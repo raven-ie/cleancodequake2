@@ -203,7 +203,8 @@ void turret_breach_finish_init (edict_t *self)
 	// get and save info for muzzle location
 	if (!self->target)
 	{
-		gi.dprintf("%s at %s needs a target\n", self->classname, vtos(self->s.origin));
+		//gi.dprintf("%s at (%f %f %f) needs a target\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
+		MapPrint (MAPPRINT_ERROR, self, self->s.origin, "Needs a target\n");
 	}
 	else
 	{
@@ -221,7 +222,7 @@ void SP_turret_breach (edict_t *self)
 {
 	self->solid = SOLID_BSP;
 	self->movetype = MOVETYPE_PUSH;
-	gi.setmodel (self, self->model);
+	GI_SetModel (self, self->model);
 
 	if (!self->speed)
 		self->speed = 50;
@@ -260,7 +261,7 @@ void SP_turret_base (edict_t *self)
 {
 	self->solid = SOLID_BSP;
 	self->movetype = MOVETYPE_PUSH;
-	gi.setmodel (self, self->model);
+	GI_SetModel (self, self->model);
 	self->blocked = turret_blocked;
 	gi.linkentity (self);
 }
@@ -422,7 +423,8 @@ void SP_turret_driver (edict_t *self)
 	{
 		self->item = FindItemByClassname (st.item);
 		if (!self->item)
-			gi.dprintf("%s at %s has bad item: %s\n", self->classname, vtos(self->s.origin), st.item);
+			MapPrint (MAPPRINT_WARNING, self, self->s.origin, "Has bad item: \"%s\"\n", st.item);
+			//gi.dprintf("%s at (%f %f %f) has bad item: %s\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2], st.item);
 	}
 
 	self->think = turret_driver_link;

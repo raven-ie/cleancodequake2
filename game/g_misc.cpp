@@ -145,10 +145,10 @@ void ThrowGib (edict_t *self, char *gibname, int damage, int type)
 	gib->s.origin[1] = origin[1] + crandom() * size[1];
 	gib->s.origin[2] = origin[2] + crandom() * size[2];
 
-	gi.setmodel (gib, gibname);
+	gib->s.modelIndex = gi.modelindex(gibname);
 	Vec3Clear (gib->mins);
 	Vec3Clear (gib->maxs);
-	gib->solid = SOLID_BBOX;
+	gib->solid = SOLID_NOT;
 	gib->s.effects |= EF_GIB;
 	gib->takedamage = DAMAGE_YES;
 	gib->die = gib_die;
@@ -190,7 +190,7 @@ void ThrowHead (edict_t *self, char *gibname, int damage, int type)
 	Vec3Clear (self->maxs);
 
 	self->s.modelIndex2 = 0;
-	gi.setmodel (self, gibname);
+	self->s.modelIndex = gi.modelindex(gibname);
 	self->solid = SOLID_NOT;
 	self->s.effects |= EF_GIB;
 	self->s.effects &= ~EF_FLIES;
@@ -243,7 +243,7 @@ void ThrowClientHead (edict_t *self, int damage)
 
 	self->s.origin[2] += 32;
 	self->s.frame = 0;
-	gi.setmodel (self, gibname);
+	self->s.modelIndex = gi.modelindex(gibname);
 	Vec3Set (self->mins, -16, -16, 0);
 	Vec3Set (self->maxs, 16, 16, 16);
 
@@ -289,7 +289,7 @@ void ThrowDebris (edict_t *self, char *modelname, float speed, vec3_t origin)
 
 	chunk = G_Spawn();
 	Vec3Copy (origin, chunk->s.origin);
-	gi.setmodel (chunk, modelname);
+	chunk->s.modelIndex = gi.modelindex(modelname);
 	v[0] = 100 * crandom();
 	v[1] = 100 * crandom();
 	v[2] = 100 + 100 * crandom();
@@ -391,7 +391,8 @@ void SP_path_corner (edict_t *self)
 {
 	if (!self->targetname)
 	{
-		gi.dprintf ("path_corner with no targetname at %s\n", vtos(self->s.origin));
+		//gi.dprintf ("path_corner with no targetname at (%f %f %f)\n", self->s.origin[0], self->s.origin[1], self->s.origin[2]);
+		MapPrint (MAPPRINT_ERROR, self, self->s.origin, "No targetname\n");
 		G_FreeEdict (self);
 		return;
 	}
@@ -423,7 +424,7 @@ void point_combat_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSur
 		other->goalentity = other->movetarget = G_PickTarget(other->target);
 		if (!other->goalentity)
 		{
-			gi.dprintf("%s at %s target %s does not exist\n", self->classname, vtos(self->s.origin), self->target);
+			gi.dprintf("%s at (%f %f %f) target %s does not exist\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2], self->target);
 			other->movetarget = self;
 		}
 		self->target = NULL;
@@ -603,7 +604,7 @@ void func_wall_use (edict_t *self, edict_t *other, edict_t *activator)
 void SP_func_wall (edict_t *self)
 {
 	self->movetype = MOVETYPE_PUSH;
-	gi.setmodel (self, self->model);
+	GI_SetModel (self, self->model);
 
 	if (self->spawnflags & 8)
 		self->s.effects |= EF_ANIM_ALL;
@@ -630,7 +631,8 @@ void SP_func_wall (edict_t *self)
 	{
 		if (!(self->spawnflags & 2))
 		{
-			gi.dprintf("func_wall START_ON without TOGGLE\n");
+			//gi.dprintf("func_wall START_ON without TOGGLE\n");
+			MapPrint (MAPPRINT_WARNING, self, self->absMin, "Invalid spawnflags: START_ON without TOGGLE\n");
 			self->spawnflags |= 2;
 		}
 	}
@@ -682,7 +684,7 @@ void func_object_use (edict_t *self, edict_t *other, edict_t *activator)
 
 void SP_func_object (edict_t *self)
 {
-	gi.setmodel (self, self->model);
+	GI_SetModel (self, self->model);
 
 	self->mins[0] += 1;
 	self->mins[1] += 1;
@@ -824,8 +826,6 @@ void SP_func_explosive (edict_t *self)
 	gi.modelindex ("models/objects/debris1/tris.md2");
 	gi.modelindex ("models/objects/debris2/tris.md2");
 
-	gi.setmodel (self, self->model);
-
 	if (self->spawnflags & 1)
 	{
 		self->svFlags |= SVF_NOCLIENT;
@@ -838,6 +838,8 @@ void SP_func_explosive (edict_t *self)
 		if (self->targetname)
 			self->use = func_explosive_use;
 	}
+
+	GI_SetModel (self, self->model);
 
 	if (self->spawnflags & 2)
 		self->s.effects |= EF_ANIM_ALL;
@@ -1271,7 +1273,8 @@ void SP_misc_viper (edict_t *ent)
 {
 	if (!ent->target)
 	{
-		gi.dprintf ("misc_viper without a target at %s\n", vtos(ent->absMin));
+		//gi.dprintf ("misc_viper without a target at (%f %f %f)\n", ent->absMin[0], ent->absMin[1], ent->absMin[2]);
+		MapPrint (MAPPRINT_ERROR, ent, ent->s.origin, "No targetname\n");
 		G_FreeEdict (ent);
 		return;
 	}
@@ -1401,7 +1404,8 @@ void SP_misc_strogg_ship (edict_t *ent)
 {
 	if (!ent->target)
 	{
-		gi.dprintf ("%s without a target at %s\n", ent->classname, vtos(ent->absMin));
+		//gi.dprintf ("%s without a target at (%f %f %f)\n", ent->classname, ent->absMin[0], ent->absMin[1], ent->absMin[2]);
+		MapPrint (MAPPRINT_ERROR, ent, ent->s.origin, "No target\n");
 		G_FreeEdict (ent);
 		return;
 	}
@@ -1480,7 +1484,7 @@ Intended for use with the target_spawner
 */
 void SP_misc_gib_arm (edict_t *ent)
 {
-	gi.setmodel (ent, "models/objects/gibs/arm/tris.md2");
+	ent->s.modelIndex = gi.modelindex("models/objects/gibs/arm/tris.md2");
 	ent->solid = SOLID_NOT;
 	ent->s.effects |= EF_GIB;
 	ent->takedamage = DAMAGE_YES;
@@ -1501,7 +1505,7 @@ Intended for use with the target_spawner
 */
 void SP_misc_gib_leg (edict_t *ent)
 {
-	gi.setmodel (ent, "models/objects/gibs/leg/tris.md2");
+	ent->s.modelIndex = gi.modelindex("models/objects/gibs/leg/tris.md2");
 	ent->solid = SOLID_NOT;
 	ent->s.effects |= EF_GIB;
 	ent->takedamage = DAMAGE_YES;
@@ -1522,7 +1526,7 @@ Intended for use with the target_spawner
 */
 void SP_misc_gib_head (edict_t *ent)
 {
-	gi.setmodel (ent, "models/objects/gibs/head/tris.md2");
+	ent->s.modelIndex = gi.modelindex("models/objects/gibs/head/tris.md2");
 	ent->solid = SOLID_NOT;
 	ent->s.effects |= EF_GIB;
 	ent->takedamage = DAMAGE_YES;
@@ -1548,7 +1552,7 @@ used with target_string (must be on same "team")
 void SP_target_character (edict_t *self)
 {
 	self->movetype = MOVETYPE_PUSH;
-	gi.setmodel (self, self->model);
+	GI_SetModel (self, self->model);
 	self->solid = SOLID_BSP;
 	self->s.frame = 12;
 	gi.linkentity (self);
@@ -1736,14 +1740,16 @@ void SP_func_clock (edict_t *self)
 {
 	if (!self->target)
 	{
-		gi.dprintf("%s with no target at %s\n", self->classname, vtos(self->s.origin));
+		//gi.dprintf("%s with no target at (%f %f %f)\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
+		MapPrint (MAPPRINT_ERROR, self, self->absMin, "No target\n");
 		G_FreeEdict (self);
 		return;
 	}
 
 	if ((self->spawnflags & 2) && (!self->count))
 	{
-		gi.dprintf("%s with no count at %s\n", self->classname, vtos(self->s.origin));
+		//gi.dprintf("%s with no count at (%f %f %f)\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
+		MapPrint (MAPPRINT_ERROR, self, self->absMin, "No count\n");
 		G_FreeEdict (self);
 		return;
 	}
@@ -1827,12 +1833,13 @@ void SP_misc_teleporter (edict_t *ent)
 
 	if (!ent->target)
 	{
-		gi.dprintf ("teleporter without a target.\n");
+		//gi.dprintf ("teleporter without a target.\n");
+		MapPrint (MAPPRINT_ERROR, ent, ent->s.origin, "No target\n");
 		G_FreeEdict (ent);
 		return;
 	}
 
-	gi.setmodel (ent, "models/objects/dmspot/tris.md2");
+	ent->s.modelIndex = gi.modelindex("models/objects/dmspot/tris.md2");
 	ent->s.skinNum = 1;
 	ent->s.effects = EF_TELEPORTER;
 	ent->s.sound = gi.soundindex ("world/amb10.wav");
@@ -1859,7 +1866,7 @@ Point teleporters at these.
 */
 void SP_misc_teleporter_dest (edict_t *ent)
 {
-	gi.setmodel (ent, "models/objects/dmspot/tris.md2");
+	ent->s.modelIndex = gi.modelindex("models/objects/dmspot/tris.md2");
 	ent->s.skinNum = 0;
 	ent->solid = SOLID_BBOX;
 	Vec3Set (ent->mins, -32, -32, -24);

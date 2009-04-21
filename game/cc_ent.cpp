@@ -134,3 +134,41 @@ That's pretty much it for the entity system.
 Damage will be handled by the Hit function, which would call, for example, T_Damage or otherwise.
 
 */
+
+typedef struct clientBase_s {
+	playerState_t		playerState;
+	int					ping;
+} clientBase_t;
+
+typedef struct edictBase_s {
+	entityStateOld_t	s;
+	clientBase_t	*client;
+
+//==================================
+	int					inUse;
+	int					linkCount;
+
+	link_t				area;
+	
+	int					numClusters;
+	int					clusterNums[MAX_ENT_CLUSTERS];
+	int					headNode;
+	int					areaNum, areaNum2;
+//==================================
+
+	int					svFlags;
+	vec3_t				mins, maxs;
+	vec3_t				absMin, absMax, size;
+	solid_t				solid;
+	int					clipMask;
+	struct edictBase_s	*owner;
+} edictBase_t;
+
+class CBaseEntity
+{
+private:
+	edictBase_t		*base;
+
+public:
+	vec3f			Origin;
+};

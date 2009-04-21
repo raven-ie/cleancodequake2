@@ -21,6 +21,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "../shared/shared.h"
 
+#include "Newton.h"
+
 // define GAME_INCLUDE so that game.h does not define the
 // short, server-visible gclient_t and edict_t structures,
 // because we define the full size ones in this file
@@ -527,6 +529,7 @@ typedef enum {
 	F_ANGLEHACK,
 	F_EDICT,			// index on disk, pointer in memory
 	F_ITEM,				// index on disk, pointer in memory
+	F_NEWITEM,			// index on disk, pointer in memory
 	F_CLIENT,			// index on disk, pointer in memory
 	F_FUNCTION,
 	F_MMOVE,
@@ -591,9 +594,6 @@ void	G_TouchTriggers (edict_t *ent);
 void	G_TouchSolids (edict_t *ent);
 
 char	*G_CopyString (char *in);
-
-float	*tv (float x, float y, float z);
-char	*vtos (vec3_t v);
 
 //
 // g_combat.c
@@ -697,7 +697,7 @@ edict_t	*PlayerTrail_LastSpot (void);
 void respawn (edict_t *ent);
 void BeginIntermission (edict_t *targ);
 void PutClientInServer (edict_t *ent);
-void InitClientPersistant (gclient_t *client);
+void InitClientPersistant (edict_t *ent);
 void InitClientResp (gclient_t *client);
 void InitBodyQue (void);
 void ClientBeginServerFrame (edict_t *ent);
@@ -726,7 +726,6 @@ void MoveClientToIntermission (edict_t *client);
 void G_SetStats (edict_t *ent);
 void G_SetSpectatorStats (edict_t *ent);
 void G_CheckChaseStats (edict_t *ent);
-void ValidateSelectedItem (edict_t *ent);
 void DeathmatchScoreboardMessage (edict_t *ent, edict_t *killer, bool reliable);
 
 //
@@ -772,6 +771,8 @@ void GetChaseTarget(edict_t *ent);
 #define ANIM_DEATH		5
 #define ANIM_REVERSE	6
 
+// Paril, CleanCode Quake2
+#include "cc_shared.h"
 
 // client data that stays across multiple level loads
 typedef struct
@@ -788,19 +789,22 @@ typedef struct
 	int			max_health;
 	int			savedFlags;
 
-	int			selected_item;
-	int			inventory[MAX_CS_ITEMS];
+	//int			selected_item;
+	//int			inventory[MAX_CS_ITEMS];
+	CInventory	Inventory;
 
 	// ammo capacities
-	int			max_bullets;
+	/*int			max_bullets;
 	int			max_shells;
 	int			max_rockets;
 	int			max_grenades;
 	int			max_cells;
-	int			max_slugs;
+	int			max_slugs;*/
+	int			maxAmmoValues[AMMOTAG_MAX];
 
-	gitem_t		*weapon;
-	gitem_t		*lastweapon;
+	//gitem_t		*weapon;
+	//gitem_t		*lastweapon;
+	CWeapon		*Weapon;
 
 	int			power_cubes;	// used for tracking the cubes in coop games
 	int			score;			// for calculating total unit score in coop games
@@ -848,7 +852,8 @@ struct gclient_s
 
 	bool		weapon_thunk;
 
-	gitem_t		*newweapon;
+	//gitem_t		*newweapon;
+	CWeapon		*NewWeapon;
 
 	// sum up damage over an entire frame, so
 	// shotgun blasts give a single big kick
@@ -860,7 +865,7 @@ struct gclient_s
 
 	float		killer_yaw;			// when dead, look at killer
 
-	weaponstate_t	weaponstate;
+	EWeaponState weaponstate;
 	vec3_t		kick_angles;	// weapon kicks
 	vec3_t		kick_origin;
 	float		v_dmg_roll, v_dmg_pitch, v_dmg_time;	// damage kicks
@@ -1051,14 +1056,14 @@ struct edict_s
 	int			style;			// also used as areaportal number
 
 	gitem_t		*item;			// for bonus items
+	class CBaseItem	*ccitem;
 
 	// common data blocks
 	moveinfo_t		moveinfo;
 	monsterinfo_t	monsterinfo;
-};
 
-// Paril, CleanCode Quake2
-#include "cc_shared.h"
+	const NewtonBody	*newtonBody;
+};
 
 extern	CCvar	*maxentities;
 extern	CCvar	*deathmatch;
@@ -1097,3 +1102,5 @@ extern	CCvar	*flood_persecond;
 extern	CCvar	*flood_waitdelay;
 
 extern	CCvar	*sv_maplist;
+
+extern void P_ProjectSource (gclient_t *client, vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result);

@@ -29,10 +29,10 @@ typedef struct
 } spawn_t;
 
 
-void SP_item_health (edict_t *self);
+/*void SP_item_health (edict_t *self);
 void SP_item_health_small (edict_t *self);
 void SP_item_health_large (edict_t *self);
-void SP_item_health_mega (edict_t *self);
+void SP_item_health_mega (edict_t *self);*/
 
 void SP_info_player_start (edict_t *ent);
 void SP_info_player_deathmatch (edict_t *ent);
@@ -151,10 +151,10 @@ void SP_turret_base (edict_t *self);
 void SP_turret_driver (edict_t *self);
 
 spawn_t	spawns[] = {
-	{"item_health", SP_item_health},
+	/*{"item_health", SP_item_health},
 	{"item_health_small", SP_item_health_small},
 	{"item_health_large", SP_item_health_large},
-	{"item_health_mega", SP_item_health_mega},
+	{"item_health_mega", SP_item_health_mega},*/
 
 	{"info_player_start", SP_info_player_start},
 	{"info_player_deathmatch", SP_info_player_deathmatch},
@@ -287,16 +287,20 @@ Finds the spawn function for the entity and calls it
 void ED_CallSpawn (edict_t *ent)
 {
 	spawn_t	*s;
+#if 0
 	gitem_t	*item;
 	int		i;
+#endif
 
 	if (!ent->classname)
 	{
-		gi.dprintf ("ED_CallSpawn: NULL classname\n");
+		//gi.dprintf ("ED_CallSpawn: NULL classname\n");
+		MapPrint (MAPPRINT_ERROR, ent, ent->s.origin, "NULL classname!\n");
 		return;
 	}
 
 	// check item spawn functions
+#if 0
 	for (i=0,item=itemlist ; i<game.num_items ; i++,item++)
 	{
 		if (!item->classname)
@@ -307,6 +311,10 @@ void ED_CallSpawn (edict_t *ent)
 			return;
 		}
 	}
+#else
+	if (CC_ItemExists(ent))
+		return;
+#endif
 
 	// check normal spawn functions
 	for (s=spawns ; s->name ; s++)
@@ -317,7 +325,8 @@ void ED_CallSpawn (edict_t *ent)
 			return;
 		}
 	}
-	gi.dprintf ("%s doesn't have a spawn function\n", ent->classname);
+	//gi.dprintf ("%s doesn't have a spawn function\n", ent->classname);
+	MapPrint (MAPPRINT_ERROR, ent, ent->s.origin, "Invalid entity (no spawn function)\n");
 }
 
 /*
@@ -407,7 +416,8 @@ static void ED_ParseField (char *key, char *value, edict_t *ent)
 			return;
 		}
 	}
-	gi.dprintf ("%s is not a field\n", key);
+	//gi.dprintf ("%s is not a field\n", key);
+	MapPrint (MAPPRINT_ERROR, ent, ent->s.origin, "\"%s\" is not a field\n", key);
 }
 
 /*
@@ -523,6 +533,7 @@ Creates a server's entity / program execution context by
 parsing textual entity definitions out of an ent file.
 ==============
 */
+extern int entityNumber;
 void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 {
 	edict_t		*ent;
@@ -530,6 +541,11 @@ void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 	char		*token;
 	int			i;
 	int		skill_level;
+
+	entities = CC_ParseSpawnEntities (mapname, entities);
+
+	entityNumber = 0;
+	InitMapCounter();
 
 	skill_level = skill->Integer();
 	if (skill_level < 0)
@@ -575,6 +591,7 @@ void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 		if (!Q_stricmp(level.mapname, "command") && !Q_stricmp(ent->classname, "trigger_once") && !Q_stricmp(ent->model, "*27"))
 			ent->spawnflags &= ~SPAWNFLAG_NOT_HARD;
 
+		entityNumber++;
 		// Remove things (except the world) from different skill levels or deathmatch
 		if (ent != g_edicts) {
 			if (deathmatch->Integer()) {
@@ -603,7 +620,7 @@ void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 		ED_CallSpawn (ent);
 	}
 
-	gi.dprintf ("%i entities inhibited\n", inhibit);
+	gi.dprintf ("%i entities removed\n", inhibit);
 
 #ifdef DEBUG
 	i = 1;
@@ -637,6 +654,9 @@ void CreateDMStatusbar ();
 void CreateSPStatusbar ();
 void SP_worldspawn (edict_t *ent)
 {
+	// Seed the random number generator
+	srand (time(NULL));
+
 	ent->movetype = MOVETYPE_PUSH;
 	ent->solid = SOLID_BSP;
 	ent->inUse = true;			// since the world doesn't use G_Spawn()

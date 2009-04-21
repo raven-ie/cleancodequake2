@@ -27,7 +27,7 @@ void InitTrigger (edict_t *self)
 
 	self->solid = SOLID_TRIGGER;
 	self->movetype = MOVETYPE_NONE;
-	gi.setmodel (self, self->model);
+	GI_SetModel (self, self->model);
 	self->svFlags = SVF_NOCLIENT;
 }
 
@@ -145,7 +145,7 @@ void SP_trigger_multiple (edict_t *ent)
 	if (!Vec3Compare(ent->s.angles, vec3Origin))
 		G_SetMovedir (ent->s.angles, ent->movedir);
 
-	gi.setmodel (ent, ent->model);
+	GI_SetModel (ent, ent->model);
 	gi.linkentity (ent);
 }
 
@@ -176,7 +176,8 @@ void SP_trigger_once(edict_t *ent)
 		Vec3MA (ent->mins, 0.5, ent->size, v);
 		ent->spawnflags &= ~1;
 		ent->spawnflags |= 4;
-		gi.dprintf("fixed TRIGGERED flag on %s at %s\n", ent->classname, vtos(v));
+		MapPrint (MAPPRINT_WARNING, ent, ent->s.origin, "Fixed TRIGGERED flag\n");
+		//gi.dprintf("fixed TRIGGERED flag on %s at (%f %f %f)\n", ent->classname, v[0], v[1], v[2]);
 	}
 
 	ent->wait = -1;
@@ -219,7 +220,7 @@ void trigger_key_use (edict_t *self, edict_t *other, edict_t *activator)
 		return;
 
 	index = ITEM_INDEX(self->item);
-	if (!activator->client->pers.inventory[index])
+	if (!activator->client->pers.Inventory.Has(index))
 	{
 		if (level.time < self->touch_debounce_time)
 			return;
@@ -251,7 +252,7 @@ void trigger_key_use (edict_t *self, edict_t *other, edict_t *activator)
 					continue;
 				if (ent->client->pers.power_cubes & (1 << cube))
 				{
-					ent->client->pers.inventory[index]--;
+					ent->client->pers.Inventory -= index;
 					ent->client->pers.power_cubes &= ~(1 << cube);
 				}
 			}
@@ -265,13 +266,13 @@ void trigger_key_use (edict_t *self, edict_t *other, edict_t *activator)
 					continue;
 				if (!ent->client)
 					continue;
-				ent->client->pers.inventory[index] = 0;
+				ent->client->pers.Inventory.Set(index, 0);
 			}
 		}
 	}
 	else
 	{
-		activator->client->pers.inventory[index]--;
+		activator->client->pers.Inventory -= index;
 	}
 
 	G_UseTargets (self, activator);
@@ -283,20 +284,23 @@ void SP_trigger_key (edict_t *self)
 {
 	if (!st.item)
 	{
-		gi.dprintf("no key item for trigger_key at %s\n", vtos(self->s.origin));
+		//gi.dprintf("no key item for trigger_key at (%f %f %f)\n", self->s.origin[0], self->s.origin[1], self->s.origin[2]);
+		MapPrint (MAPPRINT_ERROR, self, self->s.origin, "No key item\n");
 		return;
 	}
 	self->item = FindItemByClassname (st.item);
 
 	if (!self->item)
 	{
-		gi.dprintf("item %s not found for trigger_key at %s\n", st.item, vtos(self->s.origin));
+		MapPrint (MAPPRINT_ERROR, self, self->s.origin, "Item \"%s\" not found\n", st.item);
+		//gi.dprintf("item %s not found for trigger_key at (%f %f %f)\n", st.item, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
 		return;
 	}
 
 	if (!self->target)
 	{
-		gi.dprintf("%s at %s has no target\n", self->classname, vtos(self->s.origin));
+		MapPrint (MAPPRINT_ERROR, self, self->s.origin, "No target\n");
+		//gi.dprintf("%s at (%f %f %f) has no target\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
 		return;
 	}
 
@@ -566,7 +570,8 @@ void SP_trigger_gravity (edict_t *self)
 {
 	if (st.gravity == 0)
 	{
-		gi.dprintf("trigger_gravity without gravity set at %s\n", vtos(self->s.origin));
+		//gi.dprintf("trigger_gravity without gravity set at (%f %f %f)\n", self->s.origin[0], self->s.origin[1], self->s.origin[2]);
+		MapPrint (MAPPRINT_ERROR, self, self->s.origin, "No gravity set\n");
 		G_FreeEdict  (self);
 		return;
 	}

@@ -405,7 +405,7 @@ void actor_use (edict_t *self, edict_t *other, edict_t *activator)
 	self->goalentity = self->movetarget = G_PickTarget(self->target);
 	if ((!self->movetarget) || (strcmp(self->movetarget->classname, "target_actor") != 0))
 	{
-		gi.dprintf ("%s has bad target %s at %s\n", self->classname, self->target, vtos(self->s.origin));
+		gi.dprintf ("%s has bad target %s at (%f %f %f)\n", self->classname, self->target, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
 		self->target = NULL;
 		self->monsterinfo.pausetime = 100000000;
 		self->monsterinfo.stand (self);
@@ -432,14 +432,16 @@ void SP_misc_actor (edict_t *self)
 
 	if (!self->targetname)
 	{
-		gi.dprintf("untargeted %s at %s\n", self->classname, vtos(self->s.origin));
+		//gi.dprintf("untargeted %s at (%f %f %f)\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
+		MapPrint (MAPPRINT_ERROR, self, self->s.origin, "No targetname\n");
 		G_FreeEdict (self);
 		return;
 	}
 
 	if (!self->target)
 	{
-		gi.dprintf("%s with no target at %s\n", self->classname, vtos(self->s.origin));
+		//gi.dprintf("%s with no target at (%f %f %f)\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
+		MapPrint (MAPPRINT_ERROR, self, self->s.origin, "No target\n");
 		G_FreeEdict (self);
 		return;
 	}
@@ -585,7 +587,8 @@ void target_actor_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSur
 void SP_target_actor (edict_t *self)
 {
 	if (!self->targetname)
-		gi.dprintf ("%s with no targetname at %s\n", self->classname, vtos(self->s.origin));
+		MapPrint (MAPPRINT_ERROR, self, self->s.origin, "No targetname\n");
+		//gi.dprintf ("%s with no targetname at (%f %f %f)\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
 
 	self->solid = SOLID_TRIGGER;
 	self->touch = target_actor_touch;

@@ -101,8 +101,8 @@ void BeginIntermission (edict_t *targ)
 				// strip players of all keys between units
 				for (n = 0; n < MAX_CS_ITEMS; n++)
 				{
-					if (itemlist[n].flags & IT_KEY)
-						client->client->pers.inventory[n] = 0;
+					if (CC_GetItemByIndex(n)->Flags & ITEMFLAG_KEY)
+						client->client->pers.Inventory.Set(n, 0);
 				}
 			}
 		}
@@ -288,16 +288,38 @@ void G_SetStats (edict_t *ent)
 	//
 	// ammo
 	//
-	if (!ent->client->ammo_index /* || !ent->client->pers.inventory[ent->client->ammo_index] */)
+	/*if (!ent->client->pers.Weapon || !ent->client->pers.Weapon->Item || !ent->client->pers.Weapon->Item->Ammo)
 	{
 		ent->client->ps.stats[STAT_AMMO_ICON] = 0;
 		ent->client->ps.stats[STAT_AMMO] = 0;
 	}
 	else
 	{
-		item = &itemlist[ent->client->ammo_index];
-		ent->client->ps.stats[STAT_AMMO_ICON] = gi.imageindex (item->icon);
-		ent->client->ps.stats[STAT_AMMO] = ent->client->pers.inventory[ent->client->ammo_index];
+		ent->client->ps.stats[STAT_AMMO_ICON] = gi.imageindex (ent->client->pers.Weapon->Item->Ammo->Icon);
+		ent->client->ps.stats[STAT_AMMO] = ent->client->pers.Inventory.Has(ent->client->pers.Weapon->Item->Ammo->GetIndex());
+	}*/
+	if (ent->client->pers.Weapon)
+	{
+		if (ent->client->pers.Weapon->WeaponItem && ent->client->pers.Weapon->WeaponItem->Ammo)
+		{
+			ent->client->ps.stats[STAT_AMMO_ICON] = gi.imageindex (ent->client->pers.Weapon->WeaponItem->Ammo->Icon);
+			ent->client->ps.stats[STAT_AMMO] = ent->client->pers.Inventory.Has(ent->client->pers.Weapon->WeaponItem->Ammo->GetIndex());
+		}
+		else if (ent->client->pers.Weapon->Item && (ent->client->pers.Weapon->Item->Flags & ITEMFLAG_AMMO))
+		{
+			ent->client->ps.stats[STAT_AMMO_ICON] = gi.imageindex (ent->client->pers.Weapon->Item->Icon);
+			ent->client->ps.stats[STAT_AMMO] = ent->client->pers.Inventory.Has(ent->client->pers.Weapon->Item->GetIndex());
+		}
+		else
+		{
+			ent->client->ps.stats[STAT_AMMO_ICON] = 0;
+			ent->client->ps.stats[STAT_AMMO] = 0;
+		}
+	}
+	else
+	{
+		ent->client->ps.stats[STAT_AMMO_ICON] = 0;
+		ent->client->ps.stats[STAT_AMMO] = 0;
 	}
 	
 	//
@@ -306,7 +328,7 @@ void G_SetStats (edict_t *ent)
 	power_armor_type = PowerArmorType (ent);
 	if (power_armor_type)
 	{
-		cells = ent->client->pers.inventory[ITEM_INDEX(FindItem ("cells"))];
+		cells = ent->client->pers.Inventory.Has(CC_FindItem("Cells")->GetIndex());
 		if (cells == 0)
 		{	// ran out of cells for power armor
 			ent->flags &= ~FL_POWER_ARMOR;
@@ -325,7 +347,7 @@ void G_SetStats (edict_t *ent)
 	{
 		item = GetItemByIndex (index);
 		ent->client->ps.stats[STAT_ARMOR_ICON] = gi.imageindex (item->icon);
-		ent->client->ps.stats[STAT_ARMOR] = ent->client->pers.inventory[index];
+		ent->client->ps.stats[STAT_ARMOR] = ent->client->pers.Inventory.Has(index);
 	}
 	else
 	{
@@ -374,12 +396,12 @@ void G_SetStats (edict_t *ent)
 	//
 	// selected item
 	//
-	if (ent->client->pers.selected_item == -1)
+	if (ent->client->pers.Inventory.SelectedItem == -1)
 		ent->client->ps.stats[STAT_SELECTED_ICON] = 0;
 	else
-		ent->client->ps.stats[STAT_SELECTED_ICON] = gi.imageindex (itemlist[ent->client->pers.selected_item].icon);
+		ent->client->ps.stats[STAT_SELECTED_ICON] = gi.imageindex(CC_GetItemByIndex(ent->client->pers.Inventory.SelectedItem)->Icon);//gi.imageindex (itemlist[ent->client->pers.selected_item].icon);
 
-	ent->client->ps.stats[STAT_SELECTED_ITEM] = ent->client->pers.selected_item;
+	ent->client->ps.stats[STAT_SELECTED_ITEM] = ent->client->pers.Inventory.SelectedItem;
 
 	//
 	// layouts
@@ -412,9 +434,9 @@ void G_SetStats (edict_t *ent)
 	//
 	if (ent->client->pers.helpchanged && (level.framenum&8) )
 		ent->client->ps.stats[STAT_HELPICON] = gi.imageindex ("i_help");
-	else if ( (ent->client->pers.hand == CENTER_HANDED || ent->client->ps.fov > 91)
+	/*else if ( (ent->client->pers.hand == CENTER_HANDED || ent->client->ps.fov > 91)
 		&& ent->client->pers.weapon)
-		ent->client->ps.stats[STAT_HELPICON] = gi.imageindex (ent->client->pers.weapon->icon);
+		ent->client->ps.stats[STAT_HELPICON] = gi.imageindex (ent->client->pers.weapon->icon);*/
 	else
 		ent->client->ps.stats[STAT_HELPICON] = 0;
 
