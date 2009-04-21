@@ -214,7 +214,7 @@ void InitGame (void)
 	G_Register();
 
 	// items
-	InitItems ();
+	InitItemlist ();
 
 	Q_snprintfz (game.helpmessage1, sizeof(game.helpmessage1), "");
 
@@ -278,11 +278,11 @@ void WriteField1 (FILE *f, field_t *field, byte *base)
 		*(int *)p = index;
 		break;
 	case F_ITEM:
-		if ( *(edict_t **)p == NULL)
+/*		if ( *(edict_t **)p == NULL)
 			index = -1;
 		else
 			index = *(gitem_t **)p - itemlist;
-		*(int *)p = index;
+		*(int *)p = index;*/
 		break;
 	case F_NEWITEM:
 		if ( *(edict_t **)p == NULL)
@@ -385,11 +385,11 @@ void ReadField (FILE *f, field_t *field, byte *base)
 			*(gclient_t **)p = &game.clients[index];
 		break;
 	case F_ITEM:
-		index = *(int *)p;
+/*		index = *(int *)p;
 		if ( index == -1 )
 			*(gitem_t **)p = NULL;
 		else
-			*(gitem_t **)p = &itemlist[index];
+			*(gitem_t **)p = &itemlist[index];*/
 		break;
 	case F_NEWITEM:
 		index = *(int *)p;

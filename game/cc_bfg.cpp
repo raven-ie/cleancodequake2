@@ -27,70 +27,108 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_grenadelauncher.cpp
-// Grenade Launcher
+// cc_bfg.cpp
+// BFG10k
 //
 
 #include "cc_local.h"
 #include "m_player.h"
 
-CGrenadeLauncher WeaponGrenadeLauncher;
+CBFG WeaponBFG;
 
-CGrenadeLauncher::CGrenadeLauncher() :
-CWeapon("models/weapons/v_launch/tris.md2", 0, 5, 6, 10,
-		17, 42, 60, 4)
+CBFG::CBFG() :
+CWeapon("models/weapons/v_bfg/tris.md2", 0, 8, 9, 23,
+		33, 22, 56, 2)
 {
 }
 
-bool CGrenadeLauncher::CanFire (edict_t *ent)
+bool CBFG::CanFire (edict_t *ent)
 {
 	switch (ent->client->ps.gunFrame)
 	{
-	case 6:
+	case 9:
+	case 17:
 		return true;
 	}
 	return false;
 }
 
-bool CGrenadeLauncher::CanStopFidgetting (edict_t *ent)
+bool CBFG::CanStopFidgetting (edict_t *ent)
 {
 	switch (ent->client->ps.gunFrame)
 	{
-	case 34:
-	case 51:
-	case 59:
+	case 39:
+	case 45:
+	case 50:
+	case 55:
 		return true;
 	}
 	return false;
 }
 
-void CGrenadeLauncher::Fire (edict_t *ent)
+void CBFG::Fire (edict_t *ent)
 {
-	vec3_t	offset;
+	switch (ent->client->ps.gunFrame)
+	{
+	case 9:
+		MuzzleEffect (ent);
+		break;
+	case 17:
+		FireBFG (ent);
+		break;
+	}
+}
+
+void CBFG::MuzzleEffect (edict_t *ent)
+{
+	// send muzzle flash
+	Muzzle (ent, MZ_BFG);
+
+	ent->client->ps.gunFrame++;
+
+	PlayerNoise(ent, ent->s.origin, PNOISE_WEAPON);
+}
+
+void CBFG::FireBFG (edict_t *ent)
+{
+	vec3_t	offset, start;
 	vec3_t	forward, right;
-	vec3_t	start;
-	int		damage = 120;
-	float	radius;
+	int		damage;
+	float	damage_radius = 1000;
 
-	radius = damage+40;
+	if (deathmatch->Integer())
+		damage = 200;
+	else
+		damage = 500;
+
+	// cells can go down during windup (from power armor hits), so
+	// check again and abort firing if we don't have enough now
+	if (ent->client->pers.Inventory.Has(ent->client->pers.Weapon->WeaponItem->Ammo) < 50)
+	{
+		ent->client->ps.gunFrame++;
+		return;
+	}
+
 	if (isQuad)
 		damage *= 4;
 
-	Vec3Set (offset, 8, 8, ent->viewheight-8);
 	Angles_Vectors (ent->client->v_angle, forward, right, NULL);
-	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
 
 	Vec3Scale (forward, -2, ent->client->kick_origin);
-	ent->client->kick_angles[0] = -1;
 
-	fire_grenade (ent, start, forward, damage, 600, 2.5, radius);
+	// make a big pitch kick with an inverse fall
+	ent->client->v_dmg_pitch = -40;
+	ent->client->v_dmg_roll = crandom()*8;
+	ent->client->v_dmg_time = level.time + DAMAGE_TIME;
 
-	Muzzle (ent, MZ_GRENADE);
+	Vec3Set (offset, 8, 8, ent->viewheight-8);
+	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
+	fire_bfg (ent, start, forward, damage, 400, damage_radius);
+
+	ent->client->ps.gunFrame++;
 
 	PlayerNoise(ent, start, PNOISE_WEAPON);
 
 	if (!dmFlags.dfInfiniteAmmo)
-		DepleteAmmo(ent, 1);
-
-	ent->client->ps.gunFrame++;
+		DepleteAmmo (ent, 50);
 }

@@ -149,12 +149,13 @@ dflags		these flags are used to control how T_Damage works
 	DAMAGE_NO_PROTECTION	kills godmode, armor, everything
 ============
 */
+int PowerArmorType (edict_t *ent);
 static int CheckPowerArmor (edict_t *ent, vec3_t point, vec3_t normal, int damage, int dflags)
 {
 	gclient_t	*client;
 	int			save;
 	int			power_armor_type;
-	int			index;
+	int			index = CC_FindItem("Cells")->GetIndex();
 	int			damagePerCell;
 	int			pa_te_type;
 	int			power;
@@ -172,10 +173,7 @@ static int CheckPowerArmor (edict_t *ent, vec3_t point, vec3_t normal, int damag
 	{
 		power_armor_type = PowerArmorType (ent);
 		if (power_armor_type != POWER_ARMOR_NONE)
-		{
-			index = ITEM_INDEX(FindItem("Cells"));
-			power = client->pers.Inventory.Has(index);
-		}
+			power = client->pers.Inventory.Has(CC_FindItem("Cells"));
 	}
 	else if (ent->svFlags & SVF_MONSTER)
 	{
@@ -233,42 +231,35 @@ static int CheckPowerArmor (edict_t *ent, vec3_t point, vec3_t normal, int damag
 	return save;
 }
 
+int ArmorIndex (edict_t *ent);
 static int CheckArmor (edict_t *ent, vec3_t point, vec3_t normal, int damage, int dflags)
 {
-	gclient_t	*client;
-	int			save;
-	int			index;
-	gitem_t		*armor;
-
 	if (!damage)
 		return 0;
-
-	client = ent->client;
-
-	if (!client)
+	if (!ent->client)
 		return 0;
 
 	if (dflags & DAMAGE_NO_ARMOR)
 		return 0;
 
-	index = ArmorIndex (ent);
-	if (!index)
+	CArmor *armor = ent->client->pers.Armor;
+
+	if (!armor)
 		return 0;
 
-	armor = GetItemByIndex (index);
-
-	if (dflags & DAMAGE_ENERGY)
-		save = ceil(((gitem_armor_t *)armor->info)->energy_protection*damage);
-	else
-		save = ceil(((gitem_armor_t *)armor->info)->normal_protection*damage);
-	if (save >= client->pers.Inventory.Has(index))
-		save = client->pers.Inventory.Has(index);
+	int save = ceil ( ((dflags & DAMAGE_ENERGY) ? armor->energyProtection : armor->normalProtection) * damage);
+	if (save >= ent->client->pers.Inventory.Has(armor))
+		save = ent->client->pers.Inventory.Has(armor);
 
 	if (!save)
 		return 0;
 
-	client->pers.Inventory.Remove(index, save);
+	ent->client->pers.Inventory.Remove(armor, save);
 	TempEnts.Splashes.Sparks (point, normal, (dflags & DAMAGE_BULLET) ? TempEnts.Splashes.STBulletSparks : TempEnts.Splashes.STSparks, TempEnts.Splashes.SPTSparks);
+
+	// Ran out of armor?
+	if (!ent->client->pers.Inventory.Has(armor))
+		ent->client->pers.Armor = NULL;
 
 	return save;
 }

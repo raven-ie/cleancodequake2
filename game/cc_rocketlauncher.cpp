@@ -76,11 +76,11 @@ void CRocketLauncher::Fire (edict_t *ent)
 	damage = 100 + (int)(random() * 20.0);
 	radius_damage = 120;
 	damage_radius = 120;
-/*	if (is_quad)
+	if (isQuad)
 	{
 		damage *= 4;
 		radius_damage *= 4;
-	}*/
+	}
 
 	Angles_Vectors (ent->client->v_angle, forward, right, NULL);
 
@@ -92,10 +92,7 @@ void CRocketLauncher::Fire (edict_t *ent)
 	fire_rocket (ent, start, forward, damage, 650, damage_radius, radius_damage);
 
 	// send muzzle flash
-	gi.WriteByte (SVC_MUZZLEFLASH);
-	gi.WriteShort (ent-g_edicts);
-	gi.WriteByte (MZ_ROCKET/* | is_silenced*/);
-	gi.multicast (ent->s.origin, MULTICAST_PVS);
+	Muzzle (ent, MZ_ROCKET);
 
 	PlayerNoise(ent, start, PNOISE_WEAPON);
 

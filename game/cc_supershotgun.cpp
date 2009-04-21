@@ -80,11 +80,11 @@ void CSuperShotgun::Fire (edict_t *ent)
 	Vec3Set (offset, 0, 8,  ent->viewheight-8);
 	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
 
-	/*if (is_quad)
+	if (isQuad)
 	{
 		damage *= 4;
 		kick *= 4;
-	}*/
+	}
 
 	v[PITCH] = ent->client->v_angle[PITCH];
 	v[YAW]   = ent->client->v_angle[YAW] - 5;
@@ -96,10 +96,7 @@ void CSuperShotgun::Fire (edict_t *ent)
 	fire_shotgun (ent, start, forward, damage, kick, DEFAULT_SHOTGUN_HSPREAD, DEFAULT_SHOTGUN_VSPREAD, DEFAULT_SSHOTGUN_COUNT/2, MOD_SSHOTGUN);
 
 	// send muzzle flash
-	gi.WriteByte (SVC_MUZZLEFLASH);
-	gi.WriteShort (ent-g_edicts);
-	gi.WriteByte (MZ_SSHOTGUN/* | is_silenced*/);
-	gi.multicast (ent->s.origin, MULTICAST_PVS);
+	Muzzle (ent, MZ_SSHOTGUN);
 
 	ent->client->ps.gunFrame++;
 	PlayerNoise(ent, start, PNOISE_WEAPON);

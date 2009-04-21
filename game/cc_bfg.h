@@ -27,70 +27,22 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_blaster.cpp
-// Blaster!
+// cc_bfg.h
+// BFG10k
 //
 
-#include "cc_local.h"
-#include "m_player.h"
-
-CBlaster WeaponBlaster;
-
-CBlaster::CBlaster() :
-CWeapon("models/weapons/v_blast/tris.md2", 0, 4, 5, 4,
-		10, 42, 53, 2)
+class CBFG : public CWeapon
 {
-}
+public:
+	CBFG();
 
-bool CBlaster::CanFire (edict_t *ent)
-{
-	switch (ent->client->ps.gunFrame)
-	{
-	case 5:
-		return true;
-	}
-	return false;
-}
+	bool	CanFire	(edict_t *ent);
+	bool	CanStopFidgetting (edict_t *ent);
 
-bool CBlaster::CanStopFidgetting (edict_t *ent)
-{
-	switch (ent->client->ps.gunFrame)
-	{
-	case 19:
-	case 32:
-		return true;
-	}
-	return false;
-}
+	// The function called to "fire"
+	void	MuzzleEffect (edict_t *ent);
+	void	FireBFG	(edict_t *ent);
+	void	Fire (edict_t *ent);
+};
 
-bool CBlaster::AttemptToFire (edict_t *ent)
-{
-	return true;
-}
-
-void CBlaster::Fire (edict_t *ent)
-{
-	int damage = deathmatch->Integer() ? 15 : 10;
-	vec3_t	forward, right;
-	vec3_t	start;
-	vec3_t	offset;
-
-	if (isQuad)
-		damage *= 4;
-
-	Angles_Vectors (ent->client->v_angle, forward, right, NULL);
-	Vec3Set (offset, 24, 8, ent->viewheight-8);
-	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
-
-	Vec3Scale (forward, -2, ent->client->kick_origin);
-	ent->client->kick_angles[0] = -1;
-
-	fire_blaster (ent, start, forward, damage, 1000, EF_BLASTER, false);
-
-	// send muzzle flash
-	Muzzle (ent, MZ_BLASTER);
-
-	PlayerNoise(ent, start, PNOISE_WEAPON);
-
-	ent->client->ps.gunFrame++;
-}
+extern CBFG WeaponBFG;

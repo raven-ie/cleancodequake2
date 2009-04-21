@@ -80,11 +80,11 @@ void CShotgun::Fire (edict_t *ent)
 	Vec3Set (offset, 0, 8,  ent->viewheight-8);
 	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
 
-	/*if (is_quad)
+	if (isQuad)
 	{
 		damage *= 4;
 		kick *= 4;
-	}*/
+	}
 
 	if (deathmatch->Integer())
 		fire_shotgun (ent, start, forward, damage, kick, 500, 500, DEFAULT_DEATHMATCH_SHOTGUN_COUNT, MOD_SHOTGUN);
@@ -92,10 +92,7 @@ void CShotgun::Fire (edict_t *ent)
 		fire_shotgun (ent, start, forward, damage, kick, 500, 500, DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);
 
 	// send muzzle flash
-	gi.WriteByte (SVC_MUZZLEFLASH);
-	gi.WriteShort (ent-g_edicts);
-	gi.WriteByte (MZ_SHOTGUN/* | is_silenced*/);
-	gi.multicast (ent->s.origin, MULTICAST_PVS);
+	Muzzle (ent, MZ_SHOTGUN);
 
 	ent->client->ps.gunFrame++;
 	PlayerNoise(ent, start, PNOISE_WEAPON);

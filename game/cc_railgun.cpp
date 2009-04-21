@@ -81,11 +81,11 @@ void CRailgun::Fire (edict_t *ent)
 		kick = 250;
 	}
 
-	/*if (is_quad)
+	if (isQuad)
 	{
 		damage *= 4;
 		kick *= 4;
-	}*/
+	}
 
 	Angles_Vectors (ent->client->v_angle, forward, right, NULL);
 
@@ -97,10 +97,7 @@ void CRailgun::Fire (edict_t *ent)
 	fire_rail (ent, start, forward, damage, kick);
 
 	// send muzzle flash
-	gi.WriteByte (SVC_MUZZLEFLASH);
-	gi.WriteShort (ent-g_edicts);
-	gi.WriteByte (MZ_RAILGUN/* | is_silenced*/);
-	gi.multicast (ent->s.origin, MULTICAST_PVS);
+	Muzzle (ent, MZ_RAILGUN);
 
 	ent->client->ps.gunFrame++;
 	PlayerNoise(ent, start, PNOISE_WEAPON);

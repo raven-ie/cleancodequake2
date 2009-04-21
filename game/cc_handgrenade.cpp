@@ -92,8 +92,11 @@ void CHandGrenade::FireGrenade (edict_t *ent, bool inHand)
 	int		damage = 125;
 
 	float radius = damage+40;
-	//if (is_quad)
-	//	damage *= 4;
+	if (isQuad)
+	{
+		damage *= 4;
+		Sound(ent, CHAN_ITEM, gi.soundindex("items/damage3.wav")); // Make sure people know. REOOOOOOOO
+	}
 
 	Vec3Set (offset, 8, 8, ent->viewheight-8);
 	Angles_Vectors (ent->client->v_angle, forward, right, NULL);
@@ -221,10 +224,6 @@ void CHandGrenade::WeaponGeneric (edict_t *ent)
 		// Check if this is a firing frame.
 		if (CanFire(ent))
 		{
-			// Quad damage sound if we have it...
-			//if (ent->client->quad_framenum > level.framenum)
-			//	Sound(ent, CHAN_ITEM, gi.soundindex("items/damage3.wav"));
-
 			Fire(ent);
 
 			// Now, this call above CAN change the underlying frame and state.

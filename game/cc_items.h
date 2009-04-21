@@ -245,6 +245,24 @@ public:
 	void	Drop (edict_t *ent) {};
 };
 
+class CArmor : public CBaseItem
+{
+public:
+	int		baseCount;			// (on normalProtection == -1) Amount to add
+	int		maxCount;			// (on normalProtection == -1) Amount to stop at (-1 = none)
+	float	normalProtection;	// -1 = Always add to current armor
+	float	energyProtection;	// -1 = Nothing
+
+	CArmor();
+	CArmor (char *Classname, char *WorldModel, int EffectFlags,
+			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
+			   char *Precache, int baseCount, int maxCount, float normalProtection,
+			   float energyProtection);
+
+	bool	Pickup (edict_t *ent, edict_t *other);
+	void	Use (edict_t *ent);
+	void	Drop (edict_t *ent);
+};
 
 // Just to conform to the configstrings
 #define MAX_ITEMS		256

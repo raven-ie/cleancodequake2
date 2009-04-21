@@ -158,6 +158,24 @@ CBaseItem ()
 {
 };
 
+CArmor::CArmor() :
+CBaseItem()
+{
+};
+
+CArmor::CArmor (char *Classname, char *WorldModel, int EffectFlags,
+			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
+			   char *Precache, int baseCount, int maxCount, float normalProtection,
+			   float energyProtection) :
+CBaseItem(Classname, WorldModel, EffectFlags, PickupSound, Icon, Name, Flags,
+		Precache),
+baseCount(baseCount),
+maxCount(maxCount),
+normalProtection(normalProtection),
+energyProtection(energyProtection)
+{
+};
+
 CHealth::CHealth (char *Classname, char *WorldModel, int EffectFlags,
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
 			   char *Precache, int Amount, EHealthFlags HealthFlags) :
@@ -454,6 +472,79 @@ void CItemList::SendItemNames ()
 		gi.configstring (this->Items[i]->GetConfigStringNumber(), this->Items[i]->Name);
 }
 
+bool CArmor::Pickup (edict_t *ent, edict_t *other)
+{
+	if (this->normalProtection == -1)
+	{
+		if (other->client->pers.Armor == NULL)
+		{
+			other->client->pers.Inventory.Set (CC_FindItem("Jacket Armor"), 2);
+			other->client->pers.Armor = dynamic_cast<CArmor*>(CC_FindItem("Jacket Armor"));
+		}
+		else
+		{
+			if (this->maxCount != -1 && (other->client->pers.Inventory.Has(ent->client->pers.Armor) >= this->maxCount))
+				return false;
+
+			other->client->pers.Inventory.Add (other->client->pers.Armor, 2);
+			if (this->maxCount != -1 && (other->client->pers.Inventory.Has(other->client->pers.Armor) > this->maxCount))
+				other->client->pers.Inventory.Set(ent->client->pers.Armor, this->maxCount);
+		}
+		return true;
+	}
+
+	if (other->client->pers.Armor != NULL)
+	{
+		if (this->normalProtection > other->client->pers.Armor->normalProtection)
+		{
+			// calc new armor values
+			int newCount = this->baseCount + ((other->client->pers.Armor->normalProtection / this->normalProtection) * other->client->pers.Inventory.Has(other->client->pers.Armor));
+			if (newCount > this->maxCount)
+				newCount = this->maxCount;
+
+			// zero count of old armor so it goes away
+			other->client->pers.Inventory.Set(other->client->pers.Armor, 0);
+
+			// change armor to new item with computed value
+			other->client->pers.Inventory.Set(this, newCount);
+			other->client->pers.Armor = this;
+		}
+		else
+		{
+			// calc new armor values
+			int newCount = other->client->pers.Inventory.Has(other->client->pers.Armor) + ((this->normalProtection / other->client->pers.Armor->normalProtection) * this->baseCount);
+			if (newCount > other->client->pers.Armor->maxCount)
+				newCount = other->client->pers.Armor->maxCount;
+
+			// if we're already maxed out then we don't need the new armor
+			if (other->client->pers.Inventory.Has(other->client->pers.Armor) >= newCount)
+				return false;
+
+			// update current armor value
+			other->client->pers.Inventory.Set(other->client->pers.Armor, newCount);
+		}
+	}
+	// Player has no other armor, just use it
+	else
+	{
+		other->client->pers.Armor = this;
+		other->client->pers.Inventory.Set(this, this->baseCount);
+	}
+
+	if (!(ent->spawnflags & DROPPED_ITEM) && (deathmatch->Integer()))
+		SetRespawn (ent, 20);
+
+	return true;
+}
+
+// No dropping or using this type of armor.
+void CArmor::Use(edict_t *ent)
+{
+}
+
+void CArmor::Drop (edict_t *ent)
+{
+}
 /*
 ============
 SpawnItem
@@ -470,7 +561,7 @@ void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *su
 		return;
 	if (other->health < 1)
 		return;		// dead people can't pickup
-	if (!(ent->ccitem->Flags & ITEMFLAG_GRABBABLE))
+	if (!(ent->item->Flags & ITEMFLAG_GRABBABLE))
 		return;		// not a grabbable item?
 
 	if (!(ent->spawnflags & ITEM_TARGETS_USED))
@@ -479,25 +570,25 @@ void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *su
 		ent->spawnflags |= ITEM_TARGETS_USED;
 	}
 
-	if (!ent->ccitem->Pickup(ent,other))
+	if (!ent->item->Pickup(ent,other))
 		return;
 
 	// flash the screen
 	other->client->bonus_alpha = 0.25;	
 
 	// show icon and name on status bar
-	other->client->ps.stats[STAT_PICKUP_ICON] = gi.imageindex(ent->ccitem->Icon);
-	other->client->ps.stats[STAT_PICKUP_STRING] = ent->ccitem->GetConfigStringNumber();
+	other->client->ps.stats[STAT_PICKUP_ICON] = gi.imageindex(ent->item->Icon);
+	other->client->ps.stats[STAT_PICKUP_STRING] = ent->item->GetConfigStringNumber();
 	other->client->pickup_msg_time = level.time + 3.0;
 
 	// change selected item
-	if (ent->ccitem->Flags & ITEMFLAG_USABLE)
-		other->client->pers.Inventory.SelectedItem = other->client->ps.stats[STAT_SELECTED_ITEM] = ent->ccitem->GetIndex();
+	if (ent->item->Flags & ITEMFLAG_USABLE)
+		other->client->pers.Inventory.SelectedItem = other->client->ps.stats[STAT_SELECTED_ITEM] = ent->item->GetIndex();
 
-	if (ent->ccitem->PickupSound)
-		Sound(other, CHAN_ITEM, gi.soundindex(ent->ccitem->PickupSound));
+	if (ent->item->PickupSound)
+		Sound(other, CHAN_ITEM, gi.soundindex(ent->item->PickupSound));
 
-	if (!((coop->Integer()) &&  (ent->ccitem->Flags & ITEMFLAG_STAY_COOP)) || (ent->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)))
+	if (!((coop->Integer()) &&  (ent->item->Flags & ITEMFLAG_STAY_COOP)) || (ent->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)))
 	{
 		if (ent->flags & FL_RESPAWN)
 			ent->flags &= ~FL_RESPAWN;
@@ -506,8 +597,52 @@ void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *su
 	}
 }
 
-void DoRespawn (edict_t *ent);
-void Use_Item (edict_t *ent, edict_t *other, edict_t *activator);
+void DoRespawn (edict_t *ent)
+{
+        if (ent->team)
+        {
+                edict_t *master;
+                int     count;
+                int choice;
+
+                master = ent->teammaster;
+
+                for (count = 0, ent = master; ent; ent = ent->chain, count++)
+                        ;
+
+                choice = rand() % count;
+
+                for (count = 0, ent = master; count < choice; ent = ent->chain, count++)
+                        ;
+        }
+
+        ent->svFlags &= ~SVF_NOCLIENT;
+        ent->solid = SOLID_TRIGGER;
+        gi.linkentity (ent);
+
+        // send an effect
+        ent->s.event = EV_ITEM_RESPAWN;
+}
+
+void Use_Item (edict_t *ent, edict_t *other, edict_t *activator)
+{
+        ent->svFlags &= ~SVF_NOCLIENT;
+        ent->use = NULL;
+
+        if (ent->spawnflags & ITEM_NO_TOUCH)
+        {
+                ent->solid = SOLID_BBOX;
+                ent->touch = NULL;
+        }
+        else
+        {
+                ent->solid = SOLID_TRIGGER;
+                ent->touch = TouchItem;
+        }
+
+        gi.linkentity (ent);
+}
+
 void DropItemToFloor (edict_t *ent)
 {
 	CTrace	tr;
@@ -519,7 +654,7 @@ void DropItemToFloor (edict_t *ent)
 	if (ent->model)
 		ent->s.modelIndex = gi.modelindex(ent->model);
 	else
-		ent->s.modelIndex = gi.modelindex(ent->ccitem->WorldModel);
+		ent->s.modelIndex = gi.modelindex(ent->item->WorldModel);
 	ent->solid = SOLID_TRIGGER;
 	ent->movetype = MOVETYPE_TOSS;  
 	ent->touch = TouchItem;
@@ -640,7 +775,7 @@ void CC_SpawnItem (edict_t *ent, CBaseItem *item)
 		item->drop = NULL;
 	}*/
 
-	ent->ccitem = item;
+	ent->item = item;
 	ent->nextthink = level.time + 2 * FRAMETIME;    // items start after other solids
 	ent->think = DropItemToFloor;
 	ent->s.effects = item->EffectFlags;
@@ -710,6 +845,19 @@ int GetNumItems ()
 	return ItemList->numItems;
 }
 
+void AddArmorToList ()
+{
+	CArmor *JacketArmor = new CArmor ("item_armor_jacket", "models/items/armor/jacket/tris.md2", EF_ROTATE, "misc/ar1_pkup.wav", "i_jacketarmor", "Jacket Armor", ITEMFLAG_GRABBABLE|ITEMFLAG_ARMOR, "", 25, 50, .30f, .00f);
+	CArmor *CombatArmor = new CArmor ("item_armor_combat", "models/items/armor/combat/tris.md2", EF_ROTATE, "misc/ar1_pkup.wav", "i_combatarmor", "Combat Armor", ITEMFLAG_GRABBABLE|ITEMFLAG_ARMOR, "", 50, 100, .60f, .30f);
+	CArmor *BodyArmor = new CArmor ("item_armor_body", "models/items/armor/body/tris.md2", EF_ROTATE, "misc/ar1_pkup.wav", "i_bodyarmor", "Body Armor", ITEMFLAG_GRABBABLE|ITEMFLAG_ARMOR, "", 100, 200, .80f, .60f);
+	CArmor *ArmorShard = new CArmor ("item_armor_shard", "models/items/armor/shard/tris.md2", EF_ROTATE, "misc/ar2_pkup.wav", "i_jacketarmor", "Armor Shard", ITEMFLAG_GRABBABLE|ITEMFLAG_ARMOR, "", 2, -1, -1, -1);
+
+	ItemList->AddItemToList (JacketArmor);
+	ItemList->AddItemToList (CombatArmor);
+	ItemList->AddItemToList (BodyArmor);
+	ItemList->AddItemToList (ArmorShard);
+}
+
 void AddAmmoToList ()
 {
 	CAmmo *Shells = new CAmmo("ammo_shells", "models/items/ammo/shells/medium/tris.md2", 0, "misc/am_pkup.wav", "a_shells", "Shells", ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 5, AMMOTAG_SHELLS, NULL, -1);
@@ -736,6 +884,7 @@ void AddAmmoToList ()
 	CWeaponItem *RocketLauncher = new CWeaponItem("weapon_rocketlauncher", "models/weapons/g_rocket/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_rlauncher", "Rocket Launcher", ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_USABLE, "", &WeaponRocketLauncher, Rockets, 1);
 	CWeaponItem *HyperBlaster = new CWeaponItem("weapon_hyperblaster", "models/weapons/g_hyperb/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_hyperblaster", "HyperBlaster", ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_USABLE, "", &WeaponHyperBlaster, Cells, 1);
 	CWeaponItem *Railgun = new CWeaponItem("weapon_railgun", "models/weapons/g_rail/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_railgun", "Railgun", ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_USABLE, "", &WeaponRailgun, Slugs, 1);
+	CWeaponItem *BFG = new CWeaponItem("weapon_bfg", "models/weapons/g_bfg/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_bfg", "BFG10k", ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_USABLE, "", &WeaponBFG, Cells, 50);
 	
 	ItemList->AddItemToList (Blaster);
 	ItemList->AddItemToList (Shotgun);
@@ -746,6 +895,7 @@ void AddAmmoToList ()
 	ItemList->AddItemToList (RocketLauncher);
 	ItemList->AddItemToList (HyperBlaster);
 	ItemList->AddItemToList (Railgun);
+	ItemList->AddItemToList (BFG);
 }
 
 void AddHealthToList ()
@@ -765,6 +915,7 @@ void InitItemlist ()
 
 	AddAmmoToList();
 	AddHealthToList();
+	AddArmorToList();
 }
 
 void SetItemNames ()
