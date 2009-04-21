@@ -30,7 +30,7 @@ static byte		is_silenced;
 void weapon_grenade_fire (edict_t *ent, bool held);
 
 
-static void P_ProjectSource (gclient_t *client, vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result)
+inline void P_ProjectSource (gclient_t *client, vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result)
 {
 	vec3_t	_distance;
 
@@ -117,7 +117,7 @@ void PlayerNoise(edict_t *who, vec3_t where, int type)
 
 bool Pickup_Weapon (edict_t *ent, edict_t *other)
 {
-	int			index;
+/*	int			index;
 	gitem_t		*ammo;
 
 	index = ITEM_INDEX(ent->item);
@@ -159,6 +159,7 @@ bool Pickup_Weapon (edict_t *ent, edict_t *other)
 		( !deathmatch->Integer() || other->client->pers.weapon == FindItem("blaster") ) )
 		other->client->newweapon = ent->item;
 
+	return true;*/
 	return true;
 }
 
@@ -173,7 +174,7 @@ current
 */
 void ChangeWeapon (edict_t *ent)
 {
-	int i;
+/*	int i;
 
 	if (ent->client->grenade_time)
 	{
@@ -223,7 +224,7 @@ void ChangeWeapon (edict_t *ent)
 			ent->s.frame = FRAME_pain301;
 			ent->client->anim_end = FRAME_pain304;
 			
-	}
+	}*/
 }
 
 /*
@@ -233,7 +234,7 @@ NoAmmoWeaponChange
 */
 void NoAmmoWeaponChange (edict_t *ent)
 {
-	if ( ent->client->pers.inventory[ITEM_INDEX(FindItem("slugs"))]
+/*	if ( ent->client->pers.inventory[ITEM_INDEX(FindItem("slugs"))]
 		&&  ent->client->pers.inventory[ITEM_INDEX(FindItem("railgun"))] )
 	{
 		ent->client->newweapon = FindItem ("railgun");
@@ -269,7 +270,7 @@ void NoAmmoWeaponChange (edict_t *ent)
 		ent->client->newweapon = FindItem ("shotgun");
 		return;
 	}
-	ent->client->newweapon = FindItem ("blaster");
+	ent->client->newweapon = FindItem ("blaster");*/
 }
 
 /*
@@ -284,19 +285,19 @@ void Think_Weapon (edict_t *ent)
 	// if just died, put the weapon away
 	if (ent->health < 1)
 	{
-		ent->client->newweapon = NULL;
-		ChangeWeapon (ent);
+		ent->client->NewWeapon = NULL;
+		ent->client->pers.Weapon->ChangeWeapon (ent);
 	}
 
 	// call active weapon think routine
-	if (ent->client->pers.weapon && ent->client->pers.weapon->weaponthink)
+	if (ent->client->pers.Weapon)
 	{
 		is_quad = (bool)(ent->client->quad_framenum > level.framenum);
 		if (ent->client->silencer_shots)
 			is_silenced = MZ_SILENCED;
 		else
 			is_silenced = 0;
-		ent->client->pers.weapon->weaponthink (ent);
+		ent->client->pers.Weapon->WeaponGeneric (ent);
 	}
 }
 
@@ -310,7 +311,7 @@ Make the weapon ready if there is ammo
 */
 void Use_Weapon (edict_t *ent, gitem_t *item)
 {
-	int			ammo_index;
+/*	int			ammo_index;
 	gitem_t		*ammo_item;
 
 	// see if we're already using it
@@ -336,7 +337,7 @@ void Use_Weapon (edict_t *ent, gitem_t *item)
 	}
 
 	// change to this weapon when down
-	ent->client->newweapon = item;
+	ent->client->newweapon = item;*/
 }
 
 
@@ -348,7 +349,7 @@ Drop_Weapon
 */
 void Drop_Weapon (edict_t *ent, gitem_t *item)
 {
-	int		index;
+/*	int		index;
 
 	if (dmFlags.dfWeaponsStay)
 		return;
@@ -362,7 +363,7 @@ void Drop_Weapon (edict_t *ent, gitem_t *item)
 	}
 
 	Drop_Item (ent, item);
-	ent->client->pers.inventory[index]--;
+	ent->client->pers.inventory[index]--;*/
 }
 
 
@@ -379,7 +380,7 @@ A generic function to handle the basics of weapon thinking
 
 void Weapon_Generic (edict_t *ent, int FRAME_ACTIVATE_LAST, int FRAME_FIRE_LAST, int FRAME_IDLE_LAST, int FRAME_DEACTIVATE_LAST, int *pause_frames, int *fire_frames, void (*fire)(edict_t *ent))
 {
-	int		n;
+/*	int		n;
 
 	if(ent->deadflag || ent->s.modelIndex != 255) // VWep animations screw up corpses
 	{
@@ -527,7 +528,7 @@ void Weapon_Generic (edict_t *ent, int FRAME_ACTIVATE_LAST, int FRAME_FIRE_LAST,
 
 		if (ent->client->ps.gunFrame == FRAME_IDLE_FIRST+1)
 			ent->client->weaponstate = WEAPON_READY;
-	}
+	}*/
 }
 
 
@@ -538,7 +539,7 @@ GRENADE
 
 ======================================================================
 */
-
+#if 0
 #define GRENADE_TIMER		3.0
 #define GRENADE_MINSPEED	400
 #define GRENADE_MAXSPEED	800
@@ -594,11 +595,11 @@ void weapon_grenade_fire (edict_t *ent, bool held)
 
 void Weapon_Grenade (edict_t *ent)
 {
-	if ((ent->client->newweapon) && (ent->client->weaponstate == WEAPON_READY))
-	{
-		ChangeWeapon (ent);
-		return;
-	}
+//	if ((ent->client->newweapon) && (ent->client->weaponstate == WEAPON_READY))
+//	{
+//		ChangeWeapon (ent);
+//		return;
+//	}
 
 	if (ent->client->weaponstate == WEAPON_ACTIVATING)
 	{
@@ -1432,3 +1433,4 @@ void Weapon_BFG (edict_t *ent)
 
 
 //======================================================================
+#endif

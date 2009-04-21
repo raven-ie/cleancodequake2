@@ -40,6 +40,8 @@ extern CColors Colors;
 #include "cc_sbar.h"
 #include "cc_cmds.h"
 #include "cc_items.h"
+#include "cc_weapons.h"
+#include "cc_inventory.h"
 
 extern dmf_t dmFlags;
 
@@ -66,7 +68,28 @@ void Sound (vec3_t pos, edict_t *ent, EEntSndChannel channel, char *soundString,
 void Sound (vec3_t pos, edict_t *ent, EEntSndChannel channel, int soundindex, float volume, int attenuation, float timeOfs);
 void Sound (int soundindex);
 void Sound (char *soundString);
+void GI_SetModel (edict_t *ent, char *model);
 
 void Cmd_RunCommand (char *commandName, edict_t *ent);
 void Cmd_RemoveCommands ();
 void Cmd_AddCommand (char *commandName, void (*Func) (edict_t *ent), ECmdTypeFlags Flags = CMD_NORMAL);
+
+#if 0
+void DrawNewton ();
+#endif
+
+enum EMapPrintType
+{
+	MAPPRINT_WARNING,
+	MAPPRINT_ERROR,
+	MAPPRINT_NORMAL
+};
+
+void Map_Print (EMapPrintType printType, edict_t *ent, vec3_t origin);
+void MapPrint (EMapPrintType printType, edict_t *ent, vec3_t origin, char *fmt, ...);
+void EndMapCounter ();
+void InitMapCounter ();
+
+//#define MapPrint(printType, ent, origin, format, ...) Map_Print(printType, ent, origin); gi.dprintf (format, ##__VA_ARGS__)
+char *CC_ParseSpawnEntities (char *mapname, char *entities);
+

@@ -516,7 +516,7 @@ void SP_func_plat (edict_t *ent)
 	ent->solid = SOLID_BSP;
 	ent->movetype = MOVETYPE_PUSH;
 
-	gi.setmodel (ent, ent->model);
+	GI_SetModel (ent, ent->model);
 
 	ent->blocked = plat_blocked;
 
@@ -660,7 +660,7 @@ void SP_func_rotating (edict_t *ent)
 	if (ent->spawnflags & 128)
 		ent->s.effects |= EF_ANIM_ALLFAST;
 
-	gi.setmodel (ent, ent->model);
+	GI_SetModel (ent, ent->model);
 	gi.linkentity (ent);
 }
 
@@ -768,7 +768,7 @@ void SP_func_button (edict_t *ent)
 	G_SetMovedir (ent->s.angles, ent->movedir);
 	ent->movetype = MOVETYPE_STOP;
 	ent->solid = SOLID_BSP;
-	gi.setmodel (ent, ent->model);
+	GI_SetModel (ent, ent->model);
 
 	if (ent->sounds != 1)
 		ent->moveinfo.sound_start = gi.soundindex ("switches/butn2.wav");
@@ -1149,7 +1149,7 @@ void SP_func_door (edict_t *ent)
 	G_SetMovedir (ent->s.angles, ent->movedir);
 	ent->movetype = MOVETYPE_PUSH;
 	ent->solid = SOLID_BSP;
-	gi.setmodel (ent, ent->model);
+	GI_SetModel (ent, ent->model);
 
 	ent->blocked = door_blocked;
 	ent->use = door_use;
@@ -1277,7 +1277,8 @@ void SP_func_door_rotating (edict_t *ent)
 
 	if (!st.distance)
 	{
-		gi.dprintf("%s at %s with no distance set\n", ent->classname, vtos(ent->s.origin));
+		//gi.dprintf("%s at (%f %f %f) with no distance set\n", ent->classname, ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);
+		MapPrint (MAPPRINT_WARNING, ent, ent->s.origin, "No distance set\n");
 		st.distance = 90;
 	}
 
@@ -1287,7 +1288,7 @@ void SP_func_door_rotating (edict_t *ent)
 
 	ent->movetype = MOVETYPE_PUSH;
 	ent->solid = SOLID_BSP;
-	gi.setmodel (ent, ent->model);
+	GI_SetModel (ent, ent->model);
 
 	ent->blocked = door_blocked;
 	ent->use = door_use;
@@ -1382,7 +1383,7 @@ void SP_func_water (edict_t *self)
 	G_SetMovedir (self->s.angles, self->movedir);
 	self->movetype = MOVETYPE_PUSH;
 	self->solid = SOLID_BSP;
-	gi.setmodel (self, self->model);
+	GI_SetModel (self, self->model);
 
 	switch (self->sounds)
 	{
@@ -1554,7 +1555,7 @@ again:
 	{
 		if (!first)
 		{
-			gi.dprintf ("connected teleport path_corners, see %s at %s\n", ent->classname, vtos(ent->s.origin));
+			gi.dprintf ("connected teleport path_corners, see %s at (%f %f %f)\n", ent->classname, ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);
 			return;
 		}
 		first = false;
@@ -1665,7 +1666,7 @@ void SP_func_train (edict_t *self)
 			self->dmg = 100;
 	}
 	self->solid = SOLID_BSP;
-	gi.setmodel (self, self->model);
+	GI_SetModel (self, self->model);
 
 	if (st.noise)
 		self->moveinfo.sound_middle = gi.soundindex  (st.noise);
@@ -1689,7 +1690,8 @@ void SP_func_train (edict_t *self)
 	}
 	else
 	{
-		gi.dprintf ("func_train without a target at %s\n", vtos(self->absMin));
+		//gi.dprintf ("func_train without a target at (%f %f %f)\n", self->absMin[0], self->absMin[1], self->absMin[2]);
+		MapPrint (MAPPRINT_ERROR, self, self->absMin, "No target\n");
 	}
 }
 
@@ -1727,18 +1729,21 @@ void trigger_elevator_init (edict_t *self)
 {
 	if (!self->target)
 	{
-		gi.dprintf("trigger_elevator has no target\n");
+		//gi.dprintf("trigger_elevator has no target\n");
+		MapPrint (MAPPRINT_ERROR, self, self->absMin, "No target\n");
 		return;
 	}
 	self->movetarget = G_PickTarget (self->target);
 	if (!self->movetarget)
 	{
-		gi.dprintf("trigger_elevator unable to find target %s\n", self->target);
+		//gi.dprintf("trigger_elevator unable to find target %s\n", self->target);
+		MapPrint (MAPPRINT_ERROR, self, self->absMin, "Unable to find target \"%s\"\n", self->target);
 		return;
 	}
 	if (strcmp(self->movetarget->classname, "func_train") != 0)
 	{
-		gi.dprintf("trigger_elevator target %s is not a train\n", self->target);
+		//gi.dprintf("trigger_elevator target %s is not a train\n", self->target);
+		MapPrint (MAPPRINT_ERROR, self, self->absMin, "Target \"%s\" is not a train\n", self->target);
 		return;
 	}
 
@@ -1803,7 +1808,10 @@ void SP_func_timer (edict_t *self)
 	if (self->random >= self->wait)
 	{
 		self->random = self->wait - FRAMETIME;
-		gi.dprintf("func_timer at %s has random >= wait\n", vtos(self->s.origin));
+		// Paril FIXME
+		// This to me seems like a very silly warning.
+		MapPrint (MAPPRINT_WARNING, self, self->s.origin, "Random is greater than or equal to wait\n");
+		//gi.dprintf("func_timer at (%f %f %f) has random >= wait\n", self->s.origin[0], self->s.origin[1], self->s.origin[2]);
 	}
 
 	if (self->spawnflags & 1)
@@ -1852,7 +1860,7 @@ void SP_func_conveyor (edict_t *self)
 
 	self->use = func_conveyor_use;
 
-	gi.setmodel (self, self->model);
+	GI_SetModel (self, self->model);
 	self->solid = SOLID_BSP;
 	gi.linkentity (self);
 }
@@ -1976,7 +1984,7 @@ void SP_func_door_secret (edict_t *ent)
 
 	ent->movetype = MOVETYPE_PUSH;
 	ent->solid = SOLID_BSP;
-	gi.setmodel (ent, ent->model);
+	GI_SetModel (ent, ent->model);
 
 	ent->blocked = door_secret_blocked;
 	ent->use = door_secret_use;
@@ -2041,7 +2049,7 @@ void use_killbox (edict_t *self, edict_t *other, edict_t *activator)
 
 void SP_func_killbox (edict_t *ent)
 {
-	gi.setmodel (ent, ent->model);
+	GI_SetModel (ent, ent->model);
 	ent->use = use_killbox;
 	ent->svFlags = SVF_NOCLIENT;
 }

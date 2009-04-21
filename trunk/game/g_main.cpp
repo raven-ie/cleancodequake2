@@ -102,6 +102,7 @@ void ShutdownGame (void)
 }
 
 
+#ifndef _FRONTEND
 /*
 =================
 GetGameAPI
@@ -141,6 +142,7 @@ gameExport_t *GetGameAPI (gameImport_t *import)
 
 	return &globals;
 }
+#endif
 
 #ifndef GAME_HARD_LINKED
 // this is only here so the functions in q_shared.c and q_shwin.c can link
@@ -402,6 +404,9 @@ void G_RunFrame (void)
 	level.framenum++;
 	level.time = level.framenum*FRAMETIME;
 
+	if (level.framenum == 2)
+		EndMapCounter();
+
 	// choose a client for monsters to target this frame
 	AI_SetSightClient ();
 
@@ -457,5 +462,9 @@ void G_RunFrame (void)
 
 	if (dmflags->Modified())
 		dmFlags.UpdateFlags(dmflags->Integer());
+
+#if 0
+	DrawNewton();
+#endif
 }
 

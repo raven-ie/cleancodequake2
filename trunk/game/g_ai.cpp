@@ -369,7 +369,8 @@ void FoundTarget (edict_t *self)
 	{
 		self->goalentity = self->movetarget = self->enemy;
 		HuntTarget (self);
-		gi.dprintf("%s at %s, combattarget %s not found\n", self->classname, vtos(self->s.origin), self->combattarget);
+		//gi.dprintf("%s at (%f %f %f), combattarget %s not found\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2], self->combattarget);
+		MapPrint (MAPPRINT_ERROR, self, self->s.origin, "combattarget %s not found\n", self->combattarget);
 		return;
 	}
 
@@ -437,9 +438,7 @@ bool FindTarget (edict_t *self)
 	{
 		client = level.sight_entity;
 		if (client->enemy == self->enemy)
-		{
 			return false;
-		}
 	}
 	else if (level.sound_entity_framenum >= (level.framenum - 1))
 	{

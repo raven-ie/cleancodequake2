@@ -570,7 +570,8 @@ bool monster_start (edict_t *self)
 	{
 		self->item = FindItemByClassname (st.item);
 		if (!self->item)
-			gi.dprintf("%s at %s has bad item: %s\n", self->classname, vtos(self->s.origin), st.item);
+			MapPrint (MAPPRINT_WARNING, self, self->s.origin, "Bad item: \"%s\"\n", st.item);
+			//gi.dprintf("%s at (%f %f %f) has bad item: %s\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2], st.item);
 	}
 
 	// randomize what frame they start on
@@ -610,7 +611,8 @@ void monster_start_go (edict_t *self)
 			}
 		}
 		if (notcombat && self->combattarget)
-			gi.dprintf("%s at %s has target with mixed types\n", self->classname, vtos(self->s.origin));
+			MapPrint (MAPPRINT_WARNING, self, self->s.origin, "Target with mixed types\n");
+			//gi.dprintf("%s at (%f %f %f) has target with mixed types\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
 		if (fixup)
 			self->target = NULL;
 	}
@@ -625,10 +627,11 @@ void monster_start_go (edict_t *self)
 		{
 			if (strcmp(target->classname, "point_combat") != 0)
 			{
-				gi.dprintf("%s at (%i %i %i) has a bad combattarget %s : %s at (%i %i %i)\n",
-					self->classname, (int)self->s.origin[0], (int)self->s.origin[1], (int)self->s.origin[2],
-					self->combattarget, target->classname, (int)target->s.origin[0], (int)target->s.origin[1],
-					(int)target->s.origin[2]);
+				//gi.dprintf("%s at (%i %i %i) has a bad combattarget %s : %s at (%i %i %i)\n",
+				//	self->classname, (int)self->s.origin[0], (int)self->s.origin[1], (int)self->s.origin[2],
+				//	self->combattarget, target->classname, (int)target->s.origin[0], (int)target->s.origin[1],
+				//	(int)target->s.origin[2]);
+				MapPrint (MAPPRINT_WARNING, self, self->s.origin, "Has a bad combattarget (\"%s\")\n", self->combattarget);
 			}
 		}
 	}
@@ -638,7 +641,8 @@ void monster_start_go (edict_t *self)
 		self->goalentity = self->movetarget = G_PickTarget(self->target);
 		if (!self->movetarget)
 		{
-			gi.dprintf ("%s can't find target %s at %s\n", self->classname, self->target, vtos(self->s.origin));
+			//gi.dprintf ("%s can't find target %s at (%f %f %f)\n", self->classname, self->target, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
+			MapPrint (MAPPRINT_WARNING, self, self->s.origin, "Can't find target\n");
 			self->target = NULL;
 			self->monsterinfo.pausetime = 100000000;
 			self->monsterinfo.stand (self);
@@ -676,7 +680,8 @@ void walkmonster_start_go (edict_t *self)
 
 		if (self->groundentity)
 			if (!M_walkmove (self, 0, 0))
-				gi.dprintf ("%s in solid at %s\n", self->classname, vtos(self->s.origin));
+				MapPrint (MAPPRINT_WARNING, self, self->s.origin, "In solid\n");
+				//gi.dprintf ("%s in solid at (%f %f %f)\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
 	}
 	
 	if (!self->yaw_speed)
@@ -699,7 +704,10 @@ void walkmonster_start (edict_t *self)
 void flymonster_start_go (edict_t *self)
 {
 	if (!M_walkmove (self, 0, 0))
-		gi.dprintf ("%s in solid at %s\n", self->classname, vtos(self->s.origin));
+	//{
+		MapPrint (MAPPRINT_WARNING, self, self->s.origin, "Entity in solid\n");
+		//gi.dprintf ("%s in solid at (%f %f %f)\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
+	//}
 
 	if (!self->yaw_speed)
 		self->yaw_speed = 10;

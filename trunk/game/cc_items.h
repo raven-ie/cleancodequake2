@@ -63,16 +63,21 @@ typedef struct gitem_s
 } gitem_t;
 */
 
-// Named not to interfere with IT_
-enum EItemFlags
+// Named not to interfere with IT
+typedef int EItemFlags;
+enum// EItemFlags
 {
+	ITEMFLAG_NONE				= 0,
 	ITEMFLAG_WEAPON				= 1,
 	ITEMFLAG_AMMO				= 2,
 	ITEMFLAG_HEALTH				= 4,
 	ITEMFLAG_ARMOR				= 8,
 	ITEMFLAG_STAY_COOP			= 16,
 	ITEMFLAG_KEY				= 32,
-	ITEMFLAG_POWERUP			= 64
+	ITEMFLAG_POWERUP			= 64,
+	ITEMFLAG_GRABBABLE			= 128,
+	ITEMFLAG_USABLE				= 256,
+	ITEMFLAG_DROPPABLE			= 512,
 };
 
 // Generic item.
@@ -83,9 +88,13 @@ class CBaseItem
 private:
 	int			Index;
 
+	// IST DAS MEIN FRIENDHEID?!
+	friend class CItemList;
 public:
 	CBaseItem ();
-	CBaseItem (int _Index) { Index = _Index; };
+	CBaseItem (char *Classname, char *WorldModel, int EffectFlags,
+			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
+			   char *Precache);
 
 	char		*Classname;
 	char		*WorldModel;
@@ -104,10 +113,19 @@ public:
 
 	// Functions
 	virtual	bool	Pickup (edict_t *ent, edict_t *other) = 0;
-	virtual	void	Use (edict_t *ent, CBaseItem *Item) = 0;
-	virtual	void	Drop (edict_t *ent, CBaseItem *Item) = 0;
+	virtual	void	Use (edict_t *ent) = 0;
+	virtual	void	Drop (edict_t *ent) = 0;
 
-	int			GetIndex () { return Index; };
+	static void		DoRespawn (edict_t *ent);
+	virtual void	SetRespawn (edict_t *ent, float delay);
+
+	inline int			GetIndex () { return Index; };
+	inline int			GetConfigStringNumber () { return CS_ITEMS+Index; };
+
+	virtual void	Add (edict_t *ent, int quantity);
+
+	CBaseItem		*hashClassnameNext, *hashNameNext;
+	uint32 hashedClassnameValue, hashedNameValue;
 };
 
 // Class for weapon items.
@@ -120,63 +138,111 @@ public:
 class CWeaponItem : public CBaseItem
 {
 public:
-	CWeaponItem(int _Index) : CBaseItem(_Index) {};
-	// Commented for now
-	//CBaseWeapon		*Weapon;
+	CWeaponItem();
+	CWeaponItem (char *Classname, char *WorldModel, int EffectFlags,
+			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
+			   char *Precache, class CWeapon *Weapon, class CAmmo *Ammo, int Quantity);
 
-	// Until CWeapon system is done, weapons act like NULL items.
-	bool	Pickup (edict_t *ent, edict_t *other) { return false; };
-	void	Use (edict_t *ent, CBaseItem *Item) {};
-	void	Drop (edict_t *ent, CBaseItem *Item) {};
+	class CWeapon		*Weapon;
+	class CAmmo			*Ammo;
+	int					Quantity;
+
+	bool	Pickup (edict_t *ent, edict_t *other);
+	void	Use (edict_t *ent);
+	void	Drop (edict_t *ent);
 };
 
 // Class for ammo.
+// NOTE: Insert into CAmmo? CAmmo::AmmoMaxes enum perhaps?
+typedef int EAmmoTag;
+enum
+{
+	AMMOTAG_SHELLS,
+	AMMOTAG_BULLETS,
+	AMMOTAG_GRENADES,
+	AMMOTAG_ROCKETS,
+	AMMOTAG_CELLS,
+	AMMOTAG_SLUGS,
+
+	AMMOTAG_MAX
+};
+void InitItemMaxValues (edict_t *ent);
+
 class CAmmo : public CBaseItem
 {
 public:
-	CAmmo(int _Index) : CBaseItem(_Index) {};
+	CAmmo();
+	CAmmo (char *Classname, char *WorldModel, int EffectFlags,
+			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
+			   char *Precache, int Quantity, EAmmoTag Tag, CWeapon *Weapon, int Amount);
+
+	class		CWeapon	*Weapon; // For weapon ammo
+	int			Amount; // Taken out for weapon ammo
 	int			Quantity; // Number gotten when we pick this mother upper
+	EAmmoTag	Tag; // YUCKY tag for ammo
 
 	// Only thing different about ammo is how it's picked up.
-	bool	Pickup (edict_t *ent, edict_t *other) { return false; };
-	void	Use (edict_t *ent, CBaseItem *Item) {};
-	void	Drop (edict_t *ent, CBaseItem *Item) {};
+	bool	Pickup (edict_t *ent, edict_t *other);
+	void	Use (edict_t *ent);
+	void	Drop (edict_t *ent);
+
+	// Member functions
+	bool	AddAmmo (edict_t *ent, int count);
+	int		GetMax(edict_t *ent);
 };
 
 // Class for powerups.
 // Powerups are funny because they are.
-class CPowerUp : public CBaseItem
+class CBasePowerUp : public CBaseItem
 {
 public:
-	CPowerUp(int _Index) : CBaseItem(_Index) {};
 	int			Time; // Time the powerup lasts for
 
-	bool	Pickup (edict_t *ent, edict_t *other) { return false; };
-	void	Use (edict_t *ent, CBaseItem *Item) {};
-	void	Drop (edict_t *ent, CBaseItem *Item) {};
+	CBasePowerUp();
+	CBasePowerUp (char *Classname, char *WorldModel, int EffectFlags,
+			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
+			   char *Precache, int Time);
+
+	bool	Pickup (edict_t *ent, edict_t *other);
+	void	Use (edict_t *ent) {};
+	void	Drop (edict_t *ent) {};
 };
 
 // Class for health.
+typedef int EHealthFlags;
+enum //EHealthFlags
+{
+	HEALTHFLAG_NONE,
+
+	HEALTHFLAG_IGNOREMAX,
+};
+
 class CHealth : public CBaseItem
 {
 public:
-	CHealth(int _Index) : CBaseItem(_Index) {};
-	int			Amount; // You spin me right round baby right round
+	int				Amount; // You spin me right round baby right round
+	EHealthFlags	HealthFlags;
 
-	bool	Pickup (edict_t *ent, edict_t *other) { return false; };
-	void	Use (edict_t *ent, CBaseItem *Item) {};
-	void	Drop (edict_t *ent, CBaseItem *Item) {};
+	CHealth (char *Classname, char *WorldModel, int EffectFlags,
+			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
+			   char *Precache, int Amount, EHealthFlags HealthFlags);
+
+	CHealth();
+
+	virtual bool	Pickup (edict_t *ent, edict_t *other);
+	void	Use (edict_t *ent) {};
+	void	Drop (edict_t *ent) {};
 };
 
 // Class for keys.
 class CKey : public CBaseItem
 {
 public:
-	CKey(int _Index) : CBaseItem(_Index) {};
+	CKey();
 
-	bool	Pickup (edict_t *ent, edict_t *other) { return false; };
-	void	Use (edict_t *ent, CBaseItem *Item) {};
-	void	Drop (edict_t *ent, CBaseItem *Item) {};
+	bool	Pickup (edict_t *ent, edict_t *other);
+	void	Use (edict_t *ent) {};
+	void	Drop (edict_t *ent) {};
 };
 
 
@@ -188,16 +254,16 @@ public:
 class CItemList
 {
 public:
-	void FillBasicData (char *Classname, char *WorldModel, int EffectFlags, char *PickupFlags, char *Icon, char *Name, EItemFlags Flags, char *Precache);
-	void AddWeapon (char *Classname, char *WorldModel, int EffectFlags, char *PickupFlags, char *Icon, char *Name, EItemFlags Flags, char *Precache); //, CBaseWeapon *Weapon);
-	void AddAmmo (char *Classname, char *WorldModel, int EffectFlags, char *PickupFlags, char *Icon, char *Name, EItemFlags Flags, char *Precache, int Quantity);
-	void AddPowerup (char *Classname, char *WorldModel, int EffectFlags, char *PickupFlags, char *Icon, char *Name, EItemFlags Flags, char *Precache, int Time);
-	void AddHealth (char *Classname, char *WorldModel, int EffectFlags, char *PickupFlags, char *Icon, char *Name, EItemFlags Flags, char *Precache, int Amount);
-	void AddKey (char *Classname, char *WorldModel, int EffectFlags, char *PickupFlags, char *Icon, char *Name, EItemFlags Flags, char *Precache);
+	int			numItems;
 
+	CItemList();
 	void SendItemNames ();
 
-	int			numItems;
+	// Revision 2.0
+	// Instead of having the 9 functions I used to have to add
+	// each TYPE of weapon, you create the item, and send it to here.
+	void AddItemToList (CBaseItem *Item);
+
 	// FIXME: Use dynanamic memory? Good idea? :S
 	CBaseItem	*Items[MAX_ITEMS];
 
@@ -207,3 +273,8 @@ public:
 };
 
 void InitItemlist ();
+bool CC_ItemExists (edict_t *ent);
+CBaseItem *CC_FindItemByClassname (char *name);
+CBaseItem *CC_FindItem (char *name);
+CBaseItem *CC_GetItemByIndex (int Index);
+int GetNumItems ();

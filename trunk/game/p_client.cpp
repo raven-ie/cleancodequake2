@@ -417,7 +417,7 @@ void Touch_Item (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *s
 
 void TossClientWeapon (edict_t *self)
 {
-	gitem_t		*item;
+/*	gitem_t		*item;
 	edict_t		*drop;
 	bool	quad;
 	float		spread;
@@ -459,7 +459,7 @@ void TossClientWeapon (edict_t *self)
 		drop->touch = Touch_Item;
 		drop->nextthink = level.time + (self->client->quad_framenum - level.framenum) * FRAMETIME;
 		drop->think = G_FreeEdict;
-	}
+	}*/
 }
 
 
@@ -543,8 +543,8 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 		for (n = 0; n < game.num_items; n++)
 		{
 			if (coop->Integer() && itemlist[n].flags & IT_KEY)
-				self->client->resp.coop_respawn.inventory[n] = self->client->pers.inventory[n];
-			self->client->pers.inventory[n] = 0;
+				self->client->resp.coop_respawn.Inventory.Set(n, self->client->pers.Inventory.Has(n));
+			self->client->pers.Inventory.Set(n, 0);
 		}
 	}
 
@@ -612,27 +612,25 @@ This is only called when the game first initializes in single player,
 but is called after each death and level change in deathmatch
 ==============
 */
-void InitClientPersistant (gclient_t *client)
+void InitClientPersistant (edict_t *ent)
 {
-	gitem_t		*item;
+	gclient_t	*client = ent->client;
 
 	memset (&client->pers, 0, sizeof(client->pers));
 
-	item = FindItem("Blaster");
+	/*item = FindItem("Blaster");
 	client->pers.selected_item = ITEM_INDEX(item);
-	client->pers.inventory[client->pers.selected_item] = 1;
+	client->pers.inventory[client->pers.selected_item] = 1;*/
+	CC_FindItem("Blaster")->Add(ent, 1);
 
-	client->pers.weapon = item;
+	//client->pers.weapon = item;
+	client->pers.Weapon = &WeaponBlaster;
+	client->pers.Inventory.SelectedItem = client->pers.Weapon->Item->GetIndex();
 
 	client->pers.health			= 100;
 	client->pers.max_health		= 100;
 
-	client->pers.max_bullets	= 200;
-	client->pers.max_shells		= 100;
-	client->pers.max_rockets	= 50;
-	client->pers.max_grenades	= 50;
-	client->pers.max_cells		= 200;
-	client->pers.max_slugs		= 50;
+	InitItemMaxValues(ent);
 
 	client->pers.connected = true;
 }
@@ -1131,7 +1129,7 @@ void PutClientInServer (edict_t *ent)
 
 		resp = client->resp;
 		memcpy (userinfo, client->pers.userinfo, sizeof(userinfo));
-		InitClientPersistant (client);
+		InitClientPersistant (ent);
 		ClientUserinfoChanged (ent, userinfo);
 	}
 	else if (coop->Integer())
@@ -1164,7 +1162,7 @@ void PutClientInServer (edict_t *ent)
 	memset (client, 0, sizeof(*client));
 	client->pers = saved;
 	if (client->pers.health <= 0)
-		InitClientPersistant(client);
+		InitClientPersistant(ent);
 	client->resp = resp;
 
 	// copy some data from the client to the entity
@@ -1215,7 +1213,7 @@ void PutClientInServer (edict_t *ent)
 			client->ps.fov = 160;
 	}
 
-	client->ps.gunIndex = gi.modelindex(client->pers.weapon->view_model);
+	//client->ps.gunIndex = gi.modelindex(client->pers.weapon->view_model);
 
 	// clear entity state values
 	ent->s.effects = 0;
@@ -1264,8 +1262,10 @@ void PutClientInServer (edict_t *ent)
 	gi.linkentity (ent);
 
 	// force the current weapon up
-	client->newweapon = client->pers.weapon;
-	ChangeWeapon (ent);
+	//client->newweapon = client->pers.weapon;
+	//ChangeWeapon (ent);
+	client->NewWeapon = client->pers.Weapon;
+	client->pers.Weapon->ChangeWeapon(ent);
 }
 
 /*
@@ -1500,8 +1500,8 @@ BOOL ClientConnect (edict_t *ent, char *userinfo)
 	{
 		// clear the respawning variables
 		InitClientResp (ent->client);
-		if (!game.autosaved || !ent->client->pers.weapon)
-			InitClientPersistant (ent->client);
+		if (!game.autosaved || !ent->client->pers.Weapon)
+			InitClientPersistant (ent);
 	}
 
 	ClientUserinfoChanged (ent, userinfo);

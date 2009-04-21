@@ -84,7 +84,8 @@ void SP_target_speaker (edict_t *ent)
 
 	if(!st.noise)
 	{
-		gi.dprintf("target_speaker with no noise set at %s\n", vtos(ent->s.origin));
+		//gi.dprintf("target_speaker with no noise set at (%f %f %f)\n", ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);
+		MapPrint (MAPPRINT_ERROR, ent, ent->s.origin, "No noise set\n");
 		return;
 	}
 	if (!strstr (st.noise, ".wav"))
@@ -138,7 +139,8 @@ void SP_target_help(edict_t *ent)
 
 	if (!ent->message)
 	{
-		gi.dprintf ("%s with no message at %s\n", ent->classname, vtos(ent->s.origin));
+		//gi.dprintf ("%s with no message at (%f %f %f)\n", ent->classname, ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);
+		MapPrint (MAPPRINT_ERROR, ent, ent->s.origin, "No message\n");
 		G_FreeEdict (ent);
 		return;
 	}
@@ -300,7 +302,8 @@ void SP_target_changelevel (edict_t *ent)
 {
 	if (!ent->map)
 	{
-		gi.dprintf("target_changelevel with no map at %s\n", vtos(ent->s.origin));
+		//gi.dprintf("target_changelevel with no map at (%f %f %f)\n", ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);
+		MapPrint (MAPPRINT_ERROR, ent, ent->s.origin, "No map\n");
 		G_FreeEdict (ent);
 		return;
 	}
@@ -608,7 +611,8 @@ void target_laser_start (edict_t *self)
 		{
 			ent = G_Find (NULL, FOFS(targetname), self->target);
 			if (!ent)
-				gi.dprintf ("%s at %s: %s is a bad target\n", self->classname, vtos(self->s.origin), self->target);
+				//gi.dprintf ("%s at (%f %f %f): %s is a bad target\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2], self->target);
+				MapPrint (MAPPRINT_WARNING, self, self->s.origin, "\"%s\" is a bad target\n", self->target);
 			self->enemy = ent;
 		}
 		else
@@ -698,8 +702,8 @@ void target_lightramp_use (edict_t *self, edict_t *other, edict_t *activator)
 				break;
 			if (strcmp(e->classname, "light") != 0)
 			{
-				gi.dprintf("%s at %s ", self->classname, vtos(self->s.origin));
-				gi.dprintf("target %s (%s at %s) is not a light\n", self->target, e->classname, vtos(e->s.origin));
+				//gi.dprintf("%s at (%f %f %f): target %s (%s at (%f %f %f)) is not a light\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2], self->target, e->classname, e->s.origin[0], e->s.origin[1], e->s.origin[2]);
+				MapPrint (MAPPRINT_WARNING, self, self->s.origin, "Target \"%s\" is not a light\n", self->target);
 			}
 			else
 			{
@@ -709,7 +713,8 @@ void target_lightramp_use (edict_t *self, edict_t *other, edict_t *activator)
 
 		if (!self->enemy)
 		{
-			gi.dprintf("%s target %s not found at %s\n", self->classname, self->target, vtos(self->s.origin));
+			//gi.dprintf("%s target %s not found at (%f %f %f)\n", self->classname, self->target, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
+			MapPrint (MAPPRINT_ERROR, self, self->s.origin, "Target \"%s\" not found\n", self->target);
 			G_FreeEdict (self);
 			return;
 		}
@@ -723,7 +728,8 @@ void SP_target_lightramp (edict_t *self)
 {
 	if (!self->message || strlen(self->message) != 2 || self->message[0] < 'a' || self->message[0] > 'z' || self->message[1] < 'a' || self->message[1] > 'z' || self->message[0] == self->message[1])
 	{
-		gi.dprintf("target_lightramp has bad ramp (%s) at %s\n", self->message, vtos(self->s.origin));
+		//gi.dprintf("target_lightramp has bad ramp (%s) at (%f %f %f)\n", self->message, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
+		MapPrint (MAPPRINT_ERROR, self, self->s.origin, "Bad ramp (%s)\n", self->message);
 		G_FreeEdict (self);
 		return;
 	}
@@ -736,7 +742,8 @@ void SP_target_lightramp (edict_t *self)
 
 	if (!self->target)
 	{
-		gi.dprintf("%s with no target at %s\n", self->classname, vtos(self->s.origin));
+		//gi.dprintf("%s with no target at (%f %f %f)\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
+		MapPrint (MAPPRINT_ERROR, self, self->s.origin, "No target\n");
 		G_FreeEdict (self);
 		return;
 	}
@@ -800,7 +807,8 @@ void target_earthquake_use (edict_t *self, edict_t *other, edict_t *activator)
 void SP_target_earthquake (edict_t *self)
 {
 	if (!self->targetname)
-		gi.dprintf("untargeted %s at %s\n", self->classname, vtos(self->s.origin));
+		MapPrint (MAPPRINT_ERROR, self, self->s.origin, "No targetname\n");
+		//gi.dprintf("untargeted %s at (%f %f %f)\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
 
 	if (!self->count)
 		self->count = 5;

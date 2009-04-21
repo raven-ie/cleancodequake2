@@ -610,7 +610,7 @@ void P_WorldEffects (void)
 		current_player->flags |= FL_INWATER;
 
 		// clear damage_debounce, so the pain sound will play immediately
-		current_player->damage_debounce_time = level.time - 1;
+		current_player->pain_debounce_time = level.time - 1;
 	}
 
 	//
@@ -830,9 +830,9 @@ void G_SetClientSound (edict_t *ent)
 	}
 
 
-	if (ent->client->pers.weapon)
+	/*if (ent->client->pers.weapon)
 		weap = ent->client->pers.weapon->classname;
-	else
+	else*/
 		weap = "";
 
 	if (ent->waterlevel && (ent->watertype&(CONTENTS_LAVA|CONTENTS_SLIME)) )

@@ -158,7 +158,7 @@ void SetRespawn (edict_t *ent, float delay)
 
 bool Pickup_Powerup (edict_t *ent, edict_t *other)
 {
-	int		quantity;
+/*	int		quantity;
 
 	quantity = other->client->pers.inventory[ITEM_INDEX(ent->item)];
 	if ((skill->Integer() == 1 && quantity >= 2) || (skill->Integer() >= 2 && quantity >= 1))
@@ -181,14 +181,15 @@ bool Pickup_Powerup (edict_t *ent, edict_t *other)
 		}
 	}
 
+	return true;*/
 	return true;
 }
 
 void Drop_General (edict_t *ent, gitem_t *item)
 {
-	Drop_Item (ent, item);
-	ent->client->pers.inventory[ITEM_INDEX(item)]--;
-	ValidateSelectedItem (ent);
+	//Drop_Item (ent, item);
+	//ent->client->pers.inventory[ITEM_INDEX(item)]--;
+	//ValidateSelectedItem (ent);
 }
 
 
@@ -196,7 +197,7 @@ void Drop_General (edict_t *ent, gitem_t *item)
 
 bool Pickup_Adrenaline (edict_t *ent, edict_t *other)
 {
-	if (!deathmatch->Integer())
+/*	if (!deathmatch->Integer())
 		other->max_health += 1;
 
 	if (other->health < other->max_health)
@@ -205,25 +206,27 @@ bool Pickup_Adrenaline (edict_t *ent, edict_t *other)
 	if (!(ent->spawnflags & DROPPED_ITEM) && (deathmatch->Integer()))
 		SetRespawn (ent, ent->item->quantity);
 
+	return true;*/
 	return true;
 }
 
 bool Pickup_AncientHead (edict_t *ent, edict_t *other)
 {
-	other->max_health += 2;
+	//other->max_health += 2;
 
-	if (!(ent->spawnflags & DROPPED_ITEM) && (deathmatch->Integer()))
-		SetRespawn (ent, ent->item->quantity);
+	//if (!(ent->spawnflags & DROPPED_ITEM) && (deathmatch->Integer()))
+	//	SetRespawn (ent, ent->item->quantity);
 
+	//return true;
 	return true;
 }
 
 bool Pickup_Bandolier (edict_t *ent, edict_t *other)
 {
-	gitem_t	*item;
-	int		index;
+//	gitem_t	*item;
+//	int		index;
 
-	if (other->client->pers.max_bullets < 250)
+/*	if (other->client->pers.max_bullets < 250)
 		other->client->pers.max_bullets = 250;
 	if (other->client->pers.max_shells < 150)
 		other->client->pers.max_shells = 150;
@@ -248,20 +251,20 @@ bool Pickup_Bandolier (edict_t *ent, edict_t *other)
 		other->client->pers.inventory[index] += item->quantity;
 		if (other->client->pers.inventory[index] > other->client->pers.max_shells)
 			other->client->pers.inventory[index] = other->client->pers.max_shells;
-	}
+	}*/
 
-	if (!(ent->spawnflags & DROPPED_ITEM) && (deathmatch->Integer()))
-		SetRespawn (ent, ent->item->quantity);
+	//if (!(ent->spawnflags & DROPPED_ITEM) && (deathmatch->Integer()))
+	//	SetRespawn (ent, ent->item->quantity);
 
 	return true;
 }
 
 bool Pickup_Pack (edict_t *ent, edict_t *other)
 {
-	gitem_t	*item;
-	int		index;
+//	gitem_t	*item;
+//	int		index;
 
-	if (other->client->pers.max_bullets < 300)
+/*	if (other->client->pers.max_bullets < 300)
 		other->client->pers.max_bullets = 300;
 	if (other->client->pers.max_shells < 200)
 		other->client->pers.max_shells = 200;
@@ -326,10 +329,10 @@ bool Pickup_Pack (edict_t *ent, edict_t *other)
 		other->client->pers.inventory[index] += item->quantity;
 		if (other->client->pers.inventory[index] > other->client->pers.max_slugs)
 			other->client->pers.inventory[index] = other->client->pers.max_slugs;
-	}
+	}*/
 
-	if (!(ent->spawnflags & DROPPED_ITEM) && (deathmatch->Integer()))
-		SetRespawn (ent, ent->item->quantity);
+	//if (!(ent->spawnflags & DROPPED_ITEM) && (deathmatch->Integer()))
+	//	SetRespawn (ent, ent->item->quantity);
 
 	return true;
 }
@@ -338,7 +341,7 @@ bool Pickup_Pack (edict_t *ent, edict_t *other)
 
 void Use_Quad (edict_t *ent, gitem_t *item)
 {
-	int		timeout;
+/*	int		timeout;
 
 	ent->client->pers.inventory[ITEM_INDEX(item)]--;
 	ValidateSelectedItem (ent);
@@ -358,20 +361,20 @@ void Use_Quad (edict_t *ent, gitem_t *item)
 	else
 		ent->client->quad_framenum = level.framenum + timeout;
 
-	Sound(ent, CHAN_ITEM, gi.soundindex("items/damage.wav"));
+	Sound(ent, CHAN_ITEM, gi.soundindex("items/damage.wav"));*/
 }
 
 //======================================================================
 
 void Use_Breather (edict_t *ent, gitem_t *item)
 {
-	ent->client->pers.inventory[ITEM_INDEX(item)]--;
-	ValidateSelectedItem (ent);
+	//ent->client->pers.inventory[ITEM_INDEX(item)]--;
+	//ValidateSelectedItem (ent);
 
-	if (ent->client->breather_framenum > level.framenum)
-		ent->client->breather_framenum += 300;
-	else
-		ent->client->breather_framenum = level.framenum + 300;
+	//if (ent->client->breather_framenum > level.framenum)
+	//	ent->client->breather_framenum += 300;
+	//else
+	//	ent->client->breather_framenum = level.framenum + 300;
 
 //	gi.sound(ent, CHAN_ITEM, gi.soundindex("items/damage.wav"));
 }
@@ -380,13 +383,13 @@ void Use_Breather (edict_t *ent, gitem_t *item)
 
 void Use_Envirosuit (edict_t *ent, gitem_t *item)
 {
-	ent->client->pers.inventory[ITEM_INDEX(item)]--;
+	/*ent->client->pers.inventory[ITEM_INDEX(item)]--;
 	ValidateSelectedItem (ent);
 
 	if (ent->client->enviro_framenum > level.framenum)
 		ent->client->enviro_framenum += 300;
 	else
-		ent->client->enviro_framenum = level.framenum + 300;
+		ent->client->enviro_framenum = level.framenum + 300;*/
 
 //	gi.sound(ent, CHAN_ITEM, gi.soundindex("items/damage.wav"));
 }
@@ -395,24 +398,24 @@ void Use_Envirosuit (edict_t *ent, gitem_t *item)
 
 void	Use_Invulnerability (edict_t *ent, gitem_t *item)
 {
-	ent->client->pers.inventory[ITEM_INDEX(item)]--;
-	ValidateSelectedItem (ent);
+	//ent->client->pers.inventory[ITEM_INDEX(item)]--;
+	//ValidateSelectedItem (ent);
 
-	if (ent->client->invincible_framenum > level.framenum)
-		ent->client->invincible_framenum += 300;
-	else
-		ent->client->invincible_framenum = level.framenum + 300;
+	//if (ent->client->invincible_framenum > level.framenum)
+	//	ent->client->invincible_framenum += 300;
+	//else
+	//	ent->client->invincible_framenum = level.framenum + 300;
 
-	Sound(ent, CHAN_ITEM, gi.soundindex("items/protect.wav"));
+	//Sound(ent, CHAN_ITEM, gi.soundindex("items/protect.wav"));
 }
 
 //======================================================================
 
 void	Use_Silencer (edict_t *ent, gitem_t *item)
 {
-	ent->client->pers.inventory[ITEM_INDEX(item)]--;
-	ValidateSelectedItem (ent);
-	ent->client->silencer_shots += 30;
+	//ent->client->pers.inventory[ITEM_INDEX(item)]--;
+	//ValidateSelectedItem (ent);
+	//ent->client->silencer_shots += 30;
 
 //	gi.sound(ent, CHAN_ITEM, gi.soundindex("items/damage.wav"));
 }
@@ -421,7 +424,7 @@ void	Use_Silencer (edict_t *ent, gitem_t *item)
 
 bool Pickup_Key (edict_t *ent, edict_t *other)
 {
-	if (coop->Integer())
+	/*if (coop->Integer())
 	{
 		if (strcmp(ent->classname, "key_power_cube") == 0)
 		{
@@ -439,6 +442,7 @@ bool Pickup_Key (edict_t *ent, edict_t *other)
 		return true;
 	}
 	other->client->pers.inventory[ITEM_INDEX(ent->item)]++;
+	return true;*/
 	return true;
 }
 
@@ -446,7 +450,7 @@ bool Pickup_Key (edict_t *ent, edict_t *other)
 
 bool Add_Ammo (edict_t *ent, gitem_t *item, int count)
 {
-	int			index;
+/*	int			index;
 	int			max;
 
 	if (!ent->client)
@@ -475,14 +479,14 @@ bool Add_Ammo (edict_t *ent, gitem_t *item, int count)
 	ent->client->pers.inventory[index] += count;
 
 	if (ent->client->pers.inventory[index] > max)
-		ent->client->pers.inventory[index] = max;
+		ent->client->pers.inventory[index] = max;*/
 
 	return true;
 }
 
 bool Pickup_Ammo (edict_t *ent, edict_t *other)
 {
-	int			oldcount;
+/*	int			oldcount;
 	int			count;
 	bool	weapon;
 
@@ -497,22 +501,22 @@ bool Pickup_Ammo (edict_t *ent, edict_t *other)
 	oldcount = other->client->pers.inventory[ITEM_INDEX(ent->item)];
 
 	if (!Add_Ammo (other, ent->item, count))
-		return false;
+		return false;*/
 
-	if (weapon && !oldcount)
+	/*if (weapon && !oldcount)
 	{
 		if (other->client->pers.weapon != ent->item && ( !deathmatch->Integer() || other->client->pers.weapon == FindItem("blaster") ) )
 			other->client->newweapon = ent->item;
-	}
+	}*/
 
-	if (!(ent->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)) && (deathmatch->Integer()))
-		SetRespawn (ent, 30);
+	//if (!(ent->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)) && (deathmatch->Integer()))
+	//	SetRespawn (ent, 30);
 	return true;
 }
 
 void Drop_Ammo (edict_t *ent, gitem_t *item)
 {
-	edict_t	*dropped;
+/*	edict_t	*dropped;
 	int		index;
 
 	index = ITEM_INDEX(item);
@@ -532,7 +536,7 @@ void Drop_Ammo (edict_t *ent, gitem_t *item)
 	}
 
 	ent->client->pers.inventory[index] -= dropped->count;
-	ValidateSelectedItem (ent);
+	ValidateSelectedItem (ent);*/
 }
 
 
@@ -540,7 +544,7 @@ void Drop_Ammo (edict_t *ent, gitem_t *item)
 
 void MegaHealth_think (edict_t *self)
 {
-	if (self->owner->health > self->owner->max_health)
+/*	if (self->owner->health > self->owner->max_health)
 	{
 		self->nextthink = level.time + 1;
 		self->owner->health -= 1;
@@ -550,12 +554,12 @@ void MegaHealth_think (edict_t *self)
 	if (!(self->spawnflags & DROPPED_ITEM) && (deathmatch->Integer()))
 		SetRespawn (self, 20);
 	else
-		G_FreeEdict (self);
+		G_FreeEdict (self);*/
 }
 
 bool Pickup_Health (edict_t *ent, edict_t *other)
 {
-	if (!(ent->style & HEALTH_IGNORE_MAX))
+/*	if (!(ent->style & HEALTH_IGNORE_MAX))
 		if (other->health >= other->max_health)
 			return false;
 
@@ -580,7 +584,7 @@ bool Pickup_Health (edict_t *ent, edict_t *other)
 	{
 		if (!(ent->spawnflags & DROPPED_ITEM) && (deathmatch->Integer()))
 			SetRespawn (ent, 30);
-	}
+	}*/
 
 	return true;
 }
@@ -589,7 +593,7 @@ bool Pickup_Health (edict_t *ent, edict_t *other)
 
 int ArmorIndex (edict_t *ent)
 {
-	if (!ent->client)
+/*	if (!ent->client)
 		return 0;
 
 	if (ent->client->pers.inventory[jacket_armor_index] > 0)
@@ -599,14 +603,14 @@ int ArmorIndex (edict_t *ent)
 		return combat_armor_index;
 
 	if (ent->client->pers.inventory[body_armor_index] > 0)
-		return body_armor_index;
+		return body_armor_index;*/
 
 	return 0;
 }
 
 bool Pickup_Armor (edict_t *ent, edict_t *other)
 {
-	int				old_armor_index;
+/*	int				old_armor_index;
 	gitem_armor_t	*oldinfo;
 	gitem_armor_t	*newinfo;
 	int				newcount;
@@ -678,7 +682,7 @@ bool Pickup_Armor (edict_t *ent, edict_t *other)
 	}
 
 	if (!(ent->spawnflags & DROPPED_ITEM) && (deathmatch->Integer()))
-		SetRespawn (ent, 20);
+		SetRespawn (ent, 20);*/
 
 	return true;
 }
@@ -687,7 +691,7 @@ bool Pickup_Armor (edict_t *ent, edict_t *other)
 
 int PowerArmorType (edict_t *ent)
 {
-	if (!ent->client)
+/*	if (!ent->client)
 		return POWER_ARMOR_NONE;
 
 	if (!(ent->flags & FL_POWER_ARMOR))
@@ -697,14 +701,14 @@ int PowerArmorType (edict_t *ent)
 		return POWER_ARMOR_SHIELD;
 
 	if (ent->client->pers.inventory[power_screen_index] > 0)
-		return POWER_ARMOR_SCREEN;
+		return POWER_ARMOR_SCREEN;*/
 
 	return POWER_ARMOR_NONE;
 }
 
 void Use_PowerArmor (edict_t *ent, gitem_t *item)
 {
-	int		index;
+/*	int		index;
 
 	if (ent->flags & FL_POWER_ARMOR)
 	{
@@ -721,12 +725,12 @@ void Use_PowerArmor (edict_t *ent, gitem_t *item)
 		}
 		ent->flags |= FL_POWER_ARMOR;
 		Sound(ent, CHAN_AUTO, gi.soundindex("misc/power1.wav"));
-	}
+	}*/
 }
 
 bool Pickup_PowerArmor (edict_t *ent, edict_t *other)
 {
-	int		quantity;
+/*	int		quantity;
 
 	quantity = other->client->pers.inventory[ITEM_INDEX(ent->item)];
 
@@ -739,16 +743,16 @@ bool Pickup_PowerArmor (edict_t *ent, edict_t *other)
 		// auto-use for DM only if we didn't already have one
 		if (!quantity)
 			ent->item->use (other, ent->item);
-	}
+	}*/
 
 	return true;
 }
 
 void Drop_PowerArmor (edict_t *ent, gitem_t *item)
 {
-	if ((ent->flags & FL_POWER_ARMOR) && (ent->client->pers.inventory[ITEM_INDEX(item)] == 1))
-		Use_PowerArmor (ent, item);
-	Drop_General (ent, item);
+	//if ((ent->flags & FL_POWER_ARMOR) && (ent->client->pers.inventory[ITEM_INDEX(item)] == 1))
+	//	Use_PowerArmor (ent, item);
+	//Drop_General (ent, item);
 }
 
 //======================================================================
@@ -760,7 +764,7 @@ Touch_Item
 */
 void Touch_Item (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf)
 {
-	bool	taken;
+/*	bool	taken;
 
 	if (!other->client)
 		return;
@@ -783,7 +787,7 @@ void Touch_Item (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *s
 
 		// change selected item
 		if (ent->item->use)
-			other->client->pers.selected_item = other->client->ps.stats[STAT_SELECTED_ITEM] = ITEM_INDEX(ent->item);
+			other->client->pers.Inventory.SelectedItem = other->client->ps.stats[STAT_SELECTED_ITEM] = ITEM_INDEX(ent->item);
 
 		if (ent->item->pickup == Pickup_Health)
 		{
@@ -817,7 +821,7 @@ void Touch_Item (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *s
 			ent->flags &= ~FL_RESPAWN;
 		else
 			G_FreeEdict (ent);
-	}
+	}*/
 }
 
 //======================================================================
@@ -855,7 +859,7 @@ edict_t *Drop_Item (edict_t *ent, gitem_t *item)
 	dropped->s.renderFx = RF_GLOW;
 	Vec3Set (dropped->mins, -15, -15, -15);
 	Vec3Set (dropped->maxs, 15, 15, 15);
-	gi.setmodel (dropped, dropped->item->world_model);
+	dropped->s.modelIndex = gi.modelindex(dropped->item->world_model);
 	dropped->solid = SOLID_TRIGGER;
 	dropped->movetype = MOVETYPE_TOSS;  
 	dropped->touch = drop_temp_touch;
@@ -919,28 +923,30 @@ void droptofloor (edict_t *ent)
 {
 	CTrace	tr;
 	vec3_t		dest;
-	float		*v;
+	vec3_t v;
 
-	v = tv(-15,-15,-15);
+	v[0] = v[1] = v[2] = -15;
 	Vec3Copy (v, ent->mins);
-	v = tv(15,15,15);
+	v[0] = v[1] = v[2] = 15;
 	Vec3Copy (v, ent->maxs);
 
 	if (ent->model)
-		gi.setmodel (ent, ent->model);
+		ent->s.modelIndex = gi.modelindex(ent->model);
 	else
-		gi.setmodel (ent, ent->item->world_model);
+		ent->s.modelIndex = gi.modelindex(ent->item->world_model);
 	ent->solid = SOLID_TRIGGER;
 	ent->movetype = MOVETYPE_TOSS;  
 	ent->touch = Touch_Item;
 
-	v = tv(0,0,-128);
+	v[0] = v[1] = 0;
+	v[2] = -128;
 	Vec3Add (ent->s.origin, v, dest);
 
 	tr.Trace (ent->s.origin, ent->mins, ent->maxs, dest, ent, CONTENTS_MASK_SOLID);
 	if (tr.startSolid)
 	{
-		gi.dprintf ("droptofloor: %s startsolid at %s\n", ent->classname, vtos(ent->s.origin));
+		//gi.dprintf ("droptofloor: %s startsolid at (%f %f %f)\n", ent->classname, ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);
+		MapPrint (MAPPRINT_WARNING, ent, ent->s.origin, "Entity origin is in solid\n");
 		G_FreeEdict (ent);
 		return;
 	}
@@ -1067,7 +1073,8 @@ void SpawnItem (edict_t *ent, gitem_t *item)
 		if (strcmp(ent->classname, "key_power_cube") != 0)
 		{
 			ent->spawnflags = 0;
-			gi.dprintf("%s at %s has invalid spawnflags set\n", ent->classname, vtos(ent->s.origin));
+			//gi.dprintf("%s at (%f %f %f) has invalid spawnflags set\n", ent->classname, ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);
+			MapPrint (MAPPRINT_ERROR, ent, ent->s.origin, "Invalid spawnflags (%i, should be 0)\n", ent->spawnflags);
 		}
 	}
 
@@ -1293,7 +1300,7 @@ always owned, never in the world
 		NULL,
 		Use_Weapon,
 		NULL,
-		Weapon_Blaster,
+		NULL,
 		"misc/w_pkup.wav",
 		NULL, 0,
 		"models/weapons/v_blast/tris.md2",
@@ -1316,7 +1323,7 @@ always owned, never in the world
 		Pickup_Weapon,
 		Use_Weapon,
 		Drop_Weapon,
-		Weapon_Shotgun,
+		NULL,
 		"misc/w_pkup.wav",
 		"models/weapons/g_shotg/tris.md2", EF_ROTATE,
 		"models/weapons/v_shotg/tris.md2",
@@ -1339,7 +1346,7 @@ always owned, never in the world
 		Pickup_Weapon,
 		Use_Weapon,
 		Drop_Weapon,
-		Weapon_SuperShotgun,
+		NULL,
 		"misc/w_pkup.wav",
 		"models/weapons/g_shotg2/tris.md2", EF_ROTATE,
 		"models/weapons/v_shotg2/tris.md2",
@@ -1362,7 +1369,7 @@ always owned, never in the world
 		Pickup_Weapon,
 		Use_Weapon,
 		Drop_Weapon,
-		Weapon_Machinegun,
+		NULL,
 		"misc/w_pkup.wav",
 		"models/weapons/g_machn/tris.md2", EF_ROTATE,
 		"models/weapons/v_machn/tris.md2",
@@ -1385,7 +1392,7 @@ always owned, never in the world
 		Pickup_Weapon,
 		Use_Weapon,
 		Drop_Weapon,
-		Weapon_Chaingun,
+		NULL,
 		"misc/w_pkup.wav",
 		"models/weapons/g_chain/tris.md2", EF_ROTATE,
 		"models/weapons/v_chain/tris.md2",
@@ -1408,7 +1415,7 @@ always owned, never in the world
 		Pickup_Ammo,
 		Use_Weapon,
 		Drop_Ammo,
-		Weapon_Grenade,
+		NULL,
 		"misc/am_pkup.wav",
 		"models/items/ammo/grenades/medium/tris.md2", 0,
 		"models/weapons/v_handgr/tris.md2",
@@ -1431,7 +1438,7 @@ always owned, never in the world
 		Pickup_Weapon,
 		Use_Weapon,
 		Drop_Weapon,
-		Weapon_GrenadeLauncher,
+		NULL,
 		"misc/w_pkup.wav",
 		"models/weapons/g_launch/tris.md2", EF_ROTATE,
 		"models/weapons/v_launch/tris.md2",
@@ -1454,7 +1461,7 @@ always owned, never in the world
 		Pickup_Weapon,
 		Use_Weapon,
 		Drop_Weapon,
-		Weapon_RocketLauncher,
+		NULL,
 		"misc/w_pkup.wav",
 		"models/weapons/g_rocket/tris.md2", EF_ROTATE,
 		"models/weapons/v_rocket/tris.md2",
@@ -1477,7 +1484,7 @@ always owned, never in the world
 		Pickup_Weapon,
 		Use_Weapon,
 		Drop_Weapon,
-		Weapon_HyperBlaster,
+		NULL,
 		"misc/w_pkup.wav",
 		"models/weapons/g_hyperb/tris.md2", EF_ROTATE,
 		"models/weapons/v_hyperb/tris.md2",
@@ -1500,7 +1507,7 @@ always owned, never in the world
 		Pickup_Weapon,
 		Use_Weapon,
 		Drop_Weapon,
-		Weapon_Railgun,
+		NULL,
 		"misc/w_pkup.wav",
 		"models/weapons/g_rail/tris.md2", EF_ROTATE,
 		"models/weapons/v_rail/tris.md2",
@@ -1523,7 +1530,7 @@ always owned, never in the world
 		Pickup_Weapon,
 		Use_Weapon,
 		Drop_Weapon,
-		Weapon_BFG,
+		NULL,
 		"misc/w_pkup.wav",
 		"models/weapons/g_bfg/tris.md2", EF_ROTATE,
 		"models/weapons/v_bfg/tris.md2",
@@ -2198,7 +2205,7 @@ SetItemNames
 Called by worldspawn
 ===============
 */
-void SetItemNames (void)
+/*void SetItemNames (void)
 {
 	int		i;
 	gitem_t	*it;
@@ -2214,4 +2221,4 @@ void SetItemNames (void)
 	body_armor_index   = ITEM_INDEX(FindItem("Body Armor"));
 	power_screen_index = ITEM_INDEX(FindItem("Power Screen"));
 	power_shield_index = ITEM_INDEX(FindItem("Power Shield"));
-}
+}*/

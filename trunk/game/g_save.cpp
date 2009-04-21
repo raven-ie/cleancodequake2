@@ -133,9 +133,9 @@ field_t		levelfields[] =
 
 field_t		clientfields[] =
 {
-	{"pers.weapon", CLOFS(pers.weapon), F_ITEM},
-	{"pers.lastweapon", CLOFS(pers.lastweapon), F_ITEM},
-	{"newweapon", CLOFS(newweapon), F_ITEM},
+	{"pers.Weapon", CLOFS(pers.Weapon), F_NEWITEM},
+	//{"pers.lastweapon", CLOFS(pers.lastweapon), F_ITEM},
+	{"NewWeapon", CLOFS(NewWeapon), F_NEWITEM},
 
 	{NULL, 0, F_INT}
 };
@@ -284,6 +284,17 @@ void WriteField1 (FILE *f, field_t *field, byte *base)
 			index = *(gitem_t **)p - itemlist;
 		*(int *)p = index;
 		break;
+	case F_NEWITEM:
+		if ( *(edict_t **)p == NULL)
+			index = -1;
+		else
+		{
+			CWeapon *Weap = (CWeapon *)p;
+			CBaseItem *Item = Weap->Item;
+			index = Item->GetIndex();
+		}
+		*(int *)p = index;
+		break;
 
 	//relative to code segment
 	case F_FUNCTION:
@@ -380,7 +391,14 @@ void ReadField (FILE *f, field_t *field, byte *base)
 		else
 			*(gitem_t **)p = &itemlist[index];
 		break;
-
+	case F_NEWITEM:
+		index = *(int *)p;
+		if ( index == -1 )
+			*(CWeapon **)p = NULL;
+		else
+		{
+		}
+		break;
 	//relative to code segment
 	case F_FUNCTION:
 		index = *(int *)p;

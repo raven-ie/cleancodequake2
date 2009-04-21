@@ -10,15 +10,25 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
+		FrontEnd Debug|Win32 = FrontEnd Debug|Win32
+		FrontEnd Release|Win32 = FrontEnd Release|Win32
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{E6207081-A6DE-492E-A7CB-BCF42816FBD5}.Debug|Win32.ActiveCfg = Debug|Win32
 		{E6207081-A6DE-492E-A7CB-BCF42816FBD5}.Debug|Win32.Build.0 = Debug|Win32
+		{E6207081-A6DE-492E-A7CB-BCF42816FBD5}.FrontEnd Debug|Win32.ActiveCfg = FrontEnd Debug|Win32
+		{E6207081-A6DE-492E-A7CB-BCF42816FBD5}.FrontEnd Debug|Win32.Build.0 = FrontEnd Debug|Win32
+		{E6207081-A6DE-492E-A7CB-BCF42816FBD5}.FrontEnd Release|Win32.ActiveCfg = Debug|Win32
+		{E6207081-A6DE-492E-A7CB-BCF42816FBD5}.FrontEnd Release|Win32.Build.0 = Debug|Win32
 		{E6207081-A6DE-492E-A7CB-BCF42816FBD5}.Release|Win32.ActiveCfg = Release|Win32
 		{E6207081-A6DE-492E-A7CB-BCF42816FBD5}.Release|Win32.Build.0 = Release|Win32
 		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}.Debug|Win32.ActiveCfg = Debug|Win32
 		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}.Debug|Win32.Build.0 = Debug|Win32
+		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}.FrontEnd Debug|Win32.ActiveCfg = FrontEnd Debug|Win32
+		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}.FrontEnd Debug|Win32.Build.0 = FrontEnd Debug|Win32
+		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}.FrontEnd Release|Win32.ActiveCfg = Debug|Win32
+		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}.FrontEnd Release|Win32.Build.0 = Debug|Win32
 		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}.Release|Win32.ActiveCfg = Release|Win32
 		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection

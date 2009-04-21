@@ -41,94 +41,94 @@ void CStatusBar::AddToBarBuffer (char *string)
 
 void CStatusBar::AddVirtualPoint_Y (int y)
 {
-	Q_snprintfz (temp, sizeof(temp), "yv %i \n", y);
+	Q_snprintfz (temp, sizeof(temp), "yv %i ", y);
 	AddToBarBuffer (temp);
 }
 
 void CStatusBar::AddVirtualPoint_X (int x)
 {
-	Q_snprintfz (temp, sizeof(temp), "xv %i \n", x);
+	Q_snprintfz (temp, sizeof(temp), "xv %i ", x);
 	AddToBarBuffer (temp);
 }
 
 void CStatusBar::AddPoint_X (int x, bool inverted = false)
 {
-	Q_snprintfz (temp, sizeof(temp), "x%c %i \n", inverted ? 'r' : 'l', x);
+	Q_snprintfz (temp, sizeof(temp), "x%c %i ", inverted ? 'r' : 'l', x);
 	AddToBarBuffer (temp);
 }
 
 void CStatusBar::AddPoint_Y (int y, bool inverted = false)
 {
-	Q_snprintfz (temp, sizeof(temp), "y%c %i \n", inverted ? 'b' : 't', y);
+	Q_snprintfz (temp, sizeof(temp), "y%c %i ", inverted ? 'b' : 't', y);
 	AddToBarBuffer (temp);
 }
 
 void CStatusBar::AddString (char *string, bool highBit = false)
 {
-	Q_snprintfz (temp, sizeof(temp), "string%s %s \n", highBit ? "2" : "", string);
+	Q_snprintfz (temp, sizeof(temp), "string%s %s ", highBit ? "2" : "", string);
 	AddToBarBuffer(temp);
 }
 
 void CStatusBar::AddStatString (int stat)
 {
-	Q_snprintfz (temp, sizeof(temp), "stat_string %i \n", stat);
+	Q_snprintfz (temp, sizeof(temp), "stat_string %i ", stat);
 	AddToBarBuffer (temp);
 }
 
 void CStatusBar::AddPic (char *pic)
 {
-	Q_snprintfz (temp, sizeof(temp), "picn %s \n", pic);
+	Q_snprintfz (temp, sizeof(temp), "picn %s ", pic);
 	AddToBarBuffer(temp);
 }
 
 void CStatusBar::AddPicStat (int stat)
 {
-	Q_snprintfz (temp, sizeof(temp), "pic %i \n", stat);
+	Q_snprintfz (temp, sizeof(temp), "pic %i ", stat);
 	AddToBarBuffer(temp);
 }
 
 void CStatusBar::AddNumStat (int stat, int width = 3)
 {
-	Q_snprintfz (temp, sizeof(temp), "num %i %i \n", width, stat);
+	Q_snprintfz (temp, sizeof(temp), "num %i %i ", width, stat);
 	AddToBarBuffer(temp);
 }
 
 void CStatusBar::AddStatement (int stat, bool end = false)
 {
 	if (!end)
-		Q_snprintfz (temp, sizeof(temp), "if %i \n", stat);
+		Q_snprintfz (temp, sizeof(temp), "if %i ", stat);
 	else
-		Q_snprintfz (temp, sizeof(temp), "endif \n");
+		Q_snprintfz (temp, sizeof(temp), "endif ");
 	AddToBarBuffer(temp);
 }
 
 void CStatusBar::AddAmmoNum ()
 {
-	Q_snprintfz (temp, sizeof(temp), "anum \n");
+	Q_snprintfz (temp, sizeof(temp), "anum ");
 	AddToBarBuffer(temp);
 }
 
 void CStatusBar::AddHealthNum ()
 {
-	Q_snprintfz (temp, sizeof(temp), "hnum \n");
+	Q_snprintfz (temp, sizeof(temp), "hnum ");
 	AddToBarBuffer(temp);
 }
 
 void CStatusBar::AddArmorNum ()
 {
-	Q_snprintfz (temp, sizeof(temp), "rnum \n");
+	Q_snprintfz (temp, sizeof(temp), "rnum ");
 	AddToBarBuffer(temp);
 }
 
 void CStatusBar::AddClientBlock (int x, int y, int cNum, int score, int ping, int time)
 {
-	Q_snprintfz (temp, sizeof(temp), "client %i %i %i %i %i %i \n", x, y, cNum, score, ping, time);
+	Q_snprintfz (temp, sizeof(temp), "client %i %i %i %i %i %i ", x, y, cNum, score, ping, time);
 	AddToBarBuffer(temp);
 }
 
 void CStatusBar::AddClientBlock (int x, int y, int cNum, int score, int ping)
 {
-	Q_snprintfz (temp, sizeof(temp), "ctf %i %i %i %i %i %i \n", x, y, cNum, score, ping);
+	Q_snprintfz (temp, sizeof(temp), "ctf %i %i %i %i %i %i ", x, y, cNum, score, ping);
 	AddToBarBuffer(temp);
 }
 

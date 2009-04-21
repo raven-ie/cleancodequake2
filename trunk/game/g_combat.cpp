@@ -174,7 +174,7 @@ static int CheckPowerArmor (edict_t *ent, vec3_t point, vec3_t normal, int damag
 		if (power_armor_type != POWER_ARMOR_NONE)
 		{
 			index = ITEM_INDEX(FindItem("Cells"));
-			power = client->pers.inventory[index];
+			power = client->pers.Inventory.Has(index);
 		}
 	}
 	else if (ent->svFlags & SVF_MONSTER)
@@ -227,7 +227,7 @@ static int CheckPowerArmor (edict_t *ent, vec3_t point, vec3_t normal, int damag
 	power_used = save / damagePerCell;
 
 	if (client)
-		client->pers.inventory[index] -= power_used;
+		client->pers.Inventory.Remove(index, power_used);
 	else
 		ent->monsterinfo.power_armor_power -= power_used;
 	return save;
@@ -261,13 +261,13 @@ static int CheckArmor (edict_t *ent, vec3_t point, vec3_t normal, int damage, in
 		save = ceil(((gitem_armor_t *)armor->info)->energy_protection*damage);
 	else
 		save = ceil(((gitem_armor_t *)armor->info)->normal_protection*damage);
-	if (save >= client->pers.inventory[index])
-		save = client->pers.inventory[index];
+	if (save >= client->pers.Inventory.Has(index))
+		save = client->pers.Inventory.Has(index);
 
 	if (!save)
 		return 0;
 
-	client->pers.inventory[index] -= save;
+	client->pers.Inventory.Remove(index, save);
 	TempEnts.Splashes.Sparks (point, normal, (dflags & DAMAGE_BULLET) ? TempEnts.Splashes.STBulletSparks : TempEnts.Splashes.STSparks, TempEnts.Splashes.SPTSparks);
 
 	return save;
