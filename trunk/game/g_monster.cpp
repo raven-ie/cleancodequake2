@@ -515,7 +515,7 @@ void monster_death_use (edict_t *self)
 
 	if (self->item)
 	{
-		Drop_Item (self, self->item);
+		self->item->Drop (self);
 		self->item = NULL;
 	}
 
@@ -568,7 +568,7 @@ bool monster_start (edict_t *self)
 
 	if (st.item)
 	{
-		self->item = FindItemByClassname (st.item);
+		self->item = CC_FindItemByClassname (st.item);
 		if (!self->item)
 			MapPrint (MAPPRINT_WARNING, self, self->s.origin, "Bad item: \"%s\"\n", st.item);
 			//gi.dprintf("%s at (%f %f %f) has bad item: %s\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2], st.item);

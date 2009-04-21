@@ -219,13 +219,13 @@ void trigger_key_use (edict_t *self, edict_t *other, edict_t *activator)
 	if (!activator->client)
 		return;
 
-	index = ITEM_INDEX(self->item);
+	index = self->item->GetIndex();
 	if (!activator->client->pers.Inventory.Has(index))
 	{
 		if (level.time < self->touch_debounce_time)
 			return;
 		self->touch_debounce_time = level.time + 5.0;
-		gi.centerprintf (activator, "You need the %s", self->item->pickup_name);
+		gi.centerprintf (activator, "You need the %s", self->item->Name);
 		Sound (activator, CHAN_AUTO, gi.soundindex ("misc/keytry.wav"));
 		return;
 	}
@@ -236,7 +236,7 @@ void trigger_key_use (edict_t *self, edict_t *other, edict_t *activator)
 		int		player;
 		edict_t	*ent;
 
-		if (strcmp(self->item->classname, "key_power_cube") == 0)
+		if (strcmp(self->item->Classname, "key_power_cube") == 0)
 		{
 			int	cube;
 
@@ -288,7 +288,7 @@ void SP_trigger_key (edict_t *self)
 		MapPrint (MAPPRINT_ERROR, self, self->s.origin, "No key item\n");
 		return;
 	}
-	self->item = FindItemByClassname (st.item);
+	self->item = CC_FindItemByClassname (st.item);
 
 	if (!self->item)
 	{

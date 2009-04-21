@@ -55,6 +55,7 @@ protected:
 
 	char			*WeaponModelString; // Temporary
 public:
+	bool			isQuad, isSilenced;
 	CBaseItem		*Item;
 	CWeaponItem		*WeaponItem; // The weapon that is linked to this weapon.
 	int				WeaponModel; // Index
@@ -64,6 +65,9 @@ public:
 
 	// InitWeapon "clears" the previous weapon by introducing the current weapon.
 	virtual void	InitWeapon (edict_t *ent);
+
+	// Muzzle flash
+	virtual void	Muzzle (edict_t *ent, int muzzleNum);
 
 	// General animating function.
 	// Doesn't need to be changed.
@@ -86,6 +90,8 @@ public:
 	virtual void	Fire (edict_t *ent) = 0;
 
 	void ChangeWeapon (edict_t *ent);
+
+	virtual void	Think (edict_t *ent);
 };
 
 #include "cc_blaster.h"
@@ -98,3 +104,4 @@ public:
 #include "cc_rocketlauncher.h"
 #include "cc_hyperblaster.h"
 #include "cc_railgun.h"
+#include "cc_bfg.h"

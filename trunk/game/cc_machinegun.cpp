@@ -94,11 +94,11 @@ void CMachinegun::Fire (edict_t *ent)
 		return;
 	}
 
-	/*if (is_quad)
+	if (isQuad)
 	{
 		damage *= 4;
 		kick *= 4;
-	}*/
+	}
 
 	for (i=1 ; i<3 ; i++)
 	{
@@ -123,10 +123,7 @@ void CMachinegun::Fire (edict_t *ent)
 	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
 	fire_bullet (ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN);
 
-	gi.WriteByte (SVC_MUZZLEFLASH);
-	gi.WriteShort (ent-g_edicts);
-	gi.WriteByte (MZ_MACHINEGUN/* | is_silenced*/);
-	gi.multicast (ent->s.origin, MULTICAST_PVS);
+	Muzzle (ent, MZ_MACHINEGUN);
 
 	PlayerNoise(ent, start, PNOISE_WEAPON);
 

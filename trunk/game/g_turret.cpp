@@ -421,7 +421,7 @@ void SP_turret_driver (edict_t *self)
 
 	if (st.item)
 	{
-		self->item = FindItemByClassname (st.item);
+		self->item = CC_FindItemByClassname (st.item);
 		if (!self->item)
 			MapPrint (MAPPRINT_WARNING, self, self->s.origin, "Has bad item: \"%s\"\n", st.item);
 			//gi.dprintf("%s at (%f %f %f) has bad item: %s\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2], st.item);

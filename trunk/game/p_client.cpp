@@ -540,9 +540,9 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 
 		// clear inventory
 		// this is kind of ugly, but it's how we want to handle keys in coop
-		for (n = 0; n < game.num_items; n++)
+		for (n = 0; n < GetNumItems(); n++)
 		{
-			if (coop->Integer() && itemlist[n].flags & IT_KEY)
+			if (coop->Integer() && CC_GetItemByIndex(n)->Flags & ITEMFLAG_KEY)
 				self->client->resp.coop_respawn.Inventory.Set(n, self->client->pers.Inventory.Has(n));
 			self->client->pers.Inventory.Set(n, 0);
 		}
@@ -626,6 +626,8 @@ void InitClientPersistant (edict_t *ent)
 	//client->pers.weapon = item;
 	client->pers.Weapon = &WeaponBlaster;
 	client->pers.Inventory.SelectedItem = client->pers.Weapon->Item->GetIndex();
+
+	client->pers.Armor = NULL;
 
 	client->pers.health			= 100;
 	client->pers.max_health		= 100;
@@ -1737,9 +1739,9 @@ void ClientThink (edict_t *ent, userCmd_t *ucmd)
 			} else
 				GetChaseTarget(ent);
 
-		} else if (!client->weapon_thunk) {
+		} else if (!client->weapon_thunk && client->pers.Weapon) {
 			client->weapon_thunk = true;
-			Think_Weapon (ent);
+			client->pers.Weapon->Think (ent);
 		}
 	}
 
@@ -1791,8 +1793,8 @@ void ClientBeginServerFrame (edict_t *ent)
 	}
 
 	// run weapon animations if it hasn't been done by a ucmd_t
-	if (!client->weapon_thunk && !client->resp.spectator)
-		Think_Weapon (ent);
+	if (!client->weapon_thunk && !client->resp.spectator && client->pers.Weapon)
+		client->pers.Weapon->Think (ent);
 	else
 		client->weapon_thunk = false;
 

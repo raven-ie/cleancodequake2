@@ -54,6 +54,25 @@ public:
 	}
 };
 
+class MultiCast
+{
+	vec3_t Or;
+	ECastFlags castType;
+
+public:
+	MultiCast (vec3_t Origin, byte Enum, ECastFlags castFlags = CASTFLAG_PVS)
+	{
+		Vec3Copy (Origin, Or);
+		castType = castFlags;
+
+		WriteByte (Enum);
+	};
+	~MultiCast ()
+	{
+		Cast (castType, Or);
+	}
+};
+
 CTEnt TempEnts;
 
 void CTEnt::CTEnt_Splashes::Gunshot (vec3_t Origin, vec3_t Plane)
@@ -290,4 +309,11 @@ void CTEnt::WidowSplash (vec3_t Origin)
 {
 	TECast cast(Origin, TE_WIDOWSPLASH);
 	WritePosition(Origin);
+}
+
+void CTEnt::MuzzleFlash (vec3_t Origin, short Ent, short id)
+{
+	MultiCast cast (Origin, SVC_MUZZLEFLASH);
+	WriteShort (Ent);
+	WriteByte (id);
 }

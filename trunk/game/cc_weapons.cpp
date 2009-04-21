@@ -121,7 +121,7 @@ void CWeapon::WeaponGeneric (edict_t *ent)
 		if (CanFire(ent))
 		{
 			// Quad damage sound if we have it...
-			if (ent->client->quad_framenum > level.framenum)
+			if (isQuad)
 				Sound(ent, CHAN_ITEM, gi.soundindex("items/damage3.wav"));
 
 			Fire(ent);
@@ -248,4 +248,118 @@ void CWeapon::OutOfAmmo (edict_t *ent)
 		Sound(ent, CHAN_VOICE, gi.soundindex("weapons/noammo.wav"));
 		ent->damage_debounce_time = level.time + 1;
 	}
+}
+
+// Routines
+inline void P_ProjectSource (gclient_t *client, vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result)
+{
+	vec3_t	_distance;
+
+	Vec3Copy (distance, _distance);
+	if (client->pers.hand == LEFT_HANDED)
+		_distance[1] *= -1;
+	else if (client->pers.hand == CENTER_HANDED)
+		_distance[1] = 0;
+	G_ProjectSource (point, _distance, forward, right, result);
+}
+
+
+/*
+===============
+PlayerNoise
+
+Each player can have two noise objects associated with it:
+a personal noise (jumping, pain, weapon firing), and a weapon
+target noise (bullet wall impacts)
+
+Monsters that don't directly see the player can move
+to a noise in hopes of seeing the player from there.
+===============
+*/
+void PlayerNoise(edict_t *who, vec3_t where, int type)
+{
+	edict_t		*noise;
+
+	if (type == PNOISE_WEAPON)
+	{
+		if (who->client->silencer_shots)
+		{
+			who->client->silencer_shots--;
+			return;
+		}
+	}
+
+	if (deathmatch->Integer())
+		return;
+
+	if (who->flags & FL_NOTARGET)
+		return;
+
+
+	if (!who->mynoise)
+	{
+		noise = G_Spawn();
+		noise->classname = "player_noise";
+		Vec3Set (noise->mins, -8, -8, -8);
+		Vec3Set (noise->maxs, 8, 8, 8);
+		noise->owner = who;
+		noise->svFlags = SVF_NOCLIENT;
+		who->mynoise = noise;
+
+		noise = G_Spawn();
+		noise->classname = "player_noise";
+		Vec3Set (noise->mins, -8, -8, -8);
+		Vec3Set (noise->maxs, 8, 8, 8);
+		noise->owner = who;
+		noise->svFlags = SVF_NOCLIENT;
+		who->mynoise2 = noise;
+	}
+
+	if (type == PNOISE_SELF || type == PNOISE_WEAPON)
+	{
+		noise = who->mynoise;
+		level.sound_entity = noise;
+		level.sound_entity_framenum = level.framenum;
+	}
+	else // type == PNOISE_IMPACT
+	{
+		noise = who->mynoise2;
+		level.sound2_entity = noise;
+		level.sound2_entity_framenum = level.framenum;
+	}
+
+	Vec3Copy (where, noise->s.origin);
+	Vec3Subtract (where, noise->maxs, noise->absMin);
+	Vec3Add (where, noise->maxs, noise->absMax);
+	noise->teleport_time = level.time;
+	gi.linkentity (noise);
+}
+
+void CWeapon::Muzzle (edict_t *ent, int muzzleNum)
+{
+	if (isSilenced)
+		muzzleNum |= MZ_SILENCED;
+	TempEnts.MuzzleFlash(ent->s.origin, ent-g_edicts, muzzleNum);
+}
+
+/*
+=================
+Think_Weapon
+
+Called by ClientBeginServerFrame and ClientThink
+=================
+*/
+void CWeapon::Think (edict_t *ent)
+{
+	// if just died, put the weapon away
+	if (ent->health < 1)
+	{
+		ent->client->NewWeapon = NULL;
+		ChangeWeapon (ent);
+	}
+
+	// call active weapon think routine
+	isQuad = (ent->client->quad_framenum > level.framenum);
+	isSilenced = (ent->client->silencer_shots) ? true : false;
+	WeaponGeneric (ent);
 }

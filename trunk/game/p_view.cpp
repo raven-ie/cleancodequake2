@@ -742,6 +742,7 @@ void P_WorldEffects (void)
 G_SetClientEffects
 ===============
 */
+int PowerArmorType (edict_t *ent);
 void G_SetClientEffects (edict_t *ent)
 {
 	int		pa_type;

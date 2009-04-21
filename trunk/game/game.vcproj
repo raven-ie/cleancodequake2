@@ -435,10 +435,6 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;hpj;bat;for;f90"
 			>
 			<File
-				RelativePath=".\cc_local.h"
-				>
-			</File>
-			<File
 				RelativePath=".\g_ai.cpp"
 				>
 			</File>
@@ -622,13 +618,13 @@
 				RelativePath=".\p_view.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\p_weapon.cpp"
-				>
-			</File>
 			<Filter
 				Name="CleanCode Source Files"
 				>
+				<File
+					RelativePath=".\cc_local.h"
+					>
+				</File>
 				<File
 					RelativePath=".\cc_shared.h"
 					>
@@ -763,6 +759,14 @@
 					<Filter
 						Name="Weapons"
 						>
+						<File
+							RelativePath=".\cc_bfg.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\cc_bfg.h"
+							>
+						</File>
 						<File
 							RelativePath=".\cc_blaster.cpp"
 							>

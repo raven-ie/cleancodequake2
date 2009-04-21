@@ -21,7 +21,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "../shared/shared.h"
 
+#if 0
 #include "Newton.h"
+#endif
 
 // define GAME_INCLUDE so that game.h does not define the
 // short, server-visible gclient_t and edict_t structures,
@@ -192,69 +194,14 @@ MOVETYPE_FLYMISSILE,	// extra size to monsters
 MOVETYPE_BOUNCE
 } movetype_t;
 
-
-
-typedef struct
+/*typedef struct
 {
 	int		base_count;
 	int		max_count;
 	float	normal_protection;
 	float	energy_protection;
 	int		armor;
-} gitem_armor_t;
-
-
-// gitem_t->flags
-#define IT_WEAPON		1		// use makes active weapon
-#define IT_AMMO			2
-#define IT_ARMOR		4
-#define IT_STAY_COOP	8
-#define IT_KEY			16
-#define IT_POWERUP		32
-
-// gitem_t->weapmodel for weapons indicates model index
-#define WEAP_BLASTER			1 
-#define WEAP_SHOTGUN			2 
-#define WEAP_SUPERSHOTGUN		3 
-#define WEAP_MACHINEGUN			4 
-#define WEAP_CHAINGUN			5 
-#define WEAP_GRENADES			6 
-#define WEAP_GRENADELAUNCHER	7 
-#define WEAP_ROCKETLAUNCHER		8 
-#define WEAP_HYPERBLASTER		9 
-#define WEAP_RAILGUN			10
-#define WEAP_BFG				11
-
-typedef struct gitem_s
-{
-	char		*classname;	// spawning name
-	bool		(*pickup)(struct edict_s *ent, struct edict_s *other);
-	void		(*use)(struct edict_s *ent, struct gitem_s *item);
-	void		(*drop)(struct edict_s *ent, struct gitem_s *item);
-	void		(*weaponthink)(struct edict_s *ent);
-	char		*pickup_sound;
-	char		*world_model;
-	int			world_model_flags;
-	char		*view_model;
-
-	// client side info
-	char		*icon;
-	char		*pickup_name;	// for printing on pickup
-	int			count_width;		// number of digits to display by icon
-
-	int			quantity;		// for ammo how much, for weapons how much is used per shot
-	char		*ammo;			// for weapons
-	int			flags;			// IT_* flags
-
-	int			weapmodel;		// weapon model index (for weapons)
-
-	void		*info;
-	int			tag;
-
-	char		*precaches;		// string of all models, sounds, and images this item will use
-} gitem_t;
-
-
+} gitem_armor_t;*/
 
 //
 // this structure is left intact through an entire game
@@ -280,9 +227,6 @@ typedef struct
 
 	// cross level triggers
 	int			serverflags;
-
-	// items
-	int			num_items;
 
 	bool		autosaved;
 } game_locals_t;
@@ -546,34 +490,12 @@ typedef struct
 
 
 extern	field_t fields[];
-extern	gitem_t	itemlist[];
-
 
 //
 // g_cmds.c
 //
 void Cmd_Help_f (edict_t *ent);
 void Cmd_Score_f (edict_t *ent);
-
-//
-// g_items.c
-//
-void PrecacheItem (gitem_t *it);
-void InitItems (void);
-void SetItemNames (void);
-gitem_t	*FindItem (char *pickup_name);
-gitem_t	*FindItemByClassname (char *classname);
-#define ITEM_INDEX(x) ((x)-itemlist)
-edict_t *Drop_Item (edict_t *ent, gitem_t *item);
-void SetRespawn (edict_t *ent, float delay);
-void ChangeWeapon (edict_t *ent);
-void SpawnItem (edict_t *ent, gitem_t *item);
-void Think_Weapon (edict_t *ent);
-int ArmorIndex (edict_t *ent);
-int PowerArmorType (edict_t *ent);
-gitem_t	*GetItemByIndex (int index);
-bool Add_Ammo (edict_t *ent, gitem_t *item, int count);
-void Touch_Item (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
 
 //
 // g_utils.c
@@ -789,22 +711,14 @@ typedef struct
 	int			max_health;
 	int			savedFlags;
 
-	//int			selected_item;
-	//int			inventory[MAX_CS_ITEMS];
 	CInventory	Inventory;
 
 	// ammo capacities
-	/*int			max_bullets;
-	int			max_shells;
-	int			max_rockets;
-	int			max_grenades;
-	int			max_cells;
-	int			max_slugs;*/
 	int			maxAmmoValues[AMMOTAG_MAX];
 
-	//gitem_t		*weapon;
-	//gitem_t		*lastweapon;
 	CWeapon		*Weapon;
+	CArmor		*Armor; // Current armor.
+	// Stored here for convenience. (dynamic_cast ew)
 
 	int			power_cubes;	// used for tracking the cubes in coop games
 	int			score;			// for calculating total unit score in coop games
@@ -852,7 +766,6 @@ struct gclient_s
 
 	bool		weapon_thunk;
 
-	//gitem_t		*newweapon;
 	CWeapon		*NewWeapon;
 
 	// sum up damage over an entire frame, so
@@ -1055,14 +968,15 @@ struct edict_s
 
 	int			style;			// also used as areaportal number
 
-	gitem_t		*item;			// for bonus items
-	class CBaseItem	*ccitem;
+	class CBaseItem	*item;
 
 	// common data blocks
 	moveinfo_t		moveinfo;
 	monsterinfo_t	monsterinfo;
 
+#if 0
 	const NewtonBody	*newtonBody;
+#endif
 };
 
 extern	CCvar	*maxentities;

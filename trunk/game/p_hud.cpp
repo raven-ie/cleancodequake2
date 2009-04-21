@@ -273,10 +273,11 @@ void Cmd_Help_f (edict_t *ent)
 G_SetStats
 ===============
 */
+int PowerArmorType (edict_t *ent);
+int ArmorIndex (edict_t *ent);
 void G_SetStats (edict_t *ent)
 {
-	gitem_t		*item;
-	int			index, cells;
+	int			cells;
 	int			power_armor_type;
 
 	//
@@ -337,17 +338,16 @@ void G_SetStats (edict_t *ent)
 		}
 	}
 
-	index = ArmorIndex (ent);
-	if (power_armor_type && (!index || (level.framenum & 8) ) )
+	CArmor *Armor = ent->client->pers.Armor;
+	if (power_armor_type && (!Armor || (level.framenum & 8) ) )
 	{	// flash between power armor and other armor icon
 		ent->client->ps.stats[STAT_ARMOR_ICON] = gi.imageindex ("i_powershield");
 		ent->client->ps.stats[STAT_ARMOR] = cells;
 	}
-	else if (index)
+	else if (Armor)
 	{
-		item = GetItemByIndex (index);
-		ent->client->ps.stats[STAT_ARMOR_ICON] = gi.imageindex (item->icon);
-		ent->client->ps.stats[STAT_ARMOR] = ent->client->pers.Inventory.Has(index);
+		ent->client->ps.stats[STAT_ARMOR_ICON] = gi.imageindex (Armor->Icon);
+		ent->client->ps.stats[STAT_ARMOR] = ent->client->pers.Inventory.Has(Armor);
 	}
 	else
 	{

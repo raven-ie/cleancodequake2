@@ -116,6 +116,8 @@ public:
 	void TeleportEffect (vec3_t Origin);
 	void WidowBeamOut (vec3_t Origin, short id = -1);
 	void WidowSplash (vec3_t Origin);
+
+	void MuzzleFlash (vec3_t Origin, short Ent, short id);
 };
 
 extern CTEnt TempEnts;

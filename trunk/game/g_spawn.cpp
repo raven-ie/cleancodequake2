@@ -652,6 +652,7 @@ Only used for the world.
 */
 void CreateDMStatusbar ();
 void CreateSPStatusbar ();
+void SetItemNames ();
 void SP_worldspawn (edict_t *ent)
 {
 	// Seed the random number generator
@@ -666,9 +667,6 @@ void SP_worldspawn (edict_t *ent)
 
 	// reserve some spots for dead player bodies for coop / deathmatch
 	InitBodyQue ();
-
-	// set configstrings for items
-	SetItemNames ();
 
 	if (st.nextmap)
 		strcpy (level.nextmap, st.nextmap);
@@ -704,7 +702,7 @@ void SP_worldspawn (edict_t *ent)
 		CreateSPStatusbar();
 
 	//---------------
-
+	SetItemNames();
 
 	// help icon for statusbar
 	gi.imageindex ("i_help");
@@ -719,8 +717,6 @@ void SP_worldspawn (edict_t *ent)
 		gravity->Set(st.gravity);
 
 	snd_fry = gi.soundindex ("player/fry.wav");	// standing in lava / slime
-
-	PrecacheItem (FindItem ("Blaster"));
 
 	gi.soundindex ("player/lava1.wav");
 	gi.soundindex ("player/lava2.wav");
@@ -751,21 +747,6 @@ void SP_worldspawn (edict_t *ent)
 	gi.soundindex ("*pain75_2.wav");
 	gi.soundindex ("*pain100_1.wav");
 	gi.soundindex ("*pain100_2.wav");
-
-	// sexed models
-	// THIS ORDER MUST MATCH THE DEFINES IN g_local.h
-	// you can add more, max 15
-	gi.modelindex ("#w_blaster.md2");
-	gi.modelindex ("#w_shotgun.md2");
-	gi.modelindex ("#w_sshotgun.md2");
-	gi.modelindex ("#w_machinegun.md2");
-	gi.modelindex ("#w_chaingun.md2");
-	gi.modelindex ("#a_grenades.md2");
-	gi.modelindex ("#w_glauncher.md2");
-	gi.modelindex ("#w_rlauncher.md2");
-	gi.modelindex ("#w_hyperblaster.md2");
-	gi.modelindex ("#w_railgun.md2");
-	gi.modelindex ("#w_bfg.md2");
 
 	//-------------------
 

@@ -424,17 +424,17 @@ void Cmd_SelectPrevItem_f (edict_t *ent)
 }
 void Cmd_SelectNextWeapon_f (edict_t *ent)
 {
-	ent->client->pers.Inventory.SelectNextItem (IT_WEAPON);
+	ent->client->pers.Inventory.SelectNextItem (ITEMFLAG_WEAPON);
 }
 void Cmd_SelectPrevWeapon_f (edict_t *ent)
 {
-	ent->client->pers.Inventory.SelectPrevItem (IT_WEAPON);
+	ent->client->pers.Inventory.SelectPrevItem (ITEMFLAG_WEAPON);
 }
 void Cmd_SelectNextPowerup_f (edict_t *ent)
 {
-	ent->client->pers.Inventory.SelectNextItem (IT_POWERUP);
+	ent->client->pers.Inventory.SelectNextItem (ITEMFLAG_POWERUP);
 }
 void Cmd_SelectPrevPowerup_f (edict_t *ent)
 {
-	ent->client->pers.Inventory.SelectPrevItem (IT_POWERUP);
+	ent->client->pers.Inventory.SelectPrevItem (ITEMFLAG_POWERUP);
 }

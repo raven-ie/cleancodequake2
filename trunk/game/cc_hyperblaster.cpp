@@ -113,8 +113,8 @@ void CHyperBlaster::Fire (edict_t *ent)
 			vec3_t	start;
 			vec3_t	noffset;
 
-			//if (is_quad)
-			//	damage *= 4;
+			if (isQuad)
+				damage *= 4;
 			Angles_Vectors (ent->client->v_angle, forward, right, NULL);
 			Vec3Set (noffset, 24, 8, ent->viewheight-8);
 			Vec3Add (noffset, offset, noffset);
@@ -126,10 +126,7 @@ void CHyperBlaster::Fire (edict_t *ent)
 			fire_blaster (ent, start, forward, damage, 1000, effect, true);
 
 			// send muzzle flash
-			gi.WriteByte (SVC_MUZZLEFLASH);
-			gi.WriteShort (ent-g_edicts);
-			gi.WriteByte (MZ_HYPERBLASTER/* | is_silenced*/);
-			gi.multicast (ent->s.origin, MULTICAST_PVS);
+			Muzzle (ent, MZ_HYPERBLASTER);
 
 			PlayerNoise(ent, start, PNOISE_WEAPON);
 
