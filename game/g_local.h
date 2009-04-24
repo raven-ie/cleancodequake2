@@ -700,6 +700,7 @@ void GetChaseTarget(edict_t *ent);
 typedef struct
 {
 	char		userinfo[MAX_INFO_STRING];
+	char		IP[16];
 	char		netname[16];
 	int			hand;
 
@@ -810,6 +811,7 @@ struct gclient_s
 	float		enviro_framenum;
 
 	bool		grenade_blew_up;
+	bool		grenade_thrown;
 	float		grenade_time;
 	int			silencer_shots;
 	int			weapon_sound;

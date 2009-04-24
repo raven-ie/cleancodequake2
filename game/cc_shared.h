@@ -40,8 +40,9 @@ extern CColors Colors;
 #include "cc_sbar.h"
 #include "cc_cmds.h"
 #include "cc_items.h"
-#include "cc_weapons.h"
+#include "cc_weaponmain.h"
 #include "cc_inventory.h"
+#include "cc_ban.h"
 
 extern dmf_t dmFlags;
 

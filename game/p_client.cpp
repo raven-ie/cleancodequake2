@@ -412,54 +412,45 @@ void ClientObituary (edict_t *self, edict_t *inflictor, edict_t *attacker)
 		self->client->resp.score--;
 }
 
-
-void Touch_Item (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
-
+void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
 void TossClientWeapon (edict_t *self)
 {
-/*	gitem_t		*item;
-	edict_t		*drop;
-	bool	quad;
-	float		spread;
-
 	if (!deathmatch->Integer())
 		return;
 
-	item = self->client->pers.weapon;
-	if (! self->client->pers.inventory[self->client->ammo_index] )
-		item = NULL;
-	if (item && (strcmp (item->pickup_name, "Blaster") == 0))
-		item = NULL;
+	CBaseItem *Item = ((self->client->pers.Weapon) ? ((self->client->pers.Weapon->WeaponItem) ? self->client->pers.Weapon->WeaponItem : self->client->pers.Weapon->Item) : NULL);
+	// Personally, this is dumb.
+	//if (! self->client->pers.Inventory.Has(Item->Ammo) )
+	//	item = NULL;
+	if (!Item->WorldModel)
+		Item = NULL;
 
-	if (!dmFlags.dfQuadDrop)
-		quad = false;
-	else
-		quad = (bool)(self->client->quad_framenum > (level.framenum + 10));
+	bool quad = (!dmFlags.dfQuadDrop) ? false : (bool)(self->client->quad_framenum > (level.framenum + 10));
+	float spread = (Item && quad) ? 22.5f : 0.0f;
 
-	if (item && quad)
-		spread = 22.5;
-	else
-		spread = 0.0;
-
-	if (item)
+	if (Item)
 	{
 		self->client->v_angle[YAW] -= spread;
-		drop = Drop_Item (self, item);
+		edict_t *drop = Item->DropItem (self);
 		self->client->v_angle[YAW] += spread;
-		drop->spawnflags = DROPPED_PLAYER_ITEM;
+		drop->spawnflags |= DROPPED_PLAYER_ITEM;
+		if (self->client->pers.Weapon->WeaponItem)
+			drop->count = self->client->pers.Inventory.Has(self->client->pers.Weapon->WeaponItem->Ammo);
+		else
+			drop->count = self->client->pers.Inventory.Has(self->client->pers.Weapon->Item);
 	}
 
 	if (quad)
 	{
 		self->client->v_angle[YAW] += spread;
-		drop = Drop_Item (self, FindItemByClassname ("item_quad"));
+		edict_t *drop = FindItem("Quad Damage")->DropItem (self);
 		self->client->v_angle[YAW] -= spread;
 		drop->spawnflags |= DROPPED_PLAYER_ITEM;
 
-		drop->touch = Touch_Item;
+		drop->touch = TouchItem;
 		drop->nextthink = level.time + (self->client->quad_framenum - level.framenum) * FRAMETIME;
 		drop->think = G_FreeEdict;
-	}*/
+	}
 }
 
 
@@ -542,7 +533,7 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 		// this is kind of ugly, but it's how we want to handle keys in coop
 		for (n = 0; n < GetNumItems(); n++)
 		{
-			if (coop->Integer() && CC_GetItemByIndex(n)->Flags & ITEMFLAG_KEY)
+			if (coop->Integer() && GetItemByIndex(n)->Flags & ITEMFLAG_KEY)
 				self->client->resp.coop_respawn.Inventory.Set(n, self->client->pers.Inventory.Has(n));
 			self->client->pers.Inventory.Set(n, 0);
 		}
@@ -621,7 +612,7 @@ void InitClientPersistant (edict_t *ent)
 	/*item = FindItem("Blaster");
 	client->pers.selected_item = ITEM_INDEX(item);
 	client->pers.inventory[client->pers.selected_item] = 1;*/
-	CC_FindItem("Blaster")->Add(ent, 1);
+	FindItem("Blaster")->Add(ent, 1);
 
 	//client->pers.weapon = item;
 	client->pers.Weapon = &WeaponBlaster;
@@ -1388,9 +1379,7 @@ void ClientUserinfoChanged (edict_t *ent, char *userinfo)
 
 	// check for malformed or illegal info strings
 	if (!Info_Validate(userinfo))
-	{
 		strcpy (userinfo, "\\name\\badinfo\\skin\\male/grunt");
-	}
 
 	// set name
 	s = Info_ValueForKey (userinfo, "name");
@@ -1414,9 +1403,7 @@ void ClientUserinfoChanged (edict_t *ent, char *userinfo)
 
 	// fov
 	if (deathmatch->Integer() && dmFlags.dfFixedFov)
-	{
 		ent->client->ps.fov = 90;
-	}
 	else
 	{
 		ent->client->ps.fov = atoi(Info_ValueForKey(userinfo, "fov"));
@@ -1429,9 +1416,12 @@ void ClientUserinfoChanged (edict_t *ent, char *userinfo)
 	// handedness
 	s = Info_ValueForKey (userinfo, "hand");
 	if (strlen(s))
-	{
 		ent->client->pers.hand = atoi(s);
-	}
+
+	// IP
+	s = Info_ValueForKey (userinfo, "ip");
+	if (strlen(s))
+		strncpy (ent->client->pers.IP, s, sizeof(ent->client->pers.IP));
 
 	// save off the userinfo in case we want to check something later
 	strncpy (ent->client->pers.userinfo, userinfo, sizeof(ent->client->pers.userinfo)-1);
@@ -1509,7 +1499,13 @@ BOOL ClientConnect (edict_t *ent, char *userinfo)
 	ClientUserinfoChanged (ent, userinfo);
 
 	if (game.maxclients > 1)
-		gi.dprintf ("%s connected\n", ent->client->pers.netname);
+	{
+		// Tell the entire game that someone connected
+		gi.bprintf (PRINT_MEDIUM, "%s connected\n", ent->client->pers.netname);
+		
+		// But only tell the server the IP
+		gi.dprintf ("%s@%s connected\n", ent->client->pers.netname, Info_ValueForKey (userinfo, "ip"));
+	}
 
 	ent->svFlags = 0; // make sure we start with known default
 	ent->client->pers.connected = true;

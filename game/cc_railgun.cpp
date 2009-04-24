@@ -38,7 +38,7 @@ CRailgun WeaponRailgun;
 
 CRailgun::CRailgun() :
 CWeapon("models/weapons/v_rail/tris.md2", 0, 3, 4, 14,
-		19, 37, 57, 4)
+		19, 37, 57, 4, "weapons/rg_hum.wav")
 {
 }
 

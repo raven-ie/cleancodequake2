@@ -100,7 +100,7 @@ void Cmd_Give_f (edict_t *ent)
 	{
 		for (i=0 ; i<GetNumItems() ; i++)
 		{
-			it = CC_GetItemByIndex(i);
+			it = GetItemByIndex(i);
 			if (!(it->Flags & ITEMFLAG_GRABBABLE))
 				continue;
 			if (!(it->Flags & ITEMFLAG_WEAPON))
@@ -115,7 +115,7 @@ void Cmd_Give_f (edict_t *ent)
 	{
 		for (i=0 ; i<GetNumItems() ; i++)
 		{
-			it = CC_GetItemByIndex(i);
+			it = GetItemByIndex(i);
 			if (!(it->Flags & ITEMFLAG_GRABBABLE))
 				continue;
 			if (!(it->Flags & ITEMFLAG_AMMO))
@@ -162,20 +162,20 @@ void Cmd_Give_f (edict_t *ent)
 	{
 		for (i=0 ; i<GetNumItems() ; i++)
 		{
-			it = CC_GetItemByIndex(i);
+			it = GetItemByIndex(i);
 			if (!(it->Flags & ITEMFLAG_GRABBABLE))
 				continue;
-			if (it->Flags & (ITEMFLAG_ARMOR|ITEMFLAG_WEAPON|ITEMFLAG_AMMO))
+			if (it->Flags & (ITEMFLAG_HEALTH|ITEMFLAG_ARMOR|ITEMFLAG_WEAPON|ITEMFLAG_AMMO))
 				continue;
 			ent->client->pers.Inventory.Set (i, 1);
 		}
 		return;
 	}
 
-	it = CC_FindItem (name);
+	it = FindItem (name);
 	if (!it)
 	{
-		it = CC_FindItemByClassname (name);
+		it = FindItemByClassname (name);
 		if (!it)
 		{
 			gi.cprintf (ent, PRINT_HIGH, "unknown item\n");
@@ -651,8 +651,8 @@ void Cmd_Register ()
 	Cmd_AddCommand ("god",					Cmd_God_f,				CMD_CHEAT);
 	Cmd_AddCommand ("notarget",				Cmd_Notarget_f,			CMD_CHEAT);
 	Cmd_AddCommand ("noclip",				Cmd_Noclip_f,			CMD_CHEAT);
-	Cmd_AddCommand ("give",					Cmd_Give,				CMD_CHEAT);
-	Cmd_AddCommand ("old_give",				Cmd_Give_f,				CMD_CHEAT);
+	Cmd_AddCommand ("give",					Cmd_Give_f,				CMD_CHEAT);
+	Cmd_AddCommand ("spawn",				Cmd_Give,				CMD_CHEAT);
 
 #if 0
 	Cmd_AddCommand ("newtoninit",			Cmd_NewtonInit);

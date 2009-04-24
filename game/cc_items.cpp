@@ -34,21 +34,6 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 
-CItemList *ItemList;
-
-CBaseItem::CBaseItem () :
-Index(-1),
-Classname(NULL),
-WorldModel(NULL),
-PickupSound(NULL),
-Icon(NULL),
-Name(NULL),
-EffectFlags(0),
-Precache(NULL),
-Flags(ITEMFLAG_NONE)
-{
-};
-
 CBaseItem::CBaseItem (char *Classname, char *WorldModel, int EffectFlags,
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
 			   char *Precache) :
@@ -101,450 +86,78 @@ void CBaseItem::SetRespawn (edict_t *ent, float delay)
 	ent->svFlags |= SVF_NOCLIENT;
 	ent->solid = SOLID_NOT;
 	ent->nextthink = level.time + delay;
-	ent->think = DoRespawn;
+	ent->think = &DoRespawn;
 	gi.linkentity (ent);
 }
 
-CWeaponItem::CWeaponItem() : 
-CBaseItem ()
+void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
+static void DropTempTouch (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf)
 {
-};
-
-CWeaponItem::CWeaponItem (char *Classname, char *WorldModel, int EffectFlags,
-			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
-			   char *Precache, class CWeapon *Weapon, class CAmmo *Ammo, int Quantity) :
-CBaseItem(Classname, WorldModel, EffectFlags, PickupSound, Icon, Name, Flags, Precache),
-Weapon(Weapon),
-Ammo(Ammo),
-Quantity(Quantity)
-{
-	if (!Weapon)
-		gi.dprintf ("Warning: Weapon with no weapon!\n");
-	else
-	{
-		Weapon->Item = this;
-		Weapon->WeaponItem = this;
-	}
-	if (!Ammo)
-		gi.dprintf ("Warning: Weapon with no ammo!\n");
-}
-
-CAmmo::CAmmo() :
-CBaseItem ()
-{
-};
-
-CAmmo::CAmmo (char *Classname, char *WorldModel, int EffectFlags,
-			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
-			   char *Precache, int Quantity, EAmmoTag Tag, CWeapon *Weapon, int Amount) :
-CBaseItem (Classname, WorldModel, EffectFlags, PickupSound, Icon, Name, Flags,
-		   Precache),
-Quantity(Quantity),
-Tag(Tag),
-Weapon(Weapon),
-Amount(Amount)
-{
-	if (Weapon)
-		Weapon->Item = this;
-}
-
-CBasePowerUp::CBasePowerUp() :
-CBaseItem ()
-{
-};
-
-CHealth::CHealth() :
-CBaseItem ()
-{
-};
-
-CArmor::CArmor() :
-CBaseItem()
-{
-};
-
-CArmor::CArmor (char *Classname, char *WorldModel, int EffectFlags,
-			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
-			   char *Precache, int baseCount, int maxCount, float normalProtection,
-			   float energyProtection) :
-CBaseItem(Classname, WorldModel, EffectFlags, PickupSound, Icon, Name, Flags,
-		Precache),
-baseCount(baseCount),
-maxCount(maxCount),
-normalProtection(normalProtection),
-energyProtection(energyProtection)
-{
-};
-
-CHealth::CHealth (char *Classname, char *WorldModel, int EffectFlags,
-			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
-			   char *Precache, int Amount, EHealthFlags HealthFlags) :
-CBaseItem (Classname, WorldModel, EffectFlags, PickupSound, Icon, Name, Flags,
-		   Precache),
-Amount(Amount),
-HealthFlags(HealthFlags)
-{
-};
-
-CKey::CKey() :
-CBaseItem ()
-{
-};
-CItemList::CItemList() :
-numItems(0)
-{
-	memset (HashedClassnameItemList, 0, sizeof(CBaseItem*) * MAX_ITEMS_HASH);
-	memset (HashedNameItemList, 0, sizeof(CBaseItem*) * MAX_ITEMS_HASH);
-};
-
-void CItemList::AddItemToList (CBaseItem *Item)
-{
-	Items[numItems] = Item;
-	Item->Index = numItems++;
-
-	// Hash!
-	if (Item->Classname)
-	{
-		Item->hashClassnameNext = HashedClassnameItemList[Item->hashedClassnameValue];
-		HashedClassnameItemList[Item->hashedClassnameValue] = Item;
-	}
-	if (Item->Name)
-	{
-		Item->hashNameNext = HashedNameItemList[Item->hashedNameValue];
-		HashedNameItemList[Item->hashedNameValue] = Item;
-	}
-}
-
-bool CWeaponItem::Pickup (edict_t *ent, edict_t *other)
-{
-	int			index;
-
-	index = this->GetIndex();
-
-	if ( (dmFlags.dfWeaponsStay || coop->Integer()) 
-		&& other->client->pers.Inventory.Has(index))
-	{
-		if (!(ent->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM) ) )
-			return false;	// leave the weapon for others to pickup
-	}
-
-	other->client->pers.Inventory += this;
-
-	if (!(ent->spawnflags & DROPPED_ITEM) )
-	{
-		// give them some ammo with it
-		if (this->Ammo)
-		{
-			if (dmFlags.dfInfiniteAmmo)
-				this->Ammo->AddAmmo (other, 1000);
-			else
-				this->Ammo->AddAmmo (other, this->Ammo->Quantity);
-		}
-
-		if (! (ent->spawnflags & DROPPED_PLAYER_ITEM) )
-		{
-			if (deathmatch->Integer())
-			{
-				if (dmFlags.dfWeaponsStay)
-					ent->flags |= FL_RESPAWN;
-				else
-					SetRespawn (ent, 30);
-			}
-			if (coop->Integer())
-				ent->flags |= FL_RESPAWN;
-		}
-	}
-
-	/*if (other->client->pers.weapon != ent->item && 
-		(other->client->pers.inventory[index] == 1) &&
-		( !deathmatch->Integer() || other->client->pers.weapon == FindItem("blaster") ) )
-		other->client->newweapon = ent->item;*/
-
-	return true;
-}
-
-void CWeaponItem::Use (edict_t *ent)
-{
-	// see if we're already using it
-	if (this->Weapon == ent->client->pers.Weapon)
+	if (other == ent->owner)
 		return;
 
-	if (this->Ammo && !g_select_empty->Integer() && !(this->Flags & ITEMFLAG_AMMO))
-	{
-		if (!ent->client->pers.Inventory.Has(this->Ammo->GetIndex()))
-		{
-			gi.cprintf (ent, PRINT_HIGH, "No %s for %s.\n", this->Ammo->Name, this->Name);
-			return;
-		}
+	TouchItem (ent, other, plane, surf);
+}
 
-		if (ent->client->pers.Inventory.Has(this->Ammo->GetIndex()) < this->Quantity)
-		{
-			gi.cprintf (ent, PRINT_HIGH, "Not enough %s for %s.\n", this->Ammo->Name, this->Name);
-			return;
-		}
+static void DropMakeTouchable (edict_t *ent)
+{
+	ent->touch = TouchItem;
+	if (deathmatch->Integer())
+	{
+		ent->nextthink = level.time + 29;
+		ent->think = G_FreeEdict;
 	}
-
-	// change to this weapon when down
-	ent->client->NewWeapon = this->Weapon;
 }
 
-void CWeaponItem::Drop (edict_t *ent)
+edict_t *CBaseItem::DropItem (edict_t *ent)
 {
-}
+	edict_t	*dropped;
+	vec3_t	forward, right;
+	vec3_t	offset;
 
-void InitItemMaxValues (edict_t *ent)
-{
-	ent->client->pers.maxAmmoValues[AMMOTAG_SHELLS] = 100;
-	ent->client->pers.maxAmmoValues[AMMOTAG_BULLETS] = 200;
-	ent->client->pers.maxAmmoValues[AMMOTAG_GRENADES] = 50;
-	ent->client->pers.maxAmmoValues[AMMOTAG_ROCKETS] = 50;
-	ent->client->pers.maxAmmoValues[AMMOTAG_CELLS] = 200;
-	ent->client->pers.maxAmmoValues[AMMOTAG_SLUGS] = 50;
-}
+	dropped = G_Spawn();
 
-int CAmmo::GetMax (edict_t *ent)
-{
-	return ent->client->pers.maxAmmoValues[this->Tag];
-}
+	dropped->classname = this->Classname;
+	dropped->item = this;
+	dropped->spawnflags = DROPPED_ITEM;
+	dropped->s.effects = this->EffectFlags;
+	dropped->s.renderFx = RF_GLOW;
+	Vec3Set (dropped->mins, -15, -15, -15);
+	Vec3Set (dropped->maxs, 15, 15, 15);
+	dropped->s.modelIndex = gi.modelindex(this->WorldModel);
+	dropped->solid = SOLID_TRIGGER;
+	dropped->movetype = MOVETYPE_TOSS;  
+	dropped->touch = DropTempTouch;
+	dropped->owner = ent;
 
-void CAmmo::Use (edict_t *ent)
-{
-	if (!(this->Flags & ITEMFLAG_WEAPON))
-		return;
-
-	// see if we're already using it
-	if (this->Weapon == ent->client->pers.Weapon)
-		return;
-
-	if (!g_select_empty->Integer())
+	if (ent->client)
 	{
-		if (!ent->client->pers.Inventory.Has(this->GetIndex()))
-		{
-			gi.cprintf (ent, PRINT_HIGH, "No %s for %s.\n", this->Name, this->Name);
-			return;
-		}
+		CTrace	trace;
 
-		if (ent->client->pers.Inventory.Has(this->GetIndex()) < this->Amount)
-		{
-			gi.cprintf (ent, PRINT_HIGH, "Not enough %s.\n", this->Name);
-			return;
-		}
-	}
-
-	// change to this weapon when down
-	ent->client->NewWeapon = this->Weapon;
-}
-
-void CAmmo::Drop (edict_t *ent)
-{
-}
-
-bool CAmmo::AddAmmo (edict_t *ent, int count)
-{
-	// YUCK
-	int max = CAmmo::GetMax(ent);
-
-	if (!max)
-		return false;
-
-	if (ent->client->pers.Inventory.Has(this) < max)
-	{
-		ent->client->pers.Inventory.Add (this, count);
-
-		if (ent->client->pers.Inventory.Has(this) > max)
-			ent->client->pers.Inventory.Set(this, max);
-
-		return true;
-	}
-	return false;
-}
-
-bool CAmmo::Pickup (edict_t *ent, edict_t *other)
-{
-	int			oldcount;
-	int			count;
-	bool		weapon;
-
-	weapon = (this->Flags & ITEMFLAG_WEAPON);
-
-	if ( weapon && dmFlags.dfInfiniteAmmo )
-		count = 1000;
-	else if (ent->count)
-		count = ent->count;
-	else
-		count = this->Quantity;
-
-	oldcount = other->client->pers.Inventory.Has(this);
-
-	if (!this->AddAmmo (other, count))
-		return false;
-
-	/*if (weapon && !oldcount)
-	{
-		if (other->client->pers.weapon != ent->item && ( !deathmatch->Integer() || other->client->pers.weapon == FindItem("blaster") ) )
-			other->client->newweapon = ent->item;
-	}*/
-
-	if (!(ent->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)) && (deathmatch->Integer()))
-		this->SetRespawn (ent, 30);
-	return true;
-}
-
-bool CBasePowerUp::Pickup (edict_t *ent, edict_t *other)
-{
-	return false;
-}
-
-/*void MegaHealth_think (edict_t *self)
-{
-	if (self->owner->health > self->owner->max_health)
-	{
-		self->nextthink = level.time + 1;
-		self->owner->health -= 1;
-		return;
-	}
-
-	if (!(self->spawnflags & DROPPED_ITEM) && (deathmatch->Integer()))
-		SetRespawn (self, 20);
-	else
-		G_FreeEdict (self);
-}
-
-bool Pickup_Health (edict_t *ent, edict_t *other)
-{
-	if (!(ent->style & HEALTH_IGNORE_MAX))
-		if (other->health >= other->max_health)
-			return false;
-
-	other->health += ent->count;
-
-	if (!(ent->style & HEALTH_IGNORE_MAX))
-	{
-		if (other->health > other->max_health)
-			other->health = other->max_health;
-	}
-
-	if (ent->style & HEALTH_TIMED)
-	{
-		ent->think = MegaHealth_think;
-		ent->nextthink = level.time + 5;
-		ent->owner = other;
-		ent->flags |= FL_RESPAWN;
-		ent->svFlags |= SVF_NOCLIENT;
-		ent->solid = SOLID_NOT;
+		Angles_Vectors (ent->client->v_angle, forward, right, NULL);
+		Vec3Set (offset, 24, 0, -16);
+		G_ProjectSource (ent->s.origin, offset, forward, right, dropped->s.origin);
+		trace.Trace (ent->s.origin, dropped->mins, dropped->maxs,
+			dropped->s.origin, ent, CONTENTS_SOLID);
+		Vec3Copy (trace.endPos, dropped->s.origin);
 	}
 	else
 	{
-		if (!(ent->spawnflags & DROPPED_ITEM) && (deathmatch->Integer()))
-			SetRespawn (ent, 30);
+		Angles_Vectors (ent->s.angles, forward, right, NULL);
+		Vec3Copy (ent->s.origin, dropped->s.origin);
 	}
 
-	return true;
-}*/
+	Vec3Scale (forward, 100, dropped->velocity);
+	dropped->velocity[2] = 300;
 
-bool CHealth::Pickup (edict_t *ent, edict_t *other)
-{
-	if (!(this->HealthFlags & HEALTHFLAG_IGNOREMAX) && (other->health >= other->max_health))
-		return false;
+	dropped->think = DropMakeTouchable;
+	dropped->nextthink = level.time + 1;
 
-	other->health += this->Amount;
+	gi.linkentity (dropped);
 
-	if (!(this->HealthFlags & HEALTHFLAG_IGNOREMAX))
-	{
-		if (other->health > other->max_health)
-			other->health = other->max_health;
-	}
-
-	if (!(ent->spawnflags & DROPPED_ITEM) && (deathmatch->Integer()))
-		SetRespawn (ent, 30);
-
-	return true;
+	return dropped;
 }
 
-bool CKey::Pickup (edict_t *ent, edict_t *other)
-{
-	return false;
-}
-
-void CItemList::SendItemNames ()
-{
-	for (int i = 0 ; i < this->numItems ; i++)
-		gi.configstring (this->Items[i]->GetConfigStringNumber(), this->Items[i]->Name);
-}
-
-bool CArmor::Pickup (edict_t *ent, edict_t *other)
-{
-	if (this->normalProtection == -1)
-	{
-		if (other->client->pers.Armor == NULL)
-		{
-			other->client->pers.Inventory.Set (CC_FindItem("Jacket Armor"), 2);
-			other->client->pers.Armor = dynamic_cast<CArmor*>(CC_FindItem("Jacket Armor"));
-		}
-		else
-		{
-			if (this->maxCount != -1 && (other->client->pers.Inventory.Has(ent->client->pers.Armor) >= this->maxCount))
-				return false;
-
-			other->client->pers.Inventory.Add (other->client->pers.Armor, 2);
-			if (this->maxCount != -1 && (other->client->pers.Inventory.Has(other->client->pers.Armor) > this->maxCount))
-				other->client->pers.Inventory.Set(ent->client->pers.Armor, this->maxCount);
-		}
-		return true;
-	}
-
-	if (other->client->pers.Armor != NULL)
-	{
-		if (this->normalProtection > other->client->pers.Armor->normalProtection)
-		{
-			// calc new armor values
-			int newCount = this->baseCount + ((other->client->pers.Armor->normalProtection / this->normalProtection) * other->client->pers.Inventory.Has(other->client->pers.Armor));
-			if (newCount > this->maxCount)
-				newCount = this->maxCount;
-
-			// zero count of old armor so it goes away
-			other->client->pers.Inventory.Set(other->client->pers.Armor, 0);
-
-			// change armor to new item with computed value
-			other->client->pers.Inventory.Set(this, newCount);
-			other->client->pers.Armor = this;
-		}
-		else
-		{
-			// calc new armor values
-			int newCount = other->client->pers.Inventory.Has(other->client->pers.Armor) + ((this->normalProtection / other->client->pers.Armor->normalProtection) * this->baseCount);
-			if (newCount > other->client->pers.Armor->maxCount)
-				newCount = other->client->pers.Armor->maxCount;
-
-			// if we're already maxed out then we don't need the new armor
-			if (other->client->pers.Inventory.Has(other->client->pers.Armor) >= newCount)
-				return false;
-
-			// update current armor value
-			other->client->pers.Inventory.Set(other->client->pers.Armor, newCount);
-		}
-	}
-	// Player has no other armor, just use it
-	else
-	{
-		other->client->pers.Armor = this;
-		other->client->pers.Inventory.Set(this, this->baseCount);
-	}
-
-	if (!(ent->spawnflags & DROPPED_ITEM) && (deathmatch->Integer()))
-		SetRespawn (ent, 20);
-
-	return true;
-}
-
-// No dropping or using this type of armor.
-void CArmor::Use(edict_t *ent)
-{
-}
-
-void CArmor::Drop (edict_t *ent)
-{
-}
 /*
 ============
 SpawnItem
@@ -599,48 +212,48 @@ void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *su
 
 void DoRespawn (edict_t *ent)
 {
-        if (ent->team)
-        {
-                edict_t *master;
-                int     count;
-                int choice;
+	if (ent->team)
+	{
+		edict_t *master;
+		int     count;
+		int choice;
 
-                master = ent->teammaster;
+		master = ent->teammaster;
 
-                for (count = 0, ent = master; ent; ent = ent->chain, count++)
-                        ;
+		for (count = 0, ent = master; ent; ent = ent->chain, count++)
+			;
 
-                choice = rand() % count;
+		choice = rand() % count;
 
-                for (count = 0, ent = master; count < choice; ent = ent->chain, count++)
-                        ;
-        }
+		for (count = 0, ent = master; count < choice; ent = ent->chain, count++)
+			;
+	}
 
-        ent->svFlags &= ~SVF_NOCLIENT;
-        ent->solid = SOLID_TRIGGER;
-        gi.linkentity (ent);
+	ent->svFlags &= ~SVF_NOCLIENT;
+	ent->solid = SOLID_TRIGGER;
+	gi.linkentity (ent);
 
-        // send an effect
-        ent->s.event = EV_ITEM_RESPAWN;
+	// send an effect
+	ent->s.event = EV_ITEM_RESPAWN;
 }
 
 void Use_Item (edict_t *ent, edict_t *other, edict_t *activator)
 {
-        ent->svFlags &= ~SVF_NOCLIENT;
-        ent->use = NULL;
+	ent->svFlags &= ~SVF_NOCLIENT;
+	ent->use = NULL;
 
-        if (ent->spawnflags & ITEM_NO_TOUCH)
-        {
-                ent->solid = SOLID_BBOX;
-                ent->touch = NULL;
-        }
-        else
-        {
-                ent->solid = SOLID_TRIGGER;
-                ent->touch = TouchItem;
-        }
+	if (ent->spawnflags & ITEM_NO_TOUCH)
+	{
+		ent->solid = SOLID_BBOX;
+		ent->touch = NULL;
+	}
+	else
+	{
+		ent->solid = SOLID_TRIGGER;
+		ent->touch = TouchItem;
+	}
 
-        gi.linkentity (ent);
+	gi.linkentity (ent);
 }
 
 void DropItemToFloor (edict_t *ent)
@@ -706,9 +319,7 @@ void DropItemToFloor (edict_t *ent)
 	gi.linkentity (ent);
 }
 
-
-
-void CC_SpawnItem (edict_t *ent, CBaseItem *item)
+void SpawnItem (edict_t *ent, CBaseItem *item)
 {
 	//PrecacheItem (item);
 
@@ -780,145 +391,4 @@ void CC_SpawnItem (edict_t *ent, CBaseItem *item)
 	ent->think = DropItemToFloor;
 	ent->s.effects = item->EffectFlags;
 	ent->s.renderFx = RF_GLOW;
-}
-
-bool CC_ItemExists (edict_t *ent)
-{
-	// Check through the itemlist
-	uint32 hash = Com_HashGeneric(ent->classname, MAX_ITEMS_HASH);
-	CBaseItem *Item;
-
-	for (Item = ItemList->HashedClassnameItemList[hash]; Item; Item=Item->hashClassnameNext)
-	{
-		if (Q_stricmp(Item->Classname, ent->classname) == 0)
-		{
-			CC_SpawnItem (ent, Item);
-			return true;
-		}
-	}
-	return false;
-}
-
-CBaseItem *CC_FindItem (char *name)
-{
-	// Check through the itemlist
-	uint32 hash = Com_HashGeneric(name, MAX_ITEMS_HASH);
-	CBaseItem *Item;
-
-	for (Item = ItemList->HashedNameItemList[hash]; Item; Item=Item->hashNameNext)
-	{
-		if (Q_stricmp(Item->Name, name) == 0)
-			return Item;
-	}
-	return NULL;
-}
-
-// Forces an add
-void CBaseItem::Add (edict_t *ent, int quantity)
-{
-	ent->client->pers.Inventory.Add(this, quantity);
-}
-
-CBaseItem *CC_FindItemByClassname (char *name)
-{
-	// Check through the itemlist
-	uint32 hash = Com_HashGeneric(name, MAX_ITEMS_HASH);
-	CBaseItem *Item;
-
-	for (Item = ItemList->HashedClassnameItemList[hash]; Item; Item=Item->hashClassnameNext)
-	{
-		if (Q_stricmp(Item->Name, name) == 0)
-			return Item;
-	}
-	return NULL;
-}
-
-CBaseItem *CC_GetItemByIndex (int Index)
-{
-	if (!ItemList->Items[Index] || Index >= MAX_CS_ITEMS || Index < 0)
-		return NULL;
-	return ItemList->Items[Index];
-}
-
-int GetNumItems ()
-{
-	return ItemList->numItems;
-}
-
-void AddArmorToList ()
-{
-	CArmor *JacketArmor = new CArmor ("item_armor_jacket", "models/items/armor/jacket/tris.md2", EF_ROTATE, "misc/ar1_pkup.wav", "i_jacketarmor", "Jacket Armor", ITEMFLAG_GRABBABLE|ITEMFLAG_ARMOR, "", 25, 50, .30f, .00f);
-	CArmor *CombatArmor = new CArmor ("item_armor_combat", "models/items/armor/combat/tris.md2", EF_ROTATE, "misc/ar1_pkup.wav", "i_combatarmor", "Combat Armor", ITEMFLAG_GRABBABLE|ITEMFLAG_ARMOR, "", 50, 100, .60f, .30f);
-	CArmor *BodyArmor = new CArmor ("item_armor_body", "models/items/armor/body/tris.md2", EF_ROTATE, "misc/ar1_pkup.wav", "i_bodyarmor", "Body Armor", ITEMFLAG_GRABBABLE|ITEMFLAG_ARMOR, "", 100, 200, .80f, .60f);
-	CArmor *ArmorShard = new CArmor ("item_armor_shard", "models/items/armor/shard/tris.md2", EF_ROTATE, "misc/ar2_pkup.wav", "i_jacketarmor", "Armor Shard", ITEMFLAG_GRABBABLE|ITEMFLAG_ARMOR, "", 2, -1, -1, -1);
-
-	ItemList->AddItemToList (JacketArmor);
-	ItemList->AddItemToList (CombatArmor);
-	ItemList->AddItemToList (BodyArmor);
-	ItemList->AddItemToList (ArmorShard);
-}
-
-void AddAmmoToList ()
-{
-	CAmmo *Shells = new CAmmo("ammo_shells", "models/items/ammo/shells/medium/tris.md2", 0, "misc/am_pkup.wav", "a_shells", "Shells", ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 5, AMMOTAG_SHELLS, NULL, -1);
-	CAmmo *Bullets = new CAmmo("ammo_bullets", "models/items/ammo/bullets/medium/tris.md2", 0, "misc/am_pkup.wav", "a_bullets", "Bullets", ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 50, AMMOTAG_BULLETS, NULL, -1);
-	CAmmo *Slugs = new CAmmo("ammo_slugs", "models/items/ammo/slugs/medium/tris.md2", 0, "misc/am_pkup.wav", "a_slugs", "Slugs", ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 5, AMMOTAG_SLUGS, NULL, -1);
-	CAmmo *Grenades = new CAmmo("ammo_grenades", "models/items/ammo/grenades/medium/tris.md2", 0, "misc/am_pkup.wav", "a_grenades", "Grenades", ITEMFLAG_AMMO|ITEMFLAG_USABLE|ITEMFLAG_GRABBABLE|ITEMFLAG_WEAPON, "", 5, AMMOTAG_GRENADES, &WeaponGrenades, 1);
-	CAmmo *Rockets = new CAmmo("ammo_rockets", "models/items/ammo/rockets/medium/tris.md2", 0, "misc/am_pkup.wav", "a_rockets", "Rockets", ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 5, AMMOTAG_ROCKETS, NULL, -1);
-	CAmmo *Cells = new CAmmo("ammo_cells", "models/items/ammo/cells/medium/tris.md2", 0, "misc/am_pkup.wav", "a_cells", "Cells", ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 50, AMMOTAG_CELLS, NULL, -1);
-
-	ItemList->AddItemToList (Shells);
-	ItemList->AddItemToList (Bullets);
-	ItemList->AddItemToList (Slugs);
-	ItemList->AddItemToList (Grenades);
-	ItemList->AddItemToList (Rockets);
-	ItemList->AddItemToList (Cells);
-
-	// Weapons
-	CWeaponItem *Blaster = new CWeaponItem(NULL, NULL, 0, NULL, "w_blaster", "Blaster", ITEMFLAG_WEAPON|ITEMFLAG_USABLE, "", &WeaponBlaster, NULL, 0);
-	CWeaponItem *Shotgun = new CWeaponItem("weapon_shotgun", "models/weapons/g_shotg/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_shotgun", "Shotgun", ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_USABLE, "", &WeaponShotgun, Shells, 1);
-	CWeaponItem *SuperShotgun = new CWeaponItem("weapon_supershotgun", "models/weapons/g_shotg2/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_sshotgun", "Super Shotgun", ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_USABLE, "", &WeaponSuperShotgun, Shells, 2);
-	CWeaponItem *Machinegun = new CWeaponItem("weapon_machinegun", "models/weapons/g_machn/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_machinegun", "Machinegun", ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_USABLE, "", &WeaponMachinegun, Bullets, 1);
-	CWeaponItem *Chaingun = new CWeaponItem("weapon_chaingun", "models/weapons/g_chain/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_chaingun", "Chaingun", ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_USABLE, "", &WeaponChaingun, Bullets, 1);
-	CWeaponItem *GrenadeLauncher = new CWeaponItem("weapon_grenadelauncher", "models/weapons/g_launch/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_glauncher", "Grenade Launcher", ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_USABLE, "", &WeaponGrenadeLauncher, Grenades, 1);
-	CWeaponItem *RocketLauncher = new CWeaponItem("weapon_rocketlauncher", "models/weapons/g_rocket/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_rlauncher", "Rocket Launcher", ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_USABLE, "", &WeaponRocketLauncher, Rockets, 1);
-	CWeaponItem *HyperBlaster = new CWeaponItem("weapon_hyperblaster", "models/weapons/g_hyperb/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_hyperblaster", "HyperBlaster", ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_USABLE, "", &WeaponHyperBlaster, Cells, 1);
-	CWeaponItem *Railgun = new CWeaponItem("weapon_railgun", "models/weapons/g_rail/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_railgun", "Railgun", ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_USABLE, "", &WeaponRailgun, Slugs, 1);
-	CWeaponItem *BFG = new CWeaponItem("weapon_bfg", "models/weapons/g_bfg/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_bfg", "BFG10k", ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_USABLE, "", &WeaponBFG, Cells, 50);
-	
-	ItemList->AddItemToList (Blaster);
-	ItemList->AddItemToList (Shotgun);
-	ItemList->AddItemToList (SuperShotgun);
-	ItemList->AddItemToList (Machinegun);
-	ItemList->AddItemToList (Chaingun);
-	ItemList->AddItemToList (GrenadeLauncher);
-	ItemList->AddItemToList (RocketLauncher);
-	ItemList->AddItemToList (HyperBlaster);
-	ItemList->AddItemToList (Railgun);
-	ItemList->AddItemToList (BFG);
-}
-
-void AddHealthToList ()
-{
-	CHealth *StimPack = new CHealth("item_health_small", "models/items/healing/stimpack/tris.md2", 0, "items/s_health.wav", "i_health", "Stimpack", ITEMFLAG_HEALTH|ITEMFLAG_GRABBABLE, "", 2, HEALTHFLAG_IGNOREMAX);
-	CHealth *SmallHealth = new CHealth("item_health", "models/items/healing/medium/tris.md2", 0, "items/n_health.wav", "i_health", "Medium Health", ITEMFLAG_HEALTH|ITEMFLAG_GRABBABLE, "", 10, HEALTHFLAG_NONE);
-	CHealth *LargeHealth = new CHealth("item_health_large", "models/items/healing/large/tris.md2", 0, "items/l_health.wav", "i_health", "Large Health", ITEMFLAG_HEALTH|ITEMFLAG_GRABBABLE, "", 25, HEALTHFLAG_NONE);
-
-	ItemList->AddItemToList (StimPack);
-	ItemList->AddItemToList (SmallHealth);
-	ItemList->AddItemToList (LargeHealth);
-}
-
-void InitItemlist ()
-{
-	ItemList = new CItemList;
-
-	AddAmmoToList();
-	AddHealthToList();
-	AddArmorToList();
-}
-
-void SetItemNames ()
-{
-	ItemList->SendItemNames();
 }

@@ -28,338 +28,296 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 //
 // cc_weapons.cpp
-// New, improved, better, stable item system!
+// New item system code
 //
 
 #include "cc_local.h"
-#include "m_player.h"
 
-CWeapon::CWeapon(char *model, int ActivationStart, int ActivationNumFrames, int FireStart, int FireNumFrames,
-				 int IdleStart, int IdleNumFrames, int DeactStart, int DeactNumFrames) :
-ActivationStart(ActivationStart),
-ActivationNumFrames(ActivationNumFrames),
-FireStart(FireStart),
-FireNumFrames(FireNumFrames),
-IdleStart(IdleStart),
-IdleNumFrames(IdleNumFrames),
-DeactStart(DeactStart),
-DeactNumFrames(DeactNumFrames)
+CWeaponItem::CWeaponItem (char *Classname, char *WorldModel, int EffectFlags,
+			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
+			   char *Precache, class CWeapon *Weapon, class CAmmo *Ammo, int Quantity) :
+CBaseItem(Classname, WorldModel, EffectFlags, PickupSound, Icon, Name, Flags, Precache),
+Weapon(Weapon),
+Ammo(Ammo),
+Quantity(Quantity)
 {
-	WeaponModel = -1;
-	WeaponModelString = model;
+	if (!Weapon)
+		gi.dprintf ("Warning: Weapon with no weapon!\n");
+	else
+	{
+		Weapon->Item = this;
+		Weapon->WeaponItem = this;
+	}
+	if (!Ammo)
+		gi.dprintf ("Warning: Weapon with no ammo!\n");
+}
 
-	ActivationEnd = (ActivationStart + ActivationNumFrames);
-	FireEnd = (FireStart + FireNumFrames);
-	IdleEnd = (IdleStart + IdleNumFrames);
-	DeactEnd = (DeactStart + DeactNumFrames);
+CAmmo::CAmmo (char *Classname, char *WorldModel, int EffectFlags,
+			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
+			   char *Precache, int Quantity, EAmmoTag Tag, CWeapon *Weapon, int Amount) :
+CBaseItem (Classname, WorldModel, EffectFlags, PickupSound, Icon, Name, Flags,
+		   Precache),
+Quantity(Quantity),
+Tag(Tag),
+Weapon(Weapon),
+Amount(Amount)
+{
+	if (Weapon)
+		Weapon->Item = this;
+}
+
+bool CWeaponItem::Pickup (edict_t *ent, edict_t *other)
+{
+	int			index;
+
+	index = this->GetIndex();
+
+	if ( (dmFlags.dfWeaponsStay || coop->Integer()) 
+		&& other->client->pers.Inventory.Has(index))
+	{
+		if (!(ent->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM) ) )
+			return false;	// leave the weapon for others to pickup
+	}
+
+	other->client->pers.Inventory += this;
+
+	if (!(ent->spawnflags & DROPPED_ITEM) )
+	{
+		// give them some ammo with it
+		if (this->Ammo)
+		{
+			if (dmFlags.dfInfiniteAmmo)
+				this->Ammo->AddAmmo (other, 1000);
+			else
+				this->Ammo->AddAmmo (other, this->Ammo->Quantity);
+		}
+
+		if (! (ent->spawnflags & DROPPED_PLAYER_ITEM) )
+		{
+			if (deathmatch->Integer())
+			{
+				if (dmFlags.dfWeaponsStay)
+					ent->flags |= FL_RESPAWN;
+				else
+					SetRespawn (ent, 30);
+			}
+			if (coop->Integer())
+				ent->flags |= FL_RESPAWN;
+		}
+	}
+	else if (ent->count)
+	{
+		this->Ammo->AddAmmo (other, ent->count);
+	}
+
+	/*if (other->client->pers.weapon != ent->item && 
+		(other->client->pers.inventory[index] == 1) &&
+		( !deathmatch->Integer() || other->client->pers.weapon == FindItem("blaster") ) )
+		other->client->newweapon = ent->item;*/
+
+	return true;
+}
+
+void CWeaponItem::Use (edict_t *ent)
+{
+	// see if we're already using it
+	if (this->Weapon == ent->client->pers.Weapon)
+		return;
+
+	if (this->Ammo && !g_select_empty->Integer() && !(this->Flags & ITEMFLAG_AMMO))
+	{
+		if (!ent->client->pers.Inventory.Has(this->Ammo->GetIndex()))
+		{
+			gi.cprintf (ent, PRINT_HIGH, "No %s for %s.\n", this->Ammo->Name, this->Name);
+			return;
+		}
+
+		if (ent->client->pers.Inventory.Has(this->Ammo->GetIndex()) < this->Quantity)
+		{
+			gi.cprintf (ent, PRINT_HIGH, "Not enough %s for %s.\n", this->Ammo->Name, this->Name);
+			return;
+		}
+	}
+
+	// change to this weapon when down
+	ent->client->NewWeapon = this->Weapon;
+}
+
+void CWeaponItem::Drop (edict_t *ent)
+{
+	edict_t *dropped = DropItem(ent);
+	ent->client->pers.Inventory -= this;
+
+	if (this->Weapon == ent->client->pers.Weapon)
+		ent->client->pers.Weapon->NoAmmoWeaponChange(ent);
+}
+
+void InitItemMaxValues (edict_t *ent)
+{
+	ent->client->pers.maxAmmoValues[AMMOTAG_SHELLS] = 100;
+	ent->client->pers.maxAmmoValues[AMMOTAG_BULLETS] = 200;
+	ent->client->pers.maxAmmoValues[AMMOTAG_GRENADES] = 50;
+	ent->client->pers.maxAmmoValues[AMMOTAG_ROCKETS] = 50;
+	ent->client->pers.maxAmmoValues[AMMOTAG_CELLS] = 200;
+	ent->client->pers.maxAmmoValues[AMMOTAG_SLUGS] = 50;
+}
+
+int maxBackpackAmmoValues[AMMOTAG_MAX] =
+{
+	200,
+	300,
+	100,
+	100,
+	300,
+	100
+};
+int maxBandolierAmmoValues[AMMOTAG_MAX] =
+{
+	150,
+	250,
+	50,
+	50,
+	250,
+	75
 };
 
-void CWeapon::InitWeapon (edict_t *ent)
+int CAmmo::GetMax (edict_t *ent)
 {
-	if (WeaponModel == -1)
-		WeaponModel = gi.modelindex(WeaponModelString);
-	ent->client->ps.gunFrame = ActivationStart;
-	ent->client->ps.gunIndex = WeaponModel;
-	ent->client->weaponstate = WS_ACTIVATING;
+	return ent->client->pers.maxAmmoValues[this->Tag];
 }
 
-void CWeapon::WeaponGeneric (edict_t *ent)
+void CAmmo::Use (edict_t *ent)
 {
-	// Idea from Brazen source
-	int newFrame = -1, newState = -1;
+	if (!(this->Flags & ITEMFLAG_WEAPON))
+		return;
 
-	switch (ent->client->weaponstate)
+	// see if we're already using it
+	if (this->Weapon == ent->client->pers.Weapon)
+		return;
+
+	if (!g_select_empty->Integer())
 	{
-	case WS_ACTIVATING:
-		if (ent->client->ps.gunFrame == ActivationEnd)
+		if (!ent->client->pers.Inventory.Has(this->GetIndex()))
 		{
-			newFrame = IdleStart;
-			newState = WS_IDLE;
-		}
-		break;
-	case WS_IDLE:
-		if (ent->client->NewWeapon && ent->client->NewWeapon != this)
-		{
-			// We want to go away!
-			newState = WS_DEACTIVATING;
-			newFrame = DeactStart;
-		}
-		else if ((ent->client->buttons|ent->client->latched_buttons) & BUTTON_ATTACK)
-		{
-			ent->client->latched_buttons &= ~BUTTON_ATTACK;
-
-			// We want to attack!
-			// First call, check AttemptToFire
-			if (AttemptToFire(ent))
-			{
-				// Got here, we can fire!
-				ent->client->ps.gunFrame = FireStart;
-				ent->client->weaponstate = WS_FIRING;
-
-				// We need to check against us right away for first-frame firing
-				WeaponGeneric(ent);
-				return;
-			}
-			else
-				OutOfAmmo(ent);
-		}
-
-		// Either we are still idle or a failed fire.
-		if (newState == -1)
-		{
-			if (ent->client->ps.gunFrame == IdleEnd)
-				newFrame = IdleStart;
-			else
-			{
-				if (CanStopFidgetting(ent) && (rand()&15))
-					newFrame = ent->client->ps.gunFrame;
-			}
-		}
-		break;
-	case WS_FIRING:
-		// Check if this is a firing frame.
-		if (CanFire(ent))
-		{
-			// Quad damage sound if we have it...
-			if (isQuad)
-				Sound(ent, CHAN_ITEM, gi.soundindex("items/damage3.wav"));
-
-			Fire(ent);
-
-			// Now, this call above CAN change the underlying frame and state.
-			// We need this block to make sure we are still doing what we are supposed to.
-			newState = ent->client->weaponstate;
-			newFrame = ent->client->ps.gunFrame;
-		}
-
-		// Only do this if we haven't been explicitely set a newFrame
-		// because we might want to keep firing beyond this point
-		if (newFrame == -1 && ent->client->ps.gunFrame == FireEnd)
-		{
-			newFrame = IdleStart;
-			newState = WS_IDLE;
-		}
-		break;
-	case WS_DEACTIVATING:
-		if (ent->client->ps.gunFrame == DeactEnd)
-		{
-			// Change weapon
-			this->ChangeWeapon (ent);
+			gi.cprintf (ent, PRINT_HIGH, "No %s for %s.\n", this->Name, this->Name);
 			return;
 		}
-		break;
-	}
 
-	if (newFrame != -1)
-		ent->client->ps.gunFrame = newFrame;
-	if (newState != -1)
-		ent->client->weaponstate = newState;
-
-	if (newFrame == -1 && newState == -1)
-		ent->client->ps.gunFrame++;
-}
-
-void CWeapon::ChangeWeapon (edict_t *ent)
-{
-	ent->client->pers.Weapon = ent->client->NewWeapon;
-	ent->client->NewWeapon = NULL;
-	ent->client->machinegun_shots = 0;
-
-	// set visible model
-	if (ent->s.modelIndex == 255) {
-		int i = 0;
-		//if (ent->client->pers.Weapon)
-		//	i = ((ent->client->pers.Weapon & 0xff) << 8);
-		//else
-		ent->s.skinNum = (ent - g_edicts - 1) | i;
-	}
-
-	if (!ent->client->pers.Weapon)
-	{	// dead
-		ent->client->ps.gunIndex = 0;
-
-		if (!ent->client->grenade_blew_up && ent->client->grenade_time >= level.time) // We had a grenade cocked
+		if (ent->client->pers.Inventory.Has(this->GetIndex()) < this->Amount)
 		{
-			WeaponGrenades.FireGrenade(ent, false);
-			ent->client->grenade_time = 0;
+			gi.cprintf (ent, PRINT_HIGH, "Not enough %s.\n", this->Name);
+			return;
 		}
-		return;
 	}
 
-	ent->client->pers.Weapon->InitWeapon(ent);
-
-	ent->client->anim_priority = ANIM_PAIN;
-	if (ent->client->ps.pMove.pmFlags & PMF_DUCKED)
-	{
-		ent->s.frame = FRAME_crpain1;
-		ent->client->anim_end = FRAME_crpain4;
-	}
-	else
-	{
-		ent->s.frame = FRAME_pain301;
-		ent->client->anim_end = FRAME_pain304;
-	}
+	// change to this weapon when down
+	ent->client->NewWeapon = this->Weapon;
 }
 
-void CWeapon::DepleteAmmo (edict_t *ent, int Amount = 1)
+void CAmmo::Drop (edict_t *ent)
 {
-	if (this->WeaponItem)
-	{
-		CAmmo *Ammo = this->WeaponItem->Ammo;
+	int count = this->Quantity;
+	edict_t *dropped = DropItem(ent);
 
-		if (Ammo)
-			ent->client->pers.Inventory.Remove (Ammo, Amount);
-	}
-	else if (this->Item && (this->Item->Flags & ITEMFLAG_AMMO))
-		ent->client->pers.Inventory.Remove (this->Item, Amount);
+	if (count > ent->client->pers.Inventory.Has(this))
+		count = ent->client->pers.Inventory.Has(this);
+
+	dropped->count = count;
+
+	ent->client->pers.Inventory.Remove (this, count);
+
+	if (this->Weapon && ent->client->pers.Weapon && (ent->client->pers.Weapon == this->Weapon) &&
+		!ent->client->pers.Inventory.Has(this))
+		ent->client->pers.Weapon->NoAmmoWeaponChange(ent);
 }
 
-bool CWeapon::AttemptToFire (edict_t *ent)
+bool CAmmo::AddAmmo (edict_t *ent, int count)
 {
-	int numAmmo;
-	CAmmo *Ammo;
-	int quantity = 1;
+	// YUCK
+	int max = CAmmo::GetMax(ent);
 
-	if (this->WeaponItem)
-	{
-		Ammo = this->WeaponItem->Ammo;
-		quantity = this->WeaponItem->Quantity;
-		if (Ammo)
-			numAmmo = ent->client->pers.Inventory.Has(Ammo);
-	}
-	else if (this->Item && (this->Item->Flags & ITEMFLAG_AMMO))
-	{
-		numAmmo = ent->client->pers.Inventory.Has(this->Item);
-		Ammo = dynamic_cast<CAmmo*>(this->Item);
-		quantity = Ammo->Amount;
-	}
-
-	if (numAmmo < quantity)
+	if (!max)
 		return false;
-	else
+
+	if (ent->client->pers.Inventory.Has(this) < max)
+	{
+		ent->client->pers.Inventory.Add (this, count);
+
+		if (ent->client->pers.Inventory.Has(this) > max)
+			ent->client->pers.Inventory.Set(this, max);
+
 		return true;
+	}
+	return false;
 }
 
-void CWeapon::OutOfAmmo (edict_t *ent)
+bool CAmmo::Pickup (edict_t *ent, edict_t *other)
 {
-	// Doesn't affect pain anymore!
-	if (level.time >= ent->damage_debounce_time)
+	int			oldcount;
+	int			count;
+	bool		weapon;
+
+	weapon = (this->Flags & ITEMFLAG_WEAPON);
+
+	if ( weapon && dmFlags.dfInfiniteAmmo )
+		count = 1000;
+	else if (ent->count)
+		count = ent->count;
+	else
+		count = this->Quantity;
+
+	oldcount = other->client->pers.Inventory.Has(this);
+
+	if (!this->AddAmmo (other, count))
+		return false;
+
+	/*if (weapon && !oldcount)
 	{
-		Sound(ent, CHAN_VOICE, gi.soundindex("weapons/noammo.wav"));
-		ent->damage_debounce_time = level.time + 1;
-	}
+		if (other->client->pers.weapon != ent->item && ( !deathmatch->Integer() || other->client->pers.weapon == FindItem("blaster") ) )
+			other->client->newweapon = ent->item;
+	}*/
+
+	if (!(ent->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)) && (deathmatch->Integer()))
+		this->SetRespawn (ent, 30);
+	return true;
 }
 
-// Routines
-inline void P_ProjectSource (gclient_t *client, vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result)
+void AddAmmoToList ()
 {
-	vec3_t	_distance;
+	CAmmo *Shells = new CAmmo("ammo_shells", "models/items/ammo/shells/medium/tris.md2", 0, "misc/am_pkup.wav", "a_shells", "Shells", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 5, AMMOTAG_SHELLS, NULL, -1);
+	CAmmo *Bullets = new CAmmo("ammo_bullets", "models/items/ammo/bullets/medium/tris.md2", 0, "misc/am_pkup.wav", "a_bullets", "Bullets", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 50, AMMOTAG_BULLETS, NULL, -1);
+	CAmmo *Slugs = new CAmmo("ammo_slugs", "models/items/ammo/slugs/medium/tris.md2", 0, "misc/am_pkup.wav", "a_slugs", "Slugs", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 5, AMMOTAG_SLUGS, NULL, -1);
+	CAmmo *Grenades = new CAmmo("ammo_grenades", "models/items/ammo/grenades/medium/tris.md2", 0, "misc/am_pkup.wav", "a_grenades", "Grenades", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_USABLE|ITEMFLAG_GRABBABLE|ITEMFLAG_WEAPON, "", 5, AMMOTAG_GRENADES, &WeaponGrenades, 1);
+	CAmmo *Rockets = new CAmmo("ammo_rockets", "models/items/ammo/rockets/medium/tris.md2", 0, "misc/am_pkup.wav", "a_rockets", "Rockets", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 5, AMMOTAG_ROCKETS, NULL, -1);
+	CAmmo *Cells = new CAmmo("ammo_cells", "models/items/ammo/cells/medium/tris.md2", 0, "misc/am_pkup.wav", "a_cells", "Cells", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 50, AMMOTAG_CELLS, NULL, -1);
 
-	Vec3Copy (distance, _distance);
-	if (client->pers.hand == LEFT_HANDED)
-		_distance[1] *= -1;
-	else if (client->pers.hand == CENTER_HANDED)
-		_distance[1] = 0;
-	G_ProjectSource (point, _distance, forward, right, result);
-}
+	ItemList->AddItemToList (Shells);
+	ItemList->AddItemToList (Bullets);
+	ItemList->AddItemToList (Slugs);
+	ItemList->AddItemToList (Grenades);
+	ItemList->AddItemToList (Rockets);
+	ItemList->AddItemToList (Cells);
 
-
-/*
-===============
-PlayerNoise
-
-Each player can have two noise objects associated with it:
-a personal noise (jumping, pain, weapon firing), and a weapon
-target noise (bullet wall impacts)
-
-Monsters that don't directly see the player can move
-to a noise in hopes of seeing the player from there.
-===============
-*/
-void PlayerNoise(edict_t *who, vec3_t where, int type)
-{
-	edict_t		*noise;
-
-	if (type == PNOISE_WEAPON)
-	{
-		if (who->client->silencer_shots)
-		{
-			who->client->silencer_shots--;
-			return;
-		}
-	}
-
-	if (deathmatch->Integer())
-		return;
-
-	if (who->flags & FL_NOTARGET)
-		return;
-
-
-	if (!who->mynoise)
-	{
-		noise = G_Spawn();
-		noise->classname = "player_noise";
-		Vec3Set (noise->mins, -8, -8, -8);
-		Vec3Set (noise->maxs, 8, 8, 8);
-		noise->owner = who;
-		noise->svFlags = SVF_NOCLIENT;
-		who->mynoise = noise;
-
-		noise = G_Spawn();
-		noise->classname = "player_noise";
-		Vec3Set (noise->mins, -8, -8, -8);
-		Vec3Set (noise->maxs, 8, 8, 8);
-		noise->owner = who;
-		noise->svFlags = SVF_NOCLIENT;
-		who->mynoise2 = noise;
-	}
-
-	if (type == PNOISE_SELF || type == PNOISE_WEAPON)
-	{
-		noise = who->mynoise;
-		level.sound_entity = noise;
-		level.sound_entity_framenum = level.framenum;
-	}
-	else // type == PNOISE_IMPACT
-	{
-		noise = who->mynoise2;
-		level.sound2_entity = noise;
-		level.sound2_entity_framenum = level.framenum;
-	}
-
-	Vec3Copy (where, noise->s.origin);
-	Vec3Subtract (where, noise->maxs, noise->absMin);
-	Vec3Add (where, noise->maxs, noise->absMax);
-	noise->teleport_time = level.time;
-	gi.linkentity (noise);
-}
-
-void CWeapon::Muzzle (edict_t *ent, int muzzleNum)
-{
-	if (isSilenced)
-		muzzleNum |= MZ_SILENCED;
-	TempEnts.MuzzleFlash(ent->s.origin, ent-g_edicts, muzzleNum);
-}
-
-/*
-=================
-Think_Weapon
-
-Called by ClientBeginServerFrame and ClientThink
-=================
-*/
-void CWeapon::Think (edict_t *ent)
-{
-	// if just died, put the weapon away
-	if (ent->health < 1)
-	{
-		ent->client->NewWeapon = NULL;
-		ChangeWeapon (ent);
-	}
-
-	// call active weapon think routine
-	isQuad = (ent->client->quad_framenum > level.framenum);
-	isSilenced = (ent->client->silencer_shots) ? true : false;
-	WeaponGeneric (ent);
+	// Weapons
+	CWeaponItem *Blaster = new CWeaponItem(NULL, NULL, 0, NULL, "w_blaster", "Blaster", ITEMFLAG_WEAPON|ITEMFLAG_USABLE, "", &WeaponBlaster, NULL, 0);
+	CWeaponItem *Shotgun = new CWeaponItem("weapon_shotgun", "models/weapons/g_shotg/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_shotgun", "Shotgun", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponShotgun, Shells, 1);
+	CWeaponItem *SuperShotgun = new CWeaponItem("weapon_supershotgun", "models/weapons/g_shotg2/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_sshotgun", "Super Shotgun", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponSuperShotgun, Shells, 2);
+	CWeaponItem *Machinegun = new CWeaponItem("weapon_machinegun", "models/weapons/g_machn/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_machinegun", "Machinegun", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponMachinegun, Bullets, 1);
+	CWeaponItem *Chaingun = new CWeaponItem("weapon_chaingun", "models/weapons/g_chain/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_chaingun", "Chaingun", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponChaingun, Bullets, 1);
+	CWeaponItem *GrenadeLauncher = new CWeaponItem("weapon_grenadelauncher", "models/weapons/g_launch/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_glauncher", "Grenade Launcher", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponGrenadeLauncher, Grenades, 1);
+	CWeaponItem *RocketLauncher = new CWeaponItem("weapon_rocketlauncher", "models/weapons/g_rocket/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_rlauncher", "Rocket Launcher", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponRocketLauncher, Rockets, 1);
+	CWeaponItem *HyperBlaster = new CWeaponItem("weapon_hyperblaster", "models/weapons/g_hyperb/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_hyperblaster", "HyperBlaster", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponHyperBlaster, Cells, 1);
+	CWeaponItem *Railgun = new CWeaponItem("weapon_railgun", "models/weapons/g_rail/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_railgun", "Railgun", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponRailgun, Slugs, 1);
+	CWeaponItem *BFG = new CWeaponItem("weapon_bfg", "models/weapons/g_bfg/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_bfg", "BFG10k", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponBFG, Cells, 50);
+	
+	ItemList->AddItemToList (Blaster);
+	ItemList->AddItemToList (Shotgun);
+	ItemList->AddItemToList (SuperShotgun);
+	ItemList->AddItemToList (Machinegun);
+	ItemList->AddItemToList (Chaingun);
+	ItemList->AddItemToList (GrenadeLauncher);
+	ItemList->AddItemToList (RocketLauncher);
+	ItemList->AddItemToList (HyperBlaster);
+	ItemList->AddItemToList (Railgun);
+	ItemList->AddItemToList (BFG);
 }

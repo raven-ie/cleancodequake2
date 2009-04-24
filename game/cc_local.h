@@ -61,3 +61,5 @@ void Cast (ECastFlags castFlags, vec3_t Origin);
 void Cast (ECastType castType, ECastFlags castFlags, vec3_t Origin, edict_t *Ent);
 
 uint32 Com_HashGeneric(const char *name, const int hashSize);
+
+extern CItemList *ItemList;

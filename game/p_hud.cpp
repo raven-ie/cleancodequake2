@@ -48,7 +48,7 @@ void MoveClientToIntermission (edict_t *ent)
 	ent->client->invincible_framenum = 0;
 	ent->client->breather_framenum = 0;
 	ent->client->enviro_framenum = 0;
-	ent->client->grenade_blew_up = false;
+	ent->client->grenade_blew_up = ent->client->grenade_thrown = false;
 	ent->client->grenade_time = 0;
 
 	ent->viewheight = 0;
@@ -101,7 +101,7 @@ void BeginIntermission (edict_t *targ)
 				// strip players of all keys between units
 				for (n = 0; n < MAX_CS_ITEMS; n++)
 				{
-					if (CC_GetItemByIndex(n)->Flags & ITEMFLAG_KEY)
+					if (GetItemByIndex(n)->Flags & ITEMFLAG_KEY)
 						client->client->pers.Inventory.Set(n, 0);
 				}
 			}
@@ -329,7 +329,7 @@ void G_SetStats (edict_t *ent)
 	power_armor_type = PowerArmorType (ent);
 	if (power_armor_type)
 	{
-		cells = ent->client->pers.Inventory.Has(CC_FindItem("Cells")->GetIndex());
+		cells = ent->client->pers.Inventory.Has(FindItem("Cells")->GetIndex());
 		if (cells == 0)
 		{	// ran out of cells for power armor
 			ent->flags &= ~FL_POWER_ARMOR;
@@ -387,6 +387,11 @@ void G_SetStats (edict_t *ent)
 		ent->client->ps.stats[STAT_TIMER_ICON] = gi.imageindex ("p_rebreather");
 		ent->client->ps.stats[STAT_TIMER] = (ent->client->breather_framenum - level.framenum)/10;
 	}
+	else if (ent->client->silencer_shots)
+	{
+		ent->client->ps.stats[STAT_TIMER_ICON] = gi.imageindex ("p_silencer");
+		ent->client->ps.stats[STAT_TIMER] = ent->client->silencer_shots;
+	}
 	else
 	{
 		ent->client->ps.stats[STAT_TIMER_ICON] = 0;
@@ -399,7 +404,7 @@ void G_SetStats (edict_t *ent)
 	if (ent->client->pers.Inventory.SelectedItem == -1)
 		ent->client->ps.stats[STAT_SELECTED_ICON] = 0;
 	else
-		ent->client->ps.stats[STAT_SELECTED_ICON] = gi.imageindex(CC_GetItemByIndex(ent->client->pers.Inventory.SelectedItem)->Icon);//gi.imageindex (itemlist[ent->client->pers.selected_item].icon);
+		ent->client->ps.stats[STAT_SELECTED_ICON] = gi.imageindex(GetItemByIndex(ent->client->pers.Inventory.SelectedItem)->Icon);//gi.imageindex (itemlist[ent->client->pers.selected_item].icon);
 
 	ent->client->ps.stats[STAT_SELECTED_ITEM] = ent->client->pers.Inventory.SelectedItem;
 

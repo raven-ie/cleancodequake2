@@ -28,80 +28,70 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 //
 // cc_weapons.h
-// New, improved, better, stable item system!
+// New item system code
 //
 
-typedef int EWeaponState;
-enum //EWeaponState
+// Class for weapon items.
+// Named not to interfere with the CWeapon system, when
+// it is completed.
+// This class is missing ViewWeapon and the like
+// because the CWeapon system will handle all of that in the weapon
+// class itself. That way we don't have a bunch of useless SHIT spread
+// all around the source code.
+class CWeaponItem : public CBaseItem
 {
-	WS_ACTIVATING,
-	WS_IDLE,
-	WS_FIRING,
-	WS_DEACTIVATING
-};
-
-class CWeapon
-{
-protected:
-	// Frames
-	int				ActivationStart, ActivationNumFrames,
-					FireStart,		FireNumFrames,
-					IdleStart,		IdleNumFrames,
-					DeactStart,		DeactNumFrames;
-
-	int				ActivationEnd, FireEnd, IdleEnd, DeactEnd; // To save calls.
-
-	CWeapon ();
-
-	char			*WeaponModelString; // Temporary
 public:
-	bool			isQuad, isSilenced;
-	CBaseItem		*Item;
-	CWeaponItem		*WeaponItem; // The weapon that is linked to this weapon.
-	int				WeaponModel; // Index
+	CWeaponItem (char *Classname, char *WorldModel, int EffectFlags,
+			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
+			   char *Precache, class CWeapon *Weapon, class CAmmo *Ammo, int Quantity);
 
-	CWeapon(char *model, int ActivationStart, int ActivationNumFrames, int FireStart, int FireNumFrames,
-						 int IdleStart, int IdleNumFrames, int DeactStart, int DeactNumFrames);
+	class CWeapon		*Weapon;
+	class CAmmo			*Ammo;
+	int					Quantity;
 
-	// InitWeapon "clears" the previous weapon by introducing the current weapon.
-	virtual void	InitWeapon (edict_t *ent);
-
-	// Muzzle flash
-	virtual void	Muzzle (edict_t *ent, int muzzleNum);
-
-	// General animating function.
-	// Doesn't need to be changed.
-	virtual void	WeaponGeneric (edict_t *ent);
-
-	// These two functions replace the need for an array for
-	// pause and fire frames.
-	virtual bool	CanFire	(edict_t *ent) = 0;
-	virtual bool	CanStopFidgetting (edict_t *ent) = 0;
-
-	// Ammo usage
-	virtual void	DepleteAmmo(edict_t *ent, int Amount);
-	
-	// This function is called when the player hits the attack button.
-	// Returns "true" if the animation can go ahead (check for ammo, etc here)
-	virtual void	OutOfAmmo (edict_t *ent);
-	virtual bool	AttemptToFire (edict_t *ent); 
-
-	// The function called to "fire"
-	virtual void	Fire (edict_t *ent) = 0;
-
-	void ChangeWeapon (edict_t *ent);
-
-	virtual void	Think (edict_t *ent);
+	bool	Pickup (edict_t *ent, edict_t *other);
+	void	Use (edict_t *ent);
+	void	Drop (edict_t *ent);
 };
 
-#include "cc_blaster.h"
-#include "cc_shotgun.h"
-#include "cc_supershotgun.h"
-#include "cc_machinegun.h"
-#include "cc_chaingun.h"
-#include "cc_handgrenade.h"
-#include "cc_grenadelauncher.h"
-#include "cc_rocketlauncher.h"
-#include "cc_hyperblaster.h"
-#include "cc_railgun.h"
-#include "cc_bfg.h"
+// Class for ammo.
+// NOTE: Insert into CAmmo? CAmmo::AmmoMaxes enum perhaps?
+typedef int EAmmoTag;
+enum
+{
+	AMMOTAG_SHELLS,
+	AMMOTAG_BULLETS,
+	AMMOTAG_GRENADES,
+	AMMOTAG_ROCKETS,
+	AMMOTAG_CELLS,
+	AMMOTAG_SLUGS,
+
+	AMMOTAG_MAX
+};
+extern int maxBackpackAmmoValues[AMMOTAG_MAX];
+extern int maxBandolierAmmoValues[AMMOTAG_MAX];
+void InitItemMaxValues (edict_t *ent);
+
+class CAmmo : public CBaseItem
+{
+public:
+	CAmmo (char *Classname, char *WorldModel, int EffectFlags,
+			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
+			   char *Precache, int Quantity, EAmmoTag Tag, CWeapon *Weapon, int Amount);
+
+	class		CWeapon	*Weapon; // For weapon ammo
+	int			Amount; // Taken out for weapon ammo
+	int			Quantity; // Number gotten when we pick this mother upper
+	EAmmoTag	Tag; // YUCKY tag for ammo
+
+	// Only thing different about ammo is how it's picked up.
+	bool	Pickup (edict_t *ent, edict_t *other);
+	void	Use (edict_t *ent);
+	void	Drop (edict_t *ent);
+
+	// Member functions
+	bool	AddAmmo (edict_t *ent, int count);
+	int		GetMax(edict_t *ent);
+};
+
+void AddAmmoToList();

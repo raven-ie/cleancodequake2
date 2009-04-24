@@ -288,7 +288,7 @@ void SP_trigger_key (edict_t *self)
 		MapPrint (MAPPRINT_ERROR, self, self->s.origin, "No key item\n");
 		return;
 	}
-	self->item = CC_FindItemByClassname (st.item);
+	self->item = FindItemByClassname (st.item);
 
 	if (!self->item)
 	{

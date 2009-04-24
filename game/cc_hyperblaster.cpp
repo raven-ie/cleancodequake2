@@ -88,7 +88,10 @@ void CHyperBlaster::Fire (edict_t *ent)
 	else
 	{
 		if (! ent->client->pers.Inventory.Has(ent->client->pers.Weapon->WeaponItem->Ammo) )
+		{
 			OutOfAmmo(ent);
+			NoAmmoWeaponChange (ent);
+		}
 		else
 		{
 			// I replaced these with a table because they are constant.

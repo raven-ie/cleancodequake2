@@ -312,7 +312,7 @@ void ED_CallSpawn (edict_t *ent)
 		}
 	}
 #else
-	if (CC_ItemExists(ent))
+	if (ItemExists(ent))
 		return;
 #endif
 

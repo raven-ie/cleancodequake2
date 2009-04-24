@@ -38,7 +38,7 @@ CBFG WeaponBFG;
 
 CBFG::CBFG() :
 CWeapon("models/weapons/v_bfg/tris.md2", 0, 8, 9, 23,
-		33, 22, 56, 2)
+		33, 22, 56, 2, "weapons/bfg_hum.wav")
 {
 }
 
