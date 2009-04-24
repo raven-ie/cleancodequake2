@@ -103,12 +103,12 @@ void CInventory::SelectNextItem(EItemFlags Flags)
 	}*/
 
 	// scan  for the next valid one
-	for (int i=1 ; i<=GetNumItems() ; i++)
+	for (int i=1 ; i<=MAX_CS_ITEMS ; i++)
 	{
 		index = (SelectedItem + i)%MAX_CS_ITEMS;
 		if (!Array[index])
 			continue;
-		CBaseItem *it = CC_GetItemByIndex(index);
+		CBaseItem *it = GetItemByIndex(index);
 		if (!(it->Flags & ITEMFLAG_USABLE))
 			continue;
 		if (!(it->Flags & Flags))
@@ -132,12 +132,12 @@ void CInventory::SelectPrevItem(EItemFlags Flags)
 	}*/
 
 	// scan  for the next valid one
-	for (int i=1 ; i<=GetNumItems() ; i++)
+	for (int i=1 ; i<=MAX_CS_ITEMS ; i++)
 	{
 		index = (SelectedItem + MAX_CS_ITEMS - i)%MAX_CS_ITEMS;
 		if (!Array[index])
 			continue;
-		CBaseItem *it = CC_GetItemByIndex(index);
+		CBaseItem *it = GetItemByIndex(index);
 		if (!(it->Flags & ITEMFLAG_USABLE))
 			continue;
 		if (!(it->Flags & Flags))
@@ -186,7 +186,7 @@ void CInventory::operator += (CBaseItem *Item)
 
 void CInventory::operator += (int Index)
 {
-	Add(CC_GetItemByIndex(Index), 1);
+	Add(GetItemByIndex(Index), 1);
 }
 
 void CInventory::operator -= (CBaseItem *Item)
@@ -196,7 +196,7 @@ void CInventory::operator -= (CBaseItem *Item)
 
 void CInventory::operator -= (int Index)
 {
-	Remove (CC_GetItemByIndex(Index), 1);
+	Remove (GetItemByIndex(Index), 1);
 }
 
 /*
@@ -209,10 +209,10 @@ Use an inventory item
 void Cmd_Use_f (edict_t *ent)
 {
 	char *s = gi.args();
-	CBaseItem *Item = CC_FindItem(s);
+	CBaseItem *Item = FindItem(s);
 	if (!Item)
 	{
-		Item = CC_FindItemByClassname(s);
+		Item = FindItemByClassname(s);
 
 		if (!Item)
 		{
@@ -245,10 +245,10 @@ Drop an inventory item
 void Cmd_Drop_f (edict_t *ent)
 {
 	char *s = gi.args();
-	CBaseItem *Item = CC_FindItem(s);
+	CBaseItem *Item = FindItem(s);
 	if (!Item)
 	{
-		Item = CC_FindItemByClassname(s);
+		Item = FindItemByClassname(s);
 
 		if (!Item)
 		{
@@ -268,6 +268,7 @@ void Cmd_Drop_f (edict_t *ent)
 	}
 
 	Item->Drop (ent);
+	ent->client->pers.Inventory.ValidateSelectedItem();
 }
 
 
@@ -296,7 +297,7 @@ void Cmd_InvUse_f (edict_t *ent)
 		return;
 	}
 
-	CBaseItem *it = CC_GetItemByIndex(ent->client->pers.Inventory.SelectedItem);
+	CBaseItem *it = GetItemByIndex(ent->client->pers.Inventory.SelectedItem);
 	if (!(it->Flags & ITEMFLAG_USABLE))
 	{
 		gi.cprintf (ent, PRINT_HIGH, "Item is not usable.\n");
@@ -323,7 +324,7 @@ void Cmd_WeapPrev_f (edict_t *ent)
 		int index = (selectedWeaponIndex + i)%MAX_CS_ITEMS;
 		if (!ent->client->pers.Inventory.Has(index))
 			continue;
-		CBaseItem *Item = CC_GetItemByIndex(index);
+		CBaseItem *Item = GetItemByIndex(index);
 		if (!(Item->Flags & ITEMFLAG_USABLE))
 			continue;
 		if (! (Item->Flags & ITEMFLAG_WEAPON) )
@@ -352,7 +353,7 @@ void Cmd_WeapNext_f (edict_t *ent)
 		int index = (selectedWeaponIndex + MAX_CS_ITEMS - i)%MAX_CS_ITEMS;
 		if (!ent->client->pers.Inventory.Has(index))
 			continue;
-		CBaseItem *Item = CC_GetItemByIndex(index);
+		CBaseItem *Item = GetItemByIndex(index);
 		if (!(Item->Flags & ITEMFLAG_USABLE))
 			continue;
 		if (! (Item->Flags & ITEMFLAG_WEAPON) )
@@ -405,13 +406,14 @@ void Cmd_InvDrop_f (edict_t *ent)
 		return;
 	}
 
-	CBaseItem *Item = CC_GetItemByIndex(ent->client->pers.Inventory.SelectedItem);
+	CBaseItem *Item = GetItemByIndex(ent->client->pers.Inventory.SelectedItem);
 	if (!(Item->Flags & ITEMFLAG_DROPPABLE))
 	{
 		gi.cprintf (ent, PRINT_HIGH, "Item is not dropable.\n");
 		return;
 	}
 	Item->Drop (ent);
+	ent->client->pers.Inventory.ValidateSelectedItem();
 }
 
 void Cmd_SelectNextItem_f (edict_t *ent)

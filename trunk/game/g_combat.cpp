@@ -155,7 +155,7 @@ static int CheckPowerArmor (edict_t *ent, vec3_t point, vec3_t normal, int damag
 	gclient_t	*client;
 	int			save;
 	int			power_armor_type;
-	int			index = CC_FindItem("Cells")->GetIndex();
+	int			index = FindItem("Cells")->GetIndex();
 	int			damagePerCell;
 	int			pa_te_type;
 	int			power;
@@ -173,7 +173,7 @@ static int CheckPowerArmor (edict_t *ent, vec3_t point, vec3_t normal, int damag
 	{
 		power_armor_type = PowerArmorType (ent);
 		if (power_armor_type != POWER_ARMOR_NONE)
-			power = client->pers.Inventory.Has(CC_FindItem("Cells"));
+			power = client->pers.Inventory.Has(FindItem("Cells"));
 	}
 	else if (ent->svFlags & SVF_MONSTER)
 	{

@@ -90,7 +90,7 @@ void CMachinegun::Fire (edict_t *ent)
 	{
 		ent->client->ps.gunFrame = 6;
 		OutOfAmmo(ent);
-		//NoAmmoWeaponChange (ent);
+		NoAmmoWeaponChange (ent);
 		return;
 	}
 

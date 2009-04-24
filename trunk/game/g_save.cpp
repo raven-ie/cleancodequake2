@@ -232,6 +232,8 @@ void InitGame (void)
 	globals.numEdicts = game.maxclients+1;
 
 	gi.dprintf ("Running CleanCode Quake2, built on %s (%s %s)\n", __DATE__, BUILDSTRING, CPUSTRING);
+
+	Bans.LoadFromFile ();
 }
 
 //=========================================================

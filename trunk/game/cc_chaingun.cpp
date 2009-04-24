@@ -83,7 +83,7 @@ void CChaingun::Fire (edict_t *ent)
 
 	if ((ent->client->ps.gunFrame == 14) && !(ent->client->buttons & BUTTON_ATTACK))
 	{
-		ent->client->ps.gunFrame = 32;
+		ent->client->ps.gunFrame = 31;
 		ent->client->weapon_sound = 0;
 		return;
 	}
@@ -137,7 +137,7 @@ void CChaingun::Fire (edict_t *ent)
 	if (!shots)
 	{
 		OutOfAmmo(ent);
-		//NoAmmoWeaponChange (ent);
+		NoAmmoWeaponChange (ent);
 		return;
 	}
 

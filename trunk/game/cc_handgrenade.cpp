@@ -98,6 +98,8 @@ void CHandGrenade::FireGrenade (edict_t *ent, bool inHand)
 		Sound(ent, CHAN_ITEM, gi.soundindex("items/damage3.wav")); // Make sure people know. REOOOOOOOO
 	}
 
+	ent->client->grenade_thrown = true;
+
 	Vec3Set (offset, 8, 8, ent->viewheight-8);
 	Angles_Vectors (ent->client->v_angle, forward, right, NULL);
 	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
@@ -205,7 +207,10 @@ void CHandGrenade::WeaponGeneric (edict_t *ent)
 				return;
 			}
 			else
+			{
 				OutOfAmmo(ent);
+				NoAmmoWeaponChange (ent);
+			}
 		}
 
 		// Either we are still idle or a failed fire.
@@ -237,6 +242,7 @@ void CHandGrenade::WeaponGeneric (edict_t *ent)
 		if (newFrame == -1 && ent->client->ps.gunFrame == FireEnd)
 		{
 			ent->client->grenade_time = 0;
+			ent->client->grenade_thrown = false;
 			newFrame = IdleStart;
 			newState = WS_IDLE;
 		}

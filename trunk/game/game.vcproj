@@ -65,6 +65,7 @@
 				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="4"
 				CompileAs="0"
+				DisableSpecificWarnings="4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -741,11 +742,27 @@
 					Name="Items"
 					>
 					<File
-						RelativePath=".\cc_inventory.cpp"
+						RelativePath=".\cc_armor.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\cc_inventory.h"
+						RelativePath=".\cc_armor.h"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_health.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_health.h"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_itemlist.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_itemlist.h"
 						>
 					</File>
 					<File
@@ -756,8 +773,32 @@
 						RelativePath=".\cc_items.h"
 						>
 					</File>
+					<File
+						RelativePath=".\cc_keys.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_keys.h"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_powerups.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_powerups.h"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_weapons.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_weapons.h"
+						>
+					</File>
 					<Filter
-						Name="Weapons"
+						Name="Weapon System"
 						>
 						<File
 							RelativePath=".\cc_bfg.cpp"
@@ -848,11 +889,23 @@
 							>
 						</File>
 						<File
-							RelativePath=".\cc_weapons.cpp"
+							RelativePath=".\cc_weaponmain.cpp"
 							>
 						</File>
 						<File
-							RelativePath=".\cc_weapons.h"
+							RelativePath=".\cc_weaponmain.h"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="Inventory"
+						>
+						<File
+							RelativePath=".\cc_inventory.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\cc_inventory.h"
 							>
 						</File>
 					</Filter>
@@ -878,6 +931,18 @@
 					</File>
 					<File
 						RelativePath=".\include\pal.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="Banning"
+					>
+					<File
+						RelativePath=".\cc_ban.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_ban.h"
 						>
 					</File>
 				</Filter>
