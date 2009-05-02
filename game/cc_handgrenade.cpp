@@ -241,10 +241,21 @@ void CHandGrenade::WeaponGeneric (edict_t *ent)
 		// because we might want to keep firing beyond this point
 		if (newFrame == -1 && ent->client->ps.gunFrame == FireEnd)
 		{
-			ent->client->grenade_time = 0;
-			ent->client->grenade_thrown = false;
-			newFrame = IdleStart;
-			newState = WS_IDLE;
+			if (!ent->client->pers.Inventory.Has(this->Item))
+			{
+				NoAmmoWeaponChange (ent);
+				newState = WS_DEACTIVATING;
+				newFrame = DeactStart;
+				ent->client->grenade_time = 0;
+				ent->client->grenade_thrown = false;
+			}
+			else
+			{
+				ent->client->grenade_time = 0;
+				ent->client->grenade_thrown = false;
+				newFrame = IdleStart;
+				newState = WS_IDLE;
+			}
 		}
 		break;
 	case WS_DEACTIVATING:

@@ -79,21 +79,21 @@ void CTEnt::CTEnt_Splashes::Gunshot (vec3_t Origin, vec3_t Plane)
 {
 	TECast cast(Origin, TE_GUNSHOT);
 	WritePosition (Origin);
-	WriteDirection (Plane);
+	WriteDirection (Plane ? Plane : vec3Origin);
 }
 
 void CTEnt::CTEnt_Splashes::Shotgun (vec3_t Origin, vec3_t Plane)
 {
 	TECast cast(Origin, TE_SHOTGUN);
 	WritePosition (Origin);
-	WriteDirection (Plane);
+	WriteDirection (Plane ? Plane : vec3Origin);
 }
 
 void CTEnt::CTEnt_Splashes::Blood (vec3_t Origin, vec3_t Plane, EBloodType BloodType)
 {
 	TECast cast(Origin, BloodType);
 	WritePosition (Origin);
-	WriteDirection (vec3Origin);
+	WriteDirection (Plane ? Plane : vec3Origin);
 }
 
 void CTEnt::CTEnt_Splashes::Blaster (vec3_t Origin, vec3_t Plane, EBlasterType BlasterType)
@@ -104,9 +104,9 @@ void CTEnt::CTEnt_Splashes::Blaster (vec3_t Origin, vec3_t Plane, EBlasterType B
 	// ...
 	// ID, you impress me.
 	if (BlasterType == BLBlueHyperblaster)
-		WritePosition (Plane);
+		WritePosition (Plane ? Plane : vec3Origin);
 	else
-		WriteDirection (Plane);
+		WriteDirection (Plane ? Plane : vec3Origin);
 }
 
 void CTEnt::CTEnt_Splashes::Sparks (vec3_t Origin, vec3_t Plane, ESparkType SparkType, ESplashType color, byte amount)
@@ -116,13 +116,13 @@ void CTEnt::CTEnt_Splashes::Sparks (vec3_t Origin, vec3_t Plane, ESparkType Spar
 	if (SparkType != STLaserSparks && SparkType != STWeldingSparks && SparkType != STTunnelSparks)
 	{
 		WritePosition (Origin);
-		WriteDirection (Plane);
+		WriteDirection (Plane ? Plane : vec3Origin);
 	}
 	else
 	{
 		WriteByte (amount);
 		WritePosition (Origin);
-		WriteDirection (Plane);
+		WriteDirection (Plane ? Plane : vec3Origin);
 		WriteByte (color);
 	}
 }
@@ -132,7 +132,7 @@ void CTEnt::CTEnt_Splashes::Splash (vec3_t Origin, vec3_t Plane, ESplashType col
 	TECast cast(Origin, TE_SPLASH);
 	WriteByte (amount);
 	WritePosition (Origin);
-	WriteDirection (Plane);
+	WriteDirection (Plane ? Plane : vec3Origin);
 	WriteByte (color);
 }
 
@@ -140,7 +140,7 @@ void CTEnt::CTEnt_Splashes::ShieldSparks (vec3_t Origin, vec3_t Plane, bool Scre
 {
 	TECast cast(Origin, Screen ? TE_SCREEN_SPARKS : TE_SHIELD_SPARKS);
 	WritePosition (Origin);
-	WriteDirection (Plane);
+	WriteDirection (Plane ? Plane : vec3Origin);
 }
 
 void CTEnt::CTEnt_Splashes::Steam (vec3_t Origin, vec3_t Normal, byte count, ESplashType color, short magnitude, short id, long endTime)
@@ -162,7 +162,7 @@ void CTEnt::CTEnt_Splashes::HeatSteam (vec3_t Origin, vec3_t Normal)
 {
 	TECast cast(Origin, TE_HEATBEAM_STEAM);
 	WritePosition (Origin);
-	WriteDirection (Normal);
+	WriteDirection (Normal ? Normal : vec3Origin);
 }
 
 void CTEnt::CTEnt_Splashes::ChainfistSmoke (vec3_t Origin)
@@ -241,16 +241,16 @@ void CTEnt::CTEnt_Trails::HeatBeam (vec3_t Start, vec3_t End, short Ent, bool Mo
 }
 
 // Explosions
-void CTEnt::CTEnt_Explosions::RocketExplosion (vec3_t Start, bool Water, bool Particles)
+void CTEnt::CTEnt_Explosions::RocketExplosion (vec3_t Start, edict_t *ent, bool Water, bool Particles)
 {
 	// Water and NoParticles fight over a spot.. water will win, in the end
-	TECast cast (Start, Water ? TE_ROCKET_EXPLOSION_WATER : (Particles ? TE_ROCKET_EXPLOSION : TE_EXPLOSION1_NP));
+	TECast cast (ent->s.origin, Water ? TE_ROCKET_EXPLOSION_WATER : (Particles ? TE_ROCKET_EXPLOSION : TE_EXPLOSION1_NP), CASTFLAG_PVS);
 	WritePosition (Start);
 }
 
-void CTEnt::CTEnt_Explosions::GrenadeExplosion (vec3_t Start, bool Water)
+void CTEnt::CTEnt_Explosions::GrenadeExplosion (vec3_t Start, edict_t *ent, bool Water)
 {
-	TECast cast (Start, Water ? TE_GRENADE_EXPLOSION_WATER : TE_GRENADE_EXPLOSION);
+	TECast cast (ent->s.origin, Water ? TE_GRENADE_EXPLOSION_WATER : TE_GRENADE_EXPLOSION, CASTFLAG_PVS);
 	WritePosition (Start);
 }
 

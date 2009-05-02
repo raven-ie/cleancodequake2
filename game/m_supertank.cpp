@@ -643,7 +643,7 @@ void BossExplode (edict_t *self)
 		return;
 	}
 
-	TempEnts.Explosions.RocketExplosion (org);
+	TempEnts.Explosions.RocketExplosion (org, self);
 
 	self->nextthink = level.time + 0.1;
 }

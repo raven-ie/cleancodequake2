@@ -457,7 +457,6 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 		else
 			TempEnts.Splashes.Sparks (point, normal, (dflags & DAMAGE_BULLET) ? TempEnts.Splashes.STBulletSparks : TempEnts.Splashes.STSparks, TempEnts.Splashes.SPTSparks);
 
-
 		targ->health = targ->health - take;
 			
 		if (targ->health <= 0)

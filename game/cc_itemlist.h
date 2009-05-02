@@ -1,0 +1,66 @@
+/*
+Copyright (C) 1997-2001 Id Software, Inc.
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+/*
+This source file is contained as part of CleanCode Quake2, a project maintained
+by Paril, to 'clean up' and make Quake2 an easier source base to read and work with.
+
+You may use any part of this code to help create your own bases and own mods off
+this code if you wish. It is under the same license as Quake 2 source (as above),
+therefore you are free to have to fun with it. All I ask is you email me so I can
+list the mod on my page for CleanCode Quake2 to help get the word around. Thanks.
+*/
+
+//
+// cc_itemlist.h
+// Itemlist
+// Basically the link between items and the real world
+//
+
+// Just to conform to the configstrings
+#define MAX_ITEMS		256
+#define MAX_ITEMS_HASH	(MAX_COMMANDS/2)
+
+// Generic itemlist.
+class CItemList
+{
+public:
+	int			numItems;
+
+	CItemList();
+	void SendItemNames ();
+
+	// Revision 2.0
+	// Instead of having the 9 functions I used to have to add
+	// each TYPE of weapon, you create the item, and send it to here.
+	void AddItemToList (CBaseItem *Item);
+
+	// FIXME: Use dynamic-sized array? Good idea? :S
+	CBaseItem	*Items[MAX_ITEMS];
+
+	// There are two hash tables for items; hashed by classname, and hashed by item name.
+	CBaseItem	*HashedClassnameItemList[MAX_ITEMS_HASH];
+	CBaseItem	*HashedNameItemList[MAX_ITEMS_HASH];
+};
+
+void InitItemlist ();
+bool ItemExists (edict_t *ent);
+CBaseItem *FindItemByClassname (char *name);
+CBaseItem *FindItem (char *name);
+CBaseItem *GetItemByIndex (int Index);
+extern int GetNumItems ();

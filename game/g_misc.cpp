@@ -312,14 +312,14 @@ void ThrowDebris (edict_t *self, char *modelname, float speed, vec3_t origin)
 
 void BecomeExplosion1 (edict_t *self)
 {
-	TempEnts.Explosions.RocketExplosion (self->s.origin);
+	TempEnts.Explosions.RocketExplosion (self->s.origin, self);
 	G_FreeEdict (self);
 }
 
 
 void BecomeExplosion2 (edict_t *self)
 {
-	TempEnts.Explosions.GrenadeExplosion (self->s.origin);
+	TempEnts.Explosions.GrenadeExplosion (self->s.origin, self);
 	G_FreeEdict (self);
 }
 
