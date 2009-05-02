@@ -102,8 +102,8 @@ public:
 	class CTEnt_Explosions
 	{
 	public:
-		void RocketExplosion (vec3_t Origin, bool Water = false, bool Particles = true);
-		void GrenadeExplosion (vec3_t Origin, bool Water = false);
+		void RocketExplosion (vec3_t Origin, edict_t *ent, bool Water = false, bool Particles = true);
+		void GrenadeExplosion (vec3_t Origin, edict_t *ent, bool Water = false);
 		void BFGExplosion (vec3_t Origin, bool Big = false);
 		void PlasmaExplosion (vec3_t Origin);
 		void TrackerExplosion (vec3_t Origin);

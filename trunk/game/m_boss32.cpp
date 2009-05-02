@@ -640,13 +640,27 @@ void makron_torso_think (edict_t *self)
 	}
 }
 
+void makron_torso_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
+{
+	Sound (self, CHAN_VOICE, gi.soundindex ("misc/udeath.wav"));
+	for (int n= 0; n < 1 /*4*/; n++)
+		ThrowGib (self, "models/objects/gibs/sm_meat/tris.md2", damage, GIB_ORGANIC);
+	for (int n= 0; n < 4; n++)
+		ThrowGib (self, "models/objects/gibs/sm_metal/tris.md2", damage, GIB_METALLIC);
+	ThrowHead (self, "models/objects/gibs/gear/tris.md2", damage, GIB_METALLIC);
+}
+
 void makron_torso (edict_t *ent)
 {
-	ent->movetype = MOVETYPE_NONE;
-	ent->solid = SOLID_NOT;
-	Vec3Set (ent->mins, -8, -8, 0);
-	Vec3Set (ent->maxs, 8, 8, 8);
+	ent->movetype = MOVETYPE_TOSS;
+	ent->solid = SOLID_BBOX;
+	ent->svFlags |= SVF_DEADMONSTER;
+	ent->takedamage = DAMAGE_YES;
+	Vec3Set (ent->mins, -20, -20, 0);
+	Vec3Set (ent->maxs, 20, 20, 20);
 	ent->s.frame = 346;
+	ent->health = 200;
+	ent->die = makron_torso_die;
 	ent->s.modelIndex = gi.modelindex ("models/monsters/boss3/rider/tris.md2");
 	ent->think = makron_torso_think;
 	ent->nextthink = level.time + 2 * FRAMETIME;
@@ -701,7 +715,16 @@ void makron_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 	tempent = G_Spawn();
 	Vec3Copy (self->s.origin, tempent->s.origin);
 	Vec3Copy (self->s.angles, tempent->s.angles);
-	tempent->s.origin[1] -= 84;
+	tempent->s.angles[0] += 90;
+	tempent->s.origin[2] += 74;
+
+	vec3_t forward, up;
+	Angles_Vectors (self->s.angles, forward, NULL, up);
+
+	Vec3MA (tempent->velocity, -155, forward, tempent->velocity);
+	Vec3MA (tempent->velocity, 155, up, tempent->velocity);
+	tempent->avelocity[0] = -150;
+
 	makron_torso (tempent);
 
 	self->monsterinfo.currentmove = &makron_move_death2;
@@ -844,7 +867,7 @@ void SP_monster_makron (edict_t *self)
 	Vec3Set (self->maxs, 30, 30, 90);
 
 	self->health = 3000;
-	self->gib_health = -2000;
+	self->gib_health = -200;
 	self->mass = 500;
 
 	self->pain = makron_pain;
@@ -860,8 +883,8 @@ void SP_monster_makron (edict_t *self)
 
 	gi.linkentity (self);
 	
-//	self->monsterinfo.currentmove = &makron_move_stand;
-	self->monsterinfo.currentmove = &makron_move_sight;
+	self->monsterinfo.currentmove = &makron_move_stand;
+//	self->monsterinfo.currentmove = &makron_move_sight;
 	self->monsterinfo.scale = MODEL_SCALE;
 
 	walkmonster_start(self);

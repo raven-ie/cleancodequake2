@@ -143,6 +143,7 @@ void SP_monster_supertank (edict_t *self);
 void SP_monster_boss2 (edict_t *self);
 void SP_monster_jorg (edict_t *self);
 void SP_monster_boss3_stand (edict_t *self);
+void SP_monster_makron (edict_t *self);
 
 void SP_monster_commander_body (edict_t *self);
 
@@ -267,6 +268,7 @@ spawn_t	spawns[] = {
 	{"monster_boss2", SP_monster_boss2},
 	{"monster_boss3_stand", SP_monster_boss3_stand},
 	{"monster_jorg", SP_monster_jorg},
+	{"monster_makron", SP_monster_makron},
 
 	{"monster_commander_body", SP_monster_commander_body},
 
@@ -287,11 +289,6 @@ Finds the spawn function for the entity and calls it
 void ED_CallSpawn (edict_t *ent)
 {
 	spawn_t	*s;
-#if 0
-	gitem_t	*item;
-	int		i;
-#endif
-
 	if (!ent->classname)
 	{
 		//gi.dprintf ("ED_CallSpawn: NULL classname\n");
@@ -300,21 +297,8 @@ void ED_CallSpawn (edict_t *ent)
 	}
 
 	// check item spawn functions
-#if 0
-	for (i=0,item=itemlist ; i<game.num_items ; i++,item++)
-	{
-		if (!item->classname)
-			continue;
-		if (!strcmp(item->classname, ent->classname))
-		{	// found it
-			SpawnItem (ent, item);
-			return;
-		}
-	}
-#else
 	if (ItemExists(ent))
 		return;
-#endif
 
 	// check normal spawn functions
 	for (s=spawns ; s->name ; s++)

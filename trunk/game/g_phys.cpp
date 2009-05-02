@@ -488,9 +488,9 @@ bool SV_Push (edict_t *pusher, vec3_t move, vec3_t amove)
 			// try moving the contacted entity 
 			Vec3Add (check->s.origin, move, check->s.origin);
 			if (check->client)
-			{	// FIXME: doesn't rotate monsters?
 				check->client->ps.pMove.deltaAngles[YAW] += amove[YAW];
-			}
+			else
+				check->s.angles[YAW] += amove[YAW];
 
 			// figure movement due to the pusher's amove
 			Vec3Subtract (check->s.origin, pusher->s.origin, org);

@@ -381,25 +381,11 @@ bool SV_StepDirection (edict_t *ent, float yaw, float dist)
 }
 
 /*
-======================
-SV_FixCheckBottom
-
-======================
-*/
-void SV_FixCheckBottom (edict_t *ent)
-{
-	ent->flags |= FL_PARTIALGROUND;
-}
-
-
-
-/*
 ================
 SV_NewChaseDir
 
 ================
 */
-#define DI_NODIR	-1
 void SV_NewChaseDir (edict_t *actor, edict_t *enemy, float dist)
 {
 	float	deltax,deltay;
@@ -483,7 +469,7 @@ void SV_NewChaseDir (edict_t *actor, edict_t *enemy, float dist)
 // a valid standing position at all
 
 	if (!M_CheckBottom (actor))
-		SV_FixCheckBottom (actor);
+		actor->flags |= FL_PARTIALGROUND;
 }
 
 /*

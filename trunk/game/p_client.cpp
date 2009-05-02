@@ -1421,7 +1421,7 @@ void ClientUserinfoChanged (edict_t *ent, char *userinfo)
 	// IP
 	s = Info_ValueForKey (userinfo, "ip");
 	if (strlen(s))
-		strncpy (ent->client->pers.IP, s, sizeof(ent->client->pers.IP));
+		ent->client->pers.IP = IPStringToArrays(s);
 
 	// save off the userinfo in case we want to check something later
 	strncpy (ent->client->pers.userinfo, userinfo, sizeof(ent->client->pers.userinfo)-1);
@@ -1446,6 +1446,13 @@ BOOL ClientConnect (edict_t *ent, char *userinfo)
 
 	// check to see if they are on the banned IP list
 	value = Info_ValueForKey (userinfo, "ip");
+	IPAddress Adr = IPStringToArrays(value);
+	if (Bans.IsBanned(Adr) || Bans.IsBanned(Info_ValueForKey(userinfo, "name")))
+	{
+		Info_SetValueForKey(userinfo, "rejmsg", "Banned from server.");
+		return false;
+	}
+	
 	if (SV_FilterPacket(value)) {
 		Info_SetValueForKey(userinfo, "rejmsg", "Banned.");
 		return false;
@@ -1456,6 +1463,11 @@ BOOL ClientConnect (edict_t *ent, char *userinfo)
 	if (deathmatch->Integer() && *value && strcmp(value, "0")) {
 		int i, numspec;
 
+		if (Bans.IsBannedFromSpectator(Adr) || Bans.IsBannedFromSpectator(Info_ValueForKey(userinfo, "name")))
+		{
+			Info_SetValueForKey(userinfo, "rejmsg", "Not permitted to enter spectator mode");
+			return false;
+		}
 		if (*spectator_password->String() && 
 			strcmp(spectator_password->String(), "none") && 
 			strcmp(spectator_password->String(), value)) {

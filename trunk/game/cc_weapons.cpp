@@ -110,10 +110,13 @@ bool CWeaponItem::Pickup (edict_t *ent, edict_t *other)
 		this->Ammo->AddAmmo (other, ent->count);
 	}
 
-	/*if (other->client->pers.weapon != ent->item && 
-		(other->client->pers.inventory[index] == 1) &&
-		( !deathmatch->Integer() || other->client->pers.weapon == FindItem("blaster") ) )
-		other->client->newweapon = ent->item;*/
+	if (this->Weapon)
+	{
+		if (other->client->pers.Weapon != this->Weapon && 
+			(other->client->pers.Inventory.Has(this) == 1) &&
+			( !deathmatch->Integer() || (other->client->pers.Weapon && other->client->pers.Weapon->WeaponItem == FindItem("blaster")) ) )
+			other->client->NewWeapon = this->Weapon;
+	}
 
 	return true;
 }
@@ -271,11 +274,11 @@ bool CAmmo::Pickup (edict_t *ent, edict_t *other)
 	if (!this->AddAmmo (other, count))
 		return false;
 
-	/*if (weapon && !oldcount)
+	if (weapon && !oldcount)
 	{
-		if (other->client->pers.weapon != ent->item && ( !deathmatch->Integer() || other->client->pers.weapon == FindItem("blaster") ) )
-			other->client->newweapon = ent->item;
-	}*/
+		if (other->client->pers.Weapon != this->Weapon && ( !deathmatch->Integer() || (other->client->pers.Weapon && other->client->pers.Weapon->WeaponItem == FindItem("Blaster")) ) )
+			other->client->NewWeapon = this->Weapon;
+	}
 
 	if (!(ent->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)) && (deathmatch->Integer()))
 		this->SetRespawn (ent, 30);
@@ -284,7 +287,7 @@ bool CAmmo::Pickup (edict_t *ent, edict_t *other)
 
 void AddAmmoToList ()
 {
-	CAmmo *Shells = new CAmmo("ammo_shells", "models/items/ammo/shells/medium/tris.md2", 0, "misc/am_pkup.wav", "a_shells", "Shells", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 5, AMMOTAG_SHELLS, NULL, -1);
+	CAmmo *Shells = new CAmmo("ammo_shells", "models/items/ammo/shells/medium/tris.md2", 0, "misc/am_pkup.wav", "a_shells", "Shells", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 10, AMMOTAG_SHELLS, NULL, -1);
 	CAmmo *Bullets = new CAmmo("ammo_bullets", "models/items/ammo/bullets/medium/tris.md2", 0, "misc/am_pkup.wav", "a_bullets", "Bullets", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 50, AMMOTAG_BULLETS, NULL, -1);
 	CAmmo *Slugs = new CAmmo("ammo_slugs", "models/items/ammo/slugs/medium/tris.md2", 0, "misc/am_pkup.wav", "a_slugs", "Slugs", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 5, AMMOTAG_SLUGS, NULL, -1);
 	CAmmo *Grenades = new CAmmo("ammo_grenades", "models/items/ammo/grenades/medium/tris.md2", 0, "misc/am_pkup.wav", "a_grenades", "Grenades", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_USABLE|ITEMFLAG_GRABBABLE|ITEMFLAG_WEAPON, "", 5, AMMOTAG_GRENADES, &WeaponGrenades, 1);

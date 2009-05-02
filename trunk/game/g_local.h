@@ -62,7 +62,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define FL_WATERJUMP			0x00000200	// player jumping out of water
 #define FL_TEAMSLAVE			0x00000400	// not the first on the team
 #define FL_NO_KNOCKBACK			0x00000800
-#define FL_POWER_ARMOR			0x00001000	// power armor (if any) is active
+#define FL_POWER_ARMOR			0x00001000	// power armor is active
 #define FL_RESPAWN				0x80000000	// used for item respawning
 
 
@@ -118,29 +118,6 @@ typedef enum
 //gib types
 #define GIB_ORGANIC				0
 #define GIB_METALLIC			1
-
-//monster ai flags
-#define AI_STAND_GROUND			0x00000001
-#define AI_TEMP_STAND_GROUND	0x00000002
-#define AI_SOUND_TARGET			0x00000004
-#define AI_LOST_SIGHT			0x00000008
-#define AI_PURSUIT_LAST_SEEN	0x00000010
-#define AI_PURSUE_NEXT			0x00000020
-#define AI_PURSUE_TEMP			0x00000040
-#define AI_HOLD_FRAME			0x00000080
-#define AI_GOOD_GUY				0x00000100
-#define AI_BRUTAL				0x00000200
-#define AI_NOSTEP				0x00000400
-#define AI_DUCKED				0x00000800
-#define AI_COMBAT_POINT			0x00001000
-#define AI_MEDIC				0x00002000
-#define AI_RESURRECTING			0x00004000
-
-//monster attack state
-#define AS_STRAIGHT				1
-#define AS_SLIDING				2
-#define AS_MELEE				3
-#define AS_MISSILE				4
 
 // armor types
 #define ARMOR_NONE				0
@@ -700,7 +677,7 @@ void GetChaseTarget(edict_t *ent);
 typedef struct
 {
 	char		userinfo[MAX_INFO_STRING];
-	char		IP[16];
+	IPAddress	IP;
 	char		netname[16];
 	int			hand;
 
@@ -970,7 +947,8 @@ struct edict_s
 
 	int			style;			// also used as areaportal number
 
-	class CBaseItem	*item;
+	class CBaseItem		*item;
+	class CMonster		*Monster;
 
 	// common data blocks
 	moveinfo_t		moveinfo;

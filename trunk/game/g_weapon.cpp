@@ -313,7 +313,7 @@ void blaster_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_
 			mod = MOD_HYPERBLASTER;
 		else
 			mod = MOD_BLASTER;
-		T_Damage (other, self, self->owner, self->velocity, self->s.origin, plane->normal, self->dmg, 1, DAMAGE_ENERGY, mod);
+		T_Damage (other, self, self->owner, self->velocity, self->s.origin, plane ? plane->normal : vec3Origin, self->dmg, 1, DAMAGE_ENERGY, mod);
 	}
 	else
 		TempEnts.Splashes.Blaster(self->s.origin, plane ? plane->normal : vec3Origin);
@@ -409,20 +409,22 @@ static void Grenade_Explode (edict_t *ent)
 		mod = MOD_G_SPLASH;
 	T_RadiusDamage(ent, ent->owner, ent->dmg, ent->enemy, ent->dmg_radius, mod);
 
+	Vec3Copy (ent->s.origin, origin);
+
 	Vec3MA (ent->s.origin, -0.02, ent->velocity, origin);
 	if (ent->waterlevel)
 	{
 		if (ent->groundentity)
-			TempEnts.Explosions.GrenadeExplosion(origin, true);
+			TempEnts.Explosions.GrenadeExplosion(origin, ent, true);
 		else
-			TempEnts.Explosions.RocketExplosion(origin, true);
+			TempEnts.Explosions.RocketExplosion(origin, ent, true);
 	}
 	else
 	{
 		if (ent->groundentity)
-			TempEnts.Explosions.GrenadeExplosion(origin);
+			TempEnts.Explosions.GrenadeExplosion(origin, ent);
 		else
-			TempEnts.Explosions.RocketExplosion(origin);
+			TempEnts.Explosions.RocketExplosion(origin, ent);
 	}
 
 	G_FreeEdict (ent);
@@ -583,9 +585,9 @@ void rocket_touch (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t 
 	T_RadiusDamage(ent, ent->owner, ent->radius_dmg, other, ent->dmg_radius, MOD_R_SPLASH);
 
 	if (ent->waterlevel)
-		TempEnts.Explosions.RocketExplosion(origin, true);
+		TempEnts.Explosions.RocketExplosion(origin, ent, true);
 	else
-		TempEnts.Explosions.RocketExplosion(origin, false);
+		TempEnts.Explosions.RocketExplosion(origin, ent, false);
 
 	G_FreeEdict (ent);
 }

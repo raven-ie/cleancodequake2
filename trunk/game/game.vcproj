@@ -456,10 +456,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\g_items.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\g_main.cpp"
 				>
 			</File>
@@ -943,6 +939,18 @@
 					</File>
 					<File
 						RelativePath=".\cc_ban.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="Monsters"
+					>
+					<File
+						RelativePath=".\cc_monsters.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_monsters.h"
 						>
 					</File>
 				</Filter>

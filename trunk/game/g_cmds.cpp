@@ -478,6 +478,12 @@ void Cmd_Say_f (edict_t *ent, bool team, bool arg0)
 	if (gi.argc () < 2 && !arg0)
 		return;
 
+	if (Bans.IsSquelched(ent->client->pers.IP) || Bans.IsSquelched(ent->client->pers.netname))
+	{
+		gi.cprintf (ent, PRINT_HIGH, "You are squelched and may not talk.\n");
+		return;
+	}
+
 	if (!(dmFlags.dfSkinTeams || dmFlags.dfModelTeams))
 		team = false;
 
@@ -614,6 +620,27 @@ void Cmd_NewtonInit (edict_t *ent);
 void Cmd_NewtonBox (edict_t *ent);
 #endif
 
+void SP_monster_makron (edict_t *self);
+
+void Cmd_Pop (edict_t *ent)
+{
+	vec3_t forward;
+	vec3_t up = {0,0,-1};
+	Angles_Vectors (ent->client->v_angle, forward, NULL, NULL);
+
+	vec3f vec1 = vec3f(ent->s.origin);
+	vec3f vec3 = vec3f(forward);
+	vec3f end;
+
+	end = vec1 + vec3 * 100;
+
+	edict_t *mak = G_Spawn();
+	Vec3Copy (end, mak->s.origin);
+	mak->s.angles[1] = ent->s.angles[1];
+	SP_monster_makron (mak);
+	mak->health = 1;
+}
+
 void Cmd_Register ()
 {
 	// These commands are generic, and can be executed any time
@@ -654,6 +681,8 @@ void Cmd_Register ()
 	Cmd_AddCommand ("give",					Cmd_Give_f,				CMD_CHEAT);
 	Cmd_AddCommand ("spawn",				Cmd_Give,				CMD_CHEAT);
 
+	Cmd_AddCommand ("pop",					Cmd_Pop);
+
 #if 0
 	Cmd_AddCommand ("newtoninit",			Cmd_NewtonInit);
 	Cmd_AddCommand ("newtonbox",			Cmd_NewtonBox);
@@ -667,6 +696,8 @@ ClientCommand
 */
 void ClientCommand (edict_t *ent)
 {
+	int five =5, three = 3, two = 2;
+	int ten = (five,three,two);
 	if (!ent->client)
 		return;		// not fully in game yet
 
