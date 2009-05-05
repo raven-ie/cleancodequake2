@@ -750,9 +750,9 @@ void SV_Physics_Toss (edict_t *ent)
 		ent->waterlevel = 0;
 
 	if (!wasinwater && isinwater)
-		Sound (old_origin, g_edicts, CHAN_AUTO, gi.soundindex("misc/h2ohit1.wav"));
+		Sound (old_origin, g_edicts, CHAN_AUTO, SoundIndex("misc/h2ohit1.wav"));
 	else if (wasinwater && !isinwater)
-		Sound (ent->s.origin, g_edicts, CHAN_AUTO, gi.soundindex("misc/h2ohit1.wav"));
+		Sound (ent->s.origin, g_edicts, CHAN_AUTO, SoundIndex("misc/h2ohit1.wav"));
 
 // move teamslaves
 	for (slave = ent->teamchain; slave; slave = slave->teamchain)
@@ -823,8 +823,8 @@ void SV_Physics_Step (edict_t *ent)
 	int			mask;
 
 	// airborn monsters should always check for ground
-	if (!ent->groundentity)
-		M_CheckGround (ent);
+	if (!ent->groundentity && ent->Monster)
+		ent->Monster->CheckGround ();
 
 	groundentity = ent->groundentity;
 
@@ -880,7 +880,7 @@ void SV_Physics_Step (edict_t *ent)
 	{
 		// apply friction
 		// let dead monsters who aren't completely onground slide
-		if ((wasonground) || (ent->flags & (FL_SWIM|FL_FLY)) && !(ent->health <= 0.0 && !M_CheckBottom(ent)))
+		if ((wasonground) || (ent->flags & (FL_SWIM|FL_FLY)) && !(ent->health <= 0.0 && (ent->Monster && !ent->Monster->CheckBottom())))
 		{
 			vel = ent->velocity;
 			speed = sqrtf(vel[0]*vel[0] +vel[1]*vel[1]);
@@ -912,7 +912,7 @@ void SV_Physics_Step (edict_t *ent)
 			return;
 
 		if (ent->groundentity && !wasonground && hitsound)
-			Sound (ent, CHAN_AUTO, gi.soundindex("world/land.wav"));
+			Sound (ent, CHAN_AUTO, SoundIndex("world/land.wav"));
 	}
 
 // regular thinking

@@ -27,36 +27,62 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_dmflags.h
-// This is so that I don't have to keep doing dmflags->Integer(). Should be faster than bitwise ops every frame!
+// cc_bitch.h
+// Iron Maiden
 //
 
-class dmFlagsConfig
+
+class CMaiden : public CMonster
 {
 public:
-	bool				dfNoHealth;
-	bool				dfNoItems;
-	bool				dfWeaponsStay;
-	bool				dfNoFallingDamage;
-	bool				dfInstantItems;
-	bool				dfSameLevel;
-	bool				dfSkinTeams;
-	bool				dfModelTeams;
-	bool				dfNoFriendlyFire;
-	bool				dfSpawnFarthest;
-	bool				dfForceRespawn;
-	bool				dfNoArmor;
-	bool				dfAllowExit;
-	bool				dfInfiniteAmmo;
-	bool				dfQuadDrop;
-	bool				dfFixedFov;
+	int	SoundMissilePrelaunch;
+	int	SoundMissileLaunch;
+	int	SoundMeleeSwing;
+	int	SoundMeleeHit;
+	int	SoundMissileReload;
+	int	SoundDeath1;
+	int	SoundDeath2;
+	int	SoundFallDown;
+	int	SoundIdle1;
+	int	SoundIdle2;
+	int	SoundPain1;
+	int	SoundPain2;
+	int	SoundPain3;
+	int	SoundSight;
+	int	SoundSearch;
 
-	bool				dfQuadFireDrop;
-	bool				dfNoMines;
-	bool				dfNoStackDouble;
-	bool				dfNoNukes;
-	bool				dfNoSpheres;
+	CMaiden ();
 
-	dmFlagsConfig();
-	void UpdateFlags (int dmFlags);
+	void Allocate (edict_t *ent);
+
+	void Attack ();
+	void Dodge (edict_t *attacker, float eta);
+	void Idle ();
+	void Run ();
+	void Sight ();
+	void Stand ();
+	void Walk ();
+	void Melee ();
+
+	void DuckDown ();
+	void DuckHold ();
+	void DuckUp ();
+
+	void Moan ();
+	void Reload ();
+	void PreAttack ();
+	void Rocket ();
+	void ReRocket ();
+	void Slash ();
+	void DoSlash ();
+	void ReSlash ();
+	void Attack1 ();
+
+	void Dead ();
+	void Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
+	void Pain (edict_t *other, float kick, int damage);
+
+	void Spawn ();
 };
+
+extern CMaiden Monster_Bitch;

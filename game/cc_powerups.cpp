@@ -244,7 +244,7 @@ void CQuadDamage::Use (edict_t *ent)
 
 	ent->client->pers.Inventory -= this;
 
-	Sound(ent, CHAN_ITEM, gi.soundindex("items/damage.wav"));
+	Sound(ent, CHAN_ITEM, SoundIndex("items/damage.wav"));
 }
 
 void CInvulnerability::DoPickup (edict_t *ent, edict_t *other)
@@ -267,7 +267,7 @@ void CInvulnerability::Use (edict_t *ent)
 	else
 		ent->client->invincible_framenum = level.framenum + 300;
 
-	Sound(ent, CHAN_ITEM, gi.soundindex("items/protect.wav"));
+	Sound(ent, CHAN_ITEM, SoundIndex("items/protect.wav"));
 }
 
 void CSilencer::DoPickup (edict_t *ent, edict_t *other)
@@ -386,7 +386,7 @@ void CPowerShield::Use (edict_t *ent)
 	if (ent->flags & FL_POWER_ARMOR)
 	{
 		ent->flags &= ~FL_POWER_ARMOR;
-		Sound(ent, CHAN_AUTO, gi.soundindex("misc/power2.wav"));
+		Sound(ent, CHAN_AUTO, SoundIndex("misc/power2.wav"));
 	}
 	else
 	{
@@ -396,7 +396,7 @@ void CPowerShield::Use (edict_t *ent)
 			return;
 		}
 		ent->flags |= FL_POWER_ARMOR;
-		Sound(ent, CHAN_AUTO, gi.soundindex("misc/power1.wav"));
+		Sound(ent, CHAN_AUTO, SoundIndex("misc/power1.wav"));
 	}
 }
 

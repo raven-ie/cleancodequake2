@@ -27,36 +27,36 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_dmflags.h
-// This is so that I don't have to keep doing dmflags->Integer(). Should be faster than bitwise ops every frame!
+// cc_indexing.h
+// New indexing system
 //
 
-class dmFlagsConfig
+class CIndex // (lol)
 {
 public:
-	bool				dfNoHealth;
-	bool				dfNoItems;
-	bool				dfWeaponsStay;
-	bool				dfNoFallingDamage;
-	bool				dfInstantItems;
-	bool				dfSameLevel;
-	bool				dfSkinTeams;
-	bool				dfModelTeams;
-	bool				dfNoFriendlyFire;
-	bool				dfSpawnFarthest;
-	bool				dfForceRespawn;
-	bool				dfNoArmor;
-	bool				dfAllowExit;
-	bool				dfInfiniteAmmo;
-	bool				dfQuadDrop;
-	bool				dfFixedFov;
+	int Index;
+	char *Name;
 
-	bool				dfQuadFireDrop;
-	bool				dfNoMines;
-	bool				dfNoStackDouble;
-	bool				dfNoNukes;
-	bool				dfNoSpheres;
-
-	dmFlagsConfig();
-	void UpdateFlags (int dmFlags);
+	CIndex		*HashNext;
+	uint32		HashValue;
 };
+
+#define MAX_INDEXES 256
+
+class CIndexList
+{
+public:
+	CIndexList();
+
+	CIndex	*List[MAX_INDEXES];
+	CIndex	*HashList[MAX_INDEXES];
+
+	int	numIndexes;
+
+	int		AddToList (char *String, int Index);
+	int		GetIndex (char *String);
+};
+
+int ModelIndex (char *string);
+int SoundIndex (char *string);
+int ImageIndex (char *string);

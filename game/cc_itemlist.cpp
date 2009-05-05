@@ -112,7 +112,7 @@ CBaseItem *FindItemByClassname (char *name)
 
 	for (Item = ItemList->HashedClassnameItemList[hash]; Item; Item=Item->hashClassnameNext)
 	{
-		if (Q_stricmp(Item->Name, name) == 0)
+		if (Q_stricmp(Item->Classname, name) == 0)
 			return Item;
 	}
 	return NULL;

@@ -34,12 +34,126 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_local.h"
 #define STEPSIZE	18
 
-/*CFrame TestFrames[] =
+/*
+=================
+AI_SetSightClient
+
+Called once each frame to set level.sight_client to the
+player to be checked for in findtarget.
+
+If all clients are either dead or in notarget, sight_client
+will be null.
+
+In coop games, sight_client will cycle between the clients.
+=================
+*/
+void AI_SetSightClient (void)
 {
-	CFrame(NULL, 7, NULL),
-	CFrame(NULL, 15, NULL)
-};
-CAnim TestAnim(0, 40, TestFrames, NULL);*/
+	edict_t	*ent;
+	int		start, check;
+
+	if (level.sight_client == NULL)
+		start = 1;
+	else
+		start = level.sight_client - g_edicts;
+
+	check = start;
+	while (1)
+	{
+		check++;
+		if (check > game.maxclients)
+			check = 1;
+		ent = &g_edicts[check];
+		if (ent->inUse
+			&& ent->health > 0
+			&& !(ent->flags & FL_NOTARGET) )
+		{
+			level.sight_client = ent;
+			return;		// got one
+		}
+		if (check == start)
+		{
+			level.sight_client = NULL;
+			return;		// nobody to see
+		}
+	}
+}
+
+/*
+=============
+range
+
+returns the range catagorization of an entity reletive to self
+0	melee range, will become hostile even if back is turned
+1	visibility and infront, or visibility and show hostile
+2	infront and show hostile
+3	only triggered by damage
+=============
+*/
+int range (edict_t *self, edict_t *other)
+{
+	vec3_t	v;
+	float	len;
+
+	Vec3Subtract (self->s.origin, other->s.origin, v);
+	len = Vec3Length (v);
+	if (len < MELEE_DISTANCE)
+		return RANGE_MELEE;
+	if (len < 500)
+		return RANGE_NEAR;
+	if (len < 1000)
+		return RANGE_MID;
+	return RANGE_FAR;
+}
+
+/*
+=============
+visible
+
+returns 1 if the entity is visible to self, even if not infront ()
+=============
+*/
+bool visible (edict_t *self, edict_t *other)
+{
+	vec3_t	spot1;
+	vec3_t	spot2;
+	CTrace	trace;
+
+	Vec3Copy (self->s.origin, spot1);
+	spot1[2] += self->viewheight;
+	Vec3Copy (other->s.origin, spot2);
+	spot2[2] += other->viewheight;
+	trace.Trace (spot1, spot2, self, CONTENTS_MASK_OPAQUE);
+	
+	if (trace.fraction == 1.0)
+		return true;
+	return false;
+}
+
+
+/*
+=============
+infront
+
+returns 1 if the entity is in front (in sight) of self
+=============
+*/
+bool infront (edict_t *self, edict_t *other)
+{
+	vec3_t	vec;
+	float	dot;
+	vec3_t	forward;
+	
+	Angles_Vectors (self->s.angles, forward, NULL, NULL);
+	Vec3Subtract (other->s.origin, self->s.origin, vec);
+	VectorNormalizef (vec, vec);
+	dot = DotProduct (vec, forward);
+	
+	if (dot > 0.3)
+		return true;
+	return false;
+}
+
 
 void Monster_Think (edict_t *ent)
 {
@@ -51,8 +165,6 @@ void Monster_Think (edict_t *ent)
 	float	thinktime;
 
 	thinktime = Monster->NextThink;
-	if (thinktime <= 0)
-		return;
 	if (thinktime > level.time+0.001)
 		return;
 	
@@ -490,7 +602,7 @@ bool CMonster::StepDirection (float Yaw, float Dist)
 	Vec3Copy (Entity->s.origin, oldorigin);
 	if (MoveStep (move, false))
 	{
-		delta = Entity->s.angles[YAW] - Entity->ideal_yaw;
+		delta = Entity->s.angles[YAW] - IdealYaw;
 		// not turned far enough, so don't take the step
 		if (delta > 45 && delta < 315)
 			Vec3Copy (oldorigin, Entity->s.origin);
@@ -529,6 +641,7 @@ void CMonster::WalkMonsterStartGo ()
 void CMonster::WalkMonsterStart ()
 {
 	Think = &CMonster::WalkMonsterStartGo;
+	NextThink = level.time + .1;
 	MonsterStart ();
 }
 
@@ -677,7 +790,6 @@ void CMonster::MonsterStart ()
 	Entity->max_health = Entity->health;
 	Entity->clipMask = CONTENTS_MASK_MONSTERSOLID;
 
-	Entity->s.skinNum = 0;
 	Entity->deadflag = DEAD_NO;
 	Entity->svFlags &= ~SVF_DEADMONSTER;
 
@@ -705,6 +817,7 @@ void CMonster::MonsterTriggeredStart ()
 	Entity->movetype = MOVETYPE_NONE;
 	Entity->svFlags |= SVF_NOCLIENT;
 	NextThink = 0;
+	Think = NULL;
 	Entity->use = &CMonster::MonsterTriggeredSpawnUse;
 }
 
@@ -853,7 +966,7 @@ bool CMonster::CheckAttack ()
 		// don't always melee in easy mode
 		if (skill->Integer() == 0 && (rand()&3) )
 			return false;
-		if (AIFlags & AI_HAS_MELEE)
+		if (MonsterFlags & MF_HAS_MELEE)
 			AttackState = AS_MELEE;
 		else
 			AttackState = AS_MISSILE;
@@ -861,7 +974,7 @@ bool CMonster::CheckAttack ()
 	}
 	
 // missile attack
-	if (!(AIFlags & AI_HAS_ATTACK))
+	if (!(MonsterFlags & MF_HAS_ATTACK))
 		return false;
 		
 	if (level.time < AttackFinished)
@@ -950,7 +1063,7 @@ void CMonster::AI_Charge(float Dist)
 bool CMonster::AI_CheckAttack()
 {
 	vec3_t		temp;
-	bool		hesDeadJim;
+	bool		hesDeadJim = false;
 
 // this causes monsters to run blindly to the combat point w/o firing
 	if (Entity->goalentity)
@@ -1073,5 +1186,1012 @@ bool CMonster::AI_CheckAttack()
 	if (!EnemyVis)
 		return false;
 
+	if (Entity->enemy->client && Entity->enemy->flags & FL_GODMODE)
+		return false;
 	return CheckAttack ();
+}
+
+void CMonster::AI_Move (float Dist)
+{
+	WalkMove (Entity->s.angles[YAW], Dist);
+}
+
+void CMonster::AI_Run(float Dist)
+{
+	vec3_t		v;
+	edict_t		*tempgoal;
+	edict_t		*save;
+	bool		isNew;
+	edict_t		*marker;
+	float		d1, d2;
+	CTrace		tr;
+	vec3_t		v_forward, v_right;
+	float		left, center, right;
+	vec3_t		left_target, right_target;
+
+	// if we're going to a combat point, just proceed
+	if (AIFlags & AI_COMBAT_POINT)
+	{
+		MoveToGoal (Dist);
+		return;
+	}
+
+	if (AIFlags & AI_SOUND_TARGET)
+	{
+		Vec3Subtract (Entity->s.origin, Entity->enemy->s.origin, v);
+		if (Vec3Length(v) < 64)
+		{
+			AIFlags |= (AI_STAND_GROUND | AI_TEMP_STAND_GROUND);
+			Stand ();
+			return;
+		}
+
+		MoveToGoal (Dist);
+
+		if (!FindTarget ())
+			return;
+	}
+
+	if (AI_CheckAttack ())
+		return;
+
+	if (AttackState == AS_SLIDING)
+	{
+		AI_Run_Slide (Dist);
+		return;
+	}
+
+	if (EnemyVis)
+	{
+//		if (self.aiflags & AI_LOST_SIGHT)
+//			dprint("regained sight\n");
+		MoveToGoal (Dist);
+		AIFlags &= ~AI_LOST_SIGHT;
+		Vec3Copy (Entity->enemy->s.origin, LastSighting);
+		TrailTime = level.time;
+		return;
+	}
+
+	// coop will change to another enemy if visible
+	if (coop->Integer())
+	{	// FIXME: insane guys get mad with this, which causes crashes!
+		if (FindTarget ())
+			return;
+	}
+
+	if (SearchTime && (level.time > (SearchTime + 20)))
+	{
+		MoveToGoal (Dist);
+		SearchTime = 0;
+//		dprint("search timeout\n");
+		return;
+	}
+
+	save = Entity->goalentity;
+	tempgoal = G_Spawn();
+	Entity->goalentity = tempgoal;
+
+	isNew = false;
+
+	if (!(AIFlags & AI_LOST_SIGHT))
+	{
+		// just lost sight of the player, decide where to go first
+//		dprint("lost sight of player, last seen at "); dprint(vtos(self.last_sighting)); dprint("\n");
+		AIFlags |= (AI_LOST_SIGHT | AI_PURSUIT_LAST_SEEN);
+		AIFlags &= ~(AI_PURSUE_NEXT | AI_PURSUE_TEMP);
+		isNew = true;
+	}
+
+	if (AIFlags & AI_PURSUE_NEXT)
+	{
+		AIFlags &= ~AI_PURSUE_NEXT;
+//		dprint("reached current goal: "); dprint(vtos(self.origin)); dprint(" "); dprint(vtos(self.last_sighting)); dprint(" "); dprint(ftos(vlen(self.origin - self.last_sighting))); dprint("\n");
+
+		// give ourself more time since we got this far
+		SearchTime = level.time + 5;
+
+		if (AIFlags & AI_PURSUE_TEMP)
+		{
+//			dprint("was temp goal; retrying original\n");
+			AIFlags &= ~AI_PURSUE_TEMP;
+			marker = NULL;
+			Vec3Copy (SavedGoal, LastSighting);
+			isNew = true;
+		}
+		else if (AIFlags & AI_PURSUIT_LAST_SEEN)
+		{
+			AIFlags &= ~AI_PURSUIT_LAST_SEEN;
+			marker = PlayerTrail_PickFirst (Entity);
+		}
+		else
+			marker = PlayerTrail_PickNext (Entity);
+
+		if (marker)
+		{
+			Vec3Copy (marker->s.origin, LastSighting);
+			TrailTime = marker->timestamp;
+			Entity->s.angles[YAW] = IdealYaw = marker->s.angles[YAW];
+//			dprint("heading is "); dprint(ftos(self.ideal_yaw)); dprint("\n");
+
+//			debug_drawline(self.origin, self.last_sighting, 52);
+			isNew = true;
+		}
+	}
+
+	Vec3Subtract (Entity->s.origin, LastSighting, v);
+	d1 = Vec3Length(v);
+	if (d1 <= Dist)
+	{
+		AIFlags |= AI_PURSUE_NEXT;
+		Dist = d1;
+	}
+
+	Vec3Copy (LastSighting, Entity->goalentity->s.origin);
+
+	if (isNew)
+	{
+//		gi.dprintf("checking for course correction\n");
+
+		tr.Trace (Entity->s.origin, Entity->mins, Entity->maxs, LastSighting, Entity, CONTENTS_MASK_PLAYERSOLID);
+		if (tr.fraction < 1)
+		{
+			Vec3Subtract (Entity->goalentity->s.origin, Entity->s.origin, v);
+			d1 = Vec3Length(v);
+			center = tr.fraction;
+			d2 = d1 * ((center+1)/2);
+			Entity->s.angles[YAW] = IdealYaw = VecToYaw(v);
+			Angles_Vectors(Entity->s.angles, v_forward, v_right, NULL);
+
+			Vec3Set (v, d2, -16, 0);
+			G_ProjectSource (Entity->s.origin, v, v_forward, v_right, left_target);
+			tr.Trace(Entity->s.origin, Entity->mins, Entity->maxs, left_target, Entity, CONTENTS_MASK_PLAYERSOLID);
+			left = tr.fraction;
+
+			Vec3Set (v, d2, 16, 0);
+			G_ProjectSource (Entity->s.origin, v, v_forward, v_right, right_target);
+			tr.Trace(Entity->s.origin, Entity->mins, Entity->maxs, right_target, Entity, CONTENTS_MASK_PLAYERSOLID);
+			right = tr.fraction;
+
+			center = (d1*center)/d2;
+			if (left >= center && left > right)
+			{
+				if (left < 1)
+				{
+					Vec3Set (v, d2 * left * 0.5, -16, 0);
+					G_ProjectSource (Entity->s.origin, v, v_forward, v_right, left_target);
+//					gi.dprintf("incomplete path, go part way and adjust again\n");
+				}
+				Vec3Copy (LastSighting, SavedGoal);
+				AIFlags |= AI_PURSUE_TEMP;
+				Vec3Copy (left_target, Entity->goalentity->s.origin);
+				Vec3Copy (left_target, LastSighting);
+				Vec3Subtract (Entity->goalentity->s.origin, Entity->s.origin, v);
+				Entity->s.angles[YAW] = IdealYaw = VecToYaw(v);
+//				gi.dprintf("adjusted left\n");
+//				debug_drawline(self.origin, self.last_sighting, 152);
+			}
+			else if (right >= center && right > left)
+			{
+				if (right < 1) {
+					Vec3Set (v, d2 * right * 0.5, 16, 0);
+					G_ProjectSource (Entity->s.origin, v, v_forward, v_right, right_target);
+//					gi.dprintf("incomplete path, go part way and adjust again\n");
+				}
+				Vec3Copy (LastSighting, SavedGoal);
+				AIFlags |= AI_PURSUE_TEMP;
+				Vec3Copy (right_target, Entity->goalentity->s.origin);
+				Vec3Copy (right_target, LastSighting);
+				Vec3Subtract (Entity->goalentity->s.origin, Entity->s.origin, v);
+				Entity->s.angles[YAW] = IdealYaw = VecToYaw(v);
+//				gi.dprintf("adjusted right\n");
+//				debug_drawline(self.origin, self.last_sighting, 152);
+			}
+		}
+//		else gi.dprintf("course was fine\n");
+	}
+
+	MoveToGoal (Dist);
+
+	G_FreeEdict(tempgoal);
+
+	if (Entity)
+		Entity->goalentity = save;
+}
+
+void CMonster::AI_Run_Melee ()
+{
+	IdealYaw = EnemyYaw;
+	ChangeYaw ();
+
+	if (FacingIdeal())
+	{
+		Melee ();
+		AttackState = AS_STRAIGHT;
+	}
+}
+
+void CMonster::AI_Run_Missile()
+{
+	IdealYaw = EnemyYaw;
+	ChangeYaw ();
+
+	if (FacingIdeal())
+	{
+		Attack ();
+		AttackState = AS_STRAIGHT;
+	}
+}
+
+void CMonster::AI_Run_Slide(float Dist)
+{
+	IdealYaw = EnemyYaw;
+	ChangeYaw ();
+
+	if (WalkMove (IdealYaw + ((Lefty) ? 90 : -90), Dist))
+		return;
+		
+	Lefty = !Lefty;
+	WalkMove (IdealYaw - ((Lefty) ? 90 : -90), Dist);
+}
+
+void CMonster::AI_Stand (float Dist)
+{
+	if (Dist)
+		WalkMove (Entity->s.angles[YAW], Dist);
+
+	if (AIFlags & AI_STAND_GROUND)
+	{
+		if (Entity->enemy)
+		{
+			vec3_t v;
+			Vec3Subtract (Entity->enemy->s.origin, Entity->s.origin, v);
+			IdealYaw = VecToYaw(v);
+			if (Entity->s.angles[YAW] != IdealYaw && AIFlags & AI_TEMP_STAND_GROUND)
+			{
+				AIFlags &= ~(AI_STAND_GROUND | AI_TEMP_STAND_GROUND);
+				Run ();
+			}
+			ChangeYaw ();
+			CheckAttack ();
+		}
+		else
+			FindTarget ();
+		return;
+	}
+
+	if (FindTarget ())
+		return;
+	
+	if (level.time > PauseTime)
+	{
+		Walk ();
+		return;
+	}
+
+	if (!(Entity->spawnflags & 1) && (MonsterFlags & MF_HAS_IDLE) && (level.time > IdleTime))
+	{
+		if (IdleTime)
+		{
+			Idle ();
+			IdleTime = level.time + 15 + (random() * 15);
+		}
+		else
+			IdleTime = level.time + (random() * 15);
+	}
+}
+
+void CMonster::ReactToDamage (edict_t *attacker)
+{
+	if (!(attacker->client) && !(attacker->Monster))
+		return;
+
+	if (attacker == Entity || attacker == Entity->enemy)
+		return;
+
+	// if we are a good guy monster and our attacker is a player
+	// or another good guy, do not get mad at them
+	if (AIFlags & AI_GOOD_GUY)
+	{
+		if (attacker->client || (attacker->Monster->AIFlags & AI_GOOD_GUY))
+			return;
+	}
+
+	// we now know that we are not both good guys
+
+	// if attacker is a client, get mad at them because he's good and we're not
+	if (attacker->client)
+	{
+		AIFlags &= ~AI_SOUND_TARGET;
+
+		// this can only happen in coop (both new and old enemies are clients)
+		// only switch if can't see the current enemy
+		if (Entity->enemy && Entity->enemy->client)
+		{
+			if (visible(Entity, Entity->enemy))
+			{
+				Entity->oldenemy = attacker;
+				return;
+			}
+			Entity->oldenemy = Entity->enemy;
+		}
+		Entity->enemy = attacker;
+		if (!(AIFlags & AI_DUCKED))
+			FoundTarget ();
+		return;
+	}
+
+	// it's the same base (walk/swim/fly) type and a different classname and it's not a tank
+	// (they spray too much), get mad at them
+	//if (((Entity->flags & (FL_FLY|FL_SWIM)) == (attacker->flags & (FL_FLY|FL_SWIM))) &&
+	//	 (strcmp (Entity->classname, attacker->classname) != 0))// &&
+		// (strcmp(attacker->classname, "monster_tank") != 0) &&
+		// (strcmp(attacker->classname, "monster_supertank") != 0) &&
+		// (strcmp(attacker->classname, "monster_makron") != 0) &&
+		// (strcmp(attacker->classname, "monster_jorg") != 0) )
+	{
+		if (Entity->enemy && Entity->enemy->client)
+			Entity->oldenemy = Entity->enemy;
+		Entity->enemy = attacker;
+		if (!(AIFlags & AI_DUCKED))
+			FoundTarget ();
+	}
+	// if they *meant* to shoot us, then shoot back
+	/*else */if (attacker->enemy == Entity)
+	{
+		if (Entity->enemy && Entity->enemy->client)
+			Entity->oldenemy = Entity->enemy;
+		Entity->enemy = attacker;
+		if (!(AIFlags & AI_DUCKED))
+			FoundTarget ();
+	}
+	// otherwise get mad at whoever they are mad at (help our buddy) unless it is us!
+	/*else if (attacker->enemy && attacker->enemy != Entity)
+	{
+		if (Entity->enemy && Entity->enemy->client)
+			Entity->oldenemy = Entity->enemy;
+		Entity->enemy = attacker->enemy;
+		if (!(AIFlags & AI_DUCKED))
+			FoundTarget ();
+	}*/
+}
+
+void CMonster::AI_Turn(float Dist)
+{
+	if (Dist)
+		WalkMove (Entity->s.angles[YAW], Dist);
+
+	if (FindTarget ())
+		return;
+	
+	ChangeYaw ();
+}
+
+void CMonster::AI_Walk(float Dist)
+{
+	MoveToGoal (Dist);
+
+	// check for noticing a player
+	if (FindTarget ())
+		return;
+
+	if ((MonsterFlags & MF_HAS_SEARCH) && (level.time > IdleTime))
+	{
+		if (IdleTime)
+		{
+			Search ();
+			IdleTime = level.time + 15 + (random() * 15);
+		}
+		else
+			IdleTime = level.time + (random() * 15);
+	}
+}
+
+// These are intended to be virtually replaced.
+void CMonster::Stand ()
+{
+}
+
+void CMonster::Idle ()
+{
+	if (MonsterFlags & MF_HAS_IDLE)
+		gi.dprintf ("Warning: Monster with no idle has MF_HAS_IDLE!\n");
+}
+
+void CMonster::Search ()
+{
+	if (MonsterFlags & MF_HAS_SEARCH)
+		gi.dprintf ("Warning: Monster with no search has MF_HAS_SEARCH!\n");
+}
+
+void CMonster::Walk ()
+{
+}
+
+void CMonster::Run ()
+{
+}
+
+void CMonster::Dodge (edict_t *other, float eta)
+{
+}
+
+void CMonster::Attack()
+{
+	if (MonsterFlags & MF_HAS_ATTACK)
+		gi.dprintf ("Warning: Monster with no attack has MF_HAS_ATTACK!\n");
+}
+
+void CMonster::Melee ()
+{
+	if (MonsterFlags & MF_HAS_MELEE)
+		gi.dprintf ("Warning: Monster with no melee has MF_HAS_MELEE!\n");
+}
+
+void CMonster::Sight ()
+{
+	if (MonsterFlags & MF_HAS_SIGHT)
+		gi.dprintf ("Warning: Monster with no sight has MF_HAS_SIGHT!\n");
+}
+
+void CMonster::MonsterDeathUse ()
+{
+	Entity->flags &= ~(FL_FLY|FL_SWIM);
+	AIFlags &= AI_GOOD_GUY;
+
+	if (Entity->item)
+	{
+		Entity->item->Drop (Entity);
+		Entity->item = NULL;
+	}
+
+	if (Entity->deathtarget)
+		Entity->target = Entity->deathtarget;
+
+	if (!Entity->target)
+		return;
+
+	G_UseTargets (Entity, Entity->enemy);
+}
+
+void CMonster::MonsterThink ()
+{
+	MoveFrame ();
+	if (Entity->linkCount != LinkCount)
+	{
+		LinkCount = Entity->linkCount;
+		CheckGround ();
+	}
+	CatagorizePosition ();
+	WorldEffects ();
+	SetEffects ();
+}
+
+void CMonster::MoveFrame ()
+{
+	int		index;
+	CAnim	*Move = CurrentMove;
+
+	Entity->nextthink = level.time + FRAMETIME;
+
+	if ((NextFrame) && (NextFrame >= Move->FirstFrame) && (NextFrame <= Move->LastFrame))
+	{
+		Entity->s.frame = NextFrame;
+		NextFrame = 0;
+	}
+	else
+	{
+		if (Entity->s.frame == Move->LastFrame)
+		{
+			if (Move->EndFunc)
+			{
+				void (CMonster::*EndFunc) () = Move->EndFunc;
+				(this->*EndFunc) ();
+
+				// regrab move, endfunc is very likely to change it
+				Move = CurrentMove;
+
+				// check for death
+				if (Entity->svFlags & SVF_DEADMONSTER)
+					return;
+			}
+		}
+
+		if (Entity->s.frame < Move->FirstFrame || Entity->s.frame > Move->LastFrame)
+		{
+			AIFlags &= ~AI_HOLD_FRAME;
+			Entity->s.frame = Move->FirstFrame;
+		}
+		else
+		{
+			if (!(AIFlags & AI_HOLD_FRAME))
+			{
+				Entity->s.frame++;
+				if (Entity->s.frame > Move->LastFrame)
+					Entity->s.frame = Move->FirstFrame;
+			}
+		}
+	}
+
+	index = Entity->s.frame - Move->FirstFrame;
+
+	void (CMonster::*AIFunc) (float Dist) = Move->Frames[index].AIFunc;
+	if (AIFunc)
+		(this->*AIFunc) ((AIFlags & AI_HOLD_FRAME) ? 0 : (Move->Frames[index].Dist * Scale));
+
+	void (CMonster::*Function) () = Move->Frames[index].Function;
+	if (Function)
+		(this->*Function) ();
+}
+
+void CMonster::FoundTarget ()
+{
+	// let other monsters see this monster for a while
+	if (Entity->enemy->client)
+	{
+		level.sight_entity = Entity;
+		level.sight_entity_framenum = level.framenum;
+		level.sight_entity->light_level = 128;
+	}
+
+	Entity->show_hostile = level.time + 1;		// wake up other monsters
+
+	Vec3Copy(Entity->enemy->s.origin, LastSighting);
+	TrailTime = level.time;
+
+	if (!Entity->combattarget)
+	{
+		HuntTarget ();
+		return;
+	}
+
+	Entity->goalentity = Entity->movetarget = G_PickTarget(Entity->combattarget);
+	if (!Entity->movetarget)
+	{
+		Entity->goalentity = Entity->movetarget = Entity->enemy;
+		HuntTarget ();
+		MapPrint (MAPPRINT_ERROR, Entity, Entity->s.origin, "combattarget %s not found\n", Entity->combattarget);
+		return;
+	}
+
+	// clear out our combattarget, these are a one shot deal
+	Entity->combattarget = NULL;
+	AIFlags |= AI_COMBAT_POINT;
+
+	// clear the targetname, that point is ours!
+	Entity->movetarget->targetname = NULL;
+	PauseTime = 0;
+
+	// run for it
+	Run ();
+}
+
+void CMonster::SetEffects()
+{
+	Entity->s.effects = 0;
+	Entity->s.renderFx = RF_FRAMELERP;
+
+	if (AIFlags & AI_RESURRECTING)
+	{
+		Entity->s.effects |= EF_COLOR_SHELL;
+		Entity->s.renderFx |= RF_SHELL_RED;
+	}
+
+	if (Entity->health <= 0)
+		return;
+
+	if (Entity->powerarmor_time > level.time)
+	{
+		if (PowerArmorType == POWER_ARMOR_SCREEN)
+			Entity->s.effects |= EF_POWERSCREEN;
+		else if (PowerArmorType == POWER_ARMOR_SHIELD)
+		{
+			Entity->s.effects |= EF_COLOR_SHELL;
+			Entity->s.renderFx |= RF_SHELL_GREEN;
+		}
+	}
+}
+
+void CMonster::WorldEffects()
+{
+	if (Entity->health > 0)
+	{
+		if (!(Entity->flags & FL_SWIM))
+		{
+			if (Entity->waterlevel < 3)
+				Entity->air_finished = level.time + 12;
+			else if (Entity->air_finished < level.time)
+			{
+				if (Entity->pain_debounce_time < level.time)
+				{
+					int dmg = 2 + 2 * floor(level.time - Entity->air_finished);
+					if (dmg > 15)
+						dmg = 15;
+					T_Damage (Entity, world, world, vec3Origin, Entity->s.origin, vec3Origin, dmg, 0, DAMAGE_NO_ARMOR, MOD_WATER);
+					Entity->pain_debounce_time = level.time + 1;
+				}
+			}
+		}
+		else
+		{
+			if (Entity->waterlevel > 0)
+				Entity->air_finished = level.time + 9;
+			else if (Entity->air_finished < level.time)
+			{	// suffocate!
+				if (Entity->pain_debounce_time < level.time)
+				{
+					int dmg = 2 + 2 * floor(level.time - Entity->air_finished);
+					if (dmg > 15)
+						dmg = 15;
+					T_Damage (Entity, world, world, vec3Origin, Entity->s.origin, vec3Origin, dmg, 0, DAMAGE_NO_ARMOR, MOD_WATER);
+					Entity->pain_debounce_time = level.time + 1;
+				}
+			}
+		}
+	}
+	
+	if (Entity->waterlevel == 0)
+	{
+		if (Entity->flags & FL_INWATER)
+		{	
+			Sound (Entity, CHAN_BODY, SoundIndex("player/watr_out.wav"));
+			Entity->flags &= ~FL_INWATER;
+		}
+		return;
+	}
+
+	if ((Entity->watertype & CONTENTS_LAVA) && !(Entity->flags & FL_IMMUNE_LAVA))
+	{
+		if (Entity->damage_debounce_time < level.time)
+		{
+			Entity->damage_debounce_time = level.time + 0.2;
+			T_Damage (Entity, world, world, vec3Origin, Entity->s.origin, vec3Origin, 10*Entity->waterlevel, 0, 0, MOD_LAVA);
+		}
+	}
+	if ((Entity->watertype & CONTENTS_SLIME) && !(Entity->flags & FL_IMMUNE_SLIME))
+	{
+		if (Entity->damage_debounce_time < level.time)
+		{
+			Entity->damage_debounce_time = level.time + 1;
+			T_Damage (Entity, world, world, vec3Origin, Entity->s.origin, vec3Origin, 4*Entity->waterlevel, 0, 0, MOD_SLIME);
+		}
+	}
+	
+	if ( !(Entity->flags & FL_INWATER) )
+	{	
+		if (!(Entity->svFlags & SVF_DEADMONSTER))
+		{
+			if (Entity->watertype & CONTENTS_LAVA)
+			{
+				if (random() <= 0.5)
+					Sound (Entity, CHAN_BODY, SoundIndex("player/lava1.wav"));
+				else
+					Sound (Entity, CHAN_BODY, SoundIndex("player/lava2.wav"));
+			}
+			else
+				Sound (Entity, CHAN_BODY, SoundIndex("player/watr_in.wav"));
+		}
+
+		Entity->flags |= FL_INWATER;
+		Entity->damage_debounce_time = 0;
+	}
+}
+
+void CMonster::CatagorizePosition()
+{
+	vec3_t		point;
+	int			cont;
+//
+// get waterlevel
+//
+	point[0] = Entity->s.origin[0];
+	point[1] = Entity->s.origin[1];
+	point[2] = Entity->s.origin[2] + Entity->mins[2] + 1;	
+	cont = gi.pointcontents (point);
+
+	if (!(cont & CONTENTS_MASK_WATER))
+	{
+		Entity->waterlevel = 0;
+		Entity->watertype = 0;
+		return;
+	}
+
+	Entity->watertype = cont;
+	Entity->waterlevel = 1;
+	point[2] += 26;
+	cont = gi.pointcontents (point);
+	if (!(cont & CONTENTS_MASK_WATER))
+		return;
+
+	Entity->waterlevel = 2;
+	point[2] += 22;
+	cont = gi.pointcontents (point);
+	if (cont & CONTENTS_MASK_WATER)
+		Entity->waterlevel = 3;
+}
+
+void CMonster::CheckGround()
+{
+	vec3_t		point;
+	CTrace		trace;
+
+	if (Entity->flags & (FL_SWIM|FL_FLY))
+		return;
+
+	if (Entity->velocity[2] > 100)
+	{
+		Entity->groundentity = NULL;
+		return;
+	}
+
+// if the hull point one-quarter unit down is solid the entity is on ground
+	point[0] = Entity->s.origin[0];
+	point[1] = Entity->s.origin[1];
+	point[2] = Entity->s.origin[2] - 0.25;
+
+	trace.Trace (Entity->s.origin, Entity->mins, Entity->maxs, point, Entity, CONTENTS_MASK_MONSTERSOLID);
+
+	// check steepness
+	if ( trace.plane.normal[2] < 0.7 && !trace.startSolid)
+	{
+		Entity->groundentity = NULL;
+		return;
+	}
+
+	if (!trace.startSolid && !trace.allSolid)
+	{
+		Vec3Copy (trace.endPos, Entity->s.origin);
+		Entity->groundentity = trace.ent;
+		Entity->groundentity_linkcount = trace.ent->linkCount;
+		Entity->velocity[2] = 0;
+	}
+}
+
+void CMonster::HuntTarget()
+{
+	vec3_t	vec;
+
+	Entity->goalentity = Entity->enemy;
+	if (AIFlags & AI_STAND_GROUND)
+		Stand ();
+	else
+		Run ();
+	Vec3Subtract (Entity->enemy->s.origin, Entity->s.origin, vec);
+	IdealYaw = VecToYaw(vec);
+	// wait a while before first attack
+	if (!(AIFlags & AI_STAND_GROUND))
+		AttackFinished = level.time + 1;
+}
+
+bool CMonster::FindTarget()
+{
+	edict_t		*client;
+	bool		heardit;
+	int			r;
+
+	if (Entity->monsterinfo.aiflags & AI_GOOD_GUY)
+	{
+		if (Entity->goalentity && Entity->goalentity->inUse && Entity->goalentity->classname)
+		{
+			if (strcmp(Entity->goalentity->classname, "target_actor") == 0)
+				return false;
+		}
+
+		//FIXME look for monsters?
+		return false;
+	}
+
+	// if we're going to a combat point, just proceed
+	if (Entity->monsterinfo.aiflags & AI_COMBAT_POINT)
+		return false;
+
+// if the first spawnflag bit is set, the monster will only wake up on
+// really seeing the player, not another monster getting angry or hearing
+// something
+
+// revised behavior so they will wake up if they "see" a player make a noise
+// but not weapon impact/explosion noises
+
+	heardit = false;
+	if ((level.sight_entity_framenum >= (level.framenum - 1)) && !(Entity->spawnflags & 1) )
+	{
+		client = level.sight_entity;
+		if (client->enemy == Entity->enemy)
+			return false;
+	}
+	else if (level.sound_entity_framenum >= (level.framenum - 1))
+	{
+		client = level.sound_entity;
+		heardit = true;
+	}
+	else if (!(Entity->enemy) && (level.sound2_entity_framenum >= (level.framenum - 1)) && !(Entity->spawnflags & 1) )
+	{
+		client = level.sound2_entity;
+		heardit = true;
+	}
+	else
+	{
+		client = level.sight_client;
+		if (!client)
+			return false;	// no clients to get mad at
+	}
+
+	// if the entity went away, forget it
+	if (!client->inUse)
+		return false;
+
+	if (client == Entity->enemy)
+		return true;	// JDC false;
+
+	if (client->client)
+	{
+		if (client->flags & FL_NOTARGET)
+			return false;
+	}
+	else if (client->svFlags & SVF_MONSTER)
+	{
+		if (!client->enemy)
+			return false;
+		if (client->enemy->flags & FL_NOTARGET)
+			return false;
+	}
+	else if (heardit)
+	{
+		if (client->owner->flags & FL_NOTARGET)
+			return false;
+	}
+	else
+		return false;
+
+	if (!heardit)
+	{
+		r = range (Entity, client);
+
+		if (r == RANGE_FAR)
+			return false;
+
+// this is where we would check invisibility
+
+		// is client in an spot too dark to be seen?
+		if (client->light_level <= 5)
+			return false;
+
+		if (!visible (Entity, client))
+			return false;
+
+		if (r == RANGE_NEAR)
+		{
+			if (client->show_hostile < level.time && !infront (Entity, client))
+				return false;
+		}
+		else if (r == RANGE_MID)
+		{
+			if (!infront (Entity, client))
+				return false;
+		}
+
+		Entity->enemy = client;
+
+		if (strcmp(Entity->enemy->classname, "player_noise") != 0)
+		{
+			AIFlags &= ~AI_SOUND_TARGET;
+
+			if (!Entity->enemy->client)
+			{
+				Entity->enemy = Entity->enemy->enemy;
+				if (!Entity->enemy->client)
+				{
+					Entity->enemy = NULL;
+					return false;
+				}
+			}
+		}
+	}
+	else	// heardit
+	{
+		vec3_t	temp;
+
+		if (Entity->spawnflags & 1)
+		{
+			if (!visible (Entity, client))
+				return false;
+		}
+		else
+		{
+			if (!gi.inPHS(Entity->s.origin, client->s.origin))
+				return false;
+		}
+
+		Vec3Subtract (client->s.origin, Entity->s.origin, temp);
+
+		if (Vec3Length(temp) > 1000)	// too far to hear
+			return false;
+
+		// check area portals - if they are different and not connected then we can't hear it
+		if (client->areaNum != Entity->areaNum)
+		{
+			if (!gi.AreasConnected(Entity->areaNum, client->areaNum))
+				return false;
+		}
+
+		IdealYaw = VecToYaw(temp);
+		ChangeYaw ();
+
+		// hunt the sound for a bit; hopefully find the real player
+		AIFlags |= AI_SOUND_TARGET;
+		Entity->enemy = client;
+	}
+
+//
+// got one
+//
+	FoundTarget ();
+
+	if (!(AIFlags & AI_SOUND_TARGET) && (MonsterFlags & MF_HAS_SIGHT))
+		Sight ();
+
+	return true;
+}
+
+bool CMonster::FacingIdeal()
+{
+	float delta = AngleModf (Entity->s.angles[YAW] - IdealYaw);
+	if (delta > 45 && delta < 315)
+		return false;
+	return true;
+}
+
+void CMonster::FliesOff()
+{
+	Entity->s.effects &= ~EF_FLIES;
+	Entity->s.sound = 0;
+}
+
+void CMonster::FliesOn ()
+{
+	if (Entity->waterlevel)
+		return;
+	Entity->s.effects |= EF_FLIES;
+	Entity->s.sound = SoundIndex ("infantry/inflies1.wav");
+	Think = &CMonster::FliesOff;
+	NextThink = level.time + 60;
+}
+
+void CMonster::CheckFlies ()
+{
+	if (Entity->waterlevel)
+		return;
+
+	if (random() > 0.5)
+		return;
+
+	Think = &CMonster::FliesOn;
+	NextThink = level.time + 5 + 10 * random();
+}
+
+void Monster_Die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
+{
+	self->Monster->Die(inflictor, attacker, damage, point);
+}
+
+void Monster_Pain (edict_t *self, edict_t *other, float kick, int damage)
+{
+	self->Monster->Pain(other, kick, damage);
+}
+
+static uint32 lastMonsterID;
+CMonster::CMonster ()
+{
+	MonsterID = lastMonsterID++;
+}
+
+void CMonster::Init (edict_t *ent)
+{
+	Entity = ent;
+	Spawn ();
+
+	Entity->die = Monster_Die;
+	Entity->pain = Monster_Pain;
+
+	Entity->think = Monster_Think;
+	Entity->nextthink = level.time + .1;
 }

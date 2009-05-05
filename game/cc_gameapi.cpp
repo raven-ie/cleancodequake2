@@ -47,7 +47,7 @@ static void Sound_Base (vec3_t pos, edict_t *ent, EEntSndChannel channel, int so
 	if (!soundString)
 		sIndex = soundindex;
 	else if (soundindex != -1)
-		sIndex = gi.soundindex(soundString);
+		sIndex = SoundIndex(soundString);
 	else
 	{
 		Com_Printf (0, "No sound index!\n");

@@ -573,9 +573,9 @@ void SP_func_plat (edict_t *ent)
 	Vec3Copy (ent->pos2, ent->moveinfo.end_origin);
 	Vec3Copy (ent->s.angles, ent->moveinfo.end_angles);
 
-	ent->moveinfo.sound_start = gi.soundindex ("plats/pt1_strt.wav");
-	ent->moveinfo.sound_middle = gi.soundindex ("plats/pt1_mid.wav");
-	ent->moveinfo.sound_end = gi.soundindex ("plats/pt1_end.wav");
+	ent->moveinfo.sound_start = SoundIndex ("plats/pt1_strt.wav");
+	ent->moveinfo.sound_middle = SoundIndex ("plats/pt1_mid.wav");
+	ent->moveinfo.sound_end = SoundIndex ("plats/pt1_end.wav");
 }
 
 //====================================================================
@@ -771,7 +771,7 @@ void SP_func_button (edict_t *ent)
 	GI_SetModel (ent, ent->model);
 
 	if (ent->sounds != 1)
-		ent->moveinfo.sound_start = gi.soundindex ("switches/butn2.wav");
+		ent->moveinfo.sound_start = SoundIndex ("switches/butn2.wav");
 	
 	if (!ent->speed)
 		ent->speed = 40;
@@ -1132,7 +1132,7 @@ void door_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *
 	self->touch_debounce_time = level.time + 5.0;
 
 	gi.centerprintf (other, "%s", self->message);
-	Sound (other, CHAN_AUTO, gi.soundindex ("misc/talk1.wav"));
+	Sound (other, CHAN_AUTO, SoundIndex ("misc/talk1.wav"));
 }
 
 void SP_func_door (edict_t *ent)
@@ -1141,9 +1141,9 @@ void SP_func_door (edict_t *ent)
 
 	if (ent->sounds != 1)
 	{
-		ent->moveinfo.sound_start = gi.soundindex  ("doors/dr1_strt.wav");
-		ent->moveinfo.sound_middle = gi.soundindex  ("doors/dr1_mid.wav");
-		ent->moveinfo.sound_end = gi.soundindex  ("doors/dr1_end.wav");
+		ent->moveinfo.sound_start = SoundIndex  ("doors/dr1_strt.wav");
+		ent->moveinfo.sound_middle = SoundIndex  ("doors/dr1_mid.wav");
+		ent->moveinfo.sound_end = SoundIndex  ("doors/dr1_end.wav");
 	}
 
 	G_SetMovedir (ent->s.angles, ent->movedir);
@@ -1197,7 +1197,7 @@ void SP_func_door (edict_t *ent)
 	}
 	else if (ent->targetname && ent->message)
 	{
-		gi.soundindex ("misc/talk.wav");
+		SoundIndex ("misc/talk.wav");
 		ent->touch = door_touch;
 	}
 	
@@ -1307,9 +1307,9 @@ void SP_func_door_rotating (edict_t *ent)
 
 	if (ent->sounds != 1)
 	{
-		ent->moveinfo.sound_start = gi.soundindex  ("doors/dr1_strt.wav");
-		ent->moveinfo.sound_middle = gi.soundindex  ("doors/dr1_mid.wav");
-		ent->moveinfo.sound_end = gi.soundindex  ("doors/dr1_end.wav");
+		ent->moveinfo.sound_start = SoundIndex  ("doors/dr1_strt.wav");
+		ent->moveinfo.sound_middle = SoundIndex  ("doors/dr1_mid.wav");
+		ent->moveinfo.sound_end = SoundIndex  ("doors/dr1_end.wav");
 	}
 
 	// if it starts open, switch the positions
@@ -1330,7 +1330,7 @@ void SP_func_door_rotating (edict_t *ent)
 	
 	if (ent->targetname && ent->message)
 	{
-		gi.soundindex ("misc/talk.wav");
+		SoundIndex ("misc/talk.wav");
 		ent->touch = door_touch;
 	}
 
@@ -1391,13 +1391,13 @@ void SP_func_water (edict_t *self)
 			break;
 
 		case 1: // water
-			self->moveinfo.sound_start = gi.soundindex  ("world/mov_watr.wav");
-			self->moveinfo.sound_end = gi.soundindex  ("world/stp_watr.wav");
+			self->moveinfo.sound_start = SoundIndex  ("world/mov_watr.wav");
+			self->moveinfo.sound_end = SoundIndex  ("world/stp_watr.wav");
 			break;
 
 		case 2: // lava
-			self->moveinfo.sound_start = gi.soundindex  ("world/mov_watr.wav");
-			self->moveinfo.sound_end = gi.soundindex  ("world/stp_watr.wav");
+			self->moveinfo.sound_start = SoundIndex  ("world/mov_watr.wav");
+			self->moveinfo.sound_end = SoundIndex  ("world/stp_watr.wav");
 			break;
 	}
 
@@ -1669,7 +1669,7 @@ void SP_func_train (edict_t *self)
 	GI_SetModel (self, self->model);
 
 	if (st.noise)
-		self->moveinfo.sound_middle = gi.soundindex  (st.noise);
+		self->moveinfo.sound_middle = SoundIndex  (st.noise);
 
 	if (!self->speed)
 		self->speed = 100;
@@ -1978,9 +1978,9 @@ void SP_func_door_secret (edict_t *ent)
 	float	width;
 	float	length;
 
-	ent->moveinfo.sound_start = gi.soundindex  ("doors/dr1_strt.wav");
-	ent->moveinfo.sound_middle = gi.soundindex  ("doors/dr1_mid.wav");
-	ent->moveinfo.sound_end = gi.soundindex  ("doors/dr1_end.wav");
+	ent->moveinfo.sound_start = SoundIndex  ("doors/dr1_strt.wav");
+	ent->moveinfo.sound_middle = SoundIndex  ("doors/dr1_mid.wav");
+	ent->moveinfo.sound_end = SoundIndex  ("doors/dr1_end.wav");
 
 	ent->movetype = MOVETYPE_PUSH;
 	ent->solid = SOLID_BSP;
@@ -2029,7 +2029,7 @@ void SP_func_door_secret (edict_t *ent)
 	}
 	else if (ent->targetname && ent->message)
 	{
-		gi.soundindex ("misc/talk.wav");
+		SoundIndex ("misc/talk.wav");
 		ent->touch = door_touch;
 	}
 	

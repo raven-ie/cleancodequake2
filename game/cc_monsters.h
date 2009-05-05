@@ -37,19 +37,20 @@ class CFrame
 {
 public:
 
-	void (CMonster::*Run) (float Dist);
+	void (CMonster::*AIFunc) (float Dist);
 	float	Dist;
 	void (CMonster::*Function) ();
 
 	CFrame ();
 
-	CFrame(void (CMonster::*Run) (float Dist), float Dist, void (CMonster::*Function) () = NULL) :
-	Run(Run),
+	CFrame(void (CMonster::*AIFunc) (float Dist), float Dist, void (CMonster::*Function) () = NULL) :
+	AIFunc(AIFunc),
 	Dist(Dist),
 	Function(Function)
 	{
 	};
 };
+
 class CAnim
 {
 public:
@@ -84,8 +85,12 @@ public:
 #define AI_COMBAT_POINT			0x00001000
 #define AI_MEDIC				0x00002000
 #define AI_RESURRECTING			0x00004000
-#define AI_HAS_ATTACK			0x00008000
-#define AI_HAS_MELEE			0x00010000
+
+#define MF_HAS_MELEE			0x00000001
+#define MF_HAS_IDLE				0x00000002
+#define MF_HAS_SEARCH			0x00000004
+#define	MF_HAS_SIGHT			0x00000008
+#define MF_HAS_ATTACK			0x00000010
 
 //monster attack state
 #define AS_STRAIGHT				1
@@ -93,17 +98,24 @@ public:
 #define AS_MELEE				3
 #define AS_MISSILE				4
 
-class CMonster
+class CMonster abstract
 {
 protected:
 public:
+	uint32				MonsterID;
+
+	// Hash
+	uint32				HashValue;
+	CMonster		*HashNext;
+
+	char				*Classname;
 	edict_t				*Entity; // Entity linked to the monster
 
 	float				IdealYaw;
 	edict_t				*GoalEntity;
 	edict_t				*MoveTarget;
 	float				YawSpeed;
-	int					AIFlags;
+	uint32				AIFlags;
 
 	void				RunThink ();
 	void				(CMonster::*Think) ();
@@ -118,7 +130,7 @@ public:
 	float				TrailTime;
 	vec3_t				LastSighting;
 	int					AttackState;
-	int					Lefty;
+	bool				Lefty;
 	float				IdleTime;
 	int					LinkCount;
 
@@ -130,7 +142,12 @@ public:
 	float				EnemyYaw;
 
 	CAnim				*CurrentMove;
-	
+
+	uint32				MonsterFlags;
+
+	CMonster();
+
+	virtual void Allocate (edict_t *ent) = 0;
 	// Virtual functions
 	virtual void		Stand			();
 	virtual void		Idle			();
@@ -140,8 +157,10 @@ public:
 	virtual void		Dodge			(edict_t *other, float eta);
 	virtual void		Attack			();
 	virtual void		Melee			();
-	virtual void		Sight			(edict_t *other);
+	virtual void		Sight			();
 	virtual bool		CheckAttack		();
+
+	virtual void		ReactToDamage	(edict_t *attacker);
 
 	void				MonsterThink	();
 
@@ -208,8 +227,23 @@ public:
 	void NewChaseDir (edict_t *Enemy, float Dist);
 	bool StepDirection (float Yaw, float Dist);
 	bool MoveStep (vec3_t move, bool ReLink);
+
+	// Called on a spawn
+	void Init (edict_t *ent);
+	virtual void	Spawn () = 0;
+	virtual void	Die(edict_t *inflictor, edict_t *attacker, int damage, vec3_t point) = 0;
+	virtual void	Pain(edict_t *other, float kick, int damage) = 0;
 };
 
 #define DI_NODIR	-1
 
-void RunMonsterThink (edict_t *ent);
+void Monster_Think (edict_t *ent);
+
+#define ConvertDerivedFunction(x) static_cast<void (__thiscall CMonster::* )(void)>(x)
+
+#include "cc_soldier_base.h"
+#include "cc_soldier_shotgun.h"
+#include "cc_soldier_light.h"
+#include "cc_soldier_machinegun.h"
+#include "cc_infantry.h"
+#include "cc_bitch.h"

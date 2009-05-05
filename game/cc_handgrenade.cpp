@@ -64,7 +64,7 @@ void CHandGrenade::Hold (edict_t *ent)
 	if (!ent->client->grenade_time)
 	{
 		ent->client->grenade_time = level.time + GRENADE_TIMER + 0.2;
-		ent->client->weapon_sound = gi.soundindex("weapons/hgrenc1b.wav");
+		ent->client->weapon_sound = SoundIndex("weapons/hgrenc1b.wav");
 	}
 
 	// they waited too long, detonate it in their hand
@@ -95,7 +95,7 @@ void CHandGrenade::FireGrenade (edict_t *ent, bool inHand)
 	if (isQuad)
 	{
 		damage *= 4;
-		Sound(ent, CHAN_ITEM, gi.soundindex("items/damage3.wav")); // Make sure people know. REOOOOOOOO
+		Sound(ent, CHAN_ITEM, SoundIndex("items/damage3.wav")); // Make sure people know. REOOOOOOOO
 	}
 
 	ent->client->grenade_thrown = true;
@@ -161,7 +161,7 @@ bool CHandGrenade::CanFire (edict_t *ent)
 	switch (ent->client->ps.gunFrame)
 	{
 	case 5:
-		Sound(ent, CHAN_WEAPON, gi.soundindex("weapons/hgrena1b.wav"));
+		Sound(ent, CHAN_WEAPON, SoundIndex("weapons/hgrena1b.wav"));
 		return false;
 	case 11:
 	case 12:

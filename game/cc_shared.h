@@ -44,8 +44,10 @@ extern CColors Colors;
 #include "cc_inventory.h"
 #include "cc_ban.h"
 #include "cc_monsters.h"
+#include "cc_monsterlist.h"
+#include "cc_indexing.h"
 
-extern dmf_t dmFlags;
+extern dmFlagsConfig dmFlags;
 
 // This is.. unnecessarily long.
 void Sound (edict_t *ent, EEntSndChannel channel, int soundindex, float volume, int attenuation, float timeOfs);

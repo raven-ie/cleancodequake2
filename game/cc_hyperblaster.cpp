@@ -81,7 +81,7 @@ void CHyperBlaster::Fire (edict_t *ent)
 	int		effect;
 	int		damage;
 
-	ent->client->weapon_sound = gi.soundindex("weapons/hyprbl1a.wav");
+	ent->client->weapon_sound = SoundIndex("weapons/hyprbl1a.wav");
 
 	if (!(ent->client->buttons & BUTTON_ATTACK))
 		ent->client->ps.gunFrame++;
@@ -156,7 +156,7 @@ void CHyperBlaster::Fire (edict_t *ent)
 
 	if (ent->client->ps.gunFrame == 12)
 	{
-		Sound(ent, CHAN_AUTO, gi.soundindex("weapons/hyprbd1a.wav"));
+		Sound(ent, CHAN_AUTO, SoundIndex("weapons/hyprbd1a.wav"));
 		ent->client->weapon_sound = 0;
 	}
 }

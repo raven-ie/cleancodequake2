@@ -58,7 +58,7 @@ WeaponSound(WeaponSound)
 void CWeapon::InitWeapon (edict_t *ent)
 {
 	if (WeaponModel == -1)
-		WeaponModel = gi.modelindex(WeaponModelString);
+		WeaponModel = ModelIndex(WeaponModelString);
 	ent->client->ps.gunFrame = ActivationStart;
 	ent->client->ps.gunIndex = WeaponModel;
 	ent->client->weaponstate = WS_ACTIVATING;
@@ -126,7 +126,7 @@ void CWeapon::WeaponGeneric (edict_t *ent)
 		{
 			// Quad damage sound if we have it...
 			if (isQuad)
-				Sound(ent, CHAN_ITEM, gi.soundindex("items/damage3.wav"));
+				Sound(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
 
 			Fire(ent);
 
@@ -249,7 +249,7 @@ void CWeapon::OutOfAmmo (edict_t *ent)
 	// Doesn't affect pain anymore!
 	if (level.time >= ent->damage_debounce_time)
 	{
-		Sound(ent, CHAN_AUTO, gi.soundindex("weapons/noammo.wav"));
+		Sound(ent, CHAN_AUTO, SoundIndex("weapons/noammo.wav"));
 		ent->damage_debounce_time = level.time + 1;
 	}
 }

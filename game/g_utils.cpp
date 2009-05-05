@@ -203,7 +203,7 @@ void G_UseTargets (edict_t *ent, edict_t *activator)
 		if (ent->noise_index)
 			Sound (activator, CHAN_AUTO, ent->noise_index);
 		else
-			Sound (activator, CHAN_AUTO, gi.soundindex ("misc/talk1.wav"));
+			Sound (activator, CHAN_AUTO, SoundIndex ("misc/talk1.wav"));
 	}
 
 //

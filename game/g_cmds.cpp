@@ -601,6 +601,7 @@ void GCmd_SayTeam_f (edict_t *ent)
 	Cmd_Say_f (ent, true, false);
 }
 
+void SP_misc_explobox (edict_t *self);
 void Cmd_Test_f (edict_t *ent)
 {
 	vec3_t forward;
@@ -611,35 +612,18 @@ void Cmd_Test_f (edict_t *ent)
 	vec3f vec3 = vec3f(forward);
 	vec3f end;
 
-	end = vec1 + vec3 * 250;
-	TempEnts.Explosions.NukeBlast(end);
+	end = vec1 + vec3 * 150;
+
+	edict_t *NEW = G_Spawn();
+	SP_misc_explobox (NEW);
+	Vec3Copy (end, NEW->s.origin);
+	gi.linkentity(NEW);
 }
 
 #if 0
 void Cmd_NewtonInit (edict_t *ent);
 void Cmd_NewtonBox (edict_t *ent);
 #endif
-
-void SP_monster_makron (edict_t *self);
-
-void Cmd_Pop (edict_t *ent)
-{
-	vec3_t forward;
-	vec3_t up = {0,0,-1};
-	Angles_Vectors (ent->client->v_angle, forward, NULL, NULL);
-
-	vec3f vec1 = vec3f(ent->s.origin);
-	vec3f vec3 = vec3f(forward);
-	vec3f end;
-
-	end = vec1 + vec3 * 100;
-
-	edict_t *mak = G_Spawn();
-	Vec3Copy (end, mak->s.origin);
-	mak->s.angles[1] = ent->s.angles[1];
-	SP_monster_makron (mak);
-	mak->health = 1;
-}
 
 void Cmd_Register ()
 {
@@ -680,8 +664,6 @@ void Cmd_Register ()
 	Cmd_AddCommand ("noclip",				Cmd_Noclip_f,			CMD_CHEAT);
 	Cmd_AddCommand ("give",					Cmd_Give_f,				CMD_CHEAT);
 	Cmd_AddCommand ("spawn",				Cmd_Give,				CMD_CHEAT);
-
-	Cmd_AddCommand ("pop",					Cmd_Pop);
 
 #if 0
 	Cmd_AddCommand ("newtoninit",			Cmd_NewtonInit);

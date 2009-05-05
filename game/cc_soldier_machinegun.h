@@ -27,36 +27,19 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_dmflags.h
-// This is so that I don't have to keep doing dmflags->Integer(). Should be faster than bitwise ops every frame!
+// cc_soldier_machinegun.h
+// T-t-t-t-t-t-t.
 //
 
-class dmFlagsConfig
+class CSoldierMachinegun : public CSoldierBase
 {
 public:
-	bool				dfNoHealth;
-	bool				dfNoItems;
-	bool				dfWeaponsStay;
-	bool				dfNoFallingDamage;
-	bool				dfInstantItems;
-	bool				dfSameLevel;
-	bool				dfSkinTeams;
-	bool				dfModelTeams;
-	bool				dfNoFriendlyFire;
-	bool				dfSpawnFarthest;
-	bool				dfForceRespawn;
-	bool				dfNoArmor;
-	bool				dfAllowExit;
-	bool				dfInfiniteAmmo;
-	bool				dfQuadDrop;
-	bool				dfFixedFov;
+	CSoldierMachinegun();
 
-	bool				dfQuadFireDrop;
-	bool				dfNoMines;
-	bool				dfNoStackDouble;
-	bool				dfNoNukes;
-	bool				dfNoSpheres;
-
-	dmFlagsConfig();
-	void UpdateFlags (int dmFlags);
+	void Allocate (edict_t *ent);
+	void Attack ();
+	void FireGun (int FlashNumber);
+	void SpawnSoldier ();
 };
+
+extern CSoldierMachinegun Monster_Soldier_Machinegun;
