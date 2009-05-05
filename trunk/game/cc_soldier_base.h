@@ -27,36 +27,57 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_dmflags.h
-// This is so that I don't have to keep doing dmflags->Integer(). Should be faster than bitwise ops every frame!
+// cc_soldier_base.h
+// The base for soldier-like monsters.
 //
 
-class dmFlagsConfig
+class CSoldierBase : public CMonster
 {
 public:
-	bool				dfNoHealth;
-	bool				dfNoItems;
-	bool				dfWeaponsStay;
-	bool				dfNoFallingDamage;
-	bool				dfInstantItems;
-	bool				dfSameLevel;
-	bool				dfSkinTeams;
-	bool				dfModelTeams;
-	bool				dfNoFriendlyFire;
-	bool				dfSpawnFarthest;
-	bool				dfForceRespawn;
-	bool				dfNoArmor;
-	bool				dfAllowExit;
-	bool				dfInfiniteAmmo;
-	bool				dfQuadDrop;
-	bool				dfFixedFov;
+	int	SoundIdle;
+	int	SoundSight1;
+	int	SoundSight2;
+	int	SoundCock;
 
-	bool				dfQuadFireDrop;
-	bool				dfNoMines;
-	bool				dfNoStackDouble;
-	bool				dfNoNukes;
-	bool				dfNoSpheres;
+	int	SoundPain;
+	int	SoundDeath;
 
-	dmFlagsConfig();
-	void UpdateFlags (int dmFlags);
+	virtual void Allocate (edict_t *ent) = 0;
+
+	virtual void Attack () = 0;
+	void Dodge (edict_t *attacker, float eta);
+	void Idle ();
+	void Run ();
+	void Sight ();
+	void Stand ();
+	void Walk ();
+
+	void CockGun ();
+	void Duck_Down ();
+	void Duck_Hold ();
+	void Duck_Up ();
+	virtual void FireGun (int FlashNumber) = 0;
+
+	void Walk1_Random ();
+
+	void Fire1 ();
+	void Fire2 ();
+	void Fire3 ();
+	void Fire4 ();
+	void Fire7 ();
+	void Fire6 ();
+	void Fire8 ();
+	void Attack1_Refire1 ();
+	void Attack1_Refire2 ();
+	void Attack2_Refire1 ();
+	void Attack2_Refire2 ();
+	void Attack3_Refire ();
+	void Attack6_Refire ();
+
+	void Dead ();
+	void Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
+	void Pain (edict_t *other, float kick, int damage);
+
+	void Spawn (); // Initialize "commonalities"
+	virtual void SpawnSoldier () = 0; // Initialize health, etc.
 };

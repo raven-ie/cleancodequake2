@@ -387,7 +387,6 @@ void chick_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage
 	}
 }
 
-
 void chick_duck_down (edict_t *self)
 {
 	if (self->monsterinfo.aiflags & AI_DUCKED)

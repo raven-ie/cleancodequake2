@@ -216,6 +216,9 @@ void InitGame (void)
 	// items
 	InitItemlist ();
 
+	// monsters
+	InitMonsterList();
+
 	Q_snprintfz (game.helpmessage1, sizeof(game.helpmessage1), "");
 
 	Q_snprintfz (game.helpmessage2, sizeof(game.helpmessage2), "");
@@ -287,15 +290,15 @@ void WriteField1 (FILE *f, field_t *field, byte *base)
 		*(int *)p = index;*/
 		break;
 	case F_NEWITEM:
-		if ( *(edict_t **)p == NULL)
+		/*if ( *(edict_t **)p == NULL)
 			index = -1;
 		else
 		{
 			CWeapon *Weap = (CWeapon *)p;
 			CBaseItem *Item = Weap->Item;
 			index = Item->GetIndex();
-		}
-		*(int *)p = index;
+		}*/
+		*(int *)p = -1;
 		break;
 
 	//relative to code segment

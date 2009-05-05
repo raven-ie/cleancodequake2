@@ -44,11 +44,11 @@ static void check_dodge (edict_t *self, vec3_t start, vec3_t dir, int speed)
 	}
 	Vec3MA (start, 8192, dir, end);
 	tr.Trace (start, end, self, CONTENTS_MASK_SHOT);
-	if ((tr.ent) && (tr.ent->svFlags & SVF_MONSTER) && (tr.ent->health > 0) && (tr.ent->monsterinfo.dodge) && infront(tr.ent, self))
+	if ((tr.ent) && tr.ent->Monster && (tr.ent->svFlags & SVF_MONSTER) && (tr.ent->health > 0) && infront(tr.ent, self))
 	{
 		Vec3Subtract (tr.endPos, start, v);
 		eta = (Vec3Length(v) - tr.ent->maxs[0]) / speed;
-		tr.ent->monsterinfo.dodge (tr.ent, self, eta);
+		tr.ent->Monster->Dodge (self, eta);
 	}
 }
 
@@ -345,8 +345,8 @@ void fire_blaster (edict_t *self, vec3_t start, vec3_t dir, int damage, int spee
 	bolt->s.effects |= effect;
 	Vec3Clear (bolt->mins);
 	Vec3Clear (bolt->maxs);
-	bolt->s.modelIndex = gi.modelindex ("models/objects/laser/tris.md2");
-	bolt->s.sound = gi.soundindex ("misc/lasfly.wav");
+	bolt->s.modelIndex = ModelIndex ("models/objects/laser/tris.md2");
+	bolt->s.sound = SoundIndex ("misc/lasfly.wav");
 	bolt->owner = self;
 	bolt->touch = blaster_touch;
 	bolt->nextthink = level.time + 2;
@@ -446,13 +446,13 @@ static void Grenade_Touch (edict_t *ent, edict_t *other, plane_t *plane, cmBspSu
 		if (ent->spawnflags & 1)
 		{
 			if (random() > 0.5)
-				Sound (ent, CHAN_VOICE, gi.soundindex ("weapons/hgrenb1a.wav"));
+				Sound (ent, CHAN_VOICE, SoundIndex ("weapons/hgrenb1a.wav"));
 			else
-				Sound (ent, CHAN_VOICE, gi.soundindex ("weapons/hgrenb2a.wav"));
+				Sound (ent, CHAN_VOICE, SoundIndex ("weapons/hgrenb2a.wav"));
 		}
 		else
 		{
-			Sound (ent, CHAN_VOICE, gi.soundindex ("weapons/grenlb1b.wav"));
+			Sound (ent, CHAN_VOICE, SoundIndex ("weapons/grenlb1b.wav"));
 		}
 		return;
 	}
@@ -482,7 +482,7 @@ void fire_grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int s
 	grenade->s.effects |= EF_GRENADE;
 	Vec3Clear (grenade->mins);
 	Vec3Clear (grenade->maxs);
-	grenade->s.modelIndex = gi.modelindex ("models/objects/grenade/tris.md2");
+	grenade->s.modelIndex = ModelIndex ("models/objects/grenade/tris.md2");
 	grenade->owner = self;
 	grenade->touch = Grenade_Touch;
 	grenade->nextthink = level.time + timer;
@@ -515,7 +515,7 @@ void fire_grenade2 (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int 
 	grenade->s.effects |= EF_GRENADE;
 	Vec3Clear (grenade->mins);
 	Vec3Clear (grenade->maxs);
-	grenade->s.modelIndex = gi.modelindex ("models/objects/grenade2/tris.md2");
+	grenade->s.modelIndex = ModelIndex ("models/objects/grenade2/tris.md2");
 	grenade->owner = self;
 	grenade->touch = Grenade_Touch;
 	grenade->nextthink = level.time + timer;
@@ -527,13 +527,13 @@ void fire_grenade2 (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int 
 		grenade->spawnflags = 3;
 	else
 		grenade->spawnflags = 1;
-	grenade->s.sound = gi.soundindex("weapons/hgrenc1b.wav");
+	grenade->s.sound = SoundIndex("weapons/hgrenc1b.wav");
 
 	if (timer <= 0.0)
 		Grenade_Explode (grenade);
 	else
 	{
-		Sound (self, CHAN_WEAPON, gi.soundindex ("weapons/hgrent1a.wav"));
+		Sound (self, CHAN_WEAPON, SoundIndex ("weapons/hgrent1a.wav"));
 		gi.linkentity (grenade);
 	}
 }
@@ -607,7 +607,7 @@ void fire_rocket (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed
 	rocket->s.effects |= EF_ROCKET;
 	Vec3Clear (rocket->mins);
 	Vec3Clear (rocket->maxs);
-	rocket->s.modelIndex = gi.modelindex ("models/objects/rocket/tris.md2");
+	rocket->s.modelIndex = ModelIndex ("models/objects/rocket/tris.md2");
 	rocket->owner = self;
 	rocket->touch = rocket_touch;
 	rocket->nextthink = level.time + 8000/speed;
@@ -615,7 +615,7 @@ void fire_rocket (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed
 	rocket->dmg = damage;
 	rocket->radius_dmg = radius_damage;
 	rocket->dmg_radius = damage_radius;
-	rocket->s.sound = gi.soundindex ("weapons/rockfly.wav");
+	rocket->s.sound = SoundIndex ("weapons/rockfly.wav");
 	rocket->classname = "rocket";
 
 	if (self->client)
@@ -753,12 +753,12 @@ void bfg_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *s
 		T_Damage (other, self, self->owner, self->velocity, self->s.origin, plane->normal, 200, 0, 0, MOD_BFG_BLAST);
 	T_RadiusDamage(self, self->owner, 200, other, 100, MOD_BFG_BLAST);
 
-	Sound (self, CHAN_VOICE, gi.soundindex ("weapons/bfg__x1b.wav"));
+	Sound (self, CHAN_VOICE, SoundIndex ("weapons/bfg__x1b.wav"));
 	self->solid = SOLID_NOT;
 	self->touch = NULL;
 	Vec3MA (self->s.origin, -1 * FRAMETIME, self->velocity, self->s.origin);
 	Vec3Clear (self->velocity);
-	self->s.modelIndex = gi.modelindex ("sprites/s_bfg3.sp2");
+	self->s.modelIndex = ModelIndex ("sprites/s_bfg3.sp2");
 	self->s.frame = 0;
 	self->s.sound = 0;
 	self->s.effects &= ~EF_ANIM_ALLFAST;
@@ -853,7 +853,7 @@ void fire_bfg (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, f
 	bfg->s.effects |= EF_BFG | EF_ANIM_ALLFAST;
 	Vec3Clear (bfg->mins);
 	Vec3Clear (bfg->maxs);
-	bfg->s.modelIndex = gi.modelindex ("sprites/s_bfg1.sp2");
+	bfg->s.modelIndex = ModelIndex ("sprites/s_bfg1.sp2");
 	bfg->owner = self;
 	bfg->touch = bfg_touch;
 	bfg->nextthink = level.time + 8000/speed;
@@ -861,7 +861,7 @@ void fire_bfg (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, f
 	bfg->radius_dmg = damage;
 	bfg->dmg_radius = damage_radius;
 	bfg->classname = "bfg blast";
-	bfg->s.sound = gi.soundindex ("weapons/bfg__l1a.wav");
+	bfg->s.sound = SoundIndex ("weapons/bfg__l1a.wav");
 
 	bfg->think = bfg_think;
 	bfg->nextthink = level.time + FRAMETIME;

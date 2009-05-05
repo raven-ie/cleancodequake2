@@ -272,7 +272,6 @@ void DeathmatchScoreboardMessage (edict_t *ent, edict_t *killer, bool reliable =
 {
 	CStatusBar *Scoreboard = new CStatusBar;
 
-	char	string[1400];
 	int		sorted[MAX_CS_CLIENTS];
 	int		sortedscores[MAX_CS_CLIENTS];
 	int		score, total;
@@ -281,8 +280,7 @@ void DeathmatchScoreboardMessage (edict_t *ent, edict_t *killer, bool reliable =
 
 	// sort the clients by score
 	total = 0;
-	int i = 0;
-	for ( ; i < game.maxclients ; i++)
+	for (int i = 0; i < game.maxclients ; i++)
 	{
 		cl_ent = g_edicts + 1 + i;
 		if (!cl_ent->inUse || game.clients[i].resp.spectator)
@@ -305,14 +303,11 @@ void DeathmatchScoreboardMessage (edict_t *ent, edict_t *killer, bool reliable =
 		total++;
 	}
 
-	// print level name and exit rules
-	string[0] = 0;
-
 	// add the clients in sorted order
 	if (total > 12)
 		total = 12;
 
-	for (i = 0 ; i < total ; i++)
+	for (int i = 0 ; i < total ; i++)
 	{
 		int		x, y;
 		char	*tag;

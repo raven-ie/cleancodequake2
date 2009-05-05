@@ -27,36 +27,26 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_dmflags.h
-// This is so that I don't have to keep doing dmflags->Integer(). Should be faster than bitwise ops every frame!
+// cc_monsterlist.h
+// Monster list (for maps)
 //
 
-class dmFlagsConfig
+#define		MAX_MONSTERS			256
+#define		MAX_MONSTERS_HASHED		128
+
+class CMonsterList
 {
 public:
-	bool				dfNoHealth;
-	bool				dfNoItems;
-	bool				dfWeaponsStay;
-	bool				dfNoFallingDamage;
-	bool				dfInstantItems;
-	bool				dfSameLevel;
-	bool				dfSkinTeams;
-	bool				dfModelTeams;
-	bool				dfNoFriendlyFire;
-	bool				dfSpawnFarthest;
-	bool				dfForceRespawn;
-	bool				dfNoArmor;
-	bool				dfAllowExit;
-	bool				dfInfiniteAmmo;
-	bool				dfQuadDrop;
-	bool				dfFixedFov;
+	int numMonsters;
 
-	bool				dfQuadFireDrop;
-	bool				dfNoMines;
-	bool				dfNoStackDouble;
-	bool				dfNoNukes;
-	bool				dfNoSpheres;
+	CMonster		*List[MAX_MONSTERS];
+	CMonster		*HashedList[MAX_MONSTERS_HASHED];
 
-	dmFlagsConfig();
-	void UpdateFlags (int dmFlags);
+	CMonsterList();
+
+	void AddMonsterToList (CMonster *Monster);
+	CMonster	*MonsterExists (char *Classname);
 };
+
+CMonster *FindMonster (char *Classname);
+void InitMonsterList ();

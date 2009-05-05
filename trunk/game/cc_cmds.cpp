@@ -102,9 +102,6 @@ void Cmd_RemoveCommands ()
 		delete CommandList[numCommands];
 		numCommands--;
 	}
-
-	if (*CommandList)
-		Com_Printf (0, "Memory leak in CommandList!\n");
 }
 
 void Cmd_RunCommand (char *commandName, edict_t *ent)

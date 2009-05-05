@@ -27,36 +27,53 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_dmflags.h
-// This is so that I don't have to keep doing dmflags->Integer(). Should be faster than bitwise ops every frame!
+// cc_infantry.h
+// Infantry Monster
 //
 
-class dmFlagsConfig
+class CInfantry : public CMonster
 {
 public:
-	bool				dfNoHealth;
-	bool				dfNoItems;
-	bool				dfWeaponsStay;
-	bool				dfNoFallingDamage;
-	bool				dfInstantItems;
-	bool				dfSameLevel;
-	bool				dfSkinTeams;
-	bool				dfModelTeams;
-	bool				dfNoFriendlyFire;
-	bool				dfSpawnFarthest;
-	bool				dfForceRespawn;
-	bool				dfNoArmor;
-	bool				dfAllowExit;
-	bool				dfInfiniteAmmo;
-	bool				dfQuadDrop;
-	bool				dfFixedFov;
+	int	SoundPain1;
+	int	SoundPain2;
+	int	SoundDie1;
+	int	SoundDie2;
 
-	bool				dfQuadFireDrop;
-	bool				dfNoMines;
-	bool				dfNoStackDouble;
-	bool				dfNoNukes;
-	bool				dfNoSpheres;
+	int	SoundGunshot;
+	int	SoundWeaponCock;
+	int	SoundPunchSwing;
+	int	SoundPunchHit;
+	int	SoundSight;
+	int	SoundSearch;
+	int	SoundIdle;
 
-	dmFlagsConfig();
-	void UpdateFlags (int dmFlags);
+	CInfantry ();
+
+	void Allocate (edict_t *ent);
+
+	void Attack ();
+	void Dodge (edict_t *attacker, float eta);
+	void Idle ();
+	void Run ();
+	void Sight ();
+	void Stand ();
+	void Walk ();
+	void Melee ();
+
+	void CockGun ();
+	void Duck_Down ();
+	void Duck_Hold ();
+	void Duck_Up ();
+	void Fire ();
+	void Smack ();
+	void Swing ();
+	void MachineGun ();
+
+	void Dead ();
+	void Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
+	void Pain (edict_t *other, float kick, int damage);
+
+	void Spawn ();
 };
+
+extern CInfantry Monster_Infantry;

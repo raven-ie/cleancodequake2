@@ -548,7 +548,7 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 
 	if (self->health < -40)
 	{	// gib
-		Sound (self, CHAN_BODY, gi.soundindex ("misc/udeath.wav"));
+		Sound (self, CHAN_BODY, SoundIndex ("misc/udeath.wav"));
 		for (n= 0; n < 4; n++)
 			ThrowGib (self, "models/objects/gibs/sm_meat/tris.md2", damage, GIB_ORGANIC);
 		ThrowClientHead (self, damage);
@@ -584,7 +584,7 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 				self->client->anim_end = FRAME_death308;
 				break;
 			}
-			Sound (self, CHAN_VOICE, gi.soundindex(Q_VarArgs ("*death%i.wav", (rand()%4)+1)));
+			Sound (self, CHAN_VOICE, SoundIndex(Q_VarArgs ("*death%i.wav", (rand()%4)+1)));
 		}
 	}
 
@@ -936,7 +936,7 @@ void body_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage,
 
 	if (self->health < -40)
 	{
-		Sound (self, CHAN_BODY, gi.soundindex ("misc/udeath.wav"));
+		Sound (self, CHAN_BODY, SoundIndex ("misc/udeath.wav"));
 		for (n= 0; n < 4; n++)
 			ThrowGib (self, "models/objects/gibs/sm_meat/tris.md2", damage, GIB_ORGANIC);
 		self->s.origin[2] -= 48;
@@ -1206,7 +1206,7 @@ void PutClientInServer (edict_t *ent)
 			client->ps.fov = 160;
 	}
 
-	//client->ps.gunIndex = gi.modelindex(client->pers.weapon->view_model);
+	//client->ps.gunIndex = ModelIndex(client->pers.weapon->view_model);
 
 	// clear entity state values
 	ent->s.effects = 0;
@@ -1682,7 +1682,7 @@ void ClientThink (edict_t *ent, userCmd_t *ucmd)
 
 		if (ent->groundentity && !pm.groundEntity && (pm.cmd.upMove >= 10) && (pm.waterLevel == 0))
 		{
-			Sound(ent, CHAN_VOICE, gi.soundindex("*jump1.wav"));
+			Sound(ent, CHAN_VOICE, SoundIndex("*jump1.wav"));
 			PlayerNoise(ent, ent->s.origin, PNOISE_SELF);
 		}
 

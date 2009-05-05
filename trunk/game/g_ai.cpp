@@ -327,6 +327,7 @@ bool infront (edict_t *self, edict_t *other)
 
 //============================================================================
 
+void M_AttackFinished (edict_t *self, float time);
 void HuntTarget (edict_t *self)
 {
 	vec3_t	vec;
@@ -340,7 +341,7 @@ void HuntTarget (edict_t *self)
 	self->ideal_yaw = VecToYaw(vec);
 	// wait a while before first attack
 	if (!(self->monsterinfo.aiflags & AI_STAND_GROUND))
-		AttackFinished (self, 1);
+		M_AttackFinished (self, 1);
 }
 
 void FoundTarget (edict_t *self)

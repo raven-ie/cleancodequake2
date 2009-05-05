@@ -109,7 +109,7 @@ void gib_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *s
 
 	if (plane)
 	{
-		Sound (self, CHAN_VOICE, gi.soundindex ("misc/fhit3.wav"));
+		Sound (self, CHAN_VOICE, SoundIndex ("misc/fhit3.wav"));
 
 		VecToAngles (plane->normal, normal_angles);
 		Angles_Vectors (normal_angles, NULL, right, NULL);
@@ -145,7 +145,7 @@ void ThrowGib (edict_t *self, char *gibname, int damage, int type)
 	gib->s.origin[1] = origin[1] + crandom() * size[1];
 	gib->s.origin[2] = origin[2] + crandom() * size[2];
 
-	gib->s.modelIndex = gi.modelindex(gibname);
+	gib->s.modelIndex = ModelIndex(gibname);
 	Vec3Clear (gib->mins);
 	Vec3Clear (gib->maxs);
 	gib->solid = SOLID_NOT;
@@ -190,7 +190,7 @@ void ThrowHead (edict_t *self, char *gibname, int damage, int type)
 	Vec3Clear (self->maxs);
 
 	self->s.modelIndex2 = 0;
-	self->s.modelIndex = gi.modelindex(gibname);
+	self->s.modelIndex = ModelIndex(gibname);
 	self->solid = SOLID_NOT;
 	self->s.effects |= EF_GIB;
 	self->s.effects &= ~EF_FLIES;
@@ -243,7 +243,7 @@ void ThrowClientHead (edict_t *self, int damage)
 
 	self->s.origin[2] += 32;
 	self->s.frame = 0;
-	self->s.modelIndex = gi.modelindex(gibname);
+	self->s.modelIndex = ModelIndex(gibname);
 	Vec3Set (self->mins, -16, -16, 0);
 	Vec3Set (self->maxs, 16, 16, 16);
 
@@ -289,7 +289,7 @@ void ThrowDebris (edict_t *self, char *modelname, float speed, vec3_t origin)
 
 	chunk = G_Spawn();
 	Vec3Copy (origin, chunk->s.origin);
-	chunk->s.modelIndex = gi.modelindex(modelname);
+	chunk->s.modelIndex = ModelIndex(modelname);
 	v[0] = 100 * crandom();
 	v[1] = 100 * crandom();
 	v[2] = 100 + 100 * crandom();
@@ -370,15 +370,31 @@ void path_corner_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurf
 
 	if (self->wait)
 	{
-		other->monsterinfo.pausetime = level.time + self->wait;
-		other->monsterinfo.stand (other);
+		if (other->Monster)
+		{
+			other->Monster->PauseTime = level.time + self->wait;
+			other->Monster->Stand();
+		}
+		else
+		{
+			other->monsterinfo.pausetime = level.time + self->wait;
+			other->monsterinfo.stand (other);
+		}
 		return;
 	}
 
 	if (!other->movetarget)
 	{
-		other->monsterinfo.pausetime = level.time + 100000000;
-		other->monsterinfo.stand (other);
+		if (other->Monster)
+		{
+			other->Monster->PauseTime = level.time + 100000000;
+			other->Monster->Stand ();
+		}
+		else
+		{
+			other->monsterinfo.pausetime = level.time + 100000000;
+			other->monsterinfo.stand (other);
+		}
 	}
 	else
 	{
@@ -431,9 +447,18 @@ void point_combat_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSur
 	}
 	else if ((self->spawnflags & 1) && !(other->flags & (FL_SWIM|FL_FLY)))
 	{
-		other->monsterinfo.pausetime = level.time + 100000000;
-		other->monsterinfo.aiflags |= AI_STAND_GROUND;
-		other->monsterinfo.stand (other);
+		if (other->Monster)
+		{
+			other->Monster->PauseTime = level.time + 100000000;
+			other->Monster->AIFlags |= AI_STAND_GROUND;
+			other->Monster->Stand ();
+		}
+		else
+		{
+			other->monsterinfo.pausetime = level.time + 100000000;
+			other->monsterinfo.aiflags |= AI_STAND_GROUND;
+			other->monsterinfo.stand (other);
+		}
 	}
 
 	if (other->movetarget == self)
@@ -441,7 +466,11 @@ void point_combat_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSur
 		other->target = NULL;
 		other->movetarget = NULL;
 		other->goalentity = other->enemy;
-		other->monsterinfo.aiflags &= ~AI_COMBAT_POINT;
+
+		if (other->Monster)
+			other->Monster->AIFlags &= ~AI_COMBAT_POINT;
+		else
+			other->monsterinfo.aiflags &= ~AI_COMBAT_POINT;
 	}
 
 	if (self->pathtarget)
@@ -497,7 +526,7 @@ void SP_viewthing(edict_t *ent)
 	ent->s.renderFx = RF_FRAMELERP;
 	Vec3Set (ent->mins, -16, -16, -24);
 	Vec3Set (ent->maxs, 16, 16, 32);
-	ent->s.modelIndex = gi.modelindex ("models/objects/banner/tris.md2");
+	ent->s.modelIndex = ModelIndex ("models/objects/banner/tris.md2");
 	gi.linkentity (ent);
 	ent->nextthink = level.time + 0.5;
 	ent->think = TH_viewthing;
@@ -823,8 +852,8 @@ void SP_func_explosive (edict_t *self)
 
 	self->movetype = MOVETYPE_PUSH;
 
-	gi.modelindex ("models/objects/debris1/tris.md2");
-	gi.modelindex ("models/objects/debris2/tris.md2");
+	ModelIndex ("models/objects/debris1/tris.md2");
+	ModelIndex ("models/objects/debris2/tris.md2");
 
 	if (self->spawnflags & 1)
 	{
@@ -867,14 +896,76 @@ void barrel_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t
 
 {
 	float	ratio;
-	vec3_t	v;
+	vec3_t	v, forward = {0,0,0};
 
 	if ((!other->groundentity) || (other->groundentity == self))
 		return;
 
 	ratio = (float)other->mass / (float)self->mass;
+
 	Vec3Subtract (self->s.origin, other->s.origin, v);
-	M_walkmove (self, VecToYaw(v), 20 * ratio * FRAMETIME);
+
+	float Yaw = VecToYaw(v);
+	Yaw = Yaw*M_PI*2 / 360;
+	
+	vec3_t move;
+	move[0] = cosf(Yaw)*(20 * ratio);
+	move[1] = sinf(Yaw)*(20 * ratio);
+	move[2] = 0;
+
+	vec3_t oldorg, neworg, end;
+	Vec3Copy (self->s.origin, oldorg);
+	Vec3Add (self->s.origin, move, neworg);
+
+	int stepsize = 8;
+
+	neworg[2] += stepsize;
+	Vec3Copy (neworg, end);
+	end[2] -= stepsize*2;
+
+	CTrace trace;
+	trace.Trace (neworg, self->mins, self->maxs, end, self, CONTENTS_MASK_MONSTERSOLID);
+
+	if (trace.allSolid)
+		return;
+
+	if (trace.startSolid)
+	{
+		neworg[2] -= stepsize;
+		trace.Trace (neworg, self->mins, self->maxs, end, self, CONTENTS_MASK_MONSTERSOLID);
+		if (trace.allSolid || trace.startSolid)
+			return;
+	}
+
+// check point traces down for dangling corners
+	Vec3Copy (trace.endPos, self->s.origin);
+
+	self->groundentity = trace.ent;
+	self->groundentity_linkcount = trace.ent->linkCount;
+
+	if (trace.fraction == 1.0)
+		self->groundentity = NULL;
+
+// the move is ok
+	gi.linkentity (self);
+	G_TouchTriggers (self);
+	/*v[2] = 0;
+
+	vec3_t tempOrigin;
+	Vec3MA (self->s.origin, 0.1, v, tempOrigin);
+	TempEnts.Trails.BFGLaser(self->s.origin, tempOrigin);
+
+	CTrace trace;
+	trace.Trace (self->s.origin, tempOrigin, self, CONTENTS_MASK_ALL);
+
+	if (trace.fraction == 1.0)
+	{
+		Vec3Copy (self->s.origin, self->s.oldOrigin);
+		Vec3Copy (tempOrigin, self->s.origin);
+		gi.linkentity(self);
+	}*/
+
+	//M_walkmove (self, VecToYaw(v), 20 * ratio * FRAMETIME);
 }
 
 void barrel_explode (edict_t *self)
@@ -972,15 +1063,15 @@ void SP_misc_explobox (edict_t *self)
 		return;
 	}
 
-	gi.modelindex ("models/objects/debris1/tris.md2");
-	gi.modelindex ("models/objects/debris2/tris.md2");
-	gi.modelindex ("models/objects/debris3/tris.md2");
+	ModelIndex ("models/objects/debris1/tris.md2");
+	ModelIndex ("models/objects/debris2/tris.md2");
+	ModelIndex ("models/objects/debris3/tris.md2");
 
 	self->solid = SOLID_BBOX;
-	self->movetype = MOVETYPE_STEP;
+	self->movetype = MOVETYPE_TOSS;
 
 	self->model = "models/objects/barrels/tris.md2";
-	self->s.modelIndex = gi.modelindex (self->model);
+	self->s.modelIndex = ModelIndex (self->model);
 	Vec3Set (self->mins, -16, -16, 0);
 	Vec3Set (self->maxs, 16, 16, 40);
 
@@ -993,12 +1084,11 @@ void SP_misc_explobox (edict_t *self)
 
 	self->die = barrel_delay;
 	self->takedamage = DAMAGE_YES;
-	self->monsterinfo.aiflags = AI_NOSTEP;
 
 	self->touch = barrel_touch;
 
-	self->think = M_droptofloor;
-	self->nextthink = level.time + 2 * FRAMETIME;
+	//self->think = M_droptofloor;
+	//self->nextthink = level.time + 2 * FRAMETIME;
 
 	gi.linkentity (self);
 }
@@ -1033,7 +1123,7 @@ void SP_misc_blackhole (edict_t *ent)
 	ent->solid = SOLID_NOT;
 	Vec3Set (ent->mins, -64, -64, 0);
 	Vec3Set (ent->maxs, 64, 64, 8);
-	ent->s.modelIndex = gi.modelindex ("models/objects/black/tris.md2");
+	ent->s.modelIndex = ModelIndex ("models/objects/black/tris.md2");
 	ent->s.renderFx = RF_TRANSLUCENT;
 	ent->use = misc_blackhole_use;
 	ent->think = misc_blackhole_think;
@@ -1061,7 +1151,7 @@ void SP_misc_eastertank (edict_t *ent)
 	ent->solid = SOLID_BBOX;
 	Vec3Set (ent->mins, -32, -32, -16);
 	Vec3Set (ent->maxs, 32, 32, 32);
-	ent->s.modelIndex = gi.modelindex ("models/monsters/tank/tris.md2");
+	ent->s.modelIndex = ModelIndex ("models/monsters/tank/tris.md2");
 	ent->s.frame = 254;
 	ent->think = misc_eastertank_think;
 	ent->nextthink = level.time + 2 * FRAMETIME;
@@ -1089,7 +1179,7 @@ void SP_misc_easterchick (edict_t *ent)
 	ent->solid = SOLID_BBOX;
 	Vec3Set (ent->mins, -32, -32, 0);
 	Vec3Set (ent->maxs, 32, 32, 32);
-	ent->s.modelIndex = gi.modelindex ("models/monsters/bitch/tris.md2");
+	ent->s.modelIndex = ModelIndex ("models/monsters/bitch/tris.md2");
 	ent->s.frame = 208;
 	ent->think = misc_easterchick_think;
 	ent->nextthink = level.time + 2 * FRAMETIME;
@@ -1117,7 +1207,7 @@ void SP_misc_easterchick2 (edict_t *ent)
 	ent->solid = SOLID_BBOX;
 	Vec3Set (ent->mins, -32, -32, 0);
 	Vec3Set (ent->maxs, 32, 32, 32);
-	ent->s.modelIndex = gi.modelindex ("models/monsters/bitch/tris.md2");
+	ent->s.modelIndex = ModelIndex ("models/monsters/bitch/tris.md2");
 	ent->s.frame = 248;
 	ent->think = misc_easterchick2_think;
 	ent->nextthink = level.time + 2 * FRAMETIME;
@@ -1138,14 +1228,14 @@ void commander_body_think (edict_t *self)
 		self->nextthink = 0;
 
 	if (self->s.frame == 22)
-		Sound (self, CHAN_BODY, gi.soundindex ("tank/thud.wav"));
+		Sound (self, CHAN_BODY, SoundIndex ("tank/thud.wav"));
 }
 
 void commander_body_use (edict_t *self, edict_t *other, edict_t *activator)
 {
 	self->think = commander_body_think;
 	self->nextthink = level.time + FRAMETIME;
-	Sound (self, CHAN_BODY, gi.soundindex ("tank/pain.wav"));
+	Sound (self, CHAN_BODY, SoundIndex ("tank/pain.wav"));
 }
 
 void commander_body_drop (edict_t *self)
@@ -1159,7 +1249,7 @@ void SP_monster_commander_body (edict_t *self)
 	self->movetype = MOVETYPE_NONE;
 	self->solid = SOLID_BBOX;
 	self->model = "models/monsters/commandr/tris.md2";
-	self->s.modelIndex = gi.modelindex (self->model);
+	self->s.modelIndex = ModelIndex (self->model);
 	Vec3Set (self->mins, -32, -32, 0);
 	Vec3Set (self->maxs, 32, 32, 48);
 	self->use = commander_body_use;
@@ -1168,8 +1258,8 @@ void SP_monster_commander_body (edict_t *self)
 	self->s.renderFx |= RF_FRAMELERP;
 	gi.linkentity (self);
 
-	gi.soundindex ("tank/thud.wav");
-	gi.soundindex ("tank/pain.wav");
+	SoundIndex ("tank/thud.wav");
+	SoundIndex ("tank/pain.wav");
 
 	self->think = commander_body_drop;
 	self->nextthink = level.time + 5 * FRAMETIME;
@@ -1190,7 +1280,7 @@ void SP_misc_banner (edict_t *ent)
 {
 	ent->movetype = MOVETYPE_NONE;
 	ent->solid = SOLID_NOT;
-	ent->s.modelIndex = gi.modelindex ("models/objects/banner/tris.md2");
+	ent->s.modelIndex = ModelIndex ("models/objects/banner/tris.md2");
 	ent->s.frame = rand() % 16;
 	gi.linkentity (ent);
 
@@ -1208,7 +1298,7 @@ void misc_deadsoldier_die (edict_t *self, edict_t *inflictor, edict_t *attacker,
 	if (self->health > -80)
 		return;
 
-	Sound (self, CHAN_BODY, gi.soundindex ("misc/udeath.wav"));
+	Sound (self, CHAN_BODY, SoundIndex ("misc/udeath.wav"));
 	for (n= 0; n < 4; n++)
 		ThrowGib (self, "models/objects/gibs/sm_meat/tris.md2", damage, GIB_ORGANIC);
 	ThrowHead (self, "models/objects/gibs/head2/tris.md2", damage, GIB_ORGANIC);
@@ -1224,7 +1314,7 @@ void SP_misc_deadsoldier (edict_t *ent)
 
 	ent->movetype = MOVETYPE_NONE;
 	ent->solid = SOLID_BBOX;
-	ent->s.modelIndex=gi.modelindex ("models/deadbods/dude/tris.md2");
+	ent->s.modelIndex=ModelIndex ("models/deadbods/dude/tris.md2");
 
 	// Defaults to frame 0
 	if (ent->spawnflags & 2)
@@ -1284,7 +1374,7 @@ void SP_misc_viper (edict_t *ent)
 
 	ent->movetype = MOVETYPE_PUSH;
 	ent->solid = SOLID_NOT;
-	ent->s.modelIndex = gi.modelindex ("models/ships/viper/tris.md2");
+	ent->s.modelIndex = ModelIndex ("models/ships/viper/tris.md2");
 	Vec3Set (ent->mins, -16, -16, 0);
 	Vec3Set (ent->maxs, 16, 16, 32);
 
@@ -1307,7 +1397,7 @@ void SP_misc_bigviper (edict_t *ent)
 	ent->solid = SOLID_BBOX;
 	Vec3Set (ent->mins, -176, -120, -24);
 	Vec3Set (ent->maxs, 176, 120, 72);
-	ent->s.modelIndex = gi.modelindex ("models/ships/bigviper/tris.md2");
+	ent->s.modelIndex = ModelIndex ("models/ships/bigviper/tris.md2");
 	gi.linkentity (ent);
 }
 
@@ -1370,7 +1460,7 @@ void SP_misc_viper_bomb (edict_t *self)
 	Vec3Set (self->mins, -8, -8, -8);
 	Vec3Set (self->maxs, 8, 8, 8);
 
-	self->s.modelIndex = gi.modelindex ("models/objects/bomb/tris.md2");
+	self->s.modelIndex = ModelIndex ("models/objects/bomb/tris.md2");
 
 	if (!self->dmg)
 		self->dmg = 1000;
@@ -1415,7 +1505,7 @@ void SP_misc_strogg_ship (edict_t *ent)
 
 	ent->movetype = MOVETYPE_PUSH;
 	ent->solid = SOLID_NOT;
-	ent->s.modelIndex = gi.modelindex ("models/ships/strogg1/tris.md2");
+	ent->s.modelIndex = ModelIndex ("models/ships/strogg1/tris.md2");
 	Vec3Set (ent->mins, -16, -16, 0);
 	Vec3Set (ent->maxs, 16, 16, 32);
 
@@ -1451,7 +1541,7 @@ void SP_misc_satellite_dish (edict_t *ent)
 	ent->solid = SOLID_BBOX;
 	Vec3Set (ent->mins, -64, -64, 0);
 	Vec3Set (ent->maxs, 64, 64, 128);
-	ent->s.modelIndex = gi.modelindex ("models/objects/satellite/tris.md2");
+	ent->s.modelIndex = ModelIndex ("models/objects/satellite/tris.md2");
 	ent->use = misc_satellite_dish_use;
 	gi.linkentity (ent);
 }
@@ -1463,7 +1553,7 @@ void SP_light_mine1 (edict_t *ent)
 {
 	ent->movetype = MOVETYPE_NONE;
 	ent->solid = SOLID_BBOX;
-	ent->s.modelIndex = gi.modelindex ("models/objects/minelite/light1/tris.md2");
+	ent->s.modelIndex = ModelIndex ("models/objects/minelite/light1/tris.md2");
 	gi.linkentity (ent);
 }
 
@@ -1474,7 +1564,7 @@ void SP_light_mine2 (edict_t *ent)
 {
 	ent->movetype = MOVETYPE_NONE;
 	ent->solid = SOLID_BBOX;
-	ent->s.modelIndex = gi.modelindex ("models/objects/minelite/light2/tris.md2");
+	ent->s.modelIndex = ModelIndex ("models/objects/minelite/light2/tris.md2");
 	gi.linkentity (ent);
 }
 
@@ -1484,7 +1574,7 @@ Intended for use with the target_spawner
 */
 void SP_misc_gib_arm (edict_t *ent)
 {
-	ent->s.modelIndex = gi.modelindex("models/objects/gibs/arm/tris.md2");
+	ent->s.modelIndex = ModelIndex("models/objects/gibs/arm/tris.md2");
 	ent->solid = SOLID_NOT;
 	ent->s.effects |= EF_GIB;
 	ent->takedamage = DAMAGE_YES;
@@ -1505,7 +1595,7 @@ Intended for use with the target_spawner
 */
 void SP_misc_gib_leg (edict_t *ent)
 {
-	ent->s.modelIndex = gi.modelindex("models/objects/gibs/leg/tris.md2");
+	ent->s.modelIndex = ModelIndex("models/objects/gibs/leg/tris.md2");
 	ent->solid = SOLID_NOT;
 	ent->s.effects |= EF_GIB;
 	ent->takedamage = DAMAGE_YES;
@@ -1526,7 +1616,7 @@ Intended for use with the target_spawner
 */
 void SP_misc_gib_head (edict_t *ent)
 {
-	ent->s.modelIndex = gi.modelindex("models/objects/gibs/head/tris.md2");
+	ent->s.modelIndex = ModelIndex("models/objects/gibs/head/tris.md2");
 	ent->solid = SOLID_NOT;
 	ent->s.effects |= EF_GIB;
 	ent->takedamage = DAMAGE_YES;
@@ -1839,10 +1929,10 @@ void SP_misc_teleporter (edict_t *ent)
 		return;
 	}
 
-	ent->s.modelIndex = gi.modelindex("models/objects/dmspot/tris.md2");
+	ent->s.modelIndex = ModelIndex("models/objects/dmspot/tris.md2");
 	ent->s.skinNum = 1;
 	ent->s.effects = EF_TELEPORTER;
-	ent->s.sound = gi.soundindex ("world/amb10.wav");
+	ent->s.sound = SoundIndex ("world/amb10.wav");
 	ent->solid = SOLID_BBOX;
 
 	Vec3Set (ent->mins, -32, -32, -24);
@@ -1866,7 +1956,7 @@ Point teleporters at these.
 */
 void SP_misc_teleporter_dest (edict_t *ent)
 {
-	ent->s.modelIndex = gi.modelindex("models/objects/dmspot/tris.md2");
+	ent->s.modelIndex = ModelIndex("models/objects/dmspot/tris.md2");
 	ent->s.skinNum = 0;
 	ent->solid = SOLID_BBOX;
 	Vec3Set (ent->mins, -32, -32, -24);

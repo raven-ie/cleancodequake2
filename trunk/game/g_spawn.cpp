@@ -20,8 +20,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
-dmf_t				dmFlags;
-
 typedef struct
 {
 	char	*name;
@@ -122,34 +120,9 @@ void SP_misc_easterchick (edict_t *self);
 void SP_misc_easterchick2 (edict_t *self);
 void SP_misc_model (edict_t *self);
 
-void SP_monster_berserk (edict_t *self);
-void SP_monster_gladiator (edict_t *self);
-void SP_monster_gunner (edict_t *self);
-void SP_monster_infantry (edict_t *self);
-void SP_monster_soldier_light (edict_t *self);
-void SP_monster_soldier (edict_t *self);
-void SP_monster_soldier_ss (edict_t *self);
-void SP_monster_tank (edict_t *self);
-void SP_monster_medic (edict_t *self);
-void SP_monster_flipper (edict_t *self);
-void SP_monster_chick (edict_t *self);
-void SP_monster_parasite (edict_t *self);
-void SP_monster_flyer (edict_t *self);
-void SP_monster_brain (edict_t *self);
-void SP_monster_floater (edict_t *self);
-void SP_monster_hover (edict_t *self);
-void SP_monster_mutant (edict_t *self);
-void SP_monster_supertank (edict_t *self);
-void SP_monster_boss2 (edict_t *self);
-void SP_monster_jorg (edict_t *self);
-void SP_monster_boss3_stand (edict_t *self);
-void SP_monster_makron (edict_t *self);
-
-void SP_monster_commander_body (edict_t *self);
-
 void SP_turret_breach (edict_t *self);
 void SP_turret_base (edict_t *self);
-void SP_turret_driver (edict_t *self);
+//void SP_turret_driver (edict_t *self);
 
 spawn_t	spawns[] = {
 	/*{"item_health", SP_item_health},
@@ -205,7 +178,7 @@ spawn_t	spawns[] = {
 	{"target_crosslevel_target", SP_target_crosslevel_target},
 	{"target_laser", SP_target_laser},
 	{"target_help", SP_target_help},
-	{"target_actor", SP_target_actor},
+	//{"target_actor", SP_target_actor},
 	{"target_lightramp", SP_target_lightramp},
 	{"target_location", SP_target_location},
 	{"target_position", SP_target_position},
@@ -228,11 +201,11 @@ spawn_t	spawns[] = {
 	{"misc_explobox", SP_misc_explobox},
 	{"misc_banner", SP_misc_banner},
 	{"misc_satellite_dish", SP_misc_satellite_dish},
-	{"misc_actor", SP_misc_actor},
+	//{"misc_actor", SP_misc_actor},
 	{"misc_gib_arm", SP_misc_gib_arm},
 	{"misc_gib_leg", SP_misc_gib_leg},
 	{"misc_gib_head", SP_misc_gib_head},
-	{"misc_insane", SP_misc_insane},
+	//{"misc_insane", SP_misc_insane},
 	{"misc_deadsoldier", SP_misc_deadsoldier},
 	{"misc_viper", SP_misc_viper},
 	{"misc_viper_bomb", SP_misc_viper_bomb},
@@ -246,7 +219,7 @@ spawn_t	spawns[] = {
 	{"misc_easterchick2", SP_misc_easterchick2},
 	{"misc_model", SP_misc_model},
 
-	{"monster_berserk", SP_monster_berserk},
+/*	{"monster_berserk", SP_monster_berserk},
 	{"monster_gladiator", SP_monster_gladiator},
 	{"monster_gunner", SP_monster_gunner},
 	{"monster_infantry", SP_monster_infantry},
@@ -270,11 +243,11 @@ spawn_t	spawns[] = {
 	{"monster_jorg", SP_monster_jorg},
 	{"monster_makron", SP_monster_makron},
 
-	{"monster_commander_body", SP_monster_commander_body},
+	{"monster_commander_body", SP_monster_commander_body},*/
 
 	{"turret_breach", SP_turret_breach},
 	{"turret_base", SP_turret_base},
-	{"turret_driver", SP_turret_driver},
+	//{"turret_driver", SP_turret_driver},
 
 	{NULL, NULL}
 };
@@ -299,6 +272,15 @@ void ED_CallSpawn (edict_t *ent)
 	// check item spawn functions
 	if (ItemExists(ent))
 		return;
+
+	if (ent->Monster = FindMonster(ent->classname))
+	{
+		ent->Monster->Allocate(ent);
+		ent->Monster->Init (ent);
+		return;
+	}
+	else
+		ent->Monster = NULL;
 
 	// check normal spawn functions
 	for (s=spawns ; s->name ; s++)
@@ -689,10 +671,10 @@ void SP_worldspawn (edict_t *ent)
 	SetItemNames();
 
 	// help icon for statusbar
-	gi.imageindex ("i_help");
-	level.pic_health = gi.imageindex ("i_health");
-	gi.imageindex ("help");
-	gi.imageindex ("field_3");
+	ImageIndex ("i_help");
+	level.pic_health = ImageIndex ("i_health");
+	ImageIndex ("help");
+	ImageIndex ("field_3");
 
 	CCvar *gravity = new CCvar ("gravity", "800", 0);
 	if (!st.gravity)
@@ -700,69 +682,69 @@ void SP_worldspawn (edict_t *ent)
 	else
 		gravity->Set(st.gravity);
 
-	snd_fry = gi.soundindex ("player/fry.wav");	// standing in lava / slime
+	snd_fry = SoundIndex ("player/fry.wav");	// standing in lava / slime
 
-	gi.soundindex ("player/lava1.wav");
-	gi.soundindex ("player/lava2.wav");
+	SoundIndex ("player/lava1.wav");
+	SoundIndex ("player/lava2.wav");
 
-	gi.soundindex ("misc/pc_up.wav");
-	gi.soundindex ("misc/talk1.wav");
+	SoundIndex ("misc/pc_up.wav");
+	SoundIndex ("misc/talk1.wav");
 
-	gi.soundindex ("misc/udeath.wav");
+	SoundIndex ("misc/udeath.wav");
 
 	// gibs
-	gi.soundindex ("items/respawn1.wav");
+	SoundIndex ("items/respawn1.wav");
 
 	// sexed sounds
-	gi.soundindex ("*death1.wav");
-	gi.soundindex ("*death2.wav");
-	gi.soundindex ("*death3.wav");
-	gi.soundindex ("*death4.wav");
-	gi.soundindex ("*fall1.wav");
-	gi.soundindex ("*fall2.wav");	
-	gi.soundindex ("*gurp1.wav");		// drowning damage
-	gi.soundindex ("*gurp2.wav");	
-	gi.soundindex ("*jump1.wav");		// player jump
-	gi.soundindex ("*pain25_1.wav");
-	gi.soundindex ("*pain25_2.wav");
-	gi.soundindex ("*pain50_1.wav");
-	gi.soundindex ("*pain50_2.wav");
-	gi.soundindex ("*pain75_1.wav");
-	gi.soundindex ("*pain75_2.wav");
-	gi.soundindex ("*pain100_1.wav");
-	gi.soundindex ("*pain100_2.wav");
+	SoundIndex ("*death1.wav");
+	SoundIndex ("*death2.wav");
+	SoundIndex ("*death3.wav");
+	SoundIndex ("*death4.wav");
+	SoundIndex ("*fall1.wav");
+	SoundIndex ("*fall2.wav");	
+	SoundIndex ("*gurp1.wav");		// drowning damage
+	SoundIndex ("*gurp2.wav");	
+	SoundIndex ("*jump1.wav");		// player jump
+	SoundIndex ("*pain25_1.wav");
+	SoundIndex ("*pain25_2.wav");
+	SoundIndex ("*pain50_1.wav");
+	SoundIndex ("*pain50_2.wav");
+	SoundIndex ("*pain75_1.wav");
+	SoundIndex ("*pain75_2.wav");
+	SoundIndex ("*pain100_1.wav");
+	SoundIndex ("*pain100_2.wav");
 
 	//-------------------
 
-	gi.soundindex ("player/gasp1.wav");		// gasping for air
-	gi.soundindex ("player/gasp2.wav");		// head breaking surface, not gasping
+	SoundIndex ("player/gasp1.wav");		// gasping for air
+	SoundIndex ("player/gasp2.wav");		// head breaking surface, not gasping
 
-	gi.soundindex ("player/watr_in.wav");	// feet hitting water
-	gi.soundindex ("player/watr_out.wav");	// feet leaving water
+	SoundIndex ("player/watr_in.wav");	// feet hitting water
+	SoundIndex ("player/watr_out.wav");	// feet leaving water
 
-	gi.soundindex ("player/watr_un.wav");	// head going underwater
+	SoundIndex ("player/watr_un.wav");	// head going underwater
 	
-	gi.soundindex ("player/u_breath1.wav");
-	gi.soundindex ("player/u_breath2.wav");
+	SoundIndex ("player/u_breath1.wav");
+	SoundIndex ("player/u_breath2.wav");
 
-	gi.soundindex ("items/pkup.wav");		// bonus item pickup
-	gi.soundindex ("world/land.wav");		// landing thud
-	gi.soundindex ("misc/h2ohit1.wav");		// landing splash
+	SoundIndex ("items/pkup.wav");		// bonus item pickup
+	SoundIndex ("world/land.wav");		// landing thud
+	SoundIndex ("misc/h2ohit1.wav");		// landing splash
 
-	gi.soundindex ("items/damage.wav");
-	gi.soundindex ("items/protect.wav");
-	gi.soundindex ("items/protect4.wav");
-	gi.soundindex ("weapons/noammo.wav");
+	SoundIndex ("items/damage.wav");
+	SoundIndex ("items/protect.wav");
+	SoundIndex ("items/protect4.wav");
+	SoundIndex ("weapons/noammo.wav");
 
-	gi.soundindex ("infantry/inflies1.wav");
+	SoundIndex ("infantry/inflies1.wav");
 
-	sm_meat_index = gi.modelindex ("models/objects/gibs/sm_meat/tris.md2");
-	gi.modelindex ("models/objects/gibs/arm/tris.md2");
-	gi.modelindex ("models/objects/gibs/bone/tris.md2");
-	gi.modelindex ("models/objects/gibs/bone2/tris.md2");
-	gi.modelindex ("models/objects/gibs/chest/tris.md2");
-	gi.modelindex ("models/objects/gibs/skull/tris.md2");
-	gi.modelindex ("models/objects/gibs/head2/tris.md2");
+	sm_meat_index = ModelIndex ("models/objects/gibs/sm_meat/tris.md2");
+	ModelIndex ("models/objects/gibs/arm/tris.md2");
+	ModelIndex ("models/objects/gibs/bone/tris.md2");
+	ModelIndex ("models/objects/gibs/bone2/tris.md2");
+	ModelIndex ("models/objects/gibs/chest/tris.md2");
+	ModelIndex ("models/objects/gibs/skull/tris.md2");
+	ModelIndex ("models/objects/gibs/head2/tris.md2");
 
 //
 // Setup light animation tables. 'a' is total darkness, 'z' is doublebright.

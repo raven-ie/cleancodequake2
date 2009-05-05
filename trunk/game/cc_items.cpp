@@ -124,7 +124,7 @@ edict_t *CBaseItem::DropItem (edict_t *ent)
 	dropped->s.renderFx = RF_GLOW;
 	Vec3Set (dropped->mins, -15, -15, -15);
 	Vec3Set (dropped->maxs, 15, 15, 15);
-	dropped->s.modelIndex = gi.modelindex(this->WorldModel);
+	dropped->s.modelIndex = ModelIndex(this->WorldModel);
 	dropped->solid = SOLID_TRIGGER;
 	dropped->movetype = MOVETYPE_TOSS;  
 	dropped->touch = DropTempTouch;
@@ -190,7 +190,7 @@ void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *su
 	other->client->bonus_alpha = 0.25;	
 
 	// show icon and name on status bar
-	other->client->ps.stats[STAT_PICKUP_ICON] = gi.imageindex(ent->item->Icon);
+	other->client->ps.stats[STAT_PICKUP_ICON] = ImageIndex(ent->item->Icon);
 	other->client->ps.stats[STAT_PICKUP_STRING] = ent->item->GetConfigStringNumber();
 	other->client->pickup_msg_time = level.time + 3.0;
 
@@ -199,7 +199,7 @@ void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *su
 		other->client->pers.Inventory.SelectedItem = other->client->ps.stats[STAT_SELECTED_ITEM] = ent->item->GetIndex();
 
 	if (ent->item->PickupSound)
-		Sound(other, CHAN_ITEM, gi.soundindex(ent->item->PickupSound));
+		Sound(other, CHAN_ITEM, SoundIndex(ent->item->PickupSound));
 
 	if (!((coop->Integer()) &&  (ent->item->Flags & ITEMFLAG_STAY_COOP)) || (ent->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)))
 	{
@@ -265,9 +265,9 @@ void DropItemToFloor (edict_t *ent)
 	ent->maxs[0] = ent->maxs[1] = ent->maxs[2] = 15;
 
 	if (ent->model)
-		ent->s.modelIndex = gi.modelindex(ent->model);
+		ent->s.modelIndex = ModelIndex(ent->model);
 	else
-		ent->s.modelIndex = gi.modelindex(ent->item->WorldModel);
+		ent->s.modelIndex = ModelIndex(ent->item->WorldModel);
 	ent->solid = SOLID_TRIGGER;
 	ent->movetype = MOVETYPE_TOSS;  
 	ent->touch = TouchItem;

@@ -132,7 +132,7 @@ void M_FlyCheck (edict_t *self)
 	self->nextthink = level.time + 5 + 10 * random();
 }
 
-void AttackFinished (edict_t *self, float time)
+void M_AttackFinished (edict_t *self, float time)
 {
 	self->monsterinfo.attack_finished = level.time + time;
 }

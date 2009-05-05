@@ -519,28 +519,6 @@ void T_RadiusDamage (edict_t *inflictor, edict_t *attacker, float damage, edict_
 #define DEFAULT_SSHOTGUN_COUNT	20
 
 //
-// g_monster.c
-//
-void monster_fire_bullet (edict_t *self, vec3_t start, vec3_t dir, int damage, int kick, int hspread, int vspread, int flashtype);
-void monster_fire_shotgun (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int count, int flashtype);
-void monster_fire_blaster (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, int flashtype, int effect);
-void monster_fire_grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, int flashtype);
-void monster_fire_rocket (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, int flashtype);
-void monster_fire_railgun (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick, int flashtype);
-void monster_fire_bfg (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, int kick, float damage_radius, int flashtype);
-void M_droptofloor (edict_t *ent);
-void monster_think (edict_t *self);
-void walkmonster_start (edict_t *self);
-void swimmonster_start (edict_t *self);
-void flymonster_start (edict_t *self);
-void AttackFinished (edict_t *self, float time);
-void monster_death_use (edict_t *self);
-void M_CatagorizePosition (edict_t *ent);
-bool M_CheckAttack (edict_t *self);
-void M_FlyCheck (edict_t *self);
-void M_CheckGround (edict_t *ent);
-
-//
 // g_misc.c
 //
 void ThrowHead (edict_t *self, char *gibname, int damage, int type);
@@ -553,18 +531,9 @@ void BecomeExplosion1(edict_t *self);
 //
 void AI_SetSightClient (void);
 
-void ai_stand (edict_t *self, float dist);
-void ai_move (edict_t *self, float dist);
-void ai_walk (edict_t *self, float dist);
-void ai_turn (edict_t *self, float dist);
-void ai_run (edict_t *self, float dist);
-void ai_charge (edict_t *self, float dist);
 int range (edict_t *self, edict_t *other);
-
-void FoundTarget (edict_t *self);
 bool infront (edict_t *self, edict_t *other);
 bool visible (edict_t *self, edict_t *other);
-bool FacingIdeal(edict_t *self);
 
 //
 // g_weapon.c
@@ -631,14 +600,6 @@ void DeathmatchScoreboardMessage (edict_t *ent, edict_t *killer, bool reliable);
 // g_pweapon.c
 //
 void PlayerNoise(edict_t *who, vec3_t where, int type);
-
-//
-// m_move.c
-//
-bool M_CheckBottom (edict_t *ent);
-bool M_walkmove (edict_t *ent, float yaw, float dist);
-void M_MoveToGoal (edict_t *ent, float dist);
-void M_ChangeYaw (edict_t *ent);
 
 //
 // g_phys.c
@@ -947,8 +908,8 @@ struct edict_s
 
 	int			style;			// also used as areaportal number
 
-	class CBaseItem		*item;
-	class CMonster		*Monster;
+	CBaseItem		*item;
+	CMonster		*Monster;
 
 	// common data blocks
 	moveinfo_t		moveinfo;

@@ -92,7 +92,7 @@ void SP_target_speaker (edict_t *ent)
 		Q_snprintfz (buffer, sizeof(buffer), "%s.wav", st.noise);
 	else
 		strncpy (buffer, st.noise, sizeof(buffer));
-	ent->noise_index = gi.soundindex (buffer);
+	ent->noise_index = SoundIndex (buffer);
 
 	if (!ent->volume)
 		ent->volume = 1.0;
@@ -174,7 +174,7 @@ void SP_target_secret (edict_t *ent)
 	ent->use = use_target_secret;
 	if (!st.noise)
 		st.noise = "misc/secret.wav";
-	ent->noise_index = gi.soundindex (st.noise);
+	ent->noise_index = SoundIndex (st.noise);
 	ent->svFlags = SVF_NOCLIENT;
 	level.total_secrets++;
 	// map bug hack
@@ -212,7 +212,7 @@ void SP_target_goal (edict_t *ent)
 	ent->use = use_target_goal;
 	if (!st.noise)
 		st.noise = "misc/secret.wav";
-	ent->noise_index = gi.soundindex (st.noise);
+	ent->noise_index = SoundIndex (st.noise);
 	ent->svFlags = SVF_NOCLIENT;
 	level.total_goals++;
 }
@@ -426,7 +426,7 @@ void SP_target_blaster (edict_t *self)
 {
 	self->use = use_target_blaster;
 	G_SetMovedir (self->s.angles, self->movedir);
-	self->noise_index = gi.soundindex ("weapons/laser2.wav");
+	self->noise_index = SoundIndex ("weapons/laser2.wav");
 
 	if (!self->dmg)
 		self->dmg = 15;
@@ -820,5 +820,5 @@ void SP_target_earthquake (edict_t *self)
 	self->think = target_earthquake_think;
 	self->use = target_earthquake_use;
 
-	self->noise_index = gi.soundindex ("world/quake.wav");
+	self->noise_index = SoundIndex ("world/quake.wav");
 }

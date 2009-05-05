@@ -175,7 +175,7 @@ NewtonBody *MakeAStupidBox (edict_t *ent, NewtonCollision *collision, float x, f
 	//Vec3Set (init->maxs, 50, 50, 50);
 	//init->solid = SOLID_BBOX;
 	Vec3Copy (init->s.origin, init->s.oldOrigin);
-	init->s.modelIndex = gi.modelindex("models/crate.md2");
+	init->s.modelIndex = ModelIndex("models/crate.md2");
 	init->movetype = MOVETYPE_NONE;
 	gi.linkentity(init);
 	NewtonBodySetUserData (body, (void*)init);
@@ -217,7 +217,7 @@ NewtonBody *MakeARope (NewtonCollision *collision, float x, float y, float z)
 	init->s.origin[0] = mat[12];
 	init->s.origin[1] = mat[13];
 	init->s.origin[2] = mat[14];
-	init->s.modelIndex = gi.modelindex("models/rope/tris.md2");
+	init->s.modelIndex = ModelIndex("models/rope/tris.md2");
 	gi.linkentity(init);
 	NewtonBodySetUserData (body, (void*)init);
 
@@ -453,7 +453,7 @@ NewtonRagDollBone *QuickRagdoll (edict_t *player, NewtonRagDoll *Ragdoll, Newton
 	}
 
 	edict_t *ent = G_Spawn();
-	ent->s.modelIndex = gi.modelindex("models/ragdoll/tris.md2");
+	ent->s.modelIndex = ModelIndex("models/ragdoll/tris.md2");
 	ent->s.frame = frame;
 	ent->owner = player;
 	Vec3Set (ent->s.origin, x, y, z);

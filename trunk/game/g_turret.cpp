@@ -90,7 +90,7 @@ void turret_breach_fire (edict_t *self)
 	damage = 100 + random() * 50;
 	speed = 550 + 50 * skill->Integer();
 	fire_rocket (self->teammaster->owner, start, f, damage, speed, 150, damage);
-	Sound (start, self, CHAN_WEAPON, gi.soundindex("weapons/rocklf1a.wav"));
+	Sound (start, self, CHAN_WEAPON, SoundIndex("weapons/rocklf1a.wav"));
 }
 
 void turret_breach_think (edict_t *self)
@@ -272,7 +272,7 @@ Must NOT be on the team with the rest of the turret parts.
 Instead it must target the turret_breach.
 */
 
-void infantry_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
+/*void infantry_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
 void infantry_stand (edict_t *self);
 void monster_use (edict_t *self, edict_t *other, edict_t *activator);
 
@@ -395,7 +395,7 @@ void SP_turret_driver (edict_t *self)
 
 	self->movetype = MOVETYPE_PUSH;
 	self->solid = SOLID_BBOX;
-	self->s.modelIndex = gi.modelindex("models/monsters/infantry/tris.md2");
+	self->s.modelIndex = ModelIndex("models/monsters/infantry/tris.md2");
 	Vec3Set (self->mins, -16, -16, -24);
 	Vec3Set (self->maxs, 16, 16, 32);
 
@@ -431,4 +431,4 @@ void SP_turret_driver (edict_t *self)
 	self->nextthink = level.time + FRAMETIME;
 
 	gi.linkentity (self);
-}
+}*/

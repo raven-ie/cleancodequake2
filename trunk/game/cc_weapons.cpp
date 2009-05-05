@@ -48,8 +48,8 @@ Quantity(Quantity)
 		Weapon->Item = this;
 		Weapon->WeaponItem = this;
 	}
-	if (!Ammo)
-		gi.dprintf ("Warning: Weapon with no ammo!\n");
+	if (!Ammo && Quantity)
+		gi.dprintf ("Warning: Weapon with no ammo has quantity!\n");
 }
 
 CAmmo::CAmmo (char *Classname, char *WorldModel, int EffectFlags,
@@ -222,14 +222,15 @@ void CAmmo::Drop (edict_t *ent)
 	int count = this->Quantity;
 	edict_t *dropped = DropItem(ent);
 
-	if (count > ent->client->pers.Inventory.Has(this))
+	if (ent->client && count > ent->client->pers.Inventory.Has(this))
 		count = ent->client->pers.Inventory.Has(this);
 
 	dropped->count = count;
 
-	ent->client->pers.Inventory.Remove (this, count);
+	if (ent->client)
+		ent->client->pers.Inventory.Remove (this, count);
 
-	if (this->Weapon && ent->client->pers.Weapon && (ent->client->pers.Weapon == this->Weapon) &&
+	if (ent->client && this->Weapon && ent->client->pers.Weapon && (ent->client->pers.Weapon == this->Weapon) &&
 		!ent->client->pers.Inventory.Has(this))
 		ent->client->pers.Weapon->NoAmmoWeaponChange(ent);
 }
