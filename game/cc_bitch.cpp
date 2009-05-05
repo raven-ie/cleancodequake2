@@ -471,7 +471,7 @@ CFrame ChickFramesStartAttack1 [] =
 CAnim ChickMoveStartAttack1 (FRAME_attak101, FRAME_attak113, ChickFramesStartAttack1);
 
 
-CFrame chick_frames_attack1 [] =
+CFrame ChickFramesAttack1 [] =
 {
 	CFrame (&CMonster::AI_Charge, 19, ConvertDerivedFunction(&CMaiden::Rocket)),
 	CFrame (&CMonster::AI_Charge, -6),
@@ -487,9 +487,8 @@ CFrame chick_frames_attack1 [] =
 	CFrame (&CMonster::AI_Charge, 6),
 	CFrame (&CMonster::AI_Charge, 4),
 	CFrame (&CMonster::AI_Charge, 3, ConvertDerivedFunction(&CMaiden::ReRocket))
-
 };
-CAnim ChickMoveAttack1 (FRAME_attak114, FRAME_attak127, chick_frames_attack1);
+CAnim ChickMoveAttack1 (FRAME_attak114, FRAME_attak127, ChickFramesAttack1);
 
 CFrame ChickFramesEndAttack1 [] =
 {
