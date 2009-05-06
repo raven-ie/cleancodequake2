@@ -23,4 +23,4 @@ Monsters (bold means done)
   * Parasite
   * *Soldiers*
   * Supertank
-  * Tank
+  * *Tank*
