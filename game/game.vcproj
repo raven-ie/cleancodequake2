@@ -59,7 +59,7 @@
 				ObjectFile="$(IntDir)\"
 				ProgramDataBaseFileName="$(IntDir)\vc90.pdb"
 				BrowseInformation="1"
-				WarningLevel="3"
+				WarningLevel="4"
 				WarnAsError="true"
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="false"
@@ -741,18 +741,6 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="Colors"
-				>
-				<File
-					RelativePath=".\cc_colors.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\cc_colors.h"
-					>
-				</File>
-			</Filter>
-			<Filter
 				Name="Entities"
 				>
 				<File
@@ -999,11 +987,27 @@
 						>
 					</File>
 					<File
+						RelativePath=".\cc_flyer.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_flyer.h"
+						>
+					</File>
+					<File
 						RelativePath=".\cc_infantry.cpp"
 						>
 					</File>
 					<File
 						RelativePath=".\cc_infantry.h"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_tank.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_tank.h"
 						>
 					</File>
 					<Filter
@@ -1047,6 +1051,18 @@
 						</File>
 					</Filter>
 				</Filter>
+			</Filter>
+			<Filter
+				Name="Colors"
+				>
+				<File
+					RelativePath=".\cc_colors.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_colors.h"
+					>
+				</File>
 			</Filter>
 		</Filter>
 	</Files>

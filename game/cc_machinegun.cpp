@@ -141,5 +141,4 @@ void CMachinegun::Fire (edict_t *ent)
 		ent->s.frame = FRAME_attack1 - (int) (random()+0.25);
 		ent->client->anim_end = FRAME_attack8;
 	}
-	//	ent->client->pers.inventory[ent->client->ammo_index]--;
 }

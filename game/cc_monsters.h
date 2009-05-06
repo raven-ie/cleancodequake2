@@ -38,8 +38,8 @@ class CFrame
 public:
 
 	void (CMonster::*AIFunc) (float Dist);
-	float	Dist;
 	void (CMonster::*Function) ();
+	float	Dist;
 
 	CFrame ();
 
@@ -247,3 +247,4 @@ void Monster_Think (edict_t *ent);
 #include "cc_soldier_machinegun.h"
 #include "cc_infantry.h"
 #include "cc_bitch.h"
+#include "cc_tank.h"

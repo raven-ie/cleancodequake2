@@ -84,30 +84,9 @@ typedef enum
 	DAMAGE_AIM			// auto targeting recognizes this
 } damage_t;
 
-typedef enum 
-{
-	WEAPON_READY, 
-	WEAPON_ACTIVATING,
-	WEAPON_DROPPING,
-	WEAPON_FIRING
-} weaponstate_t;
-
-typedef enum
-{
-	AMMO_BULLETS,
-	AMMO_SHELLS,
-	AMMO_ROCKETS,
-	AMMO_GRENADES,
-	AMMO_CELLS,
-	AMMO_SLUGS
-} ammo_t;
-
-
 //deadflag
 #define DEAD_NO					0
-#define DEAD_DYING				1
-#define DEAD_DEAD				2
-#define DEAD_RESPAWNABLE		3
+#define DEAD_DEAD				1
 
 //range
 #define RANGE_MELEE				0
@@ -119,13 +98,6 @@ typedef enum
 #define GIB_ORGANIC				0
 #define GIB_METALLIC			1
 
-// armor types
-#define ARMOR_NONE				0
-#define ARMOR_JACKET			1
-#define ARMOR_COMBAT			2
-#define ARMOR_BODY				3
-#define ARMOR_SHARD				4
-
 // power armor types
 #define POWER_ARMOR_NONE		0
 #define POWER_ARMOR_SCREEN		1
@@ -135,7 +107,6 @@ typedef enum
 #define RIGHT_HANDED			0
 #define LEFT_HANDED				1
 #define CENTER_HANDED			2
-
 
 // game.serverflags values
 #define SFL_CROSS_TRIGGER_1		0x00000001
@@ -158,27 +129,18 @@ typedef enum
 // edict->movetype values
 typedef enum
 {
-MOVETYPE_NONE,			// never moves
-MOVETYPE_NOCLIP,		// origin and angles change with no interaction
-MOVETYPE_PUSH,			// no clip to world, push on box contact
-MOVETYPE_STOP,			// no clip to world, stops on box contact
+	MOVETYPE_NONE,			// never moves
+	MOVETYPE_NOCLIP,		// origin and angles change with no interaction
+	MOVETYPE_PUSH,			// no clip to world, push on box contact
+	MOVETYPE_STOP,			// no clip to world, stops on box contact
 
-MOVETYPE_WALK,			// gravity
-MOVETYPE_STEP,			// gravity, special edge handling
-MOVETYPE_FLY,
-MOVETYPE_TOSS,			// gravity
-MOVETYPE_FLYMISSILE,	// extra size to monsters
-MOVETYPE_BOUNCE
+	MOVETYPE_WALK,			// gravity
+	MOVETYPE_STEP,			// gravity, special edge handling
+	MOVETYPE_FLY,
+	MOVETYPE_TOSS,			// gravity
+	MOVETYPE_FLYMISSILE,	// extra size to monsters
+	MOVETYPE_BOUNCE
 } movetype_t;
-
-/*typedef struct
-{
-	int		base_count;
-	int		max_count;
-	float	normal_protection;
-	float	energy_protection;
-	int		armor;
-} gitem_armor_t;*/
 
 //
 // this structure is left intact through an entire game
@@ -312,58 +274,6 @@ typedef struct
 	void		(*endfunc)(edict_t *);
 } moveinfo_t;
 
-
-typedef struct
-{
-	void	(*aifunc)(edict_t *self, float dist);
-	float	dist;
-	void	(*thinkfunc)(edict_t *self);
-} mframe_t;
-
-typedef struct
-{
-	int			firstframe;
-	int			lastframe;
-	mframe_t	*frame;
-	void		(*endfunc)(edict_t *self);
-} mmove_t;
-
-typedef struct
-{
-	mmove_t		*currentmove;
-	int			aiflags;
-	int			nextframe;
-	float		scale;
-
-	void		(*stand)(edict_t *self);
-	void		(*idle)(edict_t *self);
-	void		(*search)(edict_t *self);
-	void		(*walk)(edict_t *self);
-	void		(*run)(edict_t *self);
-	void		(*dodge)(edict_t *self, edict_t *other, float eta);
-	void		(*attack)(edict_t *self);
-	void		(*melee)(edict_t *self);
-	void		(*sight)(edict_t *self, edict_t *other);
-	bool		(*checkattack)(edict_t *self);
-
-	float		pausetime;
-	float		attack_finished;
-
-	vec3_t		saved_goal;
-	float		search_time;
-	float		trail_time;
-	vec3_t		last_sighting;
-	int			attack_state;
-	int			lefty;
-	float		idle_time;
-	int			linkcount;
-
-	int			power_armor_type;
-	int			power_armor_power;
-} monsterinfo_t;
-
-
-
 extern	game_locals_t	game;
 extern	level_locals_t	level;
 extern	gameImport_t	gi;
@@ -374,41 +284,45 @@ extern	int	sm_meat_index;
 extern	int	snd_fry;
 
 // means of death
-#define MOD_UNKNOWN			0
-#define MOD_BLASTER			1
-#define MOD_SHOTGUN			2
-#define MOD_SSHOTGUN		3
-#define MOD_MACHINEGUN		4
-#define MOD_CHAINGUN		5
-#define MOD_GRENADE			6
-#define MOD_G_SPLASH		7
-#define MOD_ROCKET			8
-#define MOD_R_SPLASH		9
-#define MOD_HYPERBLASTER	10
-#define MOD_RAILGUN			11
-#define MOD_BFG_LASER		12
-#define MOD_BFG_BLAST		13
-#define MOD_BFG_EFFECT		14
-#define MOD_HANDGRENADE		15
-#define MOD_HG_SPLASH		16
-#define MOD_WATER			17
-#define MOD_SLIME			18
-#define MOD_LAVA			19
-#define MOD_CRUSH			20
-#define MOD_TELEFRAG		21
-#define MOD_FALLING			22
-#define MOD_SUICIDE			23
-#define MOD_HELD_GRENADE	24
-#define MOD_EXPLOSIVE		25
-#define MOD_BARREL			26
-#define MOD_BOMB			27
-#define MOD_EXIT			28
-#define MOD_SPLASH			29
-#define MOD_TARGET_LASER	30
-#define MOD_TRIGGER_HURT	31
-#define MOD_HIT				32
-#define MOD_TARGET_BLASTER	33
-#define MOD_FRIENDLY_FIRE	0x8000000
+enum // EMeansOfDeath
+{
+	MOD_UNKNOWN,
+	MOD_BLASTER,
+	MOD_SHOTGUN,
+	MOD_SSHOTGUN,
+	MOD_MACHINEGUN,
+	MOD_CHAINGUN,
+	MOD_GRENADE,
+	MOD_G_SPLASH,
+	MOD_ROCKET,
+	MOD_R_SPLASH,
+	MOD_HYPERBLASTER,
+	MOD_RAILGUN,
+	MOD_BFG_LASER,
+	MOD_BFG_BLAST,
+	MOD_BFG_EFFECT,
+	MOD_HANDGRENADE,
+	MOD_HG_SPLASH,
+	MOD_WATER,
+	MOD_SLIME,
+	MOD_LAVA,
+	MOD_CRUSH,
+	MOD_TELEFRAG,
+	MOD_FALLING,
+	MOD_SUICIDE,
+	MOD_HELD_GRENADE,
+	MOD_EXPLOSIVE,
+	MOD_BARREL,
+	MOD_BOMB,
+	MOD_EXIT,
+	MOD_SPLASH,
+	MOD_TARGET_LASER,
+	MOD_TRIGGER_HURT,
+	MOD_HIT,
+	MOD_TARGET_BLASTER,
+
+	MOD_FRIENDLY_FIRE
+};
 
 extern	int	meansOfDeath;
 
@@ -697,13 +611,8 @@ struct gclient_s
 	bool		showhelp;
 	bool		showhelpicon;
 
-	int			ammo_index;
-
 	int			buttons;
-	int			oldbuttons;
 	int			latched_buttons;
-
-	bool		weapon_thunk;
 
 	CWeapon		*NewWeapon;
 
@@ -913,7 +822,6 @@ struct edict_s
 
 	// common data blocks
 	moveinfo_t		moveinfo;
-	monsterinfo_t	monsterinfo;
 
 #if 0
 	const NewtonBody	*newtonBody;

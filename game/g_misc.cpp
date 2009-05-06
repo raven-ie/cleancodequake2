@@ -375,11 +375,6 @@ void path_corner_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurf
 			other->Monster->PauseTime = level.time + self->wait;
 			other->Monster->Stand();
 		}
-		else
-		{
-			other->monsterinfo.pausetime = level.time + self->wait;
-			other->monsterinfo.stand (other);
-		}
 		return;
 	}
 
@@ -389,11 +384,6 @@ void path_corner_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurf
 		{
 			other->Monster->PauseTime = level.time + 100000000;
 			other->Monster->Stand ();
-		}
-		else
-		{
-			other->monsterinfo.pausetime = level.time + 100000000;
-			other->monsterinfo.stand (other);
 		}
 	}
 	else
@@ -453,12 +443,6 @@ void point_combat_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSur
 			other->Monster->AIFlags |= AI_STAND_GROUND;
 			other->Monster->Stand ();
 		}
-		else
-		{
-			other->monsterinfo.pausetime = level.time + 100000000;
-			other->monsterinfo.aiflags |= AI_STAND_GROUND;
-			other->monsterinfo.stand (other);
-		}
 	}
 
 	if (other->movetarget == self)
@@ -469,8 +453,6 @@ void point_combat_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSur
 
 		if (other->Monster)
 			other->Monster->AIFlags &= ~AI_COMBAT_POINT;
-		else
-			other->monsterinfo.aiflags &= ~AI_COMBAT_POINT;
 	}
 
 	if (self->pathtarget)
@@ -896,7 +878,7 @@ void barrel_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t
 
 {
 	float	ratio;
-	vec3_t	v, forward = {0,0,0};
+	vec3_t	v;
 
 	if ((!other->groundentity) || (other->groundentity == self))
 		return;
@@ -949,23 +931,6 @@ void barrel_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t
 // the move is ok
 	gi.linkentity (self);
 	G_TouchTriggers (self);
-	/*v[2] = 0;
-
-	vec3_t tempOrigin;
-	Vec3MA (self->s.origin, 0.1, v, tempOrigin);
-	TempEnts.Trails.BFGLaser(self->s.origin, tempOrigin);
-
-	CTrace trace;
-	trace.Trace (self->s.origin, tempOrigin, self, CONTENTS_MASK_ALL);
-
-	if (trace.fraction == 1.0)
-	{
-		Vec3Copy (self->s.origin, self->s.oldOrigin);
-		Vec3Copy (tempOrigin, self->s.origin);
-		gi.linkentity(self);
-	}*/
-
-	//M_walkmove (self, VecToYaw(v), 20 * ratio * FRAMETIME);
 }
 
 void barrel_explode (edict_t *self)
@@ -1068,7 +1033,7 @@ void SP_misc_explobox (edict_t *self)
 	ModelIndex ("models/objects/debris3/tris.md2");
 
 	self->solid = SOLID_BBOX;
-	self->movetype = MOVETYPE_TOSS;
+	self->movetype = MOVETYPE_STEP;
 
 	self->model = "models/objects/barrels/tris.md2";
 	self->s.modelIndex = ModelIndex (self->model);
@@ -1086,9 +1051,6 @@ void SP_misc_explobox (edict_t *self)
 	self->takedamage = DAMAGE_YES;
 
 	self->touch = barrel_touch;
-
-	//self->think = M_droptofloor;
-	//self->nextthink = level.time + 2 * FRAMETIME;
 
 	gi.linkentity (self);
 }
@@ -1336,7 +1298,6 @@ void SP_misc_deadsoldier (edict_t *ent)
 	ent->takedamage = DAMAGE_YES;
 	ent->svFlags |= SVF_MONSTER|SVF_DEADMONSTER;
 	ent->die = misc_deadsoldier_die;
-	ent->monsterinfo.aiflags |= AI_GOOD_GUY;
 
 	gi.linkentity (ent);
 }

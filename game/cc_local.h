@@ -43,13 +43,13 @@ void WriteShort (short val);
 void WriteByte (byte val);
 void WriteChar (char val);
 
-enum ECastType : int
+enum ECastType
 {
 	// Cast type
 	CAST_MULTI,
 	CAST_UNI
 };
-enum ECastFlags : int
+enum ECastFlags
 {
 	CASTFLAG_PVS = 1,
 	CASTFLAG_PHS = 2,

@@ -772,7 +772,7 @@ void CMonster::MonsterStart ()
 		return;
 	}
 
-	if ((Entity->spawnflags & 4) && !(Entity->monsterinfo.aiflags & AI_GOOD_GUY))
+	if ((Entity->spawnflags & 4) && !(AIFlags & AI_GOOD_GUY))
 	{
 		Entity->spawnflags &= ~4;
 		Entity->spawnflags |= 1;
@@ -829,7 +829,7 @@ void _cdecl CMonster::MonsterUse (edict_t *self, edict_t *other, edict_t *activa
 		return;
 	if (activator->flags & FL_NOTARGET)
 		return;
-	if (!(activator->client) && !(activator->monsterinfo.aiflags & AI_GOOD_GUY))
+	if (!(activator->client) && !(self->Monster->AIFlags & AI_GOOD_GUY))
 		return;
 	
 // delay reaction so if the monster is teleported, its sound is still heard
@@ -1157,13 +1157,6 @@ bool CMonster::AI_CheckAttack()
 		Vec3Copy (Entity->enemy->s.origin, LastSighting);
 	}
 
-// look for other coop players here
-//	if (coop && self->monsterinfo.search_time < level.time)
-//	{
-//		if (FindTarget (self))
-//			return true;
-//	}
-
 	EnemyInfront = infront(Entity, Entity->enemy);
 	EnemyRange = range(Entity, Entity->enemy);
 	Vec3Subtract (Entity->enemy->s.origin, Entity->s.origin, temp);
@@ -1452,7 +1445,7 @@ void CMonster::AI_Stand (float Dist)
 				Run ();
 			}
 			ChangeYaw ();
-			CheckAttack ();
+			AI_CheckAttack();
 		}
 		else
 			FindTarget ();
@@ -1968,7 +1961,7 @@ bool CMonster::FindTarget()
 	bool		heardit;
 	int			r;
 
-	if (Entity->monsterinfo.aiflags & AI_GOOD_GUY)
+	if (AIFlags & AI_GOOD_GUY)
 	{
 		if (Entity->goalentity && Entity->goalentity->inUse && Entity->goalentity->classname)
 		{
@@ -1981,7 +1974,7 @@ bool CMonster::FindTarget()
 	}
 
 	// if we're going to a combat point, just proceed
-	if (Entity->monsterinfo.aiflags & AI_COMBAT_POINT)
+	if (AIFlags & AI_COMBAT_POINT)
 		return false;
 
 // if the first spawnflag bit is set, the monster will only wake up on

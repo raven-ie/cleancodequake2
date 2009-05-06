@@ -1726,9 +1726,9 @@ void ClientThink (edict_t *ent, userCmd_t *ucmd)
 
 	}
 
-	client->oldbuttons = client->buttons;
+	int oldbuttons = client->buttons;
 	client->buttons = ucmd->buttons;
-	client->latched_buttons |= client->buttons & ~client->oldbuttons;
+	client->latched_buttons |= client->buttons & ~oldbuttons;
 
 	// save light level the player is standing on for
 	// monster sighting AI
@@ -1747,9 +1747,6 @@ void ClientThink (edict_t *ent, userCmd_t *ucmd)
 			} else
 				GetChaseTarget(ent);
 
-		} else if (!client->weapon_thunk && client->pers.Weapon) {
-			client->weapon_thunk = true;
-			client->pers.Weapon->Think (ent);
 		}
 	}
 
@@ -1800,11 +1797,9 @@ void ClientBeginServerFrame (edict_t *ent)
 		return;
 	}
 
-	// run weapon animations if it hasn't been done by a ucmd_t
-	if (!client->weapon_thunk && !client->resp.spectator && client->pers.Weapon)
+	// run weapon animations
+	if (!client->resp.spectator && client->pers.Weapon)
 		client->pers.Weapon->Think (ent);
-	else
-		client->weapon_thunk = false;
 
 	if (ent->deadflag)
 	{

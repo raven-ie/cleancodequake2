@@ -111,7 +111,6 @@ void CHandGrenade::FireGrenade (edict_t *ent, bool inHand)
 	ent->client->grenade_time = level.time + 1.0;
 	if (!dmFlags.dfInfiniteAmmo)
 		DepleteAmmo(ent, 1);
-	//	ent->client->pers.inventory[ent->client->ammo_index]--;
 
 	if(ent->health <= 0 || ent->deadflag || ent->s.modelIndex != 255) // VWep animations screw up corpses
 		return;

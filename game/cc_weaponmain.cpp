@@ -46,7 +46,6 @@ DeactStart(DeactStart),
 DeactNumFrames(DeactNumFrames),
 WeaponSound(WeaponSound)
 {
-	WeaponModel = -1;
 	WeaponModelString = model;
 
 	ActivationEnd = (ActivationStart + ActivationNumFrames);
@@ -57,10 +56,8 @@ WeaponSound(WeaponSound)
 
 void CWeapon::InitWeapon (edict_t *ent)
 {
-	if (WeaponModel == -1)
-		WeaponModel = ModelIndex(WeaponModelString);
 	ent->client->ps.gunFrame = ActivationStart;
-	ent->client->ps.gunIndex = WeaponModel;
+	ent->client->ps.gunIndex = ModelIndex(WeaponModelString);
 	ent->client->weaponstate = WS_ACTIVATING;
 }
 
@@ -220,22 +217,28 @@ void CWeapon::DepleteAmmo (edict_t *ent, int Amount = 1)
 
 bool CWeapon::AttemptToFire (edict_t *ent)
 {
-	int numAmmo;
+	int numAmmo = 0;
 	CAmmo *Ammo;
-	int quantity = 1;
+	int quantity = 0;
 
-	if (this->WeaponItem)
-	{
-		Ammo = this->WeaponItem->Ammo;
-		quantity = this->WeaponItem->Quantity;
-		if (Ammo)
-			numAmmo = ent->client->pers.Inventory.Has(Ammo);
-	}
-	else if (this->Item && (this->Item->Flags & ITEMFLAG_AMMO))
+	if (this->Item && (this->Item->Flags & ITEMFLAG_AMMO))
 	{
 		numAmmo = ent->client->pers.Inventory.Has(this->Item);
 		Ammo = dynamic_cast<CAmmo*>(this->Item);
 		quantity = Ammo->Amount;
+	}
+	// Revision: Always going to be true here.
+	else
+	{
+		if (this->WeaponItem->Ammo)
+		{
+			Ammo = this->WeaponItem->Ammo;
+			quantity = this->WeaponItem->Quantity;
+			if (Ammo)
+				numAmmo = ent->client->pers.Inventory.Has(Ammo);
+		}
+		else
+			return true;
 	}
 
 	if (numAmmo < quantity)

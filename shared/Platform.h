@@ -32,6 +32,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # pragma warning(disable : 4191)	// 'operator/operation' : unsafe conversion from 'type of expression' to 'type required'
 # pragma warning(3 : 4202)	// nonstandard extension used : '...': prototype parameter in name list illegal
 # pragma warning(3 : 4254)	// 'operator' : conversion from 'type1' to 'type2', possible loss of data
+// Paril, for CleanCode
+# pragma warning (disable : 4100) // unreferenced formal parameter
+# pragma warning (disable : 4389) // signed/unsigned mismatch
+# pragma warning (disable : 4127) // conditional expression is constant
 
 # pragma intrinsic(memcmp)
 
