@@ -249,7 +249,6 @@ inline bool IfExpr ()
 // Returns an entire line.
 char *CC_ParseLine (char **entString)
 {
-	size_t pos = 0;
 	size_t found = strcspn (*entString, "\n");
 	char *token = *entString;
 
@@ -287,7 +286,7 @@ char *ParsePound (char *tok, char *realEntities)
 			PushIf (false);
 			// Since we evaluated to false, we need to keep going
 			// till we reach an #else*
-			while ((token = CC_ParseLine(&realEntities)) && (token[0] != '#' && token[1] != 'e'));
+			while (((token = CC_ParseLine(&realEntities)) != NULL) && (token[0] != '#' && token[1] != 'e'));
 
 			ParsePound (token, realEntities);
 		}
@@ -300,7 +299,7 @@ char *ParsePound (char *tok, char *realEntities)
 		{
 			// Since we evaluated to false, we need to keep going
 			// till we reach an #else*
-			while ((token = CC_ParseLine(&realEntities)) && (token[0] != '#' && token[1] != 'e'));
+			while (((token = CC_ParseLine(&realEntities)) != NULL) && (token[0] != '#' && token[1] != 'e'));
 
 			ParsePound (token, realEntities);
 		}
@@ -322,7 +321,7 @@ char *ParsePound (char *tok, char *realEntities)
 			PushIf (false);
 			// Since we evaluated to false, we need to keep going
 			// till we reach an #else*
-			while ((token = CC_ParseLine(&realEntities)) && (token[0] != '#' && token[1] != 'e'));
+			while (((token = CC_ParseLine(&realEntities)) != NULL) && (token[0] != '#' && token[1] != 'e'));
 
 			ParsePound (token, realEntities);
 		}
@@ -389,7 +388,6 @@ char *CC_ParseSpawnEntities (char *mapname, char *entities)
 	string finalString;
 	char *realEntities;
 	char *token;
-	int curPos = 0;
 	char *tempEntities;
 
 	tempEntities = CC_LoadEntFile (mapname, entities);
@@ -399,11 +397,11 @@ char *CC_ParseSpawnEntities (char *mapname, char *entities)
 		entities = tempEntities;
 	realEntities = entities;
 
-	while ((token = CC_ParseLine(&realEntities)))
+	while ((token = CC_ParseLine(&realEntities)) != NULL)
 	{
 		if (token == NULL)
 			break; // ever happen?
-		if (token[0] == '#' && (realEntities = ParsePound(token, realEntities)))
+		if (token[0] == '#' && (realEntities = ParsePound(token, realEntities)) != NULL)
 			continue;
 
 		// Basically if we reach here, this part makes it into the final compilation.

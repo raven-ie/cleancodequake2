@@ -578,6 +578,12 @@ void target_laser_use (edict_t *self, edict_t *other, edict_t *activator)
 		target_laser_on (self);
 }
 
+// Beam colors are basically four encoded colors.
+inline int ConvertColorsToBeamColor (byte colorOne, byte colorTwo, byte colorThree, byte colorFour)
+{
+	return (colorOne) | ((colorTwo) << 8) | ((colorThree) << 16) | ((colorFour) << 24);
+}
+
 void target_laser_start (edict_t *self)
 {
 	edict_t *ent;
@@ -595,15 +601,15 @@ void target_laser_start (edict_t *self)
 
 	// set the color
 	if (self->spawnflags & RED)
-		self->s.skinNum = Colors.PatriotRed;
+		self->s.skinNum = ConvertColorsToBeamColor (Colors.PatriotRed, Colors.PatriotRed, Colors.Red, Colors.Red);
 	else if (self->spawnflags & GREEN)
-		self->s.skinNum = Colors.Lime;
+		self->s.skinNum = ConvertColorsToBeamColor (Colors.Green, Colors.Lime, Colors.FireSpeechGreen, Colors.Harlequin);
 	else if (self->spawnflags & BLUE)
-		self->s.skinNum = Colors.PatriotBlue;
+		self->s.skinNum = ConvertColorsToBeamColor (Colors.PatriotBlue, Colors.PatriotBlue, Colors.NeonBlue, Colors.NeonBlue);
 	else if (self->spawnflags & YELLOW)
-		self->s.skinNum = Colors.Lemon;
+		self->s.skinNum = ConvertColorsToBeamColor (Colors.ParisDaisy, Colors.Gorse, Colors.Lemon, Colors.Gold);
 	else if (self->spawnflags & ORANGE)
-		self->s.skinNum = Colors.HarvestGold;
+		self->s.skinNum = ConvertColorsToBeamColor (Colors.HarvestGold, Colors.RobRoy, Colors.TulipTree, Colors.FireBush);
 
 	if (!self->enemy)
 	{

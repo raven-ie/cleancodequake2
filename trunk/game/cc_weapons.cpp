@@ -148,7 +148,7 @@ void CWeaponItem::Use (edict_t *ent)
 
 void CWeaponItem::Drop (edict_t *ent)
 {
-	edict_t *dropped = DropItem(ent);
+	DropItem(ent);
 	ent->client->pers.Inventory -= this;
 
 	if (this->Weapon == ent->client->pers.Weapon)

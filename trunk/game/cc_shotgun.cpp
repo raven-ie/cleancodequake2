@@ -99,5 +99,4 @@ void CShotgun::Fire (edict_t *ent)
 
 	if (!dmFlags.dfInfiniteAmmo)
 		DepleteAmmo(ent, 1);
-	//	ent->client->pers.inventory[ent->client->ammo_index]--;
 }

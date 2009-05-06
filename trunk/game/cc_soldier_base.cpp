@@ -450,7 +450,7 @@ void CSoldierBase::Duck_Down ()
 
 void CSoldierBase::Duck_Up ()
 {
-	Entity->monsterinfo.aiflags &= ~AI_DUCKED;
+	AIFlags &= ~AI_DUCKED;
 	Entity->maxs[2] += 32;
 	Entity->takedamage = DAMAGE_AIM;
 	gi.linkentity (Entity);
@@ -543,20 +543,6 @@ CFrame SoldierFramesAttack6 [] =
 	CFrame (&CMonster::AI_Charge, 17, ConvertDerivedFunction(&CSoldierBase::Attack6_Refire))
 };
 CAnim SoldierMoveAttack6 (FRAME_runs01, FRAME_runs14, SoldierFramesAttack6, ConvertDerivedFunction(&CSoldierBase::Run));
-
-/*void soldier_attack()
-{
-	if (self->s.skinNum < 4)
-	{
-		if (random() < 0.5)
-			self->monsterinfo.currentmove = &soldier_move_attack1;
-		else
-			self->monsterinfo.currentmove = &soldier_move_attack2;
-	}
-	else
-		self->monsterinfo.currentmove = &soldier_move_attack4;
-}*/
-
 
 //
 // SIGHT

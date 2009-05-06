@@ -398,6 +398,7 @@ void CInfantry::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t p
 	switch (rand() % 3)
 	{
 	case 0:
+	default:
 		Animation = &InfantryMoveDeath1;
 		pSound = SoundDie2;
 		break;

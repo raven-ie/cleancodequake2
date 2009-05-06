@@ -27,39 +27,61 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_indexing.h
-// New indexing system
+// cc_tank.h
+// Tank
 //
 
-class CIndex // (lol)
+class CTank : public CMonster
 {
 public:
-	int Index;
-	char *Name;
+	int	SoundThud;
+	int	SoundPain;
+	int	SoundIdle;
+	int	SoundDie;
+	int	SoundStep;
+	int	SoundSight;
+	int	SoundWindup;
+	int	SoundStrike;
 
-	CIndex		*HashNext;
-	uint32		HashValue;
+	CTank ();
+
+	virtual void Allocate (edict_t *ent);
+
+	void Attack ();
+	void Idle ();
+	void Run ();
+	void Sight ();
+	void Stand ();
+	void Walk ();
+
+	void Footstep ();
+	void Thud ();
+	void Windup ();
+	void Blaster();
+	void Strike ();
+	void Rocket ();
+	void MachineGun();
+	void ReFireBlaster ();
+	void ReAttackBlaster ();
+	void PostStrike ();
+	void DoAttackRocket ();
+	void ReFireRocket ();
+
+	void Dead ();
+	void Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
+	void Pain (edict_t *other, float kick, int damage);
+
+	virtual void Spawn ();
 };
 
-#define MAX_INDEXES 256
-
-class CIndexList
+class CTankCommander : public CTank
 {
 public:
-	CIndexList();
+	CTankCommander ();
 
-	CIndex	*List[MAX_INDEXES];
-	CIndex	*HashList[MAX_INDEXES];
-
-	int	numIndexes;
-
-	int		AddToList (char *String, int Index);
-	int		GetIndex (char *String);
-
-	void	Clear ();
+	void Allocate (edict_t *ent);
+	void Spawn ();
 };
 
-int ModelIndex (char *string);
-int SoundIndex (char *string);
-int ImageIndex (char *string);
-void ClearList ();
+extern CTank Monster_Tank;
+extern CTankCommander Monster_Tank_Commander;

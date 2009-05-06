@@ -273,7 +273,7 @@ void ED_CallSpawn (edict_t *ent)
 	if (ItemExists(ent))
 		return;
 
-	if (ent->Monster = FindMonster(ent->classname))
+	if ((ent->Monster = FindMonster(ent->classname)) != NULL)
 	{
 		ent->Monster->Allocate(ent);
 		ent->Monster->Init (ent);
@@ -621,6 +621,7 @@ void CreateSPStatusbar ();
 void SetItemNames ();
 void SP_worldspawn (edict_t *ent)
 {
+	ClearList(); // Do this before ANYTHING
 	// Seed the random number generator
 	srand (time(NULL));
 

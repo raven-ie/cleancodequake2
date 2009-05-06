@@ -58,7 +58,6 @@ public:
 	bool			isQuad, isSilenced;
 	CBaseItem		*Item;
 	CWeaponItem		*WeaponItem; // The weapon that is linked to this weapon.
-	int				WeaponModel; // Index
 	char			*WeaponSound;
 
 	CWeapon(char *model, int ActivationStart, int ActivationNumFrames, int FireStart, int FireNumFrames,

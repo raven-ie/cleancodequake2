@@ -99,3 +99,17 @@ int ImageIndex (char *String)
 		return ImageList.AddToList (String, gi.imageindex(String));
 	return Index;
 }
+
+void CIndexList::Clear ()
+{
+	numIndexes = 0;
+	memset (List, 0, sizeof(CIndex*) * MAX_INDEXES);
+	memset (HashList, 0, sizeof(CIndex*) * MAX_INDEXES);
+}
+
+void ClearList ()
+{
+	ModelList.Clear();
+	ImageList.Clear();
+	SoundList.Clear();
+}

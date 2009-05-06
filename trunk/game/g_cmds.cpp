@@ -605,7 +605,6 @@ void SP_misc_explobox (edict_t *self);
 void Cmd_Test_f (edict_t *ent)
 {
 	vec3_t forward;
-	vec3_t up = {0,0,-1};
 	Angles_Vectors (ent->client->v_angle, forward, NULL, NULL);
 
 	vec3f vec1 = vec3f(ent->s.origin);
@@ -678,8 +677,6 @@ ClientCommand
 */
 void ClientCommand (edict_t *ent)
 {
-	int five =5, three = 3, two = 2;
-	int ten = (five,three,two);
 	if (!ent->client)
 		return;		// not fully in game yet
 

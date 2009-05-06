@@ -39,7 +39,7 @@ public:
 	class CTEnt_Splashes
 	{
 	public:
-		enum ESplashType : int
+		enum ESplashType
 		{
 			SPTUnknown = 0,
 			SPTSparks,
@@ -49,20 +49,20 @@ public:
 			SPTLava,
 			SPTBlood
 		};
-		enum EBloodType : int
+		enum EBloodType
 		{
 			BTBlood = TE_BLOOD,
 			BTMoreBlood = TE_MOREBLOOD,
 			BTGreenBlood = TE_GREENBLOOD
 		};
-		enum EBlasterType : int
+		enum EBlasterType
 		{
 			BLBlaster = TE_BLASTER,
 			BLBlueHyperblaster = TE_BLUEHYPERBLASTER,
 			BLFlechette = TE_FLECHETTE,
 			BLGreenBlaster = TE_BLASTER2
 		};
-		enum ESparkType : int
+		enum ESparkType
 		{
 			STSparks = TE_SPARKS,
 			STBulletSparks = TE_BULLET_SPARKS,

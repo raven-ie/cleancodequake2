@@ -53,3 +53,5 @@ public:
 
 	bool	Pickup (edict_t *ent, edict_t *other);
 };
+
+void AddKeysToList ();

@@ -448,7 +448,7 @@ void SP_trigger_push (edict_t *self)
 	if (!self->target) {
 		self->touch = trigger_push_touch;
 	}
-	else if (target = G_Find (NULL, FOFS(targetname), self->target))
+	else if ((target = G_Find (NULL, FOFS(targetname), self->target)) != NULL)
 	{
 		// Quake3
 		//self->touch = trigger_push_q3touch;

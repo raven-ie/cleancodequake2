@@ -344,7 +344,7 @@ void CMaiden::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t poi
 // check for gib
 	if (Entity->health <= Entity->gib_health)
 	{
-		Sound (Entity, CHAN_VOICE, gi.soundindex ("misc/udeath.wav"));
+		Sound (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (n= 0; n < 2; n++)
 			ThrowGib (Entity, "models/objects/gibs/bone/tris.md2", damage, GIB_ORGANIC);
 		for (n= 0; n < 4; n++)
@@ -598,21 +598,21 @@ void CMaiden::Spawn ()
 	Vec3Set (Entity->mins, -16, -16, 0);
 	Vec3Set (Entity->maxs, 16, 16, 56);
 
-	SoundMissilePrelaunch	= gi.soundindex ("chick/chkatck1.wav");	
-	SoundMissileLaunch	= gi.soundindex ("chick/chkatck2.wav");	
-	SoundMeleeSwing		= gi.soundindex ("chick/chkatck3.wav");	
-	SoundMeleeHit			= gi.soundindex ("chick/chkatck4.wav");	
-	SoundMissileReload	= gi.soundindex ("chick/chkatck5.wav");	
-	SoundDeath1			= gi.soundindex ("chick/chkdeth1.wav");	
-	SoundDeath2			= gi.soundindex ("chick/chkdeth2.wav");	
-	SoundFallDown			= gi.soundindex ("chick/chkfall1.wav");	
-	SoundIdle1				= gi.soundindex ("chick/chkidle1.wav");	
-	SoundIdle2				= gi.soundindex ("chick/chkidle2.wav");	
-	SoundPain1				= gi.soundindex ("chick/chkpain1.wav");	
-	SoundPain2				= gi.soundindex ("chick/chkpain2.wav");	
-	SoundPain3				= gi.soundindex ("chick/chkpain3.wav");	
-	SoundSight				= gi.soundindex ("chick/chksght1.wav");	
-	SoundSearch			= gi.soundindex ("chick/chksrch1.wav");	
+	SoundMissilePrelaunch	= SoundIndex ("chick/chkatck1.wav");	
+	SoundMissileLaunch	= SoundIndex ("chick/chkatck2.wav");	
+	SoundMeleeSwing		= SoundIndex ("chick/chkatck3.wav");	
+	SoundMeleeHit			= SoundIndex ("chick/chkatck4.wav");	
+	SoundMissileReload	= SoundIndex ("chick/chkatck5.wav");	
+	SoundDeath1			= SoundIndex ("chick/chkdeth1.wav");	
+	SoundDeath2			= SoundIndex ("chick/chkdeth2.wav");	
+	SoundFallDown			= SoundIndex ("chick/chkfall1.wav");	
+	SoundIdle1				= SoundIndex ("chick/chkidle1.wav");	
+	SoundIdle2				= SoundIndex ("chick/chkidle2.wav");	
+	SoundPain1				= SoundIndex ("chick/chkpain1.wav");	
+	SoundPain2				= SoundIndex ("chick/chkpain2.wav");	
+	SoundPain3				= SoundIndex ("chick/chkpain3.wav");	
+	SoundSight				= SoundIndex ("chick/chksght1.wav");	
+	SoundSearch			= SoundIndex ("chick/chksrch1.wav");	
 
 	Entity->health = 175;
 	Entity->gib_health = -70;

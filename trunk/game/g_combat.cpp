@@ -96,21 +96,9 @@ void Killed (edict_t *targ, edict_t *inflictor, edict_t *attacker, int damage, v
 
 	targ->enemy = attacker;
 
-	if ((targ->svFlags & SVF_MONSTER) && (targ->deadflag != DEAD_DEAD) && !targ->Monster)
+	if ((targ->svFlags & SVF_MONSTER) && (targ->deadflag != DEAD_DEAD) && targ->Monster)
 	{
 //		targ->svFlags |= SVF_DEADMONSTER;	// now treat as a different content type
-		if (!(targ->monsterinfo.aiflags & AI_GOOD_GUY))
-		{
-			level.killed_monsters++;
-			if (coop->Integer() && attacker->client)
-				attacker->client->resp.score++;
-			// medics won't heal monsters that they kill themselves
-			if (strcmp(attacker->classname, "monster_medic") == 0)
-				targ->owner = attacker;
-		}
-	}
-	else if (targ->Monster)
-	{
 		if (!(targ->Monster->AIFlags & AI_GOOD_GUY))
 		{
 			level.killed_monsters++;
@@ -173,7 +161,7 @@ static int CheckPowerArmor (edict_t *ent, vec3_t point, vec3_t normal, int damag
 	int			index = FindItem("Cells")->GetIndex();
 	int			damagePerCell;
 	int			pa_te_type;
-	int			power;
+	int			power = 0;
 	int			power_used;
 
 	if (!damage)
@@ -190,12 +178,7 @@ static int CheckPowerArmor (edict_t *ent, vec3_t point, vec3_t normal, int damag
 		if (power_armor_type != POWER_ARMOR_NONE)
 			power = client->pers.Inventory.Has(FindItem("Cells"));
 	}
-	else if ((ent->svFlags & SVF_MONSTER) && !ent->Monster)
-	{
-		power_armor_type = ent->monsterinfo.power_armor_type;
-		power = ent->monsterinfo.power_armor_power;
-	}
-	else if (ent->Monster)
+	else if ((ent->svFlags & SVF_MONSTER) && ent->Monster)
 	{
 		power_armor_type = ent->Monster->PowerArmorType;
 		power = ent->Monster->PowerArmorPower;
@@ -246,8 +229,6 @@ static int CheckPowerArmor (edict_t *ent, vec3_t point, vec3_t normal, int damag
 
 	if (client)
 		client->pers.Inventory.Remove(index, power_used);
-	else if (!ent->Monster)
-		ent->monsterinfo.power_armor_power -= power_used;
 	else if (ent->Monster)
 		ent->Monster->PowerArmorPower -= power_used;
 	return save;

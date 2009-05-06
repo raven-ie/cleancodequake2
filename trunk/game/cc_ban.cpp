@@ -37,7 +37,7 @@ CBanList	Bans;
 
 IPAddress IPStringToArrays (const char *IP)
 {
-	IPAddress Address;
+	IPAddress Address = {0,0,0,0};
 	int i = 0, z = 0, c = 0;
 	char tempAddress[3];
 
@@ -73,7 +73,7 @@ IPAddress IPStringToArrays (const char *IP)
 
 IPAddress IPStringToArrays (char *IP)
 {
-	IPAddress Address;
+	IPAddress Address = {0,0,0,0};
 	int i = 0, z = 0, c = 0;
 	char tempAddress[3];
 

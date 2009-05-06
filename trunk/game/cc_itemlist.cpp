@@ -138,6 +138,7 @@ void InitItemlist ()
 	AddHealthToList();
 	AddArmorToList();
 	AddPowerupsToList();
+	AddKeysToList();
 }
 
 void SetItemNames ()

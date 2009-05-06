@@ -22,8 +22,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define Function(f) {#f, f}
 
-mmove_t mmove_reloc;
-
 field_t fields[] = {
 	{"classname", FOFS(classname), F_LSTRING},
 	{"model", FOFS(model), F_LSTRING},
@@ -79,18 +77,6 @@ field_t fields[] = {
 	{"use", FOFS(use), F_FUNCTION, FFL_NOSPAWN},
 	{"pain", FOFS(pain), F_FUNCTION, FFL_NOSPAWN},
 	{"die", FOFS(die), F_FUNCTION, FFL_NOSPAWN},
-
-	{"stand", FOFS(monsterinfo.stand), F_FUNCTION, FFL_NOSPAWN},
-	{"idle", FOFS(monsterinfo.idle), F_FUNCTION, FFL_NOSPAWN},
-	{"search", FOFS(monsterinfo.search), F_FUNCTION, FFL_NOSPAWN},
-	{"walk", FOFS(monsterinfo.walk), F_FUNCTION, FFL_NOSPAWN},
-	{"run", FOFS(monsterinfo.run), F_FUNCTION, FFL_NOSPAWN},
-	{"dodge", FOFS(monsterinfo.dodge), F_FUNCTION, FFL_NOSPAWN},
-	{"attack", FOFS(monsterinfo.attack), F_FUNCTION, FFL_NOSPAWN},
-	{"melee", FOFS(monsterinfo.melee), F_FUNCTION, FFL_NOSPAWN},
-	{"sight", FOFS(monsterinfo.sight), F_FUNCTION, FFL_NOSPAWN},
-	{"checkattack", FOFS(monsterinfo.checkattack), F_FUNCTION, FFL_NOSPAWN},
-	{"currentmove", FOFS(monsterinfo.currentmove), F_MMOVE, FFL_NOSPAWN},
 
 	{"endfunc", FOFS(moveinfo.endfunc), F_FUNCTION, FFL_NOSPAWN},
 
@@ -290,14 +276,14 @@ void WriteField1 (FILE *f, field_t *field, byte *base)
 		*(int *)p = index;*/
 		break;
 	case F_NEWITEM:
-		/*if ( *(edict_t **)p == NULL)
+		if ( *(edict_t **)p == NULL)
 			index = -1;
 		else
 		{
-			CWeapon *Weap = (CWeapon *)p;
+			CWeapon *Weap = static_cast<CWeapon *>(p);
 			CBaseItem *Item = Weap->Item;
 			index = Item->GetIndex();
-		}*/
+		}
 		*(int *)p = -1;
 		break;
 
@@ -307,15 +293,6 @@ void WriteField1 (FILE *f, field_t *field, byte *base)
 			index = 0;
 		else
 			index = *(byte **)p - ((byte *)InitGame);
-		*(int *)p = index;
-		break;
-
-	//relative to data segment
-	case F_MMOVE:
-		if (*(byte **)p == NULL)
-			index = 0;
-		else
-			index = *(byte **)p - (byte *)&mmove_reloc;
 		*(int *)p = index;
 		break;
 
@@ -412,16 +389,6 @@ void ReadField (FILE *f, field_t *field, byte *base)
 		else
 			*(byte **)p = ((byte *)InitGame) + index;
 		break;
-
-	//relative to data segment
-	case F_MMOVE:
-		index = *(int *)p;
-		if (index == 0)
-			*(byte **)p = NULL;
-		else
-			*(byte **)p = (byte *)&mmove_reloc + index;
-		break;
-
 	default:
 		gi.error ("ReadEdict: unknown field type");
 	}
@@ -438,26 +405,41 @@ All pointer variables (except function pointers) must be handled specially.
 */
 void WriteClient (FILE *f, gclient_t *client)
 {
-	field_t		*field;
+//	field_t		*field;
 	gclient_t	temp;
 	
 	// all of the ints, floats, and vectors stay as they are
 	temp = *client;
 
 	// change the pointers to lengths or indexes
-	for (field=clientfields ; field->name ; field++)
+	//for (field=clientfields ; field->name ; field++)
+	//{
+	//	WriteField1 (f, field, (byte *)&temp);
+	//}
+	// Write pers.weapon and pers.newweapon
+	int pwIndex = -1, nwIndex = -1;
+
+	if (client->pers.Weapon)
 	{
-		WriteField1 (f, field, (byte *)&temp);
+		CBaseItem *Item = client->pers.Weapon->Item;
+		pwIndex = Item->GetIndex();
+	}
+	if (client->NewWeapon)
+	{
+		CBaseItem *Item = client->NewWeapon->Item;
+		nwIndex = Item->GetIndex();
 	}
 
 	// write the block
 	fwrite (&temp, sizeof(temp), 1, f);
 
 	// now write any allocated data following the edict
-	for (field=clientfields ; field->name ; field++)
+	/*for (field=clientfields ; field->name ; field++)
 	{
 		WriteField2 (f, field, (byte *)client);
-	}
+	}*/
+	fwrite (&pwIndex, sizeof(int), 1, f);
+	fwrite (&nwIndex, sizeof(int), 1, f);
 }
 
 /*
@@ -469,14 +451,57 @@ All pointer variables (except function pointers) must be handled specially.
 */
 void ReadClient (FILE *f, gclient_t *client)
 {
-	field_t		*field;
+//	field_t		*field;
 
 	fread (client, sizeof(*client), 1, f);
 
-	for (field=clientfields ; field->name ; field++)
+	/*for (field=clientfields ; field->name ; field++)
 	{
 		ReadField (f, field, (byte *)client);
+	}*/
+	int pwIndex, nwIndex;
+	fread (&pwIndex, sizeof(int), 1, f);
+	fread (&nwIndex, sizeof(int), 1, f);
+
+	if (pwIndex != -1)
+	{
+		CBaseItem *It = GetItemByIndex (pwIndex);
+		if (It->Flags & ITEMFLAG_WEAPON)
+		{
+			if (It->Flags & ITEMFLAG_AMMO)
+			{
+				CAmmo *Ammo = static_cast<CAmmo*>(It);
+				client->pers.Weapon = Ammo->Weapon;
+			}
+			else
+			{
+				CWeaponItem *Weapon = static_cast<CWeaponItem*>(It);
+				client->pers.Weapon = Weapon->Weapon;
+			}
+		}
 	}
+	else
+		client->pers.Weapon = NULL;
+
+	if (nwIndex != -1)
+	{
+		CBaseItem *It = GetItemByIndex (nwIndex);
+		if (It->Flags & ITEMFLAG_WEAPON)
+		{
+			if (It->Flags & ITEMFLAG_AMMO)
+			{
+				CAmmo *Ammo = static_cast<CAmmo*>(It);
+				client->NewWeapon = Ammo->Weapon;
+			}
+			else
+			{
+				CWeaponItem *Weapon = static_cast<CWeaponItem*>(It);
+				client->NewWeapon = Weapon->Weapon;
+			}
+		}
+	}
+	else
+		client->NewWeapon = NULL;
 }
 
 /*

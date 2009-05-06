@@ -101,6 +101,8 @@ void BeginIntermission (edict_t *targ)
 				// strip players of all keys between units
 				for (n = 0; n < MAX_CS_ITEMS; n++)
 				{
+					if (n >= GetNumItems())
+						break;
 					if (GetItemByIndex(n)->Flags & ITEMFLAG_KEY)
 						client->client->pers.Inventory.Set(n, 0);
 				}
@@ -277,9 +279,6 @@ int PowerArmorType (edict_t *ent);
 int ArmorIndex (edict_t *ent);
 void G_SetStats (edict_t *ent)
 {
-	int			cells;
-	int			power_armor_type;
-
 	//
 	// health
 	//
@@ -326,7 +325,8 @@ void G_SetStats (edict_t *ent)
 	//
 	// armor
 	//
-	power_armor_type = PowerArmorType (ent);
+	int			cells = 0;
+	int			power_armor_type = PowerArmorType (ent);
 	if (power_armor_type)
 	{
 		cells = ent->client->pers.Inventory.Has(FindItem("Cells")->GetIndex());
