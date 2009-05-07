@@ -96,3 +96,5 @@ void InitMapCounter ();
 
 //#define MapPrint(printType, ent, origin, format, ...) Map_Print(printType, ent, origin); gi.dprintf (format, ##__VA_ARGS__)
 char *CC_ParseSpawnEntities (char *mapname, char *entities);
+
+uint32 Sys_Milliseconds ();

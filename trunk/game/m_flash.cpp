@@ -90,8 +90,10 @@ vec3_t dumb_and_hacky_monster_MuzzFlashOffset [] = {
 
 	24.8f,			-9.0f,			39.0f,			// MZ2_CHICK_ROCKET_1				57
 
-	12.1f,			13.4f,			-14.5f,			// MZ2_FLYER_BLASTER_1				58
-	12.1f,			-7.4f,			-14.5f,			// MZ2_FLYER_BLASTER_2				59
+	// Paril
+	// Moved these up a bit
+	12.1f,			13.4f,			-4.5f,			// MZ2_FLYER_BLASTER_1				58
+	12.1f,			-7.4f,			-4.5f,			// MZ2_FLYER_BLASTER_2				59
 
 	12.1f,			5.4f,			16.5f,			// MZ2_MEDIC_BLASTER_1				60
 
