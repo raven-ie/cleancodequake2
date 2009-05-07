@@ -137,7 +137,7 @@ edict_t *CBaseItem::DropItem (edict_t *ent)
 		Angles_Vectors (ent->client->v_angle, forward, right, NULL);
 		Vec3Set (offset, 24, 0, -16);
 		G_ProjectSource (ent->s.origin, offset, forward, right, dropped->s.origin);
-		trace.Trace (ent->s.origin, dropped->mins, dropped->maxs,
+		trace = CTrace (ent->s.origin, dropped->mins, dropped->maxs,
 			dropped->s.origin, ent, CONTENTS_SOLID);
 		Vec3Copy (trace.endPos, dropped->s.origin);
 	}
@@ -275,7 +275,7 @@ void DropItemToFloor (edict_t *ent)
 	vec3_t v = {0,0,-128};
 	Vec3Add (ent->s.origin, v, dest);
 
-	tr.Trace (ent->s.origin, ent->mins, ent->maxs, dest, ent, CONTENTS_MASK_SOLID);
+	tr = CTrace (ent->s.origin, ent->mins, ent->maxs, dest, ent, CONTENTS_MASK_SOLID);
 	if (tr.startSolid)
 	{
 		//gi.dprintf ("droptofloor: %s startsolid at (%f %f %f)\n", ent->classname, ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);

@@ -567,14 +567,14 @@ void CFlyer::Dodge (edict_t *other, float eta)
 	bool CanRollLeft = false;
 
 	Vec3MA (Entity->s.origin, -(15 * 5), right, end);
-	trace.Trace (Entity->s.origin, Entity->mins, Entity->maxs, end, Entity, CONTENTS_MASK_MONSTERSOLID);
+	trace = CTrace (Entity->s.origin, Entity->mins, Entity->maxs, end, Entity, CONTENTS_MASK_MONSTERSOLID);
 
 	if (trace.fraction == 1.0)
 		CanRollRight = true;
 
 	// Now check the left
 	Vec3MA (Entity->s.origin, (15 * 5), right, end);
-	trace.Trace (Entity->s.origin, Entity->mins, Entity->maxs, end, Entity, CONTENTS_MASK_MONSTERSOLID);
+	trace = CTrace(Entity->s.origin, Entity->mins, Entity->maxs, end, Entity, CONTENTS_MASK_MONSTERSOLID);
 
 	if (trace.fraction == 1.0)
 		CanRollLeft = true;

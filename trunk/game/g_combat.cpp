@@ -39,7 +39,7 @@ bool CanDamage (edict_t *targ, edict_t *inflictor)
 	{
 		Vec3Add (targ->absMin, targ->absMax, dest);
 		Vec3Scale (dest, 0.5, dest);
-		trace.Trace (inflictor->s.origin, dest, inflictor, CONTENTS_MASK_SOLID);
+		trace = CTrace (inflictor->s.origin, dest, inflictor, CONTENTS_MASK_SOLID);
 		if (trace.fraction == 1.0)
 			return true;
 		if (trace.ent == targ)
@@ -47,35 +47,35 @@ bool CanDamage (edict_t *targ, edict_t *inflictor)
 		return false;
 	}
 	
-	trace.Trace (inflictor->s.origin, targ->s.origin, inflictor, CONTENTS_MASK_SOLID);
+	trace = CTrace (inflictor->s.origin, targ->s.origin, inflictor, CONTENTS_MASK_SOLID);
 	if (trace.fraction == 1.0)
 		return true;
 
 	Vec3Copy (targ->s.origin, dest);
 	dest[0] += 15.0;
 	dest[1] += 15.0;
-	trace.Trace (inflictor->s.origin, dest, inflictor, CONTENTS_MASK_SOLID);
+	trace = CTrace (inflictor->s.origin, dest, inflictor, CONTENTS_MASK_SOLID);
 	if (trace.fraction == 1.0)
 		return true;
 
 	Vec3Copy (targ->s.origin, dest);
 	dest[0] += 15.0;
 	dest[1] -= 15.0;
-	trace.Trace (inflictor->s.origin, dest, inflictor, CONTENTS_MASK_SOLID);
+	trace = CTrace (inflictor->s.origin, dest, inflictor, CONTENTS_MASK_SOLID);
 	if (trace.fraction == 1.0)
 		return true;
 
 	Vec3Copy (targ->s.origin, dest);
 	dest[0] -= 15.0;
 	dest[1] += 15.0;
-	trace.Trace (inflictor->s.origin, dest, inflictor, CONTENTS_MASK_SOLID);
+	trace = CTrace (inflictor->s.origin, dest, inflictor, CONTENTS_MASK_SOLID);
 	if (trace.fraction == 1.0)
 		return true;
 
 	Vec3Copy (targ->s.origin, dest);
 	dest[0] -= 15.0;
 	dest[1] -= 15.0;
-	trace.Trace (inflictor->s.origin, dest, inflictor, CONTENTS_MASK_SOLID);
+	trace = CTrace (inflictor->s.origin, dest, inflictor, CONTENTS_MASK_SOLID);
 	if (trace.fraction == 1.0)
 		return true;
 
@@ -226,6 +226,8 @@ static int CheckPowerArmor (edict_t *ent, vec3_t point, vec3_t normal, int damag
 	ent->powerarmor_time = level.time + 0.2;
 
 	power_used = save / damagePerCell;
+	if (!power_used)
+		power_used = 1;
 
 	if (client)
 		client->pers.Inventory.Remove(index, power_used);

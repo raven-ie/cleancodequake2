@@ -440,7 +440,7 @@ bool KillBox (edict_t *ent)
 
 	while (1)
 	{
-		tr.Trace (ent->s.origin, ent->mins, ent->maxs, ent->s.origin, NULL, CONTENTS_MASK_PLAYERSOLID);
+		tr = CTrace (ent->s.origin, ent->mins, ent->maxs, ent->s.origin, NULL, CONTENTS_MASK_PLAYERSOLID);
 		if (!tr.ent)
 			break;
 

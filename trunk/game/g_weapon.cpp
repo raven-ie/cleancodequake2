@@ -43,7 +43,7 @@ static void check_dodge (edict_t *self, vec3_t start, vec3_t dir, int speed)
 			return;
 	}
 	Vec3MA (start, 8192, dir, end);
-	tr.Trace (start, end, self, CONTENTS_MASK_SHOT);
+	tr = CTrace (start, end, self, CONTENTS_MASK_SHOT);
 	if ((tr.ent) && tr.ent->Monster && (tr.ent->svFlags & SVF_MONSTER) && (tr.ent->health > 0) && infront(tr.ent, self))
 	{
 		Vec3Subtract (tr.endPos, start, v);
@@ -91,7 +91,7 @@ bool fire_hit (edict_t *self, vec3_t aim, int damage, int kick)
 
 	Vec3MA (self->s.origin, range, dir, point);
 
-	tr.Trace (self->s.origin, point, self, CONTENTS_MASK_SHOT);
+	tr = CTrace (self->s.origin, point, self, CONTENTS_MASK_SHOT);
 	if (tr.fraction < 1)
 	{
 		if (!tr.ent->takedamage)
@@ -143,7 +143,7 @@ static void fire_lead (edict_t *self, vec3_t start, vec3_t aimdir, int damage, i
 	bool		water = false;
 	int			content_mask = CONTENTS_MASK_SHOT | CONTENTS_MASK_WATER;
 
-	tr.Trace (self->s.origin, start, self, CONTENTS_MASK_SHOT);
+	tr = CTrace (self->s.origin, start, self, CONTENTS_MASK_SHOT);
 	if (!(tr.fraction < 1.0))
 	{
 		VecToAngles (aimdir, dir);
@@ -162,7 +162,7 @@ static void fire_lead (edict_t *self, vec3_t start, vec3_t aimdir, int damage, i
 			content_mask &= ~CONTENTS_MASK_WATER;
 		}
 
-		tr.Trace (start, end, self, content_mask);
+		tr = CTrace (start, end, self, content_mask);
 
 		// see if we hit water
 		if (tr.contents & CONTENTS_MASK_WATER)
@@ -203,7 +203,7 @@ static void fire_lead (edict_t *self, vec3_t start, vec3_t aimdir, int damage, i
 			}
 
 			// re-trace ignoring water this time
-			tr.Trace (water_start, end, self, CONTENTS_MASK_SHOT);
+			tr = CTrace (water_start, end, self, CONTENTS_MASK_SHOT);
 		}
 	}
 
@@ -243,7 +243,7 @@ static void fire_lead (edict_t *self, vec3_t start, vec3_t aimdir, int damage, i
 		if (gi.pointcontents (pos) & CONTENTS_MASK_WATER)
 			Vec3Copy (pos, tr.endPos);
 		else
-			tr.Trace (pos, water_start, tr.ent, CONTENTS_MASK_WATER);
+			tr = CTrace (pos, water_start, tr.ent, CONTENTS_MASK_WATER);
 
 		Vec3Add (water_start, tr.endPos, pos);
 		Vec3Scale (pos, 0.5, pos);
@@ -360,7 +360,7 @@ void fire_blaster (edict_t *self, vec3_t start, vec3_t dir, int damage, int spee
 	if (self->client)
 		check_dodge (self, bolt->s.origin, dir, speed);
 
-	tr.Trace (self->s.origin, bolt->s.origin, bolt, CONTENTS_MASK_SHOT);
+	tr = CTrace (self->s.origin, bolt->s.origin, bolt, CONTENTS_MASK_SHOT);
 	if (tr.fraction < 1.0)
 	{
 		Vec3MA (bolt->s.origin, -10, dir, bolt->s.origin);
@@ -647,7 +647,7 @@ void fire_rail (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick
 	mask = CONTENTS_MASK_SHOT|CONTENTS_WATER|CONTENTS_SLIME|CONTENTS_LAVA;
 	while (ignore)
 	{
-		tr.Trace (from, end, ignore, mask);
+		tr = CTrace (from, end, ignore, mask);
 
 		if (tr.contents & (CONTENTS_WATER|CONTENTS_SLIME|CONTENTS_LAVA))
 		{
@@ -811,7 +811,7 @@ void bfg_think (edict_t *self)
 		Vec3MA (start, 2048, dir, end);
 		while(1)
 		{
-			tr.Trace (start, end, ignore, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_DEADMONSTER);
+			tr = CTrace (start, end, ignore, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_DEADMONSTER);
 
 			if (!tr.ent)
 				break;

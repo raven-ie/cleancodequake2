@@ -906,7 +906,7 @@ void barrel_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t
 	end[2] -= stepsize*2;
 
 	CTrace trace;
-	trace.Trace (neworg, self->mins, self->maxs, end, self, CONTENTS_MASK_MONSTERSOLID);
+	trace = CTrace (neworg, self->mins, self->maxs, end, self, CONTENTS_MASK_MONSTERSOLID);
 
 	if (trace.allSolid)
 		return;
@@ -914,7 +914,7 @@ void barrel_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t
 	if (trace.startSolid)
 	{
 		neworg[2] -= stepsize;
-		trace.Trace (neworg, self->mins, self->maxs, end, self, CONTENTS_MASK_MONSTERSOLID);
+		trace = CTrace (neworg, self->mins, self->maxs, end, self, CONTENTS_MASK_MONSTERSOLID);
 		if (trace.allSolid || trace.startSolid)
 			return;
 	}

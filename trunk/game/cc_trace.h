@@ -46,22 +46,21 @@ class CTrace : public cmTrace_t
 	}
 
 public:
-	void Trace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *ignore, int contentMask)
+	CTrace () {};
+	// Constructor easyness
+	CTrace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *ignore, int contentMask)
 	{
 		cmTrace_t temp = gi.trace(start, mins, maxs, end, ignore, contentMask);
-
 		Copy(temp);
 	}
-	void Trace (vec3_t start, vec3_t end, edict_t *ignore, int contentMask)
+	CTrace (vec3_t start, vec3_t end, edict_t *ignore, int contentMask)
 	{
 		cmTrace_t temp = gi.trace(start, vec3Origin, vec3Origin, end, ignore, contentMask);
-
 		Copy(temp);
 	}
-	void Trace (vec3_t start, vec3_t end, int contentMask)
+	CTrace (vec3_t start, vec3_t end, int contentMask)
 	{
 		cmTrace_t temp = gi.trace(start, vec3Origin, vec3Origin, end, NULL, contentMask);
-
 		Copy(temp);
 	}
 };
