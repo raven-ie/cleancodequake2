@@ -55,7 +55,7 @@ edict_t	*SV_TestEntityPosition (edict_t *ent)
 		mask = ent->clipMask;
 	else
 		mask = CONTENTS_MASK_SOLID;
-	trace.Trace (ent->s.origin, ent->mins, ent->maxs, ent->s.origin, ent, mask);
+	trace = CTrace (ent->s.origin, ent->mins, ent->maxs, ent->s.origin, ent, mask);
 	
 	if (trace.startSolid)
 		return g_edicts;
@@ -210,7 +210,7 @@ int SV_FlyMove (edict_t *ent, float time, int mask)
 		for (i=0 ; i<3 ; i++)
 			end[i] = ent->s.origin[i] + time_left * ent->velocity[i];
 
-		trace.Trace (ent->s.origin, ent->mins, ent->maxs, end, ent, mask);
+		trace = CTrace (ent->s.origin, ent->mins, ent->maxs, end, ent, mask);
 
 		if (trace.allSolid)
 		{	// entity is trapped in another solid
@@ -355,7 +355,7 @@ retry:
 	else
 		mask = CONTENTS_MASK_SOLID;
 
-	trace.Trace (start, ent->mins, ent->maxs, end, ent, mask);
+	trace = CTrace (start, ent->mins, ent->maxs, end, ent, mask);
 	
 	Vec3Copy (trace.endPos, ent->s.origin);
 	gi.linkentity (ent);

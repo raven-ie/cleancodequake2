@@ -123,7 +123,7 @@ bool visible (edict_t *self, edict_t *other)
 	spot1[2] += self->viewheight;
 	Vec3Copy (other->s.origin, spot2);
 	spot2[2] += other->viewheight;
-	trace.Trace (spot1, spot2, self, CONTENTS_MASK_OPAQUE);
+	trace = CTrace (spot1, spot2, self, CONTENTS_MASK_OPAQUE);
 	
 	if (trace.fraction == 1.0)
 		return true;
@@ -247,7 +247,7 @@ realcheck:
 	start[0] = stop[0] = (mins[0] + maxs[0])*0.5;
 	start[1] = stop[1] = (mins[1] + maxs[1])*0.5;
 	stop[2] = start[2] - 2*STEPSIZE;
-	trace.Trace (start, stop, Entity, CONTENTS_MASK_MONSTERSOLID);
+	trace = CTrace(start, stop, Entity, CONTENTS_MASK_MONSTERSOLID);
 
 	if (trace.fraction == 1.0)
 		return false;
@@ -260,7 +260,7 @@ realcheck:
 			start[0] = stop[0] = x ? maxs[0] : mins[0];
 			start[1] = stop[1] = y ? maxs[1] : mins[1];
 			
-			trace.Trace (start, stop, Entity, CONTENTS_MASK_MONSTERSOLID);
+			trace = CTrace(start, stop, Entity, CONTENTS_MASK_MONSTERSOLID);
 			
 			if (trace.fraction != 1.0 && trace.endPos[2] > bottom)
 				bottom = trace.endPos[2];
@@ -352,7 +352,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 						neworg[2] += dz;
 				}
 			}
-			trace.Trace (Entity->s.origin, Entity->mins, Entity->maxs, neworg, Entity, CONTENTS_MASK_MONSTERSOLID);
+			trace = CTrace(Entity->s.origin, Entity->mins, Entity->maxs, neworg, Entity, CONTENTS_MASK_MONSTERSOLID);
 	
 			// fly monsters don't enter water voluntarily
 			if (Entity->flags & FL_FLY)
@@ -410,7 +410,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 	Vec3Copy (neworg, end);
 	end[2] -= stepsize*2;
 
-	trace.Trace (neworg, Entity->mins, Entity->maxs, end, Entity, CONTENTS_MASK_MONSTERSOLID);
+	trace = CTrace(neworg, Entity->mins, Entity->maxs, end, Entity, CONTENTS_MASK_MONSTERSOLID);
 
 	if (trace.allSolid)
 		return false;
@@ -418,7 +418,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 	if (trace.startSolid)
 	{
 		neworg[2] -= stepsize;
-		trace.Trace (neworg, Entity->mins, Entity->maxs, end, Entity, CONTENTS_MASK_MONSTERSOLID);
+		trace = CTrace(neworg, Entity->mins, Entity->maxs, end, Entity, CONTENTS_MASK_MONSTERSOLID);
 		if (trace.allSolid || trace.startSolid)
 			return false;
 	}
@@ -953,7 +953,7 @@ bool CMonster::CheckAttack ()
 		Vec3Copy (Entity->enemy->s.origin, spot2);
 		spot2[2] += Entity->enemy->viewheight;
 
-		tr.Trace (spot1, spot2, Entity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
+		tr = CTrace(spot1, spot2, Entity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
 
 		// do we have a clear shot?
 		if (tr.ent != Entity->enemy)
@@ -1036,7 +1036,7 @@ void CMonster::DropToFloor ()
 	Vec3Copy (Entity->s.origin, end);
 	end[2] -= 256;
 	
-	trace.Trace (Entity->s.origin, Entity->mins, Entity->maxs, end, Entity, CONTENTS_MASK_MONSTERSOLID);
+	trace = CTrace (Entity->s.origin, Entity->mins, Entity->maxs, end, Entity, CONTENTS_MASK_MONSTERSOLID);
 
 	if (trace.fraction == 1 || trace.allSolid)
 		return;
@@ -1325,7 +1325,7 @@ void CMonster::AI_Run(float Dist)
 	{
 //		gi.dprintf("checking for course correction\n");
 
-		tr.Trace (Entity->s.origin, Entity->mins, Entity->maxs, LastSighting, Entity, CONTENTS_MASK_PLAYERSOLID);
+		tr = CTrace (Entity->s.origin, Entity->mins, Entity->maxs, LastSighting, Entity, CONTENTS_MASK_PLAYERSOLID);
 		if (tr.fraction < 1)
 		{
 			Vec3Subtract (Entity->goalentity->s.origin, Entity->s.origin, v);
@@ -1337,12 +1337,12 @@ void CMonster::AI_Run(float Dist)
 
 			Vec3Set (v, d2, -16, 0);
 			G_ProjectSource (Entity->s.origin, v, v_forward, v_right, left_target);
-			tr.Trace(Entity->s.origin, Entity->mins, Entity->maxs, left_target, Entity, CONTENTS_MASK_PLAYERSOLID);
+			tr = CTrace(Entity->s.origin, Entity->mins, Entity->maxs, left_target, Entity, CONTENTS_MASK_PLAYERSOLID);
 			left = tr.fraction;
 
 			Vec3Set (v, d2, 16, 0);
 			G_ProjectSource (Entity->s.origin, v, v_forward, v_right, right_target);
-			tr.Trace(Entity->s.origin, Entity->mins, Entity->maxs, right_target, Entity, CONTENTS_MASK_PLAYERSOLID);
+			tr = CTrace(Entity->s.origin, Entity->mins, Entity->maxs, right_target, Entity, CONTENTS_MASK_PLAYERSOLID);
 			right = tr.fraction;
 
 			center = (d1*center)/d2;
@@ -1921,7 +1921,7 @@ void CMonster::CheckGround()
 	point[1] = Entity->s.origin[1];
 	point[2] = Entity->s.origin[2] - 0.25;
 
-	trace.Trace (Entity->s.origin, Entity->mins, Entity->maxs, point, Entity, CONTENTS_MASK_MONSTERSOLID);
+	trace = CTrace (Entity->s.origin, Entity->mins, Entity->maxs, point, Entity, CONTENTS_MASK_MONSTERSOLID);
 
 	// check steepness
 	if ( trace.plane.normal[2] < 0.7 && !trace.startSolid)

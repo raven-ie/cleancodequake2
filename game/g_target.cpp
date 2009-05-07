@@ -524,7 +524,7 @@ void target_laser_think (edict_t *self)
 	Vec3MA (start, 2048, self->movedir, end);
 	while(1)
 	{
-		tr.Trace (start, end, ignore, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_DEADMONSTER);
+		tr = CTrace (start, end, ignore, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_DEADMONSTER);
 
 		if (!tr.ent)
 			break;
