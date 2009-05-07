@@ -48,7 +48,7 @@ void CCmd::Run (edict_t *ent)
 
 CCmd::CCmd (char *name, void (*Func)(edict_t *ent), ECmdTypeFlags Flags)
 {
-	cmdName = (char*)calloc(1, strlen(name)+1);
+	cmdName = (char*)gi.TagMalloc(strlen(name)+1, TAG_GAME);
 	Q_snprintfz (cmdName, strlen(name)+1, "%s", name);
 	hashValue = Com_HashGeneric(name, MAX_CMD_HASH);
 	CmdFlags = Flags;
@@ -57,7 +57,7 @@ CCmd::CCmd (char *name, void (*Func)(edict_t *ent), ECmdTypeFlags Flags)
 
 CCmd::~CCmd ()
 {
-	free(cmdName);
+	gi.TagFree(cmdName);
 };
 
 CCmd *CommandList[MAX_COMMANDS];
