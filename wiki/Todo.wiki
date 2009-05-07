@@ -12,7 +12,7 @@ Monsters (bold means done)
   * *Chick*
   * Flipper
   * Floater
-  * Flyer
+  * *Flyer*
   * Gladiator
   * Gunner
   * Hover
