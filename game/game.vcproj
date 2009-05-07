@@ -50,6 +50,7 @@
 				AdditionalOptions="/EHsc"
 				Optimization="0"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
+				MinimalRebuild="false"
 				ExceptionHandling="0"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="true"
@@ -80,6 +81,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="Winmm.lib"
 				OutputFile="..\baseq2\gamex86.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"

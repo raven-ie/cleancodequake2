@@ -507,6 +507,7 @@ void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 	char		*token;
 	int			i;
 	int		skill_level;
+	uint32 startTime = Sys_Milliseconds();
 
 	entities = CC_ParseSpawnEntities (mapname, entities);
 
@@ -601,6 +602,8 @@ void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 	G_FindTeams ();
 
 	PlayerTrail_Init ();
+
+	gi.dprintf ("Finished server initialization in %d ms\n", Sys_Milliseconds() - startTime);
 }
 
 

@@ -359,7 +359,7 @@ void Cmd_WeapNext_f (edict_t *ent)
 		if (! (Item->Flags & ITEMFLAG_WEAPON) )
 			continue;
 		Item->Use (ent);
-		if (ent->client->NewWeapon->Item == Item || ent->client->pers.Weapon->Item == Item)
+		if (ent->client->NewWeapon && ent->client->NewWeapon->Item == Item || ent->client->pers.Weapon->Item == Item)
 			return;	// successful
 	}
 }

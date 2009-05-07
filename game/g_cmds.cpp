@@ -601,22 +601,42 @@ void GCmd_SayTeam_f (edict_t *ent)
 	Cmd_Say_f (ent, true, false);
 }
 
+/*
+================
+Sys_Milliseconds
+================
+*/
+#include <windows.h>
+uint32	curtime;
+uint32 Sys_Milliseconds ()
+{
+	static uint32		base;
+	static bool	initialized = false;
+
+	if (!initialized)
+	{	// let base retain 16 bits of effectively random data
+		base = timeGetTime() & 0xffff0000;
+		initialized = true;
+	}
+	curtime = timeGetTime() - base;
+
+	return curtime;
+}
+
+
+
 void SP_misc_explobox (edict_t *self);
 void Cmd_Test_f (edict_t *ent)
 {
-	vec3_t forward;
-	Angles_Vectors (ent->client->v_angle, forward, NULL, NULL);
+	uint32 cur = Sys_Milliseconds();
 
-	vec3f vec1 = vec3f(ent->s.origin);
-	vec3f vec3 = vec3f(forward);
-	vec3f end;
-
-	end = vec1 + vec3 * 150;
-
-	edict_t *NEW = G_Spawn();
-	SP_misc_explobox (NEW);
-	Vec3Copy (end, NEW->s.origin);
-	gi.linkentity(NEW);
+	for (uint32 i = 0; i < 600000; i++)
+	{
+		ModelIndex ("models/weapons/g_bfg/tris.md2");
+		SoundIndex ("world/10.wav");
+		ImageIndex ("a_cells");
+	}
+	gi.dprintf ("%d\n", Sys_Milliseconds() - cur);
 }
 
 #if 0

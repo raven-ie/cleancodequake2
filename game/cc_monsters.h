@@ -240,6 +240,7 @@ public:
 void Monster_Think (edict_t *ent);
 
 #define ConvertDerivedFunction(x) static_cast<void (__thiscall CMonster::* )(void)>(x)
+#define ConvertDerivedAIMove(x) static_cast<void (__thiscall CMonster::* )(float)>(x)
 
 #include "cc_soldier_base.h"
 #include "cc_soldier_shotgun.h"
@@ -248,3 +249,4 @@ void Monster_Think (edict_t *ent);
 #include "cc_infantry.h"
 #include "cc_bitch.h"
 #include "cc_tank.h"
+#include "cc_flyer.h"
