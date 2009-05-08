@@ -27,71 +27,49 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_blaster.cpp
-// Blaster!
+// cc_gunner.h
+// Gunner Monster
 //
 
-#include "cc_local.h"
-#include "m_player.h"
-
-CBlaster WeaponBlaster;
-
-CBlaster::CBlaster() :
-CWeapon("models/weapons/v_blast/tris.md2", 0, 4, 5, 4,
-		10, 42, 53, 2)
+class CGunner : public CMonster
 {
-}
+public:
+	int	SoundPain;
+	int	SoundPain2;
+	int	SoundDeath;
+	int	SoundIdle;
+	int	SoundOpen;
+	int	SoundSearch;
+	int	SoundSight;
 
-bool CBlaster::CanFire (edict_t *ent)
-{
-	switch (ent->client->ps.gunFrame)
-	{
-	case 5:
-		return true;
-	}
-	return false;
-}
+	CGunner ();
+	void Allocate (edict_t *ent);
 
-bool CBlaster::CanStopFidgetting (edict_t *ent)
-{
-	switch (ent->client->ps.gunFrame)
-	{
-	case 19:
-	case 32:
-		return true;
-	}
-	return false;
-}
+	void ReFireChain ();
+	void FireChain ();
+	void Grenade ();
+	void OpenGun ();
+	void Fire ();
+	void DuckUp ();
+	void DuckDown ();
+	void DuckHold ();
+	void RunAndShoot ();
+	void Fidget ();
 
-bool CBlaster::AttemptToFire (edict_t *ent)
-{
-	return true;
-}
+	void Attack ();
+	void Dodge (edict_t *attacker, float eta);
+	void Idle ();
+	void Search ();
+	void Run ();
+	void Sight ();
+	void Stand ();
+	void Walk ();
 
-void CBlaster::Fire (edict_t *ent)
-{
-	int damage = deathmatch->Integer() ? 15 : 10;
-	vec3_t	forward, right;
-	vec3_t	start;
-	vec3_t	offset;
+	void Dead ();
+	void Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
+	void Pain (edict_t *other, float kick, int damage);
 
-	if (isQuad)
-		damage *= 4;
+	void Spawn ();
+};
 
-	Angles_Vectors (ent->client->v_angle, forward, right, NULL);
-	Vec3Set (offset, 24, 8, ent->viewheight-8);
-	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
-
-	Vec3Scale (forward, -2, ent->client->kick_origin);
-	ent->client->kick_angles[0] = -1;
-
-	fire_blaster (ent, start, forward, damage, 1000, EF_BLASTER, false);
-
-	// send muzzle flash
-	Muzzle (ent, MZ_BLASTER);
-
-	PlayerNoise(ent, start, PNOISE_WEAPON);
-	FireAnimation(ent);
-
-	ent->client->ps.gunFrame++;
-}
+extern CGunner Monster_Gunner;

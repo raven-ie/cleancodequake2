@@ -62,6 +62,21 @@ bool CChaingun::CanStopFidgetting (edict_t *ent)
 	return false;
 }
 
+void CChaingun::FireAnimation (edict_t *ent)
+{
+	ent->client->anim_priority = ANIM_ATTACK;
+	if (ent->client->ps.pMove.pmFlags & PMF_DUCKED)
+	{
+		ent->s.frame = FRAME_crattak1 - (ent->client->ps.gunFrame & 1);
+		ent->client->anim_end = FRAME_crattak9;
+	}
+	else
+	{
+		ent->s.frame = FRAME_attack1 - (ent->client->ps.gunFrame & 1);
+		ent->client->anim_end = FRAME_attack8;
+	}
+}
+
 void CChaingun::Fire (edict_t *ent)
 {
 	int			i;
@@ -107,17 +122,7 @@ void CChaingun::Fire (edict_t *ent)
 		ent->client->weapon_sound = SoundIndex("weapons/chngnl1a.wav");
 	}
 
-	ent->client->anim_priority = ANIM_ATTACK;
-	if (ent->client->ps.pMove.pmFlags & PMF_DUCKED)
-	{
-		ent->s.frame = FRAME_crattak1 - (ent->client->ps.gunFrame & 1);
-		ent->client->anim_end = FRAME_crattak9;
-	}
-	else
-	{
-		ent->s.frame = FRAME_attack1 - (ent->client->ps.gunFrame & 1);
-		ent->client->anim_end = FRAME_attack8;
-	}
+	FireAnimation (ent);
 
 	if (ent->client->ps.gunFrame <= 9)
 		shots = 1;

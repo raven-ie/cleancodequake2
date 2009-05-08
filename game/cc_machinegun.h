@@ -39,6 +39,8 @@ public:
 	bool	CanFire	(edict_t *ent);
 	bool	CanStopFidgetting (edict_t *ent);
 
+	void FireAnimation (edict_t *ent);
+
 	// The function called to "fire"
 	void	Fire (edict_t *ent);
 };

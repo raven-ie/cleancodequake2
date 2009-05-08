@@ -59,6 +59,7 @@ public:
 	CBaseItem		*Item;
 	CWeaponItem		*WeaponItem; // The weapon that is linked to this weapon.
 	char			*WeaponSound;
+	int				vwepIndex;
 
 	CWeapon(char *model, int ActivationStart, int ActivationNumFrames, int FireStart, int FireNumFrames,
 						 int IdleStart, int IdleNumFrames, int DeactStart, int DeactNumFrames, char *WeaponSound = NULL);
@@ -68,6 +69,7 @@ public:
 
 	// Muzzle flash
 	virtual void	Muzzle (edict_t *ent, int muzzleNum);
+	virtual void	FireAnimation (edict_t *ent);
 
 	// General animating function.
 	// Doesn't need to be changed.

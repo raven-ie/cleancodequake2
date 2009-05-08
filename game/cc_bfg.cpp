@@ -109,6 +109,8 @@ void CBFG::FireBFG (edict_t *ent)
 		return;
 	}
 
+	FireAnimation (ent);
+
 	if (isQuad)
 		damage *= 4;
 
