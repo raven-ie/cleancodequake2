@@ -997,6 +997,14 @@
 						>
 					</File>
 					<File
+						RelativePath=".\cc_gunner.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_gunner.h"
+						>
+					</File>
+					<File
 						RelativePath=".\cc_infantry.cpp"
 						>
 					</File>

@@ -673,6 +673,7 @@ void SP_worldspawn (edict_t *ent)
 
 	//---------------
 	SetItemNames();
+	DoWeaponVweps ();
 
 	// help icon for statusbar
 	ImageIndex ("i_help");

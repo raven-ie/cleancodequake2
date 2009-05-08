@@ -97,6 +97,7 @@ void CSuperShotgun::Fire (edict_t *ent)
 
 	// send muzzle flash
 	Muzzle (ent, MZ_SSHOTGUN);
+	FireAnimation (ent);
 
 	ent->client->ps.gunFrame++;
 	PlayerNoise(ent, start, PNOISE_WEAPON);

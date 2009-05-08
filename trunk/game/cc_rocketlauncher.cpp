@@ -95,6 +95,7 @@ void CRocketLauncher::Fire (edict_t *ent)
 	Muzzle (ent, MZ_ROCKET);
 
 	PlayerNoise(ent, start, PNOISE_WEAPON);
+	FireAnimation (ent);
 
 	if (!dmFlags.dfInfiniteAmmo)
 		DepleteAmmo(ent, 1);

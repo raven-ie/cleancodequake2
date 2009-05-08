@@ -167,18 +167,12 @@ void CWeapon::ChangeWeapon (edict_t *ent)
 	ent->client->machinegun_shots = 0;
 
 	// set visible model
-	if (ent->s.modelIndex == 255) {
-		int i = 0;
-		//if (ent->client->pers.Weapon)
-		//	i = ((ent->client->pers.Weapon & 0xff) << 8);
-		//else
-		ent->s.skinNum = (ent - g_edicts - 1) | i;
-	}
+	if (ent->client->pers.Weapon && ent->s.modelIndex == 255)
+		ent->s.skinNum = (ent - g_edicts - 1) | ((ent->client->pers.Weapon->vwepIndex & 0xff) << 8);
 
 	if (!ent->client->pers.Weapon)
 	{	// dead
 		ent->client->ps.gunIndex = 0;
-
 		if (!ent->client->grenade_thrown && !ent->client->grenade_blew_up && ent->client->grenade_time >= level.time) // We had a grenade cocked
 		{
 			WeaponGrenades.FireGrenade(ent, false);
@@ -469,4 +463,20 @@ void CWeapon::NoAmmoWeaponChange (edict_t *ent)
 	ent->client->NewWeapon = (Chosen_Weapon == NULL) ? Chosen_Ammo->Weapon : Chosen_Weapon->Weapon;
 	if (!HasCurrentWeapon)
 		ent->client->pers.Weapon->ChangeWeapon(ent);
+}
+
+void CWeapon::FireAnimation (edict_t *ent)
+{
+	// start the animation
+	ent->client->anim_priority = ANIM_ATTACK;
+	if (ent->client->ps.pMove.pmFlags & PMF_DUCKED)
+	{
+		ent->s.frame = FRAME_crattak1-1;
+		ent->client->anim_end = FRAME_crattak9;
+	}
+	else
+	{
+		ent->s.frame = FRAME_attack1-1;
+		ent->client->anim_end = FRAME_attack8;
+	}
 }

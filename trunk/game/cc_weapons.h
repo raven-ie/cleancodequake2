@@ -43,11 +43,12 @@ class CWeaponItem : public CBaseItem
 public:
 	CWeaponItem (char *Classname, char *WorldModel, int EffectFlags,
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
-			   char *Precache, class CWeapon *Weapon, class CAmmo *Ammo, int Quantity);
+			   char *Precache, class CWeapon *Weapon, class CAmmo *Ammo, int Quantity, char *VWepModel);
 
 	class CWeapon		*Weapon;
 	class CAmmo			*Ammo;
 	int					Quantity;
+	char	*VWepModel;
 
 	bool	Pickup (edict_t *ent, edict_t *other);
 	void	Use (edict_t *ent);
@@ -77,12 +78,13 @@ class CAmmo : public CBaseItem
 public:
 	CAmmo (char *Classname, char *WorldModel, int EffectFlags,
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
-			   char *Precache, int Quantity, EAmmoTag Tag, CWeapon *Weapon, int Amount);
+			   char *Precache, int Quantity, EAmmoTag Tag, CWeapon *Weapon, int Amount, char *VWepModel);
 
 	class		CWeapon	*Weapon; // For weapon ammo
 	int			Amount; // Taken out for weapon ammo
 	int			Quantity; // Number gotten when we pick this mother upper
 	EAmmoTag	Tag; // YUCKY tag for ammo
+	char	*VWepModel;
 
 	// Only thing different about ammo is how it's picked up.
 	bool	Pickup (edict_t *ent, edict_t *other);
@@ -95,3 +97,4 @@ public:
 };
 
 void AddAmmoToList();
+void DoWeaponVweps();

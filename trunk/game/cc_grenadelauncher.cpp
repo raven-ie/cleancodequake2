@@ -76,6 +76,8 @@ void CGrenadeLauncher::Fire (edict_t *ent)
 	if (isQuad)
 		damage *= 4;
 
+	FireAnimation (ent);
+
 	Vec3Set (offset, 8, 8, ent->viewheight-8);
 	Angles_Vectors (ent->client->v_angle, forward, right, NULL);
 	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);

@@ -64,6 +64,21 @@ bool CMachinegun::CanStopFidgetting (edict_t *ent)
 	return false;
 }
 
+void CMachinegun::FireAnimation (edict_t *ent)
+{
+	ent->client->anim_priority = ANIM_ATTACK;
+	if (ent->client->ps.pMove.pmFlags & PMF_DUCKED)
+	{
+		ent->s.frame = FRAME_crattak1 - (int) (random()+0.25);
+		ent->client->anim_end = FRAME_crattak9;
+	}
+	else
+	{
+		ent->s.frame = FRAME_attack1 - (int) (random()+0.25);
+		ent->client->anim_end = FRAME_attack8;
+	}
+}
+
 void CMachinegun::Fire (edict_t *ent)
 {
 	int	i;
@@ -130,15 +145,5 @@ void CMachinegun::Fire (edict_t *ent)
 	if (!dmFlags.dfInfiniteAmmo)
 		DepleteAmmo(ent, 1);
 
-	ent->client->anim_priority = ANIM_ATTACK;
-	if (ent->client->ps.pMove.pmFlags & PMF_DUCKED)
-	{
-		ent->s.frame = FRAME_crattak1 - (int) (random()+0.25);
-		ent->client->anim_end = FRAME_crattak9;
-	}
-	else
-	{
-		ent->s.frame = FRAME_attack1 - (int) (random()+0.25);
-		ent->client->anim_end = FRAME_attack8;
-	}
+	FireAnimation (ent);
 }
