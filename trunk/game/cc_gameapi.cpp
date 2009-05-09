@@ -417,3 +417,23 @@ char *CC_ParseSpawnEntities (char *mapname, char *entities)
 
 	return finalEntString;
 }
+
+void *::operator new (size_t size)
+{
+	return gi.TagMalloc (size, TAG_CLEAN);
+}
+
+void ::operator delete (void *ptr)
+{
+	gi.TagFree (ptr);
+}
+
+void *::operator new[] (size_t size)
+{
+	return gi.TagMalloc (size, TAG_CLEAN);
+}
+
+void ::operator delete[] (void *ptr)
+{
+	gi.TagFree (ptr);
+}

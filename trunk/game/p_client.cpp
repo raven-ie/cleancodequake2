@@ -216,7 +216,7 @@ bool IsNeutral (edict_t *ent)
 	return false;
 }
 
-void ClientObituary (edict_t *self, edict_t *inflictor, edict_t *attacker)
+void _ClientObituary (edict_t *self, edict_t *inflictor, edict_t *attacker)
 {
 	int			mod;
 	char		*message;
@@ -412,6 +412,199 @@ void ClientObituary (edict_t *self, edict_t *inflictor, edict_t *attacker)
 		self->client->resp.score--;
 }
 
+void ClientObituary (edict_t *self, edict_t *attacker)
+{
+	char *message = "", *message2 = "";
+	if (attacker == self)
+	{
+		switch (meansOfDeath)
+		{
+		case MOD_HELD_GRENADE:
+			message = "tried to put the pin back in";
+			break;
+		case MOD_HG_SPLASH:
+		case MOD_G_SPLASH:
+			switch (self->client->resp.Gender)
+			{
+			case GenderMale:
+				message = "tripped on its his grenade";
+				break;
+			case GenderFemale:
+				message = "tripped on its her grenade";
+				break;
+			default:
+				message = "tripped on its own grenade";
+				break;
+			}
+			break;
+		case MOD_R_SPLASH:
+			switch (self->client->resp.Gender)
+			{
+			case GenderMale:
+				message = "blew himself up";
+				break;
+			case GenderFemale:
+				message = "blew herself up";
+				break;
+			default:
+				message = "blew itself up";
+				break;
+			}
+			break;
+		case MOD_BFG_BLAST:
+			message = "should have used a smaller gun";
+			break;
+		default:
+			switch (self->client->resp.Gender)
+			{
+			case GenderMale:
+				message = "killed himself";
+				break;
+			case GenderFemale:
+				message = "killed herself";
+				break;
+			default:
+				message = "killed himself";
+				break;
+			}
+			break;
+		}
+		if (deathmatch->Integer())
+			self->client->resp.score--;
+		gi.bprintf (PRINT_MEDIUM, "%s %s.\n", self->client->pers.netname, message);
+	}
+	else if (attacker == world)
+	{
+		switch (meansOfDeath)
+		{
+		case MOD_SUICIDE:
+			message = "suicides";
+			break;
+		case MOD_FALLING:
+			message = "cratered";
+			break;
+		case MOD_CRUSH:
+			message = "was squished";
+			break;
+		case MOD_WATER:
+			message = "sank like a rock";
+			break;
+		case MOD_SLIME:
+			message = "melted";
+			break;
+		case MOD_LAVA:
+			message = "does a back flip into the lava";
+			break;
+		case MOD_EXPLOSIVE:
+		case MOD_BARREL:
+			message = "blew up";
+			break;
+		case MOD_EXIT:
+			message = "found a way out";
+			break;
+		case MOD_TARGET_LASER:
+			message = "saw the light";
+			break;
+		case MOD_TARGET_BLASTER:
+			message = "got blasted";
+			break;
+		case MOD_BOMB:
+		case MOD_SPLASH:
+		case MOD_TRIGGER_HURT:
+			message = "was in the wrong place";
+			break;
+		}
+
+		if (deathmatch->Integer())
+			self->client->resp.score--;
+		gi.bprintf (PRINT_MEDIUM, "%s %s.\n", self->client->pers.netname, message);
+	}
+	else if (attacker && attacker->client)
+	{
+		switch (meansOfDeath)
+		{
+		case MOD_BLASTER:
+			message = "was blasted by";
+			break;
+		case MOD_SHOTGUN:
+			message = "was gunned down by";
+			break;
+		case MOD_SSHOTGUN:
+			message = "was blown away by";
+			message2 = "'s super shotgun";
+			break;
+		case MOD_MACHINEGUN:
+			message = "was machinegunned by";
+			break;
+		case MOD_CHAINGUN:
+			message = "was cut in half by";
+			message2 = "'s chaingun";
+			break;
+		case MOD_GRENADE:
+			message = "was popped by";
+			message2 = "'s grenade";
+			break;
+		case MOD_G_SPLASH:
+			message = "was shredded by";
+			message2 = "'s shrapnel";
+			break;
+		case MOD_ROCKET:
+			message = "ate";
+			message2 = "'s rocket";
+			break;
+		case MOD_R_SPLASH:
+			message = "almost dodged";
+			message2 = "'s rocket";
+			break;
+		case MOD_HYPERBLASTER:
+			message = "was melted by";
+			message2 = "'s hyperblaster";
+			break;
+		case MOD_RAILGUN:
+			message = "was railed by";
+			break;
+		case MOD_BFG_LASER:
+			message = "saw the pretty lights from";
+			message2 = "'s BFG";
+			break;
+		case MOD_BFG_BLAST:
+			message = "was disintegrated by";
+			message2 = "'s BFG blast";
+			break;
+		case MOD_BFG_EFFECT:
+			message = "couldn't hide from";
+			message2 = "'s BFG";
+			break;
+		case MOD_HANDGRENADE:
+			message = "caught";
+			message2 = "'s handgrenade";
+			break;
+		case MOD_HG_SPLASH:
+			message = "didn't see";
+			message2 = "'s handgrenade";
+			break;
+		case MOD_HELD_GRENADE:
+			message = "feels";
+			message2 = "'s pain";
+			break;
+		case MOD_TELEFRAG:
+			message = "tried to invade";
+			message2 = "'s personal space";
+			break;
+		}
+		gi.bprintf (PRINT_MEDIUM,"%s %s %s%s\n", self->client->pers.netname, message, attacker->client->pers.netname, message2);
+		if (deathmatch->Integer())
+		{
+			if ((self->client && attacker->client) && OnSameTeam(self, attacker))
+				attacker->client->resp.score--;
+			else
+				attacker->client->resp.score++;
+		}
+	}
+	else
+		gi.dprintf ("K WTF BAD OBITS\n");
+}
+
 void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
 void TossClientWeapon (edict_t *self)
 {
@@ -452,7 +645,6 @@ void TossClientWeapon (edict_t *self)
 		drop->think = G_FreeEdict;
 	}
 }
-
 
 /*
 ==================
@@ -524,7 +716,7 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 		self->client->respawn_time = level.time + 1.0;
 		LookAtKiller (self, inflictor, attacker);
 		self->client->ps.pMove.pmType = PMT_DEAD;
-		ClientObituary (self, inflictor, attacker);
+		ClientObituary (self, attacker);
 		TossClientWeapon (self);
 		if (deathmatch->Integer())
 			Cmd_Help_f (self);		// show scores
@@ -1422,6 +1614,27 @@ void ClientUserinfoChanged (edict_t *ent, char *userinfo)
 	s = Info_ValueForKey (userinfo, "ip");
 	if (strlen(s))
 		ent->client->pers.IP = IPStringToArrays(s);
+
+	// Gender
+	s = Info_ValueForKey (userinfo, "gender");
+	if (strlen(s))
+	{
+		switch (s[0])
+		{
+		case 'm':
+		case 'M':
+			ent->client->resp.Gender = GenderMale;
+			break;
+		case 'f':
+		case 'F':
+			ent->client->resp.Gender = GenderFemale;
+			break;
+		default:
+			ent->client->resp.Gender = GenderNeutral;
+		}
+	}
+	else
+		ent->client->resp.Gender = GenderMale;
 
 	// save off the userinfo in case we want to check something later
 	strncpy (ent->client->pers.userinfo, userinfo, sizeof(ent->client->pers.userinfo)-1);

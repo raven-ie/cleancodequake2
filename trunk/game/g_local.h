@@ -71,6 +71,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // memory tags to allow dynamic memory to be cleaned up
 #define TAG_GAME	765		// clear when unloading the dll
 #define TAG_LEVEL	766		// clear when loading a new level
+#define TAG_CLEAN	767		// "Clean" memory
 
 
 #define MELEE_DISTANCE	80
@@ -321,7 +322,7 @@ enum // EMeansOfDeath
 	MOD_HIT,
 	MOD_TARGET_BLASTER,
 
-	MOD_FRIENDLY_FIRE
+	MOD_FRIENDLY_FIRE		=	512
 };
 
 extern	int	meansOfDeath;
@@ -591,6 +592,7 @@ typedef struct
 	vec3_t		cmd_angles;			// angles sent over in the last command
 
 	bool		spectator;			// client is a spectator
+	EGender	Gender;
 } client_respawn_t;
 
 // this structure is cleared on each PutClientInServer(),
