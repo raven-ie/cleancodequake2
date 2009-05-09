@@ -108,7 +108,7 @@ void CBrain::Spawn ()
 }}}
 
 See the .h file to see what arguments need to be in a function.
-(Generally, "edict_t *self" needs to be removed from functions)
+(Generally, `edict_t *self` needs to be removed from functions)
 
 Now, you remove any un-needed parts of the function.,
 This would be anything that references monsterinfo. There ARE exceptions, for example:
@@ -154,7 +154,7 @@ Remove these lines:
 Generally, it has an upper-case name. See cc_monsters.h (CMonster) for complete list of variables.
 the Scale line can be removed, as it's set in the constructor (CBrain::CBrain())
 
-Go to the spot where the big list of monsterinfo.* used to be, and add this in:
+Go to the spot where the big list of `monsterinfo.*` used to be, and add this in:
 
 {{{
 MonsterFlags |= (MF_HAS_SIGHT | MF_HAS_SEARCH | MF_HAS_MELEE | MF_HAS_IDLE);
@@ -382,7 +382,7 @@ The final animation will now look like:
 CAnim BrainMoveDeath2 (FRAME_death201, FRAME_death205, BrainFramesDeath2, ConvertDerivedFunction(&CBrain::Dead));
 }}}
 
-Next, the frames. First, we will change mframe_t to CFrame, and then change the
+Next, the frames. First, we will change `mframe_t` to `CFrame`, and then change the
 name of the frames variable to be the same as we changed it in the animation:
 
 {{{
@@ -398,7 +398,7 @@ CFrame BrainFramesDeath2 [] =
 
 Since this is an array, it needs the { } to define multiple frames.
 Now, what we need to do is change all ai_move into the correct function.
-For ALL of these, they are all in CMonster, and named uppercase like in CleanCode's standards.
+For ALL of these, they are all in `CMonster`, and named uppercase like in CleanCode's standards.
 For example:
 
 {{{
@@ -452,7 +452,7 @@ CFrame BrainFramesDeath2 [] =
 
 The function defaults to NULL, so we don't need to include it.
 If, by chance, they call a function on a frame, you use the same technique as you did
-in the animation (ConvertDerivedFunction(&CBrain::Name), make "Name" in CBrain if it does not exist).
+in the animation (`ConvertDerivedFunction(&CBrain::Name)`, make `Name` in CBrain if it does not exist).
 
 When converting functions, there are only a few simple rules to follow.
 I will use this function as an example:
@@ -475,11 +475,11 @@ Basically, to convert this function to the Brain class, we change the name to:
 CBrain::DuckDown
 }}}
 
-We add that function in the class (same conventions as above, void Name ()), and we remove "edict_t *self"
+We add that function in the class (same conventions as above, void Name ()), and we remove `edict_t *self`
 from the function definition. This is because classes can access their own members right from
-inside function calls. For monsters, "Entity" is the entity linked to the monster.
+inside function calls. For monsters, `Entity` is the entity linked to the monster.
 
-Another problem is anything that accesses "monsterinfo". This structure has been removed
+Another problem is anything that accesses `monsterinfo`. This structure has been removed
 and is instead merged into the monster itself. Anything you see in member functions can be accessed
 by naming it with CleanCode conventions. For example:
 
