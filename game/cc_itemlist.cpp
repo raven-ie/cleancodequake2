@@ -98,6 +98,19 @@ CBaseItem *FindItem (char *name)
 	return NULL;
 }
 
+CBaseItem *FindItem_OldStyle (char *name)
+{
+	// Check through the itemlist
+	CBaseItem *Item;
+	for (int i = 0; i < GetNumItems(); i++)
+	{
+		Item = GetItemByIndex(i);
+		if (Q_stricmp(Item->Name, name) == 0)
+			return Item;
+	}
+	return NULL;
+}
+
 // Forces an add
 void CBaseItem::Add (edict_t *ent, int quantity)
 {

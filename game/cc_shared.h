@@ -98,3 +98,10 @@ void InitMapCounter ();
 char *CC_ParseSpawnEntities (char *mapname, char *entities);
 
 uint32 Sys_Milliseconds ();
+
+enum EGender
+{
+	GenderMale,
+	GenderFemale,
+	GenderNeutral
+};

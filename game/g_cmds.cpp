@@ -626,17 +626,10 @@ uint32 Sys_Milliseconds ()
 
 
 void SP_misc_explobox (edict_t *self);
+CBaseItem *FindItem_OldStyle (char *name);
+
 void Cmd_Test_f (edict_t *ent)
 {
-	uint32 cur = Sys_Milliseconds();
-
-	for (uint32 i = 0; i < 600000; i++)
-	{
-		ModelIndex ("models/weapons/g_bfg/tris.md2");
-		SoundIndex ("world/10.wav");
-		ImageIndex ("a_cells");
-	}
-	gi.dprintf ("%d\n", Sys_Milliseconds() - cur);
 }
 
 #if 0
