@@ -1,0 +1,515 @@
+#summary Converting Monsters
+
+If you've seen the progress, we are short on monsters. You can help by adding more monsters. Follow the guide below to convert your favorite monster to CleanCode!
+
+=Guide=
+Alright, in this little doc I'll show you how to make the Brain.
+
+Now, it helps first to get a little background information
+on the monster first. What do we know about the brain? Let's
+open m_brain.cpp, and go to the SP_monster_brain function:
+
+	self->monsterinfo.stand = brain_stand;
+	self->monsterinfo.walk = brain_walk;
+	self->monsterinfo.run = brain_run;
+	self->monsterinfo.dodge = brain_dodge;
+//	self->monsterinfo.attack = brain_attack;
+	self->monsterinfo.melee = brain_melee;
+	self->monsterinfo.sight = brain_sight;
+	self->monsterinfo.search = brain_search;
+	self->monsterinfo.idle = brain_idle;
+	
+This code tells us the following:
+He stands, walk, runs, dodges, does not have a ranged attack (commented or NULL),
+has melee, has a sight (sound when he sees you), has a search and has an idle.
+
+With this, we can start doing the conversion. The first step is to get together
+it's header file: make a new file, cc_brain.h, and we'll copy cc_infantry.h and make
+modifications to it. The first thing we do is change names, and remove all Infantry-related (non-virtual) functions and variables (sounds). It will look like this:
+
+{{{
+class CBrain : public CMonster
+{
+public:
+	CBrain ();
+
+	void Allocate (edict_t *ent);
+
+	void Attack ();
+	void Dodge (edict_t *attacker, float eta);
+	void Idle ();
+	void Run ();
+	void Sight ();
+	void Stand ();
+	void Walk ();
+	void Melee ();
+
+	void Dead ();
+	void Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
+	void Pain (edict_t *other, float kick, int damage);
+
+	void Spawn ();
+};
+
+extern CBrain Monster_Brain;
+}}}
+
+Now, using the information we took at the beginning, we start pulling and adding functions
+to the first block. Since he has no attack, we will remove this line:
+{{{
+	void Attack ();
+}}}
+
+The Brain DOES have a search, so we will add this line:
+{{{
+	void Search ();
+}}}
+	
+What we have now is a basic header file, with the basics for a monster.
+Now we can start setting the .cpp file up.
+Make a cc_brain.cpp, and we put the first few always-there codes:
+
+{{{
+#include "cc_local.h"
+#include "m_brain.h" // We include this only because it has the frames
+
+CBrain Monster_Brain;
+
+CBrain::CBrain ()
+{
+	Classname = "monster_infantry";
+	Scale = MODEL_SCALE;
+}
+
+void CBrain::Allocate (edict_t *ent)
+{
+	ent->Monster = new CBrain(Monster_Brain);
+}
+}}}
+
+Now, go to cc_monsters.h, and at the end, add:
+
+{{{
+#include "cc_brain.h"
+}}}
+
+Now we have a basic monster code laid out.
+The next step is the lengthiest of them all.
+Copy the entire file of m_brain.cpp (of the original Q2 code) from the #includes down.
+Don't bring over the includes; just everything below it.
+
+The first thing we need to modify is the spawn function.
+In C++, member functions are declared with ::. For example, we change the header of SP_monster_brain to:
+
+{{{
+void CBrain::Spawn ()
+}}}
+
+See the .h file to see what arguments need to be in a function.
+(Generally, "edict_t *self" needs to be removed from functions)
+
+Now, you remove any un-needed parts of the function.,
+This would be anything that references monsterinfo. There ARE exceptions, for example:
+
+{{{
+self->monsterinfo.power_armor_type
+}}}
+
+would become
+
+{{{
+PowerArmorType
+}}}
+
+Remove these lines:
+
+{{{
+	self->pain = brain_pain;
+	self->die = brain_die;
+}}}
+{{{
+	self->monsterinfo.stand = brain_stand;
+	self->monsterinfo.walk = brain_walk;
+	self->monsterinfo.run = brain_run;
+	self->monsterinfo.dodge = brain_dodge;
+//	self->monsterinfo.attack = brain_attack;
+	self->monsterinfo.melee = brain_melee;
+	self->monsterinfo.sight = brain_sight;
+	self->monsterinfo.search = brain_search;
+	self->monsterinfo.idle = brain_idle;
+}}}
+{{{
+	self->monsterinfo.scale = MODEL_SCALE;
+}}}
+{{{
+	if (deathmatch->Integer())
+	{
+		G_FreeEdict (self);
+		return;
+	}
+}}}
+
+Generally, it has an upper-case name. See cc_monsters.h (CMonster) for complete list of variables.
+the Scale line can be removed, as it's set in the constructor (CBrain::CBrain())
+
+Go to the spot where the big list of monsterinfo.* used to be, and add this in:
+
+{{{
+MonsterFlags |= (MF_HAS_SIGHT | MF_HAS_SEARCH | MF_HAS_MELEE | MF_HAS_IDLE);
+}}}
+
+MonsterFlags is a variable that holds flags for what actions the monster can perform.
+The complete list:
+
+{{{
+#define MF_HAS_MELEE			0x00000001
+#define MF_HAS_IDLE			0x00000002
+#define MF_HAS_SEARCH			0x00000004
+#define	MF_HAS_SIGHT			0x00000008
+#define MF_HAS_ATTACK			0x00000010
+}}}
+
+Now, here's what I usually do next.
+Head to the top of m_brain.cpp to find a big list of integers:
+
+{{{
+static int	sound_chest_open;
+static int	sound_tentacles_extend;
+}}}
+
+etc etc. Copy this ENTIRE list, and move it to the top of your new class just below "public:"
+so it looks like this:
+
+{{{
+public:
+	static int	sound_chest_open;
+	static int	sound_tentacles_extend;
+	static int	sound_tentacles_retract;
+	static int	sound_death;
+	static int	sound_idle1;
+	static int	sound_idle2;
+
+	void Allocate (edict_t *ent);
+}}}
+Now, remove "static" from each one, make the first S uppercase, remove any underscores (_) and put
+the letter after the underscore capital. For example:
+
+{{{
+sound_chest_open
+}}}
+becomes
+{{{
+SoundChestOpen;
+}}}
+
+This is just a naming convention that CleanCode has, it has no effect on the game itself.
+You will now have:
+
+
+{{{
+public:
+	int	SoundChestOpen;
+	int	SoundTentaclesExtend;
+	int	SoundTentaclesRetract;
+	int	SoundDeath;
+	int	SoundIdle1;
+	int	SoundIdle2;
+
+	void Allocate (edict_t *ent);
+}}}
+
+Now, go back to the .cpp file where we were, and change all of the lines to reflect these changes:
+
+{{{
+sound_chest_open = gi.soundindex ("brain/brnatck1.wav");
+}}}
+becomes
+{{{
+SoundChestOpen = gi.soundindex ("brain/brnatck1.wav");
+}}}
+
+Now, let's take advantage of CleanCode's indexing features. Change all "gi.soundindex"
+to SoundIndex, and any gi.modelindex to ModelIndex. The line will now be:
+
+{{{
+SoundChestOpen = SoundIndex ("brain/brnatck1.wav");
+}}}
+
+Go down to:
+
+{{{
+	self->monsterinfo.power_armor_type = POWER_ARMOR_SCREEN;
+	self->monsterinfo.power_armor_power = 100;
+}}}
+
+Change these to:
+
+{{{
+	PowerArmorType = POWER_ARMOR_SCREEN;
+	PowerArmorPower = 100;
+}}}
+
+It may be confusing that we are setting variables that don't seem to exist, I'll explain this in a minute.
+
+Change this line:
+
+{{{
+walkmonster_start (self);
+}}}
+
+to
+
+{{{
+WalkMonsterStart ();
+}}}
+
+And the last thing we need to do, in the entire spawn function, replace all occurences of "self"
+with "Entity". Uppercase E, don't forget.
+
+Now, for the last step of the spawn function, we replace the function name:
+
+{{{
+void SP_monster_brain (edict_t *self)
+}}}
+
+This will become:
+
+{{{
+void CBrain::Spawn ()
+}}}
+
+Most functions will all follow the same idea after this.
+
+{{{
+void brain_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
+}}}
+
+will become:
+
+{{{
+void CBrain::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
+}}}
+
+As I mentioned above, see cc_brain.h for the function definitions.
+
+Now we can move onto animations.
+I'll use this one for example, all of them follow the exact same standard.
+
+{{{
+mframe_t brain_frames_death2 [] =
+{
+	ai_move,	0,	NULL,
+	ai_move,	0,	NULL,
+	ai_move,	0,	NULL,
+	ai_move,	9,	NULL,
+	ai_move,	0,	NULL
+};
+mmove_t brain_move_death2 = {FRAME_death201, FRAME_death205, brain_frames_death2, brain_dead};
+}}}
+
+This may look confusing at first glance, but it's actually very simple.
+mframe_t is the OLD structure for frames. Basically each line is one frame.
+The animation above defines 5 frames of animation. The first member is "AIFunc", which is usually
+ai_move, ai_stand, ai_run.. This is the function that is called with the argument of "dist" that is
+the second member (0, 0, 0, 9, 0.. this is the amount of units the monster will move on this frame).
+The third argument is the function that the monster calls on this frame, for firing,
+melee, etc. NULL means no function. Otherwise it will be like, brain_punch, or anything really.
+
+mmove_t is the old structure for an animation. The members go as follow:
+Start frame = The first frame of animation
+End frame = the last frame of animation
+Frames = pointer to an array of frames (defined above the animation)
+Function = a function to be called at the end of the animation.
+
+The first thing we will do is fix the animation. We need to convert it over to the new CAnim class.
+Basically, this involves three things:
+
+mmove_t becomes CAnim
+= { becomes (
+} becomes }
+
+After conversion, the animation line will be:
+
+{{{
+CAnim brain_move_death2 (FRAME_death201, FRAME_death205, brain_frames_death2, brain_dead);
+}}}
+
+Now, we change the name of the animation to fit CleanCode's standards:
+
+{{{
+CAnim BrainMoveDeath2 (FRAME_death201, FRAME_death205, brain_frames_death2, brain_dead);
+}}}
+
+And same goes with the frames:
+
+{{{
+CAnim BrainMoveDeath2 (FRAME_death201, FRAME_death205, BrainFramesDeath2, brain_dead);
+}}}
+
+Now, the hard part is the function.
+If the function is NULL, remove the entire argument so that it looks like this:
+
+{{{
+CAnim BrainMoveDeath2 (FRAME_death201, FRAME_death205, BrainFramesDeath2);
+}}}
+
+BUT, since this animation HAS a function, we need to create and convert it.
+If you come across a function that starts with brain_ that does not exist in the CBrain structure,
+add it. This is simple because they will always have the same type:
+
+{{{
+void Dead ();
+}}}
+
+Since that function exists, we don't need to add it, but in a lot of cases you will need
+to add a new function (add it above Dead).
+
+Now, what do we use instead of brain_dead?
+You might be thinking CBrain::Dead. You're close.
+We have to use a special macro that I created for this purpose. We also
+need to use the memory address operator (&) so that we pass the address to it.
+
+{{{
+ConvertDerivedFunction(&CBrain::Dead)
+}}}
+
+This is what you would use in place of brain_dead in the animation.
+The final animation will now look like:
+
+{{{
+CAnim BrainMoveDeath2 (FRAME_death201, FRAME_death205, BrainFramesDeath2, ConvertDerivedFunction(&CBrain::Dead));
+}}}
+
+Next, the frames. First, we will change mframe_t to CFrame, and then change the
+name of the frames variable to be the same as we changed it in the animation:
+
+{{{
+CFrame BrainFramesDeath2 [] =
+{
+	ai_move,	0,	NULL,
+	ai_move,	0,	NULL,
+	ai_move,	0,	NULL,
+	ai_move,	9,	NULL,
+	ai_move,	0,	NULL
+};
+}}}
+
+Since this is an array, it needs the { } to define multiple frames.
+Now, what we need to do is change all ai_move into the correct function.
+For ALL of these, they are all in CMonster, and named uppercase like in CleanCode's standards.
+For example:
+
+{{{
+CMonster::AI_Move
+}}}
+
+Because it's a pointer to a member function, it requires the memory address operator (&).
+The frames will now look like:
+
+{{{
+CFrame BrainFramesDeath2 [] =
+{
+	&CMonster::AI_Move,	0,	NULL,
+	&CMonster::AI_Move,	0,	NULL,
+	&CMonster::AI_Move,	0,	NULL,
+	&CMonster::AI_Move,	9,	NULL,
+	&CMonster::AI_Move,	0,	NULL
+};
+}}}
+
+This is almost complete: now, for each frame, we need to enclose it in the following:
+{{{
+CFrame ( )
+}}}
+This is so it constructs an actual frame using it's constructor.
+Now, we have this:
+
+{{{
+CFrame BrainFramesDeath2 [] =
+{
+	CFrame (&CMonster::AI_Move,	0,	NULL),
+	CFrame (&CMonster::AI_Move,	0,	NULL),
+	CFrame (&CMonster::AI_Move,	0,	NULL),
+	CFrame (&CMonster::AI_Move,	9,	NULL),
+	CFrame (&CMonster::AI_Move,	0,	NULL)
+};
+}}}
+
+This will compile, however, we can make one last adjustment to make this code easier to read:
+
+{{{
+CFrame BrainFramesDeath2 [] =
+{
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	9),
+	CFrame (&CMonster::AI_Move,	0)
+};
+}}}
+
+The function defaults to NULL, so we don't need to include it.
+If, by chance, they call a function on a frame, you use the same technique as you did
+in the animation (ConvertDerivedFunction(&CBrain::Name), make "Name" in CBrain if it does not exist).
+
+When converting functions, there are only a few simple rules to follow.
+I will use this function as an example:
+
+{{{
+void brain_duck_down (edict_t *self)
+{
+	if (self->monsterinfo.aiflags & AI_DUCKED)
+		return;
+	self->monsterinfo.aiflags |= AI_DUCKED;
+	self->maxs[2] -= 32;
+	self->takedamage = DAMAGE_YES;
+	gi.linkentity (self);
+}
+}}}
+
+Basically, to convert this function to the Brain class, we change the name to:
+
+{{{
+CBrain::DuckDown
+}}}
+
+We add that function in the class (same conventions as above, void Name ()), and we remove "edict_t *self"
+from the function definition. This is because classes can access their own members right from
+inside function calls. For monsters, "Entity" is the entity linked to the monster.
+
+Another problem is anything that accesses "monsterinfo". This structure has been removed
+and is instead merged into the monster itself. Anything you see in member functions can be accessed
+by naming it with CleanCode conventions. For example:
+
+{{{
+self->monsterinfo.aiflags
+}}}
+is
+{{{
+AIFlags
+}}}
+
+{{{
+self->monsterinfo.currentmove
+}}}
+is
+{{{
+CurrentMove
+}}}
+
+They are all saved and used the exact same way.
+Now, this function should look like:
+
+{{{
+void CBrain::DuckDown ()
+{
+	if (AIFlags & AI_DUCKED)
+		return;
+	AIFlags |= AI_DUCKED;
+	Entity->maxs[2] -= 32;
+	Entity->takedamage = DAMAGE_YES;
+	gi.linkentity (Entity);
+}
+}}}
+
+That should cover about everything.
