@@ -138,6 +138,9 @@ void Cmd_Give_f (edict_t *ent)
 		ent->client->pers.Inventory.Set(Armor->GetIndex(), Armor->maxCount);
 		ent->client->pers.Armor = Armor;
 
+		if (gi.argv(2))
+			ent->client->pers.Inventory.Set(Armor->GetIndex(), atoi(gi.argv(2)));
+
 		if (!give_all)
 			return;
 	}
@@ -173,11 +176,17 @@ void Cmd_Give_f (edict_t *ent)
 	it = FindItem (name);
 	if (!it)
 	{
-		it = FindItemByClassname (name);
+		name = gi.args();
+		it = FindItem(name);
+
 		if (!it)
 		{
-			gi.cprintf (ent, PRINT_HIGH, "unknown item\n");
-			return;
+			it = FindItemByClassname (name);
+			if (!it)
+			{
+				gi.cprintf (ent, PRINT_HIGH, "unknown item\n");
+				return;
+			}
 		}
 	}
 
@@ -628,6 +637,7 @@ CBaseItem *FindItem_OldStyle (char *name);
 
 void Cmd_Test_f (edict_t *ent)
 {
+	T_Damage (ent, ent, ent, vec3Origin, ent->s.origin, vec3Origin, atoi(gi.argv(1)), 0, DAMAGE_NO_PROTECTION, MOD_SUICIDE);
 }
 
 #if 0

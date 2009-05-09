@@ -76,7 +76,10 @@ void CBlaster::Fire (edict_t *ent)
 	vec3_t	offset;
 
 	if (isQuad)
+	{
 		damage *= 4;
+		Sound(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
+	}
 
 	Angles_Vectors (ent->client->v_angle, forward, right, NULL);
 	Vec3Set (offset, 24, 8, ent->viewheight-8);

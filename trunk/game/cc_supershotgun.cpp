@@ -84,6 +84,7 @@ void CSuperShotgun::Fire (edict_t *ent)
 	{
 		damage *= 4;
 		kick *= 4;
+		Sound(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
 	}
 
 	v[PITCH] = ent->client->v_angle[PITCH];
