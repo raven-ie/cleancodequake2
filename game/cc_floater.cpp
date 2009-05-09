@@ -1,0 +1,553 @@
+/*
+Copyright (C) 1997-2001 Id Software, Inc.
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+/*
+This source file is contained as part of CleanCode Quake2, a project maintained
+by Paril, to 'clean up' and make Quake2 an easier source base to read and work with.
+
+You may use any part of this code to help create your own bases and own mods off
+this code if you wish. It is under the same license as Quake 2 source (as above),
+therefore you are free to have to fun with it. All I ask is you email me so I can
+list the mod on my page for CleanCode Quake2 to help get the word around. Thanks.
+*/
+
+//
+// cc_floater.cpp
+// Floater Monster
+//
+
+#include "cc_local.h"
+#include "m_float.h"
+
+CFloater Monster_Floater;
+
+CFloater::CFloater ()
+{
+	Classname = "monster_floater";
+	Scale = MODEL_SCALE;
+}
+
+void CFloater::Allocate (edict_t *ent)
+{
+	ent->Monster = new CFloater(Monster_Floater);
+}
+
+void CFloater::Sight ()
+{
+	Sound (Entity, CHAN_VOICE, SoundSight);
+}
+
+void CFloater::Idle ()
+{
+	Sound (Entity, CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
+}
+
+void CFloater::FireBlaster ()
+{
+	vec3_t	start;
+	vec3_t	forward, right;
+	vec3_t	end;
+	vec3_t	dir;
+	int		effect = 0;
+
+	switch (Entity->s.frame)
+	{
+	case FRAME_attak104:
+	case FRAME_attak107:
+		effect = EF_HYPERBLASTER;
+		break;
+	}
+
+	Angles_Vectors (Entity->s.angles, forward, right, NULL);
+	G_ProjectSource (Entity->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_FLOAT_BLASTER_1], forward, right, start);
+
+	Vec3Copy (Entity->enemy->s.origin, end);
+	end[2] += Entity->enemy->viewheight;
+	Vec3Subtract (end, start, dir);
+
+	MonsterFireBlaster (start, dir, 1, 1000, MZ2_FLOAT_BLASTER_1, effect);
+}
+
+CFrame FloaterFramesStand1 [] =
+{
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0)
+};
+CAnim FloaterMoveStand1 (FRAME_stand101, FRAME_stand152, FloaterFramesStand1);
+
+CFrame FloaterFramesStand2 [] =
+{
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0)
+};
+CAnim FloaterMoveStand2 (FRAME_stand201, FRAME_stand252, FloaterFramesStand2);
+
+void CFloater::Stand ()
+{
+	CurrentMove = (random() <= 0.5) ? &FloaterMoveStand1 : &FloaterMoveStand2;
+}
+
+CFrame FloaterFramesAttack1 [] =
+{
+	CFrame (&CMonster::AI_Charge,	0),			// Blaster attack
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0,	ConvertDerivedFunction(&CFloater::FireBlaster)),			// BOOM (0, -25.8, 32.5)	-- LOOP Starts
+	CFrame (&CMonster::AI_Charge,	0,	ConvertDerivedFunction(&CFloater::FireBlaster)),
+	CFrame (&CMonster::AI_Charge,	0,	ConvertDerivedFunction(&CFloater::FireBlaster)),
+	CFrame (&CMonster::AI_Charge,	0,	ConvertDerivedFunction(&CFloater::FireBlaster)),
+	CFrame (&CMonster::AI_Charge,	0,	ConvertDerivedFunction(&CFloater::FireBlaster)),
+	CFrame (&CMonster::AI_Charge,	0,	ConvertDerivedFunction(&CFloater::FireBlaster)),
+	CFrame (&CMonster::AI_Charge,	0,	ConvertDerivedFunction(&CFloater::FireBlaster)),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0)			//							-- LOOP Ends
+};
+CAnim FloaterMoveAttack1 (FRAME_attak101, FRAME_attak114, FloaterFramesAttack1, ConvertDerivedFunction(&CFloater::Run));
+
+CFrame FloaterFramesAttack2 [] =
+{
+	CFrame (&CMonster::AI_Charge,	0),			// Claws
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),			// WHAM (0, -45, 29.6)		-- LOOP Starts
+	CFrame (&CMonster::AI_Charge,	0, ConvertDerivedFunction(&CFloater::Wham)),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),			//							-- LOOP Ends
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0)
+};
+CAnim FloaterMoveAttack2 (FRAME_attak201, FRAME_attak225, FloaterFramesAttack2, ConvertDerivedFunction(&CFloater::Run));
+
+CFrame FloaterFramesAttack3 [] =
+{
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0, ConvertDerivedFunction(&CFloater::Zap)),		//								-- LOOP Starts
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),		//								-- LOOP Ends
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0)
+};
+CAnim FloaterMoveAttack3 (FRAME_attak301, FRAME_attak334, FloaterFramesAttack3, ConvertDerivedFunction(&CFloater::Run));
+
+CFrame FloaterFramesPain1 [] =
+{
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0)
+};
+CAnim FloaterMovePain1 (FRAME_pain101, FRAME_pain107, FloaterFramesPain1, ConvertDerivedFunction(&CFloater::Run));
+
+CFrame FloaterFramesPain2 [] =
+{
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0)
+};
+CAnim FloaterMovePain2 (FRAME_pain201, FRAME_pain208, FloaterFramesPain2, ConvertDerivedFunction(&CFloater::Run));
+
+CFrame FloaterFramesPain3 [] =
+{
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0)
+};
+CAnim FloaterMovePain3 (FRAME_pain301, FRAME_pain312, FloaterFramesPain3, ConvertDerivedFunction(&CFloater::Run));
+
+CFrame FloaterFramesWalk [] =
+{
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5)
+};
+CAnim FloaterMoveWalk (FRAME_stand101, FRAME_stand152, FloaterFramesWalk);
+
+CFrame FloaterFramesRun [] =
+{
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13),
+	CFrame (&CMonster::AI_Run, 13)
+};
+CAnim FloaterMoveRun (FRAME_stand101, FRAME_stand152, FloaterFramesRun);
+
+void CFloater::Run ()
+{
+	CurrentMove = (AIFlags & AI_STAND_GROUND) ? &FloaterMoveStand1 : &FloaterMoveRun;
+}
+
+void CFloater::Walk ()
+{
+	CurrentMove = &FloaterMoveWalk;
+}
+
+void CFloater::Wham ()
+{
+	static	vec3_t	aim = {MELEE_DISTANCE, 0, 0};
+	Sound (Entity, CHAN_WEAPON, SoundAttack3);
+	fire_hit (Entity, aim, 5 + rand() % 6, -50);
+}
+
+void CFloater::Zap ()
+{
+	vec3_t	forward, right;
+	vec3_t	origin;
+	vec3_t	dir;
+	vec3_t	offset;
+
+	Vec3Subtract (Entity->enemy->s.origin, Entity->s.origin, dir);
+
+	Angles_Vectors (Entity->s.angles, forward, right, NULL);
+	//FIXME use a flash and replace these two lines with the commented one
+	Vec3Set (offset, 18.5f, -0.9f, 10);
+	G_ProjectSource (Entity->s.origin, offset, forward, right, origin);
+//	G_ProjectSource (self->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, origin);
+
+	Sound (Entity, CHAN_WEAPON, SoundAttack2);
+
+	//FIXME use the flash, Luke
+	TempEnts.Splashes.Splash (origin, vec3Origin, TempEnts.Splashes.SPTSparks, 32);
+
+	T_Damage (Entity->enemy, Entity, Entity, vec3Origin, Entity->enemy->s.origin, vec3Origin, 5 + rand() % 6, -10, DAMAGE_ENERGY, MOD_UNKNOWN);
+}
+
+void CFloater::Attack()
+{
+	CurrentMove = &FloaterMoveAttack1;
+}
+
+void CFloater::Melee ()
+{
+	CurrentMove = (random() < 0.5) ? &FloaterMoveAttack3 : &FloaterMoveAttack2;
+}
+
+void CFloater::Pain (edict_t *other, float kick, int damage)
+{
+	if (Entity->health < (Entity->max_health / 2))
+		Entity->s.skinNum = 1;
+
+	if (level.time < Entity->pain_debounce_time)
+		return;
+
+	Entity->pain_debounce_time = level.time + 3;
+	if (skill->Integer() == 3)
+		return;		// no pain anims in nightmare
+
+	bool n = (random() < 0.5);
+	Sound (Entity, CHAN_VOICE, n ? SoundPain1 : SoundPain2);
+	CurrentMove = n ? &FloaterMovePain1 : &FloaterMovePain2;
+}
+
+void CFloater::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
+{
+	Sound (Entity, CHAN_VOICE, SoundDeath1);
+	BecomeExplosion1(Entity);
+}
+
+void CFloater::Spawn ()
+{
+	SoundAttack2 = gi.soundindex ("floater/fltatck2.wav");
+	SoundAttack3 = gi.soundindex ("floater/fltatck3.wav");
+	SoundDeath1 = gi.soundindex ("floater/fltdeth1.wav");
+	SoundIdle = gi.soundindex ("floater/fltidle1.wav");
+	SoundPain1 = gi.soundindex ("floater/fltpain1.wav");
+	SoundPain2 = gi.soundindex ("floater/fltpain2.wav");
+	SoundSight = gi.soundindex ("floater/fltsght1.wav");
+
+	SoundIndex ("floater/fltatck1.wav");
+
+	Entity->s.sound = SoundIndex ("floater/fltsrch1.wav");
+
+	Entity->movetype = MOVETYPE_STEP;
+	Entity->solid = SOLID_BBOX;
+	Entity->s.modelIndex = ModelIndex ("models/monsters/float/tris.md2");
+	Vec3Set (Entity->mins, -24, -24, -24);
+	Vec3Set (Entity->maxs, 24, 24, 32);
+
+	Entity->health = 200;
+	Entity->gib_health = -80;
+	Entity->mass = 300;
+
+	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_MELEE | MF_HAS_SIGHT | MF_HAS_IDLE);
+
+	gi.linkentity (Entity);
+
+	CurrentMove = (random() <= 0.5) ? &FloaterMoveStand1 : &FloaterMoveStand2;	
+
+	FlyMonsterStart ();
+}

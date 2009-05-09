@@ -121,10 +121,6 @@ void CWeapon::WeaponGeneric (edict_t *ent)
 		// Check if this is a firing frame.
 		if (CanFire(ent))
 		{
-			// Quad damage sound if we have it...
-			if (isQuad)
-				Sound(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
-
 			Fire(ent);
 
 			// Now, this call above CAN change the underlying frame and state.
