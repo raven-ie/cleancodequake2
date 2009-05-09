@@ -251,3 +251,4 @@ void Monster_Think (edict_t *ent);
 #include "cc_tank.h"
 #include "cc_flyer.h"
 #include "cc_gunner.h"
+#include "cc_floater.h"

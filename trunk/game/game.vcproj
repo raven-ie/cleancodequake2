@@ -989,6 +989,14 @@
 						>
 					</File>
 					<File
+						RelativePath=".\cc_floater.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_floater.h"
+						>
+					</File>
+					<File
 						RelativePath=".\cc_flyer.cpp"
 						>
 					</File>

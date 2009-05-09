@@ -1179,8 +1179,6 @@ bool CMonster::AI_CheckAttack()
 	if (!EnemyVis)
 		return false;
 
-	if (Entity->enemy->client && Entity->enemy->flags & FL_GODMODE)
-		return false;
 	return CheckAttack ();
 }
 

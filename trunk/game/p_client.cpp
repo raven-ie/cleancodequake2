@@ -602,7 +602,11 @@ void ClientObituary (edict_t *self, edict_t *attacker)
 		}
 	}
 	else
-		gi.dprintf ("K WTF BAD OBITS\n");
+	{
+		gi.bprintf (PRINT_MEDIUM, "%s died.\n", self->client->pers.netname);
+		if (deathmatch->Integer())
+			self->client->resp.score--;
+	}
 }
 
 void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
