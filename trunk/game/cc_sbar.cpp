@@ -270,7 +270,7 @@ DeathmatchScoreboardMessage
 */
 void DeathmatchScoreboardMessage (edict_t *ent, edict_t *killer, bool reliable = true)
 {
-	CStatusBar *Scoreboard = new CStatusBar;
+	CStatusBar Scoreboard;
 
 	int		sorted[MAX_CS_CLIENTS];
 	int		sortedscores[MAX_CS_CLIENTS];
@@ -327,14 +327,14 @@ void DeathmatchScoreboardMessage (edict_t *ent, edict_t *killer, bool reliable =
 			tag = NULL;
 		if (tag)
 		{
-			Scoreboard->AddVirtualPoint_X (x+32);
-			Scoreboard->AddVirtualPoint_Y (y);
-			Scoreboard->AddPic (tag);
+			Scoreboard.AddVirtualPoint_X (x+32);
+			Scoreboard.AddVirtualPoint_Y (y);
+			Scoreboard.AddPic (tag);
 		}
 
 		// send the layout
-		Scoreboard->AddClientBlock (x, y, sorted[i], cl->resp.score, cl->ping, (level.framenum - cl->resp.enterframe)/600);
+		Scoreboard.AddClientBlock (x, y, sorted[i], cl->resp.score, cl->ping, (level.framenum - cl->resp.enterframe)/600);
 	}
 
-	Scoreboard->SendMsg (ent, reliable);
+	Scoreboard.SendMsg (ent, reliable);
 }
