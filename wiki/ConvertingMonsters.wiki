@@ -9,6 +9,7 @@ Now, it helps first to get a little background information
 on the monster first. What do we know about the brain? Let's
 open m_brain.cpp, and go to the SP_monster_brain function:
 
+{{{
 	self->monsterinfo.stand = brain_stand;
 	self->monsterinfo.walk = brain_walk;
 	self->monsterinfo.run = brain_run;
@@ -18,6 +19,7 @@ open m_brain.cpp, and go to the SP_monster_brain function:
 	self->monsterinfo.sight = brain_sight;
 	self->monsterinfo.search = brain_search;
 	self->monsterinfo.idle = brain_idle;
+}}}
 	
 This code tells us the following:
 He stands, walk, runs, dodges, does not have a ranged attack (commented or NULL),
