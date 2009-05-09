@@ -85,4 +85,5 @@ void InitMonsterList ()
 	MonsterList.AddMonsterToList (&Monster_Tank);
 	MonsterList.AddMonsterToList (&Monster_Tank_Commander);
 	MonsterList.AddMonsterToList (&Monster_Gunner);
+	MonsterList.AddMonsterToList (&Monster_Floater);
 }
