@@ -72,6 +72,7 @@ Give items to a client
 Old-style "give"
 ==================
 */
+void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
 void Cmd_Give_f (edict_t *ent)
 {
 	char		*name;
@@ -79,7 +80,7 @@ void Cmd_Give_f (edict_t *ent)
 	bool	give_all;
 	CBaseItem *it;
 
-	name = gi.args();
+	name = gi.argv(1);
 
 	if (Q_stricmp(name, "all") == 0)
 		give_all = true;
@@ -120,25 +121,22 @@ void Cmd_Give_f (edict_t *ent)
 				continue;
 			if (!(it->Flags & ITEMFLAG_AMMO))
 				continue;
-			it->Add (ent, 1000);
+
+			CAmmo *Ammo = static_cast<CAmmo*>(it);
+			Ammo->AddAmmo (ent, 1000);
 		}
 		if (!give_all)
 			return;
 	}
 
-/*	if (give_all || Q_stricmp(name, "armor") == 0)
+	if (give_all || Q_stricmp(name, "armor") == 0)
 	{
-		gitem_armor_t	*info;
+		ent->client->pers.Inventory.Set(FindItem("Jacket Armor")->GetIndex(), 0);
+		ent->client->pers.Inventory.Set(FindItem("Combat Armor")->GetIndex(), 0);
 
-		it = FindItem("Jacket Armor");
-		ent->client->pers.inventory[ITEM_INDEX(it)] = 0;
-
-		it = FindItem("Combat Armor");
-		ent->client->pers.inventory[ITEM_INDEX(it)] = 0;
-
-		it = FindItem("Body Armor");
-		info = (gitem_armor_t *)it->info;
-		ent->client->pers.inventory[ITEM_INDEX(it)] = info->max_count;
+		CArmor *Armor = dynamic_cast<CArmor*>(FindItem("Body Armor"));
+		ent->client->pers.Inventory.Set(Armor->GetIndex(), Armor->maxCount);
+		ent->client->pers.Armor = Armor;
 
 		if (!give_all)
 			return;
@@ -147,16 +145,16 @@ void Cmd_Give_f (edict_t *ent)
 	if (give_all || Q_stricmp(name, "Power Shield") == 0)
 	{
 		it = FindItem("Power Shield");
-		it_ent = G_Spawn();
-		it_ent->classname = it->classname;
+		edict_t *it_ent = G_Spawn();
+		it_ent->classname = it->Classname;
 		SpawnItem (it_ent, it);
-		Touch_Item (it_ent, ent, NULL, NULL);
+		TouchItem (it_ent, ent, NULL, NULL);
 		if (it_ent->inUse)
 			G_FreeEdict(it_ent);
 
 		if (!give_all)
 			return;
-	}*/
+	}
 
 	if (give_all)
 	{
@@ -199,12 +197,12 @@ void Cmd_Give_f (edict_t *ent)
 	}
 	else
 	{
-		/*it_ent = G_Spawn();
+		edict_t *it_ent = G_Spawn();
 		it_ent->classname = it->Classname;
 		SpawnItem (it_ent, it);
-		Touch_Item (it_ent, ent, NULL, NULL);
+		TouchItem (it_ent, ent, NULL, NULL);
 		if (it_ent->inUse)
-			G_FreeEdict(it_ent);*/
+			G_FreeEdict(it_ent);
 	}
 }
 
