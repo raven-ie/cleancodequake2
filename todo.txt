@@ -3,14 +3,10 @@ CleanCode Quake2 aims to provide a modular and object-oriented experience to wri
 
 =C/C++ 
 
-- Write wrappers for the gi.write crap functions (so we don't have to call 40 write's just to, say, spawn a temp entity, we should just be able to use a basic read-only class like TempEnts->Particles.Explosion1(origin)
 - Entity system needs a complete re-write. I'm thinking splitting it into some sort of inheretence system or something. The server needs the first few arguments of edict_s to be exactly the same in the same order, so that should stay a structure, and from there is where linkentity/unlinkentity/spawn would be handled, but from there other classes can inherit edict_s (have different types of entities, like Player entity has all the air_finished crap and stuff, monsters have monsterinfo, projectiles have different physics and stuff). Also, there should be a class for an entity that does not get passed to the server, as there are many cases where that would be useful.
-- Monsters definitely need to be re-done. Their files are way too hefty than they should be.
 - A bunch of the combat handlers need to be re-written as well. T_Damage and it's linked functions can be cut down
 - The spawn fields and SpawnEntity should also be handled differently, as it's probably the slowest portion of the entire game.
 - Physics system should be re-written too so that it can have a bunch of handlers in the future
-- Weapons system needs to be re-written (see Items System below)
-- Items system needs to be re-written for many reasons. The itemlist in Quake2 takes up a big chunk of g_items.c; I'm thinking we go with a dynamic memory system instead, that way programmers can add indices without having to deal with an actual structure (and can go like, itemlist->addWeapon()). Also, remove the need for ITEM_INDEX and FindItem; these two are very slow and don't even NEED to be used! FindItemByClassname needs to be kept because of SpawnEntities, however.
 - Instead of Vector* functions, use the Vector class. Only problem is the state structure, server requires vectors to be in float[3], so we need to do an entity finalize or something.
 
 =Features
