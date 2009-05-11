@@ -47,53 +47,106 @@ enum// EItemFlags
 	ITEMFLAG_DROPPABLE			= 512,
 };
 
-// Generic item.
-// Abstract class.
-// Contains the basic information that an item needs to spawn and be active.
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \class	CBaseItem
+///
+/// \brief	The base item class. Contains the basic information that an item needs to spawn and be active. 
+///
+/// \author	Paril
+/// \date	5/9/2009
+////////////////////////////////////////////////////////////////////////////////////////////////////
 class CBaseItem
 {
 private:
+	/// The index of this item in the item list. 
 	int			Index;
 
-	// IST DAS MEIN FRIENDHEID?!
+	/// Must be friends with itemlist so it can set the item.
 	friend class CItemList;
 public:
+	/// The next hash index (classname)
+	CBaseItem		*hashClassnameNext;
+	/// The next hash index (name)
+	CBaseItem		*hashNameNext;
+	/// Hashed classname value
+	uint32 hashedClassnameValue;
+	/// Hashed name value
+	uint32 hashedNameValue;
+
 	CBaseItem (char *Classname, char *WorldModel, int EffectFlags,
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
 			   char *Precache);
 
+	/// Classname (for maps)
 	char		*Classname;
+	/// World model
 	char		*WorldModel;
+	/// Effect flags (EF_ROTATE, etc)
 	int			EffectFlags;
 
+	/// The sound on pickup
 	char		*PickupSound;
 
+	/// HUD Icon
 	char		*Icon;
+	/// Name on pickup
 	char		*Name;
 
+	/// Item flags
 	EItemFlags	Flags;
 
-	// I don't necessarily like the fact that the precache
-	// list here is parsed. Anyone have a better idea? :S
+	/// Precached sounds/models/images.
+	/// I don't necessarily like the fact that the precache
+	/// list here is parsed. Anyone have a better idea? :S
 	char		*Precache;
 
-	// Functions
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// \fn	virtual bool Pickup (edict_t *ent, edict_t *other) = 0
+	///
+	/// \brief	Attempts to pickup the item. 
+	///
+	/// \author	Paril
+	/// \date	5/9/2009
+	///
+	/// \param	ent		 - If non-null, the item entity. 
+	/// \param	other	 - If non-null, the player who picked the item up. 
+	///
+	/// \retval	true if it succeeds, false if it fails. 
+	////////////////////////////////////////////////////////////////////////////////////////////////////
 	virtual	bool	Pickup (edict_t *ent, edict_t *other) = 0;
-	virtual	void	Use (edict_t *ent) = 0;
-	virtual	void	Drop (edict_t *ent) = 0;
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// \fn	virtual void Use (edict_t *ent) = 0
+	///
+	/// \brief	Attempts to uses the item. 
+	///
+	/// \author	Paril
+	/// \date	5/9/2009
+	///
+	/// \param	ent	 - If non-null, the entity that used the item. 
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	virtual	void	Use (edict_t *ent) = 0;
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// \fn	virtual void Drop (edict_t *ent) = 0
+	///
+	/// \brief	Attempts to drops the item. 
+	///
+	/// \author	Paril
+	/// \date	5/9/2009
+	///
+	/// \param	ent	 - If non-null, the ent. 
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	virtual	void	Drop (edict_t *ent) = 0;
 	virtual edict_t	*DropItem (edict_t *ent);
 
 	static void		DoRespawn (edict_t *ent);
 	virtual void	SetRespawn (edict_t *ent, float delay);
 
-	inline int		GetIndex () { return Index; };
-	inline int		GetConfigStringNumber () { return CS_ITEMS+Index; };
+	inline int		GetIndex ();
+	inline int		GetConfigStringNumber ();
 
 	virtual void	Add (edict_t *ent, int quantity);
-
-	CBaseItem		*hashClassnameNext, *hashNameNext;
-	uint32 hashedClassnameValue, hashedNameValue;
 };
 
 void SpawnItem (edict_t *ent, CBaseItem *item);

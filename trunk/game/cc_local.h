@@ -43,19 +43,6 @@ void WriteShort (short val);
 void WriteByte (byte val);
 void WriteChar (char val);
 
-enum ECastType
-{
-	// Cast type
-	CAST_MULTI,
-	CAST_UNI
-};
-enum ECastFlags
-{
-	CASTFLAG_PVS = 1,
-	CASTFLAG_PHS = 2,
-	CASTFLAG_RELIABLE = 4
-};
-
 void Cast (ECastFlags castFlags, edict_t *Ent);
 void Cast (ECastFlags castFlags, vec3_t Origin);
 void Cast (ECastType castType, ECastFlags castFlags, vec3_t Origin, edict_t *Ent);

@@ -98,7 +98,7 @@ public:
 #define AS_MELEE				3
 #define AS_MISSILE				4
 
-class CMonster abstract
+class CMonster
 {
 protected:
 public:

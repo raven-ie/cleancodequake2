@@ -189,7 +189,7 @@ static void fire_lead (edict_t *self, vec3_t start, vec3_t aimdir, int damage, i
 					color = SPLASH_UNKNOWN;
 
 				if (color != SPLASH_UNKNOWN)
-					TempEnts.Splashes.Splash (tr.endPos, tr.plane.normal, (CTEnt::CTEnt_Splashes::ESplashType)color);
+					TempEnts.Splashes.Splash (tr.endPos, tr.plane.normal, (CTEnt_Splashes::ESplashType)color);
 
 				// change bullet's course when it enters water
 				Vec3Subtract (end, start, dir);
@@ -823,7 +823,7 @@ void bfg_think (edict_t *self)
 			// if we hit something that's not a monster or player we're done
 			if (!(tr.ent->svFlags & SVF_MONSTER) && (!tr.ent->client))
 			{
-				TempEnts.Splashes.Sparks (tr.endPos, tr.plane.normal, TempEnts.Splashes.STLaserSparks, (CTEnt::CTEnt_Splashes::ESplashType)self->s.skinNum, 4);
+				TempEnts.Splashes.Sparks (tr.endPos, tr.plane.normal, TempEnts.Splashes.STLaserSparks, (CTEnt_Splashes::ESplashType)self->s.skinNum, 4);
 				break;
 			}
 

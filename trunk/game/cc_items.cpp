@@ -34,6 +34,26 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	CBaseItem::CBaseItem (char *Classname, char *WorldModel, int EffectFlags, char *PickupSound,
+/// 	char *Icon, char *Name, EItemFlags Flags, char *Precache) : Index(-1), Classname(Classname),
+/// 	WorldModel(WorldModel), EffectFlags(EffectFlags), PickupSound(PickupSound), Icon(Icon),
+/// 	Name(Name), Flags(Flags), Precache(Precache)
+///
+/// \brief	Constructor. 
+///
+/// \author	Paril
+/// \date	5/9/2009
+///
+/// \param	Classname	 - If non-null, the classname of the item. 
+/// \param	WorldModel	 - If non-null, the world model. 
+/// \param	EffectFlags	 - The effect flags. 
+/// \param	PickupSound	 - If non-null, the pickup sound. 
+/// \param	Icon		 - If non-null, the icon. 
+/// \param	Name		 - If non-null, the name. 
+/// \param	Flags		 - Item flags. 
+/// \param	Precache	 - If non-null, the precache. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
 CBaseItem::CBaseItem (char *Classname, char *WorldModel, int EffectFlags,
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
 			   char *Precache) :
@@ -53,6 +73,16 @@ Precache(Precache)
 		hashedNameValue = Com_HashGeneric(Name, MAX_ITEMS_HASH);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CBaseItem::DoRespawn (edict_t *ent)
+///
+/// \brief	Executes the respawn operation. 
+///
+/// \author	Paril
+/// \date	5/9/2009
+///
+/// \param	ent	 - If non-null, the entity to be respawned. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
 void CBaseItem::DoRespawn (edict_t *ent)
 {
 	if (ent->team)
@@ -80,6 +110,17 @@ void CBaseItem::DoRespawn (edict_t *ent)
 	ent->s.event = EV_ITEM_RESPAWN;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CBaseItem::SetRespawn (edict_t *ent, float delay)
+///
+/// \brief	Sets a respawn time on the item and makes it invisible. 
+///
+/// \author	Paril
+/// \date	5/9/2009
+///
+/// \param	ent		 - If non-null, the entity to be respawned. 
+/// \param	delay	 - The delay until it's respawned. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
 void CBaseItem::SetRespawn (edict_t *ent, float delay)
 {
 	ent->flags |= FL_RESPAWN;
@@ -109,6 +150,18 @@ static void DropMakeTouchable (edict_t *ent)
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	edict_t *CBaseItem::DropItem (edict_t *ent)
+///
+/// \brief	Creates the item entity.
+///
+/// \author	Paril
+/// \date	5/9/2009
+///
+/// \param	ent	 - If non-null, the item entity. 
+///
+/// \retval	null if it fails, else. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
 edict_t *CBaseItem::DropItem (edict_t *ent)
 {
 	edict_t	*dropped;
@@ -391,4 +444,34 @@ void SpawnItem (edict_t *ent, CBaseItem *item)
 	ent->think = DropItemToFloor;
 	ent->s.effects = item->EffectFlags;
 	ent->s.renderFx = RF_GLOW;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	inline int CBaseItem::GetIndex ()
+///
+/// \brief	Gets the item's index. 
+///
+/// \author	Paril
+/// \date	5/9/2009
+///
+/// \retval	The index. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+inline int CBaseItem::GetIndex ()
+{
+	return Index;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	inline int CBaseItem::GetConfigStringNumber ()
+///
+/// \brief	Gets the ConfigString number for the item. 
+///
+/// \author	Paril
+/// \date	5/9/2009
+///
+/// \retval	The ConfigString number number. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+inline int CBaseItem::GetConfigStringNumber ()
+{
+	return CS_ITEMS+Index;
 }

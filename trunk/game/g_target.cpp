@@ -337,7 +337,7 @@ Set "sounds" to one of the following:
 
 void use_target_splash (edict_t *self, edict_t *other, edict_t *activator)
 {
-	TempEnts.Splashes.Splash (self->s.origin, self->movedir, (CTEnt::CTEnt_Splashes::ESplashType)self->sounds, self->count);
+	TempEnts.Splashes.Splash (self->s.origin, self->movedir, (CTEnt_Splashes::ESplashType)self->sounds, self->count);
 
 	if (self->dmg)
 		T_RadiusDamage (self, activator, self->dmg, NULL, self->dmg+40, MOD_SPLASH);
@@ -539,7 +539,7 @@ void target_laser_think (edict_t *self)
 			if (self->spawnflags & 0x80000000)
 			{
 				self->spawnflags &= ~0x80000000;
-				TempEnts.Splashes.Sparks (tr.endPos, tr.plane.normal, TempEnts.Splashes.STLaserSparks, (CTEnt::CTEnt_Splashes::ESplashType)(self->s.skinNum & 255), count);
+				TempEnts.Splashes.Sparks (tr.endPos, tr.plane.normal, TempEnts.Splashes.STLaserSparks, (CTEnt_Splashes::ESplashType)(self->s.skinNum & 255), count);
 			}
 			break;
 		}

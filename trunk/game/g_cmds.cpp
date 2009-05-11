@@ -633,7 +633,6 @@ uint32 Sys_Milliseconds ()
 
 
 void SP_misc_explobox (edict_t *self);
-CBaseItem *FindItem_OldStyle (char *name);
 
 void Cmd_Test_f (edict_t *ent)
 {
