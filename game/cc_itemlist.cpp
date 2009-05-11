@@ -98,20 +98,17 @@ CBaseItem *FindItem (char *name)
 	return NULL;
 }
 
-CBaseItem *FindItem_OldStyle (char *name)
-{
-	// Check through the itemlist
-	CBaseItem *Item;
-	for (int i = 0; i < GetNumItems(); i++)
-	{
-		Item = GetItemByIndex(i);
-		if (Q_stricmp(Item->Name, name) == 0)
-			return Item;
-	}
-	return NULL;
-}
-
-// Forces an add
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CBaseItem::Add (edict_t *ent, int quantity)
+///
+/// \brief	Adds 'quantity' amount of this to 'ent' (ignores any max)
+///
+/// \author	Paril
+/// \date	5/9/2009
+///
+/// \param	ent		 - If non-null, the entity to add the amount to. 
+/// \param	quantity - The amount to add. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
 void CBaseItem::Add (edict_t *ent, int quantity)
 {
 	ent->client->pers.Inventory.Add(this, quantity);

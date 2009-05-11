@@ -1,3 +1,8 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \file	game\cc_tent.cpp
+///
+/// \brief	Implements the temporary entity classes.
+////////////////////////////////////////////////////////////////////////////////////////////////////
 /*
 Copyright (C) 1997-2001 Id Software, Inc.
 
@@ -33,70 +38,103 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 
-// A small class to automatically multicast and do the first two writebytes.
-class TECast
+TECast::TECast (vec3_t Origin, byte Enum, ECastFlags castFlags)
 {
-	vec3_t Or;
-	ECastFlags castType;
+	Vec3Copy (Origin, Or);
+	castType = castFlags;
 
-public:
-	TECast (vec3_t Origin, byte Enum, ECastFlags castFlags = CASTFLAG_PVS)
-	{
-		Vec3Copy (Origin, Or);
-		castType = castFlags;
-
-		WriteByte (SVC_TEMP_ENTITY);
-		WriteByte (Enum);
-	};
-	~TECast ()
-	{
-		Cast (castType, Or);
-	}
+	WriteByte (SVC_TEMP_ENTITY);
+	WriteByte (Enum);
 };
 
-class MultiCast
+TECast::~TECast ()
 {
-	vec3_t Or;
-	ECastFlags castType;
+	Cast (castType, Or);
+};
 
-public:
-	MultiCast (vec3_t Origin, byte Enum, ECastFlags castFlags = CASTFLAG_PVS)
-	{
-		Vec3Copy (Origin, Or);
-		castType = castFlags;
+MultiCast::MultiCast(vec3_t Origin, byte Enum, ECastFlags castFlags)
+{
+	Vec3Copy (Origin, Or);
+	castType = castFlags;
 
-		WriteByte (Enum);
-	};
-	~MultiCast ()
-	{
-		Cast (castType, Or);
-	}
+	WriteByte (Enum);
+};
+
+MultiCast::~MultiCast ()
+{
+	Cast (castType, Or);
 };
 
 CTEnt TempEnts;
 
-void CTEnt::CTEnt_Splashes::Gunshot (vec3_t Origin, vec3_t Plane)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Splashes::Gunshot (vec3_t Origin, vec3_t Plane)
+///
+/// \brief	Gunshot effect
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Origin	 - The origin. 
+/// \param	Plane	 - The plane. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Splashes::Gunshot (vec3_t Origin, vec3_t Plane)
 {
 	TECast cast(Origin, TE_GUNSHOT);
 	WritePosition (Origin);
 	WriteDirection (Plane ? Plane : vec3Origin);
 }
 
-void CTEnt::CTEnt_Splashes::Shotgun (vec3_t Origin, vec3_t Plane)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Splashes::Shotgun (vec3_t Origin, vec3_t Plane)
+///
+/// \brief	Shotgun splash (less ricochet sounds)
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Origin	 - The origin. 
+/// \param	Plane	 - The plane. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Splashes::Shotgun (vec3_t Origin, vec3_t Plane)
 {
 	TECast cast(Origin, TE_SHOTGUN);
 	WritePosition (Origin);
 	WriteDirection (Plane ? Plane : vec3Origin);
 }
 
-void CTEnt::CTEnt_Splashes::Blood (vec3_t Origin, vec3_t Plane, EBloodType BloodType)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Splashes::Blood (vec3_t Origin, vec3_t Plane, EBloodType BloodType)
+///
+/// \brief	Blood splash. 
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Origin		 - The origin. 
+/// \param	Plane		 - The plane. 
+/// \param	BloodType	 - Type of blood. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Splashes::Blood (vec3_t Origin, vec3_t Plane, EBloodType BloodType)
 {
 	TECast cast(Origin, BloodType);
 	WritePosition (Origin);
 	WriteDirection (Plane ? Plane : vec3Origin);
 }
 
-void CTEnt::CTEnt_Splashes::Blaster (vec3_t Origin, vec3_t Plane, EBlasterType BlasterType)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Splashes::Blaster (vec3_t Origin, vec3_t Plane, EBlasterType BlasterType)
+///
+/// \brief	Blaster splash temp entity
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Origin		 - The origin. 
+/// \param	Plane		 - The plane. 
+/// \param	BlasterType	 - Type of blaster hit. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Splashes::Blaster (vec3_t Origin, vec3_t Plane, EBlasterType BlasterType)
 {
 	TECast cast(Origin, BlasterType);
 	WritePosition (Origin);
@@ -109,7 +147,22 @@ void CTEnt::CTEnt_Splashes::Blaster (vec3_t Origin, vec3_t Plane, EBlasterType B
 		WriteDirection (Plane ? Plane : vec3Origin);
 }
 
-void CTEnt::CTEnt_Splashes::Sparks (vec3_t Origin, vec3_t Plane, ESparkType SparkType, ESplashType color, byte amount)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Splashes::Sparks (vec3_t Origin, vec3_t Plane, ESparkType SparkType,
+/// 	ESplashType color, byte amount)
+///
+/// \brief	Sparks temporary entities
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Origin		 - The origin. 
+/// \param	Plane		 - The plane. 
+/// \param	SparkType	 - Type of the spark. 
+/// \param	color		 - The color. 
+/// \param	amount		 - The amount. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Splashes::Sparks (vec3_t Origin, vec3_t Plane, ESparkType SparkType, ESplashType color, byte amount)
 {
 	TECast cast(Origin, SparkType);
 
@@ -127,7 +180,21 @@ void CTEnt::CTEnt_Splashes::Sparks (vec3_t Origin, vec3_t Plane, ESparkType Spar
 	}
 }
 
-void CTEnt::CTEnt_Splashes::Splash (vec3_t Origin, vec3_t Plane, ESplashType color, byte amount)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Splashes::Splash (vec3_t Origin, vec3_t Plane, ESplashType color,
+/// 	byte amount)
+///
+/// \brief	Splash temporary entities
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Origin	 - The origin. 
+/// \param	Plane	 - The plane. 
+/// \param	color	 - The color. 
+/// \param	amount	 - The amount. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Splashes::Splash (vec3_t Origin, vec3_t Plane, ESplashType color, byte amount)
 {
 	TECast cast(Origin, TE_SPLASH);
 	WriteByte (amount);
@@ -136,14 +203,43 @@ void CTEnt::CTEnt_Splashes::Splash (vec3_t Origin, vec3_t Plane, ESplashType col
 	WriteByte (color);
 }
 
-void CTEnt::CTEnt_Splashes::ShieldSparks (vec3_t Origin, vec3_t Plane, bool Screen)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Splashes::ShieldSparks (vec3_t Origin, vec3_t Plane, bool Screen)
+///
+/// \brief	Power Shield/Screen sparks
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Origin	 - The origin. 
+/// \param	Plane	 - The plane. 
+/// \param	Screen	 - True if power screen sparks. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Splashes::ShieldSparks (vec3_t Origin, vec3_t Plane, bool Screen)
 {
 	TECast cast(Origin, Screen ? TE_SCREEN_SPARKS : TE_SHIELD_SPARKS);
 	WritePosition (Origin);
 	WriteDirection (Plane ? Plane : vec3Origin);
 }
 
-void CTEnt::CTEnt_Splashes::Steam (vec3_t Origin, vec3_t Normal, byte count, ESplashType color, short magnitude, short id, long endTime)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Splashes::Steam (vec3_t Origin, vec3_t Normal, byte count,
+/// 	ESplashType color, short magnitude, short id, long endTime)
+///
+/// \brief	Steam temporary entity
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Origin		 - The origin. 
+/// \param	Normal		 - The normal. 
+/// \param	count		 - Number of steam particles. 
+/// \param	color		 - The color. 
+/// \param	magnitude	 - The magnitude of the steam. 
+/// \param	id			 - The identifier (normally -1). 
+/// \param	endTime		 - Time till end of sparks. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Splashes::Steam (vec3_t Origin, vec3_t Normal, byte count, ESplashType color, short magnitude, short id, long endTime)
 {
 	TECast cast(Origin, TE_STEAM);
 	WriteShort (id);
@@ -158,22 +254,53 @@ void CTEnt::CTEnt_Splashes::Steam (vec3_t Origin, vec3_t Normal, byte count, ESp
 		WriteLong (endTime);
 }
 
-void CTEnt::CTEnt_Splashes::HeatSteam (vec3_t Origin, vec3_t Normal)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Splashes::HeatSteam (vec3_t Origin, vec3_t Normal)
+///
+/// \brief	Heat steam (from the Heat Beam)
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Origin	 - The origin. 
+/// \param	Normal	 - The normal. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Splashes::HeatSteam (vec3_t Origin, vec3_t Normal)
 {
 	TECast cast(Origin, TE_HEATBEAM_STEAM);
 	WritePosition (Origin);
 	WriteDirection (Normal ? Normal : vec3Origin);
 }
 
-void CTEnt::CTEnt_Splashes::ChainfistSmoke (vec3_t Origin)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Splashes::ChainfistSmoke (vec3_t Origin)
+///
+/// \brief	Chainfist smoke
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Origin	 - The origin. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Splashes::ChainfistSmoke (vec3_t Origin)
 {
 	TECast cast(Origin, TE_CHAINFIST_SMOKE);
 	WritePosition (Origin);
 }
 
-// Trails
-// Quick function to write the two/three required args
-void BaseTrail (vec3_t Start, vec3_t End, short Ent = -1)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	static void BaseTrail (vec3_t Start, vec3_t End, short Ent = -1)
+///
+/// \brief	Writes the first few info needed for a trail
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Start	 - The start. 
+/// \param	End		 - The end. 
+/// \param	Ent		 - The entity (ent - g_edicts). 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+static void BaseTrail (vec3_t Start, vec3_t End, short Ent = -1)
 {
 	if (Ent != -1)
 		WriteShort (Ent);
@@ -181,39 +308,109 @@ void BaseTrail (vec3_t Start, vec3_t End, short Ent = -1)
 	WritePosition (End);
 }
 
-void CTEnt::CTEnt_Trails::RailTrail (vec3_t Start, vec3_t End)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Trails::RailTrail (vec3_t Start, vec3_t End)
+///
+/// \brief	Railgun trail
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Start	 - The start. 
+/// \param	End		 - The end. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Trails::RailTrail (vec3_t Start, vec3_t End)
 {
 	TECast cast(Start, TE_RAILTRAIL);
 	BaseTrail(Start, End);
 }
 
-// Bubbletrail2 doesn't do anything different apparently.
-void CTEnt::CTEnt_Trails::BubbleTrail (vec3_t Start, vec3_t End)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Trails::BubbleTrail (vec3_t Start, vec3_t End)
+///
+/// \brief	Bubble trail
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Start	 - The start. 
+/// \param	End		 - The end. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Trails::BubbleTrail (vec3_t Start, vec3_t End)
 {
 	TECast cast(Start, TE_BUBBLETRAIL);
 	BaseTrail(Start, End);
 }
 
-void CTEnt::CTEnt_Trails::FleshCable (vec3_t Start, vec3_t End, short Ent)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Trails::FleshCable (vec3_t Start, vec3_t End, short Ent)
+///
+/// \brief	Flesh cable (medic, parasite, etc)
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Start	 - The start. 
+/// \param	End		 - The end. 
+/// \param	Ent		 - The ent. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Trails::FleshCable (vec3_t Start, vec3_t End, short Ent)
 {
 	TECast cast(Start, TE_PARASITE_ATTACK);
 	BaseTrail(Start, End, Ent);
 }
 
-void CTEnt::CTEnt_Trails::BFGLaser (vec3_t Start, vec3_t End)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Trails::BFGLaser (vec3_t Start, vec3_t End)
+///
+/// \brief	The BFG green laser
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Start	 - The start. 
+/// \param	End		 - The end. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Trails::BFGLaser (vec3_t Start, vec3_t End)
 {
 	TECast cast(Start, TE_BFG_LASER);
 	BaseTrail(Start, End);
 }
 
-void CTEnt::CTEnt_Trails::GrappleCable (vec3_t Start, vec3_t End, short Ent, vec3_t Offset)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Trails::GrappleCable (vec3_t Start, vec3_t End, short Ent, vec3_t Offset)
+///
+/// \brief	Grappling hook trail
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Start	 - The start. 
+/// \param	End		 - The end. 
+/// \param	Ent		 - The ent. 
+/// \param	Offset	 - The offset. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Trails::GrappleCable (vec3_t Start, vec3_t End, short Ent, vec3_t Offset)
 {
 	TECast cast(Start, TE_GRAPPLE_CABLE);
 	BaseTrail(Start, End, Ent);
 	WritePosition (Offset);
 }
 
-void CTEnt::CTEnt_Trails::Lightning (vec3_t Start, vec3_t End, short SrcEnt, short DestEnt)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Trails::Lightning (vec3_t Start, vec3_t End, short SrcEnt, short DestEnt)
+///
+/// \brief	Lightning, from tesla
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Start	 - The start. 
+/// \param	End		 - The end. 
+/// \param	SrcEnt	 - Source entity. 
+/// \param	DestEnt	 - Destination entity. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Trails::Lightning (vec3_t Start, vec3_t End, short SrcEnt, short DestEnt)
 {
 	TECast cast(Start, TE_LIGHTNING);
 	WriteShort (SrcEnt);
@@ -221,64 +418,176 @@ void CTEnt::CTEnt_Trails::Lightning (vec3_t Start, vec3_t End, short SrcEnt, sho
 	BaseTrail(Start, End);
 }
 
-void CTEnt::CTEnt_Trails::DebugTrail (vec3_t Start, vec3_t End)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Trails::DebugTrail (vec3_t Start, vec3_t End)
+///
+/// \brief	Debug trail (slow fading blue trail)
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Start	 - The start. 
+/// \param	End		 - The end. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Trails::DebugTrail (vec3_t Start, vec3_t End)
 {
 	TECast cast(Start, TE_DEBUGTRAIL);
 	BaseTrail(Start, End);
 }
 
-void CTEnt::CTEnt_Trails::ForceWall (vec3_t Start, vec3_t End, byte color)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Trails::ForceWall (vec3_t Start, vec3_t End, byte color)
+///
+/// \brief	Sweet effect, particles rain down from start to end
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Start	 - The start. 
+/// \param	End		 - The end. 
+/// \param	color	 - The color. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Trails::ForceWall (vec3_t Start, vec3_t End, byte color)
 {
 	TECast cast(Start, TE_FORCEWALL);
 	BaseTrail(Start, End);
 	WriteByte (color);
 }
 
-void CTEnt::CTEnt_Trails::HeatBeam (vec3_t Start, vec3_t End, short Ent, bool Monster)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Trails::HeatBeam (vec3_t Start, vec3_t End, short Ent, bool Monster)
+///
+/// \brief	Heat Beam itself.
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Start	 - The start. 
+/// \param	End		 - The end. 
+/// \param	Ent		 - The entity. 
+/// \param	Monster	 - If true, uses a special monster origin. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Trails::HeatBeam (vec3_t Start, vec3_t End, short Ent, bool Monster)
 {
 	TECast cast(Start, Monster ? TE_MONSTER_HEATBEAM : TE_HEATBEAM);
 	BaseTrail(Start, End, Ent);
 }
 
-// Explosions
-void CTEnt::CTEnt_Explosions::RocketExplosion (vec3_t Start, edict_t *ent, bool Water, bool Particles)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Explosions::RocketExplosion (vec3_t Start, edict_t *ent, bool Water,
+/// 	bool Particles)
+///
+/// \brief	The rocket explosion. Note that Water + (Particles = false) = Water!
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Start		 - The start. 
+/// \param	ent			 - If non-null, the ent. 
+/// \param	Water		 - true to water.
+/// \param	Particles	 - true to particles. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Explosions::RocketExplosion (vec3_t Start, edict_t *ent, bool Water, bool Particles)
 {
 	// Water and NoParticles fight over a spot.. water will win, in the end
 	TECast cast (ent->s.origin, Water ? TE_ROCKET_EXPLOSION_WATER : (Particles ? TE_ROCKET_EXPLOSION : TE_EXPLOSION1_NP), CASTFLAG_PVS);
 	WritePosition (Start);
 }
 
-void CTEnt::CTEnt_Explosions::GrenadeExplosion (vec3_t Start, edict_t *ent, bool Water)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Explosions::GrenadeExplosion (vec3_t Start, edict_t *ent, bool Water)
+///
+/// \brief	Grenade explosion
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Start	 - The start. 
+/// \param	ent		 - If non-null, the ent. 
+/// \param	Water	 - true to water. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Explosions::GrenadeExplosion (vec3_t Start, edict_t *ent, bool Water)
 {
 	TECast cast (ent->s.origin, Water ? TE_GRENADE_EXPLOSION_WATER : TE_GRENADE_EXPLOSION, CASTFLAG_PVS);
 	WritePosition (Start);
 }
 
-void CTEnt::CTEnt_Explosions::BFGExplosion (vec3_t Origin, bool Big)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Explosions::BFGExplosion (vec3_t Origin, bool Big)
+///
+/// \brief	BFG Explosion
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Origin	 - The origin. 
+/// \param	Big		 - If true, uses big explosion.
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Explosions::BFGExplosion (vec3_t Origin, bool Big)
 {
 	TECast cast (Origin, Big ? TE_BFG_BIGEXPLOSION : TE_BFG_EXPLOSION);
 	WritePosition (Origin);
 }
 
-void CTEnt::CTEnt_Explosions::PlasmaExplosion (vec3_t Origin)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Explosions::PlasmaExplosion (vec3_t Origin)
+///
+/// \brief	Plasma explosion
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Origin	 - The origin. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Explosions::PlasmaExplosion (vec3_t Origin)
 {
 	TECast cast (Origin, TE_PLASMA_EXPLOSION);
 	WritePosition (Origin);
 }
 
-void CTEnt::CTEnt_Explosions::TrackerExplosion (vec3_t Origin)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Explosions::TrackerExplosion (vec3_t Origin)
+///
+/// \brief	Tracker explosion
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Origin	 - The origin. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Explosions::TrackerExplosion (vec3_t Origin)
 {
 	TECast cast (Origin, TE_TRACKER_EXPLOSION);
 	WritePosition (Origin);
 }
 
-void CTEnt::CTEnt_Explosions::NukeBlast (vec3_t Origin)
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt_Explosions::NukeBlast (vec3_t Origin)
+///
+/// \brief	Nuke blast
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Origin	 - The origin. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt_Explosions::NukeBlast (vec3_t Origin)
 {
 	TECast cast (Origin, TE_NUKEBLAST);
 	WritePosition (Origin);
 }
 
-// Others
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt::Flashlight (vec3_t Origin, short Ent)
+///
+/// \brief	The flashlight temporary entity (bright white light)
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Origin	 - The origin. 
+/// \param	Ent		 - The ent. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
 void CTEnt::Flashlight (vec3_t Origin, short Ent)
 {
 	TECast cast(Origin, TE_FLASHLIGHT);
@@ -286,18 +595,49 @@ void CTEnt::Flashlight (vec3_t Origin, short Ent)
 	WriteShort (Ent);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt::BossTeleport (vec3_t Origin)
+///
+/// \brief	Boss teleport. 
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Origin	 - The origin. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
 void CTEnt::BossTeleport (vec3_t Origin)
 {
 	TECast cast(Origin, TE_BOSSTPORT);
 	WritePosition(Origin);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt::TeleportEffect (vec3_t Origin)
+///
+/// \brief	Teleport effect. 
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Origin	 - The origin. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
 void CTEnt::TeleportEffect (vec3_t Origin)
 {
 	TECast cast(Origin, TE_TELEPORT_EFFECT);
 	WritePosition(Origin);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt::WidowBeamOut (vec3_t Origin, short id)
+///
+/// \brief	Widow beam-out effect. 
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Origin	 - The origin. 
+/// \param	id		 - The identifier. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
 void CTEnt::WidowBeamOut (vec3_t Origin, short id)
 {
 	TECast cast(Origin, TE_WIDOWBEAMOUT);
@@ -305,12 +645,34 @@ void CTEnt::WidowBeamOut (vec3_t Origin, short id)
 	WritePosition(Origin);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt::WidowSplash (vec3_t Origin)
+///
+/// \brief	Widow splash. 
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Origin	 - The origin. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
 void CTEnt::WidowSplash (vec3_t Origin)
 {
 	TECast cast(Origin, TE_WIDOWSPLASH);
 	WritePosition(Origin);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt::MuzzleFlash (vec3_t Origin, short Ent, short id)
+///
+/// \brief	Muzzle flash. 
+///
+/// \author	Paril
+/// \date	5/10/2009
+///
+/// \param	Origin	 - The origin. 
+/// \param	Ent		 - The ent. 
+/// \param	id		 - The identifier. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
 void CTEnt::MuzzleFlash (vec3_t Origin, short Ent, short id)
 {
 	MultiCast cast (Origin, SVC_MUZZLEFLASH);

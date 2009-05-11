@@ -1,3 +1,8 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \file	game\cc_tent.h
+///
+/// \brief	Declares the temporary entity classes.
+////////////////////////////////////////////////////////////////////////////////////////////////////
 /*
 Copyright (C) 1997-2001 Id Software, Inc.
 
@@ -31,93 +36,243 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // A huge class containing containers to spawn temp entities with a single function call.
 //
 
-// FIXME: Any way we could specify unicast/multicast seperately and
-// cast type??
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \class	CTEnt_Splashes
+///
+/// \brief	Temporary entity splashes
+///
+/// \author	Paril
+/// \date	5/10/2009
+////////////////////////////////////////////////////////////////////////////////////////////////////
+class CTEnt_Splashes
+{
+public:
+	enum ESplashType
+	{
+		SPTUnknown = 0,
+		SPTSparks,
+		SPTWater,
+		SPTMud,
+		SPTSlime,
+		SPTLava,
+		SPTBlood
+	};
+	enum EBloodType
+	{
+		BTBlood = TE_BLOOD,
+		BTMoreBlood = TE_MOREBLOOD,
+		BTGreenBlood = TE_GREENBLOOD
+	};
+	enum EBlasterType
+	{
+		BLBlaster = TE_BLASTER,
+		BLBlueHyperblaster = TE_BLUEHYPERBLASTER,
+		BLFlechette = TE_FLECHETTE,
+		BLGreenBlaster = TE_BLASTER2
+	};
+	enum ESparkType
+	{
+		STSparks = TE_SPARKS,
+		STBulletSparks = TE_BULLET_SPARKS,
+		STHeatbeamSparks = TE_HEATBEAM_SPARKS,
+		STElectricSparks = TE_ELECTRIC_SPARKS,
+
+		// Ones that have amount/color
+		STLaserSparks = TE_LASER_SPARKS,
+		STWeldingSparks = TE_WELDING_SPARKS,
+		STTunnelSparks = TE_TUNNEL_SPARKS
+	};
+
+	void Gunshot	(vec3_t Origin,
+					vec3_t Normal);
+
+	void Shotgun	(vec3_t Origin,
+					vec3_t Normal);
+
+	void Blood	(vec3_t Origin,
+				vec3_t Normal,
+				EBloodType BloodType = BTBlood);
+
+	void Blaster	(vec3_t Origin,
+					vec3_t Normal,
+					EBlasterType BlasterType = BLBlaster);
+
+	void Sparks	(vec3_t Origin,
+				vec3_t Normal,
+				ESparkType SparkType = STSparks,
+				ESplashType color = SPTUnknown,
+				byte amount = 8);
+
+	void Splash	(vec3_t Origin,
+				vec3_t Normal,
+				ESplashType color = SPTUnknown,
+				byte amount = 8);
+
+	void ShieldSparks	(vec3_t Origin,
+						vec3_t Normal,
+						bool Screen = false);
+
+	void Steam	(vec3_t Origin,
+				vec3_t Normal,
+				byte count = 8,
+				ESplashType color = SPTUnknown,
+				short magnitude = 12,
+				short id = -1,
+				long endTime = 0);
+
+	void HeatSteam	(vec3_t Origin,
+					vec3_t Normal);
+
+	void ChainfistSmoke	(vec3_t Origin);
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \class	CTEnt_Trails
+///
+/// \brief	Temporary entities that deal with trails (start & end)
+///
+/// \author	Paril
+/// \date	5/10/2009
+////////////////////////////////////////////////////////////////////////////////////////////////////
+class CTEnt_Trails
+{
+public:
+	void RailTrail	(vec3_t Start,
+					vec3_t End);
+
+	void HeatBeam	(vec3_t Start,
+					vec3_t End,
+					short Ent,
+					bool Monster = false);
+
+	void ForceWall	(vec3_t Start,
+					vec3_t End,
+					byte color = Colors.Lime);
+
+	void DebugTrail	(vec3_t Start,
+					vec3_t End);
+
+	void Lightning	(vec3_t Start,
+					vec3_t End,
+					short SrcEnt,
+					short DestEnt);
+
+	void GrappleCable	(vec3_t Start,
+						vec3_t End,
+						short Ent,
+						vec3_t Offset = vec3Origin);
+
+	void BFGLaser	(vec3_t Start,
+					vec3_t End);
+
+	void FleshCable		(vec3_t Start,
+						vec3_t End,
+						short Ent);
+	void BubbleTrail	(vec3_t Start,
+						vec3_t End);
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \class	CTEnt_Explosions
+///
+/// \brief	Temporary entity explosions
+///
+/// \author	Paril
+/// \date	5/10/2009
+////////////////////////////////////////////////////////////////////////////////////////////////////
+class CTEnt_Explosions
+{
+public:
+	void RocketExplosion	(vec3_t Origin, edict_t *ent,
+							bool Water = false,
+							bool Particles = true);
+
+	void GrenadeExplosion	(vec3_t Origin,
+							edict_t *ent,
+							bool Water = false);
+
+	void BFGExplosion		(vec3_t Origin,
+							bool Big = false);
+
+	void PlasmaExplosion	(vec3_t Origin);
+
+	void TrackerExplosion	(vec3_t Origin);
+
+	void NukeBlast			(vec3_t Origin);
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \class	CTEnt
+///
+/// \brief	Implements all temporary entities above and new ones
+///
+/// \author	Paril
+/// \date	5/10/2009
+////////////////////////////////////////////////////////////////////////////////////////////////////
 class CTEnt
 {
 public:
-	class CTEnt_Splashes
-	{
-	public:
-		enum ESplashType
-		{
-			SPTUnknown = 0,
-			SPTSparks,
-			SPTWater,
-			SPTMud,
-			SPTSlime,
-			SPTLava,
-			SPTBlood
-		};
-		enum EBloodType
-		{
-			BTBlood = TE_BLOOD,
-			BTMoreBlood = TE_MOREBLOOD,
-			BTGreenBlood = TE_GREENBLOOD
-		};
-		enum EBlasterType
-		{
-			BLBlaster = TE_BLASTER,
-			BLBlueHyperblaster = TE_BLUEHYPERBLASTER,
-			BLFlechette = TE_FLECHETTE,
-			BLGreenBlaster = TE_BLASTER2
-		};
-		enum ESparkType
-		{
-			STSparks = TE_SPARKS,
-			STBulletSparks = TE_BULLET_SPARKS,
-			STHeatbeamSparks = TE_HEATBEAM_SPARKS,
-			STElectricSparks = TE_ELECTRIC_SPARKS,
+	CTEnt_Splashes		Splashes;
+	CTEnt_Trails		Trails;
+	CTEnt_Explosions	Explosions;
 
-			// Ones that have amount/color
-			STLaserSparks = TE_LASER_SPARKS,
-			STWeldingSparks = TE_WELDING_SPARKS,
-			STTunnelSparks = TE_TUNNEL_SPARKS
-		};
+	// These don't go under either of the categories above
+	void Flashlight		(vec3_t Origin,
+						short Ent);
 
-		void Gunshot (vec3_t Origin, vec3_t Normal);
-		void Shotgun (vec3_t Origin, vec3_t Normal);
-		void Blood (vec3_t Origin, vec3_t Normal, EBloodType BloodType = BTBlood);
-		void Blaster (vec3_t Origin, vec3_t Normal, EBlasterType BlasterType = BLBlaster);
-		void Sparks (vec3_t Origin, vec3_t Normal, ESparkType SparkType = STSparks, ESplashType color = SPTUnknown, byte amount = 8);
-		void Splash (vec3_t Origin, vec3_t Normal, ESplashType color = SPTUnknown, byte amount = 8);
-		void ShieldSparks (vec3_t Origin, vec3_t Normal, bool Screen = false);
-		void Steam (vec3_t Origin, vec3_t Normal, byte count = 8, ESplashType color = SPTUnknown, short magnitude = 12, short id = -1, long endTime = 0);
-		void HeatSteam (vec3_t Origin, vec3_t Normal);
-		void ChainfistSmoke (vec3_t Origin);
-	} Splashes;
-	class CTEnt_Trails
-	{
-	public:
-		void RailTrail (vec3_t Start, vec3_t End);
-		void HeatBeam (vec3_t Start, vec3_t End, short Ent, bool Monster = false);
-		void ForceWall (vec3_t Start, vec3_t End, byte color = Colors.Lime);
-		void DebugTrail (vec3_t Start, vec3_t End);
-		void Lightning (vec3_t Start, vec3_t End, short SrcEnt, short DestEnt);
-		void GrappleCable (vec3_t Start, vec3_t End, short Ent, vec3_t Offset = vec3Origin);
-		void BFGLaser (vec3_t Start, vec3_t End);
-		void FleshCable (vec3_t Start, vec3_t End, short Ent);
-		void BubbleTrail (vec3_t Start, vec3_t End);
-	} Trails;
-	class CTEnt_Explosions
-	{
-	public:
-		void RocketExplosion (vec3_t Origin, edict_t *ent, bool Water = false, bool Particles = true);
-		void GrenadeExplosion (vec3_t Origin, edict_t *ent, bool Water = false);
-		void BFGExplosion (vec3_t Origin, bool Big = false);
-		void PlasmaExplosion (vec3_t Origin);
-		void TrackerExplosion (vec3_t Origin);
-		void NukeBlast (vec3_t Origin);
-	} Explosions;
+	void BossTeleport	(vec3_t Origin);
 
-	// These.. don't go under either of the categories above... FIXME?
-	void Flashlight (vec3_t Origin, short Ent);
-	void BossTeleport (vec3_t Origin);
-	void TeleportEffect (vec3_t Origin);
-	void WidowBeamOut (vec3_t Origin, short id = -1);
-	void WidowSplash (vec3_t Origin);
+	void TeleportEffect	(vec3_t Origin);
 
-	void MuzzleFlash (vec3_t Origin, short Ent, short id);
+	void WidowBeamOut	(vec3_t Origin,
+						short id = -1);
+
+	void WidowSplash	(vec3_t Origin);
+
+	void MuzzleFlash	(vec3_t Origin,
+						short Ent,
+						short id);
+};
+
+enum ECastType
+{
+	// Cast type
+	CAST_MULTI,
+	CAST_UNI
+};
+enum ECastFlags
+{
+	CASTFLAG_PVS = 1,
+	CASTFLAG_PHS = 2,
+	CASTFLAG_RELIABLE = 4
+};
+
+/// A small class to automatically multicast and do the first two writebytes.
+class TECast
+{
+	vec3_t Or;
+	ECastFlags castType;
+
+public:
+	TECast	(vec3_t Origin,
+		byte Enum,
+		ECastFlags castFlags = CASTFLAG_PVS);
+
+	~TECast ();
+};
+
+/// Automatically sets up the multicasting for regular casts
+class MultiCast
+{
+	vec3_t Or;
+	ECastFlags castType;
+
+public:
+	MultiCast	(vec3_t Origin,
+				byte Enum,
+				ECastFlags castFlags = CASTFLAG_PVS);
+
+	~MultiCast ();
 };
 
 extern CTEnt TempEnts;
