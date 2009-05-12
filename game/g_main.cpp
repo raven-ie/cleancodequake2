@@ -464,5 +464,6 @@ void G_RunFrame (void)
 #if 0
 	DrawNewton();
 #endif
+	RunNodes();
 }
 

@@ -38,7 +38,7 @@ CHyperBlaster WeaponHyperBlaster;
 
 CHyperBlaster::CHyperBlaster() :
 CWeapon("models/weapons/v_hyperb/tris.md2", 0, 5, 6, 15,
-		22, 19, 50, 3)
+		20, 29, 50, 3)
 {
 }
 

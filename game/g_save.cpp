@@ -190,6 +190,7 @@ void G_Register ()
 	sv_maplist = new CCvar ("sv_maplist", "", 0);
 
 	Cmd_Register ();
+	InitNodes ();
 }
 
 void InitGame (void)
