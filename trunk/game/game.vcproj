@@ -1082,6 +1082,18 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="Pathfinding"
+				>
+				<File
+					RelativePath=".\cc_pathfinding.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_pathfinding.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 	</Files>
 	<Globals>

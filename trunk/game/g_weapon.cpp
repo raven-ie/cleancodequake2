@@ -364,7 +364,7 @@ void fire_blaster (edict_t *self, vec3_t start, vec3_t dir, int damage, int spee
 	if (tr.fraction < 1.0)
 	{
 		Vec3MA (bolt->s.origin, -10, dir, bolt->s.origin);
-		bolt->touch (bolt, tr.ent, NULL, NULL);
+		bolt->touch (bolt, tr.ent, &tr.plane, tr.surface);
 	}
 }	
 
