@@ -151,10 +151,14 @@ void CWeaponItem::Use (edict_t *ent)
 void CWeaponItem::Drop (edict_t *ent)
 {
 	DropItem(ent);
-	ent->client->pers.Inventory -= this;
 
-	if (this->Weapon == ent->client->pers.Weapon)
-		ent->client->pers.Weapon->NoAmmoWeaponChange(ent);
+	if (ent->client)
+	{
+		ent->client->pers.Inventory -= this;
+
+		if (this->Weapon == ent->client->pers.Weapon)
+			ent->client->pers.Weapon->NoAmmoWeaponChange(ent);
+	}
 }
 
 void InitItemMaxValues (edict_t *ent)

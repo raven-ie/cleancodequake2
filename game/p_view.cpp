@@ -496,6 +496,9 @@ static inline void P_FallingDamage (edict_t *ent)
 	int		damage;
 	vec3_t	dir;
 
+	if (dmFlags.dfNoFallingDamage)
+		return;
+
 	if (ent->s.modelIndex != 255)
 		return;		// not in the player model
 
