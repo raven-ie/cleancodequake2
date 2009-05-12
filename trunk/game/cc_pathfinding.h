@@ -51,6 +51,7 @@ public:
 	edict_t						*Ent; // Node entity
 
 	std::vector<CPathNode*>		Children;	// Children (connected nodes, basically)
+	edict_t						*LinkedEntity;
 	// Testing 2
 	uint32						G, F, H;
 	CPathNode					*Parent;

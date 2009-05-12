@@ -1834,8 +1834,6 @@ void teleporter_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurfa
 	edict_t		*dest;
 	int			i;
 
-	if (!other->client)
-		return;
 	dest = G_Find (NULL, FOFS(targetname), self->target);
 	if (!dest)
 	{
@@ -1852,22 +1850,32 @@ void teleporter_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurfa
 
 	// clear the velocity and hold them in place briefly
 	Vec3Clear (other->velocity);
-	other->client->ps.pMove.pmTime = 160>>3;		// hold time
-	other->client->ps.pMove.pmFlags |= PMF_TIME_TELEPORT;
+	if (other->client)
+	{
+		other->client->ps.pMove.pmTime = 160>>3;		// hold time
+		other->client->ps.pMove.pmFlags |= PMF_TIME_TELEPORT;
+	}
 
 	// draw the teleport splash at source and on the player
 //	self->owner->s.event = EV_PLAYER_TELEPORT;
-	other->s.event = EV_PLAYER_TELEPORT;
+	if (other->client)
+		other->s.event = EV_PLAYER_TELEPORT;
+	else
+		other->s.event = EV_OTHER_TELEPORT;
 
 	// set angles
-	for (i=0 ; i<3 ; i++)
+	if (other->client)
 	{
-		other->client->ps.pMove.deltaAngles[i] = ANGLE2SHORT(dest->s.angles[i] - other->client->resp.cmd_angles[i]);
+		for (i=0 ; i<3 ; i++)
+			other->client->ps.pMove.deltaAngles[i] = ANGLE2SHORT(dest->s.angles[i] - other->client->resp.cmd_angles[i]);
 	}
 
 	Vec3Clear (other->s.angles);
-	Vec3Clear (other->client->ps.viewAngles);
-	Vec3Clear (other->client->v_angle);
+	if (other->client)
+	{
+		Vec3Clear (other->client->ps.viewAngles);
+		Vec3Clear (other->client->v_angle);
+	}
 
 	// kill anything at the destination
 	KillBox (other);

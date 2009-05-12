@@ -290,7 +290,7 @@ void RunPlayerNodes (edict_t *ent)
 	{
 		vec3_t sub;
 		Vec3Subtract (ent->client->resp.LastNode->Origin, ent->s.origin, sub);
-		if (Vec3Length(sub) > 150)
+		if (Vec3Length(sub) > 64)
 		{
 			CPathNode *NewNode = DropNode(ent);
 			ConnectNode (NewNode->NodeId, ent->client->resp.LastNode->NodeId);
@@ -303,7 +303,7 @@ void RunNodes()
 {
 	for (uint32 i = 0; i < lastId; i++)
 	{
-		if (PlayerNearby(NodeList[i]->Origin, 100))
+		if (PlayerNearby(NodeList[i]->Origin, 250))
 		{
 			for (std::vector<CPathNode*>::iterator it = NodeList[i]->Children.begin(); it < NodeList[i]->Children.end(); it++ )
 			{
@@ -464,12 +464,12 @@ void Cmd_Node_f (edict_t *ent)
 		uint32 firstId = atoi(gi.argv(2));
 		uint32 secondId = atoi(gi.argv(3));
 
-		if (firstId > lastId)
+		if (firstId >= lastId)
 		{
 			gi.cprintf (ent, PRINT_HIGH, "Node %i doesn't exist!\n", firstId);
 			return;
 		}
-		if (secondId > lastId)
+		if (secondId >= lastId)
 		{
 			gi.cprintf (ent, PRINT_HIGH, "Node %i doesn't exist!\n", secondId);
 			return;
@@ -482,5 +482,71 @@ void Cmd_Node_f (edict_t *ent)
 	{
 		for (uint32 i = 0; i < lastId; i++)
 			NodeList[i]->Ent->s.modelIndex = ModelIndex("models/objects/grenade2/tris.md2");
+	}
+	else if (Q_stricmp(cmd, "settype") == 0)
+	{
+		if (!gi.argv(2) || (uint32)atoi(gi.argv(2)) >= lastId)
+			return;
+
+		CPathNode *Node = NodeList[atoi(gi.argv(2))];
+
+		if (Q_stricmp(gi.argv(3), "door") == 0)
+			Node->Type = NODE_DOOR;
+		else if (Q_stricmp(gi.argv(3), "jump") == 0)
+			Node->Type = NODE_PLATFORM;
+	}
+	else if (Q_stricmp(cmd, "linkwith") == 0)
+	{
+		if (!gi.argv(2) || (uint32)atoi(gi.argv(2)) >= lastId)
+			return;
+
+		CPathNode *Node = NodeList[atoi(gi.argv(2))];
+
+		vec3_t end, forward;
+		Angles_Vectors (ent->client->v_angle, forward, NULL, NULL);
+		Vec3MA (ent->s.origin, 8192, forward, end);
+
+		CTrace trace = CTrace(ent->s.origin, end, ent, CONTENTS_MASK_ALL);
+
+		if (trace.ent && trace.ent->model[0] == '*')
+		{
+			Node->LinkedEntity = trace.ent;
+			gi.dprintf ("Linked %u with %s\n", Node->NodeId, trace.ent->classname);
+		}
+	}
+	else if (Q_stricmp(cmd, "monstergoal") == 0)
+	{
+		vec3_t end, forward;
+		Angles_Vectors (ent->client->v_angle, forward, NULL, NULL);
+		Vec3MA (ent->s.origin, 8192, forward, end);
+
+		CTrace trace = CTrace(ent->s.origin, end, ent, CONTENTS_MASK_ALL);
+
+		if (trace.ent && trace.ent->Monster)
+		{
+			trace.ent->Monster->P_CurrentGoalNode = NodeList[atoi(gi.argv(3))];
+			trace.ent->Monster->P_CurrentNode = NodeList[atoi(gi.argv(2))];
+			trace.ent->Monster->FoundPath ();
+		}
+	}
+	else if (Q_stricmp (cmd, "move") == 0)
+	{
+		if (!gi.argv(2) || (uint32)atoi(gi.argv(2)) >= lastId)
+			return;
+
+		CPathNode *Node = NodeList[atoi(gi.argv(2))];
+
+		float x = atof(gi.argv(3));
+		float y = atof(gi.argv(4));
+		float z = atof(gi.argv(5));
+
+		Node->Origin[0] += x;
+		Node->Origin[1] += y;
+		Node->Origin[2] += z;
+
+		Node->Ent->s.origin[0] += x;
+		Node->Ent->s.origin[1] += y;
+		Node->Ent->s.origin[2] += z;
+		gi.linkentity(Node->Ent);
 	}
 }

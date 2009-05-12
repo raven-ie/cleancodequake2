@@ -586,6 +586,9 @@ void CFlyer::Dodge (edict_t *other, float eta)
 		WantsLeft = true;
 
 	CurrentMove = (WantsLeft) ? &FlyerMoveRollLeft : &FlyerMoveRollRight;
+
+	if (!Entity->enemy)
+		Entity->enemy = other;
 }
 #endif
 	

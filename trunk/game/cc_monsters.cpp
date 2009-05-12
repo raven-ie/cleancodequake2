@@ -34,6 +34,153 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_local.h"
 #define STEPSIZE	18
 
+void CMonster::FoundPath ()
+{
+	P_CurrentPath = new CPath(P_CurrentNode, P_CurrentGoalNode);
+
+	if (!P_CurrentPath->Path.size())
+	{
+		delete P_CurrentPath;
+
+		P_CurrentPath = NULL;
+		P_CurrentNode = P_CurrentGoalNode = NULL;
+		return;
+	}
+
+	FollowingPath = true;
+	Run ();
+}
+
+void CMonster::MoveToPath (float Dist)
+{
+	if (!Entity->groundentity && !(Entity->flags & (FL_FLY|FL_SWIM)))
+		return;
+
+	vec3_t sub;
+	bool doit = false;
+	// Check if we hit our new path.
+	Vec3Subtract (Entity->s.origin, P_CurrentNode->Origin, sub);
+
+	TempEnts.Trails.FleshCable (Entity->s.origin, P_CurrentNode->Origin, Entity-g_edicts);
+	if (Vec3Length (sub) < 30)
+	{
+		bool shouldJump = (P_CurrentNode->Type == NODE_PLATFORM);
+		// Hit the path.
+		if (P_CurrentPath->Path.size() > 1)
+		{
+			P_CurrentPath->Path.pop_back(); // Pop the last out of the stack
+			// Set our new path to the next node
+			P_CurrentNode = P_CurrentPath->Path.at(P_CurrentPath->Path.size()-1);
+			doit = true;
+			if (P_CurrentNode->Type == NODE_DOOR)
+				Stand (); // We stand, and wait.
+
+			if (shouldJump)
+			{
+				vec3_t sub2, forward;
+				Vec3Subtract (P_CurrentNode->Origin, Entity->s.origin, sub2);
+				Angles_Vectors (sub2, forward, NULL, NULL);
+				Vec3MA (Entity->velocity, 1, sub2, Entity->velocity);
+				Entity->velocity[2] = 250;
+				Entity->groundentity = NULL;
+				CheckGround();
+			}
+		}
+		else
+		{
+			FollowingPath = false;
+			Stand ();
+			return;
+		}
+	}
+
+// bump around...
+	if ( doit || (rand()&3)==1 || !StepDirection (IdealYaw, Dist))
+	{
+		if (Entity->inUse)
+		{
+			float	deltax,deltay;
+			vec3_t	d;
+			float	tdir, olddir, turnaround;
+
+			olddir = AngleModf ((int)(IdealYaw/45)*45);
+			turnaround = AngleModf (olddir - 180);
+
+			deltax = P_CurrentNode->Origin[0] - Entity->s.origin[0];
+			deltay = P_CurrentNode->Origin[1] - Entity->s.origin[1];
+			if (deltax>10)
+				d[1]= 0;
+			else if (deltax<-10)
+				d[1]= 180;
+			else
+				d[1]= DI_NODIR;
+			if (deltay<-10)
+				d[2]= 270;
+			else if (deltay>10)
+				d[2]= 90;
+			else
+				d[2]= DI_NODIR;
+
+		// try direct route
+			if (d[1] != DI_NODIR && d[2] != DI_NODIR)
+			{
+				if (d[1] == 0)
+					tdir = d[2] == 90 ? 45 : 315;
+				else
+					tdir = d[2] == 90 ? 135 : 215;
+					
+				if (tdir != turnaround && StepDirection(tdir, Dist))
+					return;
+			}
+
+		// try other directions
+			if ( ((rand()&3) & 1) ||  abs(deltay)>abs(deltax))
+			{
+				tdir=d[1];
+				d[1]=d[2];
+				d[2]=tdir;
+			}
+
+			if (d[1]!=DI_NODIR && d[1]!=turnaround 
+			&& StepDirection(d[1], Dist))
+					return;
+
+			if (d[2]!=DI_NODIR && d[2]!=turnaround
+			&& StepDirection(d[2], Dist))
+					return;
+
+		/* there is no direct path to the player, so pick another direction */
+
+			if (olddir!=DI_NODIR && StepDirection(olddir, Dist))
+					return;
+
+			if (rand()&1) 	/*randomly determine direction of search*/
+			{
+				for (tdir=0 ; tdir<=315 ; tdir += 45)
+					if (tdir!=turnaround && StepDirection(tdir, Dist) )
+							return;
+			}
+			else
+			{
+				for (tdir=315 ; tdir >=0 ; tdir -= 45)
+					if (tdir!=turnaround && StepDirection(tdir, Dist) )
+							return;
+			}
+
+			if (turnaround != DI_NODIR && StepDirection(turnaround, Dist) )
+					return;
+
+			IdealYaw = olddir;		// can't move
+
+		// if a bridge was pulled out from underneath a monster, it may not have
+		// a valid standing position at all
+
+			if (!CheckBottom ())
+				Entity->flags |= FL_PARTIALGROUND;
+		}
+	}
+}
+
 /*
 =================
 AI_SetSightClient
@@ -425,7 +572,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 
 
 	// don't go in to water
-	if (Entity->waterlevel == 0)
+	/*if (Entity->waterlevel == 0)
 	{
 		test[0] = trace.endPos[0];
 		test[1] = trace.endPos[1];
@@ -434,7 +581,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 
 		if (contents & CONTENTS_MASK_WATER)
 			return false;
-	}
+	}*/
 
 	if (trace.fraction == 1)
 	{
@@ -1200,6 +1347,12 @@ void CMonster::AI_Run(float Dist)
 	float		left, center, right;
 	vec3_t		left_target, right_target;
 
+	if (FollowingPath)
+	{
+		MoveToPath(Dist);
+		return;
+	}
+
 	// if we're going to a combat point, just proceed
 	if (AIFlags & AI_COMBAT_POINT)
 	{
@@ -1429,6 +1582,17 @@ void CMonster::AI_Stand (float Dist)
 {
 	if (Dist)
 		WalkMove (Entity->s.angles[YAW], Dist);
+
+	if (FollowingPath)
+	{
+		// Assuming we got here because we're waiting for something.
+		if (P_CurrentNode->Type == NODE_DOOR)
+		{
+			if (P_CurrentNode->LinkedEntity->moveinfo.state == 0)
+				Run(); // We can go again!
+		}
+		return;
+	}
 
 	if (AIFlags & AI_STAND_GROUND)
 	{

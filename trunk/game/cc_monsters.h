@@ -145,6 +145,16 @@ public:
 
 	uint32				MonsterFlags;
 
+	// Pathfinding
+	CPath				*P_CurrentPath;
+	CPathNode			*P_CurrentGoalNode;
+	CPathNode			*P_CurrentNode; // Always the current path node
+	bool				FollowingPath;
+
+	// Pathfinding functions
+	void	FoundPath		(); // Give it current and goal node and you can do this.
+	void	MoveToPath		(float Dist);
+
 	CMonster();
 
 	virtual void Allocate (edict_t *ent) = 0;

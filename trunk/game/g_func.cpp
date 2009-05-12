@@ -435,9 +435,6 @@ void Use_Plat (edict_t *ent, edict_t *other, edict_t *activator)
 
 void Touch_Plat_Center (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf)
 {
-	if (!other->client)
-		return;
-		
 	if (other->health <= 0)
 		return;
 

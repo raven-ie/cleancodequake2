@@ -43,10 +43,10 @@ extern CColors Colors;
 #include "cc_weaponmain.h"
 #include "cc_inventory.h"
 #include "cc_ban.h"
+#include "cc_pathfinding.h"
 #include "cc_monsters.h"
 #include "cc_monsterlist.h"
 #include "cc_indexing.h"
-#include "cc_pathfinding.h"
 
 extern dmFlagsConfig dmFlags;
 
