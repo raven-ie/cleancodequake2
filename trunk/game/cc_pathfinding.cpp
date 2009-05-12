@@ -231,15 +231,16 @@ void CPath::CreatePath ()
 };
 
 #define MAX_NODES 512
-uint32 lastId = 0;
 
-CPathNode *NodeList[MAX_NODES];
+std::vector<CPathNode*> NodeList;
 
 void Cmd_Node_f (edict_t *ent);
 
 void InitNodes ()
 {
 	Cmd_AddCommand ("node",				Cmd_Node_f);
+
+	NodeList.clear();
 }
 
 edict_t *PlayerNearby (vec3_t origin, int distance)
@@ -267,18 +268,18 @@ void PrintVerboseNodes (vec3_t origin, uint32 numNode)
 
 CPathNode *DropNode (edict_t *ent)
 {
-	NodeList[lastId] = new CPathNode(ent->s.origin, NODE_REGULAR, lastId);
-	NodeList[lastId]->Ent = G_Spawn();
+	NodeList.push_back(new CPathNode(ent->s.origin, NODE_REGULAR));
+	NodeList.at(NodeList.size() - 1)->Ent = G_Spawn();
 
-	NodeList[lastId]->Ent->s.modelIndex = ModelIndex("models/objects/grenade2/tris.md2");
-	Vec3Copy (NodeList[lastId]->Origin, NodeList[lastId]->Ent->s.origin);
-	gi.linkentity(NodeList[lastId]->Ent);
-	gi.cprintf (ent, PRINT_HIGH, "Node %i added\n", lastId);
+	NodeList.at(NodeList.size() - 1)->Ent->s.modelIndex = ModelIndex("models/objects/grenade2/tris.md2");
+	Vec3Copy (NodeList.at(NodeList.size() - 1)->Origin, NodeList.at(NodeList.size() - 1)->Ent->s.origin);
+	gi.linkentity(NodeList.at(NodeList.size() - 1)->Ent);
+	gi.cprintf (ent, PRINT_HIGH, "Node %i added\n", NodeList.size());
 
-	return NodeList[lastId++];
+	return NodeList.at(NodeList.size() - 1);
 }
 
-void ConnectNode (uint32 ID1, uint32 ID2);
+void ConnectNode (CPathNode *Node1, CPathNode *Node2);
 void RunPlayerNodes (edict_t *ent)
 {
 	if (!ent->client->resp.DroppingNodes)
@@ -293,7 +294,7 @@ void RunPlayerNodes (edict_t *ent)
 		if (Vec3Length(sub) > 64)
 		{
 			CPathNode *NewNode = DropNode(ent);
-			ConnectNode (NewNode->NodeId, ent->client->resp.LastNode->NodeId);
+			ConnectNode (NewNode, ent->client->resp.LastNode);
 			ent->client->resp.LastNode = NewNode;
 		}
 	}
@@ -301,7 +302,7 @@ void RunPlayerNodes (edict_t *ent)
 
 void RunNodes()
 {
-	for (uint32 i = 0; i < lastId; i++)
+	for (uint32 i = 0; i < NodeList.size(); i++)
 	{
 		if (PlayerNearby(NodeList[i]->Origin, 250))
 		{
@@ -318,22 +319,24 @@ void RunNodes()
 
 void AddNode (edict_t *ent, vec3_t origin)
 {
-	NodeList[lastId] = new CPathNode(origin, NODE_REGULAR, lastId);
-	NodeList[lastId]->Ent = G_Spawn();
+	NodeList.push_back(new CPathNode(origin, NODE_REGULAR));
+	NodeList.at(NodeList.size() - 1)->Ent = G_Spawn();
 
-	NodeList[lastId]->Ent->s.modelIndex = ModelIndex("models/objects/grenade2/tris.md2");
-	Vec3Copy (NodeList[lastId]->Origin, NodeList[lastId]->Ent->s.origin);
-	gi.linkentity(NodeList[lastId]->Ent);
-	gi.cprintf (ent, PRINT_HIGH, "Node %i added\n", lastId++);
+	NodeList.at(NodeList.size() - 1)->Ent->s.modelIndex = ModelIndex("models/objects/grenade2/tris.md2");
+	Vec3Copy (NodeList.at(NodeList.size() - 1)->Origin, NodeList.at(NodeList.size() - 1)->Ent->s.origin);
+	gi.linkentity(NodeList.at(NodeList.size() - 1)->Ent);
+	gi.cprintf (ent, PRINT_HIGH, "Node %i added\n", NodeList.size());
 }
 
-void ConnectNode (uint32 ID1, uint32 ID2)
+void ConnectNode (CPathNode *Node1, CPathNode *Node2)
 {
-	if (!NodeList[ID1] || !NodeList[ID2])
+	if (!Node1 || !Node2)
 		return;
 
-	NodeList[ID1]->Children.push_back (NodeList[ID2]);
-	NodeList[ID2]->Children.push_back (NodeList[ID1]);
+	Node1->Children.push_back (Node2);
+
+	if (Q_stricmp(gi.argv(4), "one"))
+		Node2->Children.push_back (Node1);
 }
 
 void CalculateTestPath (edict_t *ent, uint32 IDStart, uint32 IDEnd)
@@ -419,9 +422,7 @@ void CalculateTestPath (edict_t *ent, uint32 IDStart, uint32 IDEnd)
 									Test->NumNodes, Test->Weight);
 
 	for (size_t i = 0; i < Test->Path.size(); i++)
-	{
 		Test->Path[i]->Ent->s.modelIndex = ModelIndex("models/objects/grenade/tris.md2");
-	}
 
 	delete Test;
 
@@ -429,11 +430,232 @@ void CalculateTestPath (edict_t *ent, uint32 IDStart, uint32 IDEnd)
 	Closed.clear();
 }
 
+uint32 GetNodeIndex (CPathNode *Node)
+{
+	for (size_t i = 0; i < NodeList.size(); i++)
+	{
+		if (Node == NodeList[i])
+			return i;
+	}
+	gi.dprintf ("OMG BAD\n");
+	return 0;
+}
+
+#define NODE_VERSION 2
+void SaveNodes ()
+{
+	// Try to open the file
+	std::string FileName;
+
+	FileName += CCvar("gamename", "").String();
+	FileName += "/maps/nodes/";
+	FileName += level.mapname;
+	FileName += ".ccn";
+
+	FILE *fp = fopen (FileName.c_str(), "wb+");
+
+	if (!fp)
+		return;
+
+	// Write the header
+	int version = NODE_VERSION;
+	fwrite (&version, sizeof(int), 1, fp);
+	size_t siz = NodeList.size();
+	fwrite (&siz, sizeof(uint32), 1, fp);
+
+	// Write each node
+	for (uint32 i = 0; i < NodeList.size(); i++)
+	{
+		fwrite (NodeList[i]->Origin, sizeof(NodeList[i]->Origin), 1, fp);
+		fwrite (&NodeList[i]->Type, sizeof(NodeList[i]->Type), 1, fp);
+
+		if (NodeList[i]->Type == NODE_DOOR)
+		{
+			int modelNum = atoi(NodeList[i]->LinkedEntity->model+1);
+			fwrite (&modelNum, sizeof(int), 1, fp);
+		}
+
+		uint32 num = NodeList[i]->Children.size();
+		fwrite (&num, sizeof(uint32), 1, fp);
+		for (size_t s = 0; s < NodeList[i]->Children.size(); s++)
+		{
+			uint32 ind = GetNodeIndex(NodeList[i]->Children[s]);
+			fwrite (&ind, sizeof(uint32), 1, fp);
+		}
+	}
+	fclose(fp);
+}
+
+void LinkModelNumberToNode (CPathNode *Node, int modelNum)
+{
+	char tempString[7];
+	Q_snprintfz (tempString, sizeof(tempString), "*%i", modelNum);
+
+	int i;
+	edict_t *e;
+
+	for (i=1, e=g_edicts+i; i < globals.numEdicts; i++,e++)
+	{
+		if (!e->inUse)
+			continue;
+		if (e->client)
+			continue;
+		if (e->Monster)
+			continue;
+		if (!e->model)
+			continue;
+
+		if (strcmp(e->model, tempString) == 0)
+		{
+			Node->LinkedEntity = e;
+			return;
+		}
+	}
+	gi.dprintf ("WARNING: Couldn't find linked model for node!\n");
+}
+
+void LoadNodes ()
+{
+	// Try to open the file
+	std::string FileName;
+
+	FileName += CCvar("gamename", "").String();
+	FileName += "/maps/nodes/";
+	FileName += level.mapname;
+	FileName += ".ccn";
+
+	FILE *fp = fopen (FileName.c_str(), "rb");
+
+	if (!fp)
+		return;
+
+	// Write the header
+	int version;
+	uint32 lastId;
+
+	fread (&version, sizeof(int), 1, fp);
+	fread (&lastId, sizeof(uint32), 1, fp);
+
+	if (version != NODE_VERSION)
+	{
+		//fclose(fp);
+		//return;
+		gi.dprintf ("Old version of nodes!\n");
+	}
+
+	int **tempChildren;
+	tempChildren = new int*[lastId];
+
+	// Read each node
+	for (uint32 i = 0; i < lastId; i++)
+	{
+		ENodeType Type;
+		vec3_t Origin;
+		if (version == 1)
+		{
+			uint32 nothing;
+			fread (&nothing, sizeof(uint32), 1, fp);
+		}
+		fread (Origin, sizeof(NodeList[i]->Origin), 1, fp);
+		fread (&Type, sizeof(NodeList[i]->Type), 1, fp);
+
+		NodeList.push_back(new CPathNode(Origin, Type));
+
+		NodeList[i]->Ent = G_Spawn();
+		NodeList[i]->Ent->s.modelIndex = ModelIndex("models/objects/grenade2/tris.md2");
+		Vec3Copy (NodeList[i]->Origin, NodeList[i]->Ent->s.origin);
+		gi.linkentity(NodeList[i]->Ent);
+
+		if (Type == NODE_DOOR)
+		{
+			int modelNum;
+			fread (&modelNum, sizeof(int), 1, fp);
+
+			LinkModelNumberToNode (NodeList[i], modelNum);
+		}
+
+		uint32 num;
+		fread (&num, sizeof(uint32), 1, fp);
+
+		tempChildren[i] = new int[num+1];
+		tempChildren[i][0] = num;
+		/*for (size_t s = 0; s < num; s++)
+		{
+			int tempId;
+			fread (&tempId, sizeof(int), 1, fp);
+
+			NodeList[i]->Children.push_back (NodeList[tempId]);
+		}*/
+		for (size_t s = 0; s < num; s++)
+			fread (&tempChildren[i][s+1], sizeof(int), 1, fp);
+	}
+	fclose(fp);
+
+	for (size_t i = 0; i < lastId; i++)
+	{
+		for (int z = 0; z < tempChildren[i][0]; z++)
+			NodeList[i]->Children.push_back (NodeList[tempChildren[i][z+1]]);
+		delete tempChildren[i];
+	}
+
+	delete tempChildren;
+}
+
+bool VecInFront (vec3_t angles, vec3_t origin1, vec3_t origin2)
+{
+	vec3_t	vec;
+	float	dot;
+	vec3_t	forward;
+	
+	Angles_Vectors (angles, forward, NULL, NULL);
+	Vec3Subtract (origin1, origin2, vec);
+	VectorNormalizef (vec, vec);
+	dot = DotProduct (vec, forward);
+	
+	if (dot > 0.3)
+		return true;
+	return false;
+}
+
+CPathNode *GetClosestNodeTo (vec3_t angles, vec3_t origin)
+{
+	CPathNode *Best = NULL;
+	float bestDist = 9999999;
+	vec3_t sub;
+
+	for (uint32 i = 0; i < NodeList.size(); i++)
+	{
+		CPathNode *Node = NodeList[i];
+
+		if (!Best)
+		{
+			Vec3Subtract (Node->Origin, origin, sub);
+			bestDist = Vec3Length(sub);
+			Best = Node;
+
+			continue;
+		}
+		Vec3Subtract (Node->Origin, origin, sub);
+		float temp = Vec3Length(sub);
+		
+		if (temp < bestDist)
+		{
+			Best = Node;
+			bestDist = temp;
+		}
+	}
+	return Best;
+}
+
 void Cmd_Node_f (edict_t *ent)
 {
 	char *cmd = gi.argv(1);
 
-	if (Q_stricmp(cmd, "drop") == 0)
+	if (Q_stricmp(cmd, "save") == 0)
+		SaveNodes ();
+	else if (Q_stricmp(cmd, "load") == 0)
+		LoadNodes ();
+	else if (Q_stricmp(cmd, "drop") == 0)
 		AddNode (ent, ent->s.origin);
 	else if (Q_stricmp(cmd, "dropper") == 0)
 	{
@@ -445,31 +667,31 @@ void Cmd_Node_f (edict_t *ent)
 		uint32 firstId = atoi(gi.argv(2));
 		uint32 secondId = atoi(gi.argv(3));
 
-		if (firstId > lastId)
+		if (firstId >= NodeList.size())
 		{
 			gi.cprintf (ent, PRINT_HIGH, "Node %i doesn't exist!\n", firstId);
 			return;
 		}
-		if (secondId > lastId)
+		if (secondId >= NodeList.size())
 		{
 			gi.cprintf (ent, PRINT_HIGH, "Node %i doesn't exist!\n", secondId);
 			return;
 		}
 
 		gi.cprintf (ent, PRINT_HIGH, "Connecting nodes %i and %i...\n", firstId, secondId);
-		ConnectNode (firstId, secondId);
+		ConnectNode (NodeList[firstId], NodeList[secondId]);
 	}
 	else if (Q_stricmp(cmd, "testpath") == 0)
 	{
 		uint32 firstId = atoi(gi.argv(2));
 		uint32 secondId = atoi(gi.argv(3));
 
-		if (firstId >= lastId)
+		if (firstId >= NodeList.size())
 		{
 			gi.cprintf (ent, PRINT_HIGH, "Node %i doesn't exist!\n", firstId);
 			return;
 		}
-		if (secondId >= lastId)
+		if (secondId >= NodeList.size())
 		{
 			gi.cprintf (ent, PRINT_HIGH, "Node %i doesn't exist!\n", secondId);
 			return;
@@ -480,12 +702,12 @@ void Cmd_Node_f (edict_t *ent)
 	}
 	else if (Q_stricmp(cmd, "clearstate") == 0)
 	{
-		for (uint32 i = 0; i < lastId; i++)
+		for (uint32 i = 0; i < NodeList.size(); i++)
 			NodeList[i]->Ent->s.modelIndex = ModelIndex("models/objects/grenade2/tris.md2");
 	}
 	else if (Q_stricmp(cmd, "settype") == 0)
 	{
-		if (!gi.argv(2) || (uint32)atoi(gi.argv(2)) >= lastId)
+		if (!gi.argv(2) || (uint32)atoi(gi.argv(2)) >= NodeList.size())
 			return;
 
 		CPathNode *Node = NodeList[atoi(gi.argv(2))];
@@ -493,11 +715,11 @@ void Cmd_Node_f (edict_t *ent)
 		if (Q_stricmp(gi.argv(3), "door") == 0)
 			Node->Type = NODE_DOOR;
 		else if (Q_stricmp(gi.argv(3), "jump") == 0)
-			Node->Type = NODE_PLATFORM;
+			Node->Type = NODE_JUMP;
 	}
 	else if (Q_stricmp(cmd, "linkwith") == 0)
 	{
-		if (!gi.argv(2) || (uint32)atoi(gi.argv(2)) >= lastId)
+		if (!gi.argv(2) || (uint32)atoi(gi.argv(2)) >= NodeList.size())
 			return;
 
 		CPathNode *Node = NodeList[atoi(gi.argv(2))];
@@ -508,10 +730,10 @@ void Cmd_Node_f (edict_t *ent)
 
 		CTrace trace = CTrace(ent->s.origin, end, ent, CONTENTS_MASK_ALL);
 
-		if (trace.ent && trace.ent->model[0] == '*')
+		if (trace.ent && trace.ent->model && trace.ent->model[0] == '*')
 		{
 			Node->LinkedEntity = trace.ent;
-			gi.dprintf ("Linked %u with %s\n", Node->NodeId, trace.ent->classname);
+			gi.dprintf ("Linked %u with %s\n", GetNodeIndex(Node), trace.ent->classname);
 		}
 	}
 	else if (Q_stricmp(cmd, "monstergoal") == 0)
@@ -524,14 +746,45 @@ void Cmd_Node_f (edict_t *ent)
 
 		if (trace.ent && trace.ent->Monster)
 		{
+			if (Q_stricmp(gi.argv(2), "closest") == 0)
+				trace.ent->Monster->P_CurrentNode = GetClosestNodeTo(trace.ent->Monster->Entity->s.angles, trace.ent->Monster->Entity->s.origin);
+			else
+				trace.ent->Monster->P_CurrentNode = NodeList[atoi(gi.argv(2))];
 			trace.ent->Monster->P_CurrentGoalNode = NodeList[atoi(gi.argv(3))];
-			trace.ent->Monster->P_CurrentNode = NodeList[atoi(gi.argv(2))];
 			trace.ent->Monster->FoundPath ();
 		}
 	}
+	else if (Q_stricmp(cmd, "kill") == 0)
+	{
+		if (!gi.argv(2) || (uint32)atoi(gi.argv(2)) >= NodeList.size())
+			return;
+
+		uint32 node = atoi(gi.argv(2));
+		CPathNode *Node = NodeList[node];
+
+		Node->Children.clear();
+
+		// Cut off all connections
+		for (uint32 i = 0; i < NodeList.size(); i++)
+		{
+			for (uint32 z = 0; z < NodeList[i]->Children.size(); z++)
+			{
+				if (NodeList[i]->Children[z] == Node)
+				{
+					NodeList[i]->Children.erase(NodeList[i]->Children.begin() + z);
+					z = 0;
+				}
+			}
+		}
+
+		// Delete node
+		G_FreeEdict(Node->Ent);
+		delete Node;
+		NodeList.erase(NodeList.begin() + node);
+	}
 	else if (Q_stricmp (cmd, "move") == 0)
 	{
-		if (!gi.argv(2) || (uint32)atoi(gi.argv(2)) >= lastId)
+		if (!gi.argv(2) || (uint32)atoi(gi.argv(2)) >= NodeList.size())
 			return;
 
 		CPathNode *Node = NodeList[atoi(gi.argv(2))];
