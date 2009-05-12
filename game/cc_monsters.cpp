@@ -64,7 +64,7 @@ void CMonster::MoveToPath (float Dist)
 	TempEnts.Trails.FleshCable (Entity->s.origin, P_CurrentNode->Origin, Entity-g_edicts);
 	if (Vec3Length (sub) < 30)
 	{
-		bool shouldJump = (P_CurrentNode->Type == NODE_PLATFORM);
+		bool shouldJump = (P_CurrentNode->Type == NODE_JUMP);
 		// Hit the path.
 		if (P_CurrentPath->Path.size() > 1)
 		{
@@ -80,8 +80,8 @@ void CMonster::MoveToPath (float Dist)
 				vec3_t sub2, forward;
 				Vec3Subtract (P_CurrentNode->Origin, Entity->s.origin, sub2);
 				Angles_Vectors (sub2, forward, NULL, NULL);
-				Vec3MA (Entity->velocity, 1, sub2, Entity->velocity);
-				Entity->velocity[2] = 250;
+				Vec3MA (Entity->velocity, 1.5, sub2, Entity->velocity);
+				Entity->velocity[2] = 300;
 				Entity->groundentity = NULL;
 				CheckGround();
 			}

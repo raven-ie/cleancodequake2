@@ -86,6 +86,10 @@ void CWeapon::WeaponGeneric (edict_t *ent)
 		{
 			ent->client->latched_buttons &= ~BUTTON_ATTACK;
 
+			// This here is ugly, but necessary so that machinegun/chaingun/hyperblaster
+			// get the right acceptance on first-frame-firing
+			ent->client->buttons |= BUTTON_ATTACK;
+
 			// We want to attack!
 			// First call, check AttemptToFire
 			if (AttemptToFire(ent))

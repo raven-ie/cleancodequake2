@@ -38,14 +38,13 @@ enum ENodeType
 	NODE_REGULAR,
 
 	NODE_DOOR,
-	NODE_PLATFORM
+	NODE_JUMP
 };
 
 // One node
 class CPathNode
 {
 public:
-	uint32						NodeId; // The node's id
 	ENodeType					Type; // Type of node
 	vec3_t						Origin; // Node's location
 	edict_t						*Ent; // Node entity
@@ -56,9 +55,8 @@ public:
 	uint32						G, F, H;
 	CPathNode					*Parent;
 
-	CPathNode (vec3_t Origin, ENodeType Type, uint32 NodeId) :
-	Type(Type),
-	NodeId(NodeId)
+	CPathNode (vec3_t Origin, ENodeType Type) :
+	Type(Type)
 	{
 		Vec3Copy (Origin, this->Origin);
 	};
