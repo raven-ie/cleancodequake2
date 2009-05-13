@@ -644,6 +644,11 @@ void Cmd_NewtonInit (edict_t *ent);
 void Cmd_NewtonBox (edict_t *ent);
 #endif
 
+void Cmd_Pause  (edict_t *ent)
+{
+	level.paused = !level.paused;
+}
+
 void Cmd_Register ()
 {
 	// These commands are generic, and can be executed any time
@@ -683,6 +688,7 @@ void Cmd_Register ()
 	Cmd_AddCommand ("noclip",				Cmd_Noclip_f,			CMD_CHEAT);
 	Cmd_AddCommand ("give",					Cmd_Give_f,				CMD_CHEAT);
 	Cmd_AddCommand ("spawn",				Cmd_Give,				CMD_CHEAT);
+	Cmd_AddCommand ("pauser",				Cmd_Pause,				CMD_CHEAT);
 
 #if 0
 	Cmd_AddCommand ("newtoninit",			Cmd_NewtonInit);

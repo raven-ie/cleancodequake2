@@ -34,9 +34,22 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_local.h"
 #define STEPSIZE	18
 
+#ifdef MONSTERS_USE_PATHFINDING
+
+bool VecInFront (vec3_t angles, vec3_t origin1, vec3_t origin2);
 void CMonster::FoundPath ()
 {
+	if (!P_CurrentGoalNode || !P_CurrentNode)
+		return;
 	P_CurrentPath = new CPath(P_CurrentNode, P_CurrentGoalNode);
+
+	// If our first node is behind us and it's not too far away, we can
+	// just skip this node and go to the next one.	
+	if (VecInFront(Entity->s.angles, Entity->s.origin, P_CurrentPath->Path[P_CurrentPath->Path.size()-1]->Origin))
+	{
+		P_CurrentPath->Path.pop_back();
+		gi.dprintf ("TEST\n");
+	}
 
 	if (!P_CurrentPath->Path.size())
 	{
@@ -46,6 +59,8 @@ void CMonster::FoundPath ()
 		P_CurrentNode = P_CurrentGoalNode = NULL;
 		return;
 	}
+	// Incase we aren't the same.
+	P_CurrentNode = P_CurrentPath->Path[P_CurrentPath->Path.size()-1];
 
 	FollowingPath = true;
 	Run ();
@@ -55,6 +70,17 @@ void CMonster::MoveToPath (float Dist)
 {
 	if (!Entity->groundentity && !(Entity->flags & (FL_FLY|FL_SWIM)))
 		return;
+
+	if (FindTarget()) // Did we find an enemy while going to our path?
+	{
+		FollowingPath = false;
+		PauseTime = 100000000;
+
+		delete P_CurrentPath;
+		P_CurrentPath = NULL;
+		P_CurrentNode = P_CurrentGoalNode = NULL;
+		return;
+	}
 
 	vec3_t sub;
 	bool doit = false;
@@ -88,8 +114,28 @@ void CMonster::MoveToPath (float Dist)
 		}
 		else
 		{
+			if (Entity->enemy)
+			{
+				vec3_t sub;
+				Vec3Subtract (Entity->s.origin, Entity->enemy->s.origin, sub);
+
+				if (Vec3Length(sub) < 250) // If we're still close enough that it's possible
+					// to hear him breathing (lol), startback on the trail
+				{
+					delete P_CurrentPath;
+					P_CurrentPath = NULL;
+					P_CurrentGoalNode = GetClosestNodeTo(Entity->enemy->s.origin);
+					FoundPath ();
+					return;
+				}
+				return;
+			}
 			FollowingPath = false;
+			PauseTime = 100000000;
 			Stand ();
+			delete P_CurrentPath;
+			P_CurrentPath = NULL;
+			P_CurrentNode = P_CurrentGoalNode = NULL;
 			return;
 		}
 	}
@@ -180,6 +226,7 @@ void CMonster::MoveToPath (float Dist)
 		}
 	}
 }
+#endif
 
 /*
 =================
@@ -1016,8 +1063,125 @@ void CMonster::MonsterTriggeredSpawn ()
 		Entity->enemy = NULL;
 }
 
+bool CMonster::FriendlyInLine (vec3_t Origin, vec3_t Direction)
+{
+	vec3_t dir, forward, end;
+	VecToAngles (Direction, dir);
+	Angles_Vectors (dir, forward, NULL, NULL);
+
+	Vec3MA (Origin, 8192, forward, end);
+	CTrace trace = CTrace(Origin, end, Entity, CONTENTS_MONSTER);
+
+	if (trace.ent && trace.ent->Monster && (trace.ent->enemy != Entity))
+		return true;
+	return false;
+}
+
+#ifdef MONSTERS_ARENT_STUPID
+/*
+=================
+AlertNearbyStroggs
+
+Alerts nearby Stroggs of possible enemy targets
+=================
+*/
+
+void CMonster::AlertNearbyStroggs ()
+{
+	float dist;
+	edict_t		*strogg = NULL;
+
+	if (Entity->enemy->flags & FL_NOTARGET)
+		return;
+
+	switch (skill->Integer())
+	{
+	case 0:
+		return;
+	case 1:
+		dist = 300;
+		break;
+	case 2:
+		dist = 500;
+		break;
+	default:
+		dist = 750 + (skill->Integer()) * 75;
+		break;
+	}
+
+	if (dist > 2400)
+		dist = 2400;
+
+	while ( (strogg = findradius (strogg, Entity->s.origin, dist)) != NULL)
+	{
+		if (strogg->health < 1 || !(strogg->takedamage))
+			continue;
+
+		if (strogg == Entity)
+			continue;
+
+		if (strogg->client || !strogg->Monster)
+			continue;
+
+		if (strogg->enemy)
+			continue;
+		
+		strogg->enemy = Entity->enemy;
+		strogg->Monster->FoundTarget ();
+	}
+}
+
+/*
+=============
+CMonster::AI_Run_Strafe
+
+More advanced strafing.  Often leads to circle strafing
+=============
+*/
+void CMonster::AI_Run_Strafe (float distance)
+{
+	float	ofs;
+	vec3_t	v;
+
+	Vec3Subtract (Entity->enemy->s.origin, Entity->s.origin, v);
+	IdealYaw = VecToYaw (v);
+	ChangeYaw ();
+
+	if (!(AIFlags & AI_SLIDE))
+	{
+		PauseTime = level.time + 0.1 + (skill->Integer()) * FRAMETIME + (2 * rand() % 8) * FRAMETIME;
+		Lefty = !Lefty;
+	}
+
+	if (level.time >= PauseTime)
+		AIFlags &= ~AI_SLIDE;
+	else
+		AIFlags |= AI_SLIDE;
+
+	if (Lefty)
+		ofs = 30;
+	else
+		ofs = -30;
+
+	if (skill->Integer() <= 1)
+		ofs = 0;
+
+	if ((WalkMove (IdealYaw + ofs, distance)))
+		return;
+		
+	Lefty = !Lefty;
+	WalkMove (IdealYaw - ofs, distance);
+	
+}
+#endif
+
 void CMonster::MonsterFireBullet (vec3_t start, vec3_t dir, int damage, int kick, int hspread, int vspread, int flashtype)
 {
+#ifdef MONSTERS_ARENT_STUPID
+	if (FriendlyInLine (start, dir))
+		return;
+#endif
+
 	fire_bullet (Entity, start, dir, damage, kick, hspread, vspread, MOD_UNKNOWN);
 
 	gi.WriteByte (SVC_MUZZLEFLASH2);
@@ -1028,6 +1192,11 @@ void CMonster::MonsterFireBullet (vec3_t start, vec3_t dir, int damage, int kick
 
 void CMonster::MonsterFireShotgun (vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int count, int flashtype)
 {
+#ifdef MONSTERS_ARENT_STUPID
+	if (FriendlyInLine (start, aimdir))
+		return;
+#endif
+
 	fire_shotgun (Entity, start, aimdir, damage, kick, hspread, vspread, count, MOD_UNKNOWN);
 
 	gi.WriteByte (SVC_MUZZLEFLASH2);
@@ -1038,6 +1207,11 @@ void CMonster::MonsterFireShotgun (vec3_t start, vec3_t aimdir, int damage, int 
 
 void CMonster::MonsterFireBlaster (vec3_t start, vec3_t dir, int damage, int speed, int flashtype, int effect)
 {
+#ifdef MONSTERS_ARENT_STUPID
+	if (FriendlyInLine (start, dir))
+		return;
+#endif
+
 	fire_blaster (Entity, start, dir, damage, speed, effect, false);
 
 	gi.WriteByte (SVC_MUZZLEFLASH2);
@@ -1048,6 +1222,11 @@ void CMonster::MonsterFireBlaster (vec3_t start, vec3_t dir, int damage, int spe
 
 void CMonster::MonsterFireGrenade (vec3_t start, vec3_t aimdir, int damage, int speed, int flashtype)
 {
+#ifdef MONSTERS_ARENT_STUPID
+	if (FriendlyInLine (start, aimdir))
+		return;
+#endif
+
 	fire_grenade (Entity, start, aimdir, damage, speed, 2.5, damage+40);
 
 	gi.WriteByte (SVC_MUZZLEFLASH2);
@@ -1058,6 +1237,11 @@ void CMonster::MonsterFireGrenade (vec3_t start, vec3_t aimdir, int damage, int 
 
 void CMonster::MonsterFireRocket (vec3_t start, vec3_t dir, int damage, int speed, int flashtype)
 {
+#ifdef MONSTERS_ARENT_STUPID
+	if (FriendlyInLine (start, dir))
+		return;
+#endif
+
 	fire_rocket (Entity, start, dir, damage, speed, damage+20, damage);
 
 	gi.WriteByte (SVC_MUZZLEFLASH2);
@@ -1068,6 +1252,11 @@ void CMonster::MonsterFireRocket (vec3_t start, vec3_t dir, int damage, int spee
 
 void CMonster::MonsterFireRailgun (vec3_t start, vec3_t aimdir, int damage, int kick, int flashtype)
 {
+#ifdef MONSTERS_ARENT_STUPID
+	if (FriendlyInLine (start, aimdir))
+		return;
+#endif
+
 	fire_rail (Entity, start, aimdir, damage, kick);
 
 	gi.WriteByte (SVC_MUZZLEFLASH2);
@@ -1078,6 +1267,11 @@ void CMonster::MonsterFireRailgun (vec3_t start, vec3_t aimdir, int damage, int 
 
 void CMonster::MonsterFireBfg (vec3_t start, vec3_t aimdir, int damage, int speed, int kick, float damage_radius, int flashtype)
 {
+#ifdef MONSTERS_ARENT_STUPID
+	if (FriendlyInLine (start, aimdir))
+		return;
+#endif
+
 	fire_bfg (Entity, start, aimdir, damage, speed, damage_radius);
 
 	gi.WriteByte (SVC_MUZZLEFLASH2);
@@ -1220,21 +1414,24 @@ bool CMonster::AI_CheckAttack()
 
 		if (AIFlags & AI_SOUND_TARGET)
 		{
-			if ((level.time - Entity->enemy->teleport_time) > 5.0)
+			if (Entity->enemy)
 			{
-				if (Entity->goalentity == Entity->enemy)
-					if (Entity->movetarget)
-						Entity->goalentity = Entity->movetarget;
-					else
-						Entity->goalentity = NULL;
-				AIFlags &= ~AI_SOUND_TARGET;
-				if (AIFlags & AI_TEMP_STAND_GROUND)
-					AIFlags &= ~(AI_STAND_GROUND | AI_TEMP_STAND_GROUND);
-			}
-			else
-			{
-				Entity->show_hostile = level.time + 1;
-				return false;
+				if ((level.time - Entity->enemy->teleport_time) > 5.0)
+				{
+					if (Entity->goalentity == Entity->enemy)
+						if (Entity->movetarget)
+							Entity->goalentity = Entity->movetarget;
+						else
+							Entity->goalentity = NULL;
+					AIFlags &= ~AI_SOUND_TARGET;
+					if (AIFlags & AI_TEMP_STAND_GROUND)
+						AIFlags &= ~(AI_STAND_GROUND | AI_TEMP_STAND_GROUND);
+				}
+				else
+				{
+					Entity->show_hostile = level.time + 1;
+					return false;
+				}
 			}
 		}
 	}
@@ -1347,11 +1544,13 @@ void CMonster::AI_Run(float Dist)
 	float		left, center, right;
 	vec3_t		left_target, right_target;
 
+#ifdef MONSTERS_USE_PATHFINDING
 	if (FollowingPath)
 	{
 		MoveToPath(Dist);
 		return;
 	}
+#endif
 
 	// if we're going to a combat point, just proceed
 	if (AIFlags & AI_COMBAT_POINT)
@@ -1362,15 +1561,18 @@ void CMonster::AI_Run(float Dist)
 
 	if (AIFlags & AI_SOUND_TARGET)
 	{
-		Vec3Subtract (Entity->s.origin, Entity->enemy->s.origin, v);
-		if (Vec3Length(v) < 64)
+		if (Entity->enemy)
 		{
-			AIFlags |= (AI_STAND_GROUND | AI_TEMP_STAND_GROUND);
-			Stand ();
-			return;
-		}
+			Vec3Subtract (Entity->s.origin, Entity->enemy->s.origin, v);
+			if (Vec3Length(v) < 64)
+			{
+				AIFlags |= (AI_STAND_GROUND | AI_TEMP_STAND_GROUND);
+				Stand ();
+				return;
+			}
 
-		MoveToGoal (Dist);
+			MoveToGoal (Dist);
+		}
 
 		if (!FindTarget ())
 			return;
@@ -1381,14 +1583,17 @@ void CMonster::AI_Run(float Dist)
 
 	if (AttackState == AS_SLIDING)
 	{
-		AI_Run_Slide (Dist);
+		if (Entity->flags & FL_FLY)
+			AI_Run_Slide (Dist);
+		else
+			AI_Run_Strafe(Dist);
 		return;
 	}
 
 	if (EnemyVis)
 	{
-//		if (self.aiflags & AI_LOST_SIGHT)
-//			dprint("regained sight\n");
+		if (AIFlags & AI_LOST_SIGHT)
+			gi.dprintf("regained sight\n");
 		MoveToGoal (Dist);
 		AIFlags &= ~AI_LOST_SIGHT;
 		Vec3Copy (Entity->enemy->s.origin, LastSighting);
@@ -1403,13 +1608,13 @@ void CMonster::AI_Run(float Dist)
 			return;
 	}
 
-	if (SearchTime && (level.time > (SearchTime + 20)))
-	{
-		MoveToGoal (Dist);
-		SearchTime = 0;
+	//if (SearchTime && (level.time > (SearchTime + 20)))
+	//{
+	//	MoveToGoal (Dist);
+	//	SearchTime = 0;
 //		dprint("search timeout\n");
-		return;
-	}
+	//	return;
+	//}
 
 	save = Entity->goalentity;
 	tempgoal = G_Spawn();
@@ -1420,7 +1625,13 @@ void CMonster::AI_Run(float Dist)
 	if (!(AIFlags & AI_LOST_SIGHT))
 	{
 		// just lost sight of the player, decide where to go first
-//		dprint("lost sight of player, last seen at "); dprint(vtos(self.last_sighting)); dprint("\n");
+		gi.dprintf("lost sight of player, last seen at %f %f %f\n", LastSighting[0], LastSighting[1], LastSighting[2]);
+
+		// Set us up for pathing
+		P_CurrentNode = GetClosestNodeTo(Entity->s.origin);
+		P_CurrentGoalNode = GetClosestNodeTo(Entity->enemy->s.origin);
+		FoundPath ();
+
 		AIFlags |= (AI_LOST_SIGHT | AI_PURSUIT_LAST_SEEN);
 		AIFlags &= ~(AI_PURSUE_NEXT | AI_PURSUE_TEMP);
 		isNew = true;
@@ -1583,6 +1794,7 @@ void CMonster::AI_Stand (float Dist)
 	if (Dist)
 		WalkMove (Entity->s.angles[YAW], Dist);
 
+#ifdef MONSTERS_USE_PATHFINDING
 	if (FollowingPath)
 	{
 		// Assuming we got here because we're waiting for something.
@@ -1591,8 +1803,14 @@ void CMonster::AI_Stand (float Dist)
 			if (P_CurrentNode->LinkedEntity->moveinfo.state == 0)
 				Run(); // We can go again!
 		}
+		else
+		{
+			// ...this shouldn't happen. FIND OUT WHY PLZ
+			FollowingPath = false;
+		}
 		return;
 	}
+#endif
 
 	if (AIFlags & AI_STAND_GROUND)
 	{
@@ -1675,6 +1893,18 @@ void CMonster::ReactToDamage (edict_t *attacker)
 		return;
 	}
 
+#ifdef MONSTERS_ARENT_STUPID
+	// Help our buddy!
+	if (attacker->Monster && attacker->enemy && attacker->enemy != Entity)
+	{
+		if (Entity->enemy && Entity->enemy->client)
+			Entity->oldenemy = Entity->enemy;
+		Entity->enemy = attacker->enemy;
+		if (!(AIFlags & AI_DUCKED))
+			FoundTarget ();
+	}
+	return;
+#else
 	// it's the same base (walk/swim/fly) type and a different classname and it's not a tank
 	// (they spray too much), get mad at them
 	//if (((Entity->flags & (FL_FLY|FL_SWIM)) == (attacker->flags & (FL_FLY|FL_SWIM))) &&
@@ -1699,15 +1929,7 @@ void CMonster::ReactToDamage (edict_t *attacker)
 		if (!(AIFlags & AI_DUCKED))
 			FoundTarget ();
 	}
-	// otherwise get mad at whoever they are mad at (help our buddy) unless it is us!
-	/*else if (attacker->enemy && attacker->enemy != Entity)
-	{
-		if (Entity->enemy && Entity->enemy->client)
-			Entity->oldenemy = Entity->enemy;
-		Entity->enemy = attacker->enemy;
-		if (!(AIFlags & AI_DUCKED))
-			FoundTarget ();
-	}*/
+#endif
 }
 
 void CMonster::AI_Turn(float Dist)
@@ -1881,6 +2103,7 @@ void CMonster::MoveFrame ()
 void CMonster::FoundTarget ()
 {
 	// let other monsters see this monster for a while
+#ifndef MONSTERS_ARENT_STUPID
 	if (Entity->enemy->client)
 	{
 		level.sight_entity = Entity;
@@ -1889,6 +2112,8 @@ void CMonster::FoundTarget ()
 	}
 
 	Entity->show_hostile = level.time + 1;		// wake up other monsters
+#endif
+
 
 	Vec3Copy(Entity->enemy->s.origin, LastSighting);
 	TrailTime = level.time;
@@ -2139,6 +2364,39 @@ bool CMonster::FindTarget()
 	if (AIFlags & AI_COMBAT_POINT)
 		return false;
 
+	if (!level.sight_client && (level.sound_entity_framenum >= (level.framenum - 1)) && level.NoiseNode)
+	{
+		vec3_t temp;
+		if (Entity->spawnflags & 1)
+		{
+			CTrace trace = CTrace(Entity->s.origin, level.NoiseNode->Origin, Entity, CONTENTS_MASK_SOLID);
+
+			if (trace.fraction < 1.0)
+				return false;
+		}
+		else
+		{
+			if (!gi.inPHS(Entity->s.origin, level.NoiseNode->Origin))
+				return false;
+		}
+
+		Vec3Subtract (level.NoiseNode->Origin, Entity->s.origin, temp);
+
+		if (Vec3Length(temp) > 1000)	// too far to hear
+			return false;
+
+		IdealYaw = VecToYaw(temp);
+		ChangeYaw ();
+
+		// hunt the sound for a bit; hopefully find the real player
+		//AIFlags |= AI_SOUND_TARGET;
+
+		P_CurrentNode = GetClosestNodeTo(Entity->s.origin);
+		P_CurrentGoalNode = level.NoiseNode;
+		FoundPath ();
+		return true;
+	}
+
 // if the first spawnflag bit is set, the monster will only wake up on
 // really seeing the player, not another monster getting angry or hearing
 // something
@@ -2170,11 +2428,16 @@ bool CMonster::FindTarget()
 			return false;	// no clients to get mad at
 	}
 
+	if (!client)
+		client = level.sight_client;
+	if (!client)
+		return false;
+
 	// if the entity went away, forget it
 	if (!client->inUse)
 		return false;
 
-	if (client == Entity->enemy)
+	if (visible(Entity, client) && client == Entity->enemy)
 		return true;	// JDC false;
 
 	if (client->client)
@@ -2280,6 +2543,7 @@ bool CMonster::FindTarget()
 // got one
 //
 	FoundTarget ();
+	AlertNearbyStroggs ();
 
 	if (!(AIFlags & AI_SOUND_TARGET) && (MonsterFlags & MF_HAS_SIGHT))
 		Sight ();

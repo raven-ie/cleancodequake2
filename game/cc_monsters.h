@@ -30,7 +30,6 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // cc_monsters.h
 // Monsters
 //
-
 class CMonster;
 
 class CFrame
@@ -85,6 +84,7 @@ public:
 #define AI_COMBAT_POINT			0x00001000
 #define AI_MEDIC				0x00002000
 #define AI_RESURRECTING			0x00004000
+#define	AI_SLIDE				0x00008000
 
 #define MF_HAS_MELEE			0x00000001
 #define MF_HAS_IDLE				0x00000002
@@ -145,6 +145,7 @@ public:
 
 	uint32				MonsterFlags;
 
+#ifdef MONSTERS_USE_PATHFINDING
 	// Pathfinding
 	CPath				*P_CurrentPath;
 	CPathNode			*P_CurrentGoalNode;
@@ -154,6 +155,7 @@ public:
 	// Pathfinding functions
 	void	FoundPath		(); // Give it current and goal node and you can do this.
 	void	MoveToPath		(float Dist);
+#endif
 
 	CMonster();
 
@@ -213,6 +215,13 @@ public:
 	void MonsterFireShotgun (vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int count, int flashtype);
 	void MonsterFireBullet (vec3_t start, vec3_t dir, int damage, int kick, int hspread, int vspread, int flashtype);
 	void MonsterFireRocket (vec3_t start, vec3_t dir, int damage, int speed, int flashtype);
+
+#ifdef MONSTERS_ARENT_STUPID
+	void AlertNearbyStroggs ();
+	bool FriendlyInLine (vec3_t Origin, vec3_t Direction);
+
+	void AI_Run_Strafe (float Dist);
+#endif
 
 	void MonsterTriggeredSpawn ();
 	static void _cdecl MonsterTriggeredSpawnUse (edict_t *self, edict_t *other, edict_t *activator);

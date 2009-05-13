@@ -216,6 +216,9 @@ typedef struct
 	int			body_que;			// dead bodies
 
 	int			power_cubes;		// ugly necessity for coop
+	bool		paused;
+
+	class CPathNode	*NoiseNode;
 } level_locals_t;
 
 

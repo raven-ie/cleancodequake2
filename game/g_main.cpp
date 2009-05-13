@@ -401,6 +401,24 @@ void G_RunFrame (void)
 	int		i;
 	edict_t	*ent;
 
+	if (level.paused)
+	{
+		ent = &g_edicts[1];
+		for (i=1 ; i <= maxclients->Integer() ; i++, ent++)
+		{
+			if (!ent->inUse)
+				continue;
+			ClientBeginServerFrame (ent);
+		}
+
+		// build the playerstate_t structures for all players
+		ClientEndServerFrames ();
+
+		if (dmflags->Modified())
+			dmFlags.UpdateFlags(dmflags->Integer());
+		return;
+	}
+
 	level.framenum++;
 	level.time = level.framenum*FRAMETIME;
 
