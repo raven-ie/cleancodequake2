@@ -500,6 +500,7 @@ parsing textual entity definitions out of an ent file.
 ==============
 */
 extern int entityNumber;
+void LoadNodes();
 void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 {
 	edict_t		*ent;
@@ -602,6 +603,7 @@ void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 	G_FindTeams ();
 
 	PlayerTrail_Init ();
+	LoadNodes();
 
 	gi.dprintf ("Finished server initialization in %d ms\n", Sys_Milliseconds() - startTime);
 }

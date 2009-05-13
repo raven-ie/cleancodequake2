@@ -268,18 +268,16 @@ inline void P_ProjectSource (gclient_t *client, vec3_t point, vec3_t distance, v
 /*
 ===============
 PlayerNoise
+Revised for CleanCode.
 
-Each player can have two noise objects associated with it:
-a personal noise (jumping, pain, weapon firing), and a weapon
-target noise (bullet wall impacts)
 
-Monsters that don't directly see the player can move
-to a noise in hopes of seeing the player from there.
 ===============
 */
 void PlayerNoise(edict_t *who, vec3_t where, int type)
 {
+#ifndef MONSTERS_USE_PATHFINDING
 	edict_t		*noise;
+#endif
 
 	if (type == PNOISE_WEAPON)
 	{
@@ -293,10 +291,10 @@ void PlayerNoise(edict_t *who, vec3_t where, int type)
 	if (deathmatch->Integer())
 		return;
 
-	if (who->flags & FL_NOTARGET)
-		return;
+	//if (who->flags & FL_NOTARGET)
+	//	return;
 
-
+#ifndef MONSTERS_USE_PATHFINDING
 	if (!who->mynoise)
 	{
 		noise = G_Spawn();
@@ -334,6 +332,10 @@ void PlayerNoise(edict_t *who, vec3_t where, int type)
 	Vec3Add (where, noise->maxs, noise->absMax);
 	noise->teleport_time = level.time;
 	gi.linkentity (noise);
+#else
+	level.NoiseNode = GetClosestNodeTo(where);
+	level.sound_entity_framenum = level.framenum;
+#endif
 }
 
 void CWeapon::Muzzle (edict_t *ent, int muzzleNum)

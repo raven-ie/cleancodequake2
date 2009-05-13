@@ -31,6 +31,10 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Shared header, included by g_local.
 //
 
+// Global macros
+#define MONSTERS_ARENT_STUPID
+#define MONSTERS_USE_PATHFINDING
+
 #include "cc_colors.h"
 extern CColors Colors;
 #include "cc_cvar.h"

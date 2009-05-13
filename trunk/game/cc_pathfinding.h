@@ -106,3 +106,4 @@ public:
 void InitNodes ();
 void RunNodes ();
 void RunPlayerNodes (edict_t *ent);
+CPathNode *GetClosestNodeTo (vec3_t origin);
