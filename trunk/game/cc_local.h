@@ -33,20 +33,6 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "g_local.h"
 
-void WriteDirection (vec3_t val);
-void WritePosition (vec3_t val);
-void WriteString (char *val);
-void WriteAngle (float val);
-void WriteFloat (float val);
-void WriteLong (long val);
-void WriteShort (short val);
-void WriteByte (byte val);
-void WriteChar (char val);
-
-void Cast (ECastFlags castFlags, edict_t *Ent);
-void Cast (ECastFlags castFlags, vec3_t Origin);
-void Cast (ECastType castType, ECastFlags castFlags, vec3_t Origin, edict_t *Ent);
-
 uint32 Com_HashGeneric(const char *name, const int hashSize);
 
 extern CItemList *ItemList;

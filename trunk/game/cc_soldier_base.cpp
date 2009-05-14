@@ -296,6 +296,17 @@ void CSoldierBase::Pain (edict_t *other, float kick, int damage)
 	if (Entity->health < (Entity->max_health / 2))
 			Entity->s.skinNum |= 1;
 
+#ifdef MONSTER_USE_ROGUE_AI
+	DoneDodge ();
+	StopCharge();
+
+	// if we're blind firing, this needs to be turned off here
+	AIFlags &= ~AI_MANUAL_STEERING;
+	// PMM - clear duck flag
+	if (AIFlags & AI_DUCKED)
+		UnDuck();
+#endif
+
 	if (level.time < Entity->pain_debounce_time)
 	{
 		if ((Entity->velocity[2] > 100) && ( (CurrentMove == &SoldierMovePain1) || (CurrentMove == &SoldierMovePain2) || (CurrentMove == &SoldierMovePain3)))
@@ -338,6 +349,17 @@ void CSoldierBase::Fire1 ()
 
 void CSoldierBase::Attack1_Refire1 ()
 {
+#ifdef MONSTER_USE_ROGUE_AI
+	// PMM - blindfire
+	if (AIFlags & AI_MANUAL_STEERING)
+	{
+		AIFlags &= ~AI_MANUAL_STEERING;
+		NextFrame = FRAME_attak110; // Skips the chicklee
+		return;
+	}
+	// pmm
+#endif
+
 	if (Entity->s.skinNum > 1)
 		return;
 
@@ -437,34 +459,23 @@ CAnim SoldierMoveAttack2 (FRAME_attak201, FRAME_attak218, SoldierFramesAttack2, 
 
 // ATTACK3 (duck and shoot)
 
-void CSoldierBase::Duck_Down ()
-{
-	if (AIFlags & AI_DUCKED)
-		return;
-	AIFlags |= AI_DUCKED;
-	Entity->maxs[2] -= 32;
-	Entity->takedamage = DAMAGE_YES;
-	PauseTime = level.time + 1;
-	gi.linkentity (Entity);
-}
-
-void CSoldierBase::Duck_Up ()
-{
-	AIFlags &= ~AI_DUCKED;
-	Entity->maxs[2] += 32;
-	Entity->takedamage = DAMAGE_AIM;
-	gi.linkentity (Entity);
-}
-
 void CSoldierBase::Fire3 ()
 {
+#ifdef MONSTER_USE_ROGUE_AI
+	DuckDown ();
+#else
 	Duck_Down ();
+#endif
 	FireGun (2);
 }
 
 void CSoldierBase::Attack3_Refire ()
 {
+#ifdef MONSTER_USE_ROGUE_AI
+	if ((level.time + 0.4) < DuckWaitTime)
+#else
 	if ((level.time + 0.4) < PauseTime)
+#endif
 		NextFrame = FRAME_attak303;
 }
 
@@ -476,7 +487,11 @@ CFrame SoldierFramesAttack3 [] =
 	CFrame (&CMonster::AI_Charge, 0),
 	CFrame (&CMonster::AI_Charge, 0),
 	CFrame (&CMonster::AI_Charge, 0, ConvertDerivedFunction(&CSoldierBase::Attack3_Refire)),
+#ifdef MONSTER_USE_ROGUE_AI
+	CFrame (&CMonster::AI_Charge, 0, &CMonster::UnDuck),
+#else
 	CFrame (&CMonster::AI_Charge, 0, ConvertDerivedFunction(&CSoldierBase::Duck_Up)),
+#endif
 	CFrame (&CMonster::AI_Charge, 0),
 	CFrame (&CMonster::AI_Charge, 0)
 };
@@ -515,18 +530,60 @@ void CSoldierBase::Fire8 ()
 
 void CSoldierBase::Attack6_Refire ()
 {
+#ifdef MONSTER_USE_ROGUE_AI
+	// PMM - make sure dodge & charge bits are cleared
+	DoneDodge ();
+	StopCharge ();
+#endif
+
 	if (Entity->enemy->health <= 0)
 		return;
 
-	if (range(Entity, Entity->enemy) < RANGE_MID)
+	if (range(Entity, Entity->enemy) < RANGE_NEAR)
 		return;
 
-	if (skill->Integer() == 3)
+	if ((skill->Integer() == 3) || ((random() < (0.25*((float)skill->Integer())))))
 		NextFrame = FRAME_runs03;
 }
 
+#ifdef MONSTER_USE_ROGUE_AI
+void CSoldierBase::Attack6_RefireBlaster ()
+{
+	if (Entity->s.skinNum > 1)
+		return;
+
+	// PMM - make sure dodge & charge bits are cleared
+	DoneDodge ();
+	StopCharge ();
+
+	if (Entity->enemy->health <= 0)
+		return;
+
+	if (range(Entity, Entity->enemy) < RANGE_NEAR)
+		return;
+
+	if ((skill->Integer() == 3) || ((random() < (0.25*((float)skill->Integer())))))
+		NextFrame = FRAME_runs03;
+	else
+		NextFrame = FRAME_runs14;
+}
+#endif
+
+#ifdef MONSTER_USE_ROGUE_AI
+void CSoldierBase::StartCharge ()
+{
+	AIFlags |= AI_CHARGING;
+}
+
+void CSoldierBase::StopCharge ()
+{
+	AIFlags &= ~AI_CHARGING;
+}
+#endif
+
 CFrame SoldierFramesAttack6 [] =
 {
+#ifndef MONSTER_USE_ROGUE_AI
 	CFrame (&CMonster::AI_Charge, 10),
 	CFrame (&CMonster::AI_Charge,  4),
 	CFrame (&CMonster::AI_Charge, 12),
@@ -541,6 +598,22 @@ CFrame SoldierFramesAttack6 [] =
 	CFrame (&CMonster::AI_Charge, 12),
 	CFrame (&CMonster::AI_Charge, 12),
 	CFrame (&CMonster::AI_Charge, 17, ConvertDerivedFunction(&CSoldierBase::Attack6_Refire))
+#else
+	CFrame (&CMonster::AI_Charge, 10, ConvertDerivedFunction(&CSoldierBase::StartCharge)),
+	CFrame (&CMonster::AI_Charge,  4),
+	CFrame (&CMonster::AI_Charge, 12),
+	CFrame (&CMonster::AI_Charge, 11, ConvertDerivedFunction(&CSoldierBase::Fire8)),
+	CFrame (&CMonster::AI_Charge, 13),
+	CFrame (&CMonster::AI_Charge, 18, ConvertDerivedFunction(&CSoldierBase::DoneDodge)),
+	CFrame (&CMonster::AI_Charge, 15),
+	CFrame (&CMonster::AI_Charge, 14, ConvertDerivedFunction(&CSoldierBase::Attack6_RefireBlaster)),
+	CFrame (&CMonster::AI_Charge, 11),
+	CFrame (&CMonster::AI_Charge,  8, ConvertDerivedFunction(&CSoldierBase::CockGun)),
+	CFrame (&CMonster::AI_Charge, 11),
+	CFrame (&CMonster::AI_Charge, 12),
+	CFrame (&CMonster::AI_Charge, 12),
+	CFrame (&CMonster::AI_Charge, 17, ConvertDerivedFunction(&CSoldierBase::Attack6_Refire))
+#endif
 };
 CAnim SoldierMoveAttack6 (FRAME_runs01, FRAME_runs14, SoldierFramesAttack6, ConvertDerivedFunction(&CSoldierBase::Run));
 
@@ -552,9 +625,9 @@ void CSoldierBase::Sight ()
 {
 	Sound (Entity, CHAN_VOICE, (random() < 0.5) ? SoundSight1 : SoundSight2);
 
-	if ((skill->Integer() > 0) && (range(Entity, Entity->enemy) >= RANGE_MID))
+	if ((skill->Integer() > 0) && (range(Entity, Entity->enemy) >= RANGE_NEAR))
 	{
-		if (random() > 0.5)
+		if ((random() > 0.75) && (Entity->s.skinNum <= 3))
 			CurrentMove = &SoldierMoveAttack6;
 	}
 }
@@ -563,24 +636,25 @@ void CSoldierBase::Sight ()
 // DUCK
 //
 
-void CSoldierBase::Duck_Hold ()
-{
-	if (level.time >= PauseTime)
-		AIFlags &= ~AI_HOLD_FRAME;
-	else
-		AIFlags |= AI_HOLD_FRAME;
-}
-
 CFrame SoldierFramesDuck [] =
 {
+#ifdef MONSTER_USE_ROGUE_AI
+	CFrame (&CMonster::AI_Move, 5, &CMonster::DuckDown),
+	CFrame (&CMonster::AI_Move, -1, &CMonster::DuckHold),
+	CFrame (&CMonster::AI_Move, 1),
+	CFrame (&CMonster::AI_Move, 0,  &CMonster::UnDuck),
+	CFrame (&CMonster::AI_Move, 5)
+#else
 	CFrame (&CMonster::AI_Move, 5, ConvertDerivedFunction(&CSoldierBase::Duck_Down)),
 	CFrame (&CMonster::AI_Move, -1, ConvertDerivedFunction(&CSoldierBase::Duck_Hold)),
 	CFrame (&CMonster::AI_Move, 1),
 	CFrame (&CMonster::AI_Move, 0,  ConvertDerivedFunction(&CSoldierBase::Duck_Up)),
 	CFrame (&CMonster::AI_Move, 5)
+#endif
 };
 CAnim SoldierMoveDuck (FRAME_duck01, FRAME_duck05, SoldierFramesDuck, ConvertDerivedFunction(&CSoldierBase::Run));
 
+#ifndef MONSTER_USE_ROGUE_AI
 void CSoldierBase::Dodge (edict_t *attacker, float eta)
 {
 	if (random() > 0.25)
@@ -610,6 +684,15 @@ void CSoldierBase::Dodge (edict_t *attacker, float eta)
 		break;
 	}
 }
+
+void CSoldierBase::Duck_Hold ()
+{
+	if (level.time >= PauseTime)
+		AIFlags &= ~AI_HOLD_FRAME;
+	else
+		AIFlags |= AI_HOLD_FRAME;
+}
+#endif
 
 
 //
@@ -937,6 +1020,78 @@ void CSoldierBase::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_
 	}
 }
 
+//
+// NEW DODGE CODE
+//
+
+#ifdef MONSTER_USE_ROGUE_AI
+void CSoldierBase::Duck (float eta)
+{
+	float r;
+
+	// has to be done immediately otherwise he can get stuck
+	DuckDown();
+
+	if (skill->Integer() == 0)
+	{
+		// PMM - stupid dodge
+		NextFrame = FRAME_duck01;
+		CurrentMove = &SoldierMoveDuck;
+		DuckWaitTime = level.time + eta + 1;
+		return;
+	}
+
+	r = random();
+
+	if (r > (skill->Integer() * 0.3))
+	{
+		NextFrame = FRAME_duck01;
+		CurrentMove = &SoldierMoveDuck;
+		DuckWaitTime = level.time + eta + (0.1 * (3 - skill->Integer()));
+	}
+	else
+	{
+		NextFrame = FRAME_attak301;
+		CurrentMove = &SoldierMoveAttack3;
+		DuckWaitTime = level.time + eta + 1;
+	}
+	return;
+}
+
+void CSoldierBase::SideStep ()
+{
+	if (Entity->s.skinNum <= 3)
+	{
+		if (CurrentMove != &SoldierMoveAttack6)
+			CurrentMove = &SoldierMoveAttack6;
+	}
+	else
+	{
+		if (CurrentMove != &SoldierMoveStartRun)
+			CurrentMove = &SoldierMoveStartRun;
+	}
+}
+#else
+void CSoldierBase::Duck_Down ()
+{
+	if (AIFlags & AI_DUCKED)
+		return;
+	AIFlags |= AI_DUCKED;
+	Entity->maxs[2] -= 32;
+	Entity->takedamage = DAMAGE_YES;
+	PauseTime = level.time + 1;
+	gi.linkentity (Entity);
+}
+
+void CSoldierBase::Duck_Up ()
+{
+	AIFlags &= ~AI_DUCKED;
+	Entity->maxs[2] += 32;
+	Entity->takedamage = DAMAGE_AIM;
+	gi.linkentity (Entity);
+}
+#endif
+
 void CSoldierBase::Spawn ()
 {
 	Scale = MODEL_SCALE;
@@ -954,7 +1109,11 @@ void CSoldierBase::Spawn ()
 	SoundCock =	SoundIndex ("infantry/infatck3.wav");
 
 	Entity->mass = 100;
-	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_SIGHT | MF_HAS_IDLE);
+	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_SIGHT | MF_HAS_IDLE
+#ifdef MONSTER_USE_ROGUE_AI
+		| MF_HAS_DODGE | MF_HAS_DUCK | MF_HAS_UNDUCK | MF_HAS_SIDESTEP
+#endif
+		);
 
 	SpawnSoldier ();
 

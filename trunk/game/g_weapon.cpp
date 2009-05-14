@@ -31,10 +31,10 @@ monster's dodge function should be called.
 */
 static void check_dodge (edict_t *self, vec3_t start, vec3_t dir, int speed)
 {
-	vec3_t		end;
-	vec3_t		v;
+	vec3_t	end;
+	vec3_t	v;
 	CTrace	tr;
-	float		eta;
+	float	eta;
 
 	// easy mode only ducks one quarter the time
 	if (skill->Integer() == 0)
@@ -44,12 +44,22 @@ static void check_dodge (edict_t *self, vec3_t start, vec3_t dir, int speed)
 	}
 	Vec3MA (start, 8192, dir, end);
 	tr = CTrace (start, end, self, CONTENTS_MASK_SHOT);
-	if ((tr.ent) && tr.ent->Monster && (tr.ent->svFlags & SVF_MONSTER) && (tr.ent->health > 0) && infront(tr.ent, self))
+
+#ifdef MONSTER_USE_ROGUE_AI
+	if ((tr.ent) && (tr.ent->Monster) && (tr.ent->health > 0) && (tr.ent->Monster->MonsterFlags & MF_HAS_DODGE) && infront(tr.ent, self))
+	{
+		Vec3Subtract (tr.endPos, start, v);
+		eta = (Vec3Length(v) - tr.ent->maxs[0]) / speed;
+		tr.ent->Monster->Dodge (self, eta, &tr);
+	}
+#else
+	if ((tr.ent) && (tr.ent->Monster) && (tr.ent->health > 0) && infront(tr.ent, self))
 	{
 		Vec3Subtract (tr.endPos, start, v);
 		eta = (Vec3Length(v) - tr.ent->maxs[0]) / speed;
 		tr.ent->Monster->Dodge (self, eta);
 	}
+#endif
 }
 
 

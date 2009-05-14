@@ -47,13 +47,26 @@ void CSoldierShotgun::Allocate (edict_t *ent)
 
 extern CAnim SoldierMoveAttack1;
 extern CAnim SoldierMoveAttack2;
+extern CAnim SoldierMoveAttack6;
 
 void CSoldierShotgun::Attack ()
 {
-	if (random() < 0.5)
-		CurrentMove = &SoldierMoveAttack1;
+#ifdef MONSTER_USE_ROGUE_AI
+	DoneDodge ();
+#endif
+
+	float r = random();
+	if ((!(AIFlags & (AI_BLOCKED|AI_STAND_GROUND))) &&
+		(range(Entity, Entity->enemy) >= RANGE_NEAR) && 
+		(r < (skill->Integer()*0.25)))
+		CurrentMove = &SoldierMoveAttack6;
 	else
-		CurrentMove = &SoldierMoveAttack2;
+	{
+		if (random() < 0.5)
+			CurrentMove = &SoldierMoveAttack1;
+		else
+			CurrentMove = &SoldierMoveAttack2;
+	}
 }
 
 static int ShotgunFlash [] = {MZ2_SOLDIER_SHOTGUN_1, MZ2_SOLDIER_SHOTGUN_2, MZ2_SOLDIER_SHOTGUN_3, MZ2_SOLDIER_SHOTGUN_4, MZ2_SOLDIER_SHOTGUN_5, MZ2_SOLDIER_SHOTGUN_6, MZ2_SOLDIER_SHOTGUN_7, MZ2_SOLDIER_SHOTGUN_8};

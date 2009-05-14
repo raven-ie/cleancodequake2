@@ -232,6 +232,10 @@ public:
 	void MuzzleFlash	(vec3_t Origin,
 						short Ent,
 						short id);
+
+	void MonsterFlash	(vec3_t Origin,
+						short Ent,
+						short id);
 };
 
 enum ECastType
@@ -242,6 +246,7 @@ enum ECastType
 };
 enum ECastFlags
 {
+	CASTFLAG_UNRELIABLE = 0,
 	CASTFLAG_PVS = 1,
 	CASTFLAG_PHS = 2,
 	CASTFLAG_RELIABLE = 4

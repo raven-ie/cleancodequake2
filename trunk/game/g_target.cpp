@@ -25,10 +25,10 @@ Fire an origin based temp entity event to the clients.
 */
 void Use_Target_Tent (edict_t *ent, edict_t *other, edict_t *activator)
 {
-	gi.WriteByte (SVC_TEMP_ENTITY);
-	gi.WriteByte (ent->style);
-	gi.WritePosition (ent->s.origin);
-	gi.multicast (ent->s.origin, MULTICAST_PVS);
+	WriteByte (SVC_TEMP_ENTITY);
+	WriteByte (ent->style);
+	WritePosition (ent->s.origin);
+	Cast (CASTFLAG_PVS, ent->s.origin);
 }
 
 void SP_target_temp_entity (edict_t *ent)

@@ -34,6 +34,23 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 
+CStatusBar::CStatusBar()
+{
+	Q_snprintfz (bar, sizeof(bar), "");
+	Q_snprintfz (temp, sizeof(temp), "");
+}
+void CStatusBar::Send ()
+{
+	gi.configstring (CS_STATUSBAR, bar);
+}
+void CStatusBar::SendMsg (edict_t *ent, bool reliable)
+{
+	WriteByte (SVC_LAYOUT);
+	WriteString (bar);
+	Cast ((reliable) ? CASTFLAG_RELIABLE : CASTFLAG_UNRELIABLE, ent);
+}
+
+
 void CStatusBar::AddToBarBuffer (char *string)
 {
 	Q_snprintfz (bar, sizeof(bar), "%s%s", bar, temp);

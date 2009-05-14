@@ -68,40 +68,91 @@ public:
 	};
 };
 
-//monster ai flags
-#define AI_STAND_GROUND			0x00000001
-#define AI_TEMP_STAND_GROUND	0x00000002
-#define AI_SOUND_TARGET			0x00000004
-#define AI_LOST_SIGHT			0x00000008
-#define AI_PURSUIT_LAST_SEEN	0x00000010
-#define AI_PURSUE_NEXT			0x00000020
-#define AI_PURSUE_TEMP			0x00000040
-#define AI_HOLD_FRAME			0x00000080
-#define AI_GOOD_GUY				0x00000100
-#define AI_BRUTAL				0x00000200
-#define AI_NOSTEP				0x00000400
-#define AI_DUCKED				0x00000800
-#define AI_COMBAT_POINT			0x00001000
-#define AI_MEDIC				0x00002000
-#define AI_RESURRECTING			0x00004000
-#define	AI_SLIDE				0x00008000
+#ifndef MONSTER_USE_ROGUE_AI
+	//monster ai flags
+	#define AI_STAND_GROUND			0x00000001
+	#define AI_TEMP_STAND_GROUND	0x00000002
+	#define AI_SOUND_TARGET			0x00000004
+	#define AI_LOST_SIGHT			0x00000008
+	#define AI_PURSUIT_LAST_SEEN	0x00000010
+	#define AI_PURSUE_NEXT			0x00000020
+	#define AI_PURSUE_TEMP			0x00000040
+	#define AI_HOLD_FRAME			0x00000080
+	#define AI_GOOD_GUY				0x00000100
+	#define AI_BRUTAL				0x00000200
+	#define AI_NOSTEP				0x00000400
+	#define AI_DUCKED				0x00000800
+	#define AI_COMBAT_POINT			0x00001000
+	#define AI_MEDIC				0x00002000
+	#define AI_RESURRECTING			0x00004000
+	#define	AI_SLIDE				0x00008000
+#else
+	//monster ai flags
+	#define AI_STAND_GROUND			0x00000001
+	#define AI_TEMP_STAND_GROUND	0x00000002
+	#define AI_SOUND_TARGET			0x00000004
+	#define AI_LOST_SIGHT			0x00000008
+	#define AI_PURSUIT_LAST_SEEN	0x00000010
+	#define AI_PURSUE_NEXT			0x00000020
+	#define AI_PURSUE_TEMP			0x00000040
+	#define AI_HOLD_FRAME			0x00000080
+	#define AI_GOOD_GUY				0x00000100
+	#define AI_BRUTAL				0x00000200
+	#define AI_NOSTEP				0x00000400
+	#define AI_DUCKED				0x00000800
+	#define AI_COMBAT_POINT			0x00001000
+	#define AI_MEDIC				0x00002000
+	#define AI_RESURRECTING			0x00004000
+
+	//ROGUE
+	#define AI_WALK_WALLS			0x00008000
+	#define AI_MANUAL_STEERING		0x00010000
+	#define AI_TARGET_ANGER			0x00020000
+	#define AI_DODGING				0x00040000
+	#define AI_CHARGING				0x00080000
+	#define AI_HINT_PATH			0x00100000
+	#define	AI_IGNORE_SHOTS			0x00200000
+	// PMM - FIXME - last second added for E3 .. there's probably a better way to do this, but
+	// this works
+	#define	AI_DO_NOT_COUNT			0x00400000	// set for healed monsters
+	#define	AI_SPAWNED_CARRIER		0x00800000	// both do_not_count and spawned are set for spawned monsters
+	#define	AI_SPAWNED_MEDIC_C		0x01000000	// both do_not_count and spawned are set for spawned monsters
+	#define	AI_SPAWNED_WIDOW		0x02000000	// both do_not_count and spawned are set for spawned monsters
+	#define AI_SPAWNED_MASK			0x03800000	// mask to catch all three flavors of spawned
+	#define	AI_BLOCKED				0x04000000	// used by blocked_checkattack: set to say I'm attacking while blocked 
+												// (prevents run-attacks)
+#endif
 
 #define MF_HAS_MELEE			0x00000001
 #define MF_HAS_IDLE				0x00000002
 #define MF_HAS_SEARCH			0x00000004
 #define	MF_HAS_SIGHT			0x00000008
 #define MF_HAS_ATTACK			0x00000010
+#ifdef MONSTER_USE_ROGUE_AI
+#define MF_HAS_DODGE			0x00000020
+#define MF_HAS_DUCK				0x00000040
+#define MF_HAS_UNDUCK			0x00000080
+#define MF_HAS_SIDESTEP			0x00000100
+#endif
 
 //monster attack state
-#define AS_STRAIGHT				1
-#define AS_SLIDING				2
-#define AS_MELEE				3
-#define AS_MISSILE				4
+enum EAttackState
+{
+	AS_STRAIGHT,
+	AS_SLIDING,
+	AS_MELEE,
+	AS_MISSILE,
+#ifdef MONSTER_USE_ROGUE_AI
+	AS_BLIND
+#endif
+};
 
 class CMonster
 {
 protected:
 public:
+	void				(CMonster::*Think) ();
+
 	uint32				MonsterID;
 
 	// Hash
@@ -117,8 +168,27 @@ public:
 	float				YawSpeed;
 	uint32				AIFlags;
 
+#ifdef MONSTER_USE_ROGUE_AI
+//ROGUE
+	bool	BlindFire;		// will the monster blindfire?
+	int			MedicTries;
+
+	//  while abort_duck would be nice, only monsters which duck but don't sidestep would use it .. only the brain
+	//  not really worth it.  sidestep is an implied abort_duck
+//	void		(*abort_duck)(edict_t *self);
+	float		BaseHeight;
+	float		NextDuckTime;
+	float		DuckWaitTime;
+	float		BlindFireDelay;
+	edict_t		*LastPlayerEnemy;
+	edict_t		*BadMedic1, *BadMedic2;	// these medics have declared this monster "unhealable"
+	edict_t		*Healer;	// this is who is healing this monster
+	vec3_t		BlindFireTarget;
+	// blindfire stuff .. the boolean says whether the monster will do it, and blind_fire_time is the timing
+	// (set in the monster) of the next shot
+#endif
+
 	void				RunThink ();
-	void				(CMonster::*Think) ();
 	float				NextThink;
 	int					NextFrame;
 	float				Scale;
@@ -150,6 +220,8 @@ public:
 	CPath				*P_CurrentPath;
 	CPathNode			*P_CurrentGoalNode;
 	CPathNode			*P_CurrentNode; // Always the current path node
+	int32				P_CurrentNodeIndex;
+	float				P_NodePathTimeout;
 	bool				FollowingPath;
 
 	// Pathfinding functions
@@ -159,6 +231,14 @@ public:
 
 	CMonster();
 
+#ifdef MONSTER_USE_ROGUE_AI
+	void DuckDown ();
+	virtual void Duck (float eta);
+	virtual void UnDuck ();
+	virtual void DuckHold ();
+	virtual void SideStep ();
+#endif
+
 	virtual void Allocate (edict_t *ent) = 0;
 	// Virtual functions
 	virtual void		Stand			();
@@ -166,7 +246,12 @@ public:
 	virtual void		Search			();
 	virtual void		Walk			();
 	virtual void		Run				();
+#ifndef MONSTER_USE_ROGUE_AI
 	virtual void		Dodge			(edict_t *other, float eta);
+#else
+	void		Dodge			(edict_t *attacker, float eta, CTrace *tr);
+	void		DoneDodge	();
+#endif
 	virtual void		Attack			();
 	virtual void		Melee			();
 	virtual void		Sight			();
@@ -183,7 +268,6 @@ public:
 	void AI_Run_Melee ();
 	void AI_Run_Missile ();
 	void AI_Run_Slide (float Dist);
-	void AI_Turn (float Dist);
 	void AI_Walk (float Dist);
 	bool FacingIdeal ();
 	bool FindTarget ();
@@ -219,8 +303,6 @@ public:
 #ifdef MONSTERS_ARENT_STUPID
 	void AlertNearbyStroggs ();
 	bool FriendlyInLine (vec3_t Origin, vec3_t Direction);
-
-	void AI_Run_Strafe (float Dist);
 #endif
 
 	void MonsterTriggeredSpawn ();

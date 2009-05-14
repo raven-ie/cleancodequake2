@@ -38,13 +38,9 @@ class CStatusBar
 	char temp[100]; // A temp buffer used for adding stuffs to the bar buffer.
 
 public:
-	CStatusBar()
-	{
-		Q_snprintfz (bar, sizeof(bar), "");
-		Q_snprintfz (temp, sizeof(temp), "");
-	}
-	void Send () { gi.configstring (CS_STATUSBAR, bar); }
-	void SendMsg (edict_t *ent, bool reliable = true) { gi.WriteByte (SVC_LAYOUT); gi.WriteString (bar); gi.unicast (ent, reliable); }
+	CStatusBar();
+	void Send ();
+	void SendMsg (edict_t *ent, bool reliable = true);
 
 	void AddToBarBuffer (char *string);
 	void AddVirtualPoint_Y (int y);

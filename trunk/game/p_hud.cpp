@@ -231,9 +231,9 @@ void HelpComputer (edict_t *ent)
 		level.found_goals, level.total_goals,
 		level.found_secrets, level.total_secrets);
 
-	gi.WriteByte (SVC_LAYOUT);
-	gi.WriteString (string);
-	gi.unicast (ent, true);
+	WriteByte (SVC_LAYOUT);
+	WriteString (string);
+	Cast (CASTFLAG_RELIABLE, ent);
 }
 
 

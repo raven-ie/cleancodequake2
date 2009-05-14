@@ -38,6 +38,14 @@ void CheckNodeFlags (CPathNode *Node);
 
 std::vector<CPathNode*>		Closed, Open;
 
+#define MAX_SAVED_PATHS	512
+typedef struct SSavedPath_s
+{
+	CPath	*ToEnd[MAX_SAVED_PATHS];
+} SSavedPath_t;
+
+SSavedPath_t SavedPaths[512];
+
 CPath::CPath () :
 Start(NULL),
 End(NULL),
@@ -137,7 +145,8 @@ void CPath::CreatePath ()
 		if (n == End)
 		{
 			// Construct path
-			gi.dprintf ("Path!\n");
+			//gi.dprintf ("Path!\n");
+			Incomplete = false;
 
 			while (n)
 			{
@@ -177,7 +186,8 @@ void CPath::CreatePath ()
 		}
 		AddNodeToClosed (n);
 	}
-	return;
+	// No possible path.
+	Incomplete = true;
 };
 
 #define MAX_NODES 512
@@ -194,6 +204,7 @@ void InitNodes ()
 	DebugNodes = new CCvar("node_debug", "0", CVAR_LATCH_SERVER);
 
 	NodeList.clear();
+	memset (SavedPaths, 0, sizeof(SavedPaths));
 }
 
 edict_t *PlayerNearby (vec3_t origin, int distance)
@@ -232,25 +243,6 @@ CPathNode *DropNode (edict_t *ent)
 void ConnectNode (CPathNode *Node1, CPathNode *Node2);
 void RunPlayerNodes (edict_t *ent)
 {
-	if (!DebugNodes->Integer())
-		return;
-
-	if (!ent->client->resp.DroppingNodes)
-		return;
-
-	if (!ent->client->resp.LastNode)
-		ent->client->resp.LastNode = DropNode (ent);
-	else
-	{
-		vec3_t sub;
-		Vec3Subtract (ent->client->resp.LastNode->Origin, ent->s.origin, sub);
-		if (Vec3Length(sub) > 64)
-		{
-			CPathNode *NewNode = DropNode(ent);
-			ConnectNode (NewNode, ent->client->resp.LastNode);
-			ent->client->resp.LastNode = NewNode;
-		}
-	}
 }
 
 void RunNodes()
@@ -312,6 +304,13 @@ void AddNode (edict_t *ent, vec3_t origin)
 
 	SpawnNodeEntity (NodeList.at(NodeList.size() - 1));
 	gi.cprintf (ent, PRINT_HIGH, "Node %i added\n", NodeList.size());
+
+	if (Q_stricmp(gi.argv(2), "connect") == 0)
+	{
+		if (ent->client->resp.LastNode)
+			ConnectNode (ent->client->resp.LastNode, NodeList.at(NodeList.size() - 1));
+	}
+	ent->client->resp.LastNode = NodeList.at(NodeList.size() - 1);
 }
 
 void ConnectNode (CPathNode *Node1, CPathNode *Node2)
@@ -387,8 +386,11 @@ void SaveNodes ()
 
 		if (NodeList[i]->Type == NODE_DOOR)
 		{
-			int modelNum = atoi(NodeList[i]->LinkedEntity->model+1);
-			fwrite (&modelNum, sizeof(int), 1, fp);
+			if (NodeList[i]->LinkedEntity)
+			{
+				int modelNum = atoi(NodeList[i]->LinkedEntity->model+1);
+				fwrite (&modelNum, sizeof(int), 1, fp);
+			}
 		}
 
 		uint32 num = NodeList[i]->Children.size();
@@ -582,11 +584,8 @@ void Cmd_Node_f (edict_t *ent)
 		LoadNodes ();
 	else if (Q_stricmp(cmd, "drop") == 0)
 		AddNode (ent, ent->s.origin);
-	else if (Q_stricmp(cmd, "dropper") == 0)
-	{
+	else if (Q_stricmp(cmd, "clearlastnode") == 0)
 		ent->client->resp.LastNode = NULL;
-		ent->client->resp.DroppingNodes = !ent->client->resp.DroppingNodes;
-	}
 	else if (Q_stricmp(cmd, "connect") == 0)
 	{
 		uint32 firstId = atoi(gi.argv(2));
@@ -729,4 +728,34 @@ void Cmd_Node_f (edict_t *ent)
 		Node->Ent->s.origin[2] += z;
 		gi.linkentity(Node->Ent);
 	}
+}
+
+CPath *CreatePath (CPathNode *Start, CPathNode *End)
+{
+	CPath *New = new CPath(Start, End);
+
+	if (New->Incomplete)
+	{
+		delete New;
+		return NULL;
+	}
+	else
+		return New;
+}
+
+// A table of saved paths, to speed things up.
+
+CPath *GetPath (CPathNode *Start, CPathNode *End)
+{
+	uint32 StartIndex = GetNodeIndex(Start);
+	uint32 EndIndex = GetNodeIndex(End);
+
+	CPath *Path = SavedPaths[StartIndex].ToEnd[EndIndex];
+
+	if (!Path)
+	{
+		SavedPaths[StartIndex].ToEnd[EndIndex] = CreatePath(Start, End);
+		return SavedPaths[StartIndex].ToEnd[EndIndex];
+	}
+	return Path;
 }

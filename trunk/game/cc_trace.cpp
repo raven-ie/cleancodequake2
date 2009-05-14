@@ -30,3 +30,48 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // cc_trace.cpp
 // A wrapper for the ugly gi.trace system.
 //
+
+#include "cc_local.h"
+
+void CTrace::Copy (cmTrace_t tr)
+{
+	fraction = tr.fraction;
+	ent = tr.ent;
+	plane = tr.plane;
+	allSolid = (tr.allSolid != 0);
+	startSolid = (tr.startSolid != 0);
+	Vec3Copy (tr.endPos, endPos);
+	surface = tr.surface;
+	contents = tr.contents;
+};
+
+CTrace::CTrace ()
+{
+	fraction = 0;
+	ent = NULL;
+	memset (&plane, 0, sizeof(plane));
+	allSolid = false;
+	startSolid = false;
+	Vec3Copy (vec3Origin, endPos);
+	surface = NULL;
+	contents = -1;
+}
+
+// Constructor easyness
+CTrace::CTrace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *ignore, int contentMask)
+{
+	cmTrace_t temp = gi.trace(start, mins, maxs, end, ignore, contentMask);
+	Copy(temp);
+};
+
+CTrace::CTrace (vec3_t start, vec3_t end, edict_t *ignore, int contentMask)
+{
+	cmTrace_t temp = gi.trace(start, vec3Origin, vec3Origin, end, ignore, contentMask);
+	Copy(temp);
+};
+
+CTrace::CTrace (vec3_t start, vec3_t end, int contentMask)
+{
+	cmTrace_t temp = gi.trace(start, vec3Origin, vec3Origin, end, NULL, contentMask);
+	Copy(temp);
+}

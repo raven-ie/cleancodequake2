@@ -47,13 +47,59 @@ void CSoldierLight::Allocate (edict_t *ent)
 
 extern CAnim SoldierMoveAttack1;
 extern CAnim SoldierMoveAttack2;
+extern CAnim SoldierMoveAttack6;
 
 void CSoldierLight::Attack ()
 {
-	if (random() < 0.5)
+#ifdef MONSTER_USE_ROGUE_AI
+	DoneDodge ();
+
+	// PMM - blindfire!
+	if (AttackState == AS_BLIND)
+	{
+		float r, chance;
+		// setup shot probabilities
+		if (BlindFireDelay < 1.0)
+			chance = 1.0f;
+		else if (BlindFireDelay < 7.5)
+			chance = 0.4f;
+		else
+			chance = 0.1f;
+
+		r = random();
+
+		// minimum of 2 seconds, plus 0-3, after the shots are done
+		BlindFireDelay += 2.1 + 2.0 + random()*3.0;
+
+		// don't shoot at the origin
+		if (Vec3Compare (BlindFireTarget, vec3Origin))
+			return;
+
+		// don't shoot if the dice say not to
+		if (r > chance)
+			return;
+
+		// turn on manual steering to signal both manual steering and blindfire
+		AIFlags |= AI_MANUAL_STEERING;
 		CurrentMove = &SoldierMoveAttack1;
+		AttackFinished = level.time + 1.5 + random();
+		return;
+	}
+	// pmm
+#endif
+
+	float r = random();
+	if ((!(AIFlags & (AI_BLOCKED|AI_STAND_GROUND))) &&
+		(range(Entity, Entity->enemy) >= RANGE_NEAR) && 
+		(r < (skill->Integer()*0.25)))
+		CurrentMove = &SoldierMoveAttack6;
 	else
-		CurrentMove = &SoldierMoveAttack2;
+	{
+		if (random() < 0.5)
+			CurrentMove = &SoldierMoveAttack1;
+		else
+			CurrentMove = &SoldierMoveAttack2;
+	}
 }
 
 static int BlasterFlash [] = {MZ2_SOLDIER_BLASTER_1, MZ2_SOLDIER_BLASTER_2, MZ2_SOLDIER_BLASTER_3, MZ2_SOLDIER_BLASTER_4, MZ2_SOLDIER_BLASTER_5, MZ2_SOLDIER_BLASTER_6, MZ2_SOLDIER_BLASTER_7, MZ2_SOLDIER_BLASTER_8};
@@ -104,4 +150,8 @@ void CSoldierLight::SpawnSoldier ()
 	Entity->s.skinNum = 0;
 	Entity->health = 20;
 	Entity->gib_health = -30;
+
+#ifdef MONSTER_USE_ROGUE_AI
+	BlindFire = true;
+#endif
 }

@@ -84,6 +84,7 @@ public:
 	std::vector<CPathNode*>		Path;
 	uint32						Weight;
 	uint32						NumNodes;
+	bool						Incomplete;
 
 	CPath ();
 	CPath (CPathNode *Start, CPathNode *End);
@@ -107,3 +108,5 @@ void InitNodes ();
 void RunNodes ();
 void RunPlayerNodes (edict_t *ent);
 CPathNode *GetClosestNodeTo (vec3_t origin);
+
+CPath *GetPath (CPathNode *Start, CPathNode *End);

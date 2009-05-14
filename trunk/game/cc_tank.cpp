@@ -303,6 +303,12 @@ void CTank::Pain (edict_t *other, float kick, int damage)
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
 
+#ifdef MONSTER_USE_ROGUE_AI
+	// PMM - blindfire cleanup
+	AIFlags &= ~AI_MANUAL_STEERING;
+	// pmm
+#endif
+
 	CurrentMove = ((damage <= 60) ? ((damage <= 30) ? &TankMovePain1 : &TankMovePain2) : &TankMovePain3);
 };
 
@@ -354,6 +360,24 @@ void CTank::Rocket ()
 	vec3_t	dir;
 	vec3_t	vec;
 	int		flash_number;
+	CTrace	trace;				// PGM
+	int		rocketSpeed;		// PGM
+	// pmm - blindfire support
+	vec3_t	target;
+#ifdef MONSTER_USE_ROGUE_AI
+	bool blindfire = false;
+#endif
+
+	if(!Entity->enemy || !Entity->enemy->inUse)		//PGM
+		return;									//PGM
+
+	// pmm - blindfire check
+#ifdef MONSTER_USE_ROGUE_AI
+	if (AIFlags & AI_MANUAL_STEERING)
+		blindfire = true;
+	else
+		blindfire = false;
+#endif
 
 	switch (Entity->s.frame)
 	{
@@ -371,12 +395,114 @@ void CTank::Rocket ()
 	Angles_Vectors (Entity->s.angles, forward, right, NULL);
 	G_ProjectSource (Entity->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
-	Vec3Copy (Entity->enemy->s.origin, vec);
-	vec[2] += Entity->enemy->viewheight;
-	Vec3Subtract (vec, start, dir);
-	VectorNormalizef (dir, dir);
+	rocketSpeed = 500 + (100 * skill->Integer());	// PGM rock & roll.... :)
 
-	MonsterFireRocket (start, dir, 50, 550, flash_number);
+		// PMM
+	if (blindfire)
+		Vec3Copy (BlindFireTarget, target);
+	else
+		Vec3Copy (Entity->enemy->s.origin, target);
+	// pmm
+
+//	VectorCopy (self->enemy->s.origin, vec);
+//	vec[2] += self->enemy->viewheight;
+//	VectorSubtract (vec, start, dir);
+
+//PGM
+	// PMM - blindfire shooting
+#ifdef MONSTER_USE_ROGUE_AI
+	if (blindfire)
+	{
+		Vec3Copy (target, vec);
+		Vec3Subtract (vec, start, dir);
+	}
+	// pmm
+	// don't shoot at feet if they're above me.
+	else
+#endif
+	if(random() < 0.66 || (start[2] < Entity->enemy->absMin[2]))
+	{
+//		gi.dprintf("normal shot\n");
+		Vec3Copy (Entity->enemy->s.origin, vec);
+		vec[2] += Entity->enemy->viewheight;
+		Vec3Subtract (vec, start, dir);
+	}
+	else
+	{
+//		gi.dprintf("shooting at feet!\n");
+		Vec3Copy (Entity->enemy->s.origin, vec);
+		vec[2] = Entity->enemy->absMin[2];
+		Vec3Subtract (vec, start, dir);
+	}
+//PGM
+	
+//======
+//PMM - lead target  (not when blindfiring)
+	// 20, 35, 50, 65 chance of leading
+	if(
+#ifdef MONSTER_USE_ROGUE_AI
+		(!blindfire) && 
+#endif
+		((random() < (0.2 + ((3 - skill->Integer()) * 0.15)))))
+	{
+		float	dist;
+		float	time;
+
+//		gi.dprintf ("leading target\n");
+		dist = Vec3Length (dir);
+		time = dist/rocketSpeed;
+		Vec3MA(vec, time, Entity->enemy->velocity, vec);
+		Vec3Subtract(vec, start, dir);
+	}
+//PMM - lead target
+//======
+
+	VectorNormalizeFastf (dir);
+
+	// pmm blindfire doesn't check target (done in checkattack)
+	// paranoia, make sure we're not shooting a target right next to us
+	trace = CTrace(start, vec, Entity, CONTENTS_MASK_SHOT);
+	#ifdef MONSTER_USE_ROGUE_AI
+	if (blindfire)
+	{
+		// blindfire has different fail criteria for the trace
+		if (!(trace.startSolid || trace.allSolid || (trace.fraction < 0.5)))
+			MonsterFireRocket (start, dir, 50, rocketSpeed, flash_number);
+		else 
+		{
+			// try shifting the target to the left a little (to help counter large offset)
+			Vec3Copy (target, vec);
+			Vec3MA (vec, -20, right, vec);
+			Vec3Subtract(vec, start, dir);
+			VectorNormalizeFastf (dir);
+			trace = CTrace(start, vec, Entity, CONTENTS_MASK_SHOT);
+			if (!(trace.startSolid || trace.allSolid || (trace.fraction < 0.5)))
+				MonsterFireRocket (start, dir, 50, rocketSpeed, flash_number);
+			else 
+			{
+				// ok, that failed.  try to the right
+				Vec3Copy (target, vec);
+				Vec3MA (vec, 20, right, vec);
+				Vec3Subtract(vec, start, dir);
+				VectorNormalizeFastf (dir);
+				trace = CTrace(start, vec, Entity, CONTENTS_MASK_SHOT);
+				if (!(trace.startSolid || trace.allSolid || (trace.fraction < 0.5)))
+					MonsterFireRocket (start, dir, 50, rocketSpeed, flash_number);
+			}
+		}
+	}
+	else
+#endif
+	{
+		trace = CTrace(start, vec, Entity, CONTENTS_MASK_SHOT);
+		if(trace.ent == Entity->enemy || trace.ent == world)
+		{
+			if(trace.fraction > 0.5 || (trace.ent && trace.ent->client))
+				MonsterFireRocket (start, dir, 50, rocketSpeed, flash_number);
+	//		else
+	//			gi.dprintf("didn't make it halfway to target...aborting\n");
+		}
+	}
 }	
 
 void CTank::MachineGun ()
@@ -623,6 +749,17 @@ CAnim TankMoveAttackChain (FRAME_attak401, FRAME_attak429, TankFramesAttackChain
 
 void CTank::ReFireRocket ()
 {
+#ifdef MONSTER_USE_ROGUE_AI
+	// PMM - blindfire cleanup
+	if (AIFlags & AI_MANUAL_STEERING)
+	{
+		AIFlags &= ~AI_MANUAL_STEERING;
+		CurrentMove = &TankMoveAttackPostRocket;
+		return;
+	}
+	// pmm
+#endif
+
 	// Only on hard or nightmare
 	if ( skill->Integer() >= 2 && Entity->enemy->health > 0 && visible(Entity, Entity->enemy) && random() <= 0.4)
 	{
@@ -639,9 +776,13 @@ void CTank::DoAttackRocket ()
 
 void CTank::Attack ()
 {
+	if (!Entity->enemy || !Entity->enemy->inUse)
+		return;
+
 	vec3_t	vec;
 	float	range;
 	float	r;
+	float	chance;
 
 	if (Entity->enemy->health < 0)
 	{
@@ -649,6 +790,40 @@ void CTank::Attack ()
 		AIFlags &= ~AI_BRUTAL;
 		return;
 	}
+
+#ifdef MONSTER_USE_ROGUE_AI
+	// PMM 
+	if (AttackState == AS_BLIND)
+	{
+		// setup shot probabilities
+		if (BlindFireDelay < 1.0)
+			chance = 1.0;
+		else if (BlindFireDelay < 7.5)
+			chance = 0.4f;
+		else
+			chance = 0.1f;
+
+		r = random();
+
+		BlindFireDelay += 3.2 + 2.0 + random()*3.0;
+
+		// don't shoot at the origin
+		if (Vec3Compare (BlindFireTarget, vec3Origin))
+			return;
+
+		// don't shoot if the dice say not to
+		if (r > chance)
+			return;
+
+		// turn on manual steering to signal both manual steering and blindfire
+		AIFlags |= AI_MANUAL_STEERING;
+		CurrentMove = &TankMoveAttackFireRocket;
+		AttackFinished = level.time + 3.0 + 2*random();
+		Entity->pain_debounce_time = level.time + 5.0;	// no pain for a while
+		return;
+	}
+	// pmm
+#endif
 
 	Vec3Subtract (Entity->enemy->s.origin, Entity->s.origin, vec);
 	range = Vec3Length (vec);
@@ -799,6 +974,13 @@ void CTank::Spawn ()
 	Entity->mass = 500;
 
 	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_SIGHT | MF_HAS_IDLE);
+
+#ifdef MONSTER_USE_ROGUE_AI
+	// PMM
+	AIFlags |= AI_IGNORE_SHOTS;
+	BlindFire = true;
+	//pmm
+#endif
 
 	gi.linkentity (Entity);
 	WalkMonsterStart();
