@@ -49,6 +49,10 @@ extern CAnim SoldierMoveAttack4;
 
 void CSoldierMachinegun::Attack ()
 {
+#ifdef MONSTER_USE_ROGUE_AI
+	DoneDodge ();
+#endif
+
 	CurrentMove = &SoldierMoveAttack4;
 }
 
@@ -87,11 +91,11 @@ void CSoldierMachinegun::FireGun (int FlashNumber)
 	}
 
 	if (!(AIFlags & AI_HOLD_FRAME))
-		PauseTime = level.time + (3 + rand() % 8) * FRAMETIME;
+		Entity->wait = level.time + (3 + rand() % 8) * FRAMETIME;
 
 	MonsterFireBullet (start, aim, 2, 4, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, flashIndex);
 
-	if (level.time >= PauseTime)
+	if (level.time >= Entity->wait)
 		AIFlags &= ~AI_HOLD_FRAME;
 	else
 		AIFlags |= AI_HOLD_FRAME;

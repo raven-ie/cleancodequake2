@@ -208,6 +208,9 @@ CAnim GunnerMoveRun(FRAME_run01, FRAME_run08, GunnerFramesRun);
 
 void CGunner::Run ()
 {
+#ifdef MONSTER_USE_ROGUE_AI
+	DoneDodge();
+#endif
 	CurrentMove = (AIFlags & AI_STAND_GROUND) ? &GunnerMoveStand : &GunnerMoveRun;
 }
 
@@ -278,6 +281,10 @@ void CGunner::Pain (edict_t *other, float kick, int damage)
 	if (Entity->health < (Entity->max_health / 2))
 		Entity->s.skinNum = 1;
 
+#ifdef MONSTER_USE_ROGUE_AI
+	DoneDodge();
+#endif
+
 	if (level.time < Entity->pain_debounce_time)
 		return;
 
@@ -288,6 +295,12 @@ void CGunner::Pain (edict_t *other, float kick, int damage)
 		return;		// no pain anims in nightmare
 
 	CurrentMove = ((damage <= 10) ? &GunnerMovePain3 : ((damage <= 25) ? &GunnerMovePain2 : &GunnerMovePain1));
+
+	AIFlags &= ~AI_MANUAL_STEERING;
+
+	// PMM - clear duck flag
+	if (AIFlags & AI_DUCKED)
+		UnDuck();
 }
 
 void CGunner::Dead ()
@@ -343,6 +356,7 @@ void CGunner::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t poi
 
 void CGunner::DuckDown ()
 {
+#ifndef MONSTER_USE_ROGUE_AI
 	if (AIFlags & AI_DUCKED)
 		return;
 	AIFlags |= AI_DUCKED;
@@ -356,8 +370,26 @@ void CGunner::DuckDown ()
 	Entity->takedamage = DAMAGE_YES;
 	PauseTime = level.time + 1;
 	gi.linkentity (Entity);
+#else
+//	if (self->monsterinfo.aiflags & AI_DUCKED)
+//		return;
+	AIFlags |= AI_DUCKED;
+	if (skill->Integer() >= 2)
+	{
+		if (random() > 0.5)
+			Grenade ();
+	}
+
+//	self->maxs[2] -= 32;
+	Entity->maxs[2] = BaseHeight - 32;
+	Entity->takedamage = DAMAGE_YES;
+	if (DuckWaitTime < level.time)
+		DuckWaitTime = level.time + 1;
+	gi.linkentity (Entity);
+#endif
 }
 
+#ifndef MONSTER_USE_ROGUE_AI
 void CGunner::DuckHold ()
 {
 	if (level.time >= PauseTime)
@@ -373,16 +405,25 @@ void CGunner::DuckUp ()
 	Entity->takedamage = DAMAGE_AIM;
 	gi.linkentity (Entity);
 }
+#endif
 
 CFrame GunnerFramesDuck [] =
 {
 	CFrame (&CMonster::AI_Move, 1, ConvertDerivedFunction(&CGunner::DuckDown)),
 	CFrame (&CMonster::AI_Move, 1),
+#ifndef MONSTER_USE_ROGUE_AI
 	CFrame (&CMonster::AI_Move, 1, ConvertDerivedFunction(&CGunner::DuckHold)),
+#else
+	CFrame (&CMonster::AI_Move, 1, &CMonster::DuckHold),
+#endif
 	CFrame (&CMonster::AI_Move, 0),
 	CFrame (&CMonster::AI_Move, -1),
 	CFrame (&CMonster::AI_Move, -1),
+#ifndef MONSTER_USE_ROGUE_AI
 	CFrame (&CMonster::AI_Move, 0, ConvertDerivedFunction(&CGunner::DuckUp)),
+#else
+	CFrame (&CMonster::AI_Move, 0, &CGunner::UnDuck),
+#endif
 	CFrame (&CMonster::AI_Move, -1)
 };
 CAnim GunnerMoveDuck (FRAME_duck01, FRAME_duck08, GunnerFramesDuck, ConvertDerivedFunction(&CGunner::Run));
@@ -402,6 +443,52 @@ void CGunner::OpenGun ()
 {
 	Sound (Entity, CHAN_VOICE, SoundOpen, 1, ATTN_IDLE, 0);
 }
+
+#ifdef MONSTER_USE_ROGUE_AI
+bool CGunner::GrenadeCheck()
+{
+	if(!Entity->enemy)
+		return false;
+
+	vec3_t		start;
+	vec3_t		forward, right;
+	vec3_t		target, dir;
+
+	// if the player is above my head, use machinegun.
+
+	// check for flag telling us that we're blindfiring
+	if (AIFlags & AI_MANUAL_STEERING)
+	{
+		if (Entity->s.origin[2]+Entity->viewheight < BlindFireTarget[2])
+			return false;
+	}
+	else if(Entity->absMax[2] <= Entity->enemy->absMin[2])
+		return false;
+
+	// check to see that we can trace to the player before we start
+	// tossing grenades around.
+	Angles_Vectors (Entity->s.angles, forward, right, NULL);
+	G_ProjectSource (Entity->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_GUNNER_GRENADE_1], forward, right, start);
+
+	// pmm - check for blindfire flag
+	if (AIFlags & AI_MANUAL_STEERING)
+		Vec3Copy (BlindFireTarget, target);
+	else
+		Vec3Copy (Entity->enemy->s.origin, target);
+
+	// see if we're too close
+	Vec3Subtract (Entity->s.origin, target, dir);
+
+	if (Vec3Length(dir) < 100)
+		return false;
+
+	CTrace tr = CTrace(start, target, Entity, CONTENTS_MASK_SHOT);
+	if(tr.ent == Entity->enemy || tr.fraction == 1)
+		return true;
+
+	return false;
+}
+#endif
 
 void CGunner::Fire ()
 {
@@ -426,6 +513,7 @@ void CGunner::Fire ()
 
 void CGunner::Grenade ()
 {
+#ifndef MONSTER_USE_ROGUE_AI
 	vec3_t	start;
 	vec3_t	forward, right;
 	vec3_t	aim;
@@ -453,6 +541,85 @@ void CGunner::Grenade ()
 	Vec3Copy (forward, aim);
 
 	MonsterFireGrenade (start, aim, 50, 600, flash_number);
+#else
+	vec3_t	start;
+	vec3_t	forward, right, up;
+	vec3_t	aim;
+	int		flash_number;
+	float	spread;
+	float	pitch = 0;
+	// PMM
+	vec3_t	target;	
+
+	if(!Entity->enemy || !Entity->enemy->inUse)		//PGM
+		return;									//PGM
+
+	switch (Entity->s.frame)
+	{
+	case FRAME_attak105:
+		flash_number = MZ2_GUNNER_GRENADE_1;
+		spread = .02f;
+		break;
+	case FRAME_attak108:
+		flash_number = MZ2_GUNNER_GRENADE_2;
+		spread = .05f;
+		break;
+	case FRAME_attak111:
+		flash_number = MZ2_GUNNER_GRENADE_3;
+		spread = .08f;
+		break;
+	default:
+		flash_number = MZ2_GUNNER_GRENADE_4;
+		AIFlags &= ~AI_MANUAL_STEERING;
+		spread = .11f;
+		break;
+	}
+
+	//	pmm
+	// if we're shooting blind and we still can't see our enemy
+	if ((AIFlags & AI_MANUAL_STEERING) && (!visible(Entity, Entity->enemy)))
+	{
+		// and we have a valid blind_fire_target
+		if (Vec3Compare (BlindFireTarget, vec3Origin))
+			return;
+
+		Vec3Copy (BlindFireTarget, target);
+	}
+	else
+		Vec3Copy (Entity->s.origin, target);
+	// pmm
+
+	Angles_Vectors (Entity->s.angles, forward, right, up);	//PGM
+	G_ProjectSource (Entity->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
+
+//PGM
+	if(Entity->enemy)
+	{
+		float	dist;
+
+		Vec3Subtract(target, Entity->s.origin, aim);
+		dist = Vec3Length(aim);
+
+		// aim up if they're on the same level as me and far away.
+		if((dist > 512) && (aim[2] < 64) && (aim[2] > -64))
+			aim[2] += (dist - 512);
+
+		VectorNormalizeFastf (aim);
+		pitch = aim[2];
+		if(pitch > 0.4f)
+			pitch = 0.4f;
+		else if(pitch < -0.5f)
+			pitch = -0.5f;
+	}
+//PGM
+
+	//FIXME : do a spread -225 -75 75 225 degrees around forward
+//	VectorCopy (forward, aim);
+	Vec3MA (forward, spread, right, aim);
+	Vec3MA (aim, pitch, up, aim);
+
+	MonsterFireGrenade (start, aim, 50, 600, flash_number);
+#endif
 }
 
 CFrame GunnerFramesAttackChain [] =
@@ -502,9 +669,24 @@ CFrame GunnerFramesEndFireChain [] =
 };
 CAnim GunnerMoveEndFireChain (FRAME_attak224, FRAME_attak230, GunnerFramesEndFireChain, ConvertDerivedFunction(&CGunner::Run));
 
+void CGunner::BlindCheck ()
+{
+	vec3_t	aim;
+
+	if (AIFlags & AI_MANUAL_STEERING)
+	{
+		Vec3Subtract(BlindFireTarget, Entity->s.origin, aim);
+		IdealYaw = VecToYaw(aim);
+	}
+}
+
 CFrame GunnerFramesAttackGrenade [] =
 {
+#ifdef MONSTER_USE_ROGUE_AI
+	CFrame (&CMonster::AI_Charge, 0, ConvertDerivedFunction(&CGunner::BlindCheck)),
+#else
 	CFrame (&CMonster::AI_Charge, 0),
+#endif
 	CFrame (&CMonster::AI_Charge, 0),
 	CFrame (&CMonster::AI_Charge, 0),
 	CFrame (&CMonster::AI_Charge, 0),
@@ -530,10 +712,60 @@ CAnim GunnerMoveAttackGrenade (FRAME_attak101, FRAME_attak121, GunnerFramesAttac
 
 void CGunner::Attack()
 {
+#ifndef MONSTER_USE_ROGUE_AI
 	if (range (Entity, Entity->enemy) == RANGE_MELEE)
 		CurrentMove = &GunnerMoveAttackChain;
 	else
 		CurrentMove = (random() <= 0.5) ? &GunnerMoveAttackGrenade : &GunnerMoveAttackChain;
+#else
+	float chance, r;
+
+	DoneDodge();
+
+	// PMM 
+	if (AttackState == AS_BLIND)
+	{
+		// setup shot probabilities
+		if (BlindFireDelay < 1.0)
+			chance = 1.0;
+		else if (BlindFireDelay < 7.5)
+			chance = 0.4f;
+		else
+			chance = 0.1f;
+
+		r = random();
+
+		// minimum of 2 seconds, plus 0-3, after the shots are done
+		BlindFireDelay += 2.1 + 2.0 + random()*3.0;
+
+		// don't shoot at the origin
+		if (Vec3Compare (BlindFireTarget, vec3Origin))
+			return;
+
+		// don't shoot if the dice say not to
+		if (r > chance)
+			return;
+
+		// turn on manual steering to signal both manual steering and blindfire
+		AIFlags |= AI_MANUAL_STEERING;
+		if (GrenadeCheck())
+		{
+			// if the check passes, go for the attack
+			CurrentMove = &GunnerMoveAttackGrenade;
+			AttackFinished = level.time + 2*random();
+		}
+		// turn off blindfire flag
+		AIFlags &= ~AI_MANUAL_STEERING;
+		return;
+	}
+	// pmm
+
+	// PGM - gunner needs to use his chaingun if he's being attacked by a tesla.
+	if (range (Entity, Entity->enemy) == RANGE_MELEE)
+		CurrentMove = &GunnerMoveAttackChain;
+	else
+		CurrentMove = (random() <= 0.5 && GrenadeCheck()) ? &GunnerMoveAttackGrenade : &GunnerMoveAttackChain;
+#endif
 }
 
 void CGunner::FireChain ()
@@ -550,6 +782,54 @@ void CGunner::ReFireChain ()
 	}
 	CurrentMove = &GunnerMoveEndFireChain;
 }
+
+#ifdef MONSTER_USE_ROGUE_AI
+void CGunner::Duck (float eta)
+{
+	if ((CurrentMove == &GunnerMoveAttackChain) ||
+		(CurrentMove == &GunnerMoveFireChain) ||
+		(CurrentMove == &GunnerMoveAttackGrenade))
+	{
+		// if we're shooting, and not on easy, don't dodge
+		if (skill->Integer())
+		{
+			AIFlags &= ~AI_DUCKED;
+			return;
+		}
+	}
+
+	if (skill->Integer() == 0)
+		// PMM - stupid dodge
+		DuckWaitTime = level.time + eta + 1;
+	else
+		DuckWaitTime = level.time + eta + (0.1 * (3 - skill->Integer()));
+
+	// has to be done immediately otherwise he can get stuck
+	DuckDown();
+
+	NextFrame = FRAME_duck01;
+	CurrentMove = &GunnerMoveDuck;
+	return;
+}
+
+void CGunner::SideStep ()
+{
+	if ((CurrentMove == &GunnerMoveAttackChain) ||
+		(CurrentMove == &GunnerMoveFireChain) ||
+		(CurrentMove == &GunnerMoveAttackGrenade))
+	{
+		// if we're shooting, and not on easy, don't dodge
+		if (skill->Integer())
+		{
+			AIFlags &= ~AI_DODGING;
+			return;
+		}
+	}
+
+	if (CurrentMove != &GunnerMoveRun)
+		CurrentMove = &GunnerMoveRun;
+}
+#endif
 
 void CGunner::Spawn ()
 {
@@ -574,8 +854,16 @@ void CGunner::Spawn ()
 	Entity->gib_health = -70;
 	Entity->mass = 200;
 
-	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_SIGHT | MF_HAS_SEARCH);
+	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_SIGHT | 
+#ifdef MONSTER_USE_ROGUE_AI
+		MF_HAS_DODGE | MF_HAS_DUCK | MF_HAS_UNDUCK | MF_HAS_SIDESTEP
+#endif
+		);
 	gi.linkentity (Entity);
+
+#ifdef MONSTER_USE_ROGUE_AI
+	BlindFire = true;
+#endif
 
 	CurrentMove = &GunnerMoveStand;	
 	WalkMonsterStart ();

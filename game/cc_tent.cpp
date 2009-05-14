@@ -671,11 +671,30 @@ void CTEnt::WidowSplash (vec3_t Origin)
 ///
 /// \param	Origin	 - The origin. 
 /// \param	Ent		 - The ent. 
-/// \param	id		 - The identifier. 
+/// \param	id		 - The flash identifier. 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void CTEnt::MuzzleFlash (vec3_t Origin, short Ent, short id)
 {
 	MultiCast cast (Origin, SVC_MUZZLEFLASH);
+	WriteShort (Ent);
+	WriteByte (id);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \fn	void CTEnt::MonsterFlash (vec3_t Origin, short Ent, short id)
+///
+/// \brief	Monster muzzleflash. 
+///
+/// \author	Paril
+/// \date	5/14/2009
+///
+/// \param	Origin	 - The origin. 
+/// \param	Ent		 - The ent. 
+/// \param	id		 - The flash identifier. 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void CTEnt::MonsterFlash (vec3_t Origin, short Ent, short id)
+{
+	MultiCast cast (Origin, SVC_MUZZLEFLASH2);
 	WriteShort (Ent);
 	WriteByte (id);
 }

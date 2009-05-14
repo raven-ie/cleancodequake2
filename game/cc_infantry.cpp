@@ -218,6 +218,8 @@ void CInfantry::Pain (edict_t *other, float kick, int damage)
 	if (Entity->health < (Entity->max_health / 2))
 		Entity->s.skinNum = 1;
 
+	DoneDodge();
+
 	if (level.time < Entity->pain_debounce_time)
 		return;
 
@@ -228,6 +230,12 @@ void CInfantry::Pain (edict_t *other, float kick, int damage)
 
 	CurrentMove = (rand() % 2 == 0) ? &InfantryMovePain1 : &InfantryMovePain2;
 	Sound (Entity, CHAN_VOICE, (rand() % 2 == 0) ? SoundPain1 : SoundPain2);
+
+#ifdef MONSTER_USE_ROGUE_AI
+	// PMM - clear duck flag
+	if (AIFlags & AI_DUCKED)
+		UnDuck();
+#endif
 }
 
 vec3_t	DeathAimAngles[] =
@@ -415,6 +423,7 @@ void CInfantry::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t p
 	Sound (Entity, CHAN_VOICE, pSound);
 }
 
+#ifndef MONSTER_USE_ROGUE_AI
 void CInfantry::Duck_Down ()
 {
 	if (AIFlags & AI_DUCKED)
@@ -441,17 +450,27 @@ void CInfantry::Duck_Up ()
 	Entity->takedamage = DAMAGE_AIM;
 	gi.linkentity (Entity);
 }
+#endif
 
 CFrame InfantryFramesDuck [] =
 {
+#ifndef MONSTER_USE_ROGUE_AI
 	CFrame (&CMonster::AI_Move, -2, ConvertDerivedFunction(&CInfantry::Duck_Down)),
 	CFrame (&CMonster::AI_Move, -5, ConvertDerivedFunction(&CInfantry::Duck_Hold)),
 	CFrame (&CMonster::AI_Move, 3),
 	CFrame (&CMonster::AI_Move, 4, ConvertDerivedFunction(&CInfantry::Duck_Up)),
 	CFrame (&CMonster::AI_Move, 0)
+#else
+	CFrame (&CMonster::AI_Move, -2, &CMonster::DuckDown),
+	CFrame (&CMonster::AI_Move, -5, &CMonster::DuckHold),
+	CFrame (&CMonster::AI_Move, 3),
+	CFrame (&CMonster::AI_Move, 4, &CMonster::UnDuck),
+	CFrame (&CMonster::AI_Move, 0)
+#endif
 };
 CAnim InfantryMoveDuck (FRAME_duck01, FRAME_duck05, InfantryFramesDuck, ConvertDerivedFunction(&CInfantry::Run));
 
+#ifndef MONSTER_USE_ROGUE_AI
 void CInfantry::Dodge (edict_t *attacker, float eta)
 {
 	if (random() > 0.25)
@@ -462,7 +481,7 @@ void CInfantry::Dodge (edict_t *attacker, float eta)
 
 	CurrentMove = &InfantryMoveDuck;
 }
-
+#endif
 
 void CInfantry::CockGun ()
 {
@@ -536,6 +555,49 @@ void CInfantry::Melee ()
 	CurrentMove = &InfantryMoveAttack2;
 }
 
+void CInfantry::Duck (float eta)
+{
+	if ((CurrentMove == &InfantryMoveAttack1) ||
+		(CurrentMove == &InfantryMoveAttack2))
+	{
+		// if we're shooting, and not on easy, don't dodge
+		if (skill->Integer())
+		{
+			AIFlags &= ~AI_DUCKED;
+			return;
+		}
+	}
+
+	if (skill->Integer() == 0)
+		// PMM - stupid dodge
+		DuckWaitTime = level.time + eta + 1;
+	else
+		DuckWaitTime = level.time + eta + (0.1 * (3 - skill->Integer()));
+
+	// has to be done immediately otherwise he can get stuck
+	DuckDown();
+
+	NextFrame = FRAME_duck01;
+	CurrentMove = &InfantryMoveDuck;
+}
+
+void CInfantry::SideStep ()
+{
+	if ((CurrentMove == &InfantryMoveAttack1) ||
+		(CurrentMove == &InfantryMoveAttack2))
+	{
+		// if we're shooting, and not on easy, don't dodge
+		if (skill->Integer())
+		{
+			AIFlags &= ~AI_DODGING;
+			return;
+		}
+	}
+
+	if (CurrentMove != &InfantryMoveRun)
+		CurrentMove = &InfantryMoveRun;
+}
+
 void CInfantry::Spawn ()
 {
 	Entity->movetype = MOVETYPE_STEP;
@@ -562,7 +624,11 @@ void CInfantry::Spawn ()
 	Entity->gib_health = -40;
 	Entity->mass = 200;
 
-	MonsterFlags = (MF_HAS_MELEE | MF_HAS_ATTACK | MF_HAS_IDLE | MF_HAS_SIGHT);
+	MonsterFlags = (MF_HAS_MELEE | MF_HAS_ATTACK | MF_HAS_IDLE | MF_HAS_SIGHT
+#ifdef MONSTER_USE_ROGUE_AI
+		| MF_HAS_SIDESTEP | MF_HAS_DUCK | MF_HAS_UNDUCK | MF_HAS_DODGE
+#endif
+		);
 
 	gi.linkentity (Entity);
 

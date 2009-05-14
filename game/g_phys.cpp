@@ -117,7 +117,7 @@ SV_Impact
 Two entities have touched, so run their touch functions
 ==================
 */
-void SV_Impact (edict_t *e1, cmTrace_t *trace)
+void SV_Impact (edict_t *e1, CTrace *trace)
 {
 	edict_t		*e2;
 //	plane_t	backplane;
@@ -339,7 +339,7 @@ SV_PushEntity
 Does not change the entities velocity at all
 ============
 */
-cmTrace_t SV_PushEntity (edict_t *ent, vec3_t push)
+CTrace SV_PushEntity (edict_t *ent, vec3_t push)
 {
 	CTrace	trace;
 	vec3_t		start;
@@ -669,7 +669,7 @@ Toss, bounce, and fly movement.  When onground, do nothing.
 */
 void SV_Physics_Toss (edict_t *ent)
 {
-	cmTrace_t	trace;
+	CTrace	trace;
 	vec3_t		move;
 	float		backoff;
 	edict_t		*slave;

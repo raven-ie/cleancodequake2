@@ -50,9 +50,18 @@ public:
 	void Grenade ();
 	void OpenGun ();
 	void Fire ();
+
+#ifndef MONSTER_USE_ROGUE_AI
 	void DuckUp ();
-	void DuckDown ();
 	void DuckHold ();
+#else
+	bool GrenadeCheck ();
+	void BlindCheck ();
+	void Duck (float eta);
+	void SideStep ();
+#endif
+
+	void DuckDown ();
 	void RunAndShoot ();
 	void Fidget ();
 

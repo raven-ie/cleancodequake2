@@ -31,36 +31,24 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // A wrapper for the ugly gi.trace system.
 //
 
-class CTrace : public cmTrace_t
+class CTrace
 {
-	void Copy (cmTrace_t tr)
-	{
-		this->fraction = tr.fraction;
-		this->ent = tr.ent;
-		this->plane = tr.plane;
-		this->allSolid = tr.allSolid;
-		this->startSolid = tr.startSolid;
-		Vec3Copy (tr.endPos, this->endPos);
-		this->surface = tr.surface;
-		this->contents = tr.contents;
-	}
+	void Copy (cmTrace_t tr);
 
 public:
-	CTrace () {};
+	float				fraction;
+	edict_t				*ent;
+	plane_t				plane;
+	bool				allSolid;
+	bool				startSolid;
+	vec3_t				endPos;
+	cmBspSurface_t		*surface;
+	int					contents;
+
+	CTrace ();
+
 	// Constructor easyness
-	CTrace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *ignore, int contentMask)
-	{
-		cmTrace_t temp = gi.trace(start, mins, maxs, end, ignore, contentMask);
-		Copy(temp);
-	}
-	CTrace (vec3_t start, vec3_t end, edict_t *ignore, int contentMask)
-	{
-		cmTrace_t temp = gi.trace(start, vec3Origin, vec3Origin, end, ignore, contentMask);
-		Copy(temp);
-	}
-	CTrace (vec3_t start, vec3_t end, int contentMask)
-	{
-		cmTrace_t temp = gi.trace(start, vec3Origin, vec3Origin, end, NULL, contentMask);
-		Copy(temp);
-	}
+	CTrace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *ignore, int contentMask);
+	CTrace (vec3_t start, vec3_t end, edict_t *ignore, int contentMask);
+	CTrace (vec3_t start, vec3_t end, int contentMask);
 };

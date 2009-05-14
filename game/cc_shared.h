@@ -33,6 +33,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 // Global macros
 #define MONSTERS_ARENT_STUPID
+#define MONSTER_USE_ROGUE_AI
+#define SLIDING_TROOPS // For Rogue AI
 #define MONSTERS_USE_PATHFINDING
 
 #include "cc_colors.h"
@@ -78,6 +80,20 @@ void Sound (vec3_t pos, edict_t *ent, EEntSndChannel channel, int soundindex, fl
 void Sound (int soundindex);
 void Sound (char *soundString);
 void GI_SetModel (edict_t *ent, char *model);
+
+void WriteDirection (vec3_t val);
+void WritePosition (vec3_t val);
+void WriteString (char *val);
+void WriteAngle (float val);
+void WriteFloat (float val);
+void WriteLong (long val);
+void WriteShort (short val);
+void WriteByte (byte val);
+void WriteChar (char val);
+
+void Cast (ECastFlags castFlags, edict_t *Ent);
+void Cast (ECastFlags castFlags, vec3_t Origin);
+void Cast (ECastType castType, ECastFlags castFlags, vec3_t Origin, edict_t *Ent);
 
 void Cmd_RunCommand (char *commandName, edict_t *ent);
 void Cmd_RemoveCommands ();

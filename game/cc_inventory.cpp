@@ -87,10 +87,10 @@ void CInventory::Draw (edict_t *ent)
 
 	ent->client->showinventory = true;
 
-	gi.WriteByte (SVC_INVENTORY);
+	WriteByte (SVC_INVENTORY);
 	for (int i=0 ; i<MAX_CS_ITEMS ; i++)
-		gi.WriteShort (Array[i]);
-	gi.unicast (ent, true);
+		WriteShort (Array[i]);
+	Cast (CASTFLAG_RELIABLE, ent);
 }
 
 void CInventory::SelectNextItem(EItemFlags Flags)

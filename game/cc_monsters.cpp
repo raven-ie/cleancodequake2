@@ -40,27 +40,36 @@ bool VecInFront (vec3_t angles, vec3_t origin1, vec3_t origin2);
 void CMonster::FoundPath ()
 {
 	if (!P_CurrentGoalNode || !P_CurrentNode)
+	{
+		P_NodePathTimeout = level.time + 10; // in 10 seconds we will try again.
 		return;
-	P_CurrentPath = new CPath(P_CurrentNode, P_CurrentGoalNode);
+	}
+	// Just in case...
+	if (P_CurrentGoalNode == P_CurrentNode)
+		return;
+
+	P_CurrentPath = GetPath(P_CurrentNode, P_CurrentGoalNode);
+
+	if (!P_CurrentPath)
+	{
+		P_CurrentNode = P_CurrentGoalNode = NULL;
+		P_CurrentNodeIndex = -1;
+		P_NodePathTimeout = level.time + 10; // in 10 seconds we will try again.
+		return;
+	}
+
+	P_CurrentNodeIndex = P_CurrentPath->Path.size()-1;
 
 	// If our first node is behind us and it's not too far away, we can
 	// just skip this node and go to the next one.	
-	if (VecInFront(Entity->s.angles, Entity->s.origin, P_CurrentPath->Path[P_CurrentPath->Path.size()-1]->Origin))
-	{
-		P_CurrentPath->Path.pop_back();
-		gi.dprintf ("TEST\n");
-	}
+	if (VecInFront(Entity->s.angles, Entity->s.origin, P_CurrentPath->Path[P_CurrentNodeIndex]->Origin))
+	//{
+		P_CurrentNodeIndex--;
+		//P_CurrentPath->Path.pop_back();
+		//gi.dprintf ("TEST\n");
+	//}
 
-	if (!P_CurrentPath->Path.size())
-	{
-		delete P_CurrentPath;
-
-		P_CurrentPath = NULL;
-		P_CurrentNode = P_CurrentGoalNode = NULL;
-		return;
-	}
-	// Incase we aren't the same.
-	P_CurrentNode = P_CurrentPath->Path[P_CurrentPath->Path.size()-1];
+	P_CurrentNode = P_CurrentPath->Path[P_CurrentNodeIndex];
 
 	FollowingPath = true;
 	Run ();
@@ -71,12 +80,11 @@ void CMonster::MoveToPath (float Dist)
 	if (!Entity->groundentity && !(Entity->flags & (FL_FLY|FL_SWIM)))
 		return;
 
-	if (FindTarget()) // Did we find an enemy while going to our path?
+	if (FindTarget() && visible(Entity, Entity->enemy)) // Did we find an enemy while going to our path?
 	{
 		FollowingPath = false;
 		PauseTime = 100000000;
 
-		delete P_CurrentPath;
 		P_CurrentPath = NULL;
 		P_CurrentNode = P_CurrentGoalNode = NULL;
 		return;
@@ -92,11 +100,13 @@ void CMonster::MoveToPath (float Dist)
 	{
 		bool shouldJump = (P_CurrentNode->Type == NODE_JUMP);
 		// Hit the path.
-		if (P_CurrentPath->Path.size() > 1)
+		// If our node isn't the goal...
+		if (P_CurrentNodeIndex > 0)
 		{
-			P_CurrentPath->Path.pop_back(); // Pop the last out of the stack
+			P_CurrentNodeIndex--; // Head to the next node.
 			// Set our new path to the next node
-			P_CurrentNode = P_CurrentPath->Path.at(P_CurrentPath->Path.size()-1);
+			P_CurrentNode = P_CurrentPath->Path[P_CurrentNodeIndex];
+			gi.dprintf ("Hit node %u\n", P_CurrentNodeIndex);
 			doit = true;
 			if (P_CurrentNode->Type == NODE_DOOR)
 				Stand (); // We stand, and wait.
@@ -122,7 +132,6 @@ void CMonster::MoveToPath (float Dist)
 				if (Vec3Length(sub) < 250) // If we're still close enough that it's possible
 					// to hear him breathing (lol), startback on the trail
 				{
-					delete P_CurrentPath;
 					P_CurrentPath = NULL;
 					P_CurrentGoalNode = GetClosestNodeTo(Entity->enemy->s.origin);
 					FoundPath ();
@@ -133,7 +142,6 @@ void CMonster::MoveToPath (float Dist)
 			FollowingPath = false;
 			PauseTime = 100000000;
 			Stand ();
-			delete P_CurrentPath;
 			P_CurrentPath = NULL;
 			P_CurrentNode = P_CurrentGoalNode = NULL;
 			return;
@@ -1001,6 +1009,10 @@ void CMonster::MonsterStart ()
 	if (CurrentMove)
 		Entity->s.frame = CurrentMove->FirstFrame + (rand() % (CurrentMove->LastFrame - CurrentMove->FirstFrame + 1));
 
+#ifdef MONSTER_USE_ROGUE_AI
+	BaseHeight = Entity->maxs[2];
+#endif
+
 	Entity->think = Monster_Think;
 	Entity->nextthink = level.time + .1;
 }
@@ -1126,52 +1138,16 @@ void CMonster::AlertNearbyStroggs ()
 		if (strogg->enemy)
 			continue;
 		
-		strogg->enemy = Entity->enemy;
-		strogg->Monster->FoundTarget ();
+#ifdef MONSTERS_USE_PATHFINDING
+		// Set us up for pathing
+		P_CurrentNode = GetClosestNodeTo(strogg->s.origin);
+		P_CurrentGoalNode = GetClosestNodeTo(Entity->enemy->s.origin);
+		strogg->Monster->FoundPath ();
+#else
+		//strogg->enemy = Entity->enemy;
+		//strogg->Monster->FoundTarget ();
+#endif
 	}
-}
-
-/*
-=============
-CMonster::AI_Run_Strafe
-
-More advanced strafing.  Often leads to circle strafing
-=============
-*/
-void CMonster::AI_Run_Strafe (float distance)
-{
-	float	ofs;
-	vec3_t	v;
-
-	Vec3Subtract (Entity->enemy->s.origin, Entity->s.origin, v);
-	IdealYaw = VecToYaw (v);
-	ChangeYaw ();
-
-	if (!(AIFlags & AI_SLIDE))
-	{
-		PauseTime = level.time + 0.1 + (skill->Integer()) * FRAMETIME + (2 * rand() % 8) * FRAMETIME;
-		Lefty = !Lefty;
-	}
-
-	if (level.time >= PauseTime)
-		AIFlags &= ~AI_SLIDE;
-	else
-		AIFlags |= AI_SLIDE;
-
-	if (Lefty)
-		ofs = 30;
-	else
-		ofs = -30;
-
-	if (skill->Integer() <= 1)
-		ofs = 0;
-
-	if ((WalkMove (IdealYaw + ofs, distance)))
-		return;
-		
-	Lefty = !Lefty;
-	WalkMove (IdealYaw - ofs, distance);
-	
 }
 #endif
 
@@ -1184,10 +1160,7 @@ void CMonster::MonsterFireBullet (vec3_t start, vec3_t dir, int damage, int kick
 
 	fire_bullet (Entity, start, dir, damage, kick, hspread, vspread, MOD_UNKNOWN);
 
-	gi.WriteByte (SVC_MUZZLEFLASH2);
-	gi.WriteShort (Entity - g_edicts);
-	gi.WriteByte (flashtype);
-	gi.multicast (start, MULTICAST_PVS);
+	TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
 }
 
 void CMonster::MonsterFireShotgun (vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int count, int flashtype)
@@ -1199,10 +1172,7 @@ void CMonster::MonsterFireShotgun (vec3_t start, vec3_t aimdir, int damage, int 
 
 	fire_shotgun (Entity, start, aimdir, damage, kick, hspread, vspread, count, MOD_UNKNOWN);
 
-	gi.WriteByte (SVC_MUZZLEFLASH2);
-	gi.WriteShort (Entity - g_edicts);
-	gi.WriteByte (flashtype);
-	gi.multicast (start, MULTICAST_PVS);
+	TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
 }
 
 void CMonster::MonsterFireBlaster (vec3_t start, vec3_t dir, int damage, int speed, int flashtype, int effect)
@@ -1214,10 +1184,7 @@ void CMonster::MonsterFireBlaster (vec3_t start, vec3_t dir, int damage, int spe
 
 	fire_blaster (Entity, start, dir, damage, speed, effect, false);
 
-	gi.WriteByte (SVC_MUZZLEFLASH2);
-	gi.WriteShort (Entity - g_edicts);
-	gi.WriteByte (flashtype);
-	gi.multicast (start, MULTICAST_PVS);
+	TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
 }	
 
 void CMonster::MonsterFireGrenade (vec3_t start, vec3_t aimdir, int damage, int speed, int flashtype)
@@ -1229,10 +1196,7 @@ void CMonster::MonsterFireGrenade (vec3_t start, vec3_t aimdir, int damage, int 
 
 	fire_grenade (Entity, start, aimdir, damage, speed, 2.5, damage+40);
 
-	gi.WriteByte (SVC_MUZZLEFLASH2);
-	gi.WriteShort (Entity - g_edicts);
-	gi.WriteByte (flashtype);
-	gi.multicast (start, MULTICAST_PVS);
+	TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
 }
 
 void CMonster::MonsterFireRocket (vec3_t start, vec3_t dir, int damage, int speed, int flashtype)
@@ -1244,10 +1208,7 @@ void CMonster::MonsterFireRocket (vec3_t start, vec3_t dir, int damage, int spee
 
 	fire_rocket (Entity, start, dir, damage, speed, damage+20, damage);
 
-	gi.WriteByte (SVC_MUZZLEFLASH2);
-	gi.WriteShort (Entity - g_edicts);
-	gi.WriteByte (flashtype);
-	gi.multicast (start, MULTICAST_PVS);
+	TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
 }	
 
 void CMonster::MonsterFireRailgun (vec3_t start, vec3_t aimdir, int damage, int kick, int flashtype)
@@ -1257,12 +1218,10 @@ void CMonster::MonsterFireRailgun (vec3_t start, vec3_t aimdir, int damage, int 
 		return;
 #endif
 
-	fire_rail (Entity, start, aimdir, damage, kick);
+	if (!(gi.pointcontents (start) & CONTENTS_MASK_SOLID))
+		fire_rail (Entity, start, aimdir, damage, kick);
 
-	gi.WriteByte (SVC_MUZZLEFLASH2);
-	gi.WriteShort (Entity - g_edicts);
-	gi.WriteByte (flashtype);
-	gi.multicast (start, MULTICAST_PVS);
+	TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
 }
 
 void CMonster::MonsterFireBfg (vec3_t start, vec3_t aimdir, int damage, int speed, int kick, float damage_radius, int flashtype)
@@ -1274,14 +1233,12 @@ void CMonster::MonsterFireBfg (vec3_t start, vec3_t aimdir, int damage, int spee
 
 	fire_bfg (Entity, start, aimdir, damage, speed, damage_radius);
 
-	gi.WriteByte (SVC_MUZZLEFLASH2);
-	gi.WriteShort (Entity - g_edicts);
-	gi.WriteByte (flashtype);
-	gi.multicast (start, MULTICAST_PVS);
+	TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
 }
 
 bool CMonster::CheckAttack ()
 {
+#ifndef MONSTER_USE_ROGUE_AI
 	vec3_t	spot1, spot2;
 	float	chance;
 	CTrace	tr;
@@ -1366,6 +1323,144 @@ bool CMonster::CheckAttack ()
 	}
 
 	return false;
+#else
+	vec3_t	spot1, spot2;
+	float	chance;
+	CTrace	tr;
+
+	if (Entity->enemy->health > 0)
+	{
+	// see if any entities are in the way of the shot
+		Vec3Copy (Entity->s.origin, spot1);
+		spot1[2] += Entity->viewheight;
+		Vec3Copy (Entity->enemy->s.origin, spot2);
+		spot2[2] += Entity->enemy->viewheight;
+
+		tr = CTrace (spot1, spot2, Entity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
+
+		// do we have a clear shot?
+		if (tr.ent != Entity->enemy)
+		{	
+			// PGM - we want them to go ahead and shoot at info_notnulls if they can.
+			if(Entity->enemy->solid != SOLID_NOT || tr.fraction < 1.0)		//PGM
+			{
+				// PMM - if we can't see our target, and we're not blocked by a monster, go into blind fire if available
+				if ((!(tr.ent->svFlags & SVF_MONSTER)) && (!visible(Entity, Entity->enemy)))
+				{
+					if ((BlindFire) && (BlindFireDelay <= 20.0))
+					{
+						if (level.time < AttackFinished)
+							return false;
+						if (level.time < (TrailTime + BlindFireDelay))
+							// wait for our time
+							return false;
+						else
+						{
+							// make sure we're not going to shoot a monster
+							tr = CTrace (spot1, BlindFireTarget, Entity, CONTENTS_MONSTER);
+							if (tr.allSolid || tr.startSolid || ((tr.fraction < 1.0) && (tr.ent != Entity->enemy)))
+								return false;
+
+							AttackState = AS_BLIND;
+							return true;
+						}
+					}
+				}
+				// pmm
+				return false;
+			}
+		}
+	}
+	
+	// melee attack
+	if (EnemyRange == RANGE_MELEE)
+	{
+		// don't always melee in easy mode
+		if (skill->Integer() == 0 && (rand()&3) )
+		{
+			// PMM - fix for melee only monsters & strafing
+			AttackState = AS_STRAIGHT;
+			return false;
+		}
+		if (MonsterFlags & MF_HAS_MELEE)
+			AttackState = AS_MELEE;
+		else
+			AttackState = AS_MISSILE;
+		return true;
+	}
+	
+// missile attack
+	if (!(MonsterFlags & MF_HAS_ATTACK))
+	{
+		// PMM - fix for melee only monsters & strafing
+		AttackState = AS_STRAIGHT;
+		return false;
+	}
+	
+	if (level.time < AttackFinished)
+		return false;
+		
+	if (EnemyRange == RANGE_FAR)
+		return false;
+
+	if (AIFlags & AI_STAND_GROUND)
+		chance = 0.4f;
+	else if (EnemyRange == RANGE_MELEE)
+		chance = 0.2f;
+	else if (EnemyRange == RANGE_NEAR)
+		chance = 0.1f;
+	else if (EnemyRange == RANGE_MID)
+		chance = 0.02f;
+	else
+		return false;
+
+	if (skill->Integer() == 0)
+		chance *= 0.5;
+	else if (skill->Integer() >= 2)
+		chance *= 2;
+
+	// PGM - go ahead and shoot every time if it's a info_notnull
+	if ((random () < chance) || (Entity->enemy->solid == SOLID_NOT))
+	{
+		AttackState = AS_MISSILE;
+		AttackFinished = level.time + 2*random();
+		return true;
+	}
+
+	// PMM -daedalus should strafe more .. this can be done here or in a customized
+	// check_attack code for the hover.
+	if (Entity->flags & FL_FLY)
+	{
+		// originally, just 0.3
+		float strafe_chance;
+		if (!(strcmp(Entity->classname, "monster_daedalus")))
+			strafe_chance = 0.8f;
+		else
+			strafe_chance = 0.6f;
+
+		// if enemy is tesla, never strafe
+		if ((Entity->enemy) && (Entity->enemy->classname) && (!strcmp(Entity->enemy->classname, "tesla")))
+			strafe_chance = 0;
+
+		if (random() < strafe_chance)
+			AttackState = AS_SLIDING;
+		else
+			AttackState = AS_STRAIGHT;
+	}
+// do we want the monsters strafing?
+#ifdef SLIDING_TROOPS
+	else
+	{
+		if (random() < 0.4)
+			AttackState = AS_SLIDING;
+		else
+			AttackState = AS_STRAIGHT;
+	}
+#endif
+//-PMM
+
+	return false;
+#endif
 }
 
 void CMonster::DropToFloor ()
@@ -1391,6 +1486,7 @@ void CMonster::DropToFloor ()
 
 void CMonster::AI_Charge(float Dist)
 {
+#ifndef MONSTER_USE_ROGUE_AI
 	vec3_t	v;
 
 	Vec3Subtract (Entity->enemy->s.origin, Entity->s.origin, v);
@@ -1399,10 +1495,66 @@ void CMonster::AI_Charge(float Dist)
 
 	if (Dist)
 		WalkMove (Entity->s.angles[YAW], Dist);
+#else
+	vec3_t	v;
+	// PMM
+	float	ofs;
+	// PMM
+
+	// PMM - made AI_MANUAL_STEERING affect things differently here .. they turn, but
+	// don't set the ideal_yaw
+
+	// This is put in there so monsters won't move towards the origin after killing
+	// a tesla. This could be problematic, so keep an eye on it.
+	if(!Entity->enemy || !Entity->enemy->inUse)		//PGM
+		return;									//PGM
+
+	// PMM - save blindfire target
+	if (visible(Entity, Entity->enemy))
+		Vec3Copy (Entity->enemy->s.origin, BlindFireTarget);
+	// pmm 
+
+	if (!(AIFlags & AI_MANUAL_STEERING))
+	{
+		Vec3Subtract (Entity->enemy->s.origin, Entity->s.origin, v);
+		IdealYaw = VecToYaw(v);
+	}
+	ChangeYaw ();
+
+	if (Dist)
+	{
+		if (AIFlags & AI_CHARGING)
+		{
+			MoveToGoal (Dist);
+			return;
+		}
+		// circle strafe support
+		if (AttackState == AS_SLIDING)
+		{
+			// if we're fighting a tesla, NEVER circle strafe
+			if ((Entity->enemy) && (Entity->enemy->classname) && (!strcmp(Entity->enemy->classname, "tesla")))
+				ofs = 0;
+			else if (Lefty)
+				ofs = 90;
+			else
+				ofs = -90;
+			
+			if (WalkMove (IdealYaw + ofs, Dist))
+				return;
+				
+			Lefty = !Lefty;
+			WalkMove (IdealYaw - ofs, Dist);
+		}
+		else
+			WalkMove (Entity->s.angles[YAW], Dist);
+	}
+// PMM
+#endif
 }
 
 bool CMonster::AI_CheckAttack()
 {
+#ifndef MONSTER_USE_ROGUE_AI
 	vec3_t		temp;
 	bool		hesDeadJim = false;
 
@@ -1524,6 +1676,175 @@ bool CMonster::AI_CheckAttack()
 		return false;
 
 	return CheckAttack ();
+#else
+	vec3_t		temp;
+	bool	hesDeadJim;
+	// PMM
+	bool	retval;
+
+// this causes monsters to run blindly to the combat point w/o firing
+	if (Entity->goalentity)
+	{
+		if (AIFlags & AI_COMBAT_POINT)
+			return false;
+
+		if (AIFlags & AI_SOUND_TARGET)
+		{
+			if ((level.time - Entity->enemy->teleport_time) > 5.0)
+			{
+				if (Entity->goalentity == Entity->enemy)
+				{
+					if (Entity->movetarget)
+						Entity->goalentity = Entity->movetarget;
+					else
+						Entity->goalentity = NULL;
+				}
+
+				AIFlags &= ~AI_SOUND_TARGET;
+				if (AIFlags & AI_TEMP_STAND_GROUND)
+					AIFlags &= ~(AI_STAND_GROUND | AI_TEMP_STAND_GROUND);
+			}
+			else
+			{
+				Entity->show_hostile = level.time + 1;
+				return false;
+			}
+		}
+	}
+
+	EnemyVis = false;
+
+// see if the enemy is dead
+	hesDeadJim = false;
+	if ((!Entity->enemy) || (!Entity->enemy->inUse))
+	{
+		hesDeadJim = true;
+	}
+	else if (AIFlags & AI_MEDIC)
+	{
+		if (!(Entity->enemy->inUse) || (Entity->enemy->health > 0))
+		{
+			hesDeadJim = true;
+//			self->monsterinfo.aiflags &= ~AI_MEDIC;
+		}
+	}
+	else
+	{
+		if (AIFlags & AI_BRUTAL)
+		{
+			if (Entity->enemy->health <= -80)
+				hesDeadJim = true;
+		}
+		else
+		{
+			if (Entity->enemy->health <= 0)
+				hesDeadJim = true;
+		}
+	}
+
+	if (hesDeadJim)
+	{
+		AIFlags &= ~AI_MEDIC;
+		Entity->enemy = NULL;
+	// FIXME: look all around for other targets
+		if (Entity->oldenemy && Entity->oldenemy->health > 0)
+		{
+			Entity->enemy = Entity->oldenemy;
+			Entity->oldenemy = NULL;
+			HuntTarget ();
+		}
+//ROGUE - multiple teslas make monsters lose track of the player.
+		else if(LastPlayerEnemy && LastPlayerEnemy->health > 0)
+		{
+//			if ((g_showlogic) && (g_showlogic->value))
+//				gi.dprintf("resorting to last_player_enemy...\n");
+			Entity->enemy = LastPlayerEnemy;
+			Entity->oldenemy = NULL;
+			LastPlayerEnemy = NULL;
+			HuntTarget ();
+		}
+//ROGUE
+		else
+		{
+			if (Entity->movetarget)
+			{
+				Entity->goalentity = Entity->movetarget;
+				Walk ();
+			}
+			else
+			{
+				// we need the pausetime otherwise the stand code
+				// will just revert to walking with no target and
+				// the monsters will wonder around aimlessly trying
+				// to hunt the world entity
+				PauseTime = level.time + 100000000;
+				Stand ();
+			}
+			return true;
+		}
+	}
+
+	Entity->show_hostile = level.time + 1;		// wake up other monsters
+
+// check knowledge of enemy
+	EnemyVis = visible(Entity, Entity->enemy);
+	if (EnemyVis)
+	{
+		SearchTime = level.time + 5;
+		Vec3Copy (Entity->enemy->s.origin, LastSighting);
+		// PMM
+		AIFlags &= ~AI_LOST_SIGHT;
+		TrailTime = level.time;
+		Vec3Copy (Entity->enemy->s.origin, BlindFireTarget);
+		BlindFireDelay = 0;
+		// pmm
+	}
+
+// look for other coop players here
+//	if (coop && self->monsterinfo.search_time < level.time)
+//	{
+//		if (FindTarget (self))
+//			return true;
+//	}
+
+	EnemyInfront = infront(Entity, Entity->enemy);
+	EnemyRange = range(Entity, Entity->enemy);
+	Vec3Subtract (Entity->enemy->s.origin, Entity->s.origin, temp);
+	EnemyYaw = VecToYaw(temp);
+
+	// JDC self->ideal_yaw = enemy_yaw;
+
+	// PMM -- reordered so the monster specific checkattack is called before the run_missle/melee/checkvis
+	// stuff .. this allows for, among other things, circle strafing and attacking while in ai_run
+	retval = CheckAttack ();
+	if (retval)
+	{
+		// PMM
+		if (AttackState == AS_MISSILE)
+		{
+			AI_Run_Missile ();
+			return true;
+		}
+		if (AttackState == AS_MELEE)
+		{
+			AI_Run_Melee ();
+			return true;
+		}
+		// PMM -- added so monsters can shoot blind
+		if (AttackState == AS_BLIND)
+		{
+			AI_Run_Missile ();
+			return true;
+		}
+		// pmm
+
+		// if enemy is not currently visible, we will never attack
+		if (!EnemyVis)
+			return false;
+		// PMM
+	}
+	return retval;
+#endif
 }
 
 void CMonster::AI_Move (float Dist)
@@ -1533,6 +1854,7 @@ void CMonster::AI_Move (float Dist)
 
 void CMonster::AI_Run(float Dist)
 {
+#ifndef MONSTER_USE_ROGUE_AI
 	vec3_t		v;
 	edict_t		*tempgoal;
 	edict_t		*save;
@@ -1583,10 +1905,7 @@ void CMonster::AI_Run(float Dist)
 
 	if (AttackState == AS_SLIDING)
 	{
-		if (Entity->flags & FL_FLY)
-			AI_Run_Slide (Dist);
-		else
-			AI_Run_Strafe(Dist);
+		AI_Run_Slide (Dist);
 		return;
 	}
 
@@ -1627,10 +1946,12 @@ void CMonster::AI_Run(float Dist)
 		// just lost sight of the player, decide where to go first
 		gi.dprintf("lost sight of player, last seen at %f %f %f\n", LastSighting[0], LastSighting[1], LastSighting[2]);
 
+#ifdef MONSTERS_USE_PATHFINDING
 		// Set us up for pathing
 		P_CurrentNode = GetClosestNodeTo(Entity->s.origin);
 		P_CurrentGoalNode = GetClosestNodeTo(Entity->enemy->s.origin);
 		FoundPath ();
+#endif
 
 		AIFlags |= (AI_LOST_SIGHT | AI_PURSUIT_LAST_SEEN);
 		AIFlags &= ~(AI_PURSUE_NEXT | AI_PURSUE_TEMP);
@@ -1751,10 +2072,308 @@ void CMonster::AI_Run(float Dist)
 
 	if (Entity)
 		Entity->goalentity = save;
+#else
+	vec3_t		v;
+	edict_t		*tempgoal;
+	edict_t		*save;
+	bool	isNew;
+	edict_t		*marker;
+	float		d1, d2;
+	CTrace		tr;
+	vec3_t		v_forward, v_right;
+	float		left, center, right;
+	vec3_t		left_target, right_target;
+	//PMM
+	bool	retval;
+	bool	alreadyMoved = false;
+
+ #ifdef MONSTERS_USE_PATHFINDING
+	if (FollowingPath)
+	{
+		MoveToPath(Dist);
+		return;
+	}
+#endif
+
+	// if we're going to a combat point, just proceed
+	if (AIFlags & AI_COMBAT_POINT)
+	{
+		MoveToGoal (Dist);
+		return;
+	}
+
+	// PMM
+	if (AIFlags & AI_DUCKED)
+	{
+//		if ((g_showlogic) && (g_showlogic->value))
+//			gi.dprintf ("%s - duck flag cleaned up!\n", self->classname);
+		AIFlags &= ~AI_DUCKED;
+	}
+	if (Entity->maxs[2] != BaseHeight)
+	{
+//		if ((g_showlogic) && (g_showlogic->value))
+//			gi.dprintf ("%s - ducked height corrected!\n", self->classname);
+		UnDuck ();
+	}
+//	if ((self->monsterinfo.aiflags & AI_MANUAL_STEERING) && (strcmp(self->classname, "monster_turret")))
+//	{
+//		if ((g_showlogic) && (g_showlogic->value))
+//			gi.dprintf ("%s - manual steering in ai_run!\n", self->classname);
+//	}
+	// pmm
+
+	if (AIFlags & AI_SOUND_TARGET)
+	{
+		// PMM - paranoia checking
+		if (Entity->enemy)
+			Vec3Subtract (Entity->s.origin, Entity->enemy->s.origin, v);
+
+		if ((!Entity->enemy) || (Vec3Length(v) < 64))
+		// pmm
+		{
+			AIFlags |= (AI_STAND_GROUND | AI_TEMP_STAND_GROUND);
+			Stand ();
+			return;
+		}
+
+		MoveToGoal (Dist);
+		// PMM - prevent double moves for sound_targets
+		alreadyMoved = true;
+		// pmm
+		if(!Entity->inUse)
+			return;			// PGM - g_touchtrigger free problem
+
+		if (!FindTarget ())
+			return;
+	}
+
+	// PMM -- moved ai_checkattack up here so the monsters can attack while strafing or charging
+	// PMM -- if we're dodging, make sure to keep the attack_state AS_SLIDING
+	retval = AI_CheckAttack ();
+
+	// PMM - don't strafe if we can't see our enemy
+	if ((!EnemyVis) && (AttackState == AS_SLIDING))
+		AttackState = AS_STRAIGHT;
+
+	// unless we're dodging (dodging out of view looks smart)
+	if (AIFlags & AI_DODGING)
+		AttackState = AS_SLIDING;
+	// pmm
+
+	if (AttackState == AS_SLIDING)
+	{
+		// PMM - protect against double moves
+		if (!alreadyMoved)
+			AI_Run_Slide (Dist);
+		// PMM
+		// we're using attack_state as the return value out of ai_run_slide to indicate whether or not the
+		// move succeeded.  If the move succeeded, and we're still sliding, we're done in here (since we've
+		// had our chance to shoot in ai_checkattack, and have moved).
+		// if the move failed, our state is as_straight, and it will be taken care of below
+		if ((!retval) && (AttackState == AS_SLIDING))
+			return;
+	}
+	else if (AIFlags & AI_CHARGING)
+	{
+		IdealYaw = EnemyYaw;
+		if (!(AIFlags & AI_MANUAL_STEERING))
+			ChangeYaw ();
+	}
+	if (retval)
+	{
+		// PMM - is this useful?  Monsters attacking usually call the ai_charge routine..
+		// the only monster this affects should be the soldier
+		if ((Dist != 0) && (!alreadyMoved) && (AttackState == AS_STRAIGHT) && (!(AIFlags & AI_STAND_GROUND)))
+			MoveToGoal (Dist);
+
+		if ((Entity->enemy) && (Entity->enemy->inUse) && (EnemyVis))
+		{
+			AIFlags &= ~AI_LOST_SIGHT;
+			Vec3Copy (Entity->enemy->s.origin, LastSighting);
+			TrailTime = level.time;
+			//PMM
+			Vec3Copy (Entity->enemy->s.origin, BlindFireTarget);
+			BlindFireDelay = 0;
+			//pmm
+		}
+		return;
+	}
+	//PMM
+
+	// PGM - added a little paranoia checking here... 9/22/98
+	if ((Entity->enemy) && (Entity->enemy->inUse) && (EnemyVis))
+	{
+		// PMM - check for alreadyMoved
+		if (!alreadyMoved)
+			MoveToGoal (Dist);
+		if(!Entity->inUse)
+			return;			// PGM - g_touchtrigger free problem
+
+		AIFlags &= ~AI_LOST_SIGHT;
+		Vec3Copy (Entity->enemy->s.origin, LastSighting);
+		TrailTime = level.time;
+		// PMM
+		Vec3Copy (Entity->enemy->s.origin, BlindFireTarget);
+		BlindFireDelay = 0;
+		// pmm
+		return;
+	}
+
+// PMM - moved down here to allow monsters to get on hint paths
+	// coop will change to another enemy if visible
+	if (coop->Integer())
+	{	// FIXME: insane guys get mad with this, which causes crashes!
+		if (FindTarget ())
+			return;
+	}
+// pmm
+
+	if ((SearchTime) && (level.time > (SearchTime + 20)))
+	{
+		// PMM - double move protection
+		if (!alreadyMoved)
+			MoveToGoal (Dist);
+		SearchTime = 0;
+		return;
+	}
+
+	save = Entity->goalentity;
+	tempgoal = G_Spawn();
+	Entity->goalentity = tempgoal;
+
+	isNew = false;
+
+	if (!(AIFlags & AI_LOST_SIGHT))
+	{
+#ifdef MONSTERS_USE_PATHFINDING
+		P_NodePathTimeout = level.time + 10; // Do "blind fire" first.
+#endif
+
+		// just lost sight of the player, decide where to go first
+		AIFlags |= (AI_LOST_SIGHT | AI_PURSUIT_LAST_SEEN);
+		AIFlags &= ~(AI_PURSUE_NEXT | AI_PURSUE_TEMP);
+		isNew = true;
+	}
+#ifdef MONSTERS_USE_PATHFINDING
+	else if ((AIFlags & AI_LOST_SIGHT) && P_NodePathTimeout < level.time)
+	{
+		// Set us up for pathing
+		P_CurrentNode = GetClosestNodeTo(Entity->s.origin);
+		P_CurrentGoalNode = GetClosestNodeTo(Entity->enemy->s.origin);
+		FoundPath ();
+	}
+#endif
+
+	if (AIFlags & AI_PURSUE_NEXT)
+	{
+		AIFlags &= ~AI_PURSUE_NEXT;
+
+		// give ourself more time since we got this far
+		SearchTime = level.time + 5;
+
+		if (AIFlags & AI_PURSUE_TEMP)
+		{
+			AIFlags &= ~AI_PURSUE_TEMP;
+			marker = NULL;
+			Vec3Copy (SavedGoal, LastSighting);
+			isNew = true;
+		}
+		else if (AIFlags & AI_PURSUIT_LAST_SEEN)
+		{
+			AIFlags &= ~AI_PURSUIT_LAST_SEEN;
+			marker = PlayerTrail_PickFirst (Entity);
+		}
+		else
+			marker = PlayerTrail_PickNext (Entity);
+
+		if (marker)
+		{
+			Vec3Copy (marker->s.origin, LastSighting);
+			TrailTime = marker->timestamp;
+			Entity->s.angles[YAW] = IdealYaw = marker->s.angles[YAW];
+
+			isNew = true;
+		}
+	}
+
+	Vec3Subtract (Entity->s.origin, LastSighting, v);
+	d1 = Vec3Length(v);
+	if (d1 <= Dist)
+	{
+		AIFlags |= AI_PURSUE_NEXT;
+		Dist = d1;
+	}
+
+	Vec3Copy (LastSighting, Entity->goalentity->s.origin);
+
+	if (isNew)
+	{
+		tr = CTrace(Entity->s.origin, Entity->mins, Entity->maxs, LastSighting, Entity, CONTENTS_MASK_PLAYERSOLID);
+		if (tr.fraction < 1)
+		{
+			Vec3Subtract (Entity->goalentity->s.origin, Entity->s.origin, v);
+			d1 = Vec3Length(v);
+			center = tr.fraction;
+			d2 = d1 * ((center+1)/2);
+			Entity->s.angles[YAW] = IdealYaw = VecToYaw(v);
+			Angles_Vectors(Entity->s.angles, v_forward, v_right, NULL);
+
+			Vec3Set(v, d2, -16, 0);
+			G_ProjectSource (Entity->s.origin, v, v_forward, v_right, left_target);
+			tr = CTrace(Entity->s.origin, Entity->mins, Entity->maxs, left_target, Entity, CONTENTS_MASK_PLAYERSOLID);
+			left = tr.fraction;
+
+			Vec3Set(v, d2, 16, 0);
+			G_ProjectSource (Entity->s.origin, v, v_forward, v_right, right_target);
+			tr = CTrace(Entity->s.origin, Entity->mins, Entity->maxs, right_target, Entity, CONTENTS_MASK_PLAYERSOLID);
+			right = tr.fraction;
+
+			center = (d1*center)/d2;
+			if (left >= center && left > right)
+			{
+				if (left < 1)
+				{
+					Vec3Set(v, d2 * left * 0.5, -16, 0);
+					G_ProjectSource (Entity->s.origin, v, v_forward, v_right, left_target);
+				}
+				Vec3Copy (LastSighting, SavedGoal);
+				AIFlags |= AI_PURSUE_TEMP;
+				Vec3Copy (left_target, Entity->goalentity->s.origin);
+				Vec3Copy (left_target, LastSighting);
+				Vec3Subtract (Entity->goalentity->s.origin, Entity->s.origin, v);
+				Entity->s.angles[YAW] = IdealYaw = VecToYaw(v);
+			}
+			else if (right >= center && right > left)
+			{
+				if (right < 1)
+				{
+					Vec3Set(v, d2 * right * 0.5, 16, 0);
+					G_ProjectSource (Entity->s.origin, v, v_forward, v_right, right_target);
+				}
+				Vec3Copy (LastSighting, SavedGoal);
+				AIFlags |= AI_PURSUE_TEMP;
+				Vec3Copy (right_target, Entity->goalentity->s.origin);
+				Vec3Copy (right_target, LastSighting);
+				Vec3Subtract (Entity->goalentity->s.origin, Entity->s.origin, v);
+				Entity->s.angles[YAW] = IdealYaw = VecToYaw(v);
+			}
+		}
+	}
+
+	MoveToGoal (Dist);
+	if(!Entity->inUse)
+		return;			// PGM - g_touchtrigger free problem
+
+	G_FreeEdict(tempgoal);
+
+	if (Entity)
+		Entity->goalentity = save;
+#endif
 }
 
 void CMonster::AI_Run_Melee ()
 {
+#ifndef MONSTER_USE_ROGUE_AI
 	IdealYaw = EnemyYaw;
 	ChangeYaw ();
 
@@ -1763,10 +2382,22 @@ void CMonster::AI_Run_Melee ()
 		Melee ();
 		AttackState = AS_STRAIGHT;
 	}
+#else
+	IdealYaw = EnemyYaw;
+	if (!(AIFlags & AI_MANUAL_STEERING))
+		ChangeYaw ();
+
+	if (FacingIdeal())
+	{
+		Melee ();
+		AttackState = AS_STRAIGHT;
+	}
+#endif
 }
 
 void CMonster::AI_Run_Missile()
 {
+#ifndef MONSTER_USE_ROGUE_AI
 	IdealYaw = EnemyYaw;
 	ChangeYaw ();
 
@@ -1775,10 +2406,23 @@ void CMonster::AI_Run_Missile()
 		Attack ();
 		AttackState = AS_STRAIGHT;
 	}
+#else
+	IdealYaw = EnemyYaw;
+	if (!(AIFlags & AI_MANUAL_STEERING))
+		ChangeYaw ();
+
+	if (FacingIdeal())
+	{
+		Attack ();
+		if ((AttackState == AS_MISSILE) || (AttackState == AS_BLIND))
+			AttackState = AS_STRAIGHT;
+	}
+#endif
 }
 
 void CMonster::AI_Run_Slide(float Dist)
 {
+#ifndef MONSTER_USE_ROGUE_AI
 	IdealYaw = EnemyYaw;
 	ChangeYaw ();
 
@@ -1787,10 +2431,51 @@ void CMonster::AI_Run_Slide(float Dist)
 		
 	Lefty = !Lefty;
 	WalkMove (IdealYaw - ((Lefty) ? 90 : -90), Dist);
+#else
+	float	ofs;
+	float	angle;
+
+	IdealYaw = EnemyYaw;
+	
+	angle = 90;
+	
+	if (Lefty)
+		ofs = angle;
+	else
+		ofs = -angle;
+
+	if (!(AIFlags & AI_MANUAL_STEERING))
+		ChangeYaw ();
+
+	// PMM - clamp maximum sideways move for non flyers to make them look less jerky
+	if (!(Entity->flags & FL_FLY))
+		Dist = min (Dist, 8.0f);
+	if (WalkMove (IdealYaw + ofs, Dist))
+		return;
+	// PMM - if we're dodging, give up on it and go straight
+	if (AIFlags & AI_DODGING)
+	{
+		DoneDodge ();
+		// by setting as_straight, caller will know to try straight move
+		AttackState = AS_STRAIGHT;
+		return;
+	}
+
+	Lefty = !Lefty;
+	if (WalkMove (IdealYaw - ofs, Dist))
+		return;
+	// PMM - if we're dodging, give up on it and go straight
+	if (AIFlags & AI_DODGING)
+		DoneDodge ();
+
+	// PMM - the move failed, so signal the caller (ai_run) to try going straight
+	AttackState = AS_STRAIGHT;
+#endif
 }
 
 void CMonster::AI_Stand (float Dist)
 {
+#ifndef MONSTER_USE_ROGUE_AI
 	if (Dist)
 		WalkMove (Entity->s.angles[YAW], Dist);
 
@@ -1851,6 +2536,93 @@ void CMonster::AI_Stand (float Dist)
 		else
 			IdleTime = level.time + (random() * 15);
 	}
+#else
+	vec3_t	v;
+	// PMM
+	bool retval;
+
+	if (Dist)
+		WalkMove (Entity->s.angles[YAW], Dist);
+
+#ifdef MONSTERS_USE_PATHFINDING
+	if (FollowingPath)
+	{
+		// Assuming we got here because we're waiting for something.
+		if (P_CurrentNode->Type == NODE_DOOR)
+		{
+			if (P_CurrentNode->LinkedEntity->moveinfo.state == 0)
+				Run(); // We can go again!
+		}
+		else
+		{
+			// ...this shouldn't happen. FIND OUT WHY PLZ
+			FollowingPath = false;
+		}
+		return;
+	}
+#endif
+
+	if (AIFlags & AI_STAND_GROUND)
+	{
+		if (Entity->enemy)
+		{
+			Vec3Subtract (Entity->enemy->s.origin, Entity->s.origin, v);
+			IdealYaw = VecToYaw(v);
+			if (Entity->s.angles[YAW] != IdealYaw && AIFlags & AI_TEMP_STAND_GROUND)
+			{
+				AIFlags &= ~(AI_STAND_GROUND | AI_TEMP_STAND_GROUND);
+				Run ();
+			}
+			if (!(AIFlags & AI_MANUAL_STEERING))
+				ChangeYaw ();
+			// PMM
+			// find out if we're going to be shooting
+			retval = AI_CheckAttack ();
+			// record sightings of player
+			if ((Entity->enemy) && (Entity->enemy->inUse) && (visible(Entity, Entity->enemy)))
+			{
+				AIFlags &= ~AI_LOST_SIGHT;
+				Vec3Copy (Entity->enemy->s.origin, LastSighting);
+				Vec3Copy (Entity->enemy->s.origin, BlindFireTarget);
+				TrailTime = level.time;
+				BlindFireDelay = 0;
+			}
+			// check retval to make sure we're not blindfiring
+			else if (!retval)
+			{
+				FindTarget ();
+				return;
+			}
+//			CheckAttack ();
+			// pmm
+		}
+		else
+			FindTarget ();
+		return;
+	}
+
+	if (FindTarget ())
+		return;
+	
+	if (level.time > PauseTime)
+	{
+		Walk ();
+		return;
+	}
+
+	if (!(Entity->spawnflags & 1) && (MonsterFlags & MF_HAS_IDLE) && (level.time > IdleTime))
+	{
+		if (IdleTime)
+		{
+			Idle ();
+			IdleTime = level.time + 15 + random() * 15;
+		}
+		else
+		{
+			IdleTime = level.time + random() * 15;
+		}
+	}
+#endif
 }
 
 void CMonster::ReactToDamage (edict_t *attacker)
@@ -1932,17 +2704,6 @@ void CMonster::ReactToDamage (edict_t *attacker)
 #endif
 }
 
-void CMonster::AI_Turn(float Dist)
-{
-	if (Dist)
-		WalkMove (Entity->s.angles[YAW], Dist);
-
-	if (FindTarget ())
-		return;
-	
-	ChangeYaw ();
-}
-
 void CMonster::AI_Walk(float Dist)
 {
 	MoveToGoal (Dist);
@@ -1988,9 +2749,11 @@ void CMonster::Run ()
 {
 }
 
+#ifndef MONSTER_USE_ROGUE_AI
 void CMonster::Dodge (edict_t *other, float eta)
 {
 }
+#endif
 
 void CMonster::Attack()
 {
@@ -2140,6 +2903,12 @@ void CMonster::FoundTarget ()
 	// clear the targetname, that point is ours!
 	Entity->movetarget->targetname = NULL;
 	PauseTime = 0;
+#ifdef MONSTER_USE_ROGUE_AI
+	// PMM
+	Vec3Copy (Entity->enemy->s.origin, BlindFireTarget);
+	BlindFireDelay = 0;
+	// PMM
+#endif
 
 	// run for it
 	Run ();
@@ -2411,6 +3180,7 @@ bool CMonster::FindTarget()
 		if (client->enemy == Entity->enemy)
 			return false;
 	}
+#ifndef MONSTERS_USE_PATHFINDING
 	else if (level.sound_entity_framenum >= (level.framenum - 1))
 	{
 		client = level.sound_entity;
@@ -2421,6 +3191,7 @@ bool CMonster::FindTarget()
 		client = level.sound2_entity;
 		heardit = true;
 	}
+#endif
 	else
 	{
 		client = level.sight_client;
@@ -2614,3 +3385,165 @@ void CMonster::Init (edict_t *ent)
 	Entity->think = Monster_Think;
 	Entity->nextthink = level.time + .1;
 }
+
+#ifdef MONSTER_USE_ROGUE_AI
+void CMonster::DoneDodge ()
+{
+	AIFlags &= ~AI_DODGING;
+}
+
+void CMonster::SideStep ()
+{
+}
+
+void CMonster::Dodge (edict_t *attacker, float eta, CTrace *tr)
+{
+	float	r = random();
+	float	height;
+	bool	ducker = false, dodger = false;
+
+	// this needs to be here since this can be called after the monster has "died"
+	if (Entity->health < 1)
+		return;
+
+	if ((MonsterFlags & MF_HAS_DUCK) && (MonsterFlags & MF_HAS_UNDUCK))
+		ducker = true;
+	if ((MonsterFlags & MF_HAS_SIDESTEP) && !(AIFlags & AI_STAND_GROUND))
+		dodger = true;
+
+	if ((!ducker) && (!dodger))
+		return;
+
+	if (!Entity->enemy)
+	{
+		Entity->enemy = attacker;
+		FoundTarget ();
+	}
+
+	// PMM - don't bother if it's going to hit anyway; fix for weird in-your-face etas (I was
+	// seeing numbers like 13 and 14)
+	if ((eta < 0.1) || (eta > 5))
+	{
+//		if ((g_showlogic) && (g_showlogic->value))
+//			gi.dprintf ("timeout\n");
+		return;
+	}
+
+	// skill level determination..
+	if (r > (0.25*((skill->Integer())+1)))
+	{
+		return;
+	}
+
+	// stop charging, since we're going to dodge (somehow) instead
+//	soldier_stop_charge (self);
+
+	if (ducker)
+	{
+		height = Entity->absMax[2]-32-1;  // the -1 is because the absmax is s.origin + maxs + 1
+
+		// FIXME, make smarter
+		// if we only duck, and ducking won't help or we're already ducking, do nothing
+		//
+		// need to add monsterinfo.abort_duck() and monsterinfo.next_duck_time
+
+		if ((!dodger) && ((tr->endPos[2] <= height) || (AIFlags & AI_DUCKED)))
+			return;
+	}
+	else
+		height = Entity->absMax[2];
+
+	if (dodger)
+	{
+		// if we're already dodging, just finish the sequence, i.e. don't do anything else
+		if (AIFlags & AI_DODGING)
+		{
+//			if ((g_showlogic) && (g_showlogic->value))
+//				gi.dprintf ("already dodging\n");
+			return;
+		}
+
+		// if we're ducking already, or the shot is at our knees
+		if ((tr->endPos[2] <= height) || (AIFlags & AI_DUCKED))
+		{
+			vec3_t right, diff;
+
+			Angles_Vectors (Entity->s.angles, NULL, right, NULL);
+			Vec3Subtract (tr->endPos, Entity->s.origin, diff);
+
+			if (DotProduct (right, diff) < 0)
+				Lefty = false;
+			else
+				Lefty = true;
+	
+			// if we are currently ducked, unduck
+
+			if ((ducker) && (AIFlags & AI_DUCKED))
+			{
+//				if ((g_showlogic) && (g_showlogic->value))
+//					gi.dprintf ("unducking - ");
+				UnDuck();
+			}
+
+			AIFlags |= AI_DODGING;
+			AttackState = AS_SLIDING;
+
+			// call the monster specific code here
+			SideStep ();
+			return;
+		}
+	}
+
+	if (ducker)
+	{
+		if (NextDuckTime > level.time)
+		{
+//			if ((g_showlogic) && (g_showlogic->value))
+//				gi.dprintf ("ducked too often, not ducking\n");
+			return;
+		}
+
+//		if ((g_showlogic) && (g_showlogic->value))
+//			gi.dprintf ("ducking!\n");
+
+		DoneDodge ();
+		// set this prematurely; it doesn't hurt, and prevents extra iterations
+		AIFlags |= AI_DUCKED;
+
+		Duck (eta);
+	}
+}
+
+void CMonster::DuckDown ()
+{
+	AIFlags |= AI_DUCKED;
+
+	Entity->maxs[2] = BaseHeight - 32;
+	Entity->takedamage = DAMAGE_YES;
+	if (DuckWaitTime < level.time)
+		DuckWaitTime = level.time + 1;
+	gi.linkentity (Entity);
+}
+
+void CMonster::DuckHold ()
+{
+	if (level.time >= DuckWaitTime)
+		AIFlags &= ~AI_HOLD_FRAME;
+	else
+		AIFlags |= AI_HOLD_FRAME;
+}
+
+void CMonster::Duck (float ETA)
+{
+}
+
+void CMonster::UnDuck ()
+{
+	AIFlags &= ~AI_DUCKED;
+
+	Entity->maxs[2] = BaseHeight;
+	Entity->takedamage = DAMAGE_AIM;
+	NextDuckTime = level.time + 0.5;
+	gi.linkentity (Entity);
+}
+#endif

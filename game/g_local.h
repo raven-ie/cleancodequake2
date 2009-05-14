@@ -194,12 +194,14 @@ typedef struct
 
 	edict_t		*sight_client;	// changed once each frame for coop games
 
+#ifndef MONSTERS_USE_PATHFINDING
 	edict_t		*sight_entity;
 	int			sight_entity_framenum;
 	edict_t		*sound_entity;
 	int			sound_entity_framenum;
 	edict_t		*sound2_entity;
 	int			sound2_entity_framenum;
+#endif
 
 	int			pic_health;
 
@@ -596,7 +598,7 @@ typedef struct
 
 	bool		spectator;			// client is a spectator
 	EGender		Gender;
-	bool		DroppingNodes;
+
 	CPathNode	*LastNode;
 } client_respawn_t;
 

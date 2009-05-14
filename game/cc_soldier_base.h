@@ -45,7 +45,9 @@ public:
 	virtual void Allocate (edict_t *ent) = 0;
 
 	virtual void Attack () = 0;
+#ifndef MONSTER_USE_ROGUE_AI
 	void Dodge (edict_t *attacker, float eta);
+#endif
 	void Idle ();
 	void Run ();
 	void Sight ();
@@ -53,9 +55,17 @@ public:
 	void Walk ();
 
 	void CockGun ();
+#ifndef MONSTER_USE_ROGUE_AI
 	void Duck_Down ();
 	void Duck_Hold ();
 	void Duck_Up ();
+#else
+	void StartCharge ();
+	void StopCharge();
+
+	void SideStep ();
+	void Duck (float eta);
+#endif
 	virtual void FireGun (int FlashNumber) = 0;
 
 	void Walk1_Random ();
@@ -73,6 +83,9 @@ public:
 	void Attack2_Refire2 ();
 	void Attack3_Refire ();
 	void Attack6_Refire ();
+#ifdef MONSTER_USE_ROGUE_AI
+	void Attack6_RefireBlaster();
+#endif
 
 	void Dead ();
 	void Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
