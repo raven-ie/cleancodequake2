@@ -1,0 +1,42 @@
+#summary How-To Use nodes.
+
+= Introduction =
+Before we start, I have to say that this page is the documentation that teaches you how to create node tables, used on Clean Code, for your maps.
+
+
+= Commands =
+Those are the commands for revision 34. They have been tested, and they should work.
+
+node_debug # 			- 1 or 0. Makes visible the Nodes on the map.
+
+node load                       - Loads the table of nodes for the existing map. NOTE: 
+                                  They must be the same name to be loaded.
+node save                       - Saves the node table with the Map Name.
+
+node drop 			- drops a node
+
+node connect # # ["one"] 	- Connects two nodes bi-directional, unless "one" is into 
+                                  the command. Eg: node connect 7 9 will connect 7 -> 9
+                                  and 9 -> 7, but node connect 7 9 one
+                                  will only connect 7->9.
+node testpath # #  		- Test a path.
+
+node clearstate			- Cleans the Grenade models from testpath.
+
+node settype # type		- This is for setting the types for the nodes. Can 
+                                  be "door" or "jump". Door nodes should be placed in the 
+                                  middle of the door (see base1).
+node linkwith #			- Links the node number with the entity you're aiming 
+                                  at(only brush models,like doors and plataforms).
+node monstergoal # #		- Tells the monster you are aiming at to go from node 
+                                  X to node Y. NOTE: start can be "closest" to make him  
+                                  start at the closest node.
+node kill #			- Destroys/removes the node.
+
+node move # x y z		- Moves the node by units, i mean: node move 3 4 0 0 
+				  moves the node 4 units into the x coordinates.
+
+
+= Distribuying and Using them =
+
+At the 34 Revision of the SVN, the nodes are not loaded automatic with the start map. You need to load them manually using the "node load". If you are going to distribute your maps, you need to give the map + the node table, that's into a sub-folder of the maps folder, called the same way of the map but with different extension.
