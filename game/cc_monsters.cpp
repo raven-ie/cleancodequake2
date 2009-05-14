@@ -80,7 +80,7 @@ void CMonster::MoveToPath (float Dist)
 	if (!Entity->groundentity && !(Entity->flags & (FL_FLY|FL_SWIM)))
 		return;
 
-	if (FindTarget() && visible(Entity, Entity->enemy)) // Did we find an enemy while going to our path?
+	if (FindTarget() && (Entity->enemy && visible(Entity, Entity->enemy))) // Did we find an enemy while going to our path?
 	{
 		FollowingPath = false;
 		PauseTime = 100000000;
@@ -109,7 +109,10 @@ void CMonster::MoveToPath (float Dist)
 			gi.dprintf ("Hit node %u\n", P_CurrentNodeIndex);
 			doit = true;
 			if (P_CurrentNode->Type == NODE_DOOR)
+			{
+				P_CurrentNode->LinkedEntity->use (P_CurrentNode->LinkedEntity, Entity, Entity);
 				Stand (); // We stand, and wait.
+			}
 
 			if (shouldJump)
 			{
