@@ -5,7 +5,7 @@ Before we start, I have to say that this page is the documentation that teaches 
 
 
 = Commands =
-Those are the commands for revision 34. They have been tested, and they should work.
+Those are the commands for the lasted revision. They have been tested, and they should work.
 
 node_debug # 			- 1 or 0. Makes visible the Nodes on the map.
 
