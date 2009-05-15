@@ -15,6 +15,8 @@ node save                       - Saves the node table with the Map Name.
 
 node drop 			- drops a node
 
+node drop connect               - Drops a node and connect it with the one placed before of it.
+
 node connect # # ["one"] 	- Connects two nodes bi-directional, unless "one" is into the command. Eg: node connect 7 9 will connect 7 -> 9 and 9 -> 7, but node connect 7 9 one will only connect 7->9.
 
 node testpath # #  		- Test a path.
