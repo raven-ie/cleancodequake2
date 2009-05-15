@@ -36,4 +36,4 @@ node move # x y z		- Moves the node by units, i mean: node move 3 4 0 0 moves th
 
 = Distribuying and Using them =
 
-At the 34 Revision of the SVN, the nodes are not loaded automatic with the start map. You need to load them manually using the "node load". If you are going to distribute your maps, you need to give the map + the node table, that's into a sub-folder of the maps folder, called the same way of the map but with different extension.
+Nodes are loaded manually from 42 and newer releases. If you are going to distribute your maps, you need to give the map + the node table, that's into a sub-folder of the maps folder, called the same way of the map but with different extension.
