@@ -49,8 +49,13 @@ public:
 
 	void Attack ();
 #ifdef FLYER_KNOWS_HOW_TO_DODGE
+#ifdef MONSTER_USE_ROGUE_AI
+	void Dodge (edict_t *attacker, float eta, CTrace *tr);
+	void SideStep ();
+#else
 	void Dodge (edict_t *attacker, float eta);
-	
+#endif
+
 	void ChooseAfterDodge ();
 	void AI_Roll (float Dist);
 #endif

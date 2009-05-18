@@ -31,6 +31,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define GAME_INCLUDE
 #include "game.h"
 
+// Paril, CleanCode Quake2
+#include "cc_shared.h"
+
 // the "gameversion" client command will print this plus compile date
 #define GAMEVERSION	"baseq2"
 
@@ -201,6 +204,10 @@ typedef struct
 	int			sound_entity_framenum;
 	edict_t		*sound2_entity;
 	int			sound2_entity_framenum;
+#else
+	class		CPathNode	*NoiseNode;
+	float		SoundEntityFramenum;
+	edict_t		*SoundEntity;
 #endif
 
 	int			pic_health;
@@ -219,8 +226,6 @@ typedef struct
 
 	int			power_cubes;		// ugly necessity for coop
 	bool		paused;
-
-	class CPathNode	*NoiseNode;
 } level_locals_t;
 
 
@@ -551,9 +556,6 @@ void GetChaseTarget(edict_t *ent);
 #define ANIM_DEATH		5
 #define ANIM_REVERSE	6
 
-// Paril, CleanCode Quake2
-#include "cc_shared.h"
-
 // client data that stays across multiple level loads
 typedef struct
 {
@@ -599,7 +601,9 @@ typedef struct
 	bool		spectator;			// client is a spectator
 	EGender		Gender;
 
+#ifdef MONSTERS_USE_PATHFINDING
 	CPathNode	*LastNode;
+#endif
 } client_respawn_t;
 
 // this structure is cleared on each PutClientInServer(),

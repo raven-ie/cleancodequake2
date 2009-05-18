@@ -31,6 +31,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Pathfinding algorithm for monsters
 //
 
+#ifdef MONSTERS_USE_PATHFINDING
 #include <vector>
 
 enum ENodeType
@@ -79,7 +80,7 @@ extern std::vector<CPathNode*>		Closed; // Nodes that have already been crossed
 class CPath
 {
 public:
-	// Basically, keep popping back once we reach the end node (backwards)
+	// Basically, keep popping back until we reach the end node (backwards)
 	CPathNode					*Start, *End;
 	std::vector<CPathNode*>		Path;
 	uint32						Weight;
@@ -88,6 +89,9 @@ public:
 
 	CPath ();
 	CPath (CPathNode *Start, CPathNode *End);
+
+	void Save (FILE *fp);
+	void Load (FILE *fp);
 
 	bool NodeIsClosed (CPathNode *Node);
 	void RemoveFromClosed (CPathNode *Node);
@@ -110,3 +114,9 @@ void RunPlayerNodes (edict_t *ent);
 CPathNode *GetClosestNodeTo (vec3_t origin);
 
 CPath *GetPath (CPathNode *Start, CPathNode *End);
+
+void LoadNodes();
+
+void SavePathTable ();
+void LoadPathTable ();
+#endif

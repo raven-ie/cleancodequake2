@@ -221,6 +221,27 @@ CFrame FloaterFramesAttack1 [] =
 };
 CAnim FloaterMoveAttack1 (FRAME_attak101, FRAME_attak114, FloaterFramesAttack1, ConvertDerivedFunction(&CFloater::Run));
 
+#ifdef MONSTER_USE_ROGUE_AI
+CFrame FloaterFramesAttack1a [] =
+{
+	CFrame (&CMonster::AI_Charge,	10),			// Blaster attack
+	CFrame (&CMonster::AI_Charge,	10),
+	CFrame (&CMonster::AI_Charge,	10),
+	CFrame (&CMonster::AI_Charge,	10,	ConvertDerivedFunction(&CFloater::FireBlaster)),			// BOOM (0, -25.8, 32.5)	-- LOOP Starts
+	CFrame (&CMonster::AI_Charge,	10,	ConvertDerivedFunction(&CFloater::FireBlaster)),
+	CFrame (&CMonster::AI_Charge,	10,	ConvertDerivedFunction(&CFloater::FireBlaster)),
+	CFrame (&CMonster::AI_Charge,	10,	ConvertDerivedFunction(&CFloater::FireBlaster)),
+	CFrame (&CMonster::AI_Charge,	10,	ConvertDerivedFunction(&CFloater::FireBlaster)),
+	CFrame (&CMonster::AI_Charge,	10,	ConvertDerivedFunction(&CFloater::FireBlaster)),
+	CFrame (&CMonster::AI_Charge,	10,	ConvertDerivedFunction(&CFloater::FireBlaster)),
+	CFrame (&CMonster::AI_Charge,	10),
+	CFrame (&CMonster::AI_Charge,	10),
+	CFrame (&CMonster::AI_Charge,	10),
+	CFrame (&CMonster::AI_Charge,	10)			//							-- LOOP Ends
+};
+CAnim FloaterMoveAttack1a (FRAME_attak101, FRAME_attak114, FloaterFramesAttack1a, ConvertDerivedFunction(&CFloater::Run));
+#endif
+
 CFrame FloaterFramesAttack2 [] =
 {
 	CFrame (&CMonster::AI_Charge,	0),			// Claws
@@ -488,7 +509,29 @@ void CFloater::Zap ()
 
 void CFloater::Attack()
 {
+#ifndef MONSTER_USE_ROGUE_AI
 	CurrentMove = &FloaterMoveAttack1;
+#else
+	float chance = (!skill->Integer()) ? 0 : 1.0 - (0.5/skill->Float());
+
+	// 0% chance of circle in easy
+	// 50% chance in normal
+	// 75% chance in hard
+	// 86.67% chance in nightmare
+
+	if (random() > chance)
+	{
+		AttackState = AS_STRAIGHT;
+		CurrentMove = &FloaterMoveAttack1;
+	}
+	else // circle strafe
+	{
+		if (random () <= 0.5) // switch directions
+			Lefty = !Lefty;
+		AttackState = AS_SLIDING;
+		CurrentMove = &FloaterMoveAttack1a;
+	}
+#endif
 }
 
 void CFloater::Melee ()

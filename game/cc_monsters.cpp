@@ -1087,7 +1087,7 @@ bool CMonster::FriendlyInLine (vec3_t Origin, vec3_t Direction)
 	Vec3MA (Origin, 8192, forward, end);
 	CTrace trace = CTrace(Origin, end, Entity, CONTENTS_MONSTER);
 
-	if (trace.ent && trace.ent->Monster && (trace.ent->enemy != Entity))
+	if (trace.fraction <= 0.5 && trace.ent && trace.ent->Monster && (trace.ent->enemy != Entity))
 		return true;
 	return false;
 }
@@ -1451,7 +1451,6 @@ bool CMonster::CheckAttack ()
 			AttackState = AS_STRAIGHT;
 	}
 // do we want the monsters strafing?
-#ifdef SLIDING_TROOPS
 	else
 	{
 		if (random() < 0.4)
@@ -1459,7 +1458,7 @@ bool CMonster::CheckAttack ()
 		else
 			AttackState = AS_STRAIGHT;
 	}
-#endif
+
 //-PMM
 
 	return false;
@@ -3136,7 +3135,8 @@ bool CMonster::FindTarget()
 	if (AIFlags & AI_COMBAT_POINT)
 		return false;
 
-	if (!level.sight_client && (level.sound_entity_framenum >= (level.framenum - 1)) && level.NoiseNode)
+#ifdef MONSTERS_USE_PATHFINDING
+	if ((level.SoundEntityFramenum >= (level.framenum - 1)) && level.NoiseNode)
 	{
 		vec3_t temp;
 		if (Entity->spawnflags & 1)
@@ -3166,8 +3166,53 @@ bool CMonster::FindTarget()
 		P_CurrentNode = GetClosestNodeTo(Entity->s.origin);
 		P_CurrentGoalNode = level.NoiseNode;
 		FoundPath ();
+
+		// Check if we can see the entity too
+		if (!Entity->enemy && (level.SoundEntityFramenum >= (level.framenum - 1)) && !(Entity->spawnflags & 1) )
+		{
+			client = level.SoundEntity;
+
+			if (client)
+			{
+				vec3_t	temp;
+
+				if (Entity->spawnflags & 1)
+				{
+					if (!visible (Entity, client))
+						return false;
+				}
+				else
+				{
+					if (!gi.inPHS(Entity->s.origin, client->s.origin))
+						return false;
+				}
+
+				Vec3Subtract (client->s.origin, Entity->s.origin, temp);
+
+				if (Vec3Length(temp) > 1000)	// too far to hear
+					return false;
+
+				// check area portals - if they are different and not connected then we can't hear it
+				if (client->areaNum != Entity->areaNum)
+				{
+					if (!gi.AreasConnected(Entity->areaNum, client->areaNum))
+						return false;
+				}
+
+				// hunt the sound for a bit; hopefully find the real player
+				Entity->enemy = client;
+
+				FoundTarget ();
+				AlertNearbyStroggs ();
+
+				if (MonsterFlags & MF_HAS_SIGHT)
+					Sight ();
+			}
+		}
+
 		return true;
 	}
+#endif
 
 // if the first spawnflag bit is set, the monster will only wake up on
 // really seeing the player, not another monster getting angry or hearing
@@ -3177,12 +3222,15 @@ bool CMonster::FindTarget()
 // but not weapon impact/explosion noises
 
 	heardit = false;
+#ifndef MONSTERS_USE_PATHFINDING
 	if ((level.sight_entity_framenum >= (level.framenum - 1)) && !(Entity->spawnflags & 1) )
 	{
 		client = level.sight_entity;
 		if (client->enemy == Entity->enemy)
 			return false;
 	}
+#endif
+
 #ifndef MONSTERS_USE_PATHFINDING
 	else if (level.sound_entity_framenum >= (level.framenum - 1))
 	{
@@ -3192,6 +3240,12 @@ bool CMonster::FindTarget()
 	else if (!(Entity->enemy) && (level.sound2_entity_framenum >= (level.framenum - 1)) && !(Entity->spawnflags & 1) )
 	{
 		client = level.sound2_entity;
+		heardit = true;
+	}
+#else
+	if (level.SoundEntityFramenum >= (level.framenum - 1))
+	{
+		client = level.SoundEntity;
 		heardit = true;
 	}
 #endif
@@ -3234,6 +3288,7 @@ bool CMonster::FindTarget()
 	else
 		return false;
 
+	edict_t *old = Entity->enemy;
 	if (!heardit)
 	{
 		r = range (Entity, client);
@@ -3309,7 +3364,7 @@ bool CMonster::FindTarget()
 		ChangeYaw ();
 
 		// hunt the sound for a bit; hopefully find the real player
-		AIFlags |= AI_SOUND_TARGET;
+		//AIFlags |= AI_SOUND_TARGET;
 		Entity->enemy = client;
 	}
 
@@ -3319,7 +3374,7 @@ bool CMonster::FindTarget()
 	FoundTarget ();
 	AlertNearbyStroggs ();
 
-	if (!(AIFlags & AI_SOUND_TARGET) && (MonsterFlags & MF_HAS_SIGHT))
+	if ((Entity->enemy != old) && MonsterFlags & MF_HAS_SIGHT)
 		Sight ();
 
 	return true;

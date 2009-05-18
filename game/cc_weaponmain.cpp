@@ -334,7 +334,8 @@ void PlayerNoise(edict_t *who, vec3_t where, int type)
 	gi.linkentity (noise);
 #else
 	level.NoiseNode = GetClosestNodeTo(where);
-	level.sound_entity_framenum = level.framenum;
+	level.SoundEntityFramenum = level.framenum;
+	level.SoundEntity = who;
 #endif
 }
 

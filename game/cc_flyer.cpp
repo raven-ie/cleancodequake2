@@ -550,9 +550,17 @@ void CFlyer::ChooseAfterDodge ()
 	CurrentMove = (random() < 0.5) ? &FlyerMoveRun : &FlyerMoveAttack2;
 }
 
-void CFlyer::Dodge (edict_t *other, float eta)
+#ifndef MONSTER_USE_ROGUE_AI
+void CFlyer::Dodge (edict_t *attacker, float eta)
+#else
+void CFlyer::Dodge (edict_t *attacker, float eta, CTrace *tr)
+#endif
 {
-	if (random() > 0.75)
+	if (random() > (0.35f + ((skill->Float()+1) / 10)) )
+		return;
+	
+	// Don't dodge if we're attacking or dodging already
+	if ((CurrentMove == &FlyerMoveRollLeft || CurrentMove == &FlyerMoveRollRight) || (CurrentMove == &FlyerMoveAttack2 && (random() < 0.5)))
 		return;
 
 	CTrace trace;
@@ -588,10 +596,20 @@ void CFlyer::Dodge (edict_t *other, float eta)
 	CurrentMove = (WantsLeft) ? &FlyerMoveRollLeft : &FlyerMoveRollRight;
 
 	if (!Entity->enemy)
-		Entity->enemy = other;
+		Entity->enemy = attacker;
 }
 #endif
-	
+
+#ifdef MONSTER_USE_ROGUE_AI
+void CFlyer::SideStep ()
+{
+	if (AIFlags & AI_STAND_GROUND)
+		CurrentMove = &FlyerMoveStand;
+	else
+		CurrentMove = &FlyerMoveRun;
+}
+#endif
+
 void CFlyer::Spawn ()
 {
 	// fix a map bug in jail5.bsp
@@ -613,7 +631,7 @@ void CFlyer::Spawn ()
 
 	Entity->s.modelIndex = ModelIndex ("models/monsters/flyer/tris.md2");
 	Vec3Set (Entity->mins, -16, -16, -24);
-	Vec3Set (Entity->maxs, 16, 16, 32);
+	Vec3Set (Entity->maxs, 16, 16, 16);
 	Entity->movetype = MOVETYPE_STEP;
 	Entity->solid = SOLID_BBOX;
 
@@ -622,7 +640,11 @@ void CFlyer::Spawn ()
 	Entity->health = 50;
 	Entity->mass = 50;
 
-	MonsterFlags |= (MF_HAS_IDLE | MF_HAS_SIGHT | MF_HAS_MELEE | MF_HAS_ATTACK);
+	MonsterFlags |= (MF_HAS_IDLE | MF_HAS_SIGHT | MF_HAS_MELEE | MF_HAS_ATTACK
+#ifdef MONSTER_USE_ROGUE_AI
+	| MF_HAS_DUCK | MF_HAS_DODGE | MF_HAS_SIDESTEP
+#endif
+		);
 	gi.linkentity (Entity);
 
 	CurrentMove = &FlyerMoveStand;
