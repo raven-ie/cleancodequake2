@@ -31,10 +31,14 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Pathfinding algorithm for monsters
 //
 
+
 #include "cc_local.h"
+
+#ifdef MONSTERS_USE_PATHFINDING
 
 void SpawnNodeEntity (CPathNode *Node);
 void CheckNodeFlags (CPathNode *Node);
+uint32 GetNodeIndex (CPathNode *Node);
 
 std::vector<CPathNode*>		Closed, Open;
 
@@ -190,13 +194,61 @@ void CPath::CreatePath ()
 	Incomplete = true;
 };
 
+void CPath::Save (FILE *fp)
+{
+	uint32 index;
+	// Save all local data
+	index = GetNodeIndex(Start);
+	fwrite (&index, sizeof(uint32), 1, fp);
+
+	index = GetNodeIndex(End);
+	fwrite (&index, sizeof(uint32), 1, fp);
+
+	fwrite (&Weight, sizeof(uint32), 1, fp);
+	fwrite (&NumNodes, sizeof(uint32), 1, fp);
+
+	// Save the path data
+	size_t pathLen = Path.size();
+	fwrite (&pathLen, sizeof(uint32), 1, fp);
+
+	for (size_t i = 0; i < pathLen; i++)
+	{
+		CPathNode *Node = Path[i];
+		index = GetNodeIndex(Node);
+
+		fwrite (&index, sizeof(uint32), 1, fp);
+	}
+}
+
 #define MAX_NODES 512
 
 std::vector<CPathNode*> NodeList;
 
+void CPath::Load (FILE *fp)
+{
+	uint32 index;
+	fread (&index, sizeof(uint32), 1, fp);
+	Start = NodeList[index];
+
+	fread (&index, sizeof(uint32), 1, fp);
+	End = NodeList[index];
+
+	fread (&Weight, sizeof(uint32), 1, fp);
+	fread (&NumNodes, sizeof(uint32), 1, fp);
+
+	// Save the path data
+	size_t pathLen;
+	fread (&pathLen, sizeof(uint32), 1, fp);
+
+	for (size_t i = 0; i < pathLen; i++)
+	{
+		fread (&index, sizeof(uint32), 1, fp);
+		Path.push_back (NodeList[index]);
+	}
+}
+
 void Cmd_Node_f (edict_t *ent);
 CCvar *DebugNodes;
-void LoadNodes();
 
 void InitNodes ()
 {
@@ -744,6 +796,82 @@ CPath *CreatePath (CPathNode *Start, CPathNode *End)
 }
 
 // A table of saved paths, to speed things up.
+void SavePathTable ()
+{
+	// Try to open the file
+	std::string FileName;
+
+	FileName += CCvar("gamename", "").String();
+	FileName += "/maps/nodes/";
+	FileName += level.mapname;
+	FileName += ".cnt";
+
+	FILE *fp = fopen (FileName.c_str(), "wb+");
+
+	if (!fp)
+		return;
+
+	gi.dprintf ("Saving node helper table...\n");
+
+	int count = 0;
+	for (int i = 0; i < MAX_SAVED_PATHS; i++)
+	{
+		for (int z = 0; z < MAX_SAVED_PATHS; z++)
+		{
+			if (SavedPaths[i].ToEnd[z])
+				count++;
+		}
+	}
+	fwrite (&count, sizeof(int), 1, fp);
+
+	for (int i = 0; i < MAX_SAVED_PATHS; i++)
+	{
+		for (int z = 0; z < MAX_SAVED_PATHS; z++)
+		{
+			if (SavedPaths[i].ToEnd[z])
+			{
+				fwrite (&i, sizeof(int), 1, fp);
+				fwrite (&z, sizeof(int), 1, fp);
+				SavedPaths[i].ToEnd[z]->Save(fp);
+			}
+		}
+	}
+	fclose(fp);
+}
+
+void LoadPathTable ()
+{
+	// Try to open the file
+	std::string FileName;
+
+	FileName += CCvar("gamename", "").String();
+	FileName += "/maps/nodes/";
+	FileName += level.mapname;
+	FileName += ".cnt";
+
+	FILE *fp = fopen (FileName.c_str(), "rb");
+
+	if (!fp)
+		return;
+
+	gi.dprintf ("Loading node helper table...\n");
+
+	int count;
+	fread (&count, sizeof(int), 1, fp);
+
+	for (int i = 0; i < count; i++)
+	{
+		int indexI, indexZ;
+
+		fread (&indexI, sizeof(int), 1, fp);
+		fread (&indexZ, sizeof(int), 1, fp);
+
+		SavedPaths[indexI].ToEnd[indexZ] = new CPath();
+		SavedPaths[indexI].ToEnd[indexZ]->Load (fp);
+	}
+
+	fclose(fp);
+}
 
 CPath *GetPath (CPathNode *Start, CPathNode *End)
 {
@@ -759,3 +887,4 @@ CPath *GetPath (CPathNode *Start, CPathNode *End)
 	}
 	return Path;
 }
+#endif

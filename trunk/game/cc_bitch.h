@@ -56,7 +56,6 @@ public:
 	void Allocate (edict_t *ent);
 
 	void Attack ();
-	void Dodge (edict_t *attacker, float eta);
 	void Idle ();
 	void Run ();
 	void Sight ();
@@ -64,9 +63,15 @@ public:
 	void Walk ();
 	void Melee ();
 
+#ifdef MONSTER_USE_ROGUE_AI
+	void Duck (float eta);
+	void SideStep ();
+#else
 	void DuckDown ();
 	void DuckHold ();
 	void DuckUp ();
+	void Dodge (edict_t *attacker, float eta);
+#endif
 
 	void Moan ();
 	void Reload ();

@@ -155,7 +155,11 @@ CFrame ChickFramesRun [] =
 	CFrame (&CMonster::AI_Run, 6),
 	CFrame (&CMonster::AI_Run, 8),
 	CFrame (&CMonster::AI_Run, 13),
+#ifdef MONSTER_USE_ROGUE_AI
+	CFrame (&CMonster::AI_Run, 5, &CMonster::DoneDodge), // Make sure to clear the dodge bit. FIXME: needed?
+#else
 	CFrame (&CMonster::AI_Run, 5),
+#endif
 	CFrame (&CMonster::AI_Run, 7),
 	CFrame (&CMonster::AI_Run, 4),
 	CFrame (&CMonster::AI_Run, 11),
@@ -187,6 +191,10 @@ void CMaiden::Walk ()
 
 void CMaiden::Run ()
 {
+#ifdef MONSTER_USE_ROGUE_AI
+	DoneDodge();
+#endif
+
 	if (AIFlags & AI_STAND_GROUND)
 	{
 		CurrentMove = &ChickMoveStand;
@@ -273,6 +281,15 @@ void CMaiden::Pain (edict_t *other, float kick, int damage)
 
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
+
+#ifdef MONSTER_USE_ROGUE_AI
+	// PMM - clear this from blindfire
+	AIFlags &= ~AI_MANUAL_STEERING;
+
+	// PMM - clear duck flag
+	if (AIFlags & AI_DUCKED)
+		UnDuck();
+#endif
 
 	if (damage <= 10)
 		CurrentMove = &ChickMovePain1;
@@ -366,6 +383,7 @@ void CMaiden::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t poi
 	Sound (Entity, CHAN_VOICE, (n == 0) ? SoundDeath1 : SoundDeath2);
 }
 
+#ifndef MONSTER_USE_ROGUE_AI
 void CMaiden::DuckDown ()
 {
 	if (AIFlags & AI_DUCKED)
@@ -403,54 +421,20 @@ CFrame ChickFramesDuck [] =
 	CFrame (&CMonster::AI_Move, 3),
 	CFrame (&CMonster::AI_Move, 1)
 };
+#else
+CFrame ChickFramesDuck [] =
+{
+	CFrame (&CMonster::AI_Move, 0, &CMonster::DuckDown),
+	CFrame (&CMonster::AI_Move, 1),
+	CFrame (&CMonster::AI_Move, 4, &CMonster::DuckHold),
+	CFrame (&CMonster::AI_Move, -4),
+	CFrame (&CMonster::AI_Move, -5, &CMonster::UnDuck),
+	CFrame (&CMonster::AI_Move, 3),
+	CFrame (&CMonster::AI_Move, 1)
+};
+#endif
+
 CAnim ChickMoveDuck (FRAME_duck01, FRAME_duck07, ChickFramesDuck, ConvertDerivedFunction(&CMaiden::Run));
-
-void CMaiden::Dodge (edict_t *attacker, float eta)
-{
-	if (random() > 0.25)
-		return;
-
-	if (!Entity->enemy)
-		Entity->enemy = attacker;
-
-	CurrentMove = &ChickMoveDuck;
-}
-
-void CMaiden::Slash ()
-{
-	vec3_t	aim = {MELEE_DISTANCE, Entity->mins[0], 10};
-	Sound (Entity, CHAN_WEAPON, SoundMeleeSwing);
-	fire_hit (Entity, aim, (10 + (rand() %6)), 100);
-}
-
-
-void CMaiden::Rocket ()
-{
-	vec3_t	forward, right;
-	vec3_t	start;
-	vec3_t	dir;
-	vec3_t	vec;
-
-	Angles_Vectors (Entity->s.angles, forward, right, NULL);
-	G_ProjectSource (Entity->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_CHICK_ROCKET_1], forward, right, start);
-
-	Vec3Copy (Entity->enemy->s.origin, vec);
-	vec[2] += Entity->enemy->viewheight;
-	Vec3Subtract (vec, start, dir);
-	VectorNormalizef (dir, dir);
-
-	MonsterFireRocket (start, dir, 50, 500, MZ2_CHICK_ROCKET_1);
-}	
-
-void CMaiden::PreAttack ()
-{
-	Sound (Entity, CHAN_VOICE, SoundMissilePrelaunch);
-}
-
-void CMaiden::Reload ()
-{
-	Sound (Entity, CHAN_VOICE, SoundMissileReload);
-}
 
 CFrame ChickFramesStartAttack1 [] =
 {
@@ -500,11 +484,200 @@ CFrame ChickFramesEndAttack1 [] =
 };
 CAnim ChickMoveEndAttack1 (FRAME_attak128, FRAME_attak132, ChickFramesEndAttack1, ConvertDerivedFunction(&CMaiden::Run));
 
+#ifdef MONSTER_USE_ROGUE_AI
+void CMaiden::Duck (float eta)
+{
+	if ((CurrentMove == &ChickMoveStartAttack1) ||
+		(CurrentMove == &ChickMoveAttack1))
+	{
+		// if we're shooting, and not on easy, don't dodge
+		if (skill->Integer())
+		{
+			AIFlags &= ~AI_DUCKED;
+			return;
+		}
+	}
+
+	if (!skill->Integer())
+		// PMM - stupid dodge
+		DuckWaitTime = level.time + eta + 1;
+	else
+		DuckWaitTime = level.time + eta + (0.1 * (3 - skill->Integer()));
+
+	// has to be done immediately otherwise she can get stuck
+	DuckDown();
+
+	NextFrame = FRAME_duck01;
+	CurrentMove = &ChickMoveDuck;
+	return;
+}
+
+void CMaiden::SideStep ()
+{
+	if ((CurrentMove == &ChickMoveStartAttack1) ||
+		(CurrentMove == &ChickMoveAttack1))
+	{
+		// if we're shooting, and not on easy, don't dodge
+		if (skill->Integer())
+		{
+			AIFlags &= ~AI_DODGING;
+			return;
+		}
+	}
+
+	if (CurrentMove != &ChickMoveRun)
+		CurrentMove = &ChickMoveRun;
+}
+#else
+void CMaiden::Dodge (edict_t *attacker, float eta)
+{
+	if (random() > 0.25)
+		return;
+
+	if (!Entity->enemy)
+		Entity->enemy = attacker;
+
+	CurrentMove = &ChickMoveDuck;
+}
+#endif
+
+void CMaiden::Slash ()
+{
+	vec3_t	aim = {MELEE_DISTANCE, Entity->mins[0], 10};
+	Sound (Entity, CHAN_WEAPON, SoundMeleeSwing);
+	fire_hit (Entity, aim, (10 + (rand() %6)), 100);
+}
+
+void CMaiden::Rocket ()
+{
+#ifdef MONSTER_USE_ROGUE_AI
+	vec3_t	forward, right;
+	vec3_t	start;
+	vec3_t	dir;
+	vec3_t	vec;
+	int		rocketSpeed;
+	float	dist;
+	vec3_t	target;
+	bool blindfire = (AIFlags & AI_MANUAL_STEERING) ? true : false;
+
+	Angles_Vectors (Entity->s.angles, forward, right, NULL);
+	G_ProjectSource (Entity->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_CHICK_ROCKET_1], forward, right, start);
+
+	rocketSpeed = 500 + (100 * skill->Integer());	// PGM rock & roll.... :)
+
+	if (blindfire)
+		Vec3Copy (BlindFireTarget, target);
+	else
+		Vec3Copy (Entity->enemy->s.origin, target);
+
+	if (blindfire)
+	{
+		Vec3Copy (target, vec);
+		Vec3Subtract (vec, start, dir);
+	}
+	// pmm
+	// don't shoot at feet if they're above where i'm shooting from.
+	else if(random() < 0.33 || (start[2] < Entity->enemy->absMin[2]))
+	{
+		Vec3Copy (target, vec);
+		vec[2] += Entity->enemy->viewheight;
+		Vec3Subtract (vec, start, dir);
+	}
+	else
+	{
+		Vec3Copy (target, vec);
+		vec[2] = Entity->enemy->absMin[2];
+		Vec3Subtract (vec, start, dir);
+	}
+
+	// Lead target  (not when blindfiring)
+	// 20, 35, 50, 65 chance of leading
+	if((!blindfire) && ((random() < (0.2 + ((3 - skill->Integer()) * 0.15)))))
+	{
+		float	time;
+
+		dist = Vec3Length (dir);
+		time = dist/rocketSpeed;
+		Vec3MA(vec, time, Entity->enemy->velocity, vec);
+		Vec3Subtract(vec, start, dir);
+	}
+
+
+	VectorNormalizeFastf (dir);
+
+	// pmm blindfire doesn't check target (done in checkattack)
+	// paranoia, make sure we're not shooting a target right next to us
+	CTrace trace = CTrace(start, vec, Entity, CONTENTS_MASK_SHOT);
+	if (blindfire)
+	{
+		// blindfire has different fail criteria for the trace
+		if (!(trace.startSolid || trace.allSolid || (trace.fraction < 0.5)))
+			MonsterFireRocket (start, dir, 50, rocketSpeed, MZ2_CHICK_ROCKET_1);
+		else 
+		{
+			// geez, this is bad.  she's avoiding about 80% of her blindfires due to hitting things.
+			// hunt around for a good shot
+			// try shifting the target to the left a little (to help counter her large offset)
+			Vec3Copy (target, vec);
+			Vec3MA (vec, -10, right, vec);
+			Vec3Subtract(vec, start, dir);
+			VectorNormalizeFastf (dir);
+			trace = CTrace(start, vec, Entity, CONTENTS_MASK_SHOT);
+			if (!(trace.startSolid || trace.allSolid || (trace.fraction < 0.5)))
+				MonsterFireRocket (start, dir, 50, rocketSpeed, MZ2_CHICK_ROCKET_1);
+			else 
+			{
+				// ok, that failed.  try to the right
+				Vec3Copy (target, vec);
+				Vec3MA (vec, 10, right, vec);
+				Vec3Subtract(vec, start, dir);
+				VectorNormalizeFastf (dir);
+				trace = CTrace(start, vec, Entity, CONTENTS_MASK_SHOT);
+				if (!(trace.startSolid || trace.allSolid || (trace.fraction < 0.5)))
+					MonsterFireRocket (start, dir, 50, rocketSpeed, MZ2_CHICK_ROCKET_1);
+			}
+		}
+	}
+	else
+		MonsterFireRocket (start, dir, 50, rocketSpeed, MZ2_CHICK_ROCKET_1);
+#else
+	vec3_t	forward, right;
+	vec3_t	start;
+	vec3_t	dir;
+	vec3_t	vec;
+
+	Angles_Vectors (Entity->s.angles, forward, right, NULL);
+	G_ProjectSource (Entity->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_CHICK_ROCKET_1], forward, right, start);
+
+	Vec3Copy (Entity->enemy->s.origin, vec);
+	vec[2] += Entity->enemy->viewheight;
+	Vec3Subtract (vec, start, dir);
+	VectorNormalizef (dir, dir);
+
+	MonsterFireRocket (start, dir, 50, 500, MZ2_CHICK_ROCKET_1);
+#endif
+}	
+
+void CMaiden::PreAttack ()
+{
+	Sound (Entity, CHAN_VOICE, SoundMissilePrelaunch);
+}
+
+void CMaiden::Reload ()
+{
+	Sound (Entity, CHAN_VOICE, SoundMissileReload);
+}
+
 void CMaiden::ReRocket()
 {
+#ifdef MONSTER_USE_ROGUE_AI
+	if (AIFlags & AI_MANUAL_STEERING)
+		AIFlags &= ~AI_MANUAL_STEERING;
+	else
+#endif
 	if (Entity->enemy->health > 0)
 	{
-		if (range (Entity, Entity->enemy) > RANGE_MELEE && visible (Entity, Entity->enemy) && random() < 0.6)
+		if (range (Entity, Entity->enemy) > RANGE_MELEE && visible (Entity, Entity->enemy) && (random() <= (0.6 + (0.05*skill->Float()))))
 		{
 			CurrentMove = &ChickMoveAttack1;
 			return;
@@ -543,23 +716,10 @@ CAnim ChickMoveEndSlash (FRAME_attak213, FRAME_attak216, ChickFramesEndSlash, Co
 
 void CMaiden::ReSlash()
 {
-	if (Entity->enemy->health > 0)
-	{
-		if (range (Entity, Entity->enemy) == RANGE_MELEE)
-		{
-			if (random() <= 0.9)
-			{				
-				CurrentMove = &ChickMoveSlash;
-				return;
-			}
-			else
-			{
-				CurrentMove = &ChickMoveEndSlash;
-				return;
-			}
-		}
-	}
-	CurrentMove = &ChickMoveEndSlash;
+	if (Entity->enemy->health > 0 && (range (Entity, Entity->enemy) == RANGE_MELEE) && (random() <= 0.9))
+		CurrentMove = &ChickMoveSlash;
+	else
+		CurrentMove = &ChickMoveEndSlash;
 }
 
 void CMaiden::DoSlash()
@@ -582,6 +742,43 @@ void CMaiden::Melee()
 
 void CMaiden::Attack()
 {
+#ifdef MONSTER_USE_ROGUE_AI
+	float r, chance;
+
+	DoneDodge ();
+
+	// PMM 
+	if (AttackState == AS_BLIND)
+	{
+		// setup shot probabilities
+		if (BlindFireDelay < 1.0f)
+			chance = 1.0;
+		else if (BlindFireDelay < 7.5f)
+			chance = 0.4f;
+		else
+			chance = 0.1f;
+
+		r = random();
+
+		// minimum of 2 seconds, plus 0-3, after the shots are done
+		BlindFireDelay += 2.0 + (4.5 * random());
+
+		// don't shoot at the origin
+		if (Vec3Compare (BlindFireTarget, vec3Origin))
+			return;
+
+		// don't shoot if the dice say not to
+		if (r > chance)
+			return;
+
+		// turn on manual steering to signal both manual steering and blindfire
+		AIFlags |= AI_MANUAL_STEERING;
+		CurrentMove = &ChickMoveStartAttack1;
+		AttackFinished = level.time + 2*random();
+		return;
+	}
+	// pmm
+#endif
 	CurrentMove = &ChickMoveStartAttack1;
 }
 
@@ -618,7 +815,15 @@ void CMaiden::Spawn ()
 	Entity->gib_health = -70;
 	Entity->mass = 200;
 
-	MonsterFlags = (MF_HAS_MELEE | MF_HAS_ATTACK | MF_HAS_IDLE | MF_HAS_SIGHT);
+	MonsterFlags = (MF_HAS_MELEE | MF_HAS_ATTACK | MF_HAS_IDLE | MF_HAS_SIGHT
+#ifdef MONSTER_USE_ROGUE_AI
+		| MF_HAS_DODGE | MF_HAS_DUCK | MF_HAS_UNDUCK | MF_HAS_SIDESTEP
+#endif
+		);
+
+#ifdef MONSTER_USE_ROGUE_AI
+	BlindFire = true;
+#endif
 
 	gi.linkentity (Entity);
 

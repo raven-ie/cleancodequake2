@@ -1062,6 +1062,8 @@ void ClientEndServerFrame (edict_t *ent)
 	if (ent->client->showscores && !(level.framenum & 31) )
 		DeathmatchScoreboardMessage (ent, ent->enemy, false);
 
+#ifdef MONSTERS_USE_PATHFINDING
 	RunPlayerNodes(ent);
+#endif
 }
 

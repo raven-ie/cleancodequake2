@@ -34,7 +34,6 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Global macros
 #define MONSTERS_ARENT_STUPID
 #define MONSTER_USE_ROGUE_AI
-#define SLIDING_TROOPS // For Rogue AI
 #define MONSTERS_USE_PATHFINDING
 
 #include "cc_colors.h"

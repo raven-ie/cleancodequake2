@@ -387,6 +387,9 @@ void ExitLevel (void)
 			ent->health = ent->client->pers.max_health;
 	}
 
+#ifdef MONSTERS_USE_PATHFINDING
+	SavePathTable ();
+#endif
 }
 
 /*
@@ -482,6 +485,9 @@ void G_RunFrame (void)
 #if 0
 	DrawNewton();
 #endif
+
+#ifdef MONSTERS_USE_PATHFINDING
 	RunNodes();
+#endif
 }
 

@@ -249,7 +249,7 @@ public:
 #ifndef MONSTER_USE_ROGUE_AI
 	virtual void		Dodge			(edict_t *other, float eta);
 #else
-	void		Dodge			(edict_t *attacker, float eta, CTrace *tr);
+	virtual void		Dodge			(edict_t *attacker, float eta, CTrace *tr);
 	void		DoneDodge	();
 #endif
 	virtual void		Attack			();

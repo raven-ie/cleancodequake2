@@ -153,6 +153,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/EHsc"
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				PreprocessorDefinitions="WIN32;_WINDOWS"
@@ -186,7 +187,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="c:\quake2\baseq2\gamex86.dll"
+				OutputFile="..\release\gamex86.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				ModuleDefinitionFile="game.def"
