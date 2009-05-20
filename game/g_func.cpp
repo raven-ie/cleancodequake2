@@ -513,7 +513,7 @@ void SP_func_plat (edict_t *ent)
 	ent->solid = SOLID_BSP;
 	ent->movetype = MOVETYPE_PUSH;
 
-	GI_SetModel (ent, ent->model);
+	SetModel (ent, ent->model);
 
 	ent->blocked = plat_blocked;
 
@@ -657,7 +657,7 @@ void SP_func_rotating (edict_t *ent)
 	if (ent->spawnflags & 128)
 		ent->s.effects |= EF_ANIM_ALLFAST;
 
-	GI_SetModel (ent, ent->model);
+	SetModel (ent, ent->model);
 	gi.linkentity (ent);
 }
 
@@ -765,7 +765,7 @@ void SP_func_button (edict_t *ent)
 	G_SetMovedir (ent->s.angles, ent->movedir);
 	ent->movetype = MOVETYPE_STOP;
 	ent->solid = SOLID_BSP;
-	GI_SetModel (ent, ent->model);
+	SetModel (ent, ent->model);
 
 	if (ent->sounds != 1)
 		ent->moveinfo.sound_start = SoundIndex ("switches/butn2.wav");
@@ -1146,7 +1146,7 @@ void SP_func_door (edict_t *ent)
 	G_SetMovedir (ent->s.angles, ent->movedir);
 	ent->movetype = MOVETYPE_PUSH;
 	ent->solid = SOLID_BSP;
-	GI_SetModel (ent, ent->model);
+	SetModel (ent, ent->model);
 
 	ent->blocked = door_blocked;
 	ent->use = door_use;
@@ -1285,7 +1285,7 @@ void SP_func_door_rotating (edict_t *ent)
 
 	ent->movetype = MOVETYPE_PUSH;
 	ent->solid = SOLID_BSP;
-	GI_SetModel (ent, ent->model);
+	SetModel (ent, ent->model);
 
 	ent->blocked = door_blocked;
 	ent->use = door_use;
@@ -1380,7 +1380,7 @@ void SP_func_water (edict_t *self)
 	G_SetMovedir (self->s.angles, self->movedir);
 	self->movetype = MOVETYPE_PUSH;
 	self->solid = SOLID_BSP;
-	GI_SetModel (self, self->model);
+	SetModel (self, self->model);
 
 	switch (self->sounds)
 	{
@@ -1663,7 +1663,7 @@ void SP_func_train (edict_t *self)
 			self->dmg = 100;
 	}
 	self->solid = SOLID_BSP;
-	GI_SetModel (self, self->model);
+	SetModel (self, self->model);
 
 	if (st.noise)
 		self->moveinfo.sound_middle = SoundIndex  (st.noise);
@@ -1857,7 +1857,7 @@ void SP_func_conveyor (edict_t *self)
 
 	self->use = func_conveyor_use;
 
-	GI_SetModel (self, self->model);
+	SetModel (self, self->model);
 	self->solid = SOLID_BSP;
 	gi.linkentity (self);
 }
@@ -1981,7 +1981,7 @@ void SP_func_door_secret (edict_t *ent)
 
 	ent->movetype = MOVETYPE_PUSH;
 	ent->solid = SOLID_BSP;
-	GI_SetModel (ent, ent->model);
+	SetModel (ent, ent->model);
 
 	ent->blocked = door_secret_blocked;
 	ent->use = door_secret_use;
@@ -2046,7 +2046,7 @@ void use_killbox (edict_t *self, edict_t *other, edict_t *activator)
 
 void SP_func_killbox (edict_t *ent)
 {
-	GI_SetModel (ent, ent->model);
+	SetModel (ent, ent->model);
 	ent->use = use_killbox;
 	ent->svFlags = SVF_NOCLIENT;
 }

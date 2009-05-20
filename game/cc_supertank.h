@@ -27,31 +27,48 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_cmds.h
-// Contains a class and functions to register/remove commands parsed by ClientCommand.
+// cc_supertank.h
+// Supertank (Boss1)
 //
 
-#define MAX_COMMANDS 128
-#define MAX_CMD_HASH (MAX_COMMANDS/4)
+#define SUPERTANK_USES_GRENADE_LAUNCHER
 
-enum ECmdTypeFlags
-{
-	CMD_NORMAL		= 0, // Doesn't do anything at all, just here for show.
-	CMD_SPECTATOR	= 1,
-	CMD_CHEAT		= 2
-};
-
-class CCmd
+class CSuperTank : public CMonster
 {
 public:
-	uint32			hashValue;
-	CCmd			*hashNext;
-	char			*cmdName;
+	int SoundPain1;
+	int	SoundPain2;
+	int	SoundPain3;
+	int	SoundDeath;
+	int	SoundSearch1;
+	int	SoundSearch2;
 
-	ECmdTypeFlags	CmdFlags;
-	void			(*RunFunction) (edict_t *ent);
+	int	TreadSound;
 
-	CCmd (char *name, void (*Func) (edict_t *ent), ECmdTypeFlags Flags);
-	~CCmd();
-	void Run (edict_t *ent);
+	CSuperTank ();
+
+	void Allocate (edict_t *ent);
+
+	void PlayTreadSound ();
+	void Explode ();
+	void MachineGun ();
+	void Rocket ();
+	void ReAttack1 ();
+#ifdef SUPERTANK_USES_GRENADE_LAUNCHER
+	void Grenade ();
+#endif
+
+	void Attack ();
+	void Run ();
+	void Stand ();
+	void Walk ();
+	void Search ();
+
+	void Dead ();
+	void Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
+	void Pain (edict_t *other, float kick, int damage);
+
+	void Spawn ();
 };
+
+extern CSuperTank Monster_SuperTank;

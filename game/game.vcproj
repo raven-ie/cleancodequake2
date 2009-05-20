@@ -443,10 +443,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\g_cmds.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\g_combat.cpp"
 				>
 			</File>
@@ -472,10 +468,6 @@
 			</File>
 			<File
 				RelativePath=".\g_spawn.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\g_svcmds.cpp"
 				>
 			</File>
 			<File
@@ -730,6 +722,18 @@
 						>
 					</File>
 				</Filter>
+				<Filter
+					Name="Arg"
+					>
+					<File
+						RelativePath=".\cc_arg.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_arg.h"
+						>
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="Commands"
@@ -740,6 +744,22 @@
 				</File>
 				<File
 					RelativePath=".\cc_cmds.h"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_gamecommands.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_gamecommands.h"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_servercommands.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_servercommands.h"
 					>
 				</File>
 			</Filter>
@@ -982,6 +1002,14 @@
 					Name="Monster Files"
 					>
 					<File
+						RelativePath=".\cc_barracuda.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_barracuda.h"
+						>
+					</File>
+					<File
 						RelativePath=".\cc_bitch.cpp"
 						>
 					</File>
@@ -1032,6 +1060,14 @@
 					<Filter
 						Name="Bosses"
 						>
+						<File
+							RelativePath=".\cc_supertank.cpp"
+							>
+						</File>
+						<File
+							RelativePath=".\cc_supertank.h"
+							>
+						</File>
 					</Filter>
 					<Filter
 						Name="Soldiers"

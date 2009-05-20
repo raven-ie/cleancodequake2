@@ -43,7 +43,10 @@ extern CColors Colors;
 #include "cc_trace.h"
 #include "cc_tent.h"
 #include "cc_sbar.h"
+#include "cc_arg.h"
 #include "cc_cmds.h"
+#include "cc_servercommands.h"
+#include "cc_gamecommands.h"
 #include "cc_items.h"
 #include "cc_weaponmain.h"
 #include "cc_inventory.h"
@@ -78,7 +81,7 @@ void Sound (vec3_t pos, edict_t *ent, EEntSndChannel channel, char *soundString,
 void Sound (vec3_t pos, edict_t *ent, EEntSndChannel channel, int soundindex, float volume, int attenuation, float timeOfs);
 void Sound (int soundindex);
 void Sound (char *soundString);
-void GI_SetModel (edict_t *ent, char *model);
+void SetModel (edict_t *ent, char *model);
 
 void WriteDirection (vec3_t val);
 void WritePosition (vec3_t val);

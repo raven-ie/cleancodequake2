@@ -486,7 +486,6 @@ void CInfantry::Dodge (edict_t *attacker, float eta)
 void CInfantry::CockGun ()
 {
 	Sound (Entity, CHAN_WEAPON, SoundWeaponCock);
-	PauseTime = level.time + ((rand() & 15) + 3 + 7) * FRAMETIME;
 }
 
 void CInfantry::Fire ()
@@ -499,6 +498,7 @@ void CInfantry::Fire ()
 		AIFlags |= AI_HOLD_FRAME;
 }
 
+#ifndef INFANTRY_DOES_REVERSE_GUN_ATTACK
 CFrame InfantryFramesAttack1 [] =
 {
 	CFrame (&CMonster::AI_Charge, 4),
@@ -518,6 +518,27 @@ CFrame InfantryFramesAttack1 [] =
 	CFrame (&CMonster::AI_Charge, -3)
 };
 CAnim InfantryMoveAttack1 (FRAME_attak101, FRAME_attak115, InfantryFramesAttack1, ConvertDerivedFunction(&CInfantry::Run));
+#else
+CFrame InfantryFramesAttack1 [] =
+{
+	//CFrame (&CMonster::AI_Charge, -3),
+	//CFrame (&CMonster::AI_Charge, -2),
+	//CFrame (&CMonster::AI_Charge, -1),
+	CFrame (&CMonster::AI_Charge, 5),
+	CFrame (&CMonster::AI_Charge, 1, ConvertDerivedFunction(&CInfantry::Fire)),
+	CFrame (&CMonster::AI_Charge, -3),
+	CFrame (&CMonster::AI_Charge, -2),
+	CFrame (&CMonster::AI_Charge, 2),
+	CFrame (&CMonster::AI_Charge, 1),
+	CFrame (&CMonster::AI_Charge, 1),
+	CFrame (&CMonster::AI_Charge, -1, ConvertDerivedFunction(&CInfantry::CockGun)),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, -1),
+	CFrame (&CMonster::AI_Charge, -1),
+	CFrame (&CMonster::AI_Charge, 4)
+};
+CAnim InfantryMoveAttack1 (FRAME_attak112, FRAME_attak101, InfantryFramesAttack1, ConvertDerivedFunction(&CInfantry::Run));
+#endif
 
 
 void CInfantry::Swing ()
@@ -547,6 +568,7 @@ CAnim InfantryMoveAttack2 (FRAME_attak201, FRAME_attak208, InfantryFramesAttack2
 
 void CInfantry::Attack ()
 {
+	PauseTime = level.time + ((rand() & 15) + 11) * FRAMETIME;
 	CurrentMove = &InfantryMoveAttack1;
 }
 

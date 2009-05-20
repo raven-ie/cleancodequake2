@@ -1660,11 +1660,6 @@ BOOL ClientConnect (edict_t *ent, char *userinfo)
 		Info_SetValueForKey(userinfo, "rejmsg", "Banned from server.");
 		return false;
 	}
-	
-	if (SV_FilterPacket(value)) {
-		Info_SetValueForKey(userinfo, "rejmsg", "Banned.");
-		return false;
-	}
 
 	// check for a spectator
 	value = Info_ValueForKey (userinfo, "spectator");

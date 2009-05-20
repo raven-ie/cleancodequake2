@@ -27,31 +27,26 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_cmds.h
-// Contains a class and functions to register/remove commands parsed by ClientCommand.
+// cc_servercommands.h
+// ServerCommand and related classes
 //
 
-#define MAX_COMMANDS 128
-#define MAX_CMD_HASH (MAX_COMMANDS/4)
-
-enum ECmdTypeFlags
-{
-	CMD_NORMAL		= 0, // Doesn't do anything at all, just here for show.
-	CMD_SPECTATOR	= 1,
-	CMD_CHEAT		= 2
-};
-
-class CCmd
+class CServerCmd
 {
 public:
 	uint32			hashValue;
-	CCmd			*hashNext;
+	CServerCmd			*hashNext;
 	char			*cmdName;
 
 	ECmdTypeFlags	CmdFlags;
-	void			(*RunFunction) (edict_t *ent);
+	void			(*RunFunction) ();
 
-	CCmd (char *name, void (*Func) (edict_t *ent), ECmdTypeFlags Flags);
-	~CCmd();
-	void Run (edict_t *ent);
+	CServerCmd (char *name, void (*Func) ());
+	~CServerCmd();
+
+	void Run ();
 };
+
+void ServerCommand ();
+void SvCmd_Register ();
+void SvCmd_RemoveCommands ();

@@ -615,7 +615,7 @@ void func_wall_use (edict_t *self, edict_t *other, edict_t *activator)
 void SP_func_wall (edict_t *self)
 {
 	self->movetype = MOVETYPE_PUSH;
-	GI_SetModel (self, self->model);
+	SetModel (self, self->model);
 
 	if (self->spawnflags & 8)
 		self->s.effects |= EF_ANIM_ALL;
@@ -695,7 +695,7 @@ void func_object_use (edict_t *self, edict_t *other, edict_t *activator)
 
 void SP_func_object (edict_t *self)
 {
-	GI_SetModel (self, self->model);
+	SetModel (self, self->model);
 
 	self->mins[0] += 1;
 	self->mins[1] += 1;
@@ -850,7 +850,7 @@ void SP_func_explosive (edict_t *self)
 			self->use = func_explosive_use;
 	}
 
-	GI_SetModel (self, self->model);
+	SetModel (self, self->model);
 
 	if (self->spawnflags & 2)
 		self->s.effects |= EF_ANIM_ALL;
@@ -1603,7 +1603,7 @@ used with target_string (must be on same "team")
 void SP_target_character (edict_t *self)
 {
 	self->movetype = MOVETYPE_PUSH;
-	GI_SetModel (self, self->model);
+	SetModel (self, self->model);
 	self->solid = SOLID_BSP;
 	self->s.frame = 12;
 	gi.linkentity (self);

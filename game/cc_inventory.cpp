@@ -208,7 +208,7 @@ Use an inventory item
 */
 void Cmd_Use_f (edict_t *ent)
 {
-	char *s = gi.args();
+	char *s = ArgGetConcatenatedString();
 	CBaseItem *Item = FindItem(s);
 	if (!Item)
 	{
@@ -244,7 +244,7 @@ Drop an inventory item
 */
 void Cmd_Drop_f (edict_t *ent)
 {
-	char *s = gi.args();
+	char *s = ArgGetConcatenatedString();
 	CBaseItem *Item = FindItem(s);
 	if (!Item)
 	{
@@ -439,4 +439,196 @@ void Cmd_SelectNextPowerup_f (edict_t *ent)
 void Cmd_SelectPrevPowerup_f (edict_t *ent)
 {
 	ent->client->pers.Inventory.SelectPrevItem (ITEMFLAG_POWERUP);
+}
+
+/*
+==================
+Cmd_Give_f
+
+Give items to a client
+Old-style "give"
+==================
+*/
+void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
+void Cmd_Give_f (edict_t *ent)
+{
+	char		*name;
+	int			i;
+	bool	give_all;
+	CBaseItem *it;
+
+	name = ArgGets(1);
+
+	if (Q_stricmp(name, "all") == 0)
+		give_all = true;
+	else
+		give_all = false;
+
+	if (give_all || Q_stricmp(name, "health") == 0)
+	{
+		if (ArgCount() == 3)
+			ent->health = ArgGeti(2);
+		else
+			ent->health = ent->max_health;
+		if (!give_all)
+			return;
+	}
+
+	if (give_all || Q_stricmp(name, "weapons") == 0)
+	{
+		for (i=0 ; i<GetNumItems() ; i++)
+		{
+			it = GetItemByIndex(i);
+			if (!(it->Flags & ITEMFLAG_GRABBABLE))
+				continue;
+			if (!(it->Flags & ITEMFLAG_WEAPON))
+				continue;
+			ent->client->pers.Inventory += it;
+		}
+		if (!give_all)
+			return;
+	}
+
+	if (give_all || Q_stricmp(name, "ammo") == 0)
+	{
+		for (i=0 ; i<GetNumItems() ; i++)
+		{
+			it = GetItemByIndex(i);
+			if (!(it->Flags & ITEMFLAG_GRABBABLE))
+				continue;
+			if (!(it->Flags & ITEMFLAG_AMMO))
+				continue;
+
+			CAmmo *Ammo = static_cast<CAmmo*>(it);
+			Ammo->AddAmmo (ent, 1000);
+		}
+		if (!give_all)
+			return;
+	}
+
+	if (give_all || Q_stricmp(name, "armor") == 0)
+	{
+		ent->client->pers.Inventory.Set(FindItem("Jacket Armor")->GetIndex(), 0);
+		ent->client->pers.Inventory.Set(FindItem("Combat Armor")->GetIndex(), 0);
+
+		CArmor *Armor = dynamic_cast<CArmor*>(FindItem("Body Armor"));
+		ent->client->pers.Inventory.Set(Armor->GetIndex(), Armor->maxCount);
+		ent->client->pers.Armor = Armor;
+
+		if (ArgCount() >= 3)
+			ent->client->pers.Inventory.Set(Armor->GetIndex(), ArgGeti(2));
+
+		if (!give_all)
+			return;
+	}
+
+	if (give_all || Q_stricmp(name, "Power Shield") == 0)
+	{
+		it = FindItem("Power Shield");
+		edict_t *it_ent = G_Spawn();
+		it_ent->classname = it->Classname;
+		SpawnItem (it_ent, it);
+		TouchItem (it_ent, ent, NULL, NULL);
+		if (it_ent->inUse)
+			G_FreeEdict(it_ent);
+
+		if (!give_all)
+			return;
+	}
+
+	if (give_all)
+	{
+		for (i=0 ; i<GetNumItems() ; i++)
+		{
+			it = GetItemByIndex(i);
+			if (!(it->Flags & ITEMFLAG_GRABBABLE))
+				continue;
+			if (it->Flags & (ITEMFLAG_HEALTH|ITEMFLAG_ARMOR|ITEMFLAG_WEAPON|ITEMFLAG_AMMO))
+				continue;
+			ent->client->pers.Inventory.Set (i, 1);
+		}
+		return;
+	}
+
+	it = FindItem (name);
+	if (!it)
+	{
+		name = ArgGetConcatenatedString();
+		it = FindItem(name);
+
+		if (!it)
+		{
+			it = FindItemByClassname (name);
+			if (!it)
+			{
+				gi.cprintf (ent, PRINT_HIGH, "unknown item\n");
+				return;
+			}
+		}
+	}
+
+	if (!(it->Flags & ITEMFLAG_GRABBABLE))
+	{
+		gi.cprintf (ent, PRINT_HIGH, "non-pickup item\n");
+		return;
+	}
+
+	if (it->Flags & ITEMFLAG_AMMO)
+	{
+		CAmmo *Ammo = dynamic_cast<CAmmo*>(it);
+		if (ArgCount() == 3)
+			ent->client->pers.Inventory.Set (Ammo, ArgGeti(2));
+		else
+			ent->client->pers.Inventory.Add(Ammo, Ammo->Quantity);
+	}
+	else
+	{
+		edict_t *it_ent = G_Spawn();
+		it_ent->classname = it->Classname;
+		SpawnItem (it_ent, it);
+		TouchItem (it_ent, ent, NULL, NULL);
+		if (it_ent->inUse)
+			G_FreeEdict(it_ent);
+	}
+}
+
+// Paril
+// This is a different style of "give".
+// Allows you to spawn the item instead of giving it.
+// Also, you can spawn monsters and other goodies from here.
+void ED_CallSpawn (edict_t *ent);
+void Cmd_Give (edict_t *ent)
+{
+	// Handle give all from old give.
+	if (Q_stricmp(ArgGets(1), "all") == 0)
+	{
+		Cmd_Give_f (ent);
+		return;
+	}
+
+	// Calculate spawning direction
+	vec3_t Origin, Angles, forward;
+
+	Vec3Copy (ent->s.angles, Angles);
+	Angles[0] = 0; // No pitch
+	Angles[2] = 0; // No roll
+
+	Angles_Vectors (Angles, forward, NULL, NULL);
+	Vec3Copy (ent->s.origin, Origin);
+	Vec3MA (Origin, 150, forward, Origin);
+
+	if (gi.pointcontents(Origin) & CONTENTS_SOLID)
+		return;
+
+	edict_t *Spawned = G_Spawn();
+
+	Spawned->classname = ArgGetConcatenatedString();
+	ED_CallSpawn (Spawned);
+	if (Spawned)
+	{
+		Vec3Copy (Origin, Spawned->s.origin);
+		Vec3Copy (Angles, Spawned->s.angles);
+
+		gi.linkentity(Spawned);
+	}
 }

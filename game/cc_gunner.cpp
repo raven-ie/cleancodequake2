@@ -334,7 +334,7 @@ void CGunner::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t poi
 // check for gib
 	if (Entity->health <= Entity->gib_health)
 	{
-		Sound (Entity, CHAN_VOICE, gi.soundindex ("misc/udeath.wav"));
+		Sound (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
 			ThrowGib (Entity, "models/objects/gibs/bone/tris.md2", damage, GIB_ORGANIC);
 		for (int n= 0; n < 4; n++)

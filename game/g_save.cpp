@@ -136,7 +136,6 @@ is loaded.
 ============
 */
 // Registers all cvars and commands
-void Cmd_Register ();
 void G_Register ()
 {
 	gun_x = new CCvar ("gun_x", "0", 0);
@@ -189,7 +188,9 @@ void G_Register ()
 	// dm map list
 	sv_maplist = new CCvar ("sv_maplist", "", 0);
 
+	SetupArg ();
 	Cmd_Register ();
+	SvCmd_Register ();
 
 #ifdef MONSTERS_USE_PATHFINDING
 	InitNodes ();

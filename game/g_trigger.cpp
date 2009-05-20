@@ -27,7 +27,7 @@ void InitTrigger (edict_t *self)
 
 	self->solid = SOLID_TRIGGER;
 	self->movetype = MOVETYPE_NONE;
-	GI_SetModel (self, self->model);
+	SetModel (self, self->model);
 	self->svFlags = SVF_NOCLIENT;
 }
 
@@ -145,7 +145,7 @@ void SP_trigger_multiple (edict_t *ent)
 	if (!Vec3Compare(ent->s.angles, vec3Origin))
 		G_SetMovedir (ent->s.angles, ent->movedir);
 
-	GI_SetModel (ent, ent->model);
+	SetModel (ent, ent->model);
 	gi.linkentity (ent);
 }
 

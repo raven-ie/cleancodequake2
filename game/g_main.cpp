@@ -78,7 +78,6 @@ BOOL ClientConnect (edict_t *ent, char *userinfo);
 void ClientUserinfoChanged (edict_t *ent, char *userinfo);
 void ClientDisconnect (edict_t *ent);
 void ClientBegin (edict_t *ent);
-void ClientCommand (edict_t *ent);
 void RunEntity (edict_t *ent);
 void WriteGame (char *filename, BOOL autosave);
 void ReadGame (char *filename);
@@ -95,7 +94,8 @@ void ShutdownGame (void)
 {
 	gi.dprintf ("==== ShutdownGame ====\n");
 
-	Cmd_RemoveCommands();
+	Cmd_RemoveCommands ();
+	SvCmd_RemoveCommands ();
 
 	gi.FreeTags (TAG_LEVEL);
 	gi.FreeTags (TAG_GAME);

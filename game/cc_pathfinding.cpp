@@ -357,7 +357,7 @@ void AddNode (edict_t *ent, vec3_t origin)
 	SpawnNodeEntity (NodeList.at(NodeList.size() - 1));
 	gi.cprintf (ent, PRINT_HIGH, "Node %i added\n", NodeList.size());
 
-	if (Q_stricmp(gi.argv(2), "connect") == 0)
+	if (Q_stricmp(ArgGets(2), "connect") == 0)
 	{
 		if (ent->client->resp.LastNode)
 			ConnectNode (ent->client->resp.LastNode, NodeList.at(NodeList.size() - 1));
@@ -372,7 +372,7 @@ void ConnectNode (CPathNode *Node1, CPathNode *Node2)
 
 	Node1->Children.push_back (Node2);
 
-	if (Q_stricmp(gi.argv(4), "one"))
+	if (Q_stricmp(ArgGets(4), "one"))
 		Node2->Children.push_back (Node1);
 }
 
@@ -628,7 +628,7 @@ CPathNode *GetClosestNodeTo (vec3_t origin)
 
 void Cmd_Node_f (edict_t *ent)
 {
-	char *cmd = gi.argv(1);
+	char *cmd = ArgGets(1);
 
 	if (Q_stricmp(cmd, "save") == 0)
 		SaveNodes ();
@@ -640,8 +640,8 @@ void Cmd_Node_f (edict_t *ent)
 		ent->client->resp.LastNode = NULL;
 	else if (Q_stricmp(cmd, "connect") == 0)
 	{
-		uint32 firstId = atoi(gi.argv(2));
-		uint32 secondId = atoi(gi.argv(3));
+		uint32 firstId = ArgGeti(2);
+		uint32 secondId = ArgGeti(3);
 
 		if (firstId >= NodeList.size())
 		{
@@ -659,8 +659,8 @@ void Cmd_Node_f (edict_t *ent)
 	}
 	else if (Q_stricmp(cmd, "testpath") == 0)
 	{
-		uint32 firstId = atoi(gi.argv(2));
-		uint32 secondId = atoi(gi.argv(3));
+		uint32 firstId = ArgGeti(2);
+		uint32 secondId = ArgGeti(3);
 
 		if (firstId >= NodeList.size())
 		{
@@ -683,24 +683,24 @@ void Cmd_Node_f (edict_t *ent)
 	}
 	else if (Q_stricmp(cmd, "settype") == 0)
 	{
-		if (!gi.argv(2) || (uint32)atoi(gi.argv(2)) >= NodeList.size())
+		if (ArgCount() < 3 || (uint32)ArgGeti(2) >= NodeList.size())
 			return;
 
-		CPathNode *Node = NodeList[atoi(gi.argv(2))];
+		CPathNode *Node = NodeList[ArgGeti(2)];
 
-		if (Q_stricmp(gi.argv(3), "door") == 0)
+		if (Q_stricmp(ArgGets(3), "door") == 0)
 			Node->Type = NODE_DOOR;
-		else if (Q_stricmp(gi.argv(3), "jump") == 0)
+		else if (Q_stricmp(ArgGets(3), "jump") == 0)
 			Node->Type = NODE_JUMP;
 
 		CheckNodeFlags (Node);
 	}
 	else if (Q_stricmp(cmd, "linkwith") == 0)
 	{
-		if (!gi.argv(2) || (uint32)atoi(gi.argv(2)) >= NodeList.size())
+		if (ArgCount() < 3 || (uint32)ArgGeti(2) >= NodeList.size())
 			return;
 
-		CPathNode *Node = NodeList[atoi(gi.argv(2))];
+		CPathNode *Node = NodeList[ArgGeti(2)];
 
 		vec3_t end, forward;
 		Angles_Vectors (ent->client->v_angle, forward, NULL, NULL);
@@ -724,20 +724,20 @@ void Cmd_Node_f (edict_t *ent)
 
 		if (trace.ent && trace.ent->Monster)
 		{
-			if (Q_stricmp(gi.argv(2), "closest") == 0)
+			if (Q_stricmp(ArgGets(2), "closest") == 0)
 				trace.ent->Monster->P_CurrentNode = GetClosestNodeTo(trace.ent->Monster->Entity->s.origin);
 			else
-				trace.ent->Monster->P_CurrentNode = NodeList[atoi(gi.argv(2))];
-			trace.ent->Monster->P_CurrentGoalNode = NodeList[atoi(gi.argv(3))];
+				trace.ent->Monster->P_CurrentNode = NodeList[ArgGeti(2)];
+			trace.ent->Monster->P_CurrentGoalNode = NodeList[ArgGeti(3)];
 			trace.ent->Monster->FoundPath ();
 		}
 	}
 	else if (Q_stricmp(cmd, "kill") == 0)
 	{
-		if (!gi.argv(2) || (uint32)atoi(gi.argv(2)) >= NodeList.size())
+		if (ArgCount() < 3 || (uint32)ArgGeti(2) >= NodeList.size())
 			return;
 
-		uint32 node = atoi(gi.argv(2));
+		uint32 node = ArgGeti(2);
 		CPathNode *Node = NodeList[node];
 
 		Node->Children.clear();
@@ -762,14 +762,14 @@ void Cmd_Node_f (edict_t *ent)
 	}
 	else if (Q_stricmp (cmd, "move") == 0)
 	{
-		if (!gi.argv(2) || (uint32)atoi(gi.argv(2)) >= NodeList.size())
+		if (ArgCount() < 3 || (uint32)ArgGeti(2) >= NodeList.size())
 			return;
 
-		CPathNode *Node = NodeList[atoi(gi.argv(2))];
+		CPathNode *Node = NodeList[ArgGeti(2)];
 
-		float x = atof(gi.argv(3));
-		float y = atof(gi.argv(4));
-		float z = atof(gi.argv(5));
+		float x = ArgGetf(3);
+		float y = ArgGetf(4);
+		float z = ArgGetf(5);
 
 		Node->Origin[0] += x;
 		Node->Origin[1] += y;
