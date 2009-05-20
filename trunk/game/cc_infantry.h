@@ -31,6 +31,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Infantry Monster
 //
 
+#define INFANTRY_DOES_REVERSE_GUN_ATTACK
+
 class CInfantry : public CMonster
 {
 public:

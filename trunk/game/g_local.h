@@ -502,12 +502,6 @@ void player_pain (edict_t *self, edict_t *other, float kick, int damage);
 void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
 
 //
-// g_svcmds.c
-//
-void	ServerCommand (void);
-bool SV_FilterPacket (char *from);
-
-//
 // p_view.c
 //
 void ClientEndServerFrame (edict_t *ent);

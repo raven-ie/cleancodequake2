@@ -564,13 +564,13 @@ void CFloater::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t po
 
 void CFloater::Spawn ()
 {
-	SoundAttack2 = gi.soundindex ("floater/fltatck2.wav");
-	SoundAttack3 = gi.soundindex ("floater/fltatck3.wav");
-	SoundDeath1 = gi.soundindex ("floater/fltdeth1.wav");
-	SoundIdle = gi.soundindex ("floater/fltidle1.wav");
-	SoundPain1 = gi.soundindex ("floater/fltpain1.wav");
-	SoundPain2 = gi.soundindex ("floater/fltpain2.wav");
-	SoundSight = gi.soundindex ("floater/fltsght1.wav");
+	SoundAttack2 = SoundIndex ("floater/fltatck2.wav");
+	SoundAttack3 = SoundIndex ("floater/fltatck3.wav");
+	SoundDeath1 = SoundIndex ("floater/fltdeth1.wav");
+	SoundIdle = SoundIndex ("floater/fltidle1.wav");
+	SoundPain1 = SoundIndex ("floater/fltpain1.wav");
+	SoundPain2 = SoundIndex ("floater/fltpain2.wav");
+	SoundSight = SoundIndex ("floater/fltsght1.wav");
 
 	SoundIndex ("floater/fltatck1.wav");
 

@@ -51,3 +51,5 @@ void Cmd_SelectNextWeapon_f (edict_t *ent);
 void Cmd_SelectPrevWeapon_f (edict_t *ent);
 void Cmd_SelectNextPowerup_f (edict_t *ent);
 void Cmd_SelectPrevPowerup_f (edict_t *ent);
+void Cmd_Give (edict_t *ent);
+void Cmd_Give_f (edict_t *ent);

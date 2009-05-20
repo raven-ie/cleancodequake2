@@ -375,8 +375,6 @@ void CTank::Rocket ()
 #ifdef MONSTER_USE_ROGUE_AI
 	if (AIFlags & AI_MANUAL_STEERING)
 		blindfire = true;
-	else
-		blindfire = false;
 #endif
 
 	switch (Entity->s.frame)
@@ -398,9 +396,11 @@ void CTank::Rocket ()
 	rocketSpeed = 500 + (100 * skill->Integer());	// PGM rock & roll.... :)
 
 		// PMM
+#ifdef MONSTER_USE_ROGUE_AI
 	if (blindfire)
 		Vec3Copy (BlindFireTarget, target);
 	else
+#endif
 		Vec3Copy (Entity->enemy->s.origin, target);
 	// pmm
 

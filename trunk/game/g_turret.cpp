@@ -222,7 +222,7 @@ void SP_turret_breach (edict_t *self)
 {
 	self->solid = SOLID_BSP;
 	self->movetype = MOVETYPE_PUSH;
-	GI_SetModel (self, self->model);
+	SetModel (self, self->model);
 
 	if (!self->speed)
 		self->speed = 50;
@@ -261,7 +261,7 @@ void SP_turret_base (edict_t *self)
 {
 	self->solid = SOLID_BSP;
 	self->movetype = MOVETYPE_PUSH;
-	GI_SetModel (self, self->model);
+	SetModel (self, self->model);
 	self->blocked = turret_blocked;
 	gi.linkentity (self);
 }

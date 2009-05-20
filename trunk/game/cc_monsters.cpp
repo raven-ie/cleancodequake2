@@ -674,8 +674,23 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 			}
 			return true;
 		}
-		Vec3Copy (oldorg, Entity->s.origin);
-		return false;
+		// Check to see if there's floor just after this
+		vec3_t org, up, end2;
+		Angles_Vectors (Entity->s.angles, NULL, NULL, up);
+		Vec3Add (Entity->s.origin, move, org);
+
+		// Go down
+		Vec3MA (org, -STEPSIZE, up, end2);
+
+		// Trace
+		trace = CTrace (org, end2, Entity, CONTENTS_MASK_SOLID);
+
+		// Couldn't make the move
+		if (trace.fraction == 1.0)
+		{
+			Vec3Copy (oldorg, Entity->s.origin);
+			return false;
+		}
 	}
 
 	//if ( Entity->flags & FL_PARTIALGROUND )
@@ -1163,7 +1178,8 @@ void CMonster::MonsterFireBullet (vec3_t start, vec3_t dir, int damage, int kick
 
 	fire_bullet (Entity, start, dir, damage, kick, hspread, vspread, MOD_UNKNOWN);
 
-	TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
+	if (flashtype != -1)
+		TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
 }
 
 void CMonster::MonsterFireShotgun (vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int count, int flashtype)
@@ -1175,7 +1191,8 @@ void CMonster::MonsterFireShotgun (vec3_t start, vec3_t aimdir, int damage, int 
 
 	fire_shotgun (Entity, start, aimdir, damage, kick, hspread, vspread, count, MOD_UNKNOWN);
 
-	TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
+	if (flashtype != -1)
+		TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
 }
 
 void CMonster::MonsterFireBlaster (vec3_t start, vec3_t dir, int damage, int speed, int flashtype, int effect)
@@ -1187,7 +1204,8 @@ void CMonster::MonsterFireBlaster (vec3_t start, vec3_t dir, int damage, int spe
 
 	fire_blaster (Entity, start, dir, damage, speed, effect, false);
 
-	TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
+	if (flashtype != -1)
+		TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
 }	
 
 void CMonster::MonsterFireGrenade (vec3_t start, vec3_t aimdir, int damage, int speed, int flashtype)
@@ -1199,7 +1217,8 @@ void CMonster::MonsterFireGrenade (vec3_t start, vec3_t aimdir, int damage, int 
 
 	fire_grenade (Entity, start, aimdir, damage, speed, 2.5, damage+40);
 
-	TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
+	if (flashtype != -1)
+		TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
 }
 
 void CMonster::MonsterFireRocket (vec3_t start, vec3_t dir, int damage, int speed, int flashtype)
@@ -1211,7 +1230,8 @@ void CMonster::MonsterFireRocket (vec3_t start, vec3_t dir, int damage, int spee
 
 	fire_rocket (Entity, start, dir, damage, speed, damage+20, damage);
 
-	TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
+	if (flashtype != -1)
+		TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
 }	
 
 void CMonster::MonsterFireRailgun (vec3_t start, vec3_t aimdir, int damage, int kick, int flashtype)
@@ -1224,7 +1244,8 @@ void CMonster::MonsterFireRailgun (vec3_t start, vec3_t aimdir, int damage, int 
 	if (!(gi.pointcontents (start) & CONTENTS_MASK_SOLID))
 		fire_rail (Entity, start, aimdir, damage, kick);
 
-	TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
+	if (flashtype != -1)
+		TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
 }
 
 void CMonster::MonsterFireBfg (vec3_t start, vec3_t aimdir, int damage, int speed, int kick, float damage_radius, int flashtype)
@@ -1236,7 +1257,8 @@ void CMonster::MonsterFireBfg (vec3_t start, vec3_t aimdir, int damage, int spee
 
 	fire_bfg (Entity, start, aimdir, damage, speed, damage_radius);
 
-	TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
+	if (flashtype != -1)
+		TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
 }
 
 bool CMonster::CheckAttack ()
@@ -2812,57 +2834,111 @@ void CMonster::MoveFrame ()
 {
 	int		index;
 	CAnim	*Move = CurrentMove;
-
 	Entity->nextthink = level.time + FRAMETIME;
 
-	if ((NextFrame) && (NextFrame >= Move->FirstFrame) && (NextFrame <= Move->LastFrame))
+	// Backwards animation support
+	if (Move->FirstFrame > Move->LastFrame)
 	{
-		Entity->s.frame = NextFrame;
-		NextFrame = 0;
-	}
-	else
-	{
-		if (Entity->s.frame == Move->LastFrame)
+		if ((NextFrame) && (NextFrame >= Move->LastFrame) && (NextFrame <= Move->FirstFrame))
 		{
-			if (Move->EndFunc)
-			{
-				void (CMonster::*EndFunc) () = Move->EndFunc;
-				(this->*EndFunc) ();
-
-				// regrab move, endfunc is very likely to change it
-				Move = CurrentMove;
-
-				// check for death
-				if (Entity->svFlags & SVF_DEADMONSTER)
-					return;
-			}
-		}
-
-		if (Entity->s.frame < Move->FirstFrame || Entity->s.frame > Move->LastFrame)
-		{
-			AIFlags &= ~AI_HOLD_FRAME;
-			Entity->s.frame = Move->FirstFrame;
+			Entity->s.frame = NextFrame;
+			NextFrame = 0;
 		}
 		else
 		{
-			if (!(AIFlags & AI_HOLD_FRAME))
+			if (Entity->s.frame == Move->LastFrame)
 			{
-				Entity->s.frame++;
-				if (Entity->s.frame > Move->LastFrame)
-					Entity->s.frame = Move->FirstFrame;
+				if (Move->EndFunc)
+				{
+					void (CMonster::*EndFunc) () = Move->EndFunc;
+					(this->*EndFunc) ();
+
+					// regrab move, endfunc is very likely to change it
+					Move = CurrentMove;
+
+					// check for death
+					if (Entity->svFlags & SVF_DEADMONSTER)
+						return;
+				}
+			}
+
+			if (Entity->s.frame < Move->LastFrame || Entity->s.frame > Move->FirstFrame)
+			{
+				AIFlags &= ~AI_HOLD_FRAME;
+				Entity->s.frame = Move->FirstFrame;
+			}
+			else
+			{
+				if (!(AIFlags & AI_HOLD_FRAME))
+				{
+					Entity->s.frame--;
+					if (Entity->s.frame < Move->LastFrame)
+						Entity->s.frame = Move->FirstFrame;
+				}
 			}
 		}
+
+		index = Move->FirstFrame - Entity->s.frame;
+
+		void (CMonster::*AIFunc) (float Dist) = Move->Frames[index].AIFunc;
+		if (AIFunc)
+			(this->*AIFunc) ((AIFlags & AI_HOLD_FRAME) ? 0 : (Move->Frames[index].Dist * Scale));
+
+		void (CMonster::*Function) () = Move->Frames[index].Function;
+		if (Function)
+			(this->*Function) ();
 	}
+	else
+	{
+		if ((NextFrame) && (NextFrame >= Move->FirstFrame) && (NextFrame <= Move->LastFrame))
+		{
+			Entity->s.frame = NextFrame;
+			NextFrame = 0;
+		}
+		else
+		{
+			if (Entity->s.frame == Move->LastFrame)
+			{
+				if (Move->EndFunc)
+				{
+					void (CMonster::*EndFunc) () = Move->EndFunc;
+					(this->*EndFunc) ();
 
-	index = Entity->s.frame - Move->FirstFrame;
+					// regrab move, endfunc is very likely to change it
+					Move = CurrentMove;
 
-	void (CMonster::*AIFunc) (float Dist) = Move->Frames[index].AIFunc;
-	if (AIFunc)
-		(this->*AIFunc) ((AIFlags & AI_HOLD_FRAME) ? 0 : (Move->Frames[index].Dist * Scale));
+					// check for death
+					if (Entity->svFlags & SVF_DEADMONSTER)
+						return;
+				}
+			}
 
-	void (CMonster::*Function) () = Move->Frames[index].Function;
-	if (Function)
-		(this->*Function) ();
+			if (Entity->s.frame < Move->FirstFrame || Entity->s.frame > Move->LastFrame)
+			{
+				AIFlags &= ~AI_HOLD_FRAME;
+				Entity->s.frame = Move->FirstFrame;
+			}
+			else
+			{
+				if (!(AIFlags & AI_HOLD_FRAME))
+				{
+					Entity->s.frame++;
+					if (Entity->s.frame > Move->LastFrame)
+						Entity->s.frame = Move->FirstFrame;
+				}
+			}
+		}
+
+		index = Entity->s.frame - Move->FirstFrame;
+
+		void (CMonster::*AIFunc) (float Dist) = Move->Frames[index].AIFunc;
+		if (AIFunc)
+			(this->*AIFunc) ((AIFlags & AI_HOLD_FRAME) ? 0 : (Move->Frames[index].Dist * Scale));
+
+		void (CMonster::*Function) () = Move->Frames[index].Function;
+		if (Function)
+			(this->*Function) ();
+	}
 }
 
 void CMonster::FoundTarget ()

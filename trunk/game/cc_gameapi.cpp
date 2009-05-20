@@ -159,10 +159,10 @@ void Sound (vec3_t pos, edict_t *ent, char *soundString)
 	Sound_Base (pos, ent, CHAN_AUTO, -1, 1.0f, ATTN_NORM, 0, soundString);
 }
 
-void GI_SetModel (edict_t *ent, char *model)
+void SetModel (edict_t *ent, char *model)
 {
 	if (!(model[0] == '*'))
-		gi.dprintf ("GI_SetModel on a non-brush model!\n");
+		gi.dprintf ("SetModel on a non-brush model!\n");
 	gi.setmodel (ent, model);
 }
 
@@ -436,4 +436,27 @@ void *::operator new[] (size_t size)
 void ::operator delete[] (void *ptr)
 {
 	gi.TagFree (ptr);
+}
+
+/*
+================
+Sys_Milliseconds
+================
+*/
+#include <windows.h>
+
+uint32 curtime;
+uint32 Sys_Milliseconds ()
+{
+	static uint32		base;
+	static bool	initialized = false;
+
+	if (!initialized)
+	{	// let base retain 16 bits of effectively random data
+		base = timeGetTime() & 0xffff0000;
+		initialized = true;
+	}
+	curtime = timeGetTime() - base;
+
+	return curtime;
 }
