@@ -192,51 +192,6 @@ void Cmd_Score_f (edict_t *ent)
 	DeathmatchScoreboard (ent);
 }
 
-
-/*
-==================
-HelpComputer
-
-Draw help computer.
-==================
-*/
-void HelpComputer (edict_t *ent)
-{
-	char	string[1024];
-	char	*sk;
-
-	if (skill->Integer() == 0)
-		sk = "easy";
-	else if (skill->Integer() == 1)
-		sk = "medium";
-	else if (skill->Integer() == 2)
-		sk = "hard";
-	else
-		sk = "hard+";
-
-	// send the layout
-	Q_snprintfz (string, sizeof(string),
-		"xv 32 yv 8 picn help "			// background
-		"xv 202 yv 12 string2 \"%s\" "		// skill
-		"xv 0 yv 24 cstring2 \"%s\" "		// level name
-		"xv 0 yv 54 cstring2 \"%s\" "		// help 1
-		"xv 0 yv 110 cstring2 \"%s\" "		// help 2
-		"xv 50 yv 164 string2 \" kills     goals    secrets\" "
-		"xv 50 yv 172 string2 \"%3i/%3i     %i/%i       %i/%i\" ", 
-		sk,
-		level.level_name,
-		game.helpmessage1,
-		game.helpmessage2,
-		level.killed_monsters, level.total_monsters, 
-		level.found_goals, level.total_goals,
-		level.found_secrets, level.total_secrets);
-
-	WriteByte (SVC_LAYOUT);
-	WriteString (string);
-	Cast (CASTFLAG_RELIABLE, ent);
-}
-
-
 /*
 ==================
 Cmd_Help_f

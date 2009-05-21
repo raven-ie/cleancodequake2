@@ -37,14 +37,15 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 char *ClientTeam (edict_t *ent)
 {
 	char		*p;
-	static char	value[512];
+	// Paril todo fixme, this sucks.
+	static char	value[MAX_INFO_STRING];
 
 	value[0] = 0;
 
 	if (!ent->client)
 		return value;
 
-	strcpy(value, Info_ValueForKey (ent->client->pers.userinfo, "skin"));
+	Q_strncpyz(value, Info_ValueForKey (ent->client->pers.userinfo, "skin"), MAX_INFO_STRING);
 	p = strchr(value, '/');
 	if (!p)
 		return value;
@@ -194,9 +195,9 @@ void Cmd_Players_f (edict_t *ent)
 {
 	int		i;
 	int		count;
-	char	small[64];
-	char	large[1280];
-	int		index[256];
+	char	small[MAX_INFO_KEY];
+	char	large[MAX_INFO_STRING];
+	int		*index = new int[maxclients->Integer()];
 
 	count = 0;
 	for (i = 0 ; i < maxclients->Integer() ; i++)
@@ -221,13 +222,15 @@ void Cmd_Players_f (edict_t *ent)
 			game.clients[index[i]].pers.netname);
 		if (strlen (small) + strlen(large) > sizeof(large) - 100 )
 		{	// can't print all of them in one packet
-			strcat (large, "...\n");
+			Q_strcatz (large, "...\n", MAX_INFO_STRING);
 			break;
 		}
-		strcat (large, small);
+		Q_strcatz (large, small, MAX_INFO_STRING);
 	}
 
 	gi.cprintf (ent, PRINT_HIGH, "%s\n%i players\n", large, count);
+
+	delete[] index;
 }
 
 /*
@@ -282,12 +285,14 @@ void Cmd_Wave_f (edict_t *ent)
 Cmd_Say_f
 ==================
 */
+#define MAX_TALK_STRING 100
+
 void Cmd_Say_f (edict_t *ent, bool team, bool arg0)
 {
 	int		i, j;
 	edict_t	*other;
 	char	*p;
-	char	text[2048];
+	char	text[MAX_TALK_STRING];
 	gclient_t *cl;
 
 	if (ArgCount () < 2 && !arg0)
@@ -309,9 +314,9 @@ void Cmd_Say_f (edict_t *ent, bool team, bool arg0)
 
 	if (arg0)
 	{
-		strcat (text, ArgGets(0));
-		strcat (text, " ");
-		strcat (text, ArgGetConcatenatedString());
+		Q_strcatz (text, ArgGets(0), sizeof(text));
+		Q_strcatz (text, " ", sizeof(text));
+		Q_strcatz (text, ArgGetConcatenatedString(), sizeof(text));
 	}
 	else
 	{
@@ -322,14 +327,14 @@ void Cmd_Say_f (edict_t *ent, bool team, bool arg0)
 			p++;
 			p[strlen(p)-1] = 0;
 		}
-		strcat(text, p);
+		Q_strcatz(text, p, sizeof(text));
 	}
 
 	// don't let text be too long for malicious reasons
-	if (strlen(text) > 150)
+	if (strlen(text) > sizeof(text))
 		text[150] = 0;
 
-	strcat(text, "\n");
+	Q_strcatz(text, "\n", sizeof(text));
 
 	if (flood_msgs->Integer())
 	{
@@ -397,11 +402,11 @@ void Cmd_PlayerList_f(edict_t *ent)
 			e2->client->pers.netname,
 			e2->client->resp.spectator ? " (spectator)" : "");
 		if (strlen(text) + strlen(st) > sizeof(text) - 50) {
-			sprintf(text+strlen(text), "And more...\n");
+			Q_snprintfz (text+strlen(text), sizeof(text), "And more...\n");
 			gi.cprintf(ent, PRINT_HIGH, "%s", text);
 			return;
 		}
-		strcat(text, st);
+		Q_strcatz(text, st, sizeof(text));
 	}
 	gi.cprintf(ent, PRINT_HIGH, "%s", text);
 }

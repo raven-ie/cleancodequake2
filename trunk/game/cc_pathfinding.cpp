@@ -415,9 +415,14 @@ void SaveNodes ()
 	FileName += level.mapname;
 	FileName += ".ccn";
 
+#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
 	FILE *fp = fopen (FileName.c_str(), "wb+");
+#else
+	FILE *fp;
+	int errorVal = fopen_s (&fp, FileName.c_str(), "wb+");
+#endif
 
-	if (!fp)
+	if (!fp || errorVal)
 		return;
 
 	// Write the header
@@ -497,9 +502,14 @@ void LoadNodes ()
 	FileName += level.mapname;
 	FileName += ".ccn";
 
+#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
 	FILE *fp = fopen (FileName.c_str(), "rb");
+#else
+	FILE *fp;
+	int errorVal = fopen_s (&fp, FileName.c_str(), "rb");
+#endif
 
-	if (!fp)
+	if (!fp || errorVal)
 		return;
 
 	// Write the header
@@ -806,9 +816,14 @@ void SavePathTable ()
 	FileName += level.mapname;
 	FileName += ".cnt";
 
+#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
 	FILE *fp = fopen (FileName.c_str(), "wb+");
+#else
+	FILE *fp;
+	int errorVal = fopen_s (&fp, FileName.c_str(), "wb+");
+#endif
 
-	if (!fp)
+	if (!fp || errorVal)
 		return;
 
 	gi.dprintf ("Saving node helper table...\n");
@@ -849,9 +864,14 @@ void LoadPathTable ()
 	FileName += level.mapname;
 	FileName += ".cnt";
 
+#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
 	FILE *fp = fopen (FileName.c_str(), "rb");
+#else
+	FILE *fp;
+	int errorVal = fopen_s (&fp, FileName.c_str(), "rb");
+#endif
 
-	if (!fp)
+	if (!fp || errorVal)
 		return;
 
 	gi.dprintf ("Loading node helper table...\n");

@@ -1566,11 +1566,11 @@ void ClientUserinfoChanged (edict_t *ent, char *userinfo)
 
 	// check for malformed or illegal info strings
 	if (!Info_Validate(userinfo))
-		strcpy (userinfo, "\\name\\badinfo\\skin\\male/grunt");
+		Q_strncpyz (userinfo, "\\name\\badinfo\\skin\\male/grunt", MAX_INFO_STRING);
 
 	// set name
 	s = Info_ValueForKey (userinfo, "name");
-	strncpy (ent->client->pers.netname, s, sizeof(ent->client->pers.netname)-1);
+	Q_strncpyz (ent->client->pers.netname, s, sizeof(ent->client->pers.netname)-1);
 
 	// set spectator
 	s = Info_ValueForKey (userinfo, "spectator");
@@ -1632,7 +1632,7 @@ void ClientUserinfoChanged (edict_t *ent, char *userinfo)
 		ent->client->resp.Gender = GenderMale;
 
 	// save off the userinfo in case we want to check something later
-	strncpy (ent->client->pers.userinfo, userinfo, sizeof(ent->client->pers.userinfo)-1);
+	Q_strncpyz (ent->client->pers.userinfo, userinfo, sizeof(ent->client->pers.userinfo)-1);
 }
 
 

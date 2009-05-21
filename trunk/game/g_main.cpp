@@ -153,7 +153,7 @@ void Com_Printf (comPrint_t flags, char *fmt, ...)
 	char		text[MAX_COMPRINT];
 
 	va_start (argptr, fmt);
-	vsnprintf (text, sizeof(text), fmt, argptr);
+	vsnprintf_s (text, sizeof(text), MAX_COMPRINT, fmt, argptr);
 	va_end (argptr);
 
 	gi.dprintf ("%s", text);
@@ -165,7 +165,7 @@ void Com_DevPrintf (comPrint_t flags, char *fmt, ...)
 	char		text[MAX_COMPRINT];
 
 	va_start (argptr, fmt);
-	vsnprintf (text, sizeof(text), fmt, argptr);
+	vsnprintf_s (text, sizeof(text), MAX_COMPRINT, fmt, argptr);
 	va_end (argptr);
 
 	gi.dprintf ("%s", text);
@@ -178,7 +178,7 @@ void Com_Error (EComErrorType code, char *fmt, ...)
 	char		text[MAX_COMPRINT];
 
 	va_start (argptr, fmt);
-	vsnprintf (text, sizeof(text), fmt, argptr);
+	vsnprintf_s (text, sizeof(text), MAX_COMPRINT, fmt, argptr);
 	va_end (argptr);
 
 	gi.error ("%s", text);
@@ -241,6 +241,9 @@ void EndDMLevel (void)
 	edict_t		*ent;
 	char *s, *t, *f;
 	static const char *seps = " ,\n\r";
+#ifdef CRT_USE_UNDEPRECATED_FUNCTIONS
+	char *nextToken;
+#endif
 
 	// stay on same level flag
 	if (dmFlags.dfSameLevel)
@@ -251,13 +254,21 @@ void EndDMLevel (void)
 
 	// see if it's in the map list
 	if (*sv_maplist->String()) {
-		s = strdup(sv_maplist->String());
+		s = G_CopyString(sv_maplist->String());
 		f = NULL;
-		t = strtok(s, seps);
+#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
+		t = strtok_s(s, seps);
+#else
+		t = strtok_s (s, seps, &nextToken);
+#endif
 		while (t != NULL) {
 			if (Q_stricmp(t, level.mapname) == 0) {
 				// it's in the list, go to the next one
+#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
 				t = strtok(NULL, seps);
+#else
+				t = strtok_s (NULL, seps, &nextToken);
+#endif
 				if (t == NULL) { // end of list, go to first one
 					if (f == NULL) // there isn't a first one, same level
 						BeginIntermission (CreateTargetChangeLevel (level.mapname) );
@@ -265,12 +276,16 @@ void EndDMLevel (void)
 						BeginIntermission (CreateTargetChangeLevel (f) );
 				} else
 					BeginIntermission (CreateTargetChangeLevel (t) );
-				free(s);
+				gi.TagFree(s);
 				return;
 			}
 			if (!f)
 				f = t;
+#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
 			t = strtok(NULL, seps);
+#else
+			t = strtok_s (NULL, seps, &nextToken);
+#endif
 		}
 		free(s);
 	}

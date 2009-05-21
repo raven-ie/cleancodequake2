@@ -91,7 +91,7 @@ void SP_target_speaker (edict_t *ent)
 	if (!strstr (st.noise, ".wav"))
 		Q_snprintfz (buffer, sizeof(buffer), "%s.wav", st.noise);
 	else
-		strncpy (buffer, st.noise, sizeof(buffer));
+		Q_strncpyz (buffer, st.noise, sizeof(buffer));
 	ent->noise_index = SoundIndex (buffer);
 
 	if (!ent->volume)
@@ -119,9 +119,9 @@ void SP_target_speaker (edict_t *ent)
 void Use_Target_Help (edict_t *ent, edict_t *other, edict_t *activator)
 {
 	if (ent->spawnflags & 1)
-		strncpy (game.helpmessage1, ent->message, sizeof(game.helpmessage2)-1);
+		Q_strncpyz (game.helpmessage1, ent->message, sizeof(game.helpmessage2)-1);
 	else
-		strncpy (game.helpmessage2, ent->message, sizeof(game.helpmessage1)-1);
+		Q_strncpyz (game.helpmessage2, ent->message, sizeof(game.helpmessage1)-1);
 
 	game.helpchanged++;
 }
