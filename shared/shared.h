@@ -25,7 +25,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #ifndef __SHARED_H__
 #define __SHARED_H__
 
-#define _CRT_SECURE_NO_WARNINGS 1
+//#define _CRT_SECURE_NO_WARNINGS 1
+//#define _CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES 1
+#if (_MSC_VER >= 1400)
+#define CRT_USE_UNDEPRECATED_FUNCTIONS
+#endif
 
 #include <assert.h>
 #include <math.h>

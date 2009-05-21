@@ -136,9 +136,13 @@ void CBanList::LoadFromFile ()
 	fileName += CCvar("gamename", "").String();
 	fileName += "/bans.lst"; // FIXME: customizable
 
+#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
 	fp = fopen (fileName.c_str(), "rb");
+#else
+	int errorVal = fopen_s (&fp, fileName.c_str(), "rb");
+#endif
 
-	if (!fp)
+	if (!fp || errorVal)
 		return;
 
 	fseek (fp, 0, SEEK_END);
@@ -183,7 +187,7 @@ void CBanList::LoadFromFile ()
 				BanIndex *NewIndex = new BanIndex;
 				NewIndex->IP = false;
 				NewIndex->Name = new char[token.length()];
-				strncpy (NewIndex->Name, token.c_str(), token.length());
+				Q_strncpyz (NewIndex->Name, token.c_str(), token.length());
 				NewIndex->Name[token.length()] = 0;
 
 				oc = line.find_first_of(" \n\0", ++c);
@@ -248,7 +252,14 @@ void CBanList::SaveList ()
 	fileName += CCvar("gamename", "").String();
 	fileName += "/bans.lst"; // FIXME: customizable
 
+#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
 	fp = fopen (fileName.c_str(), "w+");
+#else
+	int errorVal = fopen_s (&fp, fileName.c_str(), "w+");
+#endif
+
+	if (!fp || errorVal)
+		return;
 
 	for (size_t i = 0; i < BanList.size(); i++)
 	{
@@ -280,7 +291,7 @@ void CBanList::AddToList (char *Name, EBanTypeFlags Flags)
 	BanIndex *NewIndex = new BanIndex;
 	NewIndex->IP = false;
 	NewIndex->Name = new char[strlen(Name)];
-	strncpy (NewIndex->Name, Name, sizeof(NewIndex->Name));
+	Q_strncpyz (NewIndex->Name, Name, sizeof(NewIndex->Name));
 	NewIndex->Name[strlen(Name)] = 0;
 	NewIndex->Flags = Flags;
 

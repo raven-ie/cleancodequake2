@@ -359,7 +359,7 @@ static void ED_ParseField (char *key, char *value, edict_t *ent)
 				*(char **)(b+f->ofs) = ED_NewString (value);
 				break;
 			case F_VECTOR:
-				sscanf (value, "%f %f %f", &vec[0], &vec[1], &vec[2]);
+				sscanf_s (value, "%f %f %f", &vec[0], &vec[1], &vec[2]);
 				((float *)(b+f->ofs))[0] = vec[0];
 				((float *)(b+f->ofs))[1] = vec[1];
 				((float *)(b+f->ofs))[2] = vec[2];
@@ -529,8 +529,8 @@ void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 	memset (&level, 0, sizeof(level));
 	memset (g_edicts, 0, game.maxentities * sizeof(g_edicts[0]));
 
-	strncpy (level.mapname, mapname, sizeof(level.mapname)-1);
-	strncpy (game.spawnpoint, spawnpoint, sizeof(game.spawnpoint)-1);
+	Q_strncpyz (level.mapname, mapname, sizeof(level.mapname)-1);
+	Q_strncpyz (game.spawnpoint, spawnpoint, sizeof(game.spawnpoint)-1);
 
 	// set client fields on player ents
 	for (i=0 ; i<game.maxclients ; i++)
@@ -644,17 +644,17 @@ void SP_worldspawn (edict_t *ent)
 	InitBodyQue ();
 
 	if (st.nextmap)
-		strcpy (level.nextmap, st.nextmap);
+		Q_strncpyz (level.nextmap, st.nextmap, sizeof(level.nextmap));
 
 	// make some data visible to the server
 
 	if (ent->message && ent->message[0])
 	{
 		gi.configstring (CS_NAME, ent->message);
-		strncpy (level.level_name, ent->message, sizeof(level.level_name));
+		Q_strncpyz (level.level_name, ent->message, sizeof(level.level_name));
 	}
 	else
-		strncpy (level.level_name, level.mapname, sizeof(level.level_name));
+		Q_strncpyz (level.level_name, level.mapname, sizeof(level.level_name));
 
 	if (st.sky && st.sky[0])
 		gi.configstring (CS_SKY, st.sky);

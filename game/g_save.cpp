@@ -532,12 +532,17 @@ void WriteGame (char *filename, BOOL autosave)
 	if (!autosave)
 		SaveClientData ();
 
+#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
 	f = fopen (filename, "wb");
-	if (!f)
+#else
+	int errorVal = fopen_s(&f, filename, "wb");
+#endif
+
+	if (!f || errorVal)
 		gi.error ("Couldn't open %s", filename);
 
 	memset (str, 0, sizeof(str));
-	strcpy (str, __DATE__);
+	Q_strncpyz (str, __DATE__, sizeof(str));
 	fwrite (str, sizeof(str), 1, f);
 
 	game.autosaved = autosave ? true : false;
@@ -558,8 +563,13 @@ void ReadGame (char *filename)
 
 	gi.FreeTags (TAG_GAME);
 
+#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
 	f = fopen (filename, "rb");
-	if (!f)
+#else
+	int errorVal = fopen_s(&f, filename, "rb");
+#endif
+
+	if (!f || errorVal)
 		gi.error ("Couldn't open %s", filename);
 
 	fread (str, sizeof(str), 1, f);
@@ -698,8 +708,13 @@ void WriteLevel (char *filename)
 	FILE	*f;
 	void	*base;
 
+#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
 	f = fopen (filename, "wb");
-	if (!f)
+#else
+	int errorVal = fopen_s(&f, filename, "wb");
+#endif
+
+	if (!f || errorVal)
 		gi.error ("Couldn't open %s", filename);
 
 	// write out edict size for checking
@@ -753,8 +768,13 @@ void ReadLevel (char *filename)
 	void	*base;
 	edict_t	*ent;
 
+#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
 	f = fopen (filename, "rb");
-	if (!f)
+#else
+	int errorVal = fopen_s(&f, filename, "rb");
+#endif
+
+	if (!f || errorVal)
 		gi.error ("Couldn't open %s", filename);
 
 	// free any dynamic memory allocated by loading the level

@@ -209,7 +209,7 @@ void MapPrint (EMapPrintType printType, edict_t *ent, vec3_t origin, char *fmt, 
 	char		text[MAX_COMPRINT];
 
 	va_start (argptr, fmt);
-	vsnprintf (text, sizeof(text), fmt, argptr);
+	vsnprintf_s (text, sizeof(text), MAX_COMPRINT, fmt, argptr);
 	va_end (argptr);
 
 	if (printType == MAPPRINT_WARNING)
@@ -341,15 +341,28 @@ char *CC_LoadEntFile (char *mapname, char *entities)
 	fileName += mapname;
 	fileName += ".ent";
 
+#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
 	fp = fopen(fileName.c_str(), "rb");
+#else
+	int errorVal = fopen_s(&fp, fileName.c_str(), "rb");
+#endif
 
-	if (!fp)
+	if (!fp || errorVal)
 	{
 		fileName = "";
 		fileName += "baseq2/maps/";
 		fileName += mapname;
 		fileName += ".ent";
+
+
+#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
 		fp = fopen(fileName.c_str(), "rb");
+#else
+		int errorVal = fopen_s(&fp, fileName.c_str(), "rb");
+
+		if (!fp || errorVal)
+			return entities;
+#endif
 	}
 
 	if (fp)
@@ -413,7 +426,7 @@ char *CC_ParseSpawnEntities (char *mapname, char *entities)
 	}
 
 	char *finalEntString = new char[finalString.length()];
-	sprintf (finalEntString, "%s", finalString.c_str());
+	Q_snprintfz (finalEntString, finalString.length(), "%s", finalString.c_str());
 
 	return finalEntString;
 }
