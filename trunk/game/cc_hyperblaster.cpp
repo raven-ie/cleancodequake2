@@ -119,7 +119,7 @@ void CHyperBlaster::Fire (edict_t *ent)
 			if (isQuad)
 			{
 				damage *= 4;
-				Sound(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
+				PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
 			}
 
 			Angles_Vectors (ent->client->v_angle, forward, right, NULL);
@@ -150,7 +150,7 @@ void CHyperBlaster::Fire (edict_t *ent)
 
 	if (ent->client->ps.gunFrame == 12)
 	{
-		Sound(ent, CHAN_AUTO, SoundIndex("weapons/hyprbd1a.wav"));
+		PlaySoundFrom(ent, CHAN_AUTO, SoundIndex("weapons/hyprbd1a.wav"));
 		ent->client->weapon_sound = 0;
 	}
 }

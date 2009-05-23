@@ -153,8 +153,8 @@ void G_Register ()
 
 	// latched vars
 	sv_cheats = new CCvar ("cheats", "0", CVAR_SERVERINFO|CVAR_LATCH_SERVER);
-	gi.cvar ("gamename", GAMEVERSION , CVAR_SERVERINFO|CVAR_LATCH_SERVER);
-	gi.cvar ("gamedate", __DATE__ , CVAR_SERVERINFO|CVAR_LATCH_SERVER);
+	CCvar ("gamename", GAMEVERSION , CVAR_SERVERINFO|CVAR_LATCH_SERVER);
+	CCvar ("gamedate", __DATE__ , CVAR_SERVERINFO|CVAR_LATCH_SERVER);
 
 	maxclients = new CCvar ("maxclients", "4", CVAR_SERVERINFO | CVAR_LATCH_SERVER);
 	maxspectators = new CCvar ("maxspectators", "4", CVAR_SERVERINFO);
@@ -199,7 +199,7 @@ void G_Register ()
 
 void InitGame (void)
 {
-	gi.dprintf ("==== InitGame ====\n");
+	DebugPrintf ("==== InitGame ====\n");
 
 	// Register cvars/commands
 	G_Register();
@@ -225,7 +225,7 @@ void InitGame (void)
 	game.clients = (gclient_t*)gi.TagMalloc (game.maxclients * sizeof(game.clients[0]), TAG_GAME);
 	globals.numEdicts = game.maxclients+1;
 
-	gi.dprintf ("Running CleanCode Quake2, built on %s (%s %s)\n", __DATE__, BUILDSTRING, CPUSTRING);
+	DebugPrintf ("Running CleanCode Quake2, built on %s (%s %s)\n", __DATE__, BUILDSTRING, CPUSTRING);
 
 	Bans.LoadFromFile ();
 }
@@ -836,7 +836,7 @@ void ReadLevel (char *filename)
 	{
 		ent = &g_edicts[i+1];
 		ent->client = game.clients + i;
-		ent->client->pers.connected = false;
+		ent->client->pers.state = SVCS_FREE;
 	}
 
 	// do any load time things at this point

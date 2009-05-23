@@ -136,7 +136,7 @@ CAnim InfantryMoveFidget (FRAME_stand01, FRAME_stand49, InfantryFramesFidget, &C
 void CInfantry::Idle ()
 {
 	CurrentMove = &InfantryMoveFidget;
-	Sound (Entity, CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
 }
 
 CFrame InfantryFramesWalk [] =
@@ -229,7 +229,7 @@ void CInfantry::Pain (edict_t *other, float kick, int damage)
 		return;		// no pain anims in nightmare
 
 	CurrentMove = (rand() % 2 == 0) ? &InfantryMovePain1 : &InfantryMovePain2;
-	Sound (Entity, CHAN_VOICE, (rand() % 2 == 0) ? SoundPain1 : SoundPain2);
+	PlaySoundFrom (Entity, CHAN_VOICE, (rand() % 2 == 0) ? SoundPain1 : SoundPain2);
 
 #ifdef MONSTER_USE_ROGUE_AI
 	// PMM - clear duck flag
@@ -293,7 +293,7 @@ void CInfantry::MachineGun ()
 
 void CInfantry::Sight ()
 {
-	Sound (Entity, CHAN_BODY, SoundSight);
+	PlaySoundFrom (Entity, CHAN_BODY, SoundSight);
 }
 
 void CInfantry::Dead ()
@@ -384,7 +384,7 @@ void CInfantry::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t p
 // check for gib
 	if (Entity->health <= Entity->gib_health)
 	{
-		Sound (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
+		PlaySoundFrom (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
 			ThrowGib (Entity, "models/objects/gibs/bone/tris.md2", damage, GIB_ORGANIC);
 		for (int n= 0; n < 4; n++)
@@ -420,7 +420,7 @@ void CInfantry::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t p
 		break;
 	}
 	CurrentMove = Animation;
-	Sound (Entity, CHAN_VOICE, pSound);
+	PlaySoundFrom (Entity, CHAN_VOICE, pSound);
 }
 
 #ifndef MONSTER_USE_ROGUE_AI
@@ -485,7 +485,7 @@ void CInfantry::Dodge (edict_t *attacker, float eta)
 
 void CInfantry::CockGun ()
 {
-	Sound (Entity, CHAN_WEAPON, SoundWeaponCock);
+	PlaySoundFrom (Entity, CHAN_WEAPON, SoundWeaponCock);
 }
 
 void CInfantry::Fire ()
@@ -543,14 +543,14 @@ CAnim InfantryMoveAttack1 (FRAME_attak112, FRAME_attak101, InfantryFramesAttack1
 
 void CInfantry::Swing ()
 {
-	Sound (Entity, CHAN_WEAPON, SoundPunchSwing);
+	PlaySoundFrom (Entity, CHAN_WEAPON, SoundPunchSwing);
 }
 
 void CInfantry::Smack ()
 {
 	vec3_t	aim = {80, 0, 0};
 	if (fire_hit (Entity, aim, (5 + (rand() % 5)), 50))
-		Sound (Entity, CHAN_WEAPON, SoundPunchHit);
+		PlaySoundFrom (Entity, CHAN_WEAPON, SoundPunchHit);
 }
 
 CFrame InfantryFramesAttack2 [] =

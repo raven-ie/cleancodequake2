@@ -56,6 +56,8 @@ void SetupArg ()
 // Called at the beginning of an arg session
 void InitArg ()
 {
+_CC_DISABLE_DEPRECATION
+(
 	numArgv = gi.argc();
 
 	if (numArgv == 0)
@@ -72,6 +74,7 @@ void InitArg ()
 		argvFloatArray[i] = atof (argvStringArray[i]);
 		argvIntegerArray[i] = (int)argvFloatArray[i];
 	}
+);
 }
 
 // Called at the end of an arg session

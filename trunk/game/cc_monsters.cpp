@@ -106,7 +106,7 @@ void CMonster::MoveToPath (float Dist)
 			P_CurrentNodeIndex--; // Head to the next node.
 			// Set our new path to the next node
 			P_CurrentNode = P_CurrentPath->Path[P_CurrentNodeIndex];
-			gi.dprintf ("Hit node %u\n", P_CurrentNodeIndex);
+			DebugPrintf ("Hit node %u\n", P_CurrentNodeIndex);
 			doit = true;
 			if (P_CurrentNode->Type == NODE_DOOR)
 			{
@@ -2756,13 +2756,13 @@ void CMonster::Stand ()
 void CMonster::Idle ()
 {
 	if (MonsterFlags & MF_HAS_IDLE)
-		gi.dprintf ("Warning: Monster with no idle has MF_HAS_IDLE!\n");
+		DebugPrintf ("Warning: Monster with no idle has MF_HAS_IDLE!\n");
 }
 
 void CMonster::Search ()
 {
 	if (MonsterFlags & MF_HAS_SEARCH)
-		gi.dprintf ("Warning: Monster with no search has MF_HAS_SEARCH!\n");
+		DebugPrintf ("Warning: Monster with no search has MF_HAS_SEARCH!\n");
 }
 
 void CMonster::Walk ()
@@ -2782,19 +2782,19 @@ void CMonster::Dodge (edict_t *other, float eta)
 void CMonster::Attack()
 {
 	if (MonsterFlags & MF_HAS_ATTACK)
-		gi.dprintf ("Warning: Monster with no attack has MF_HAS_ATTACK!\n");
+		DebugPrintf ("Warning: Monster with no attack has MF_HAS_ATTACK!\n");
 }
 
 void CMonster::Melee ()
 {
 	if (MonsterFlags & MF_HAS_MELEE)
-		gi.dprintf ("Warning: Monster with no melee has MF_HAS_MELEE!\n");
+		DebugPrintf ("Warning: Monster with no melee has MF_HAS_MELEE!\n");
 }
 
 void CMonster::Sight ()
 {
 	if (MonsterFlags & MF_HAS_SIGHT)
-		gi.dprintf ("Warning: Monster with no sight has MF_HAS_SIGHT!\n");
+		DebugPrintf ("Warning: Monster with no sight has MF_HAS_SIGHT!\n");
 }
 
 void CMonster::MonsterDeathUse ()
@@ -3060,7 +3060,7 @@ void CMonster::WorldEffects()
 	{
 		if (Entity->flags & FL_INWATER)
 		{	
-			Sound (Entity, CHAN_BODY, SoundIndex("player/watr_out.wav"));
+			PlaySoundFrom (Entity, CHAN_BODY, SoundIndex("player/watr_out.wav"));
 			Entity->flags &= ~FL_INWATER;
 		}
 		return;
@@ -3090,12 +3090,12 @@ void CMonster::WorldEffects()
 			if (Entity->watertype & CONTENTS_LAVA)
 			{
 				if (random() <= 0.5)
-					Sound (Entity, CHAN_BODY, SoundIndex("player/lava1.wav"));
+					PlaySoundFrom (Entity, CHAN_BODY, SoundIndex("player/lava1.wav"));
 				else
-					Sound (Entity, CHAN_BODY, SoundIndex("player/lava2.wav"));
+					PlaySoundFrom (Entity, CHAN_BODY, SoundIndex("player/lava2.wav"));
 			}
 			else
-				Sound (Entity, CHAN_BODY, SoundIndex("player/watr_in.wav"));
+				PlaySoundFrom (Entity, CHAN_BODY, SoundIndex("player/watr_in.wav"));
 		}
 
 		Entity->flags |= FL_INWATER;

@@ -96,13 +96,33 @@ typedef struct gclient_s gclient_t;
 //
 // functions provided by the main engine
 //
-typedef struct gameImport_s {
+typedef struct gameImport_s
+{
 	// special messages
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (BroadcastPrintf)
+#endif
 	void	(*bprintf) (EGamePrintLevel printlevel, char *fmt, ...);
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (DebugPrintf)
+#endif
 	void	(*dprintf) (char *fmt, ...);
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (ClientPrintf)
+#endif
 	void	(*cprintf) (edict_t *ent, EGamePrintLevel printLevel, char *fmt, ...);
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (CenterPrintf)
+#endif
 	void	(*centerprintf) (edict_t *ent, char *fmt, ...);
+
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (PlaySoundFrom)
+#endif
 	void	(*sound) (edict_t *ent, int channel, int soundIndex, float volume, float attenuation, float timeOffset);
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (PlaySoundAt)
+#endif
 	void	(*positioned_sound) (vec3_t origin, edict_t *ent, int channel, int soundIndex, float volume, float attenuation, float timeOffset);
 
 	// config strings hold all the index strings, the lightstyles,
@@ -114,13 +134,28 @@ typedef struct gameImport_s {
 	void	(*error) (char *fmt, ...);
 
 	// the *index functions create configstrings and some internal server state
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (ModelIndex)
+#endif
 	int		(*modelindex) (char *name);
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (SoundIndex)
+#endif
 	int		(*soundindex) (char *name);
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (ImageIndex)
+#endif
 	int		(*imageindex) (char *name);
 
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (SetModel)
+#endif
 	void	(*setmodel) (edict_t *ent, char *name);
 
 	// collision detection
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (class CTrace)
+#endif
 	cmTrace_t	(*trace) (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *passEnt, int contentMask);
 	int			(*pointcontents) (vec3_t point);
 	BOOL		(*inPVS) (vec3_t p1, vec3_t p2);
@@ -137,16 +172,59 @@ typedef struct gameImport_s {
 	void	(*Pmove) (pMove_t *pMove);		// player movement code common with client prediction
 
 	// network messaging
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (Cast)
+#endif
 	void	(*multicast) (vec3_t origin, EMultiCast to);
+
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (Cast)
+#endif
 	void	(*unicast) (edict_t *ent, BOOL reliable);
+
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (WriteChar)
+#endif
 	void	(*WriteChar) (int c);
+
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (WriteByte)
+#endif
 	void	(*WriteByte) (int c);
+
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (WriteShort)
+#endif
 	void	(*WriteShort) (int c);
+
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (WriteLong)
+#endif
 	void	(*WriteLong) (int c);
+
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (WriteFloat)
+#endif
 	void	(*WriteFloat) (float f);
+
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (WriteString)
+#endif
 	void	(*WriteString) (char *s);
+
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (WritePosition)
+#endif
 	void	(*WritePosition) (vec3_t pos);	// some fractional bits
+
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (WriteDir)
+#endif
 	void	(*WriteDir) (vec3_t pos);		// single byte encoded, very coarse
+
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (WriteAngle)
+#endif
 	void	(*WriteAngle) (float f);
 
 	// managed memory allocation
@@ -155,13 +233,35 @@ typedef struct gameImport_s {
 	void	(*FreeTags) (int tag);
 
 	// console variable interaction
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (class CCvar)
+#endif
 	cVar_t	*(*cvar) (char *varName, char *value, int flags);
+
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (class CCvar)
+#endif
 	cVar_t	*(*cvar_set) (char *varName, char *value);
+
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (class CCvar)
+#endif
 	cVar_t	*(*cvar_forceset) (char *varName, char *value);
 
 	// ClientCommand and ServerCommand parameter access
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (ArgGetCount)
+#endif
 	int		(*argc) (void);
+
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (ArgGets/ArgGeti/ArgGetf)
+#endif
 	char	*(*argv) (int n);
+
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (ArgGetConcatenatedString)
+#endif
 	char	*(*args) (void);	// concatenation of all argv >= 1
 
 	// add commands to the server console as if they were typed in

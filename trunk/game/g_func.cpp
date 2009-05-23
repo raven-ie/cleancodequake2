@@ -360,7 +360,7 @@ void plat_hit_top (edict_t *ent)
 	if (!(ent->flags & FL_TEAMSLAVE))
 	{
 		if (ent->moveinfo.sound_end)
-			Sound (ent, CHAN_NO_PHS_ADD+CHAN_VOICE, ent->moveinfo.sound_end, 1, ATTN_STATIC);
+			PlaySoundFrom (ent, CHAN_NO_PHS_ADD+CHAN_VOICE, ent->moveinfo.sound_end, 1, ATTN_STATIC);
 		ent->s.sound = 0;
 	}
 	ent->moveinfo.state = STATE_TOP;
@@ -374,7 +374,7 @@ void plat_hit_bottom (edict_t *ent)
 	if (!(ent->flags & FL_TEAMSLAVE))
 	{
 		if (ent->moveinfo.sound_end)
-			Sound (ent, CHAN_NO_PHS_ADD+CHAN_VOICE, ent->moveinfo.sound_end, 1, ATTN_STATIC);
+			PlaySoundFrom (ent, CHAN_NO_PHS_ADD+CHAN_VOICE, ent->moveinfo.sound_end, 1, ATTN_STATIC);
 		ent->s.sound = 0;
 	}
 	ent->moveinfo.state = STATE_BOTTOM;
@@ -385,7 +385,7 @@ void plat_go_down (edict_t *ent)
 	if (!(ent->flags & FL_TEAMSLAVE))
 	{
 		if (ent->moveinfo.sound_start)
-			Sound (ent, CHAN_NO_PHS_ADD+CHAN_VOICE, ent->moveinfo.sound_start, 1, ATTN_STATIC);
+			PlaySoundFrom (ent, CHAN_NO_PHS_ADD+CHAN_VOICE, ent->moveinfo.sound_start, 1, ATTN_STATIC);
 		ent->s.sound = ent->moveinfo.sound_middle;
 	}
 	ent->moveinfo.state = STATE_DOWN;
@@ -397,7 +397,7 @@ void plat_go_up (edict_t *ent)
 	if (!(ent->flags & FL_TEAMSLAVE))
 	{
 		if (ent->moveinfo.sound_start)
-			Sound (ent, CHAN_NO_PHS_ADD+CHAN_VOICE, ent->moveinfo.sound_start, 1, ATTN_STATIC);
+			PlaySoundFrom (ent, CHAN_NO_PHS_ADD+CHAN_VOICE, ent->moveinfo.sound_start, 1, ATTN_STATIC);
 		ent->s.sound = ent->moveinfo.sound_middle;
 	}
 	ent->moveinfo.state = STATE_UP;
@@ -727,7 +727,7 @@ void button_fire (edict_t *self)
 
 	self->moveinfo.state = STATE_UP;
 	if (self->moveinfo.sound_start && !(self->flags & FL_TEAMSLAVE))
-		Sound (self, CHAN_NO_PHS_ADD+CHAN_VOICE, self->moveinfo.sound_start, 1, ATTN_STATIC);
+		PlaySoundFrom (self, CHAN_NO_PHS_ADD+CHAN_VOICE, self->moveinfo.sound_start, 1, ATTN_STATIC);
 	Move_Calc (self, self->moveinfo.end_origin, button_wait);
 }
 
@@ -869,7 +869,7 @@ void door_hit_top (edict_t *self)
 	if (!(self->flags & FL_TEAMSLAVE))
 	{
 		if (self->moveinfo.sound_end)
-			Sound (self, CHAN_NO_PHS_ADD+CHAN_VOICE, self->moveinfo.sound_end, 1, ATTN_STATIC);
+			PlaySoundFrom (self, CHAN_NO_PHS_ADD+CHAN_VOICE, self->moveinfo.sound_end, 1, ATTN_STATIC);
 		self->s.sound = 0;
 	}
 	self->moveinfo.state = STATE_TOP;
@@ -887,7 +887,7 @@ void door_hit_bottom (edict_t *self)
 	if (!(self->flags & FL_TEAMSLAVE))
 	{
 		if (self->moveinfo.sound_end)
-			Sound (self, CHAN_NO_PHS_ADD+CHAN_VOICE, self->moveinfo.sound_end, 1, ATTN_STATIC);
+			PlaySoundFrom (self, CHAN_NO_PHS_ADD+CHAN_VOICE, self->moveinfo.sound_end, 1, ATTN_STATIC);
 		self->s.sound = 0;
 	}
 	self->moveinfo.state = STATE_BOTTOM;
@@ -899,7 +899,7 @@ void door_go_down (edict_t *self)
 	if (!(self->flags & FL_TEAMSLAVE))
 	{
 		if (self->moveinfo.sound_start)
-			Sound (self, CHAN_NO_PHS_ADD+CHAN_VOICE, self->moveinfo.sound_start, 1, ATTN_STATIC);
+			PlaySoundFrom (self, CHAN_NO_PHS_ADD+CHAN_VOICE, self->moveinfo.sound_start, 1, ATTN_STATIC);
 		self->s.sound = self->moveinfo.sound_middle;
 	}
 	if (self->max_health)
@@ -930,7 +930,7 @@ void door_go_up (edict_t *self, edict_t *activator)
 	if (!(self->flags & FL_TEAMSLAVE))
 	{
 		if (self->moveinfo.sound_start)
-			Sound (self, CHAN_NO_PHS_ADD+CHAN_VOICE, self->moveinfo.sound_start, 1, ATTN_STATIC);
+			PlaySoundFrom (self, CHAN_NO_PHS_ADD+CHAN_VOICE, self->moveinfo.sound_start, 1, ATTN_STATIC);
 		self->s.sound = self->moveinfo.sound_middle;
 	}
 	self->moveinfo.state = STATE_UP;
@@ -1128,8 +1128,8 @@ void door_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *
 		return;
 	self->touch_debounce_time = level.time + 5.0;
 
-	gi.centerprintf (other, "%s", self->message);
-	Sound (other, CHAN_AUTO, SoundIndex ("misc/talk1.wav"));
+	CenterPrintf (other, "%s", self->message);
+	PlaySoundFrom (other, CHAN_AUTO, SoundIndex ("misc/talk1.wav"));
 }
 
 void SP_func_door (edict_t *ent)
@@ -1513,7 +1513,7 @@ void train_wait (edict_t *self)
 		if (!(self->flags & FL_TEAMSLAVE))
 		{
 			if (self->moveinfo.sound_end)
-				Sound (self, CHAN_NO_PHS_ADD+CHAN_VOICE, self->moveinfo.sound_end, 1, ATTN_STATIC);
+				PlaySoundFrom (self, CHAN_NO_PHS_ADD+CHAN_VOICE, self->moveinfo.sound_end, 1, ATTN_STATIC);
 			self->s.sound = 0;
 		}
 	}
@@ -1541,7 +1541,7 @@ again:
 	ent = G_PickTarget (self->target);
 	if (!ent)
 	{
-		gi.dprintf ("train_next: bad target %s\n", self->target);
+		DebugPrintf ("train_next: bad target %s\n", self->target);
 		return;
 	}
 
@@ -1552,7 +1552,7 @@ again:
 	{
 		if (!first)
 		{
-			gi.dprintf ("connected teleport path_corners, see %s at (%f %f %f)\n", ent->classname, ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);
+			DebugPrintf ("connected teleport path_corners, see %s at (%f %f %f)\n", ent->classname, ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);
 			return;
 		}
 		first = false;
@@ -1569,7 +1569,7 @@ again:
 	if (!(self->flags & FL_TEAMSLAVE))
 	{
 		if (self->moveinfo.sound_start)
-			Sound (self, CHAN_NO_PHS_ADD+CHAN_VOICE, self->moveinfo.sound_start, 1, ATTN_STATIC);
+			PlaySoundFrom (self, CHAN_NO_PHS_ADD+CHAN_VOICE, self->moveinfo.sound_start, 1, ATTN_STATIC);
 		self->s.sound = self->moveinfo.sound_middle;
 	}
 
@@ -1602,13 +1602,13 @@ void func_train_find (edict_t *self)
 
 	if (!self->target)
 	{
-		gi.dprintf ("train_find: no target\n");
+		DebugPrintf ("train_find: no target\n");
 		return;
 	}
 	ent = G_PickTarget (self->target);
 	if (!ent)
 	{
-		gi.dprintf ("train_find: target %s not found\n", self->target);
+		DebugPrintf ("train_find: target %s not found\n", self->target);
 		return;
 	}
 	self->target = ent->target;
@@ -1707,14 +1707,14 @@ void trigger_elevator_use (edict_t *self, edict_t *other, edict_t *activator)
 
 	if (!other->pathtarget)
 	{
-		gi.dprintf("elevator used with no pathtarget\n");
+		DebugPrintf("elevator used with no pathtarget\n");
 		return;
 	}
 
 	target = G_PickTarget (other->pathtarget);
 	if (!target)
 	{
-		gi.dprintf("elevator used with bad pathtarget: %s\n", other->pathtarget);
+		DebugPrintf("elevator used with bad pathtarget: %s\n", other->pathtarget);
 		return;
 	}
 

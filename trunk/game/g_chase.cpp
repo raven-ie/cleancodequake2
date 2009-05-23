@@ -172,6 +172,6 @@ void GetChaseTarget(edict_t *ent)
 			return;
 		}
 	}
-	gi.centerprintf(ent, "No other players to chase.");
+	CenterPrintf(ent, "No other players to chase.");
 }
 

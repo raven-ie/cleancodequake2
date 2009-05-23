@@ -21,7 +21,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
-
 void G_ProjectSource (vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result)
 {
 	result[0] = point[0] + forward[0] * distance[0] + right[0] * distance[1];
@@ -139,7 +138,7 @@ edict_t *G_PickTarget (char *targetname)
 
 	if (!num_choices)
 	{
-		gi.dprintf("G_PickTarget: target %s not found\n", targetname);
+		DebugPrintf("G_PickTarget: target %s not found\n", targetname);
 		return NULL;
 	}
 
@@ -186,7 +185,7 @@ void G_UseTargets (edict_t *ent, edict_t *activator)
 		t->think = Think_Delay;
 		t->activator = activator;
 		if (!activator)
-			gi.dprintf ("Think_Delay with no activator\n");
+			DebugPrintf ("Think_Delay with no activator\n");
 		t->message = ent->message;
 		t->target = ent->target;
 		t->killtarget = ent->killtarget;
@@ -199,11 +198,11 @@ void G_UseTargets (edict_t *ent, edict_t *activator)
 //
 	if ((ent->message) && !(activator->svFlags & SVF_MONSTER))
 	{
-		gi.centerprintf (activator, "%s", ent->message);
+		CenterPrintf (activator, "%s", ent->message);
 		if (ent->noise_index)
-			Sound (activator, CHAN_AUTO, ent->noise_index);
+			PlaySoundFrom (activator, CHAN_AUTO, ent->noise_index);
 		else
-			Sound (activator, CHAN_AUTO, SoundIndex ("misc/talk1.wav"));
+			PlaySoundFrom (activator, CHAN_AUTO, SoundIndex ("misc/talk1.wav"));
 	}
 
 //
@@ -217,7 +216,7 @@ void G_UseTargets (edict_t *ent, edict_t *activator)
 			G_FreeEdict (t);
 			if (!ent->inUse)
 			{
-				gi.dprintf("entity was removed while using killtargets\n");
+				DebugPrintf("entity was removed while using killtargets\n");
 				return;
 			}
 		}
@@ -237,17 +236,12 @@ void G_UseTargets (edict_t *ent, edict_t *activator)
 				continue;
 
 			if (t == ent)
-			{
-				gi.dprintf ("WARNING: Entity used itself.\n");
-			}
-			else
-			{
-				if (t->use)
-					t->use (t, ent, activator);
-			}
+				DebugPrintf ("WARNING: Entity used itself.\n");
+			else if (t->use)
+				t->use (t, ent, activator);
 			if (!ent->inUse)
 			{
-				gi.dprintf("entity was removed while using targets\n");
+				DebugPrintf("entity was removed while using targets\n");
 				return;
 			}
 		}

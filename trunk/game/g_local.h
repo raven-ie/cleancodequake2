@@ -19,6 +19,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 // g_local.h -- local definitions for game module
 
+#include "cc_options.h"
+
 #include "../shared/shared.h"
 
 #if 0
@@ -558,7 +560,7 @@ typedef struct
 	char		netname[16];
 	int			hand;
 
-	bool		connected;			// a loadgame will leave valid entities that
+	EClientState state;			// a loadgame will leave valid entities that
 									// just don't have a connection yet
 
 	// values saved and restored from edicts when changing levels

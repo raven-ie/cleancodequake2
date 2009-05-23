@@ -49,7 +49,7 @@ void CMaiden::Allocate (edict_t *ent)
 
 void CMaiden::Moan ()
 {
-	Sound (Entity, CHAN_VOICE, (random() < 0.5) ? SoundIdle1 : SoundIdle2, 1, ATTN_IDLE, 0);
+	PlaySoundFrom (Entity, CHAN_VOICE, (random() < 0.5) ? SoundIdle1 : SoundIdle2, 1, ATTN_IDLE, 0);
 }
 
 CFrame ChickFramesFidget [] =
@@ -269,13 +269,13 @@ void CMaiden::Pain (edict_t *other, float kick, int damage)
 	{
 	case 0:
 	default:
-		Sound (Entity, CHAN_VOICE, SoundPain1);
+		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain1);
 		break;
 	case 1:
-		Sound (Entity, CHAN_VOICE, SoundPain2);
+		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain2);
 		break;
 	case 2:
-		Sound (Entity, CHAN_VOICE, SoundPain3);
+		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain3);
 		break;
 	}
 
@@ -361,7 +361,7 @@ void CMaiden::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t poi
 // check for gib
 	if (Entity->health <= Entity->gib_health)
 	{
-		Sound (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
+		PlaySoundFrom (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (n= 0; n < 2; n++)
 			ThrowGib (Entity, "models/objects/gibs/bone/tris.md2", damage, GIB_ORGANIC);
 		for (n= 0; n < 4; n++)
@@ -380,7 +380,7 @@ void CMaiden::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t poi
 
 	n = rand() % 2;
 	CurrentMove = (n == 0) ? &ChickMoveDeath1 : &ChickMoveDeath2;
-	Sound (Entity, CHAN_VOICE, (n == 0) ? SoundDeath1 : SoundDeath2);
+	PlaySoundFrom (Entity, CHAN_VOICE, (n == 0) ? SoundDeath1 : SoundDeath2);
 }
 
 #ifndef MONSTER_USE_ROGUE_AI
@@ -544,7 +544,7 @@ void CMaiden::Dodge (edict_t *attacker, float eta)
 void CMaiden::Slash ()
 {
 	vec3_t	aim = {MELEE_DISTANCE, Entity->mins[0], 10};
-	Sound (Entity, CHAN_WEAPON, SoundMeleeSwing);
+	PlaySoundFrom (Entity, CHAN_WEAPON, SoundMeleeSwing);
 	fire_hit (Entity, aim, (10 + (rand() %6)), 100);
 }
 
@@ -660,12 +660,12 @@ void CMaiden::Rocket ()
 
 void CMaiden::PreAttack ()
 {
-	Sound (Entity, CHAN_VOICE, SoundMissilePrelaunch);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundMissilePrelaunch);
 }
 
 void CMaiden::Reload ()
 {
-	Sound (Entity, CHAN_VOICE, SoundMissileReload);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundMissileReload);
 }
 
 void CMaiden::ReRocket()
@@ -784,7 +784,7 @@ void CMaiden::Attack()
 
 void CMaiden::Sight()
 {
-	Sound (Entity, CHAN_VOICE, SoundSight);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundSight);
 }
 
 void CMaiden::Spawn ()

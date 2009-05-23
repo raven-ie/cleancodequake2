@@ -49,12 +49,12 @@ void CSuperTank::Allocate (edict_t *ent)
 
 void CSuperTank::PlayTreadSound ()
 {
-	Sound (Entity, CHAN_BODY, TreadSound);
+	PlaySoundFrom (Entity, CHAN_BODY, TreadSound);
 }
 
 void CSuperTank::Search ()
 {
-	Sound (Entity, CHAN_VOICE, (random() < 0.5) ? SoundSearch1 : SoundSearch2);
+	PlaySoundFrom (Entity, CHAN_VOICE, (random() < 0.5) ? SoundSearch1 : SoundSearch2);
 }
 
 //
@@ -355,7 +355,7 @@ void CSuperTank::Grenade ()
 		VectorNormalizef (forward, forward);
 	}
 
-	Sound (Entity, CHAN_WEAPON, SoundIndex("gunner/Gunatck3.wav"));
+	PlaySoundFrom (Entity, CHAN_WEAPON, SoundIndex("gunner/Gunatck3.wav"));
 
 	MonsterFireGrenade (start, forward, 25, 600, -1);
 }
@@ -486,17 +486,17 @@ void CSuperTank::Pain (edict_t *other, float kick, int damage)
 
 	if (damage <= 10)
 	{
-		Sound (Entity, CHAN_VOICE, SoundPain1);
+		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain1);
 		CurrentMove = &SuperTankMovePain1;
 	}
 	else if (damage <= 25)
 	{
-		Sound (Entity, CHAN_VOICE, SoundPain3);
+		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain3);
 		CurrentMove = &SuperTankMovePain2;
 	}
 	else
 	{
-		Sound (Entity, CHAN_VOICE, SoundPain2);
+		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain2);
 		CurrentMove = &SuperTankMovePain3;
 	}
 
@@ -797,7 +797,7 @@ void CSuperTank::Explode ()
 
 void CSuperTank::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
 {
-	Sound (Entity, CHAN_VOICE, SoundDeath);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundDeath);
 	Entity->deadflag = DEAD_DEAD;
 	Entity->takedamage = DAMAGE_NO;
 	Entity->count = 0;

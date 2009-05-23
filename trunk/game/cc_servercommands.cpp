@@ -102,12 +102,12 @@ void SvCmd_RunCommand (char *commandName)
 	if (Command)
 		Command->Run();
 	else
-		gi.cprintf (NULL, PRINT_HIGH, "Unknown server command \"%s\"\n", commandName);
+		ClientPrintf (NULL, PRINT_HIGH, "Unknown server command \"%s\"\n", commandName);
 }
 
 void SvCmd_Test_f ()
 {
-	gi.cprintf (NULL, PRINT_HIGH, "D:\n");
+	ClientPrintf (NULL, PRINT_HIGH, "D:\n");
 }
 
 void SvCmd_Register ()

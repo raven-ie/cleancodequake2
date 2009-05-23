@@ -114,7 +114,7 @@ void CBFG::FireBFG (edict_t *ent)
 	if (isQuad)
 	{
 		damage *= 4;
-		Sound(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
+		PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
 	}
 
 	Angles_Vectors (ent->client->v_angle, forward, right, NULL);

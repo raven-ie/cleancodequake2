@@ -94,7 +94,7 @@ void CChaingun::Fire (edict_t *ent)
 		damage = 8;
 
 	if (ent->client->ps.gunFrame == 5)
-		Sound(ent, CHAN_AUTO, SoundIndex("weapons/chngnu1a.wav"));
+		PlaySoundFrom(ent, CHAN_AUTO, SoundIndex("weapons/chngnu1a.wav"));
 
 	if ((ent->client->ps.gunFrame == 14) && !(ent->client->buttons & BUTTON_ATTACK))
 	{
@@ -115,7 +115,7 @@ void CChaingun::Fire (edict_t *ent)
 	if (ent->client->ps.gunFrame == 22)
 	{
 		ent->client->weapon_sound = 0;
-		Sound(ent, CHAN_AUTO, SoundIndex("weapons/chngnd1a.wav"));
+		PlaySoundFrom(ent, CHAN_AUTO, SoundIndex("weapons/chngnd1a.wav"));
 	}
 	else
 	{
@@ -150,7 +150,7 @@ void CChaingun::Fire (edict_t *ent)
 	{
 		damage *= 4;
 		kick *= 4;
-		Sound(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
+		PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
 	}
 
 	for (i=0 ; i<3 ; i++)

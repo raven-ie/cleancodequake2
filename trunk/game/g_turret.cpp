@@ -21,7 +21,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
-
 void AnglesNormalize(vec3_t vec)
 {
 	while(vec[0] > 360)
@@ -90,7 +89,7 @@ void turret_breach_fire (edict_t *self)
 	damage = 100 + random() * 50;
 	speed = 550 + 50 * skill->Integer();
 	fire_rocket (self->teammaster->owner, start, f, damage, speed, 150, damage);
-	Sound (start, self, CHAN_WEAPON, SoundIndex("weapons/rocklf1a.wav"));
+	PlaySoundAt (start, self, CHAN_WEAPON, SoundIndex("weapons/rocklf1a.wav"));
 }
 
 void turret_breach_think (edict_t *self)

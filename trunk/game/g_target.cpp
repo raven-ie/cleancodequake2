@@ -74,7 +74,7 @@ void Use_Target_Speaker (edict_t *ent, edict_t *other, edict_t *activator)
 			chan = CHAN_VOICE;
 		// use a positioned_sound, because this entity won't normally be
 		// sent to any clients because it is invisible
-		gi.positioned_sound (ent->s.origin, ent, chan, ent->noise_index, ent->volume, ent->attenuation, 0);
+		PlaySoundAt (ent->s.origin, ent, chan, ent->noise_index, ent->volume, ent->attenuation);
 	}
 }
 
@@ -155,7 +155,7 @@ These are single use targets.
 */
 void use_target_secret (edict_t *ent, edict_t *other, edict_t *activator)
 {
-	Sound (ent, CHAN_VOICE, ent->noise_index);
+	PlaySoundFrom (ent, CHAN_VOICE, ent->noise_index);
 
 	level.found_secrets++;
 
@@ -190,7 +190,7 @@ These are single use targets.
 */
 void use_target_goal (edict_t *ent, edict_t *other, edict_t *activator)
 {
-	Sound (ent, CHAN_VOICE, ent->noise_index);
+	PlaySoundFrom (ent, CHAN_VOICE, ent->noise_index);
 
 	level.found_goals++;
 
@@ -288,7 +288,7 @@ void use_target_changelevel (edict_t *self, edict_t *other, edict_t *activator)
 	if (deathmatch->Integer())
 	{
 		if (activator && activator->client)
-			gi.bprintf (PRINT_HIGH, "%s exited the level.\n", activator->client->pers.netname);
+			BroadcastPrintf (PRINT_HIGH, "%s exited the level.\n", activator->client->pers.netname);
 	}
 
 	// if going to a new unit, clear cross triggers
@@ -419,7 +419,7 @@ void use_target_blaster (edict_t *self, edict_t *other, edict_t *activator)
 		effect = EF_BLASTER;
 
 	fire_blaster (self, self->s.origin, self->movedir, self->dmg, self->speed, EF_BLASTER, true);
-	Sound (self, CHAN_VOICE, self->noise_index);
+	PlaySoundFrom (self, CHAN_VOICE, self->noise_index);
 }
 
 void SP_target_blaster (edict_t *self)
@@ -779,7 +779,7 @@ void target_earthquake_think (edict_t *self)
 
 	if (self->last_move_time < level.time)
 	{
-		gi.positioned_sound (self->s.origin, self, CHAN_AUTO, self->noise_index, 1.0, ATTN_NONE, 0);
+		PlaySoundAt (self->s.origin, self, CHAN_AUTO, self->noise_index, 1.0, ATTN_NONE);
 		self->last_move_time = level.time + 0.5;
 	}
 

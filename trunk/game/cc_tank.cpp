@@ -65,27 +65,27 @@ void CTankCommander::Allocate (edict_t *ent)
 
 void CTank::Sight ()
 {
-	Sound (Entity, CHAN_VOICE, SoundSight);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundSight);
 }
 
 void CTank::Footstep ()
 {
-	Sound (Entity, CHAN_BODY, SoundStep);
+	PlaySoundFrom (Entity, CHAN_BODY, SoundStep);
 }
 
 void CTank::Thud ()
 {
-	Sound (Entity, CHAN_BODY, SoundThud);
+	PlaySoundFrom (Entity, CHAN_BODY, SoundThud);
 }
 
 void CTank::Windup ()
 {
-	Sound (Entity, CHAN_WEAPON, SoundWindup);
+	PlaySoundFrom (Entity, CHAN_WEAPON, SoundWindup);
 }
 
 void CTank::Idle ()
 {
-	Sound (Entity, CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
 }
 
 //
@@ -298,7 +298,7 @@ void CTank::Pain (edict_t *other, float kick, int damage)
 	}
 
 	Entity->pain_debounce_time = level.time + 3;
-	Sound (Entity, CHAN_VOICE, SoundPain);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundPain);
 
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
@@ -350,7 +350,7 @@ void CTank::Blaster ()
 
 void CTank::Strike ()
 {
-	Sound (Entity, CHAN_WEAPON, SoundStrike);
+	PlaySoundFrom (Entity, CHAN_WEAPON, SoundStrike);
 }	
 
 void CTank::Rocket ()
@@ -917,7 +917,7 @@ void CTank::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point
 // check for gib
 	if (Entity->health <= Entity->gib_health)
 	{
-		Sound (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
+		PlaySoundFrom (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (n= 0; n < 1 /*4*/; n++)
 			ThrowGib (Entity, "models/objects/gibs/sm_meat/tris.md2", damage, GIB_ORGANIC);
 		for (n= 0; n < 4; n++)
@@ -932,7 +932,7 @@ void CTank::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point
 		return;
 
 // regular death
-	Sound (Entity, CHAN_VOICE, SoundDie);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundDie);
 	Entity->deadflag = DEAD_DEAD;
 	Entity->takedamage = DAMAGE_YES;
 

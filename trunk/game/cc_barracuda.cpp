@@ -190,7 +190,7 @@ void CBarracudaShark::Bite ()
 
 void CBarracudaShark::PreAttack ()
 {
-	Sound (Entity, CHAN_WEAPON, SoundChomp);
+	PlaySoundFrom (Entity, CHAN_WEAPON, SoundChomp);
 }
 
 CFrame FlipperFramesAttack [] =
@@ -239,11 +239,11 @@ void CBarracudaShark::Pain (edict_t *other, float kick, int damage)
 	switch ((rand() + 1) % 2)
 	{
 	case 0:
-		Sound (Entity, CHAN_VOICE, SoundPain1);
+		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain1);
 		CurrentMove = &FlipperMovePain1;
 		break;
 	case 1:
-		Sound (Entity, CHAN_VOICE, SoundPain2);
+		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain2);
 		CurrentMove = &FlipperMovePain2;
 		break;
 	}
@@ -327,7 +327,7 @@ CAnim FlipperMoveDeath (FRAME_flpdth01, FRAME_flpdth56, FlipperFramesDeath, Conv
 
 void CBarracudaShark::Sight ()
 {
-	Sound (Entity, CHAN_VOICE, SoundSight);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundSight);
 }
 
 void CBarracudaShark::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
@@ -335,7 +335,7 @@ void CBarracudaShark::Die (edict_t *inflictor, edict_t *attacker, int damage, ve
 // check for gib
 	if (Entity->health <= Entity->gib_health)
 	{
-		Sound (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
+		PlaySoundFrom (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
 			ThrowGib (Entity, "models/objects/gibs/bone/tris.md2", damage, GIB_ORGANIC);
 		for (int n= 0; n < 2; n++)
@@ -349,7 +349,7 @@ void CBarracudaShark::Die (edict_t *inflictor, edict_t *attacker, int damage, ve
 		return;
 
 // regular death
-	Sound (Entity, CHAN_VOICE, SoundDeath);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundDeath);
 	Entity->deadflag = DEAD_DEAD;
 	Entity->takedamage = DAMAGE_YES;
 	CurrentMove = &FlipperMoveDeath;

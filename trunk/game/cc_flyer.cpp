@@ -49,17 +49,17 @@ void CFlyer::Allocate (edict_t *ent)
 
 void CFlyer::Sight ()
 {
-	Sound (Entity, CHAN_VOICE, SoundSight);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundSight);
 }
 
 void CFlyer::Idle ()
 {
-	Sound (Entity, CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
 }
 
 void CFlyer::PopBlades ()
 {
-	Sound (Entity, CHAN_VOICE, SoundSproing);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundSproing);
 }
 
 CFrame FlyerFramesStand [] =
@@ -389,14 +389,14 @@ void CFlyer::SlashLeft ()
 {
 	vec3_t	aim = {MELEE_DISTANCE, Entity->mins[0], 0};
 	fire_hit (Entity, aim, 5, 0);
-	Sound (Entity, CHAN_WEAPON, SoundSlash);
+	PlaySoundFrom (Entity, CHAN_WEAPON, SoundSlash);
 }
 
 void CFlyer::SlashRight ()
 {
 	vec3_t	aim = {MELEE_DISTANCE, Entity->maxs[0], 0};
 	fire_hit (Entity, aim, 5, 0);
-	Sound (Entity, CHAN_WEAPON, SoundSlash);
+	PlaySoundFrom (Entity, CHAN_WEAPON, SoundSlash);
 }
 
 CFrame FlyerFramesStartMelee [] =
@@ -480,15 +480,15 @@ void CFlyer::Pain (edict_t *other, float kick, int damage)
 	switch (rand() % 3)
 	{
 	case 0:
-		Sound (Entity, CHAN_VOICE, SoundPain1);
+		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain1);
 		CurrentMove = &FlyerMovePain1;
 		break;
 	case 1:
-		Sound (Entity, CHAN_VOICE, SoundPain2);
+		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain2);
 		CurrentMove = &FlyerMovePain2;
 		break;
 	default:
-		Sound (Entity, CHAN_VOICE, SoundPain1);
+		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain1);
 		CurrentMove = &FlyerMovePain3;
 		break;
 	}
@@ -496,7 +496,7 @@ void CFlyer::Pain (edict_t *other, float kick, int damage)
 
 void CFlyer::Die(edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
 {
-	Sound (Entity, CHAN_VOICE, SoundDie);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundDie);
 	BecomeExplosion1(Entity);
 }
 

@@ -84,7 +84,7 @@ void CShotgun::Fire (edict_t *ent)
 	{
 		damage *= 4;
 		kick *= 4;
-		Sound(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
+		PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
 	}
 
 	if (deathmatch->Integer())

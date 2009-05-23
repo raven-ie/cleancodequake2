@@ -33,137 +33,15 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 
-// Sounds
-static void Sound_Base (vec3_t pos, edict_t *ent, EEntSndChannel channel, int soundindex, float volume, int attenuation, float timeOfs, char *soundString)
-{
-	int sIndex;
-
-	if ((!pos && !ent))
-	{
-		Com_Printf (0, "Attempted to play a sound on no entity!\n");
-		return;
-	}
-
-	if (!soundString)
-		sIndex = soundindex;
-	else if (soundindex != -1)
-		sIndex = SoundIndex(soundString);
-	else
-	{
-		Com_Printf (0, "No sound index!\n");
-		return;
-	}
-
-	if (pos)
-		gi.positioned_sound (pos, ent ? ent : &g_edicts[0], channel, soundindex, volume, attenuation, timeOfs);
-	else
-		gi.sound (ent, channel, soundindex, volume, attenuation, timeOfs);
-}
-
-void Sound (edict_t *ent, EEntSndChannel channel, int soundindex, float volume, int attenuation, float timeOfs)
-{
-	Sound_Base (NULL, ent, channel, soundindex, volume, attenuation, timeOfs, NULL);
-}
-void Sound (edict_t *ent, EEntSndChannel channel, char *soundString, float volume, int attenuation, float timeOfs)
-{
-	Sound_Base (NULL, ent, channel, -1, volume, attenuation, timeOfs, soundString);
-}
-
-void Sound (edict_t *ent, EEntSndChannel channel, int soundindex, float volume, int attenuation)
-{
-	Sound_Base (NULL, ent, channel, soundindex, volume, attenuation, 0, NULL);
-}
-void Sound (edict_t *ent, EEntSndChannel channel, char *soundString, float volume, int attenuation)
-{
-	Sound_Base (NULL, ent, channel, -1, volume, attenuation, 0, soundString);
-}
-
-void Sound (edict_t *ent, EEntSndChannel channel, int soundindex, float volume)
-{
-	Sound_Base (NULL, ent, channel, soundindex, volume, ATTN_NORM, 0, NULL);
-}
-void Sound (edict_t *ent, EEntSndChannel channel, char *soundString, float volume)
-{
-	Sound_Base (NULL, ent, channel, -1, volume, ATTN_NORM, 0, soundString);
-}
-
-void Sound (edict_t *ent, EEntSndChannel channel, int soundindex)
-{
-	Sound_Base (NULL, ent, channel, soundindex, 1.0f, ATTN_NORM, 0, NULL);
-}
-void Sound (edict_t *ent, EEntSndChannel channel, char *soundString)
-{
-	Sound_Base (NULL, ent, channel, -1, 1.0f, ATTN_NORM, 0, soundString);
-}
-
-void Sound (edict_t *ent, int soundindex)
-{
-	Sound_Base (NULL, ent, CHAN_AUTO, soundindex, 1.0f, ATTN_NORM, 0, NULL);
-}
-void Sound (edict_t *ent, char *soundString)
-{
-	Sound_Base (NULL, ent, CHAN_AUTO, -1, 1.0f, ATTN_NORM, 0, soundString);
-}
-
-void Sound (int soundindex)
-{
-	Sound_Base (NULL, &g_edicts[0], CHAN_AUTO, soundindex, 1.0f, ATTN_NONE, 0, NULL);
-}
-void Sound (char *soundString)
-{
-	Sound_Base (NULL, &g_edicts[0], CHAN_AUTO, -1, 1.0f, ATTN_NONE, 0, soundString);
-}
-
-void Sound (vec3_t pos, edict_t *ent, EEntSndChannel channel, int soundindex, float volume, int attenuation, float timeOfs)
-{
-	Sound_Base (pos, ent, channel, soundindex, volume, attenuation, timeOfs, NULL);
-}
-void Sound (vec3_t pos, edict_t *ent, EEntSndChannel channel, char *soundString, float volume, int attenuation, float timeOfs)
-{
-	Sound_Base (pos, ent, channel, -1, volume, attenuation, timeOfs, soundString);
-}
-
-void Sound (vec3_t pos, edict_t *ent, EEntSndChannel channel, int soundindex, float volume, int attenuation)
-{
-	Sound_Base (pos, ent, channel, soundindex, volume, attenuation, 0, NULL);
-}
-void Sound (vec3_t pos, edict_t *ent, EEntSndChannel channel, char *soundString, float volume, int attenuation)
-{
-	Sound_Base (pos, ent, channel, -1, volume, attenuation, 0, soundString);
-}
-
-void Sound (vec3_t pos, edict_t *ent, EEntSndChannel channel, int soundindex, float volume)
-{
-	Sound_Base (pos, ent, channel, soundindex, volume, ATTN_NORM, 0, NULL);
-}
-void Sound (vec3_t pos, edict_t *ent, EEntSndChannel channel, char *soundString, float volume)
-{
-	Sound_Base (pos, ent, channel, -1, volume, ATTN_NORM, 0, soundString);
-}
-
-void Sound (vec3_t pos, edict_t *ent, EEntSndChannel channel, int soundindex)
-{
-	Sound_Base (pos, ent, channel, soundindex, 1.0f, ATTN_NORM, 0, NULL);
-}
-void Sound (vec3_t pos, edict_t *ent, EEntSndChannel channel, char *soundString)
-{
-	Sound_Base (pos, ent, channel, -1, 1.0f, ATTN_NORM, 0, soundString);
-}
-
-void Sound (vec3_t pos, edict_t *ent, int soundindex)
-{
-	Sound_Base (pos, ent, CHAN_AUTO, soundindex, 1.0f, ATTN_NORM, 0, NULL);
-}
-void Sound (vec3_t pos, edict_t *ent, char *soundString)
-{
-	Sound_Base (pos, ent, CHAN_AUTO, -1, 1.0f, ATTN_NORM, 0, soundString);
-}
-
 void SetModel (edict_t *ent, char *model)
 {
 	if (!(model[0] == '*'))
-		gi.dprintf ("SetModel on a non-brush model!\n");
+		DebugPrintf ("SetModel on a non-brush model!\n");
+
+_CC_DISABLE_DEPRECATION
+(
 	gi.setmodel (ent, model);
+)
 }
 
 static int mapWarnings, mapErrors;
@@ -172,12 +50,12 @@ int entityNumber;
 void InitMapCounter ()
 {
 	mapWarnings = mapErrors = 0;
-	gi.dprintf ("======================\nSpawning entities...\n");
+	DebugPrintf ("======================\nSpawning entities...\n");
 }
 
 void EndMapCounter ()
 {
-	gi.dprintf ("...entities spawned with %i error(s), %i warning(s).\n======================\n", mapErrors, mapWarnings);
+	DebugPrintf ("...entities spawned with %i error(s), %i warning(s).\n======================\n", mapErrors, mapWarnings);
 }
 
 void Map_Print (EMapPrintType printType, edict_t *ent, vec3_t origin)
@@ -185,20 +63,20 @@ void Map_Print (EMapPrintType printType, edict_t *ent, vec3_t origin)
 	if (printType == MAPPRINT_WARNING)
 	{
 		mapWarnings++;
-		gi.dprintf ("Warning %i>", mapWarnings);
+		DebugPrintf ("Warning %i>", mapWarnings);
 	}
 	else if (printType == MAPPRINT_ERROR)
 	{	
 		mapErrors++;
-		gi.dprintf ("Error %i>", mapErrors);
+		DebugPrintf ("Error %i>", mapErrors);
 	}
 
-	gi.dprintf ("Entity #%i ", entityNumber);
+	DebugPrintf ("Entity #%i ", entityNumber);
 	if (ent->classname)
-		gi.dprintf ("(%s) ", ent->classname);
+		DebugPrintf ("(%s) ", ent->classname);
 	if (origin)
-		gi.dprintf ("(%.0f %.0f %.0f)", origin[0], origin[1], origin[2]);
-	gi.dprintf ("\n");
+		DebugPrintf ("(%.0f %.0f %.0f)", origin[0], origin[1], origin[2]);
+	DebugPrintf ("\n");
 }
 
 void MapPrint (EMapPrintType printType, edict_t *ent, vec3_t origin, char *fmt, ...)
@@ -213,10 +91,10 @@ void MapPrint (EMapPrintType printType, edict_t *ent, vec3_t origin, char *fmt, 
 	va_end (argptr);
 
 	if (printType == MAPPRINT_WARNING)
-		gi.dprintf ("Warning %i>", mapWarnings);
+		DebugPrintf ("Warning %i>", mapWarnings);
 	else if (printType == MAPPRINT_ERROR)
-		gi.dprintf ("Error %i>", mapErrors);
-	gi.dprintf ("%s", text);
+		DebugPrintf ("Error %i>", mapErrors);
+	DebugPrintf ("%s", text);
 }
 
 #include <string>
@@ -266,7 +144,7 @@ char *ParsePound (char *tok, char *realEntities)
 	{
 		token = Com_Parse (&tok);
 		if (strcmp(token, POUNDENTITIES_VERSION))
-			gi.dprintf ("Pound entity file is version %s against version "POUNDENTITIES_VERSION"!\n", token);
+			DebugPrintf ("Pound entity file is version %s against version "POUNDENTITIES_VERSION"!\n", token);
 		fileVersion = atoi(token);
 	}
 	else if (strcmp(token, "#elseifcvar") == 0)

@@ -21,7 +21,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
-
 /*QUAKED func_group (0 0 0) ?
 Used to group brushes together just for editor convenience.
 */
@@ -109,7 +108,7 @@ void gib_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *s
 
 	if (plane)
 	{
-		Sound (self, CHAN_VOICE, SoundIndex ("misc/fhit3.wav"));
+		PlaySoundFrom (self, CHAN_VOICE, SoundIndex ("misc/fhit3.wav"));
 
 		VecToAngles (plane->normal, normal_angles);
 		Angles_Vectors (normal_angles, NULL, right, NULL);
@@ -430,7 +429,7 @@ void point_combat_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSur
 		other->goalentity = other->movetarget = G_PickTarget(other->target);
 		if (!other->goalentity)
 		{
-			gi.dprintf("%s at (%f %f %f) target %s does not exist\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2], self->target);
+			DebugPrintf("%s at (%f %f %f) target %s does not exist\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2], self->target);
 			other->movetarget = self;
 		}
 		self->target = NULL;
@@ -501,7 +500,7 @@ void TH_viewthing(edict_t *ent)
 
 void SP_viewthing(edict_t *ent)
 {
-	gi.dprintf ("viewthing spawned\n");
+	DebugPrintf ("viewthing spawned\n");
 
 	ent->movetype = MOVETYPE_NONE;
 	ent->solid = SOLID_BBOX;
@@ -1190,14 +1189,14 @@ void commander_body_think (edict_t *self)
 		self->nextthink = 0;
 
 	if (self->s.frame == 22)
-		Sound (self, CHAN_BODY, SoundIndex ("tank/thud.wav"));
+		PlaySoundFrom (self, CHAN_BODY, SoundIndex ("tank/thud.wav"));
 }
 
 void commander_body_use (edict_t *self, edict_t *other, edict_t *activator)
 {
 	self->think = commander_body_think;
 	self->nextthink = level.time + FRAMETIME;
-	Sound (self, CHAN_BODY, SoundIndex ("tank/pain.wav"));
+	PlaySoundFrom (self, CHAN_BODY, SoundIndex ("tank/pain.wav"));
 }
 
 void commander_body_drop (edict_t *self)
@@ -1260,7 +1259,7 @@ void misc_deadsoldier_die (edict_t *self, edict_t *inflictor, edict_t *attacker,
 	if (self->health > -80)
 		return;
 
-	Sound (self, CHAN_BODY, SoundIndex ("misc/udeath.wav"));
+	PlaySoundFrom (self, CHAN_BODY, SoundIndex ("misc/udeath.wav"));
 	for (n= 0; n < 4; n++)
 		ThrowGib (self, "models/objects/gibs/sm_meat/tris.md2", damage, GIB_ORGANIC);
 	ThrowHead (self, "models/objects/gibs/head2/tris.md2", damage, GIB_ORGANIC);
@@ -1837,7 +1836,7 @@ void teleporter_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurfa
 	dest = G_Find (NULL, FOFS(targetname), self->target);
 	if (!dest)
 	{
-		gi.dprintf ("Couldn't find destination\n");
+		DebugPrintf ("Couldn't find destination\n");
 		return;
 	}
 

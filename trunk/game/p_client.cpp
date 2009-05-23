@@ -311,7 +311,7 @@ void _ClientObituary (edict_t *self, edict_t *inflictor, edict_t *attacker)
 		}
 		if (message)
 		{
-			gi.bprintf (PRINT_MEDIUM, "%s %s.\n", self->client->pers.netname, message);
+			BroadcastPrintf (PRINT_MEDIUM, "%s %s.\n", self->client->pers.netname, message);
 			if (deathmatch->Integer())
 				self->client->resp.score--;
 			self->enemy = NULL;
@@ -394,7 +394,7 @@ void _ClientObituary (edict_t *self, edict_t *inflictor, edict_t *attacker)
 			}
 			if (message)
 			{
-				gi.bprintf (PRINT_MEDIUM,"%s %s %s%s\n", self->client->pers.netname, message, attacker->client->pers.netname, message2);
+				BroadcastPrintf (PRINT_MEDIUM,"%s %s %s%s\n", self->client->pers.netname, message, attacker->client->pers.netname, message2);
 				if (deathmatch->Integer())
 				{
 					if (ff)
@@ -407,7 +407,7 @@ void _ClientObituary (edict_t *self, edict_t *inflictor, edict_t *attacker)
 		}
 	}
 
-	gi.bprintf (PRINT_MEDIUM,"%s died.\n", self->client->pers.netname);
+	BroadcastPrintf (PRINT_MEDIUM,"%s died.\n", self->client->pers.netname);
 	if (deathmatch->Integer())
 		self->client->resp.score--;
 }
@@ -471,7 +471,7 @@ void ClientObituary (edict_t *self, edict_t *attacker)
 		}
 		if (deathmatch->Integer())
 			self->client->resp.score--;
-		gi.bprintf (PRINT_MEDIUM, "%s %s.\n", self->client->pers.netname, message);
+		BroadcastPrintf (PRINT_MEDIUM, "%s %s.\n", self->client->pers.netname, message);
 	}
 	else if (attacker == world)
 	{
@@ -517,7 +517,7 @@ void ClientObituary (edict_t *self, edict_t *attacker)
 
 		if (deathmatch->Integer())
 			self->client->resp.score--;
-		gi.bprintf (PRINT_MEDIUM, "%s %s.\n", self->client->pers.netname, message);
+		BroadcastPrintf (PRINT_MEDIUM, "%s %s.\n", self->client->pers.netname, message);
 	}
 	else if (attacker && attacker->client)
 	{
@@ -592,7 +592,7 @@ void ClientObituary (edict_t *self, edict_t *attacker)
 			message2 = "'s personal space";
 			break;
 		}
-		gi.bprintf (PRINT_MEDIUM,"%s %s %s%s\n", self->client->pers.netname, message, attacker->client->pers.netname, message2);
+		BroadcastPrintf (PRINT_MEDIUM,"%s %s %s%s\n", self->client->pers.netname, message, attacker->client->pers.netname, message2);
 		if (deathmatch->Integer())
 		{
 			if ((self->client && attacker->client) && OnSameTeam(self, attacker))
@@ -603,7 +603,7 @@ void ClientObituary (edict_t *self, edict_t *attacker)
 	}
 	else
 	{
-		gi.bprintf (PRINT_MEDIUM, "%s died.\n", self->client->pers.netname);
+		BroadcastPrintf (PRINT_MEDIUM, "%s died.\n", self->client->pers.netname);
 		if (deathmatch->Integer())
 			self->client->resp.score--;
 	}
@@ -744,7 +744,7 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 
 	if (self->health < -40)
 	{	// gib
-		Sound (self, CHAN_BODY, SoundIndex ("misc/udeath.wav"));
+		PlaySoundFrom (self, CHAN_BODY, SoundIndex ("misc/udeath.wav"));
 		for (n= 0; n < 4; n++)
 			ThrowGib (self, "models/objects/gibs/sm_meat/tris.md2", damage, GIB_ORGANIC);
 		ThrowClientHead (self, damage);
@@ -783,7 +783,7 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 					break;
 				}
 			}
-			Sound (self, CHAN_VOICE, SoundIndex(Q_VarArgs ("*death%i.wav", (rand()%4)+1)));
+			PlaySoundFrom (self, CHAN_VOICE, SoundIndex(Q_VarArgs ("*death%i.wav", (rand()%4)+1)));
 		}
 	}
 
@@ -823,8 +823,6 @@ void InitClientPersistant (edict_t *ent)
 	client->pers.max_health		= 100;
 
 	InitItemMaxValues(ent);
-
-	client->pers.connected = true;
 }
 
 
@@ -1135,7 +1133,7 @@ void body_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage,
 
 	if (self->health < -40)
 	{
-		Sound (self, CHAN_BODY, SoundIndex ("misc/udeath.wav"));
+		PlaySoundFrom (self, CHAN_BODY, SoundIndex ("misc/udeath.wav"));
 		for (n= 0; n < 4; n++)
 			ThrowGib (self, "models/objects/gibs/sm_meat/tris.md2", damage, GIB_ORGANIC);
 		self->s.origin[2] -= 48;
@@ -1220,7 +1218,7 @@ void spectator_respawn (edict_t *ent)
 		if (*spectator_password->String() && 
 			strcmp(spectator_password->String(), "none") && 
 			strcmp(spectator_password->String(), value)) {
-			gi.cprintf(ent, PRINT_HIGH, "Spectator password incorrect.\n");
+			ClientPrintf(ent, PRINT_HIGH, "Spectator password incorrect.\n");
 			ent->client->pers.spectator = false;
 			WriteByte (SVC_STUFFTEXT);
 			WriteString ("spectator 0\n");
@@ -1234,7 +1232,7 @@ void spectator_respawn (edict_t *ent)
 				numspec++;
 
 		if (numspec >= maxspectators->Integer()) {
-			gi.cprintf(ent, PRINT_HIGH, "Server spectator limit is full.");
+			ClientPrintf(ent, PRINT_HIGH, "Server spectator limit is full.");
 			ent->client->pers.spectator = false;
 			// reset his spectator var
 			WriteByte (SVC_STUFFTEXT);
@@ -1248,7 +1246,7 @@ void spectator_respawn (edict_t *ent)
 		char *value = Info_ValueForKey (ent->client->pers.userinfo, "password");
 		if (*password->String() && strcmp(password->String(), "none") && 
 			strcmp(password->String(), value)) {
-			gi.cprintf(ent, PRINT_HIGH, "Password incorrect.\n");
+			ClientPrintf(ent, PRINT_HIGH, "Password incorrect.\n");
 			ent->client->pers.spectator = true;
 			WriteByte (SVC_STUFFTEXT);
 			WriteString ("spectator 1\n");
@@ -1276,9 +1274,9 @@ void spectator_respawn (edict_t *ent)
 	ent->client->respawn_time = level.time;
 
 	if (ent->client->pers.spectator) 
-		gi.bprintf (PRINT_HIGH, "%s has moved to the sidelines\n", ent->client->pers.netname);
+		BroadcastPrintf (PRINT_HIGH, "%s has moved to the sidelines\n", ent->client->pers.netname);
 	else
-		gi.bprintf (PRINT_HIGH, "%s joined the game\n", ent->client->pers.netname);
+		BroadcastPrintf (PRINT_HIGH, "%s joined the game\n", ent->client->pers.netname);
 }
 
 //==============================================================
@@ -1353,6 +1351,7 @@ void PutClientInServer (edict_t *ent)
 	if (client->pers.health <= 0)
 		InitClientPersistant(ent);
 	client->resp = resp;
+	client->pers.state = SVCS_SPAWNED;
 
 	// copy some data from the client to the entity
 	FetchClientEntData (ent);
@@ -1482,7 +1481,7 @@ void ClientBeginDeathmatch (edict_t *ent)
 		// send effect
 		TempEnts.MuzzleFlash (ent->s.origin, ent-g_edicts, MZ_LOGIN);
 
-	gi.bprintf (PRINT_HIGH, "%s entered the game\n", ent->client->pers.netname);
+	BroadcastPrintf (PRINT_HIGH, "%s entered the game\n", ent->client->pers.netname);
 
 	// make sure all view stuff is valid
 	ClientEndServerFrame (ent);
@@ -1541,7 +1540,7 @@ void ClientBegin (edict_t *ent)
 		if (game.maxclients > 1)
 		{
 			TempEnts.MuzzleFlash (ent->s.origin, ent-g_edicts, MZ_LOGIN);
-			gi.bprintf (PRINT_HIGH, "%s entered the game\n", ent->client->pers.netname);
+			BroadcastPrintf (PRINT_HIGH, "%s entered the game\n", ent->client->pers.netname);
 		}
 	}
 
@@ -1716,14 +1715,14 @@ BOOL ClientConnect (edict_t *ent, char *userinfo)
 	if (game.maxclients > 1)
 	{
 		// Tell the entire game that someone connected
-		gi.bprintf (PRINT_MEDIUM, "%s connected\n", ent->client->pers.netname);
+		BroadcastPrintf (PRINT_MEDIUM, "%s connected\n", ent->client->pers.netname);
 		
 		// But only tell the server the IP
-		gi.dprintf ("%s@%s connected\n", ent->client->pers.netname, Info_ValueForKey (userinfo, "ip"));
+		DebugPrintf ("%s@%s connected\n", ent->client->pers.netname, Info_ValueForKey (userinfo, "ip"));
 	}
 
 	ent->svFlags = 0; // make sure we start with known default
-	ent->client->pers.connected = true;
+	ent->client->pers.state = SVCS_CONNECTED;
 	return true;
 }
 
@@ -1742,7 +1741,7 @@ void ClientDisconnect (edict_t *ent)
 	if (!ent->client)
 		return;
 
-	gi.bprintf (PRINT_HIGH, "%s disconnected\n", ent->client->pers.netname);
+	BroadcastPrintf (PRINT_HIGH, "%s disconnected\n", ent->client->pers.netname);
 
 	// send effect
 	TempEnts.MuzzleFlash (ent->s.origin, ent-g_edicts, MZ_LOGIN);
@@ -1752,7 +1751,7 @@ void ClientDisconnect (edict_t *ent)
 	ent->solid = SOLID_NOT;
 	ent->inUse = false;
 	ent->classname = "disconnected";
-	ent->client->pers.connected = false;
+	ent->client->pers.state = SVCS_FREE;
 
 	playernum = ent-g_edicts-1;
 	gi.configstring (CS_PLAYERSKINS+playernum, "");
@@ -1767,10 +1766,13 @@ edict_t	*pm_passent;
 // pmove doesn't need to know about passent and contentmask
 cmTrace_t	PM_trace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end)
 {
+_CC_DISABLE_DEPRECATION
+(
 	if (pm_passent->health > 0)
-		return gi.trace (start, mins, maxs, end, pm_passent, CONTENTS_MASK_PLAYERSOLID);
+		return gi.trace(start, mins, maxs, end, pm_passent, CONTENTS_MASK_PLAYERSOLID);
 	else
-		return gi.trace (start, mins, maxs, end, pm_passent, CONTENTS_MASK_DEADSOLID);
+		return gi.trace(start, mins, maxs, end, pm_passent, CONTENTS_MASK_DEADSOLID);
+)
 }
 
 unsigned CheckBlock (void *b, int c)
@@ -1882,7 +1884,7 @@ void ClientThink (edict_t *ent, userCmd_t *ucmd)
 
 		if (ent->groundentity && !pm.groundEntity && (pm.cmd.upMove >= 10) && (pm.waterLevel == 0))
 		{
-			Sound(ent, CHAN_VOICE, SoundIndex("*jump1.wav"));
+			PlaySoundFrom(ent, CHAN_VOICE, SoundIndex("*jump1.wav"));
 			PlayerNoise(ent, ent->s.origin, PNOISE_SELF);
 		}
 

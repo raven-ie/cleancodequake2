@@ -130,31 +130,6 @@ enum EMultiCast
 	MULTICAST_PVS_R
 };
 
-//
-// client connection state
-//
-enum EClientState
-{
-	CA_UNINITIALIZED,	// initial state
-	CA_DISCONNECTED,	// not talking to a server
-	CA_CONNECTING,		// sending request packets to the server
-	CA_CONNECTED,		// netChan_t established, waiting for svc_serverdata
-	CA_ACTIVE			// game views should be displayed
-};
-
-//
-// server state
-//
-enum EServerState
-{
-	SS_DEAD,			// no map loaded
-	SS_LOADING,			// spawning level edicts
-	SS_GAME,			// actively running
-	SS_CINEMATIC,		// playing a cinematic
-	SS_DEMO,			// playing a demo
-	SS_PIC				// just showing a pic
-};
-
 // ===========================================================================
 
 void	seedMT (uint32 seed);
