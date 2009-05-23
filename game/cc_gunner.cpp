@@ -49,17 +49,17 @@ void CGunner::Allocate (edict_t *ent)
 
 void CGunner::Idle ()
 {
-	Sound (Entity, CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
 }
 
 void CGunner::Sight ()
 {
-	Sound (Entity, CHAN_VOICE, SoundSight);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundSight);
 }
 
 void CGunner::Search ()
 {
-	Sound (Entity, CHAN_VOICE, SoundSearch);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundSearch);
 }
 
 CFrame GunnerFramesFidget [] =
@@ -289,7 +289,7 @@ void CGunner::Pain (edict_t *other, float kick, int damage)
 		return;
 
 	Entity->pain_debounce_time = level.time + 3;
-	Sound (Entity, CHAN_VOICE, (rand()&1) ? SoundPain : SoundPain2);
+	PlaySoundFrom (Entity, CHAN_VOICE, (rand()&1) ? SoundPain : SoundPain2);
 
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
@@ -334,7 +334,7 @@ void CGunner::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t poi
 // check for gib
 	if (Entity->health <= Entity->gib_health)
 	{
-		Sound (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
+		PlaySoundFrom (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
 			ThrowGib (Entity, "models/objects/gibs/bone/tris.md2", damage, GIB_ORGANIC);
 		for (int n= 0; n < 4; n++)
@@ -348,7 +348,7 @@ void CGunner::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t poi
 		return;
 
 // regular death
-	Sound (Entity, CHAN_VOICE, SoundDeath);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundDeath);
 	Entity->deadflag = DEAD_DEAD;
 	Entity->takedamage = DAMAGE_YES;
 	CurrentMove = &GunnerMoveDeath;
@@ -428,7 +428,11 @@ CFrame GunnerFramesDuck [] =
 };
 CAnim GunnerMoveDuck (FRAME_duck01, FRAME_duck08, GunnerFramesDuck, ConvertDerivedFunction(&CGunner::Run));
 
-void CGunner::Dodge (edict_t *attacker, float eta)
+void CGunner::Dodge (edict_t *attacker, float eta
+#ifdef MONSTER_USE_ROGUE_AI
+					 , CTrace *tr
+#endif
+					 )
 {
 	if (random() > 0.25)
 		return;
@@ -441,7 +445,7 @@ void CGunner::Dodge (edict_t *attacker, float eta)
 
 void CGunner::OpenGun ()
 {
-	Sound (Entity, CHAN_VOICE, SoundOpen, 1, ATTN_IDLE, 0);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundOpen, 1, ATTN_IDLE, 0);
 }
 
 #ifdef MONSTER_USE_ROGUE_AI

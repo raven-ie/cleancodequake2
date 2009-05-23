@@ -278,7 +278,7 @@ void PrintVerboseNodes (vec3_t origin, uint32 numNode)
 	while ((ent = findradius(ent, origin, 25)) != NULL)
 	{
 		if (ent && ent->client)
-			gi.cprintf (ent, PRINT_HIGH, "You are very close to node %i\n", numNode);
+			ClientPrintf (ent, PRINT_HIGH, "You are very close to node %i\n", numNode);
 	}
 }
 
@@ -287,7 +287,7 @@ CPathNode *DropNode (edict_t *ent)
 	NodeList.push_back(new CPathNode(ent->s.origin, NODE_REGULAR));
 
 	SpawnNodeEntity (NodeList.at(NodeList.size() - 1));
-	gi.cprintf (ent, PRINT_HIGH, "Node %i added\n", NodeList.size());
+	ClientPrintf (ent, PRINT_HIGH, "Node %i added\n", NodeList.size());
 
 	return NodeList.at(NodeList.size() - 1);
 }
@@ -355,7 +355,7 @@ void AddNode (edict_t *ent, vec3_t origin)
 	NodeList.push_back(new CPathNode(origin, NODE_REGULAR));
 
 	SpawnNodeEntity (NodeList.at(NodeList.size() - 1));
-	gi.cprintf (ent, PRINT_HIGH, "Node %i added\n", NodeList.size());
+	ClientPrintf (ent, PRINT_HIGH, "Node %i added\n", NodeList.size());
 
 	if (Q_stricmp(ArgGets(2), "connect") == 0)
 	{
@@ -380,7 +380,7 @@ void CalculateTestPath (edict_t *ent, uint32 IDStart, uint32 IDEnd)
 {
 	CPath *Test = new CPath (NodeList[IDStart], NodeList[IDEnd]);
 
-	gi.cprintf (ent, PRINT_HIGH, "BEST: (%u n, %u w)\n",
+	ClientPrintf (ent, PRINT_HIGH, "BEST: (%u n, %u w)\n",
 									Test->NumNodes, Test->Weight);
 
 	for (size_t i = 0; i < Test->Path.size(); i++)
@@ -399,7 +399,7 @@ uint32 GetNodeIndex (CPathNode *Node)
 		if (Node == NodeList[i])
 			return i;
 	}
-	gi.dprintf ("OMG BAD\n");
+	DebugPrintf ("OMG BAD\n");
 	return 0;
 }
 
@@ -460,7 +460,7 @@ void SaveNodes ()
 	}
 	fclose(fp);
 
-	gi.dprintf ("Saved %u (%u special) nodes\n", numNodes, numSpecialNodes);
+	DebugPrintf ("Saved %u (%u special) nodes\n", numNodes, numSpecialNodes);
 }
 
 void LinkModelNumberToNode (CPathNode *Node, int modelNum)
@@ -488,7 +488,7 @@ void LinkModelNumberToNode (CPathNode *Node, int modelNum)
 			return;
 		}
 	}
-	gi.dprintf ("WARNING: Couldn't find linked model for node!\n");
+	DebugPrintf ("WARNING: Couldn't find linked model for node!\n");
 }
 
 void LoadNodes ()
@@ -525,7 +525,7 @@ void LoadNodes ()
 	{
 		//fclose(fp);
 		//return;
-		gi.dprintf ("Old version of nodes!\n");
+		DebugPrintf ("Old version of nodes!\n");
 	}
 
 	int **tempChildren;
@@ -583,7 +583,7 @@ void LoadNodes ()
 	}
 
 	delete tempChildren;
-	gi.dprintf ("Loaded %u (%u special) nodes\n", numNodes, numSpecialNodes);
+	DebugPrintf ("Loaded %u (%u special) nodes\n", numNodes, numSpecialNodes);
 }
 
 bool VecInFront (vec3_t angles, vec3_t origin1, vec3_t origin2)
@@ -655,16 +655,16 @@ void Cmd_Node_f (edict_t *ent)
 
 		if (firstId >= NodeList.size())
 		{
-			gi.cprintf (ent, PRINT_HIGH, "Node %i doesn't exist!\n", firstId);
+			ClientPrintf (ent, PRINT_HIGH, "Node %i doesn't exist!\n", firstId);
 			return;
 		}
 		if (secondId >= NodeList.size())
 		{
-			gi.cprintf (ent, PRINT_HIGH, "Node %i doesn't exist!\n", secondId);
+			ClientPrintf (ent, PRINT_HIGH, "Node %i doesn't exist!\n", secondId);
 			return;
 		}
 
-		gi.cprintf (ent, PRINT_HIGH, "Connecting nodes %i and %i...\n", firstId, secondId);
+		ClientPrintf (ent, PRINT_HIGH, "Connecting nodes %i and %i...\n", firstId, secondId);
 		ConnectNode (NodeList[firstId], NodeList[secondId]);
 	}
 	else if (Q_stricmp(cmd, "testpath") == 0)
@@ -674,16 +674,16 @@ void Cmd_Node_f (edict_t *ent)
 
 		if (firstId >= NodeList.size())
 		{
-			gi.cprintf (ent, PRINT_HIGH, "Node %i doesn't exist!\n", firstId);
+			ClientPrintf (ent, PRINT_HIGH, "Node %i doesn't exist!\n", firstId);
 			return;
 		}
 		if (secondId >= NodeList.size())
 		{
-			gi.cprintf (ent, PRINT_HIGH, "Node %i doesn't exist!\n", secondId);
+			ClientPrintf (ent, PRINT_HIGH, "Node %i doesn't exist!\n", secondId);
 			return;
 		}
 
-		gi.cprintf (ent, PRINT_HIGH, "Testing path %i and %i...\n", firstId, secondId);
+		ClientPrintf (ent, PRINT_HIGH, "Testing path %i and %i...\n", firstId, secondId);
 		CalculateTestPath (ent, firstId, secondId);
 	}
 	else if (Q_stricmp(cmd, "clearstate") == 0)
@@ -721,7 +721,7 @@ void Cmd_Node_f (edict_t *ent)
 		if (trace.ent && trace.ent->model && trace.ent->model[0] == '*')
 		{
 			Node->LinkedEntity = trace.ent;
-			gi.dprintf ("Linked %u with %s\n", GetNodeIndex(Node), trace.ent->classname);
+			DebugPrintf ("Linked %u with %s\n", GetNodeIndex(Node), trace.ent->classname);
 		}
 	}
 	else if (Q_stricmp(cmd, "monstergoal") == 0)
@@ -826,7 +826,7 @@ void SavePathTable ()
 	if (!fp || errorVal)
 		return;
 
-	gi.dprintf ("Saving node helper table...\n");
+	DebugPrintf ("Saving node helper table...\n");
 
 	int count = 0;
 	for (int i = 0; i < MAX_SAVED_PATHS; i++)
@@ -874,7 +874,7 @@ void LoadPathTable ()
 	if (!fp || errorVal)
 		return;
 
-	gi.dprintf ("Loading node helper table...\n");
+	DebugPrintf ("Loading node helper table...\n");
 
 	int count;
 	fread (&count, sizeof(int), 1, fp);

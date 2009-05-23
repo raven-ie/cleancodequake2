@@ -165,7 +165,7 @@ void Com_FileBase(char *in, char *out)
 	else
 	{
 		s--;
-		strncpy (out, s2+1, s-s2);
+		Q_strnicmp (out, s2+1, s-s2);
 		out[s-s2] = 0;
 	}
 }

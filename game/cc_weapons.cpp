@@ -43,14 +43,14 @@ Quantity(Quantity),
 VWepModel(VWepModel)
 {
 	if (!Weapon)
-		gi.dprintf ("Warning: Weapon with no weapon!\n");
+		DebugPrintf ("Warning: Weapon with no weapon!\n");
 	else
 	{
 		Weapon->Item = this;
 		Weapon->WeaponItem = this;
 	}
 	if (!Ammo && Quantity)
-		gi.dprintf ("Warning: Weapon with no ammo has quantity!\n");
+		DebugPrintf ("Warning: Weapon with no ammo has quantity!\n");
 }
 
 CAmmo::CAmmo (char *Classname, char *WorldModel, int EffectFlags,
@@ -133,13 +133,13 @@ void CWeaponItem::Use (edict_t *ent)
 	{
 		if (!ent->client->pers.Inventory.Has(this->Ammo->GetIndex()))
 		{
-			gi.cprintf (ent, PRINT_HIGH, "No %s for %s.\n", this->Ammo->Name, this->Name);
+			ClientPrintf (ent, PRINT_HIGH, "No %s for %s.\n", this->Ammo->Name, this->Name);
 			return;
 		}
 
 		if (ent->client->pers.Inventory.Has(this->Ammo->GetIndex()) < this->Quantity)
 		{
-			gi.cprintf (ent, PRINT_HIGH, "Not enough %s for %s.\n", this->Ammo->Name, this->Name);
+			ClientPrintf (ent, PRINT_HIGH, "Not enough %s for %s.\n", this->Ammo->Name, this->Name);
 			return;
 		}
 	}
@@ -208,13 +208,13 @@ void CAmmo::Use (edict_t *ent)
 	{
 		if (!ent->client->pers.Inventory.Has(this->GetIndex()))
 		{
-			gi.cprintf (ent, PRINT_HIGH, "No %s for %s.\n", this->Name, this->Name);
+			ClientPrintf (ent, PRINT_HIGH, "No %s for %s.\n", this->Name, this->Name);
 			return;
 		}
 
 		if (ent->client->pers.Inventory.Has(this->GetIndex()) < this->Amount)
 		{
-			gi.cprintf (ent, PRINT_HIGH, "Not enough %s.\n", this->Name);
+			ClientPrintf (ent, PRINT_HIGH, "Not enough %s.\n", this->Name);
 			return;
 		}
 	}

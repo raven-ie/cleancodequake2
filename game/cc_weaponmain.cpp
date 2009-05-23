@@ -246,7 +246,7 @@ void CWeapon::OutOfAmmo (edict_t *ent)
 	// Doesn't affect pain anymore!
 	if (level.time >= ent->damage_debounce_time)
 	{
-		Sound(ent, CHAN_AUTO, SoundIndex("weapons/noammo.wav"));
+		PlaySoundFrom(ent, CHAN_AUTO, SoundIndex("weapons/noammo.wav"));
 		ent->damage_debounce_time = level.time + 1;
 	}
 }

@@ -627,6 +627,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\cc_options.h"
+				>
+			</File>
+			<File
 				RelativePath=".\cc_shared.h"
 				>
 			</File>
@@ -730,6 +734,26 @@
 					</File>
 					<File
 						RelativePath=".\cc_arg.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="Replacements"
+					>
+					<File
+						RelativePath=".\cc_print.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_print.h"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_sound.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_sound.h"
 						>
 					</File>
 				</Filter>

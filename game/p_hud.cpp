@@ -20,7 +20,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_local.h"
 
 
-
 /*
 ======================================================================
 
@@ -288,7 +287,7 @@ void G_SetStats (edict_t *ent)
 		if (cells == 0)
 		{	// ran out of cells for power armor
 			ent->flags &= ~FL_POWER_ARMOR;
-			Sound(ent, CHAN_ITEM, SoundIndex("misc/power2.wav"));
+			PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("misc/power2.wav"));
 			power_armor_type = 0;;
 		}
 	}

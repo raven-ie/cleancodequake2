@@ -81,15 +81,8 @@ argv(0) god
 */
 void Cmd_God_f (edict_t *ent)
 {
-	char	*msg;
-
 	ent->flags ^= FL_GODMODE;
-	if (!(ent->flags & FL_GODMODE) )
-		msg = "godmode OFF\n";
-	else
-		msg = "godmode ON\n";
-
-	gi.cprintf (ent, PRINT_HIGH, msg);
+	ClientPrintf (ent, PRINT_HIGH, "God mode %s\n", (!(ent->flags & FL_GODMODE)) ? "off" : "on");
 }
 
 
@@ -104,15 +97,8 @@ argv(0) notarget
 */
 void Cmd_Notarget_f (edict_t *ent)
 {
-	char	*msg;
-
 	ent->flags ^= FL_NOTARGET;
-	if (!(ent->flags & FL_NOTARGET) )
-		msg = "notarget OFF\n";
-	else
-		msg = "notarget ON\n";
-
-	gi.cprintf (ent, PRINT_HIGH, msg);
+	ClientPrintf (ent, PRINT_HIGH, "Notarget %s\n", (!(ent->flags & FL_NOTARGET)) ? "off" : "on");
 }
 
 
@@ -125,20 +111,8 @@ argv(0) noclip
 */
 void Cmd_Noclip_f (edict_t *ent)
 {
-	char	*msg;
-
-	if (ent->movetype == MOVETYPE_NOCLIP)
-	{
-		ent->movetype = MOVETYPE_WALK;
-		msg = "noclip OFF\n";
-	}
-	else
-	{
-		ent->movetype = MOVETYPE_NOCLIP;
-		msg = "noclip ON\n";
-	}
-
-	gi.cprintf (ent, PRINT_HIGH, msg);
+	ent->movetype = (ent->movetype == MOVETYPE_NOCLIP) ? MOVETYPE_WALK : MOVETYPE_NOCLIP;
+	ClientPrintf (ent, PRINT_HIGH, "Noclip %s\n", (ent->movetype == MOVETYPE_NOCLIP) ? "on" : "off");
 }
 
 /*
@@ -202,7 +176,7 @@ void Cmd_Players_f (edict_t *ent)
 	count = 0;
 	for (i = 0 ; i < maxclients->Integer() ; i++)
 	{
-		if (game.clients[i].pers.connected)
+		if (game.clients[i].pers.state >= SVCS_CONNECTED)
 		{
 			index[count] = i;
 			count++;
@@ -228,7 +202,7 @@ void Cmd_Players_f (edict_t *ent)
 		Q_strcatz (large, small, MAX_INFO_STRING);
 	}
 
-	gi.cprintf (ent, PRINT_HIGH, "%s\n%i players\n", large, count);
+	ClientPrintf (ent, PRINT_HIGH, "%s\n%i players\n", large, count);
 
 	delete[] index;
 }
@@ -252,28 +226,28 @@ void Cmd_Wave_f (edict_t *ent)
 	switch (ArgGeti(1))
 	{
 	case 0:
-		gi.cprintf (ent, PRINT_HIGH, "flipoff\n");
+		ClientPrintf (ent, PRINT_HIGH, "flipoff\n");
 		ent->s.frame = FRAME_flip01-1;
 		ent->client->anim_end = FRAME_flip12;
 		break;
 	case 1:
-		gi.cprintf (ent, PRINT_HIGH, "salute\n");
+		ClientPrintf (ent, PRINT_HIGH, "salute\n");
 		ent->s.frame = FRAME_salute01-1;
 		ent->client->anim_end = FRAME_salute11;
 		break;
 	case 2:
-		gi.cprintf (ent, PRINT_HIGH, "taunt\n");
+		ClientPrintf (ent, PRINT_HIGH, "taunt\n");
 		ent->s.frame = FRAME_taunt01-1;
 		ent->client->anim_end = FRAME_taunt17;
 		break;
 	case 3:
-		gi.cprintf (ent, PRINT_HIGH, "wave\n");
+		ClientPrintf (ent, PRINT_HIGH, "wave\n");
 		ent->s.frame = FRAME_wave01-1;
 		ent->client->anim_end = FRAME_wave11;
 		break;
 	case 4:
 	default:
-		gi.cprintf (ent, PRINT_HIGH, "point\n");
+		ClientPrintf (ent, PRINT_HIGH, "point\n");
 		ent->s.frame = FRAME_point01-1;
 		ent->client->anim_end = FRAME_point12;
 		break;
@@ -300,7 +274,7 @@ void Cmd_Say_f (edict_t *ent, bool team, bool arg0)
 
 	if (Bans.IsSquelched(ent->client->pers.IP) || Bans.IsSquelched(ent->client->pers.netname))
 	{
-		gi.cprintf (ent, PRINT_HIGH, "You are squelched and may not talk.\n");
+		ClientPrintf (ent, PRINT_HIGH, "You are squelched and may not talk.\n");
 		return;
 	}
 
@@ -342,7 +316,7 @@ void Cmd_Say_f (edict_t *ent, bool team, bool arg0)
 
         if (level.time < cl->flood_locktill)
 		{
-			gi.cprintf(ent, PRINT_HIGH, "You can't talk for %d more seconds\n",
+			ClientPrintf(ent, PRINT_HIGH, "You can't talk for %d more seconds\n",
 				(int)(cl->flood_locktill - level.time));
             return;
         }
@@ -353,7 +327,7 @@ void Cmd_Say_f (edict_t *ent, bool team, bool arg0)
 			level.time - cl->flood_when[i] < flood_persecond->Float())
 		{
 			cl->flood_locktill = level.time + flood_waitdelay->Float();
-			gi.cprintf(ent, PRINT_CHAT, "Flood protection:  You can't talk for %d seconds.\n",
+			ClientPrintf(ent, PRINT_CHAT, "Flood protection:  You can't talk for %d seconds.\n",
 				flood_waitdelay->Integer());
             return;
         }
@@ -363,7 +337,7 @@ void Cmd_Say_f (edict_t *ent, bool team, bool arg0)
 	}
 
 	if (dedicated->Integer())
-		gi.cprintf(NULL, PRINT_CHAT, "%s", text);
+		ClientPrintf(NULL, PRINT_CHAT, "%s", text);
 
 	for (j = 1; j <= game.maxclients; j++)
 	{
@@ -377,7 +351,7 @@ void Cmd_Say_f (edict_t *ent, bool team, bool arg0)
 			if (!OnSameTeam(ent, other))
 				continue;
 		}
-		gi.cprintf(other, PRINT_CHAT, "%s", text);
+		ClientPrintf(other, PRINT_CHAT, "%s", text);
 	}
 }
 
@@ -403,12 +377,12 @@ void Cmd_PlayerList_f(edict_t *ent)
 			e2->client->resp.spectator ? " (spectator)" : "");
 		if (strlen(text) + strlen(st) > sizeof(text) - 50) {
 			Q_snprintfz (text+strlen(text), sizeof(text), "And more...\n");
-			gi.cprintf(ent, PRINT_HIGH, "%s", text);
+			ClientPrintf(ent, PRINT_HIGH, "%s", text);
 			return;
 		}
 		Q_strcatz(text, st, sizeof(text));
 	}
-	gi.cprintf(ent, PRINT_HIGH, "%s", text);
+	ClientPrintf(ent, PRINT_HIGH, "%s", text);
 }
 
 void GCmd_Say_f (edict_t *ent)

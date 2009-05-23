@@ -66,7 +66,11 @@ public:
 	void Fidget ();
 
 	void Attack ();
+#ifndef MONSTER_USE_ROGUE_AI
 	void Dodge (edict_t *attacker, float eta);
+#else
+	void Dodge (edict_t *attacker, float eta, CTrace *trace);
+#endif
 	void Idle ();
 	void Search ();
 	void Run ();

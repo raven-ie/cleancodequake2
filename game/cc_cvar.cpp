@@ -33,9 +33,10 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 
+_CC_DISABLE_DEPRECATION
+(
 void CCvar::Update()
 {
-	// This function is very.. very ugly.
 	mainValue = cVar->string;
 	floatVal = cVar->floatVal;
 	intVal = floatVal;
@@ -66,7 +67,7 @@ void CCvar::Register(char *cvarName, float defaultValue, int flags)
 void CCvar::Register(char *cvarName, int defaultValue, int flags)
 {
 	char tempAlloc[15];
-	Q_snprintfz(tempAlloc, defaultValue, "%i", defaultValue);
+	Q_snprintfz(tempAlloc, sizeof(tempAlloc), "%i", defaultValue);
 
 	cVar = gi.cvar (cvarName, tempAlloc, flags);
 
@@ -131,3 +132,4 @@ bool CCvar::Modified ()
 
 	return modified;
 }
+)

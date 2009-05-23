@@ -134,7 +134,7 @@ static inline void P_DamageFeedback (edict_t *player, vec3_t forward, vec3_t rig
 			l = 75;
 		else
 			l = 100;
-		Sound (player, CHAN_VOICE, SoundIndex(Q_VarArgs ("*pain%i_%i.wav", l, r)));
+		PlaySoundFrom (player, CHAN_VOICE, SoundIndex(Q_VarArgs ("*pain%i_%i.wav", l, r)));
 	}
 
 	// the total alpha of the blend is always proportional to count
@@ -436,7 +436,7 @@ static inline void SV_CalcBlend (edict_t *ent)
 	{
 		remaining = ent->client->quad_framenum - level.framenum;
 		if (remaining == 30)	// beginning to fade
-			Sound(ent, CHAN_ITEM, SoundIndex("items/damage2.wav"));
+			PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/damage2.wav"));
 		if (remaining > 30 || (remaining & 4) )
 			SV_AddBlend (0, 0, 1, 0.08f, ent->client->ps.viewBlend);
 	}
@@ -444,7 +444,7 @@ static inline void SV_CalcBlend (edict_t *ent)
 	{
 		remaining = ent->client->invincible_framenum - level.framenum;
 		if (remaining == 30)	// beginning to fade
-			Sound(ent, CHAN_ITEM, SoundIndex("items/protect2.wav"));
+			PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/protect2.wav"));
 		if (remaining > 30 || (remaining & 4) )
 			SV_AddBlend (1, 1, 0, 0.08f, ent->client->ps.viewBlend);
 	}
@@ -452,7 +452,7 @@ static inline void SV_CalcBlend (edict_t *ent)
 	{
 		remaining = ent->client->enviro_framenum - level.framenum;
 		if (remaining == 30)	// beginning to fade
-			Sound(ent, CHAN_ITEM, SoundIndex("items/airout.wav"));
+			PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/airout.wav"));
 		if (remaining > 30 || (remaining & 4) )
 			SV_AddBlend (0, 1, 0, 0.08f, ent->client->ps.viewBlend);
 	}
@@ -460,7 +460,7 @@ static inline void SV_CalcBlend (edict_t *ent)
 	{
 		remaining = ent->client->breather_framenum - level.framenum;
 		if (remaining == 30)	// beginning to fade
-			Sound(ent, CHAN_ITEM, SoundIndex("items/airout.wav"));
+			PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/airout.wav"));
 		if (remaining > 30 || (remaining & 4) )
 			SV_AddBlend (0.4f, 1, 0.4f, 0.04f, ent->client->ps.viewBlend);
 	}
@@ -597,11 +597,11 @@ static inline void P_WorldEffects (edict_t *ent)
 	{
 		PlayerNoise(ent, ent->s.origin, PNOISE_SELF);
 		if (ent->watertype & CONTENTS_LAVA)
-			Sound (ent, CHAN_BODY, SoundIndex("player/lava_in.wav"));
+			PlaySoundFrom (ent, CHAN_BODY, SoundIndex("player/lava_in.wav"));
 		else if (ent->watertype & CONTENTS_SLIME)
-			Sound (ent, CHAN_BODY, SoundIndex("player/watr_in.wav"));
+			PlaySoundFrom (ent, CHAN_BODY, SoundIndex("player/watr_in.wav"));
 		else if (ent->watertype & CONTENTS_WATER)
-			Sound (ent, CHAN_BODY, SoundIndex("player/watr_in.wav"));
+			PlaySoundFrom (ent, CHAN_BODY, SoundIndex("player/watr_in.wav"));
 		ent->flags |= FL_INWATER;
 
 		// clear damage_debounce, so the pain sound will play immediately
@@ -614,7 +614,7 @@ static inline void P_WorldEffects (edict_t *ent)
 	if (old_waterlevel && ! waterlevel)
 	{
 		PlayerNoise(ent, ent->s.origin, PNOISE_SELF);
-		Sound (ent, CHAN_BODY, SoundIndex("player/watr_out.wav"));
+		PlaySoundFrom (ent, CHAN_BODY, SoundIndex("player/watr_out.wav"));
 		ent->flags &= ~FL_INWATER;
 	}
 
@@ -622,7 +622,7 @@ static inline void P_WorldEffects (edict_t *ent)
 	// check for head just going under water
 	//
 	if (old_waterlevel != 3 && waterlevel == 3)
-		Sound (ent, CHAN_BODY, SoundIndex("player/watr_un.wav"));
+		PlaySoundFrom (ent, CHAN_BODY, SoundIndex("player/watr_un.wav"));
 
 	//
 	// check for head just coming out of water
@@ -631,11 +631,11 @@ static inline void P_WorldEffects (edict_t *ent)
 	{
 		if (ent->air_finished < level.time)
 		{	// gasp for air
-			Sound (ent, CHAN_VOICE, SoundIndex("player/gasp1.wav"));
+			PlaySoundFrom (ent, CHAN_VOICE, SoundIndex("player/gasp1.wav"));
 			PlayerNoise(ent, ent->s.origin, PNOISE_SELF);
 		}
 		else  if (ent->air_finished < level.time + 11) // just break surface
-			Sound (ent, CHAN_VOICE, SoundIndex("player/gasp2.wav"));
+			PlaySoundFrom (ent, CHAN_VOICE, SoundIndex("player/gasp2.wav"));
 	}
 
 	//
@@ -650,7 +650,7 @@ static inline void P_WorldEffects (edict_t *ent)
 
 			if (((int)(ent->client->breather_framenum - level.framenum) % 25) == 0)
 			{
-				Sound (ent, CHAN_AUTO, SoundIndex((!ent->client->breather_sound) ? "player/u_breath1.wav" : "player/u_breath2.wav"));
+				PlaySoundFrom (ent, CHAN_AUTO, SoundIndex((!ent->client->breather_sound) ? "player/u_breath1.wav" : "player/u_breath2.wav"));
 				ent->client->breather_sound = !ent->client->breather_sound;
 				PlayerNoise(ent, ent->s.origin, PNOISE_SELF);
 				//FIXME: release a bubble?
@@ -672,11 +672,11 @@ static inline void P_WorldEffects (edict_t *ent)
 
 				// play a gurp sound instead of a normal pain sound
 				if (ent->health <= ent->dmg)
-					Sound (ent, CHAN_VOICE, SoundIndex("player/drown1.wav"));
+					PlaySoundFrom (ent, CHAN_VOICE, SoundIndex("player/drown1.wav"));
 				else if (rand()&1)
-					Sound (ent, CHAN_VOICE, SoundIndex("*gurp1.wav"));
+					PlaySoundFrom (ent, CHAN_VOICE, SoundIndex("*gurp1.wav"));
 				else
-					Sound (ent, CHAN_VOICE, SoundIndex("*gurp2.wav"));
+					PlaySoundFrom (ent, CHAN_VOICE, SoundIndex("*gurp2.wav"));
 
 				ent->pain_debounce_time = level.time;
 
@@ -701,7 +701,7 @@ static inline void P_WorldEffects (edict_t *ent)
 				&& ent->pain_debounce_time <= level.time
 				&& ent->client->invincible_framenum < level.framenum)
 			{
-				Sound (ent, CHAN_VOICE, SoundIndex((rand()&1) ? "player/burn1.wav" : "player/burn2.wav"));
+				PlaySoundFrom (ent, CHAN_VOICE, SoundIndex((rand()&1) ? "player/burn1.wav" : "player/burn2.wav"));
 				ent->pain_debounce_time = level.time + 1;
 			}
 
@@ -794,10 +794,8 @@ static inline void G_SetClientEvent (edict_t *ent, float xyspeed)
 G_SetClientSound
 ===============
 */
-void G_SetClientSound (edict_t *ent)
+static inline void G_SetClientSound (edict_t *ent)
 {
-	char	*weap;
-
 	if (ent->client->pers.game_helpchanged != game.helpchanged)
 	{
 		ent->client->pers.game_helpchanged = game.helpchanged;
@@ -808,21 +806,11 @@ void G_SetClientSound (edict_t *ent)
 	if (ent->client->pers.helpchanged && ent->client->pers.helpchanged <= 3 && !(level.framenum&63) )
 	{
 		ent->client->pers.helpchanged++;
-		Sound (ent, CHAN_VOICE, SoundIndex ("misc/pc_up.wav"), 1, ATTN_STATIC);
+		PlaySoundFrom (ent, CHAN_VOICE, SoundIndex ("misc/pc_up.wav"), 1, ATTN_STATIC);
 	}
-
-
-	/*if (ent->client->pers.weapon)
-		weap = ent->client->pers.weapon->classname;
-	else*/
-		weap = "";
 
 	if (ent->waterlevel && (ent->watertype&(CONTENTS_LAVA|CONTENTS_SLIME)) )
 		ent->s.sound = snd_fry;
-	/*else if (strcmp(weap, "weapon_railgun") == 0)
-		ent->s.sound = SoundIndex("weapons/rg_hum.wav");
-	else if (strcmp(weap, "weapon_bfg") == 0)
-		ent->s.sound = SoundIndex("weapons/bfg_hum.wav");*/
 	else if (ent->client->pers.Weapon && ent->client->pers.Weapon->WeaponSound)
 		ent->s.sound = SoundIndex(ent->client->pers.Weapon->WeaponSound);
 	else if (ent->client->weapon_sound)

@@ -37,7 +37,7 @@ void CCmd::Run (edict_t *ent)
 {
 	if ((CmdFlags & CMD_CHEAT) && !sv_cheats->Integer() && (deathmatch->Integer() || coop->Integer()))
 	{
-		gi.cprintf (ent, PRINT_HIGH, "Cheats must be enabled to use this command.\n");
+		ClientPrintf (ent, PRINT_HIGH, "Cheats must be enabled to use this command.\n");
 		return;
 	}
 	if (ent->client->resp.spectator && !(CmdFlags & CMD_SPECTATOR))	
@@ -111,5 +111,5 @@ void Cmd_RunCommand (char *commandName, edict_t *ent)
 	if (Command)
 		Command->Run(ent);
 	else
-		gi.cprintf (ent, PRINT_HIGH, "Unknown command \"%s\"\n", commandName);
+		ClientPrintf (ent, PRINT_HIGH, "Unknown command \"%s\"\n", commandName);
 }

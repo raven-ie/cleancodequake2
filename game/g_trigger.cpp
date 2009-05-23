@@ -19,7 +19,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "g_local.h"
 
-
 void InitTrigger (edict_t *self)
 {
 	if (!Vec3Compare (self->s.angles, vec3Origin))
@@ -225,12 +224,12 @@ void trigger_key_use (edict_t *self, edict_t *other, edict_t *activator)
 		if (level.time < self->touch_debounce_time)
 			return;
 		self->touch_debounce_time = level.time + 5.0;
-		gi.centerprintf (activator, "You need the %s", self->item->Name);
-		Sound (activator, CHAN_AUTO, SoundIndex ("misc/keytry.wav"));
+		CenterPrintf (activator, "You need the %s", self->item->Name);
+		PlaySoundFrom (activator, CHAN_AUTO, SoundIndex ("misc/keytry.wav"));
 		return;
 	}
 
-	Sound (activator, CHAN_AUTO, SoundIndex ("misc/keyuse.wav"));
+	PlaySoundFrom (activator, CHAN_AUTO, SoundIndex ("misc/keyuse.wav"));
 	if (coop->Integer())
 	{
 		int		player;
@@ -338,16 +337,16 @@ void trigger_counter_use(edict_t *self, edict_t *other, edict_t *activator)
 	{
 		if (! (self->spawnflags & 1))
 		{
-			gi.centerprintf(activator, "%i more to go...", self->count);
-			Sound (activator, CHAN_AUTO, SoundIndex ("misc/talk1.wav"));
+			CenterPrintf(activator, "%i more to go...", self->count);
+			PlaySoundFrom (activator, CHAN_AUTO, SoundIndex ("misc/talk1.wav"));
 		}
 		return;
 	}
 	
 	if (! (self->spawnflags & 1))
 	{
-		gi.centerprintf(activator, "Sequence completed!");
-		Sound (activator, CHAN_AUTO, SoundIndex ("misc/talk1.wav"));
+		CenterPrintf(activator, "Sequence completed!");
+		PlaySoundFrom (activator, CHAN_AUTO, SoundIndex ("misc/talk1.wav"));
 	}
 	self->activator = activator;
 	multi_trigger (self);
@@ -412,7 +411,7 @@ void trigger_push_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSur
 			if (other->fly_sound_debounce_time < level.time)
 			{
 				other->fly_sound_debounce_time = level.time + 1.5;
-				Sound (other, CHAN_AUTO, windsound);
+				PlaySoundFrom (other, CHAN_AUTO, windsound);
 			}
 		}
 	}
@@ -515,7 +514,7 @@ void hurt_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *
 	if (!(self->spawnflags & 4))
 	{
 		if ((level.framenum % 10) == 0)
-			Sound (other, CHAN_AUTO, self->noise_index);
+			PlaySoundFrom (other, CHAN_AUTO, self->noise_index);
 	}
 
 	if (self->spawnflags & 8)

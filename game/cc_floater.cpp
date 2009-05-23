@@ -49,12 +49,12 @@ void CFloater::Allocate (edict_t *ent)
 
 void CFloater::Sight ()
 {
-	Sound (Entity, CHAN_VOICE, SoundSight);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundSight);
 }
 
 void CFloater::Idle ()
 {
-	Sound (Entity, CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
 }
 
 void CFloater::FireBlaster ()
@@ -480,7 +480,7 @@ void CFloater::Walk ()
 void CFloater::Wham ()
 {
 	static	vec3_t	aim = {MELEE_DISTANCE, 0, 0};
-	Sound (Entity, CHAN_WEAPON, SoundAttack3);
+	PlaySoundFrom (Entity, CHAN_WEAPON, SoundAttack3);
 	fire_hit (Entity, aim, 5 + rand() % 6, -50);
 }
 
@@ -499,7 +499,7 @@ void CFloater::Zap ()
 	G_ProjectSource (Entity->s.origin, offset, forward, right, origin);
 //	G_ProjectSource (self->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, origin);
 
-	Sound (Entity, CHAN_WEAPON, SoundAttack2);
+	PlaySoundFrom (Entity, CHAN_WEAPON, SoundAttack2);
 
 	//FIXME use the flash, Luke
 	TempEnts.Splashes.Splash (origin, vec3Origin, TempEnts.Splashes.SPTSparks, 32);
@@ -552,13 +552,13 @@ void CFloater::Pain (edict_t *other, float kick, int damage)
 		return;		// no pain anims in nightmare
 
 	bool n = (random() < 0.5);
-	Sound (Entity, CHAN_VOICE, n ? SoundPain1 : SoundPain2);
+	PlaySoundFrom (Entity, CHAN_VOICE, n ? SoundPain1 : SoundPain2);
 	CurrentMove = n ? &FloaterMovePain1 : &FloaterMovePain2;
 }
 
 void CFloater::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
 {
-	Sound (Entity, CHAN_VOICE, SoundDeath1);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundDeath1);
 	BecomeExplosion1(Entity);
 }
 

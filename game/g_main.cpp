@@ -92,7 +92,7 @@ void G_RunFrame (void);
 
 void ShutdownGame (void)
 {
-	gi.dprintf ("==== ShutdownGame ====\n");
+	DebugPrintf ("==== ShutdownGame ====\n");
 
 	Cmd_RemoveCommands ();
 	SvCmd_RemoveCommands ();
@@ -156,7 +156,7 @@ void Com_Printf (comPrint_t flags, char *fmt, ...)
 	vsnprintf_s (text, sizeof(text), MAX_COMPRINT, fmt, argptr);
 	va_end (argptr);
 
-	gi.dprintf ("%s", text);
+	DebugPrintf ("%s", text);
 }
 
 void Com_DevPrintf (comPrint_t flags, char *fmt, ...)
@@ -168,7 +168,7 @@ void Com_DevPrintf (comPrint_t flags, char *fmt, ...)
 	vsnprintf_s (text, sizeof(text), MAX_COMPRINT, fmt, argptr);
 	va_end (argptr);
 
-	gi.dprintf ("%s", text);
+	DebugPrintf ("%s", text);
 }
 
 // FIXME code is ignored
@@ -349,7 +349,7 @@ void CheckDMRules (void)
 	{
 		if (level.time >= timelimit->Float()*60)
 		{
-			gi.bprintf (PRINT_HIGH, "Timelimit hit.\n");
+			BroadcastPrintf (PRINT_HIGH, "Timelimit hit.\n");
 			EndDMLevel ();
 			return;
 		}
@@ -365,7 +365,7 @@ void CheckDMRules (void)
 
 			if (cl->resp.score >= fraglimit->Integer())
 			{
-				gi.bprintf (PRINT_HIGH, "Fraglimit hit.\n");
+				BroadcastPrintf (PRINT_HIGH, "Fraglimit hit.\n");
 				EndDMLevel ();
 				return;
 			}

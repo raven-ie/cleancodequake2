@@ -95,7 +95,7 @@ void CHandGrenade::FireGrenade (edict_t *ent, bool inHand)
 	if (isQuad)
 	{
 		damage *= 4;
-		Sound(ent, CHAN_ITEM, SoundIndex("items/damage3.wav")); // Make sure people know. REOOOOOOOO
+		PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/damage3.wav")); // Make sure people know. REOOOOOOOO
 	}
 
 	ent->client->grenade_thrown = true;
@@ -160,7 +160,7 @@ bool CHandGrenade::CanFire (edict_t *ent)
 	switch (ent->client->ps.gunFrame)
 	{
 	case 5:
-		Sound(ent, CHAN_WEAPON, SoundIndex("weapons/hgrena1b.wav"));
+		PlaySoundFrom(ent, CHAN_WEAPON, SoundIndex("weapons/hgrena1b.wav"));
 		return false;
 	case 11:
 	case 12:

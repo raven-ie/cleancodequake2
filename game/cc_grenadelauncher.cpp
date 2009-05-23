@@ -75,7 +75,7 @@ void CGrenadeLauncher::Fire (edict_t *ent)
 	radius = damage+40;
 	if (isQuad)
 	{
-		Sound(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
+		PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
 		damage *= 4;
 	}
 

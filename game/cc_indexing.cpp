@@ -73,6 +73,8 @@ int CIndexList::AddToList (char *String, int Index)
 	return Index;
 }
 
+_CC_DISABLE_DEPRECATION
+(
 int ModelIndex (char *String)
 {
 	// Do we exist?
@@ -99,6 +101,7 @@ int ImageIndex (char *String)
 		return ImageList.AddToList (String, gi.imageindex(String));
 	return Index;
 }
+)
 
 void CIndexList::Clear ()
 {

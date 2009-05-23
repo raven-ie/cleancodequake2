@@ -359,7 +359,7 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 	{
 		if (targ->pain_debounce_time < level.time)
 		{
-			Sound (targ, CHAN_ITEM, SoundIndex("items/protect4.wav"), 1, ATTN_NORM);
+			PlaySoundFrom (targ, CHAN_ITEM, SoundIndex("items/protect4.wav"), 1, ATTN_NORM);
 			targ->pain_debounce_time = level.time + 2;
 		}
 		take = 0;

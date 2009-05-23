@@ -31,13 +31,12 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Shared header, included by g_local.
 //
 
-// Global macros
-#define MONSTERS_ARENT_STUPID
-#define MONSTER_USE_ROGUE_AI
-#define MONSTERS_USE_PATHFINDING
+#include "cc_print.h"
+#include "cc_sound.h"
 
 #include "cc_colors.h"
 extern CColors Colors;
+
 #include "cc_cvar.h"
 #include "cc_dmflags.h"
 #include "cc_trace.h"
@@ -58,29 +57,6 @@ extern CColors Colors;
 
 extern dmFlagsConfig dmFlags;
 
-// This is.. unnecessarily long.
-void Sound (edict_t *ent, EEntSndChannel channel, int soundindex, float volume, int attenuation, float timeOfs);
-void Sound (edict_t *ent, EEntSndChannel channel, char *soundString, float volume, int attenuation, float timeOfs);
-void Sound (edict_t *ent, EEntSndChannel channel, int soundindex, float volume, int attenuation);
-void Sound (edict_t *ent, EEntSndChannel channel, char *soundString, float volume, int attenuation);
-void Sound (edict_t *ent, EEntSndChannel channel, int soundindex, float volume);
-void Sound (edict_t *ent, EEntSndChannel channel, char *soundString, float volume);
-void Sound (edict_t *ent, EEntSndChannel channel, int soundindex);
-void Sound (edict_t *ent, EEntSndChannel channel, char *soundString);
-void Sound (edict_t *ent, int soundindex, vec3_t pos);
-void Sound (edict_t *ent, char *soundString, vec3_t pos);
-void Sound (vec3_t pos, edict_t *ent, char *soundString);
-void Sound (vec3_t pos, edict_t *ent, int soundindex);
-void Sound (vec3_t pos, edict_t *ent, EEntSndChannel channel, char *soundString);
-void Sound (vec3_t pos, edict_t *ent, EEntSndChannel channel, int soundindex);
-void Sound (vec3_t pos, edict_t *ent, EEntSndChannel channel, char *soundString, float volume);
-void Sound (vec3_t pos, edict_t *ent, EEntSndChannel channel, int soundindex, float volume);
-void Sound (vec3_t pos, edict_t *ent, EEntSndChannel channel, char *soundString, float volume, int attenuation);
-void Sound (vec3_t pos, edict_t *ent, EEntSndChannel channel, int soundindex, float volume, int attenuation);
-void Sound (vec3_t pos, edict_t *ent, EEntSndChannel channel, char *soundString, float volume, int attenuation, float timeOfs);
-void Sound (vec3_t pos, edict_t *ent, EEntSndChannel channel, int soundindex, float volume, int attenuation, float timeOfs);
-void Sound (int soundindex);
-void Sound (char *soundString);
 void SetModel (edict_t *ent, char *model);
 
 void WriteDirection (vec3_t val);
@@ -127,4 +103,12 @@ enum EGender
 	GenderMale,
 	GenderFemale,
 	GenderNeutral
+};
+
+// svClient->state options
+enum EClientState
+{
+	SVCS_FREE,		// can be reused for a new connection
+	SVCS_CONNECTED,	// has been assigned to a svClient_t, but not in game yet
+	SVCS_SPAWNED	// client is fully in game
 };

@@ -4,12 +4,12 @@
 void CSoldierBase::Idle ()
 {
 	if (random() > 0.8)
-		Sound (Entity, CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
+		PlaySoundFrom (Entity, CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
 }
 
 void CSoldierBase::CockGun ()
 {
-	Sound (Entity, CHAN_WEAPON, SoundCock);
+	PlaySoundFrom (Entity, CHAN_WEAPON, SoundCock);
 }
 
 
@@ -315,7 +315,7 @@ void CSoldierBase::Pain (edict_t *other, float kick, int damage)
 	}
 
 	Entity->pain_debounce_time = level.time + 3;
-	Sound (Entity, CHAN_VOICE, SoundPain);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundPain);
 
 	if (Entity->velocity[2] > 100)
 	{
@@ -623,7 +623,7 @@ CAnim SoldierMoveAttack6 (FRAME_runs01, FRAME_runs14, SoldierFramesAttack6, Conv
 
 void CSoldierBase::Sight ()
 {
-	Sound (Entity, CHAN_VOICE, (random() < 0.5) ? SoundSight1 : SoundSight2);
+	PlaySoundFrom (Entity, CHAN_VOICE, (random() < 0.5) ? SoundSight1 : SoundSight2);
 
 	if ((skill->Integer() > 0) && (range(Entity, Entity->enemy) >= RANGE_NEAR))
 	{
@@ -974,7 +974,7 @@ void CSoldierBase::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_
 // check for gib
 	if (Entity->health <= Entity->gib_health)
 	{
-		Sound (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
+		PlaySoundFrom (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 3; n++)
 			ThrowGib (Entity, "models/objects/gibs/sm_meat/tris.md2", damage, GIB_ORGANIC);
 		ThrowGib (Entity, "models/objects/gibs/chest/tris.md2", damage, GIB_ORGANIC);
@@ -991,7 +991,7 @@ void CSoldierBase::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_
 	Entity->takedamage = DAMAGE_YES;
 	Entity->s.skinNum |= 1;
 
-	Sound (Entity, CHAN_VOICE, SoundDeath);
+	PlaySoundFrom (Entity, CHAN_VOICE, SoundDeath);
 
 	if (fabs((Entity->s.origin[2] + Entity->viewheight) - point[2]) <= 4)
 	{

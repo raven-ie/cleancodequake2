@@ -19,7 +19,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "g_local.h"
 
-
 /*
 =================
 check_dodge
@@ -456,13 +455,13 @@ static void Grenade_Touch (edict_t *ent, edict_t *other, plane_t *plane, cmBspSu
 		if (ent->spawnflags & 1)
 		{
 			if (random() > 0.5)
-				Sound (ent, CHAN_VOICE, SoundIndex ("weapons/hgrenb1a.wav"));
+				PlaySoundFrom (ent, CHAN_VOICE, SoundIndex ("weapons/hgrenb1a.wav"));
 			else
-				Sound (ent, CHAN_VOICE, SoundIndex ("weapons/hgrenb2a.wav"));
+				PlaySoundFrom (ent, CHAN_VOICE, SoundIndex ("weapons/hgrenb2a.wav"));
 		}
 		else
 		{
-			Sound (ent, CHAN_VOICE, SoundIndex ("weapons/grenlb1b.wav"));
+			PlaySoundFrom (ent, CHAN_VOICE, SoundIndex ("weapons/grenlb1b.wav"));
 		}
 		return;
 	}
@@ -543,7 +542,7 @@ void fire_grenade2 (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int 
 		Grenade_Explode (grenade);
 	else
 	{
-		Sound (self, CHAN_WEAPON, SoundIndex ("weapons/hgrent1a.wav"));
+		PlaySoundFrom (self, CHAN_WEAPON, SoundIndex ("weapons/hgrent1a.wav"));
 		gi.linkentity (grenade);
 	}
 }
@@ -763,7 +762,7 @@ void bfg_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *s
 		T_Damage (other, self, self->owner, self->velocity, self->s.origin, plane->normal, 200, 0, 0, MOD_BFG_BLAST);
 	T_RadiusDamage(self, self->owner, 200, other, 100, MOD_BFG_BLAST);
 
-	Sound (self, CHAN_VOICE, SoundIndex ("weapons/bfg__x1b.wav"));
+	PlaySoundFrom (self, CHAN_VOICE, SoundIndex ("weapons/bfg__x1b.wav"));
 	self->solid = SOLID_NOT;
 	self->touch = NULL;
 	Vec3MA (self->s.origin, -1 * FRAMETIME, self->velocity, self->s.origin);

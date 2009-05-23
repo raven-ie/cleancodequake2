@@ -244,7 +244,7 @@ void CQuadDamage::Use (edict_t *ent)
 
 	ent->client->pers.Inventory -= this;
 
-	Sound(ent, CHAN_ITEM, SoundIndex("items/damage.wav"));
+	PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/damage.wav"));
 }
 
 void CInvulnerability::DoPickup (edict_t *ent, edict_t *other)
@@ -267,7 +267,7 @@ void CInvulnerability::Use (edict_t *ent)
 	else
 		ent->client->invincible_framenum = level.framenum + 300;
 
-	Sound(ent, CHAN_ITEM, SoundIndex("items/protect.wav"));
+	PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/protect.wav"));
 }
 
 void CSilencer::DoPickup (edict_t *ent, edict_t *other)
@@ -386,17 +386,17 @@ void CPowerShield::Use (edict_t *ent)
 	if (ent->flags & FL_POWER_ARMOR)
 	{
 		ent->flags &= ~FL_POWER_ARMOR;
-		Sound(ent, CHAN_AUTO, SoundIndex("misc/power2.wav"));
+		PlaySoundFrom(ent, CHAN_AUTO, SoundIndex("misc/power2.wav"));
 	}
 	else
 	{
 		if (!ent->client->pers.Inventory.Has(FindItem("Cells")))
 		{
-			gi.cprintf (ent, PRINT_HIGH, "No cells for power armor.\n");
+			ClientPrintf (ent, PRINT_HIGH, "No cells for power armor.\n");
 			return;
 		}
 		ent->flags |= FL_POWER_ARMOR;
-		Sound(ent, CHAN_AUTO, SoundIndex("misc/power1.wav"));
+		PlaySoundFrom(ent, CHAN_AUTO, SoundIndex("misc/power1.wav"));
 	}
 }
 

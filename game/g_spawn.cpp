@@ -487,7 +487,7 @@ void G_FindTeams (void)
 		}
 	}
 
-	gi.dprintf ("%i teams with %i entities\n", c, c2);
+	DebugPrintf ("%i teams with %i entities\n", c, c2);
 }
 
 
@@ -587,7 +587,7 @@ void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 		ED_CallSpawn (ent);
 	}
 
-	gi.dprintf ("%i entities removed\n", inhibit);
+	DebugPrintf ("%i entities removed\n", inhibit);
 
 #ifdef DEBUG
 	i = 1;
@@ -608,7 +608,7 @@ void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 	LoadPathTable ();
 #endif
 
-	gi.dprintf ("Finished server initialization in %d ms\n", Sys_Milliseconds() - startTime);
+	DebugPrintf ("Finished server initialization in %d ms\n", Sys_Milliseconds() - startTime);
 }
 
 

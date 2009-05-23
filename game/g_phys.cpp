@@ -750,9 +750,9 @@ void SV_Physics_Toss (edict_t *ent)
 		ent->waterlevel = 0;
 
 	if (!wasinwater && isinwater)
-		Sound (old_origin, g_edicts, CHAN_AUTO, SoundIndex("misc/h2ohit1.wav"));
+		PlaySoundAt (old_origin, g_edicts, CHAN_AUTO, SoundIndex("misc/h2ohit1.wav"));
 	else if (wasinwater && !isinwater)
-		Sound (ent->s.origin, g_edicts, CHAN_AUTO, SoundIndex("misc/h2ohit1.wav"));
+		PlaySoundAt (ent->s.origin, g_edicts, CHAN_AUTO, SoundIndex("misc/h2ohit1.wav"));
 
 // move teamslaves
 	for (slave = ent->teamchain; slave; slave = slave->teamchain)
@@ -912,7 +912,7 @@ void SV_Physics_Step (edict_t *ent)
 			return;
 
 		if (ent->groundentity && !wasonground && hitsound)
-			Sound (ent, CHAN_AUTO, SoundIndex("world/land.wav"));
+			PlaySoundFrom (ent, CHAN_AUTO, SoundIndex("world/land.wav"));
 	}
 
 // regular thinking

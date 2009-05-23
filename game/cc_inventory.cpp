@@ -216,18 +216,18 @@ void Cmd_Use_f (edict_t *ent)
 
 		if (!Item)
 		{
-			gi.cprintf (ent, PRINT_HIGH, "Unknown item: %s\n", s);
+			ClientPrintf (ent, PRINT_HIGH, "Unknown item: %s\n", s);
 			return;
 		}
 	}
 	if (!(Item->Flags & ITEMFLAG_USABLE))
 	{
-		gi.cprintf (ent, PRINT_HIGH, "Item is not usable.\n");
+		ClientPrintf (ent, PRINT_HIGH, "Item is not usable.\n");
 		return;
 	}
 	if (!ent->client->pers.Inventory.Has(Item))
 	{
-		gi.cprintf (ent, PRINT_HIGH, "Out of item: %s\n", s);
+		ClientPrintf (ent, PRINT_HIGH, "Out of item: %s\n", s);
 		return;
 	}
 
@@ -252,18 +252,18 @@ void Cmd_Drop_f (edict_t *ent)
 
 		if (!Item)
 		{
-			gi.cprintf (ent, PRINT_HIGH, "Unknown item: %s\n", s);
+			ClientPrintf (ent, PRINT_HIGH, "Unknown item: %s\n", s);
 			return;
 		}
 	}
 	if (!(Item->Flags & ITEMFLAG_DROPPABLE))
 	{
-		gi.cprintf (ent, PRINT_HIGH, "Item is not dropable.\n");
+		ClientPrintf (ent, PRINT_HIGH, "Item is not dropable.\n");
 		return;
 	}
 	if (!ent->client->pers.Inventory.Has(Item))
 	{
-		gi.cprintf (ent, PRINT_HIGH, "Out of item: %s\n", s);
+		ClientPrintf (ent, PRINT_HIGH, "Out of item: %s\n", s);
 		return;
 	}
 
@@ -293,14 +293,14 @@ void Cmd_InvUse_f (edict_t *ent)
 
 	if (ent->client->pers.Inventory.SelectedItem == -1)
 	{
-		gi.cprintf (ent, PRINT_HIGH, "No item to use.\n");
+		ClientPrintf (ent, PRINT_HIGH, "No item to use.\n");
 		return;
 	}
 
 	CBaseItem *it = GetItemByIndex(ent->client->pers.Inventory.SelectedItem);
 	if (!(it->Flags & ITEMFLAG_USABLE))
 	{
-		gi.cprintf (ent, PRINT_HIGH, "Item is not usable.\n");
+		ClientPrintf (ent, PRINT_HIGH, "Item is not usable.\n");
 		return;
 	}
 	it->Use (ent);
@@ -330,7 +330,7 @@ void Cmd_WeapPrev_f (edict_t *ent)
 		if (! (Item->Flags & ITEMFLAG_WEAPON) )
 			continue;
 		Item->Use (ent);
-		if (ent->client->NewWeapon->Item == Item || ent->client->pers.Weapon->Item == Item)
+		if (ent->client->NewWeapon && ent->client->NewWeapon->Item == Item || ent->client->pers.Weapon->Item == Item)
 			return;	// successful
 	}
 }
@@ -402,14 +402,14 @@ void Cmd_InvDrop_f (edict_t *ent)
 
 	if (ent->client->pers.Inventory.SelectedItem == -1)
 	{
-		gi.cprintf (ent, PRINT_HIGH, "No item to drop.\n");
+		ClientPrintf (ent, PRINT_HIGH, "No item to drop.\n");
 		return;
 	}
 
 	CBaseItem *Item = GetItemByIndex(ent->client->pers.Inventory.SelectedItem);
 	if (!(Item->Flags & ITEMFLAG_DROPPABLE))
 	{
-		gi.cprintf (ent, PRINT_HIGH, "Item is not dropable.\n");
+		ClientPrintf (ent, PRINT_HIGH, "Item is not dropable.\n");
 		return;
 	}
 	Item->Drop (ent);
@@ -561,7 +561,7 @@ void Cmd_Give_f (edict_t *ent)
 			it = FindItemByClassname (name);
 			if (!it)
 			{
-				gi.cprintf (ent, PRINT_HIGH, "unknown item\n");
+				ClientPrintf (ent, PRINT_HIGH, "Unknown Item\n");
 				return;
 			}
 		}
@@ -569,7 +569,7 @@ void Cmd_Give_f (edict_t *ent)
 
 	if (!(it->Flags & ITEMFLAG_GRABBABLE))
 	{
-		gi.cprintf (ent, PRINT_HIGH, "non-pickup item\n");
+		ClientPrintf (ent, PRINT_HIGH, "Non-Pickup Item\n");
 		return;
 	}
 

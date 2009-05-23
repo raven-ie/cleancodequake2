@@ -135,8 +135,8 @@ Info_RemoveKey
 void Info_RemoveKey (char *s, char *key)
 {
 	char	*start;
-	char	pkey[512];
-	char	value[512];
+	char	pkey[MAX_INFO_KEY];
+	char	value[MAX_INFO_STRING];
 	char	*o;
 
 	if (strstr (key, "\\"))
@@ -164,7 +164,7 @@ void Info_RemoveKey (char *s, char *key)
 		*o = 0;
 
 		if (!strcmp (key, pkey)) {
-			strcpy (start, s);	// Remove this part
+			Q_strncpyz (start, s, MAX_INFO_KEY);	// Remove this part
 			return;
 		}
 
