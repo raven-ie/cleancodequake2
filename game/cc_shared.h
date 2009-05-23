@@ -35,7 +35,6 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_sound.h"
 
 #include "cc_colors.h"
-extern CColors Colors;
 
 #include "cc_cvar.h"
 #include "cc_dmflags.h"

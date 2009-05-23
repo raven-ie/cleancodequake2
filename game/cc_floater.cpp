@@ -502,7 +502,7 @@ void CFloater::Zap ()
 	PlaySoundFrom (Entity, CHAN_WEAPON, SoundAttack2);
 
 	//FIXME use the flash, Luke
-	TempEnts.Splashes.Splash (origin, vec3Origin, TempEnts.Splashes.SPTSparks, 32);
+	CTempEnt_Splashes::Splash (origin, vec3Origin, CTempEnt_Splashes::SPTSparks, 32);
 
 	T_Damage (Entity->enemy, Entity, Entity, vec3Origin, Entity->enemy->s.origin, vec3Origin, 5 + rand() % 6, -10, DAMAGE_ENERGY, MOD_UNKNOWN);
 }

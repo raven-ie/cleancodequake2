@@ -222,7 +222,7 @@ static int CheckPowerArmor (edict_t *ent, vec3_t point, vec3_t normal, int damag
 	if (save > damage)
 		save = damage;
 
-	TempEnts.Splashes.ShieldSparks (point, normal, (pa_te_type == TE_SCREEN_SPARKS) ? true : false);
+	CTempEnt_Splashes::ShieldSparks (point, normal, (pa_te_type == TE_SCREEN_SPARKS) ? true : false);
 	ent->powerarmor_time = level.time + 0.2;
 
 	power_used = save / damagePerCell;
@@ -260,7 +260,7 @@ static int CheckArmor (edict_t *ent, vec3_t point, vec3_t normal, int damage, in
 		return 0;
 
 	ent->client->pers.Inventory.Remove(armor, save);
-	TempEnts.Splashes.Sparks (point, normal, (dflags & DAMAGE_BULLET) ? TempEnts.Splashes.STBulletSparks : TempEnts.Splashes.STSparks, TempEnts.Splashes.SPTSparks);
+	CTempEnt_Splashes::Sparks (point, normal, (dflags & DAMAGE_BULLET) ? CTempEnt_Splashes::STBulletSparks : CTempEnt_Splashes::STSparks, CTempEnt_Splashes::SPTSparks);
 
 	// Ran out of armor?
 	if (!ent->client->pers.Inventory.Has(armor))
@@ -351,7 +351,7 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 	{
 		take = 0;
 		save = damage;
-		TempEnts.Splashes.Sparks (point, normal, (dflags & DAMAGE_BULLET) ? TempEnts.Splashes.STBulletSparks : TempEnts.Splashes.STSparks, TempEnts.Splashes.SPTSparks);
+		CTempEnt_Splashes::Sparks (point, normal, (dflags & DAMAGE_BULLET) ? CTempEnt_Splashes::STBulletSparks : CTempEnt_Splashes::STSparks, CTempEnt_Splashes::SPTSparks);
 	}
 
 	// check for invincibility
@@ -383,9 +383,9 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 	if (take)
 	{
 		if ((targ->svFlags & SVF_MONSTER) || (client))
-			TempEnts.Splashes.Blood (point, normal);
+			CTempEnt_Splashes::Blood (point, normal);
 		else
-			TempEnts.Splashes.Sparks (point, normal, (dflags & DAMAGE_BULLET) ? TempEnts.Splashes.STBulletSparks : TempEnts.Splashes.STSparks, TempEnts.Splashes.SPTSparks);
+			CTempEnt_Splashes::Sparks (point, normal, (dflags & DAMAGE_BULLET) ? CTempEnt_Splashes::STBulletSparks : CTempEnt_Splashes::STSparks, CTempEnt_Splashes::SPTSparks);
 
 		targ->health = targ->health - take;
 			

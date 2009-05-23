@@ -161,7 +161,7 @@ static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channe
 		return;
 	}
 
-	ent = g_edicts - entity;
+	ent = entity - g_edicts;
 
 	// No PHS flag
 	if (channel & 8 || attenuation == ATTN_NONE)
