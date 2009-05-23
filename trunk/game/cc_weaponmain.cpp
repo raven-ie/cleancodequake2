@@ -343,7 +343,7 @@ void CWeapon::Muzzle (edict_t *ent, int muzzleNum)
 {
 	if (isSilenced)
 		muzzleNum |= MZ_SILENCED;
-	TempEnts.MuzzleFlash(ent->s.origin, ent-g_edicts, muzzleNum);
+	CTempEnt::MuzzleFlash(ent->s.origin, ent-g_edicts, muzzleNum);
 }
 
 /*

@@ -309,7 +309,7 @@ void RunNodes()
 			for (std::vector<CPathNode*>::iterator it = NodeList[i]->Children.begin(); it < NodeList[i]->Children.end(); it++ )
 			{
 				CPathNode *Child = *it;
-				TempEnts.Trails.BFGLaser (NodeList[i]->Origin, Child->Origin);
+				CTempEnt_Trails::BFGLaser (NodeList[i]->Origin, Child->Origin);
 			}
 
 			PrintVerboseNodes (NodeList[i]->Origin, i);

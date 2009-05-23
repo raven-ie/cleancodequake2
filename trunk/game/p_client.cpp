@@ -1264,7 +1264,7 @@ void spectator_respawn (edict_t *ent)
 	// add a teleportation effect
 	if (!ent->client->pers.spectator)  {
 		// send effect
-		TempEnts.MuzzleFlash (ent->s.origin, ent-g_edicts, MZ_LOGIN);
+		CTempEnt::MuzzleFlash (ent->s.origin, ent-g_edicts, MZ_LOGIN);
 
 		// hold in place briefly
 		ent->client->ps.pMove.pmFlags = PMF_TIME_TELEPORT;
@@ -1479,7 +1479,7 @@ void ClientBeginDeathmatch (edict_t *ent)
 	}
 	else
 		// send effect
-		TempEnts.MuzzleFlash (ent->s.origin, ent-g_edicts, MZ_LOGIN);
+		CTempEnt::MuzzleFlash (ent->s.origin, ent-g_edicts, MZ_LOGIN);
 
 	BroadcastPrintf (PRINT_HIGH, "%s entered the game\n", ent->client->pers.netname);
 
@@ -1539,7 +1539,7 @@ void ClientBegin (edict_t *ent)
 		// send effect if in a multiplayer game
 		if (game.maxclients > 1)
 		{
-			TempEnts.MuzzleFlash (ent->s.origin, ent-g_edicts, MZ_LOGIN);
+			CTempEnt::MuzzleFlash (ent->s.origin, ent-g_edicts, MZ_LOGIN);
 			BroadcastPrintf (PRINT_HIGH, "%s entered the game\n", ent->client->pers.netname);
 		}
 	}
@@ -1744,7 +1744,7 @@ void ClientDisconnect (edict_t *ent)
 	BroadcastPrintf (PRINT_HIGH, "%s disconnected\n", ent->client->pers.netname);
 
 	// send effect
-	TempEnts.MuzzleFlash (ent->s.origin, ent-g_edicts, MZ_LOGIN);
+	CTempEnt::MuzzleFlash (ent->s.origin, ent-g_edicts, MZ_LOGIN);
 
 	gi.unlinkentity (ent);
 	ent->s.modelIndex = 0;

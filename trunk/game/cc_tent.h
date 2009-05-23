@@ -37,14 +37,14 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 //
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-/// \class	CTEnt_Splashes
+/// \class	CTempEnt_Splashes
 ///
 /// \brief	Temporary entity splashes
 ///
 /// \author	Paril
 /// \date	5/10/2009
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-class CTEnt_Splashes
+class CTempEnt_Splashes
 {
 public:
 	enum ESplashType
@@ -83,36 +83,36 @@ public:
 		STTunnelSparks = TE_TUNNEL_SPARKS
 	};
 
-	void Gunshot	(vec3_t Origin,
+	static void Gunshot	(vec3_t Origin,
 					vec3_t Normal);
 
-	void Shotgun	(vec3_t Origin,
+	static void Shotgun	(vec3_t Origin,
 					vec3_t Normal);
 
-	void Blood	(vec3_t Origin,
+	static void Blood	(vec3_t Origin,
 				vec3_t Normal,
 				EBloodType BloodType = BTBlood);
 
-	void Blaster	(vec3_t Origin,
+	static void Blaster	(vec3_t Origin,
 					vec3_t Normal,
 					EBlasterType BlasterType = BLBlaster);
 
-	void Sparks	(vec3_t Origin,
+	static void Sparks	(vec3_t Origin,
 				vec3_t Normal,
 				ESparkType SparkType = STSparks,
 				ESplashType color = SPTUnknown,
 				byte amount = 8);
 
-	void Splash	(vec3_t Origin,
+	static void Splash	(vec3_t Origin,
 				vec3_t Normal,
 				ESplashType color = SPTUnknown,
 				byte amount = 8);
 
-	void ShieldSparks	(vec3_t Origin,
+	static void ShieldSparks	(vec3_t Origin,
 						vec3_t Normal,
 						bool Screen = false);
 
-	void Steam	(vec3_t Origin,
+	static void Steam	(vec3_t Origin,
 				vec3_t Normal,
 				byte count = 8,
 				ESplashType color = SPTUnknown,
@@ -120,120 +120,116 @@ public:
 				short id = -1,
 				long endTime = 0);
 
-	void HeatSteam	(vec3_t Origin,
+	static void HeatSteam	(vec3_t Origin,
 					vec3_t Normal);
 
-	void ChainfistSmoke	(vec3_t Origin);
+	static void ChainfistSmoke	(vec3_t Origin);
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-/// \class	CTEnt_Trails
+/// \class	CTempEnt_Trails
 ///
 /// \brief	Temporary entities that deal with trails (start & end)
 ///
 /// \author	Paril
 /// \date	5/10/2009
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-class CTEnt_Trails
+class CTempEnt_Trails
 {
 public:
-	void RailTrail	(vec3_t Start,
+	static void RailTrail	(vec3_t Start,
 					vec3_t End);
 
-	void HeatBeam	(vec3_t Start,
+	static void HeatBeam	(vec3_t Start,
 					vec3_t End,
 					short Ent,
 					bool Monster = false);
 
-	void ForceWall	(vec3_t Start,
+	static void ForceWall	(vec3_t Start,
 					vec3_t End,
-					byte color = Colors.Lime);
+					byte color = CColors::Lime);
 
-	void DebugTrail	(vec3_t Start,
+	static void DebugTrail	(vec3_t Start,
 					vec3_t End);
 
-	void Lightning	(vec3_t Start,
+	static void Lightning	(vec3_t Start,
 					vec3_t End,
 					short SrcEnt,
 					short DestEnt);
 
-	void GrappleCable	(vec3_t Start,
+	static void GrappleCable	(vec3_t Start,
 						vec3_t End,
 						short Ent,
 						vec3_t Offset = vec3Origin);
 
-	void BFGLaser	(vec3_t Start,
+	static void BFGLaser	(vec3_t Start,
 					vec3_t End);
 
-	void FleshCable		(vec3_t Start,
+	static void FleshCable		(vec3_t Start,
 						vec3_t End,
 						short Ent);
-	void BubbleTrail	(vec3_t Start,
+	static void BubbleTrail	(vec3_t Start,
 						vec3_t End);
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-/// \class	CTEnt_Explosions
+/// \class	CTempEnt_Explosions
 ///
 /// \brief	Temporary entity explosions
 ///
 /// \author	Paril
 /// \date	5/10/2009
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-class CTEnt_Explosions
+class CTempEnt_Explosions
 {
 public:
-	void RocketExplosion	(vec3_t Origin, edict_t *ent,
+	static void RocketExplosion	(vec3_t Origin, edict_t *ent,
 							bool Water = false,
 							bool Particles = true);
 
-	void GrenadeExplosion	(vec3_t Origin,
+	static void GrenadeExplosion	(vec3_t Origin,
 							edict_t *ent,
 							bool Water = false);
 
-	void BFGExplosion		(vec3_t Origin,
+	static void BFGExplosion		(vec3_t Origin,
 							bool Big = false);
 
-	void PlasmaExplosion	(vec3_t Origin);
+	static void PlasmaExplosion	(vec3_t Origin);
 
-	void TrackerExplosion	(vec3_t Origin);
+	static void TrackerExplosion	(vec3_t Origin);
 
-	void NukeBlast			(vec3_t Origin);
+	static void NukeBlast			(vec3_t Origin);
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-/// \class	CTEnt
+/// \class	CTempEnt
 ///
 /// \brief	Implements all temporary entities above and new ones
 ///
 /// \author	Paril
 /// \date	5/10/2009
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-class CTEnt
+class CTempEnt
 {
 public:
-	CTEnt_Splashes		Splashes;
-	CTEnt_Trails		Trails;
-	CTEnt_Explosions	Explosions;
-
 	// These don't go under either of the categories above
-	void Flashlight		(vec3_t Origin,
+	static void Flashlight		(vec3_t Origin,
 						short Ent);
 
-	void BossTeleport	(vec3_t Origin);
+	static void BossTeleport	(vec3_t Origin);
 
-	void TeleportEffect	(vec3_t Origin);
+	static void TeleportEffect	(vec3_t Origin);
 
-	void WidowBeamOut	(vec3_t Origin,
+	static void WidowBeamOut	(vec3_t Origin,
 						short id = -1);
 
-	void WidowSplash	(vec3_t Origin);
+	static void WidowSplash	(vec3_t Origin);
 
-	void MuzzleFlash	(vec3_t Origin,
+	static void MuzzleFlash	(vec3_t Origin,
 						short Ent,
 						short id);
 
-	void MonsterFlash	(vec3_t Origin,
+	static void MonsterFlash	(vec3_t Origin,
 						short Ent,
 						short id);
 };
@@ -279,5 +275,3 @@ public:
 
 	~MultiCast ();
 };
-
-extern CTEnt TempEnts;

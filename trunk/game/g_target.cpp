@@ -230,7 +230,7 @@ void target_explosion_explode (edict_t *self)
 {
 	float		save;
 
-	TempEnts.Explosions.RocketExplosion (self->s.origin, self);
+	CTempEnt_Explosions::RocketExplosion (self->s.origin, self);
 
 	T_RadiusDamage (self, self->activator, self->dmg, NULL, self->dmg+40, MOD_EXPLOSIVE);
 
@@ -337,7 +337,7 @@ Set "sounds" to one of the following:
 
 void use_target_splash (edict_t *self, edict_t *other, edict_t *activator)
 {
-	TempEnts.Splashes.Splash (self->s.origin, self->movedir, (CTEnt_Splashes::ESplashType)self->sounds, self->count);
+	CTempEnt_Splashes::Splash (self->s.origin, self->movedir, (CTempEnt_Splashes::ESplashType)self->sounds, self->count);
 
 	if (self->dmg)
 		T_RadiusDamage (self, activator, self->dmg, NULL, self->dmg+40, MOD_SPLASH);
@@ -539,7 +539,7 @@ void target_laser_think (edict_t *self)
 			if (self->spawnflags & 0x80000000)
 			{
 				self->spawnflags &= ~0x80000000;
-				TempEnts.Splashes.Sparks (tr.endPos, tr.plane.normal, TempEnts.Splashes.STLaserSparks, (CTEnt_Splashes::ESplashType)(self->s.skinNum & 255), count);
+				CTempEnt_Splashes::Sparks (tr.endPos, tr.plane.normal, CTempEnt_Splashes::STLaserSparks, (CTempEnt_Splashes::ESplashType)(self->s.skinNum & 255), count);
 			}
 			break;
 		}
@@ -601,15 +601,15 @@ void target_laser_start (edict_t *self)
 
 	// set the color
 	if (self->spawnflags & RED)
-		self->s.skinNum = ConvertColorsToBeamColor (Colors.PatriotRed, Colors.PatriotRed, Colors.Red, Colors.Red);
+		self->s.skinNum = ConvertColorsToBeamColor (CColors::PatriotRed, CColors::PatriotRed, CColors::Red, CColors::Red);
 	else if (self->spawnflags & GREEN)
-		self->s.skinNum = ConvertColorsToBeamColor (Colors.Green, Colors.Lime, Colors.FireSpeechGreen, Colors.Harlequin);
+		self->s.skinNum = ConvertColorsToBeamColor (CColors::Green, CColors::Lime, CColors::FireSpeechGreen, CColors::Harlequin);
 	else if (self->spawnflags & BLUE)
-		self->s.skinNum = ConvertColorsToBeamColor (Colors.PatriotBlue, Colors.PatriotBlue, Colors.NeonBlue, Colors.NeonBlue);
+		self->s.skinNum = ConvertColorsToBeamColor (CColors::PatriotBlue, CColors::PatriotBlue, CColors::NeonBlue, CColors::NeonBlue);
 	else if (self->spawnflags & YELLOW)
-		self->s.skinNum = ConvertColorsToBeamColor (Colors.ParisDaisy, Colors.Gorse, Colors.Lemon, Colors.Gold);
+		self->s.skinNum = ConvertColorsToBeamColor (CColors::ParisDaisy, CColors::Gorse, CColors::Lemon, CColors::Gold);
 	else if (self->spawnflags & ORANGE)
-		self->s.skinNum = ConvertColorsToBeamColor (Colors.HarvestGold, Colors.RobRoy, Colors.TulipTree, Colors.FireBush);
+		self->s.skinNum = ConvertColorsToBeamColor (CColors::HarvestGold, CColors::RobRoy, CColors::TulipTree, CColors::FireBush);
 
 	if (!self->enemy)
 	{

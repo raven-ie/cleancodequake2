@@ -198,7 +198,7 @@ static void fire_lead (edict_t *self, vec3_t start, vec3_t aimdir, int damage, i
 					color = SPLASH_UNKNOWN;
 
 				if (color != SPLASH_UNKNOWN)
-					TempEnts.Splashes.Splash (tr.endPos, tr.plane.normal, (CTEnt_Splashes::ESplashType)color);
+					CTempEnt_Splashes::Splash (tr.endPos, tr.plane.normal, (CTempEnt_Splashes::ESplashType)color);
 
 				// change bullet's course when it enters water
 				Vec3Subtract (end, start, dir);
@@ -230,9 +230,9 @@ static void fire_lead (edict_t *self, vec3_t start, vec3_t aimdir, int damage, i
 				if (strncmp (tr.surface->name, "sky", 3) != 0)
 				{
 					if (te_impact == TE_GUNSHOT)
-						TempEnts.Splashes.Gunshot (tr.endPos, tr.plane.normal);
+						CTempEnt_Splashes::Gunshot (tr.endPos, tr.plane.normal);
 					else
-						TempEnts.Splashes.Shotgun (tr.endPos, tr.plane.normal);
+						CTempEnt_Splashes::Shotgun (tr.endPos, tr.plane.normal);
 
 					if (self->client)
 						PlayerNoise(self, tr.endPos, PNOISE_IMPACT);
@@ -258,7 +258,7 @@ static void fire_lead (edict_t *self, vec3_t start, vec3_t aimdir, int damage, i
 		Vec3Scale (pos, 0.5, pos);
 
 		// FIXME: water_start or pos?
-		TempEnts.Trails.BubbleTrail (pos, tr.endPos);
+		CTempEnt_Trails::BubbleTrail (pos, tr.endPos);
 	}
 }
 
@@ -325,7 +325,7 @@ void blaster_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_
 		T_Damage (other, self, self->owner, self->velocity, self->s.origin, plane ? plane->normal : vec3Origin, self->dmg, 1, DAMAGE_ENERGY, mod);
 	}
 	else
-		TempEnts.Splashes.Blaster(self->s.origin, plane ? plane->normal : vec3Origin);
+		CTempEnt_Splashes::Blaster(self->s.origin, plane ? plane->normal : vec3Origin);
 
 	G_FreeEdict (self);
 }
@@ -424,16 +424,16 @@ static void Grenade_Explode (edict_t *ent)
 	if (ent->waterlevel)
 	{
 		if (ent->groundentity)
-			TempEnts.Explosions.GrenadeExplosion(origin, ent, true);
+			CTempEnt_Explosions::GrenadeExplosion(origin, ent, true);
 		else
-			TempEnts.Explosions.RocketExplosion(origin, ent, true);
+			CTempEnt_Explosions::RocketExplosion(origin, ent, true);
 	}
 	else
 	{
 		if (ent->groundentity)
-			TempEnts.Explosions.GrenadeExplosion(origin, ent);
+			CTempEnt_Explosions::GrenadeExplosion(origin, ent);
 		else
-			TempEnts.Explosions.RocketExplosion(origin, ent);
+			CTempEnt_Explosions::RocketExplosion(origin, ent);
 	}
 
 	G_FreeEdict (ent);
@@ -594,9 +594,9 @@ void rocket_touch (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t 
 	T_RadiusDamage(ent, ent->owner, ent->radius_dmg, other, ent->dmg_radius, MOD_R_SPLASH);
 
 	if (ent->waterlevel)
-		TempEnts.Explosions.RocketExplosion(origin, ent, true);
+		CTempEnt_Explosions::RocketExplosion(origin, ent, true);
 	else
-		TempEnts.Explosions.RocketExplosion(origin, ent, false);
+		CTempEnt_Explosions::RocketExplosion(origin, ent, false);
 
 	G_FreeEdict (ent);
 }
@@ -686,11 +686,11 @@ void fire_rail (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick
 	// send gun puff / flash
 	if (water)
 	{
-		TempEnts.Trails.RailTrail (start, tr.endPos);
-		TempEnts.Trails.RailTrail (tr.endPos, start);
+		CTempEnt_Trails::RailTrail (start, tr.endPos);
+		CTempEnt_Trails::RailTrail (tr.endPos, start);
 	}
 	else
-		TempEnts.Trails.RailTrail (start, tr.endPos);
+		CTempEnt_Trails::RailTrail (start, tr.endPos);
 
 	if (self->client)
 		PlayerNoise(self, tr.endPos, PNOISE_IMPACT);
@@ -732,7 +732,7 @@ void bfg_explode (edict_t *self)
 			if (ent == self->owner)
 				points = points * 0.5;
 
-			TempEnts.Explosions.BFGExplosion (ent->s.origin);
+			CTempEnt_Explosions::BFGExplosion (ent->s.origin);
 			T_Damage (ent, self, self->owner, self->velocity, ent->s.origin, vec3Origin, (int)points, 0, DAMAGE_ENERGY, MOD_BFG_EFFECT);
 		}
 	}
@@ -775,7 +775,7 @@ void bfg_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *s
 	self->nextthink = level.time + FRAMETIME;
 	self->enemy = other;
 
-	TempEnts.Explosions.BFGExplosion (self->s.origin, true);
+	CTempEnt_Explosions::BFGExplosion (self->s.origin, true);
 }
 
 
@@ -832,7 +832,7 @@ void bfg_think (edict_t *self)
 			// if we hit something that's not a monster or player we're done
 			if (!(tr.ent->svFlags & SVF_MONSTER) && (!tr.ent->client))
 			{
-				TempEnts.Splashes.Sparks (tr.endPos, tr.plane.normal, TempEnts.Splashes.STLaserSparks, (CTEnt_Splashes::ESplashType)self->s.skinNum, 4);
+				CTempEnt_Splashes::Sparks (tr.endPos, tr.plane.normal, CTempEnt_Splashes::STLaserSparks, (CTempEnt_Splashes::ESplashType)self->s.skinNum, 4);
 				break;
 			}
 
@@ -840,7 +840,7 @@ void bfg_think (edict_t *self)
 			Vec3Copy (tr.endPos, start);
 		}
 
-		TempEnts.Trails.BFGLaser(self->s.origin, tr.endPos);
+		CTempEnt_Trails::BFGLaser(self->s.origin, tr.endPos);
 	}
 
 	self->nextthink = level.time + FRAMETIME;

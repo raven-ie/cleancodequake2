@@ -789,7 +789,7 @@ void CSuperTank::Explode ()
 		return;
 	}
 
-	TempEnts.Explosions.RocketExplosion (org, Entity);
+	CTempEnt_Explosions::RocketExplosion (org, Entity);
 
 	NextThink = level.time + 0.1;
 }

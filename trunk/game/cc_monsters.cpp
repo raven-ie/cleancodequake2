@@ -95,7 +95,7 @@ void CMonster::MoveToPath (float Dist)
 	// Check if we hit our new path.
 	Vec3Subtract (Entity->s.origin, P_CurrentNode->Origin, sub);
 
-	TempEnts.Trails.FleshCable (Entity->s.origin, P_CurrentNode->Origin, Entity-g_edicts);
+	CTempEnt_Trails::FleshCable (Entity->s.origin, P_CurrentNode->Origin, Entity-g_edicts);
 	if (Vec3Length (sub) < 30)
 	{
 		bool shouldJump = (P_CurrentNode->Type == NODE_JUMP);
@@ -1179,7 +1179,7 @@ void CMonster::MonsterFireBullet (vec3_t start, vec3_t dir, int damage, int kick
 	fire_bullet (Entity, start, dir, damage, kick, hspread, vspread, MOD_UNKNOWN);
 
 	if (flashtype != -1)
-		TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
+		CTempEnt::MonsterFlash (start, Entity - g_edicts, flashtype);
 }
 
 void CMonster::MonsterFireShotgun (vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int count, int flashtype)
@@ -1192,7 +1192,7 @@ void CMonster::MonsterFireShotgun (vec3_t start, vec3_t aimdir, int damage, int 
 	fire_shotgun (Entity, start, aimdir, damage, kick, hspread, vspread, count, MOD_UNKNOWN);
 
 	if (flashtype != -1)
-		TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
+		CTempEnt::MonsterFlash (start, Entity - g_edicts, flashtype);
 }
 
 void CMonster::MonsterFireBlaster (vec3_t start, vec3_t dir, int damage, int speed, int flashtype, int effect)
@@ -1205,7 +1205,7 @@ void CMonster::MonsterFireBlaster (vec3_t start, vec3_t dir, int damage, int spe
 	fire_blaster (Entity, start, dir, damage, speed, effect, false);
 
 	if (flashtype != -1)
-		TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
+		CTempEnt::MonsterFlash (start, Entity - g_edicts, flashtype);
 }	
 
 void CMonster::MonsterFireGrenade (vec3_t start, vec3_t aimdir, int damage, int speed, int flashtype)
@@ -1218,7 +1218,7 @@ void CMonster::MonsterFireGrenade (vec3_t start, vec3_t aimdir, int damage, int 
 	fire_grenade (Entity, start, aimdir, damage, speed, 2.5, damage+40);
 
 	if (flashtype != -1)
-		TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
+		CTempEnt::MonsterFlash (start, Entity - g_edicts, flashtype);
 }
 
 void CMonster::MonsterFireRocket (vec3_t start, vec3_t dir, int damage, int speed, int flashtype)
@@ -1231,7 +1231,7 @@ void CMonster::MonsterFireRocket (vec3_t start, vec3_t dir, int damage, int spee
 	fire_rocket (Entity, start, dir, damage, speed, damage+20, damage);
 
 	if (flashtype != -1)
-		TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
+		CTempEnt::MonsterFlash (start, Entity - g_edicts, flashtype);
 }	
 
 void CMonster::MonsterFireRailgun (vec3_t start, vec3_t aimdir, int damage, int kick, int flashtype)
@@ -1245,7 +1245,7 @@ void CMonster::MonsterFireRailgun (vec3_t start, vec3_t aimdir, int damage, int 
 		fire_rail (Entity, start, aimdir, damage, kick);
 
 	if (flashtype != -1)
-		TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
+		CTempEnt::MonsterFlash (start, Entity - g_edicts, flashtype);
 }
 
 void CMonster::MonsterFireBfg (vec3_t start, vec3_t aimdir, int damage, int speed, int kick, float damage_radius, int flashtype)
@@ -1258,7 +1258,7 @@ void CMonster::MonsterFireBfg (vec3_t start, vec3_t aimdir, int damage, int spee
 	fire_bfg (Entity, start, aimdir, damage, speed, damage_radius);
 
 	if (flashtype != -1)
-		TempEnts.MonsterFlash (start, Entity - g_edicts, flashtype);
+		CTempEnt::MonsterFlash (start, Entity - g_edicts, flashtype);
 }
 
 bool CMonster::CheckAttack ()
