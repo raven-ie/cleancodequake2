@@ -11,16 +11,16 @@ Monsters (bold means done)
   * Boss31/32
   * *Chick*
   * Flipper
-  * Floater
+  * *Floater*
   * *Flyer*
   * Gladiator
-  * Gunner
+  * *Gunner*
   * Hover
   * *Infantry*
   * Insane
   * Medic
-  * Mutant
+  * *Mutant*
   * Parasite
   * *Soldiers*
-  * Supertank
+  * *Supertank*
   * *Tank*
