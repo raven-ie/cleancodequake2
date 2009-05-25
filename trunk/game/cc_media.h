@@ -27,42 +27,24 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_barracuda.h
-// Sharky!
+// cc_media.h
+// Storage for constant media
 //
 
-class CBarracudaShark : public CMonster
+typedef struct SPlayerMedia_s
 {
-public:
-	MediaIndex	SoundChomp;
-	MediaIndex	SoundAttack;
-	MediaIndex	SoundPain1;
-	MediaIndex	SoundPain2;
-	MediaIndex	SoundDeath;
-	MediaIndex	SoundIdle;
-	MediaIndex	SoundSearch;
-	MediaIndex	SoundSight;
+	MediaIndex		Death[4];
+	MediaIndex		Fall[2];
+	MediaIndex		Gurp[2];
+	MediaIndex		Jump;
+	MediaIndex		Pain[4][2];
+} SPlayerMedia_t;
 
-	CBarracudaShark ();
+typedef struct SGameMedia_s
+{
+	SPlayerMedia_t	Player;
+} SGameMedia_t;
 
-	void Allocate (edict_t *ent);
+extern SGameMedia_t gMedia;
 
-	void Run ();
-	void Sight ();
-	void Stand ();
-	void Walk ();
-	void Melee ();
-
-	void PreAttack ();
-	void Bite ();
-	void DoRun ();
-	void RunLoop ();
-
-	void Dead ();
-	void Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
-	void Pain (edict_t *other, float kick, int damage);
-
-	void Spawn ();
-};
-
-extern CBarracudaShark Monster_Shark;
+void InitGameMedia ();

@@ -782,7 +782,9 @@ void CTank::Attack ()
 	vec3_t	vec;
 	float	range;
 	float	r;
+#ifdef MONSTER_USE_ROGUE_AI
 	float	chance;
+#endif
 
 	if (Entity->enemy->health < 0)
 	{

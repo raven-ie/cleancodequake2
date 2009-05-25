@@ -53,7 +53,6 @@ void CSoldierShotgun::Attack ()
 {
 #ifdef MONSTER_USE_ROGUE_AI
 	DoneDodge ();
-#endif
 
 	float r = random();
 	if ((!(AIFlags & (AI_BLOCKED|AI_STAND_GROUND))) &&
@@ -61,6 +60,7 @@ void CSoldierShotgun::Attack ()
 		(r < (skill->Integer()*0.25)))
 		CurrentMove = &SoldierMoveAttack6;
 	else
+#endif
 	{
 		if (random() < 0.5)
 			CurrentMove = &SoldierMoveAttack1;

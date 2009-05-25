@@ -65,11 +65,10 @@ static inline void P_DamageFeedback (edict_t *player, vec3_t forward, vec3_t rig
 	gclient_t	*client;
 	float	side;
 	float	realcount, count, kick;
-	vec3_t	v;
-	int		r, l;
-	static	vec3_t	power_color = {0.0, 1.0, 0.0};
-	static	vec3_t	acolor = {1.0, 1.0, 1.0};
-	static	vec3_t	bcolor = {1.0, 0.0, 0.0};
+	int		l;
+	static	const colorb	PowerColor = colorb(0, 255, 0, 0);
+	static	const colorb	ArmorColor = colorb(255, 255, 255, 0);
+	static	const colorb	BloodColor = colorb(255, 0, 0, 0);
 
 	client = player->client;
 
@@ -124,39 +123,26 @@ static inline void P_DamageFeedback (edict_t *player, vec3_t forward, vec3_t rig
 	// play an apropriate pain sound
 	if ((level.time > player->pain_debounce_time) && !(player->flags & FL_GODMODE) && (client->invincible_framenum <= level.framenum))
 	{
-		r = 1 + (rand()&1);
 		player->pain_debounce_time = level.time + 0.7;
-		if (player->health < 25)
-			l = 25;
-		else if (player->health < 50)
-			l = 50;
-		else if (player->health < 75)
-			l = 75;
-		else
-			l = 100;
-		PlaySoundFrom (player, CHAN_VOICE, SoundIndex(Q_VarArgs ("*pain%i_%i.wav", l, r)));
+
+		l = (int)clamp(((floorf((max(0, player->health-1)) / 25))), 0, 3);
+		PlaySoundFrom (player, CHAN_VOICE, gMedia.Player.Pain[l][(rand()&1)]);
 	}
 
 	// the total alpha of the blend is always proportional to count
-	if (client->damage_alpha < 0)
-		client->damage_alpha = 0;
-	client->damage_alpha += count*0.01f;
-	if (client->damage_alpha < 0.2f)
-		client->damage_alpha = 0.2f;
-	if (client->damage_alpha > 0.6f)
-		client->damage_alpha = 0.6f;		// don't go too saturated
+	byte Alpha = client->damage_blend.A + count*3;
+	if (Alpha < 51)
+		Alpha = 51;
+	if (Alpha > 153)
+		Alpha = 153;		// don't go too saturated
 
 	// the color of the blend will vary based on how much was absorbed
 	// by different armors
-	Vec3Clear (v);
-	if (client->damage_parmor)
-		Vec3MA (v, (float)client->damage_parmor/realcount, power_color, v);
-	if (client->damage_armor)
-		Vec3MA (v, (float)client->damage_armor/realcount,  acolor, v);
-	if (client->damage_blood)
-		Vec3MA (v, (float)client->damage_blood/realcount,  bcolor, v);
-	Vec3Copy (v, client->damage_blend);
-
+	client->damage_blend.Set (
+							(BloodColor.R * (client->damage_blood/realcount)) + (ArmorColor.R * (client->damage_armor/realcount)) + (PowerColor.R * (client->damage_parmor/realcount)),
+							(BloodColor.G * (client->damage_blood/realcount)) + (ArmorColor.G * (client->damage_armor/realcount)) + (PowerColor.G * (client->damage_parmor/realcount)),
+							(BloodColor.B * (client->damage_blood/realcount)) + (ArmorColor.B * (client->damage_armor/realcount)) + (PowerColor.B * (client->damage_parmor/realcount)),
+							Alpha);
 
 	//
 	// calculate view angle kicks
@@ -164,6 +150,7 @@ static inline void P_DamageFeedback (edict_t *player, vec3_t forward, vec3_t rig
 	kick = abs(client->damage_knockback);
 	if (kick && player->health > 0)	// kick of 0 means no view adjust at all
 	{
+		vec3_t v;
 		kick = kick * 100 / player->health;
 
 		if (kick < count*0.5)
@@ -386,19 +373,20 @@ static inline void SV_CalcGunOffset (edict_t *ent, vec3_t forward, vec3_t right,
 SV_AddBlend
 =============
 */
-static inline void SV_AddBlend (float r, float g, float b, float a, float *v_blend)
+static inline void SV_AddBlend (colorb color, colorb &v_blend)
 {
-	float	a2, a3;
+	byte	a2, a3;
 
-	if (a <= 0)
+	if (color.A <= 0)
 		return;
-	a2 = v_blend[3] + (1-v_blend[3])*a;	// new total alpha
-	a3 = v_blend[3]/a2;		// fraction of color from old
 
-	v_blend[0] = v_blend[0]*a3 + r*(1-a3);
-	v_blend[1] = v_blend[1]*a3 + g*(1-a3);
-	v_blend[2] = v_blend[2]*a3 + b*(1-a3);
-	v_blend[3] = a2;
+	a2 = v_blend.A + color.A;	// new total alpha
+	a3 = v_blend.A/a2;		// fraction of color from old
+
+	v_blend.R = v_blend.R*a3 + color.R;
+	v_blend.G = v_blend.G*a3 + color.G;
+	v_blend.B = v_blend.B*a3 + color.B;
+	v_blend.A = a2;
 }
 
 
@@ -409,79 +397,95 @@ SV_CalcBlend
 */
 static inline void SV_CalcBlend (edict_t *ent)
 {
-	int		contents;
-	vec3_t	vieworg;
-	int		remaining;
+	static const colorb LavaColor = colorb(255, 76, 0, 153);
+	static const colorb SlimeColor = colorb(0, 25, 13, 153);
+	static const colorb WaterColor = colorb(127, 76, 51, 102);
+	static const colorb QuadColor = colorb(0, 0, 255, 20);
+	static const colorb InvulColor = colorb(255, 255, 0, 20);
+	static const colorb EnviroColor = colorb(0, 255, 0, 20);
+	static const colorb BreatherColor = colorb(102, 255, 102, 10);
 
-	ent->client->ps.viewBlend[0] = ent->client->ps.viewBlend[1] = 
-		ent->client->ps.viewBlend[2] = ent->client->ps.viewBlend[3] = 0;
+	ent->client->pers.viewBlend = colorb(0,0,0,0);
 
 	// add for contents
+	vec3_t	vieworg;
 	Vec3Add (ent->s.origin, ent->client->ps.viewOffset, vieworg);
-	contents = gi.pointcontents (vieworg);
+	int contents = gi.pointcontents (vieworg);
+
 	if (contents & (CONTENTS_LAVA|CONTENTS_SLIME|CONTENTS_WATER) )
 		ent->client->ps.rdFlags |= RDF_UNDERWATER;
 	else
 		ent->client->ps.rdFlags &= ~RDF_UNDERWATER;
 
 	if (contents & (CONTENTS_SOLID|CONTENTS_LAVA))
-		SV_AddBlend (1.0f, 0.3f, 0.0f, 0.6f, ent->client->ps.viewBlend);
+		SV_AddBlend (LavaColor, ent->client->pers.viewBlend);
 	else if (contents & CONTENTS_SLIME)
-		SV_AddBlend (0.0f, 0.1f, 0.05f, 0.6f, ent->client->ps.viewBlend);
+		SV_AddBlend (SlimeColor, ent->client->pers.viewBlend);
 	else if (contents & CONTENTS_WATER)
-		SV_AddBlend (0.5f, 0.3f, 0.2f, 0.4f, ent->client->ps.viewBlend);
+		SV_AddBlend (WaterColor, ent->client->pers.viewBlend);
 
 	// add for powerups
 	if (ent->client->quad_framenum > level.framenum)
 	{
-		remaining = ent->client->quad_framenum - level.framenum;
+		int remaining = ent->client->quad_framenum - level.framenum;
+
 		if (remaining == 30)	// beginning to fade
 			PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/damage2.wav"));
+
 		if (remaining > 30 || (remaining & 4) )
-			SV_AddBlend (0, 0, 1, 0.08f, ent->client->ps.viewBlend);
+			SV_AddBlend (QuadColor, ent->client->pers.viewBlend);
 	}
 	else if (ent->client->invincible_framenum > level.framenum)
 	{
-		remaining = ent->client->invincible_framenum - level.framenum;
+		int remaining = ent->client->invincible_framenum - level.framenum;
+
 		if (remaining == 30)	// beginning to fade
 			PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/protect2.wav"));
+
 		if (remaining > 30 || (remaining & 4) )
-			SV_AddBlend (1, 1, 0, 0.08f, ent->client->ps.viewBlend);
+			SV_AddBlend (InvulColor, ent->client->pers.viewBlend);
 	}
 	else if (ent->client->enviro_framenum > level.framenum)
 	{
-		remaining = ent->client->enviro_framenum - level.framenum;
+		int remaining = ent->client->enviro_framenum - level.framenum;
+
 		if (remaining == 30)	// beginning to fade
 			PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/airout.wav"));
+
 		if (remaining > 30 || (remaining & 4) )
-			SV_AddBlend (0, 1, 0, 0.08f, ent->client->ps.viewBlend);
+			SV_AddBlend (EnviroColor, ent->client->pers.viewBlend);
 	}
 	else if (ent->client->breather_framenum > level.framenum)
 	{
-		remaining = ent->client->breather_framenum - level.framenum;
+		int remaining = ent->client->breather_framenum - level.framenum;
+
 		if (remaining == 30)	// beginning to fade
 			PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/airout.wav"));
+
 		if (remaining > 30 || (remaining & 4) )
-			SV_AddBlend (0.4f, 1, 0.4f, 0.04f, ent->client->ps.viewBlend);
+			SV_AddBlend (BreatherColor, ent->client->pers.viewBlend);
 	}
 
 	// add for damage
-	if (ent->client->damage_alpha > 0)
-		SV_AddBlend (ent->client->damage_blend[0],ent->client->damage_blend[1]
-		,ent->client->damage_blend[2], ent->client->damage_alpha, ent->client->ps.viewBlend);
+	SV_AddBlend (ent->client->damage_blend, ent->client->pers.viewBlend);
 
-	if (ent->client->bonus_alpha > 0)
-		SV_AddBlend (0.85f, 0.7f, 0.3f, ent->client->bonus_alpha, ent->client->ps.viewBlend);
+	// add bonus
+	SV_AddBlend (colorb(217, 178, 76, ent->client->bonus_alpha), ent->client->pers.viewBlend);
 
 	// drop the damage value
-	ent->client->damage_alpha -= 0.06f;
-	if (ent->client->damage_alpha < 0)
-		ent->client->damage_alpha = 0;
+	if (ent->client->damage_blend.A < 15)
+		ent->client->damage_blend.A -= ent->client->damage_blend.A;
+	else
+		ent->client->damage_blend.A -= 15;
 
 	// drop the bonus value
-	ent->client->bonus_alpha -= 0.1f;
-	if (ent->client->bonus_alpha < 0)
-		ent->client->bonus_alpha = 0;
+	if (ent->client->bonus_alpha < 15)
+		ent->client->bonus_alpha -= ent->client->bonus_alpha;
+	else
+		ent->client->bonus_alpha -= 15;
+
+	for (int i = 0; i < 4; i++)
+		ent->client->ps.viewBlend[i] = (ent->client->pers.viewBlend[i] * 255);
 }
 
 
@@ -673,10 +677,8 @@ static inline void P_WorldEffects (edict_t *ent)
 				// play a gurp sound instead of a normal pain sound
 				if (ent->health <= ent->dmg)
 					PlaySoundFrom (ent, CHAN_VOICE, SoundIndex("player/drown1.wav"));
-				else if (rand()&1)
-					PlaySoundFrom (ent, CHAN_VOICE, SoundIndex("*gurp1.wav"));
 				else
-					PlaySoundFrom (ent, CHAN_VOICE, SoundIndex("*gurp2.wav"));
+					PlaySoundFrom (ent, CHAN_VOICE, gMedia.Player.Gurp[(rand()&1)]);
 
 				ent->pain_debounce_time = level.time;
 

@@ -1154,6 +1154,18 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="Media"
+				>
+				<File
+					RelativePath=".\cc_media.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_media.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 	</Files>
 	<Globals>

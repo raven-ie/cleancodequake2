@@ -34,13 +34,13 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 class CGunner : public CMonster
 {
 public:
-	int	SoundPain;
-	int	SoundPain2;
-	int	SoundDeath;
-	int	SoundIdle;
-	int	SoundOpen;
-	int	SoundSearch;
-	int	SoundSight;
+	MediaIndex	SoundPain;
+	MediaIndex	SoundPain2;
+	MediaIndex	SoundDeath;
+	MediaIndex	SoundIdle;
+	MediaIndex	SoundOpen;
+	MediaIndex	SoundSearch;
+	MediaIndex	SoundSight;
 
 	CGunner ();
 	void Allocate (edict_t *ent);

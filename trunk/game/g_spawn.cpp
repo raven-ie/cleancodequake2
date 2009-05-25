@@ -692,6 +692,8 @@ void SP_worldspawn (edict_t *ent)
 	else
 		gravity->Set(st.gravity);
 
+	InitGameMedia ();
+
 	snd_fry = SoundIndex ("player/fry.wav");	// standing in lava / slime
 
 	SoundIndex ("player/lava1.wav");
@@ -704,25 +706,6 @@ void SP_worldspawn (edict_t *ent)
 
 	// gibs
 	SoundIndex ("items/respawn1.wav");
-
-	// sexed sounds
-	SoundIndex ("*death1.wav");
-	SoundIndex ("*death2.wav");
-	SoundIndex ("*death3.wav");
-	SoundIndex ("*death4.wav");
-	SoundIndex ("*fall1.wav");
-	SoundIndex ("*fall2.wav");	
-	SoundIndex ("*gurp1.wav");		// drowning damage
-	SoundIndex ("*gurp2.wav");	
-	SoundIndex ("*jump1.wav");		// player jump
-	SoundIndex ("*pain25_1.wav");
-	SoundIndex ("*pain25_2.wav");
-	SoundIndex ("*pain50_1.wav");
-	SoundIndex ("*pain50_2.wav");
-	SoundIndex ("*pain75_1.wav");
-	SoundIndex ("*pain75_2.wav");
-	SoundIndex ("*pain100_1.wav");
-	SoundIndex ("*pain100_2.wav");
 
 	//-------------------
 

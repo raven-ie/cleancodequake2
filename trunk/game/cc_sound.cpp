@@ -126,7 +126,7 @@ static BOOL GI_IsInPHS (vec3_t p1, vec3_t p2)
 }
 */
 
-static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channel, int soundIndex, float vol, float attenuation, float timeOffset)
+static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channel, MediaIndex soundIndex, float vol, float attenuation, float timeOffset)
 {
 	int			sendChan, flags, i, ent;
 	float		leftVol, rightVol, distanceMult;
@@ -278,12 +278,12 @@ static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channe
 	}
 }
 
-void PlaySoundFrom (edict_t *ent, EEntSndChannel channel, int soundIndex, float volume, int attenuation, float timeOfs)
+void PlaySoundFrom (edict_t *ent, EEntSndChannel channel, MediaIndex soundIndex, float volume, int attenuation, float timeOfs)
 {
 	SV_StartSound (NULL, ent, channel, soundIndex, volume, attenuation, timeOfs);
 }
 
-void PlaySoundAt (vec3_t origin, edict_t *ent, EEntSndChannel channel, int soundIndex, float volume, int attenuation, float timeOfs)
+void PlaySoundAt (vec3_t origin, edict_t *ent, EEntSndChannel channel, MediaIndex soundIndex, float volume, int attenuation, float timeOfs)
 {
 	SV_StartSound (origin, ent, channel, soundIndex, volume, attenuation, timeOfs);
 }

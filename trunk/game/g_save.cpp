@@ -562,6 +562,7 @@ void ReadGame (char *filename)
 	char	str[16];
 
 	gi.FreeTags (TAG_GAME);
+	gi.FreeTags (TAG_CLEAN_GAME);
 
 #ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
 	f = fopen (filename, "rb");

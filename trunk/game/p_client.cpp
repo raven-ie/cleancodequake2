@@ -783,7 +783,7 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 					break;
 				}
 			}
-			PlaySoundFrom (self, CHAN_VOICE, SoundIndex(Q_VarArgs ("*death%i.wav", (rand()%4)+1)));
+			PlaySoundFrom (self, CHAN_VOICE, gMedia.Player.Death[(rand()%4)+1]);
 		}
 	}
 
@@ -1884,7 +1884,7 @@ void ClientThink (edict_t *ent, userCmd_t *ucmd)
 
 		if (ent->groundentity && !pm.groundEntity && (pm.cmd.upMove >= 10) && (pm.waterLevel == 0))
 		{
-			PlaySoundFrom(ent, CHAN_VOICE, SoundIndex("*jump1.wav"));
+			PlaySoundFrom(ent, CHAN_VOICE, gMedia.Player.Jump);
 			PlayerNoise(ent, ent->s.origin, PNOISE_SELF);
 		}
 

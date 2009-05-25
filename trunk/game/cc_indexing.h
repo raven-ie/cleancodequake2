@@ -31,10 +31,12 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // New indexing system
 //
 
-class CIndex // (lol)
+typedef byte MediaIndex;
+
+class CIndex
 {
 public:
-	int Index;
+	MediaIndex Index;
 	char *Name;
 
 	CIndex		*HashNext;
@@ -51,15 +53,16 @@ public:
 	CIndex	*List[MAX_INDEXES];
 	CIndex	*HashList[MAX_INDEXES];
 
-	int	numIndexes;
+	byte	numIndexes;
 
-	int		AddToList (char *String, int Index);
+	int		AddToList (char *String, MediaIndex Index);
 	int		GetIndex (char *String);
 
 	void	Clear ();
 };
 
-int ModelIndex (char *string);
-int SoundIndex (char *string);
-int ImageIndex (char *string);
+MediaIndex ModelIndex (char *string);
+MediaIndex SoundIndex (char *string);
+MediaIndex ImageIndex (char *string);
 void ClearList ();
+

@@ -35,21 +35,21 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 class CMaiden : public CMonster
 {
 public:
-	int	SoundMissilePrelaunch;
-	int	SoundMissileLaunch;
-	int	SoundMeleeSwing;
-	int	SoundMeleeHit;
-	int	SoundMissileReload;
-	int	SoundDeath1;
-	int	SoundDeath2;
-	int	SoundFallDown;
-	int	SoundIdle1;
-	int	SoundIdle2;
-	int	SoundPain1;
-	int	SoundPain2;
-	int	SoundPain3;
-	int	SoundSight;
-	int	SoundSearch;
+	MediaIndex	SoundMissilePrelaunch;
+	MediaIndex	SoundMissileLaunch;
+	MediaIndex	SoundMeleeSwing;
+	MediaIndex	SoundMeleeHit;
+	MediaIndex	SoundMissileReload;
+	MediaIndex	SoundDeath1;
+	MediaIndex	SoundDeath2;
+	MediaIndex	SoundFallDown;
+	MediaIndex	SoundIdle1;
+	MediaIndex	SoundIdle2;
+	MediaIndex	SoundPain1;
+	MediaIndex	SoundPain2;
+	MediaIndex	SoundPain3;
+	MediaIndex	SoundSight;
+	MediaIndex	SoundSearch;
 
 	CMaiden ();
 

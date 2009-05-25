@@ -34,14 +34,14 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 class CTank : public CMonster
 {
 public:
-	int	SoundThud;
-	int	SoundPain;
-	int	SoundIdle;
-	int	SoundDie;
-	int	SoundStep;
-	int	SoundSight;
-	int	SoundWindup;
-	int	SoundStrike;
+	MediaIndex	SoundThud;
+	MediaIndex	SoundPain;
+	MediaIndex	SoundIdle;
+	MediaIndex	SoundDie;
+	MediaIndex	SoundStep;
+	MediaIndex	SoundSight;
+	MediaIndex	SoundWindup;
+	MediaIndex	SoundStrike;
 
 	CTank ();
 

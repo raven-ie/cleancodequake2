@@ -41,6 +41,12 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Makes pathfinding work.
 #define MONSTERS_USE_PATHFINDING
 
+// Specific monster options
+#define SUPERTANK_USES_GRENADE_LAUNCHER
+#define FLYER_KNOWS_HOW_TO_DODGE
+#define INFANTRY_DOES_REVERSE_GUN_ATTACK
+
+
 // "Extended game imports" refers to:
 // gi.cprintf, gi.dprintf, gi.centerprintf, gi.bprintf, gi.sound, gi.positioned_sound
 //#define USE_EXTENDED_GAME_IMPORTS
@@ -63,3 +69,6 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 									__pragma(warning(disable:4996)) \
 									x \
 									__pragma(warning(pop))
+
+// Define this if you want to use Microsoft Visual Studio 7.0+ safe functions
+#define CRT_USE_UNDEPRECATED_FUNCTIONS

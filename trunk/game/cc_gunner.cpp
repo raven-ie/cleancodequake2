@@ -296,11 +296,13 @@ void CGunner::Pain (edict_t *other, float kick, int damage)
 
 	CurrentMove = ((damage <= 10) ? &GunnerMovePain3 : ((damage <= 25) ? &GunnerMovePain2 : &GunnerMovePain1));
 
+#ifdef MONSTER_USE_ROGUE_AI
 	AIFlags &= ~AI_MANUAL_STEERING;
 
 	// PMM - clear duck flag
 	if (AIFlags & AI_DUCKED)
 		UnDuck();
+#endif
 }
 
 void CGunner::Dead ()
@@ -673,6 +675,7 @@ CFrame GunnerFramesEndFireChain [] =
 };
 CAnim GunnerMoveEndFireChain (FRAME_attak224, FRAME_attak230, GunnerFramesEndFireChain, ConvertDerivedFunction(&CGunner::Run));
 
+#ifdef MONSTER_USE_ROGUE_AI
 void CGunner::BlindCheck ()
 {
 	vec3_t	aim;
@@ -683,6 +686,7 @@ void CGunner::BlindCheck ()
 		IdealYaw = VecToYaw(aim);
 	}
 }
+#endif
 
 CFrame GunnerFramesAttackGrenade [] =
 {
@@ -858,9 +862,9 @@ void CGunner::Spawn ()
 	Entity->gib_health = -70;
 	Entity->mass = 200;
 
-	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_SIGHT | 
+	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_SIGHT
 #ifdef MONSTER_USE_ROGUE_AI
-		MF_HAS_DODGE | MF_HAS_DUCK | MF_HAS_UNDUCK | MF_HAS_SIDESTEP
+		| MF_HAS_DODGE | MF_HAS_DUCK | MF_HAS_UNDUCK | MF_HAS_SIDESTEP
 #endif
 		);
 	gi.linkentity (Entity);

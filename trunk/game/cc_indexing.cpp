@@ -56,7 +56,7 @@ int CIndexList::GetIndex (char *String)
 	return -1;
 }
 
-int CIndexList::AddToList (char *String, int Index)
+int CIndexList::AddToList (char *String, MediaIndex Index)
 {
 	CIndex *NewIndex = new CIndex;
 	NewIndex->Index = Index;
@@ -75,7 +75,7 @@ int CIndexList::AddToList (char *String, int Index)
 
 _CC_DISABLE_DEPRECATION
 (
-int ModelIndex (char *String)
+MediaIndex ModelIndex (char *String)
 {
 	// Do we exist?
 	int Index = ModelList.GetIndex(String);
@@ -84,7 +84,7 @@ int ModelIndex (char *String)
 	return Index;
 }
 
-int SoundIndex (char *String)
+MediaIndex SoundIndex (char *String)
 {
 	// Do we exist?
 	int Index = SoundList.GetIndex(String);
@@ -93,7 +93,7 @@ int SoundIndex (char *String)
 	return Index;
 }
 
-int ImageIndex (char *String)
+MediaIndex ImageIndex (char *String)
 {
 	// Do we exist?
 	int Index = ImageList.GetIndex(String);

@@ -86,7 +86,6 @@ void CSoldierLight::Attack ()
 		return;
 	}
 	// pmm
-#endif
 
 	float r = random();
 	if ((!(AIFlags & (AI_BLOCKED|AI_STAND_GROUND))) &&
@@ -94,6 +93,7 @@ void CSoldierLight::Attack ()
 		(r < (skill->Integer()*0.25)))
 		CurrentMove = &SoldierMoveAttack6;
 	else
+#endif
 	{
 		if (random() < 0.5)
 			CurrentMove = &SoldierMoveAttack1;

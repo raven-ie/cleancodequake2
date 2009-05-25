@@ -218,7 +218,9 @@ void CInfantry::Pain (edict_t *other, float kick, int damage)
 	if (Entity->health < (Entity->max_health / 2))
 		Entity->s.skinNum = 1;
 
+#ifdef MONSTER_USE_ROGUE_AI
 	DoneDodge();
+#endif
 
 	if (level.time < Entity->pain_debounce_time)
 		return;
@@ -577,6 +579,7 @@ void CInfantry::Melee ()
 	CurrentMove = &InfantryMoveAttack2;
 }
 
+#ifdef MONSTER_USE_ROGUE_AI
 void CInfantry::Duck (float eta)
 {
 	if ((CurrentMove == &InfantryMoveAttack1) ||
@@ -619,6 +622,7 @@ void CInfantry::SideStep ()
 	if (CurrentMove != &InfantryMoveRun)
 		CurrentMove = &InfantryMoveRun;
 }
+#endif
 
 void CInfantry::Spawn ()
 {
