@@ -36,6 +36,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		AMDCaProjectFile = D:\cleancodeq2\trunk\CodeAnalyst\ccq2.caw
+		AMDCaProjectFile = E:\cleancodeq2\trunk\CodeAnalyst\ccq2.caw
 	EndGlobalSection
 EndGlobal
