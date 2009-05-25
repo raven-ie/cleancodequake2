@@ -27,29 +27,41 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_hash.cpp
-// Duh
+// cc_icarus.h
+// Icarus
 //
 
-#include "cc_local.h"
-
-/*
-================
-Com_HashGeneric
-hashSize MUST be a power of two!
-
-From EGL, used to make table lookups
-a bit faster.
-================
-*/
-uint32 Com_HashGeneric (const char *name, const int hashSize)
+class CIcarus : public CMonster
 {
-	uint32 hashValue = 0;
-	for ( ; *name ; )
-	{
-		int ch = Q_tolower(*(name++));
-		hashValue = hashValue * 33 + ch;
-	}
+public:
+	MediaIndex	SoundPain1;
+	MediaIndex	SoundPain2;
+	MediaIndex	SoundDeath1;
+	MediaIndex	SoundDeath2;
+	MediaIndex	SoundSight;
+	MediaIndex	SoundSearch1;
+	MediaIndex	SoundSearch2;
 
-	return (hashValue + (hashValue >> 5)) & (hashSize-1);
-}
+	CIcarus ();
+	void Allocate (edict_t *ent);
+
+	void ReAttack ();
+	void FireBlaster ();
+	void DeadThink ();
+	void StartAttack ();
+
+	void Attack ();
+	void Run ();
+	void Sight ();
+	void Stand ();
+	void Walk ();
+	void Search ();
+
+	void Dead ();
+	void Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
+	void Pain (edict_t *other, float kick, int damage);
+
+	void Spawn ();
+};
+
+extern CIcarus Monster_Icarus;
