@@ -38,7 +38,7 @@ CSuperTank Monster_SuperTank;
 
 CSuperTank::CSuperTank ()
 {
-	Classname = "monster_boss1";
+	Classname = "monster_supertank";
 	Scale = MODEL_SCALE;
 };
 
