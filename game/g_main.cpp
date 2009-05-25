@@ -26,8 +26,8 @@ gameImport_t	gi;
 gameExport_t	globals;
 spawn_temp_t	st;
 
-int	sm_meat_index;
-int	snd_fry;
+MediaIndex	sm_meat_index;
+MediaIndex	snd_fry;
 int meansOfDeath;
 
 edict_t		*g_edicts;
@@ -99,6 +99,8 @@ void ShutdownGame (void)
 
 	gi.FreeTags (TAG_LEVEL);
 	gi.FreeTags (TAG_GAME);
+	gi.FreeTags (TAG_CLEAN_GAME);
+	gi.FreeTags (TAG_CLEAN_LEVEL);
 }
 
 

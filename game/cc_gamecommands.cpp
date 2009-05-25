@@ -306,7 +306,7 @@ void Cmd_Say_f (edict_t *ent, bool team, bool arg0)
 
 	// don't let text be too long for malicious reasons
 	if (strlen(text) > sizeof(text))
-		text[150] = 0;
+		text[sizeof(text)] = 0;
 
 	Q_strcatz(text, "\n", sizeof(text));
 
@@ -359,20 +359,44 @@ void Cmd_PlayerList_f(edict_t *ent)
 {
 	int i;
 	char st[80];
-	char text[1400];
+	char text[MAX_COMPRINT/4];
 	edict_t *e2;
 
 	// connect time, ping, score, name
 	*text = 0;
-	for (i = 0, e2 = g_edicts + 1; i < maxclients->Integer(); i++, e2++) {
+
+	Q_snprintfz (text, sizeof(text), "Spawned:\n");
+	for (i = 0, e2 = g_edicts + 1; i < maxclients->Integer(); i++, e2++)
+	{
 		if (!e2->inUse)
 			continue;
+		if (e2->client->pers.state != SVCS_SPAWNED)
+			continue;
 
-		Q_snprintfz(st, sizeof(st), "%02d:%02d %4d %3d %s%s\n",
+		Q_snprintfz(st, sizeof(st), " - %02d:%02d %4d %3d %s%s\n",
 			(level.framenum - e2->client->resp.enterframe) / 600,
 			((level.framenum - e2->client->resp.enterframe) % 600)/10,
 			e2->client->ping,
 			e2->client->resp.score,
+			e2->client->pers.netname,
+			e2->client->resp.spectator ? " (spectator)" : "");
+		if (strlen(text) + strlen(st) > sizeof(text) - 50) {
+			Q_snprintfz (text+strlen(text), sizeof(text), "And more...\n");
+			ClientPrintf(ent, PRINT_HIGH, "%s", text);
+			return;
+		}
+		Q_strcatz(text, st, sizeof(text));
+	}
+
+	Q_strcatz (text, "Connecting:\n", sizeof(text));
+	for (i = 0, e2 = g_edicts + 1; i < maxclients->Integer(); i++, e2++)
+	{
+		if (!e2->inUse)
+			continue;
+		if (e2->client->pers.state == SVCS_SPAWNED)
+			continue;
+
+		Q_snprintfz(st, sizeof(st), " - %s%s\n",
 			e2->client->pers.netname,
 			e2->client->resp.spectator ? " (spectator)" : "");
 		if (strlen(text) + strlen(st) > sizeof(text) - 50) {
@@ -397,6 +421,13 @@ void GCmd_SayTeam_f (edict_t *ent)
 
 void Cmd_Test_f (edict_t *ent)
 {
+	char *sound = ArgGets(1);
+
+	if (!sound || !sound[0])
+		return;
+
+	gi.configstring (CS_SOUNDS+70, sound);
+	PlaySoundFrom (ent, CHAN_AUTO, 70);
 }
 
 void Cmd_Register ()

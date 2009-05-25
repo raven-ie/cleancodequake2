@@ -31,18 +31,16 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Flyer Monster
 //
 
-#define FLYER_KNOWS_HOW_TO_DODGE
-
 class CFlyer : public CMonster
 {
 public:
-	int	SoundSight;
-	int	SoundIdle;
-	int	SoundPain1;
-	int	SoundPain2;
-	int	SoundSlash;
-	int	SoundSproing;
-	int	SoundDie;
+	MediaIndex	SoundSight;
+	MediaIndex	SoundIdle;
+	MediaIndex	SoundPain1;
+	MediaIndex	SoundPain2;
+	MediaIndex	SoundSlash;
+	MediaIndex	SoundSproing;
+	MediaIndex	SoundDie;
 
 	CFlyer ();
 	void Allocate (edict_t *ent);

@@ -76,8 +76,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // memory tags to allow dynamic memory to be cleaned up
 #define TAG_GAME	765		// clear when unloading the dll
 #define TAG_LEVEL	766		// clear when loading a new level
-#define TAG_CLEAN	767		// "Clean" memory
-
+#define TAG_CLEAN_GAME	767		// "Clean" memory
+#define TAG_CLEAN_LEVEL	768		// "Clean" memory
 
 #define MELEE_DISTANCE	80
 
@@ -293,8 +293,8 @@ extern	gameImport_t	gi;
 extern	gameExport_t	globals;
 extern	spawn_temp_t	st;
 
-extern	int	sm_meat_index;
-extern	int	snd_fry;
+extern	MediaIndex	sm_meat_index;
+extern	MediaIndex	snd_fry;
 
 // means of death
 enum // EMeansOfDeath
@@ -584,6 +584,8 @@ typedef struct
 	int			helpchanged;
 
 	bool		spectator;			// client is a spectator
+
+	colorb		viewBlend; // View blending
 } client_persistant_t;
 
 // client data that stays across deathmatch respawns
@@ -640,9 +642,8 @@ struct gclient_s
 	vec3_t		kick_origin;
 	float		v_dmg_roll, v_dmg_pitch, v_dmg_time;	// damage kicks
 	float		fall_time, fall_value;		// for view drop on fall
-	float		damage_alpha;
-	float		bonus_alpha;
-	vec3_t		damage_blend;
+	byte		bonus_alpha;
+	colorb		damage_blend;
 	vec3_t		v_angle;			// aiming direction
 	float		bobtime;			// so off-ground doesn't change it
 	vec3_t		oldviewangles;
@@ -661,10 +662,10 @@ struct gclient_s
 	bool		anim_run;
 
 	// powerup timers
-	float		quad_framenum;
-	float		invincible_framenum;
-	float		breather_framenum;
-	float		enviro_framenum;
+	int			quad_framenum;
+	int			invincible_framenum;
+	int			breather_framenum;
+	int			enviro_framenum;
 
 	bool		grenade_blew_up;
 	bool		grenade_thrown;
@@ -803,8 +804,8 @@ struct edict_s
 	edict_t		*mynoise;		// can go in client only
 	edict_t		*mynoise2;
 
-	int			noise_index;
-	int			noise_index2;
+	MediaIndex			noise_index;
+	MediaIndex			noise_index2;
 	float		volume;
 	float		attenuation;
 

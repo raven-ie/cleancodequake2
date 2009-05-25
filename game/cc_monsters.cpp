@@ -1093,6 +1093,7 @@ void CMonster::MonsterTriggeredSpawn ()
 		Entity->enemy = NULL;
 }
 
+#ifdef MONSTERS_ARENT_STUPID
 bool CMonster::FriendlyInLine (vec3_t Origin, vec3_t Direction)
 {
 	vec3_t dir, forward, end;
@@ -1106,6 +1107,7 @@ bool CMonster::FriendlyInLine (vec3_t Origin, vec3_t Direction)
 		return true;
 	return false;
 }
+#endif
 
 #ifdef MONSTERS_ARENT_STUPID
 /*
@@ -1935,8 +1937,8 @@ void CMonster::AI_Run(float Dist)
 
 	if (EnemyVis)
 	{
-		if (AIFlags & AI_LOST_SIGHT)
-			gi.dprintf("regained sight\n");
+		//if (AIFlags & AI_LOST_SIGHT)
+			//gi.dprintf("regained sight\n");
 		MoveToGoal (Dist);
 		AIFlags &= ~AI_LOST_SIGHT;
 		Vec3Copy (Entity->enemy->s.origin, LastSighting);
@@ -1968,7 +1970,7 @@ void CMonster::AI_Run(float Dist)
 	if (!(AIFlags & AI_LOST_SIGHT))
 	{
 		// just lost sight of the player, decide where to go first
-		gi.dprintf("lost sight of player, last seen at %f %f %f\n", LastSighting[0], LastSighting[1], LastSighting[2]);
+		//gi.dprintf("lost sight of player, last seen at %f %f %f\n", LastSighting[0], LastSighting[1], LastSighting[2]);
 
 #ifdef MONSTERS_USE_PATHFINDING
 		// Set us up for pathing
@@ -3448,7 +3450,9 @@ bool CMonster::FindTarget()
 // got one
 //
 	FoundTarget ();
+#ifdef MONSTERS_ARENT_STUPID
 	AlertNearbyStroggs ();
+#endif
 
 	if ((Entity->enemy != old) && MonsterFlags & MF_HAS_SIGHT)
 		Sight ();

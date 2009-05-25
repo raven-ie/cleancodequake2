@@ -31,19 +31,17 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Supertank (Boss1)
 //
 
-#define SUPERTANK_USES_GRENADE_LAUNCHER
-
 class CSuperTank : public CMonster
 {
 public:
-	int SoundPain1;
-	int	SoundPain2;
-	int	SoundPain3;
-	int	SoundDeath;
-	int	SoundSearch1;
-	int	SoundSearch2;
+	MediaIndex SoundPain1;
+	MediaIndex	SoundPain2;
+	MediaIndex	SoundPain3;
+	MediaIndex	SoundDeath;
+	MediaIndex	SoundSearch1;
+	MediaIndex	SoundSearch2;
 
-	int	TreadSound;
+	MediaIndex	TreadSound;
 
 	CSuperTank ();
 

@@ -27,42 +27,38 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_barracuda.h
-// Sharky!
+// cc_media.cpp
+// Storage for constant media
 //
 
-class CBarracudaShark : public CMonster
+#include "cc_local.h"
+
+SGameMedia_t gMedia;
+
+void InitGameMedia ()
 {
-public:
-	MediaIndex	SoundChomp;
-	MediaIndex	SoundAttack;
-	MediaIndex	SoundPain1;
-	MediaIndex	SoundPain2;
-	MediaIndex	SoundDeath;
-	MediaIndex	SoundIdle;
-	MediaIndex	SoundSearch;
-	MediaIndex	SoundSight;
+	char buffer[MAX_INFO_KEY];
 
-	CBarracudaShark ();
+	for (int i = 0; i < 4; i++)
+	{
+		Q_snprintfz (buffer, sizeof(buffer), "*death%i.wav", i+1);
+		gMedia.Player.Death[i] = SoundIndex(buffer);
+	}
 
-	void Allocate (edict_t *ent);
+	gMedia.Player.Fall[0] = SoundIndex("*fall1.wav");
+	gMedia.Player.Fall[1] = SoundIndex("*fall2.wav");
 
-	void Run ();
-	void Sight ();
-	void Stand ();
-	void Walk ();
-	void Melee ();
+	gMedia.Player.Gurp[0] = SoundIndex("*gurp1.wav");
+	gMedia.Player.Gurp[1] = SoundIndex("*gurp2.wav");
 
-	void PreAttack ();
-	void Bite ();
-	void DoRun ();
-	void RunLoop ();
+	gMedia.Player.Jump = SoundIndex("*jump1.wav");
 
-	void Dead ();
-	void Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
-	void Pain (edict_t *other, float kick, int damage);
+	for (int i = 25; i <= 100; i += 25)
+	{
+		Q_snprintfz (buffer, sizeof(buffer), "*pain%i_1.wav", i);
+		gMedia.Player.Pain[(int)(i / 25) - 1][0] = SoundIndex(buffer);
 
-	void Spawn ();
-};
-
-extern CBarracudaShark Monster_Shark;
+		Q_snprintfz (buffer, sizeof(buffer), "*pain%i_2.wav", i);
+		gMedia.Player.Pain[(int)(i / 25) - 1][1] = SoundIndex(buffer);
+	}
+}

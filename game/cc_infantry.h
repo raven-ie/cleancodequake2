@@ -31,23 +31,21 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Infantry Monster
 //
 
-#define INFANTRY_DOES_REVERSE_GUN_ATTACK
-
 class CInfantry : public CMonster
 {
 public:
-	int	SoundPain1;
-	int	SoundPain2;
-	int	SoundDie1;
-	int	SoundDie2;
+	MediaIndex	SoundPain1;
+	MediaIndex	SoundPain2;
+	MediaIndex	SoundDie1;
+	MediaIndex	SoundDie2;
 
-	int	SoundGunshot;
-	int	SoundWeaponCock;
-	int	SoundPunchSwing;
-	int	SoundPunchHit;
-	int	SoundSight;
-	int	SoundSearch;
-	int	SoundIdle;
+	MediaIndex	SoundGunshot;
+	MediaIndex	SoundWeaponCock;
+	MediaIndex	SoundPunchSwing;
+	MediaIndex	SoundPunchHit;
+	MediaIndex	SoundSight;
+	MediaIndex	SoundSearch;
+	MediaIndex	SoundIdle;
 
 	CInfantry ();
 

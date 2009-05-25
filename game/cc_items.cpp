@@ -240,7 +240,7 @@ void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *su
 		return;
 
 	// flash the screen
-	other->client->bonus_alpha = 0.25;	
+	other->client->bonus_alpha = 64;	
 
 	// show icon and name on status bar
 	other->client->ps.stats[STAT_PICKUP_ICON] = ImageIndex(ent->item->Icon);
