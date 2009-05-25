@@ -1065,6 +1065,14 @@
 						>
 					</File>
 					<File
+						RelativePath=".\cc_icarus.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_icarus.h"
+						>
+					</File>
+					<File
 						RelativePath=".\cc_infantry.cpp"
 						>
 					</File>

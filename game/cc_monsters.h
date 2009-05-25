@@ -355,3 +355,4 @@ void Monster_Think (edict_t *ent);
 #include "cc_floater.h"
 #include "cc_supertank.h"
 #include "cc_barracuda.h"
+#include "cc_icarus.h"
