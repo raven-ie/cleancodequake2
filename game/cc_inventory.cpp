@@ -321,7 +321,7 @@ void Cmd_WeapPrev_f (edict_t *ent)
 	// scan  for the next valid one
 	for (int i=0 ; i<=GetNumItems() ; i++)
 	{
-		int index = (selectedWeaponIndex + i)%MAX_CS_ITEMS;
+		int index = (selectedWeaponIndex + MAX_ITEMS - i)%MAX_CS_ITEMS;
 		if (!ent->client->pers.Inventory.Has(index))
 			continue;
 		CBaseItem *Item = GetItemByIndex(index);
@@ -350,7 +350,7 @@ void Cmd_WeapNext_f (edict_t *ent)
 	// scan  for the next valid one
 	for (int i=0 ; i<=GetNumItems() ; i++)
 	{
-		int index = (selectedWeaponIndex + MAX_CS_ITEMS - i)%MAX_CS_ITEMS;
+		int index = (selectedWeaponIndex + i)%MAX_CS_ITEMS;
 		if (!ent->client->pers.Inventory.Has(index))
 			continue;
 		CBaseItem *Item = GetItemByIndex(index);

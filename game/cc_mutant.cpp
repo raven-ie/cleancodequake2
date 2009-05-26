@@ -377,7 +377,7 @@ void CMutant::JumpTakeOff ()
 
 	PlaySoundFrom (Entity, CHAN_VOICE, SoundSight);
 	Vec3MA (Entity->velocity, 550, forward, Entity->velocity);
-	Vec3MA (Entity->velocity, 100 + Vec3Length(angles), up, Entity->velocity);
+	Vec3MA (Entity->velocity, 60 + Vec3Length(angles), up, Entity->velocity);
 	//Entity->velocity[2] = 250;
 #endif
 
@@ -439,9 +439,18 @@ bool CMutant::CheckJump ()
 	// Did we lose sight of them?
 	if (AIFlags & AI_LOST_SIGHT)
 	{
+		vec3_t temp;
+
 		// Did we already try this?
 		if (AttemptJumpToLastSight)
 			return false;
+
+		Vec3Subtract (Entity->s.origin, LastSighting, temp);
+		if (Vec3Length(temp) > 400)
+		{
+			DebugPrintf ("Not attempting.\n");
+			return false; // Too far
+		}
 
 		// So we lost sight of the player.
 		// Can we jump to the last spot we saw him?
@@ -456,6 +465,7 @@ bool CMutant::CheckJump ()
 			vec3_t below = {LastSighting[0], LastSighting[1], LastSighting[2] - 64};
 
 			trace = CTrace (LastSighting, below, Entity, CONTENTS_MASK_MONSTERSOLID);
+			CTempEnt_Trails::DebugTrail (LastSighting, below);
 			if (trace.fraction < 1.0)
 			{
 				// Hit floor, we're solid and can do this jump
@@ -484,7 +494,11 @@ bool CMutant::CheckJump ()
 			
 				Vec3MA (temp, -15, forward, temp);
 				trace = CTrace(Entity->s.origin, temp, Entity, CONTENTS_MASK_MONSTERSOLID);
+				CTempEnt_Trails::DebugTrail (Entity->s.origin, temp);
 			}
+
+			// Push it up a bit
+			temp[2] += 8;
 
 			if (escape != 100)
 			{
@@ -516,6 +530,8 @@ bool CMutant::CheckJump ()
 		if (random() < 0.9)
 			return false;
 	}
+	else if (distance > 350)
+		return false;
 
 	return true;
 }
