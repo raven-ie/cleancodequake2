@@ -780,11 +780,11 @@ void CSuperTank::Explode ()
 	case 8:
 		Entity->s.sound = 0;
 		for (n= 0; n < 4; n++)
-			ThrowGib (Entity, "models/objects/gibs/sm_meat/tris.md2", 500, GIB_ORGANIC);
+			ThrowGib (Entity, gMedia.Gib_SmallMeat, 500, GIB_ORGANIC);
 		for (n= 0; n < 8; n++)
-			ThrowGib (Entity, "models/objects/gibs/sm_metal/tris.md2", 500, GIB_METALLIC);
-		ThrowGib (Entity, "models/objects/gibs/chest/tris.md2", 500, GIB_ORGANIC);
-		ThrowHead (Entity, "models/objects/gibs/gear/tris.md2", 500, GIB_METALLIC);
+			ThrowGib (Entity, gMedia.Gib_SmallMetal, 500, GIB_METALLIC);
+		ThrowGib (Entity, gMedia.Gib_Chest, 500, GIB_ORGANIC);
+		ThrowHead (Entity, gMedia.Gib_Gear, 500, GIB_METALLIC);
 		Entity->deadflag = DEAD_DEAD;
 		return;
 	}

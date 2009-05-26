@@ -600,10 +600,10 @@ void CIcarus::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t poi
 	{
 		PlaySoundFrom (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
-			ThrowGib (Entity, "models/objects/gibs/bone/tris.md2", damage, GIB_ORGANIC);
+			ThrowGib (Entity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
 		for (int n= 0; n < 2; n++)
-			ThrowGib (Entity, "models/objects/gibs/sm_meat/tris.md2", damage, GIB_ORGANIC);
-		ThrowHead (Entity, "models/objects/gibs/sm_meat/tris.md2", damage, GIB_ORGANIC);
+			ThrowGib (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		ThrowHead (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 		Entity->deadflag = DEAD_DEAD;
 		return;
 	}

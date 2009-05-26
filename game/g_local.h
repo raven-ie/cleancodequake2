@@ -212,8 +212,6 @@ typedef struct
 	edict_t		*SoundEntity;
 #endif
 
-	int			pic_health;
-
 	int			total_secrets;
 	int			found_secrets;
 
@@ -292,9 +290,6 @@ extern	level_locals_t	level;
 extern	gameImport_t	gi;
 extern	gameExport_t	globals;
 extern	spawn_temp_t	st;
-
-extern	MediaIndex	sm_meat_index;
-extern	MediaIndex	snd_fry;
 
 // means of death
 enum // EMeansOfDeath
@@ -448,9 +443,9 @@ void T_RadiusDamage (edict_t *inflictor, edict_t *attacker, float damage, edict_
 //
 // g_misc.c
 //
-void ThrowHead (edict_t *self, char *gibname, int damage, int type);
+void ThrowHead (edict_t *self, MediaIndex gibIndex, int damage, int type);
 void ThrowClientHead (edict_t *self, int damage);
-void ThrowGib (edict_t *self, char *gibname, int damage, int type);
+void ThrowGib (edict_t *self, MediaIndex gibIndex, int damage, int type);
 void BecomeExplosion1(edict_t *self);
 
 //
@@ -671,7 +666,7 @@ struct gclient_s
 	bool		grenade_thrown;
 	float		grenade_time;
 	int			silencer_shots;
-	int			weapon_sound;
+	MediaIndex	weapon_sound;
 
 	float		pickup_msg_time;
 

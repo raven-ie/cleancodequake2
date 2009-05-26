@@ -680,12 +680,6 @@ void SP_worldspawn (edict_t *ent)
 	SetItemNames();
 	DoWeaponVweps ();
 
-	// help icon for statusbar
-	ImageIndex ("i_help");
-	level.pic_health = ImageIndex ("i_health");
-	ImageIndex ("help");
-	ImageIndex ("field_3");
-
 	CCvar *gravity = new CCvar ("gravity", "800", 0);
 	if (!st.gravity)
 		gravity->Set("800");
@@ -693,8 +687,6 @@ void SP_worldspawn (edict_t *ent)
 		gravity->Set(st.gravity);
 
 	InitGameMedia ();
-
-	snd_fry = SoundIndex ("player/fry.wav");	// standing in lava / slime
 
 	SoundIndex ("player/lava1.wav");
 	SoundIndex ("player/lava2.wav");
@@ -730,14 +722,6 @@ void SP_worldspawn (edict_t *ent)
 	SoundIndex ("weapons/noammo.wav");
 
 	SoundIndex ("infantry/inflies1.wav");
-
-	sm_meat_index = ModelIndex ("models/objects/gibs/sm_meat/tris.md2");
-	ModelIndex ("models/objects/gibs/arm/tris.md2");
-	ModelIndex ("models/objects/gibs/bone/tris.md2");
-	ModelIndex ("models/objects/gibs/bone2/tris.md2");
-	ModelIndex ("models/objects/gibs/chest/tris.md2");
-	ModelIndex ("models/objects/gibs/skull/tris.md2");
-	ModelIndex ("models/objects/gibs/head2/tris.md2");
 
 //
 // Setup light animation tables. 'a' is total darkness, 'z' is doublebright.

@@ -53,12 +53,15 @@ protected:
 
 	CWeapon ();
 
-	char			*WeaponModelString; // Temporary
 public:
 	bool			isQuad, isSilenced;
 	CBaseItem		*Item;
 	CWeaponItem		*WeaponItem; // The weapon that is linked to this weapon.
 	char			*WeaponSound;
+	MediaIndex		WeaponSoundIndex;
+	char			*WeaponModelString; // Temporary
+	MediaIndex		WeaponModelIndex;
+
 	MediaIndex		vwepIndex;
 
 	CWeapon(char *model, int ActivationStart, int ActivationNumFrames, int FireStart, int FireNumFrames,

@@ -921,11 +921,11 @@ void CTank::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point
 	{
 		PlaySoundFrom (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (n= 0; n < 1 /*4*/; n++)
-			ThrowGib (Entity, "models/objects/gibs/sm_meat/tris.md2", damage, GIB_ORGANIC);
+			ThrowGib (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 		for (n= 0; n < 4; n++)
-			ThrowGib (Entity, "models/objects/gibs/sm_metal/tris.md2", damage, GIB_METALLIC);
-		ThrowGib (Entity, "models/objects/gibs/chest/tris.md2", damage, GIB_ORGANIC);
-		ThrowHead (Entity, "models/objects/gibs/gear/tris.md2", damage, GIB_METALLIC);
+			ThrowGib (Entity, gMedia.Gib_SmallMetal, damage, GIB_METALLIC);
+		ThrowGib (Entity, gMedia.Gib_Chest, damage, GIB_ORGANIC);
+		ThrowHead (Entity, gMedia.Gib_Gear, damage, GIB_METALLIC);
 		Entity->deadflag = DEAD_DEAD;
 		return;
 	}

@@ -236,32 +236,22 @@ void G_SetStats (edict_t *ent)
 	//
 	// health
 	//
-	ent->client->ps.stats[STAT_HEALTH_ICON] = level.pic_health;
+	ent->client->ps.stats[STAT_HEALTH_ICON] = gMedia.Hud.HealthPic;
 	ent->client->ps.stats[STAT_HEALTH] = ent->health;
 
 	//
 	// ammo
 	//
-	/*if (!ent->client->pers.Weapon || !ent->client->pers.Weapon->Item || !ent->client->pers.Weapon->Item->Ammo)
-	{
-		ent->client->ps.stats[STAT_AMMO_ICON] = 0;
-		ent->client->ps.stats[STAT_AMMO] = 0;
-	}
-	else
-	{
-		ent->client->ps.stats[STAT_AMMO_ICON] = ImageIndex (ent->client->pers.Weapon->Item->Ammo->Icon);
-		ent->client->ps.stats[STAT_AMMO] = ent->client->pers.Inventory.Has(ent->client->pers.Weapon->Item->Ammo->GetIndex());
-	}*/
 	if (ent->client->pers.Weapon)
 	{
 		if (ent->client->pers.Weapon->WeaponItem && ent->client->pers.Weapon->WeaponItem->Ammo)
 		{
-			ent->client->ps.stats[STAT_AMMO_ICON] = ImageIndex (ent->client->pers.Weapon->WeaponItem->Ammo->Icon);
+			ent->client->ps.stats[STAT_AMMO_ICON] = ent->client->pers.Weapon->WeaponItem->Ammo->IconIndex;
 			ent->client->ps.stats[STAT_AMMO] = ent->client->pers.Inventory.Has(ent->client->pers.Weapon->WeaponItem->Ammo->GetIndex());
 		}
 		else if (ent->client->pers.Weapon->Item && (ent->client->pers.Weapon->Item->Flags & ITEMFLAG_AMMO))
 		{
-			ent->client->ps.stats[STAT_AMMO_ICON] = ImageIndex (ent->client->pers.Weapon->Item->Icon);
+			ent->client->ps.stats[STAT_AMMO_ICON] = ent->client->pers.Weapon->Item->IconIndex;
 			ent->client->ps.stats[STAT_AMMO] = ent->client->pers.Inventory.Has(ent->client->pers.Weapon->Item->GetIndex());
 		}
 		else
@@ -295,12 +285,12 @@ void G_SetStats (edict_t *ent)
 	CArmor *Armor = ent->client->pers.Armor;
 	if (power_armor_type && (!Armor || (level.framenum & 8) ) )
 	{	// flash between power armor and other armor icon
-		ent->client->ps.stats[STAT_ARMOR_ICON] = ImageIndex ("i_powershield");
+		ent->client->ps.stats[STAT_ARMOR_ICON] = gMedia.Hud.PowerShieldPic;
 		ent->client->ps.stats[STAT_ARMOR] = cells;
 	}
 	else if (Armor)
 	{
-		ent->client->ps.stats[STAT_ARMOR_ICON] = ImageIndex (Armor->Icon);
+		ent->client->ps.stats[STAT_ARMOR_ICON] = Armor->IconIndex;
 		ent->client->ps.stats[STAT_ARMOR] = ent->client->pers.Inventory.Has(Armor);
 	}
 	else
@@ -323,29 +313,31 @@ void G_SetStats (edict_t *ent)
 	//
 	if (ent->client->quad_framenum > level.framenum)
 	{
-		ent->client->ps.stats[STAT_TIMER_ICON] = ImageIndex ("p_quad");
+		ent->client->ps.stats[STAT_TIMER_ICON] = gMedia.Hud.QuadPic;
 		ent->client->ps.stats[STAT_TIMER] = (ent->client->quad_framenum - level.framenum)/10;
 	}
 	else if (ent->client->invincible_framenum > level.framenum)
 	{
-		ent->client->ps.stats[STAT_TIMER_ICON] = ImageIndex ("p_invulnerability");
+		ent->client->ps.stats[STAT_TIMER_ICON] = gMedia.Hud.InvulPic;
 		ent->client->ps.stats[STAT_TIMER] = (ent->client->invincible_framenum - level.framenum)/10;
 	}
 	else if (ent->client->enviro_framenum > level.framenum)
 	{
-		ent->client->ps.stats[STAT_TIMER_ICON] = ImageIndex ("p_envirosuit");
+		ent->client->ps.stats[STAT_TIMER_ICON] = gMedia.Hud.EnviroPic;
 		ent->client->ps.stats[STAT_TIMER] = (ent->client->enviro_framenum - level.framenum)/10;
 	}
 	else if (ent->client->breather_framenum > level.framenum)
 	{
-		ent->client->ps.stats[STAT_TIMER_ICON] = ImageIndex ("p_rebreather");
+		ent->client->ps.stats[STAT_TIMER_ICON] = gMedia.Hud.RebreatherPic;
 		ent->client->ps.stats[STAT_TIMER] = (ent->client->breather_framenum - level.framenum)/10;
 	}
+	// Paril, show silencer
 	else if (ent->client->silencer_shots)
 	{
-		ent->client->ps.stats[STAT_TIMER_ICON] = ImageIndex ("p_silencer");
+		ent->client->ps.stats[STAT_TIMER_ICON] = gMedia.Hud.SilencerPic;
 		ent->client->ps.stats[STAT_TIMER] = ent->client->silencer_shots;
 	}
+	// Paril
 	else
 	{
 		ent->client->ps.stats[STAT_TIMER_ICON] = 0;
@@ -358,7 +350,7 @@ void G_SetStats (edict_t *ent)
 	if (ent->client->pers.Inventory.SelectedItem == -1)
 		ent->client->ps.stats[STAT_SELECTED_ICON] = 0;
 	else
-		ent->client->ps.stats[STAT_SELECTED_ICON] = ImageIndex(GetItemByIndex(ent->client->pers.Inventory.SelectedItem)->Icon);//ImageIndex (itemlist[ent->client->pers.selected_item].icon);
+		ent->client->ps.stats[STAT_SELECTED_ICON] = GetItemByIndex(ent->client->pers.Inventory.SelectedItem)->IconIndex;//ImageIndex (itemlist[ent->client->pers.selected_item].icon);
 
 	ent->client->ps.stats[STAT_SELECTED_ITEM] = ent->client->pers.Inventory.SelectedItem;
 
@@ -392,10 +384,11 @@ void G_SetStats (edict_t *ent)
 	// help icon / current weapon if not shown
 	//
 	if (ent->client->pers.helpchanged && (level.framenum&8) )
-		ent->client->ps.stats[STAT_HELPICON] = ImageIndex ("i_help");
-	/*else if ( (ent->client->pers.hand == CENTER_HANDED || ent->client->ps.fov > 91)
-		&& ent->client->pers.weapon)
-		ent->client->ps.stats[STAT_HELPICON] = ImageIndex (ent->client->pers.weapon->icon);*/
+		ent->client->ps.stats[STAT_HELPICON] = gMedia.Hud.HelpPic;
+
+	else if ( (ent->client->pers.hand == CENTER_HANDED || ent->client->ps.fov > 91)
+		&& ent->client->pers.Weapon)
+		ent->client->ps.stats[STAT_HELPICON] = ent->client->pers.Weapon->Item->IconIndex;
 	else
 		ent->client->ps.stats[STAT_HELPICON] = 0;
 

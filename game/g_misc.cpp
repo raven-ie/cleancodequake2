@@ -100,35 +100,12 @@ void gib_think (edict_t *self)
 	}
 }
 
-void gib_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *surf)
-{
-	vec3_t	normal_angles, right;
-
-	self->touch = NULL;
-
-	if (plane)
-	{
-		PlaySoundFrom (self, CHAN_VOICE, SoundIndex ("misc/fhit3.wav"));
-
-		VecToAngles (plane->normal, normal_angles);
-		Angles_Vectors (normal_angles, NULL, right, NULL);
-		VecToAngles (right, self->s.angles);
-
-		if (self->s.modelIndex == sm_meat_index)
-		{
-			self->s.frame++;
-			self->think = gib_think;
-			self->nextthink = level.time + FRAMETIME;
-		}
-	}
-}
-
 void gib_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
 {
 	G_FreeEdict (self);
 }
 
-void ThrowGib (edict_t *self, char *gibname, int damage, int type)
+void ThrowGib (edict_t *self, MediaIndex gibIndex, int damage, int type)
 {
 	edict_t *gib;
 	vec3_t	vd;
@@ -144,19 +121,17 @@ void ThrowGib (edict_t *self, char *gibname, int damage, int type)
 	gib->s.origin[1] = origin[1] + crandom() * size[1];
 	gib->s.origin[2] = origin[2] + crandom() * size[2];
 
-	gib->s.modelIndex = ModelIndex(gibname);
+	gib->s.modelIndex = gibIndex;
 	Vec3Clear (gib->mins);
 	Vec3Clear (gib->maxs);
 	gib->solid = SOLID_NOT;
 	gib->s.effects |= EF_GIB;
 	gib->takedamage = DAMAGE_YES;
 	gib->die = gib_die;
-	gib->touch = gib_touch;
 
 	if (type == GIB_ORGANIC)
 	{
 		gib->movetype = MOVETYPE_TOSS;
-		gib->touch = gib_touch;
 		vscale = 0.5;
 	}
 	else
@@ -178,7 +153,7 @@ void ThrowGib (edict_t *self, char *gibname, int damage, int type)
 	gi.linkentity (gib);
 }
 
-void ThrowHead (edict_t *self, char *gibname, int damage, int type)
+void ThrowHead (edict_t *self, MediaIndex gibIndex, int damage, int type)
 {
 	vec3_t	vd;
 	float	vscale;
@@ -189,7 +164,7 @@ void ThrowHead (edict_t *self, char *gibname, int damage, int type)
 	Vec3Clear (self->maxs);
 
 	self->s.modelIndex2 = 0;
-	self->s.modelIndex = ModelIndex(gibname);
+	self->s.modelIndex = gibIndex;
 	self->solid = SOLID_NOT;
 	self->s.effects |= EF_GIB;
 	self->s.effects &= ~EF_FLIES;
@@ -202,7 +177,6 @@ void ThrowHead (edict_t *self, char *gibname, int damage, int type)
 	if (type == GIB_ORGANIC)
 	{
 		self->movetype = MOVETYPE_TOSS;
-		self->touch = gib_touch;
 		vscale = 0.5;
 	}
 	else
@@ -227,22 +201,20 @@ void ThrowHead (edict_t *self, char *gibname, int damage, int type)
 void ThrowClientHead (edict_t *self, int damage)
 {
 	vec3_t	vd;
-	char	*gibname;
 
 	if (rand()&1)
 	{
-		gibname = "models/objects/gibs/head2/tris.md2";
+		self->s.modelIndex = gMedia.Gib_Head[1];
 		self->s.skinNum = 1;		// second skin is player
 	}
 	else
 	{
-		gibname = "models/objects/gibs/skull/tris.md2";
+		self->s.modelIndex = gMedia.Gib_Skull;
 		self->s.skinNum = 0;
 	}
 
 	self->s.origin[2] += 32;
 	self->s.frame = 0;
-	self->s.modelIndex = ModelIndex(gibname);
 	Vec3Set (self->mins, -16, -16, 0);
 	Vec3Set (self->maxs, 16, 16, 16);
 
@@ -1261,8 +1233,8 @@ void misc_deadsoldier_die (edict_t *self, edict_t *inflictor, edict_t *attacker,
 
 	PlaySoundFrom (self, CHAN_BODY, SoundIndex ("misc/udeath.wav"));
 	for (n= 0; n < 4; n++)
-		ThrowGib (self, "models/objects/gibs/sm_meat/tris.md2", damage, GIB_ORGANIC);
-	ThrowHead (self, "models/objects/gibs/head2/tris.md2", damage, GIB_ORGANIC);
+		ThrowGib (self, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+	ThrowHead (self, gMedia.Gib_Head[1], damage, GIB_ORGANIC);
 }
 
 void SP_misc_deadsoldier (edict_t *ent)
@@ -1534,7 +1506,7 @@ Intended for use with the target_spawner
 */
 void SP_misc_gib_arm (edict_t *ent)
 {
-	ent->s.modelIndex = ModelIndex("models/objects/gibs/arm/tris.md2");
+	ent->s.modelIndex = gMedia.Gib_Arm;
 	ent->solid = SOLID_NOT;
 	ent->s.effects |= EF_GIB;
 	ent->takedamage = DAMAGE_YES;
@@ -1555,7 +1527,7 @@ Intended for use with the target_spawner
 */
 void SP_misc_gib_leg (edict_t *ent)
 {
-	ent->s.modelIndex = ModelIndex("models/objects/gibs/leg/tris.md2");
+	ent->s.modelIndex = gMedia.Gib_Leg;
 	ent->solid = SOLID_NOT;
 	ent->s.effects |= EF_GIB;
 	ent->takedamage = DAMAGE_YES;
@@ -1576,7 +1548,7 @@ Intended for use with the target_spawner
 */
 void SP_misc_gib_head (edict_t *ent)
 {
-	ent->s.modelIndex = ModelIndex("models/objects/gibs/head/tris.md2");
+	ent->s.modelIndex = gMedia.Gib_Head[0];
 	ent->solid = SOLID_NOT;
 	ent->s.effects |= EF_GIB;
 	ent->takedamage = DAMAGE_YES;
