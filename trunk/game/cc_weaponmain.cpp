@@ -57,7 +57,7 @@ WeaponSound(WeaponSound)
 void CWeapon::InitWeapon (edict_t *ent)
 {
 	ent->client->ps.gunFrame = ActivationStart;
-	ent->client->ps.gunIndex = ModelIndex(WeaponModelString);
+	ent->client->ps.gunIndex = WeaponModelIndex;
 	ent->client->weaponstate = WS_ACTIVATING;
 }
 

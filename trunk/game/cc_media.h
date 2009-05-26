@@ -40,9 +40,38 @@ typedef struct SPlayerMedia_s
 	MediaIndex		Pain[4][2];
 } SPlayerMedia_t;
 
+typedef struct SHudMedia_s
+{
+	MediaIndex	HealthPic;
+	MediaIndex	PowerShieldPic;
+	MediaIndex	QuadPic;
+	MediaIndex	InvulPic;
+	MediaIndex	EnviroPic;
+	MediaIndex	RebreatherPic;
+	MediaIndex	SilencerPic;
+	MediaIndex	HelpPic;
+} SHudMedia_t;
+
 typedef struct SGameMedia_s
 {
+	// Player media
 	SPlayerMedia_t	Player;
+	// HUD Media
+	SHudMedia_t		Hud;
+
+	// Gibs
+	MediaIndex		Gib_SmallMeat;
+	MediaIndex		Gib_SmallMetal;
+	MediaIndex		Gib_Arm;
+	MediaIndex		Gib_Leg;
+	MediaIndex		Gib_Gear;
+	MediaIndex		Gib_Bone[2];
+	MediaIndex		Gib_Chest;
+	MediaIndex		Gib_Skull;
+	MediaIndex		Gib_Head[2];
+
+	// World stuff
+	MediaIndex		FrySound;
 } SGameMedia_t;
 
 extern SGameMedia_t gMedia;

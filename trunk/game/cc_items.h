@@ -86,9 +86,11 @@ public:
 
 	/// The sound on pickup
 	char		*PickupSound;
+	int			PickupSoundIndex;
 
 	/// HUD Icon
 	char		*Icon;
+	MediaIndex	IconIndex;
 	/// Name on pickup
 	char		*Name;
 

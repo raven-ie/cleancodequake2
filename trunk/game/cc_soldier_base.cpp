@@ -976,9 +976,9 @@ void CSoldierBase::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_
 	{
 		PlaySoundFrom (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 3; n++)
-			ThrowGib (Entity, "models/objects/gibs/sm_meat/tris.md2", damage, GIB_ORGANIC);
-		ThrowGib (Entity, "models/objects/gibs/chest/tris.md2", damage, GIB_ORGANIC);
-		ThrowHead (Entity, "models/objects/gibs/head2/tris.md2", damage, GIB_ORGANIC);
+			ThrowGib (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		ThrowGib (Entity, gMedia.Gib_Chest, damage, GIB_ORGANIC);
+		ThrowHead (Entity, gMedia.Gib_Head[1], damage, GIB_ORGANIC);
 		Entity->deadflag = DEAD_DEAD;
 		return;
 	}

@@ -26,7 +26,6 @@ gameImport_t	gi;
 gameExport_t	globals;
 spawn_temp_t	st;
 
-MediaIndex	sm_meat_index;
 MediaIndex	snd_fry;
 int meansOfDeath;
 

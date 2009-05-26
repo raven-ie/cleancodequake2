@@ -64,3 +64,5 @@ CBaseItem *FindItemByClassname (char *name);
 CBaseItem *FindItem (char *name);
 CBaseItem *GetItemByIndex (int Index);
 extern int GetNumItems ();
+
+void InitItemMedia ();

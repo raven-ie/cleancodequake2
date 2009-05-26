@@ -90,4 +90,5 @@ void InitMonsterList ()
 	MonsterList.AddMonsterToList (&Monster_Shark);
 	MonsterList.AddMonsterToList (&Monster_Icarus);
 	MonsterList.AddMonsterToList (&Monster_Mutant);
+	MonsterList.AddMonsterToList (&Monster_Insane);
 }

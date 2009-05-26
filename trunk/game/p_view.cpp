@@ -812,9 +812,9 @@ static inline void G_SetClientSound (edict_t *ent)
 	}
 
 	if (ent->waterlevel && (ent->watertype&(CONTENTS_LAVA|CONTENTS_SLIME)) )
-		ent->s.sound = snd_fry;
-	else if (ent->client->pers.Weapon && ent->client->pers.Weapon->WeaponSound)
-		ent->s.sound = SoundIndex(ent->client->pers.Weapon->WeaponSound);
+		ent->s.sound = gMedia.FrySound;
+	else if (ent->client->pers.Weapon && ent->client->pers.Weapon->WeaponSoundIndex)
+		ent->s.sound = ent->client->pers.Weapon->WeaponSoundIndex;
 	else if (ent->client->weapon_sound)
 		ent->s.sound = ent->client->weapon_sound;
 	else

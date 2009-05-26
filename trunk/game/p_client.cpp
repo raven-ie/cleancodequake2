@@ -746,7 +746,7 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 	{	// gib
 		PlaySoundFrom (self, CHAN_BODY, SoundIndex ("misc/udeath.wav"));
 		for (n= 0; n < 4; n++)
-			ThrowGib (self, "models/objects/gibs/sm_meat/tris.md2", damage, GIB_ORGANIC);
+			ThrowGib (self, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 		ThrowClientHead (self, damage);
 
 		self->takedamage = DAMAGE_NO;
@@ -783,7 +783,7 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 					break;
 				}
 			}
-			PlaySoundFrom (self, CHAN_VOICE, gMedia.Player.Death[(rand()%4)+1]);
+			PlaySoundFrom (self, CHAN_VOICE, gMedia.Player.Death[(rand()%4)]);
 		}
 	}
 
@@ -1135,7 +1135,7 @@ void body_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage,
 	{
 		PlaySoundFrom (self, CHAN_BODY, SoundIndex ("misc/udeath.wav"));
 		for (n= 0; n < 4; n++)
-			ThrowGib (self, "models/objects/gibs/sm_meat/tris.md2", damage, GIB_ORGANIC);
+			ThrowGib (self, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 		self->s.origin[2] -= 48;
 		ThrowClientHead (self, damage);
 		self->takedamage = DAMAGE_NO;

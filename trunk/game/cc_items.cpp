@@ -243,7 +243,7 @@ void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *su
 	other->client->bonus_alpha = 64;	
 
 	// show icon and name on status bar
-	other->client->ps.stats[STAT_PICKUP_ICON] = ImageIndex(ent->item->Icon);
+	other->client->ps.stats[STAT_PICKUP_ICON] = ent->item->IconIndex;
 	other->client->ps.stats[STAT_PICKUP_STRING] = ent->item->GetConfigStringNumber();
 	other->client->pickup_msg_time = level.time + 3.0;
 
@@ -252,7 +252,7 @@ void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *su
 		other->client->pers.Inventory.SelectedItem = other->client->ps.stats[STAT_SELECTED_ITEM] = ent->item->GetIndex();
 
 	if (ent->item->PickupSound)
-		PlaySoundFrom(other, CHAN_ITEM, SoundIndex(ent->item->PickupSound));
+		PlaySoundFrom(other, CHAN_ITEM, ent->item->PickupSoundIndex);
 
 	if (!((coop->Integer()) &&  (ent->item->Flags & ITEMFLAG_STAY_COOP)) || (ent->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)))
 	{
