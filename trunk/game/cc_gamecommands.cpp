@@ -427,7 +427,7 @@ void Cmd_Test_f (edict_t *ent)
 		return;
 
 	gi.configstring (CS_SOUNDS+70, sound);
-	PlaySoundFrom (ent, CHAN_AUTO, 70);
+	PlaySoundFrom (ent, CHAN_AUTO, 70, 1, ATTN_NONE);
 }
 
 void Cmd_Register ()

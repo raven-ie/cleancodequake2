@@ -1081,6 +1081,14 @@
 						>
 					</File>
 					<File
+						RelativePath=".\cc_insane.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_insane.h"
+						>
+					</File>
+					<File
 						RelativePath=".\cc_mutant.cpp"
 						>
 					</File>

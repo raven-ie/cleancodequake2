@@ -485,7 +485,7 @@ static inline void SV_CalcBlend (edict_t *ent)
 		ent->client->bonus_alpha -= 15;
 
 	for (int i = 0; i < 4; i++)
-		ent->client->ps.viewBlend[i] = (ent->client->pers.viewBlend[i] * 255);
+		ent->client->ps.viewBlend[i] = ((float)(ent->client->pers.viewBlend[i]) / 255);
 }
 
 
