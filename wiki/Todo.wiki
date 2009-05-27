@@ -15,7 +15,7 @@ Monsters (bold means done)
   * *Flyer*
   * Gladiator
   * *Gunner*
-  * Hover
+  * *Hover*
   * *Infantry*
   * Insane
   * Medic
