@@ -37,6 +37,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #ifdef MONSTERS_USE_PATHFINDING
 
 bool VecInFront (vec3_t angles, vec3_t origin1, vec3_t origin2);
+int rangevector (vec3_t self, vec3_t other);
+
 void CMonster::FoundPath ()
 {
 	if (!P_CurrentGoalNode || !P_CurrentNode)
@@ -71,10 +73,30 @@ void CMonster::FoundPath ()
 
 	P_CurrentNode = P_CurrentPath->Path[P_CurrentNodeIndex];
 
+	float timeOut = level.time + 2; // Always at least 2 seconds
+	// Calculate approximate distance and check how long we want this to time out for
+	switch (rangevector(Entity->s.origin, P_CurrentNode->Origin))
+	{
+	case RANGE_MELEE:
+		timeOut += 6; // 10 seconds max
+		break;
+	case RANGE_NEAR:
+		timeOut += 23; // 25 seconds
+		break;
+	case RANGE_MID:
+		timeOut += 16; // 18 seconds
+		break;
+	case RANGE_FAR:
+		timeOut += 30; // 32 seconds
+		break;
+	}
+	P_NodeFollowTimeout = timeOut;
+
 	FollowingPath = true;
 	Run ();
 }
 
+void plat_go_up (edict_t *ent);
 void CMonster::MoveToPath (float Dist)
 {
 	if (!Entity->groundentity && !(Entity->flags & (FL_FLY|FL_SWIM)))
@@ -108,10 +130,43 @@ void CMonster::MoveToPath (float Dist)
 			P_CurrentNode = P_CurrentPath->Path[P_CurrentNodeIndex];
 			DebugPrintf ("Hit node %u\n", P_CurrentNodeIndex);
 			doit = true;
-			if (P_CurrentNode->Type == NODE_DOOR)
+			if (P_CurrentNode->Type == NODE_DOOR || P_CurrentNode->Type == NODE_PLATFORM)
 			{
-				P_CurrentNode->LinkedEntity->use (P_CurrentNode->LinkedEntity, Entity, Entity);
-				Stand (); // We stand, and wait.
+				// If we reached the node, but the platform isn't down, go back two nodes
+				if (P_CurrentNode->Type == NODE_PLATFORM && P_CurrentNode->LinkedEntity->moveinfo.state != STATE_BOTTOM)
+				{
+					if (P_CurrentPath->Path.size() >= (uint32)(P_CurrentNodeIndex + 2)) // Can we even go that far?
+					{
+						P_CurrentNodeIndex += 2;
+						P_CurrentNode = P_CurrentPath->Path[P_CurrentNodeIndex];
+						DebugPrintf ("Plat in bad spot: going back to %u\n", P_CurrentNodeIndex);
+					}
+				}
+				else
+				{
+					//P_CurrentNode->LinkedEntity->use (P_CurrentNode->LinkedEntity, Entity, Entity);
+					if (P_CurrentNode->Type == NODE_PLATFORM)
+					{
+						if (P_CurrentNode->LinkedEntity->moveinfo.state == STATE_BOTTOM)
+							plat_go_up (P_CurrentNode->LinkedEntity);
+						else if (P_CurrentNode->LinkedEntity->moveinfo.state == STATE_TOP)
+							P_CurrentNode->LinkedEntity->nextthink = level.time + 1;	// the player is still on the plat, so delay going down
+					}
+					else
+						P_CurrentNode->LinkedEntity->use (P_CurrentNode->LinkedEntity, Entity, Entity);
+					Stand (); // We stand, and wait.
+				}
+			}
+
+			if (P_CurrentNodeIndex > 1) // If we have two more goals to destination
+			{
+				// In two goals, do we reach the platform node?
+				if (P_CurrentPath->Path[P_CurrentNodeIndex-1]->Type == NODE_PLATFORM)
+				{
+					// Is it at bottom?
+					if (P_CurrentPath->Path[P_CurrentNodeIndex-1]->LinkedEntity->moveinfo.state != STATE_BOTTOM)
+						Stand (); // We wait till it comes down
+				}
 			}
 
 			if (shouldJump)
@@ -149,6 +204,36 @@ void CMonster::MoveToPath (float Dist)
 			P_CurrentNode = P_CurrentGoalNode = NULL;
 			return;
 		}
+	}
+
+	if (P_NodeFollowTimeout < level.time)
+	{
+		// Re-evaluate start and end nodes
+		CPathNode *End = P_CurrentPath->Path[0];
+		P_CurrentNode = GetClosestNodeTo(Entity->s.origin);
+		P_CurrentGoalNode = End;
+		P_CurrentPath = NULL;
+		FoundPath ();
+
+		float timeOut = level.time + 2; // Always at least 2 seconds
+		// Calculate approximate distance and check how long we want this to time out for
+		switch (rangevector(Entity->s.origin, P_CurrentNode->Origin))
+		{
+		case RANGE_MELEE:
+			timeOut += 6; // 10 seconds max
+			break;
+		case RANGE_NEAR:
+			timeOut += 23; // 25 seconds
+			break;
+		case RANGE_MID:
+			timeOut += 16; // 18 seconds
+			break;
+		case RANGE_FAR:
+			timeOut += 30; // 32 seconds
+			break;
+		}
+		P_NodeFollowTimeout = timeOut;
+		return;
 	}
 
 // bump around...
@@ -301,6 +386,22 @@ int range (edict_t *self, edict_t *other)
 	float	len;
 
 	Vec3Subtract (self->s.origin, other->s.origin, v);
+	len = Vec3Length (v);
+	if (len < MELEE_DISTANCE)
+		return RANGE_MELEE;
+	if (len < 500)
+		return RANGE_NEAR;
+	if (len < 1000)
+		return RANGE_MID;
+	return RANGE_FAR;
+}
+
+int rangevector (vec3_t self, vec3_t other)
+{
+	vec3_t	v;
+	float	len;
+
+	Vec3Subtract (self, other, v);
 	len = Vec3Length (v);
 	if (len < MELEE_DISTANCE)
 		return RANGE_MELEE;
@@ -2574,10 +2675,17 @@ void CMonster::AI_Stand (float Dist)
 	if (FollowingPath)
 	{
 		// Assuming we got here because we're waiting for something.
-		if (P_CurrentNode->Type == NODE_DOOR)
+		if (P_CurrentNode->Type == NODE_DOOR || P_CurrentNode->Type == NODE_PLATFORM)
 		{
-			if (P_CurrentNode->LinkedEntity->moveinfo.state == 0)
+			if (P_CurrentNode->LinkedEntity->moveinfo.state == STATE_TOP)
 				Run(); // We can go again!
+		}
+		// In two goals, do we reach the platform node?
+		else if (P_CurrentPath->Path[P_CurrentNodeIndex-1]->Type == NODE_PLATFORM)
+		{
+			// Is it at bottom?
+			if (P_CurrentPath->Path[P_CurrentNodeIndex-1]->LinkedEntity->moveinfo.state == STATE_BOTTOM)
+				Run (); // Go!
 		}
 		else
 		{
@@ -3253,6 +3361,9 @@ bool CMonster::FindTarget()
 			if (client)
 			{
 				vec3_t	temp;
+
+				if (client->flags & FL_NOTARGET)
+					return false;
 
 				if (Entity->spawnflags & 1)
 				{

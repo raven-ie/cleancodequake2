@@ -130,7 +130,7 @@ CBaseItem *FindItemByClassname (char *name)
 
 CBaseItem *GetItemByIndex (int Index)
 {
-	if (!ItemList->Items[Index] || Index >= MAX_CS_ITEMS || Index < 0)
+	if (Index >= ItemList->numItems || Index < 0)
 		return NULL;
 	return ItemList->Items[Index];
 }

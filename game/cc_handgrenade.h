@@ -38,8 +38,8 @@ public:
 	CHandGrenade(char *model, int FireStart, int FireNumFrames,
 						 int IdleStart, int IdleNumFrames);
 
-	bool	CanFire	(edict_t *ent);
-	bool	CanStopFidgetting (edict_t *ent);
+	inline bool	CanFire	(edict_t *ent);
+	inline bool	CanStopFidgetting (edict_t *ent);
 
 	void	WeaponGeneric (edict_t *ent);
 

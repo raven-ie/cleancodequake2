@@ -218,7 +218,7 @@ void CQuadDamage::DoPickup (edict_t *ent, edict_t *other)
 	if (deathmatch->Integer())
 	{
 		if (!(ent->spawnflags & DROPPED_ITEM) )
-			SetRespawn (ent, 30);
+			SetRespawn (ent, 60);
 		if (dmFlags.dfInstantItems || (ent->spawnflags & DROPPED_PLAYER_ITEM))
 		{
 			quad_drop_timeout_hack = (ent->nextthink - level.time) / FRAMETIME;
@@ -252,7 +252,7 @@ void CInvulnerability::DoPickup (edict_t *ent, edict_t *other)
 	if (deathmatch->Integer())
 	{
 		if (!(ent->spawnflags & DROPPED_ITEM) )
-			SetRespawn (ent, 30);
+			SetRespawn (ent, 300);
 		if (dmFlags.dfInstantItems || (ent->spawnflags & DROPPED_PLAYER_ITEM))
 			Use (other);
 	}
@@ -292,7 +292,7 @@ void CRebreather::DoPickup (edict_t *ent, edict_t *other)
 	if (deathmatch->Integer())
 	{
 		if (!(ent->spawnflags & DROPPED_ITEM) )
-			SetRespawn (ent, 30);
+			SetRespawn (ent, 60);
 		if (dmFlags.dfInstantItems || (ent->spawnflags & DROPPED_PLAYER_ITEM))
 			Use (other);
 	}
@@ -313,7 +313,7 @@ void CEnvironmentSuit::DoPickup (edict_t *ent, edict_t *other)
 	if (deathmatch->Integer())
 	{
 		if (!(ent->spawnflags & DROPPED_ITEM) )
-			SetRespawn (ent, 30);
+			SetRespawn (ent, 60);
 		if (dmFlags.dfInstantItems || (ent->spawnflags & DROPPED_PLAYER_ITEM))
 			Use (other);
 	}

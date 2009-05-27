@@ -72,7 +72,7 @@ public:
 
 	// Muzzle flash
 	virtual void	Muzzle (edict_t *ent, int muzzleNum);
-	virtual void	FireAnimation (edict_t *ent);
+	virtual inline void	FireAnimation (edict_t *ent);
 
 	// General animating function.
 	// Doesn't need to be changed.
@@ -80,8 +80,8 @@ public:
 
 	// These two functions replace the need for an array for
 	// pause and fire frames.
-	virtual bool	CanFire	(edict_t *ent) = 0;
-	virtual bool	CanStopFidgetting (edict_t *ent) = 0;
+	virtual inline bool	CanFire	(edict_t *ent) = 0;
+	virtual inline bool	CanStopFidgetting (edict_t *ent) = 0;
 
 	// Ammo usage
 	virtual void	DepleteAmmo(edict_t *ent, int Amount);

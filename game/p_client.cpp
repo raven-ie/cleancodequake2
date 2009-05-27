@@ -1630,6 +1630,11 @@ void ClientUserinfoChanged (edict_t *ent, char *userinfo)
 	else
 		ent->client->resp.Gender = GenderMale;
 
+	// MSG command
+	s = Info_ValueForKey (userinfo, "msg");
+	if (strlen (s))
+		ent->client->resp.messageLevel = atoi (s);
+
 	// save off the userinfo in case we want to check something later
 	Q_strncpyz (ent->client->pers.userinfo, userinfo, sizeof(ent->client->pers.userinfo)-1);
 }

@@ -39,7 +39,9 @@ enum ENodeType
 	NODE_REGULAR,
 
 	NODE_DOOR,
-	NODE_JUMP
+	NODE_JUMP,
+
+	NODE_PLATFORM, // Special handling
 };
 
 // One node
@@ -110,7 +112,6 @@ public:
 
 void InitNodes ();
 void RunNodes ();
-void RunPlayerNodes (edict_t *ent);
 CPathNode *GetClosestNodeTo (vec3_t origin);
 
 CPath *GetPath (CPathNode *Start, CPathNode *End);

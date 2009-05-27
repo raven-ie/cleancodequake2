@@ -285,6 +285,11 @@ typedef struct
 	void		(*endfunc)(edict_t *);
 } moveinfo_t;
 
+#define STATE_TOP			0
+#define STATE_BOTTOM		1
+#define STATE_UP			2
+#define STATE_DOWN			3
+
 extern	game_locals_t	game;
 extern	level_locals_t	level;
 extern	gameImport_t	gi;
@@ -593,6 +598,7 @@ typedef struct
 
 	bool		spectator;			// client is a spectator
 	EGender		Gender;
+	int			messageLevel;
 
 #ifdef MONSTERS_USE_PATHFINDING
 	CPathNode	*LastNode;

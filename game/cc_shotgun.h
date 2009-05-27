@@ -36,8 +36,8 @@ class CShotgun : public CWeapon
 public:
 	CShotgun();
 
-	bool	CanFire	(edict_t *ent);
-	bool	CanStopFidgetting (edict_t *ent);
+	inline bool	CanFire	(edict_t *ent);
+	inline bool	CanStopFidgetting (edict_t *ent);
 
 	// The function called to "fire"
 	void	Fire (edict_t *ent);

@@ -55,11 +55,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define PLAT_LOW_TRIGGER	1
 
-#define STATE_TOP			0
-#define STATE_BOTTOM		1
-#define STATE_UP			2
-#define STATE_DOWN			3
-
 #define DOOR_START_OPEN		1
 #define DOOR_REVERSE		2
 #define DOOR_CRUSHER		4
@@ -436,6 +431,8 @@ void Use_Plat (edict_t *ent, edict_t *other, edict_t *activator)
 void Touch_Plat_Center (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf)
 {
 	if (other->health <= 0)
+		return;
+	if (!other->client)
 		return;
 
 	ent = ent->enemy;	// now point at the plat, not the trigger

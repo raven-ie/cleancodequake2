@@ -222,6 +222,7 @@ public:
 	CPathNode			*P_CurrentNode; // Always the current path node
 	int32				P_CurrentNodeIndex;
 	float				P_NodePathTimeout;
+	float				P_NodeFollowTimeout;
 	bool				FollowingPath;
 
 	// Pathfinding functions

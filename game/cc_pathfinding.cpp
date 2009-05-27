@@ -292,11 +292,6 @@ CPathNode *DropNode (edict_t *ent)
 	return NodeList.at(NodeList.size() - 1);
 }
 
-void ConnectNode (CPathNode *Node1, CPathNode *Node2);
-void RunPlayerNodes (edict_t *ent)
-{
-}
-
 void RunNodes()
 {
 	if (!DebugNodes->Integer())
@@ -343,6 +338,10 @@ void CheckNodeFlags (CPathNode *Node)
 		Node->Ent->s.effects = EF_COLOR_SHELL;
 		Node->Ent->s.renderFx = RF_SHELL_RED;
 		break;
+	case NODE_PLATFORM:
+		Node->Ent->s.effects = EF_COLOR_SHELL;
+		Node->Ent->s.renderFx = RF_SHELL_GREEN;
+		break;
 	case NODE_JUMP:
 		Node->Ent->s.effects = EF_COLOR_SHELL;
 		Node->Ent->s.renderFx = RF_SHELL_BLUE;
@@ -350,6 +349,7 @@ void CheckNodeFlags (CPathNode *Node)
 	}
 }
 
+void ConnectNode (CPathNode *Node1, CPathNode *Node2);
 void AddNode (edict_t *ent, vec3_t origin)
 {
 	NodeList.push_back(new CPathNode(origin, NODE_REGULAR));
@@ -441,7 +441,7 @@ void SaveNodes ()
 		if (NodeList[i]->Type)
 			numSpecialNodes++;
 
-		if (NodeList[i]->Type == NODE_DOOR)
+		if (NodeList[i]->Type == NODE_DOOR || NodeList[i]->Type == NODE_PLATFORM)
 		{
 			if (NodeList[i]->LinkedEntity)
 			{
@@ -550,7 +550,7 @@ void LoadNodes ()
 
 		if(Type)
 			numSpecialNodes++;
-		if (Type == NODE_DOOR)
+		if (Type == NODE_DOOR || Type == NODE_PLATFORM)
 		{
 			int modelNum;
 			fread (&modelNum, sizeof(int), 1, fp);
@@ -700,6 +700,8 @@ void Cmd_Node_f (edict_t *ent)
 
 		if (Q_stricmp(ArgGets(3), "door") == 0)
 			Node->Type = NODE_DOOR;
+		else if (Q_stricmp(ArgGets(3), "plat") == 0)
+			Node->Type = NODE_PLATFORM;
 		else if (Q_stricmp(ArgGets(3), "jump") == 0)
 			Node->Type = NODE_JUMP;
 

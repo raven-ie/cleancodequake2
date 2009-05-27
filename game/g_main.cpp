@@ -311,15 +311,13 @@ void EndDMLevel (void)
 CheckNeedPass
 =================
 */
-void CheckNeedPass (void)
+inline void CheckNeedPass ()
 {
-	int need;
-
 	// if password or spectator_password has changed, update needpass
 	// as needed
 	if (password->Modified() || spectator_password->Modified()) 
 	{
-		need = 0;
+		int need = 0;
 
 		if (*password->String() && Q_stricmp(password->String(), "none"))
 			need |= 1;
@@ -445,7 +443,8 @@ void G_RunFrame (void)
 		EndMapCounter();
 
 	// choose a client for monsters to target this frame
-	AI_SetSightClient ();
+	if (!deathmatch->Integer()) // Paril, lol
+		AI_SetSightClient ();
 
 	// exit intermissions
 
