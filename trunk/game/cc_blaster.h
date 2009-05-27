@@ -36,12 +36,12 @@ class CBlaster : public CWeapon
 public:
 	CBlaster();
 
-	bool	CanFire	(edict_t *ent);
-	bool	CanStopFidgetting (edict_t *ent);
+	inline bool	CanFire	(edict_t *ent);
+	inline bool	CanStopFidgetting (edict_t *ent);
 	
 	// This function is called when the player hits the attack button.
 	// Returns "true" if the animation can go ahead (check for ammo, etc here)
-	bool	AttemptToFire (edict_t *ent); 
+	inline bool	AttemptToFire (edict_t *ent); 
 
 	// The function called to "fire"
 	void	Fire (edict_t *ent);

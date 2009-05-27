@@ -46,14 +46,8 @@ static void SV_ClientPrintf (edict_t *ent, EGamePrintLevel printLevel, char *fmt
 {
 	va_list		argptr;
 	char		string[MAX_COMPRINT];
-	int			messageLevel = PRINT_LOW;
 
-	// MSG command
-	char *val = Info_ValueForKey (ent->client->pers.userinfo, "msg");
-	if (strlen (val))
-		messageLevel = atoi (val);
-
-	if (printLevel < messageLevel)
+	if (printLevel < ent->client->resp.messageLevel)
 		return;
 
 	va_start (argptr, fmt);
@@ -170,12 +164,7 @@ void BroadcastPrintf (EGamePrintLevel printLevel, char *fmt, ...)
 	int i;
 	for (i=1, cl=&g_edicts[1]; i<=maxclients->Integer() ; i++, cl++)
 	{
-		int messageLevel = PRINT_LOW;
-		char *val = Info_ValueForKey (cl->client->pers.userinfo, "msg");
-		if (strlen (val))
-			messageLevel = atoi (val);
-
-		if (printLevel < messageLevel)
+		if (printLevel < cl->client->resp.messageLevel)
 			continue;
 		if (cl->client->pers.state != SVCS_SPAWNED)
 			continue;

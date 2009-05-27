@@ -404,8 +404,10 @@ static inline void SV_CalcBlend (edict_t *ent)
 	static const colorb InvulColor = colorb(255, 255, 0, 20);
 	static const colorb EnviroColor = colorb(0, 255, 0, 20);
 	static const colorb BreatherColor = colorb(102, 255, 102, 10);
-
-	ent->client->pers.viewBlend = colorb(0,0,0,0);
+	static const colorb ClearColor = colorb(0,0,0,0);
+	static colorb BonusColor = colorb(217, 178, 76, 0);
+	
+	ent->client->pers.viewBlend = ClearColor;
 
 	// add for contents
 	vec3_t	vieworg;
@@ -467,25 +469,34 @@ static inline void SV_CalcBlend (edict_t *ent)
 	}
 
 	// add for damage
-	SV_AddBlend (ent->client->damage_blend, ent->client->pers.viewBlend);
-
-	// add bonus
-	SV_AddBlend (colorb(217, 178, 76, ent->client->bonus_alpha), ent->client->pers.viewBlend);
+	if (ent->client->damage_blend.A)
+		SV_AddBlend (ent->client->damage_blend, ent->client->pers.viewBlend);
 
 	// drop the damage value
-	if (ent->client->damage_blend.A < 15)
-		ent->client->damage_blend.A -= ent->client->damage_blend.A;
-	else
-		ent->client->damage_blend.A -= 15;
+	if (ent->client->damage_blend.A)
+	{
+		if (ent->client->damage_blend.A < 15)
+			ent->client->damage_blend.A = 0;
+		else
+			ent->client->damage_blend.A -= 15;
+	}
 
-	// drop the bonus value
-	if (ent->client->bonus_alpha < 15)
-		ent->client->bonus_alpha -= ent->client->bonus_alpha;
-	else
-		ent->client->bonus_alpha -= 15;
+	// add bonus and drop the value
+	if (ent->client->bonus_alpha)
+	{
+		BonusColor.A = ent->client->bonus_alpha;
+		SV_AddBlend (BonusColor, ent->client->pers.viewBlend);
 
-	for (int i = 0; i < 4; i++)
-		ent->client->ps.viewBlend[i] = ((float)(ent->client->pers.viewBlend[i]) / 255);
+		if (ent->client->bonus_alpha < 15)
+			ent->client->bonus_alpha = 0;
+		else
+			ent->client->bonus_alpha -= 15;
+	}
+
+	ent->client->ps.viewBlend[0] = ((float)(ent->client->pers.viewBlend.R) / 255);
+	ent->client->ps.viewBlend[1] = ((float)(ent->client->pers.viewBlend.G) / 255);
+	ent->client->ps.viewBlend[2] = ((float)(ent->client->pers.viewBlend.B) / 255);
+	ent->client->ps.viewBlend[3] = ((float)(ent->client->pers.viewBlend.A) / 255);
 }
 
 
@@ -1051,9 +1062,5 @@ void ClientEndServerFrame (edict_t *ent)
 	// if the scoreboard is up, update it
 	if (ent->client->showscores && !(level.framenum & 31) )
 		DeathmatchScoreboardMessage (ent, ent->enemy, false);
-
-#ifdef MONSTERS_USE_PATHFINDING
-	RunPlayerNodes(ent);
-#endif
 }
 

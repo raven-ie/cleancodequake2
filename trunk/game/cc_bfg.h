@@ -36,8 +36,8 @@ class CBFG : public CWeapon
 public:
 	CBFG();
 
-	bool	CanFire	(edict_t *ent);
-	bool	CanStopFidgetting (edict_t *ent);
+	inline bool	CanFire	(edict_t *ent);
+	inline bool	CanStopFidgetting (edict_t *ent);
 
 	// The function called to "fire"
 	void	MuzzleEffect (edict_t *ent);

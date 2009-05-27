@@ -81,10 +81,10 @@ MediaIndex ModelIndex (char *String)
 	int Index = ModelList.GetIndex(String);
 	if (Index == -1)
 	{
-		DebugPrintf ("ModelIndex: Adding new index for %s\n", String);
+		//DebugPrintf ("ModelIndex: Adding new index for %s\n", String);
 		return ModelList.AddToList (String, gi.modelindex(String));
 	}
-	DebugPrintf ("ModelIndex: Using existing index %s\n", String);
+	//DebugPrintf ("ModelIndex: Using existing index %s\n", String);
 	return Index;
 }
 
@@ -94,10 +94,10 @@ MediaIndex SoundIndex (char *String)
 	int Index = SoundList.GetIndex(String);
 	if (Index == -1)
 	{
-		DebugPrintf ("SoundIndex: Adding new index for %s\n", String);
+		//DebugPrintf ("SoundIndex: Adding new index for %s\n", String);
 		return SoundList.AddToList (String, gi.soundindex(String));
 	}
-	DebugPrintf ("SoundIndex: Using existing index %s\n", String);
+	//DebugPrintf ("SoundIndex: Using existing index %s\n", String);
 	return Index;
 }
 
@@ -107,10 +107,10 @@ MediaIndex ImageIndex (char *String)
 	int Index = ImageList.GetIndex(String);
 	if (Index == -1)
 	{
-		DebugPrintf ("ImageIndex: Adding new index for %s\n", String);
+		//DebugPrintf ("ImageIndex: Adding new index for %s\n", String);
 		return ImageList.AddToList (String, gi.imageindex(String));
 	}
-	DebugPrintf ("ImageIndex: Using existing index %s\n", String);
+	//DebugPrintf ("ImageIndex: Using existing index %s\n", String);
 	return Index;
 }
 )
