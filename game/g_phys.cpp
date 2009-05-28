@@ -63,28 +63,6 @@ edict_t	*SV_TestEntityPosition (edict_t *ent)
 	return NULL;
 }
 
-
-/*
-================
-SV_CheckVelocity
-================
-*/
-void SV_CheckVelocity (edict_t *ent)
-{
-	int		i;
-
-//
-// bound velocity
-//
-	for (i=0 ; i<3 ; i++)
-	{
-		if (ent->velocity[i] > sv_maxvelocity->Float())
-			ent->velocity[i] = sv_maxvelocity->Float();
-		else if (ent->velocity[i] < -sv_maxvelocity->Float())
-			ent->velocity[i] = -sv_maxvelocity->Float();
-	}
-}
-
 /*
 =============
 SV_RunThink
@@ -698,8 +676,6 @@ void SV_Physics_Toss (edict_t *ent)
 
 	Vec3Copy (ent->s.origin, old_origin);
 
-	SV_CheckVelocity (ent);
-
 // add gravity
 	if (ent->movetype != MOVETYPE_FLY
 	&& ent->movetype != MOVETYPE_FLYMISSILE)
@@ -827,8 +803,6 @@ void SV_Physics_Step (edict_t *ent)
 		ent->Monster->CheckGround ();
 
 	groundentity = ent->groundentity;
-
-	SV_CheckVelocity (ent);
 
 	if (groundentity)
 		wasonground = true;
