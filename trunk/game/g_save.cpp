@@ -145,7 +145,6 @@ void G_Register ()
 	//FIXME: sv_ prefix is wrong for these
 	sv_rollspeed = new CCvar ("sv_rollspeed", "200", 0);
 	sv_rollangle = new CCvar ("sv_rollangle", "2", 0);
-	sv_maxvelocity = new CCvar ("sv_maxvelocity", "2000", 0);
 	sv_gravity = new CCvar ("sv_gravity", "800", 0);
 
 	// noset vars

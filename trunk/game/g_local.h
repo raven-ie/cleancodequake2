@@ -855,7 +855,6 @@ extern	CCvar	*dedicated;
 extern	CCvar	*filterban;
 
 extern	CCvar	*sv_gravity;
-extern	CCvar	*sv_maxvelocity;
 
 extern	CCvar	*gun_x, *gun_y, *gun_z;
 extern	CCvar	*sv_rollspeed;

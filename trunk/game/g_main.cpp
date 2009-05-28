@@ -48,7 +48,6 @@ CCvar	*dedicated;
 
 CCvar	*filterban;
 
-CCvar	*sv_maxvelocity;
 CCvar	*sv_gravity;
 
 CCvar	*sv_rollspeed;
