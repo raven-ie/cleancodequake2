@@ -39,8 +39,9 @@ node move # x y z			- Moves a node, relative to it's origin (5 0 0 moves it 5 un
 = Types of Nodes =
 
 As of now, the following types exist:
-"door" = A brush model that moves, and has states. This can be a door, or a platform. Best to be one-way.
-"jump" = A jump node. Monsters will jump from this node to the node it's connected to. Best to be one-way.
+  * "door" = A brush model that has states, will wait at node before this one for the state to reach top before moving
+  * "platform" = A func_plat. This node includes safety measures so that monsters don't get stuck underneath it.
+  * "jump" = A jump node. Monsters will jump from this node to the node it's connected to. Best to be one-way.
 
 = Distributing and Terms =
 
