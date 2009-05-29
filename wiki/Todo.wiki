@@ -17,7 +17,7 @@ Monsters (bold means done)
   * *Gunner*
   * *Hover*
   * *Infantry*
-  * Insane
+  * *Insane*
   * Medic
   * *Mutant*
   * Parasite
