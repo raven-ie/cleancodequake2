@@ -64,8 +64,8 @@ public:
 
 	MediaIndex		vwepIndex;
 
-	CWeapon(char *model, int ActivationStart, int ActivationNumFrames, int FireStart, int FireNumFrames,
-						 int IdleStart, int IdleNumFrames, int DeactStart, int DeactNumFrames, char *WeaponSound = NULL);
+	CWeapon(char *model, int ActivationStart, int ActivationEnd, int FireStart, int FireEnd,
+				 int IdleStart, int IdleEnd, int DeactStart, int DeactEnd, char *WeaponSound = NULL);
 
 	// InitWeapon "clears" the previous weapon by introducing the current weapon.
 	virtual void	InitWeapon (edict_t *ent);

@@ -34,24 +34,24 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_local.h"
 #include "m_player.h"
 
-CWeapon::CWeapon(char *model, int ActivationStart, int ActivationNumFrames, int FireStart, int FireNumFrames,
-				 int IdleStart, int IdleNumFrames, int DeactStart, int DeactNumFrames, char *WeaponSound) :
+CWeapon::CWeapon(char *model, int ActivationStart, int ActivationEnd, int FireStart, int FireEnd,
+				 int IdleStart, int IdleEnd, int DeactStart, int DeactEnd, char *WeaponSound) :
 ActivationStart(ActivationStart),
-ActivationNumFrames(ActivationNumFrames),
+ActivationEnd(ActivationEnd),
 FireStart(FireStart),
-FireNumFrames(FireNumFrames),
+FireEnd(FireEnd),
 IdleStart(IdleStart),
-IdleNumFrames(IdleNumFrames),
+IdleEnd(IdleEnd),
 DeactStart(DeactStart),
-DeactNumFrames(DeactNumFrames),
+DeactEnd(DeactEnd),
 WeaponSound(WeaponSound)
 {
 	WeaponModelString = model;
 
-	ActivationEnd = (ActivationStart + ActivationNumFrames);
-	FireEnd = (FireStart + FireNumFrames);
-	IdleEnd = (IdleStart + IdleNumFrames);
-	DeactEnd = (DeactStart + DeactNumFrames);
+	ActivationNumFrames = (ActivationEnd - ActivationStart);
+	FireNumFrames = (FireEnd - FireStart);
+	IdleNumFrames = (IdleEnd - IdleStart);
+	DeactNumFrames = (DeactEnd - DeactStart);
 };
 
 void CWeapon::InitWeapon (edict_t *ent)
@@ -135,9 +135,9 @@ void CWeapon::WeaponGeneric (edict_t *ent)
 
 		// Only do this if we haven't been explicitely set a newFrame
 		// because we might want to keep firing beyond this point
-		if (newFrame == -1 && ent->client->ps.gunFrame == FireEnd)
+		if (newFrame == -1 && ent->client->ps.gunFrame > FireEnd)
 		{
-			newFrame = IdleStart;
+			newFrame = IdleStart+1;
 			newState = WS_IDLE;
 		}
 		break;

@@ -37,8 +37,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 CRocketLauncher WeaponRocketLauncher;
 
 CRocketLauncher::CRocketLauncher() :
-CWeapon("models/weapons/v_rocket/tris.md2", 0, 4, 5, 8,
-		14, 36, 51, 3)
+CWeapon("models/weapons/v_rocket/tris.md2", 0, 4, 5, 12,
+		13, 50, 51, 54)
 {
 }
 

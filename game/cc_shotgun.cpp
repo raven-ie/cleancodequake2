@@ -37,8 +37,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 CShotgun WeaponShotgun;
 
 CShotgun::CShotgun() :
-CWeapon("models/weapons/v_shotg/tris.md2", 0, 7, 8, 11,
-		20, 16, 36, 3)
+CWeapon("models/weapons/v_shotg/tris.md2", 0, 7, 8, 18,
+		19, 36, 37, 39)
 {
 }
 

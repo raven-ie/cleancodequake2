@@ -359,21 +359,12 @@ void G_SetStats (edict_t *ent)
 	//
 	ent->client->ps.stats[STAT_LAYOUTS] = 0;
 
-	if (deathmatch->Integer())
-	{
-		if (ent->client->pers.health <= 0 || level.intermissiontime
-			|| ent->client->showscores)
-			ent->client->ps.stats[STAT_LAYOUTS] |= 1;
-		if (ent->client->showinventory && ent->client->pers.health > 0)
-			ent->client->ps.stats[STAT_LAYOUTS] |= 2;
-	}
-	else
-	{
-		if (ent->client->showscores || ent->client->showhelp)
-			ent->client->ps.stats[STAT_LAYOUTS] |= 1;
-		if (ent->client->showinventory && ent->client->pers.health > 0)
-			ent->client->ps.stats[STAT_LAYOUTS] |= 2;
-	}
+	if (ent->client->pers.health <= 0 || ent->client->resp.MenuState.InMenu ||
+		((deathmatch->Integer() && (level.intermissiontime || ent->client->showscores)) || 
+		!deathmatch->Integer() && ent->client->showhelp))
+		ent->client->ps.stats[STAT_LAYOUTS] |= 1;
+	if (ent->client->showinventory && ent->client->pers.health > 0)
+		ent->client->ps.stats[STAT_LAYOUTS] |= 2;
 
 	//
 	// frags

@@ -1376,6 +1376,8 @@ void PutClientInServer (edict_t *ent)
 	ent->watertype = 0;
 	ent->flags &= ~FL_NO_KNOCKBACK;
 	ent->svFlags &= ~SVF_DEADMONSTER;
+	if (!ent->client->resp.MenuState.ent)
+		ent->client->resp.MenuState = CMenuState(ent);
 
 	Vec3Copy (mins, ent->mins);
 	Vec3Copy (maxs, ent->maxs);

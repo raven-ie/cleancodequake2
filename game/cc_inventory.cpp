@@ -289,6 +289,12 @@ Cmd_InvUse_f
 */
 void Cmd_InvUse_f (edict_t *ent)
 {
+	if (ent->client->resp.MenuState.InMenu)
+	{
+		ent->client->resp.MenuState.Select();
+		return;
+	}
+
 	ent->client->pers.Inventory.ValidateSelectedItem ();
 
 	if (ent->client->pers.Inventory.SelectedItem == -1)
@@ -418,10 +424,20 @@ void Cmd_InvDrop_f (edict_t *ent)
 
 void Cmd_SelectNextItem_f (edict_t *ent)
 {
+	if (ent->client->resp.MenuState.InMenu)
+	{
+		ent->client->resp.MenuState.SelectNext();
+		return;
+	}
 	ent->client->pers.Inventory.SelectNextItem (-1);
 }
 void Cmd_SelectPrevItem_f (edict_t *ent)
 {
+	if (ent->client->resp.MenuState.InMenu)
+	{
+		ent->client->resp.MenuState.SelectPrev();
+		return;
+	}
 	ent->client->pers.Inventory.SelectPrevItem (-1);
 }
 void Cmd_SelectNextWeapon_f (edict_t *ent)
