@@ -27,8 +27,40 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_colors.cpp
-// A container with enumerations for colors
+// cc_menuevents.cpp
+// An "addon" to CMenuItem that lets you use function pointers for events
 //
 
 #include "cc_local.h"
+
+CEventMenuItem::CEventMenuItem (CMenu *Menu, int x, int y) : 
+CMenuItem(Menu,x,y),
+Event_CanSelect(NULL),
+Event_Update(NULL),
+Event_Select(NULL)
+{
+};
+
+bool CEventMenuItem::CanSelect (edict_t *ent)
+{
+	if (!Event_CanSelect)
+		return true; // If there's no select event, assume true.
+
+	return (Menu->*Event_CanSelect)(ent, this);
+}
+
+void CEventMenuItem::Update (edict_t *ent)
+{
+	if (!Event_Update)
+		return;
+
+	(Menu->*Event_Update)(ent, this);
+}
+
+bool CEventMenuItem::Select (edict_t *ent)
+{
+	if (!Event_Select)
+		return false; // If there's no select event, assume false.
+
+	return (Menu->*Event_Select)(ent, this);
+}

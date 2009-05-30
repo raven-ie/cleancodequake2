@@ -37,8 +37,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 CRailgun WeaponRailgun;
 
 CRailgun::CRailgun() :
-CWeapon("models/weapons/v_rail/tris.md2", 0, 3, 4, 15,
-		20, 36, 57, 4, "weapons/rg_hum.wav")
+CWeapon("models/weapons/v_rail/tris.md2", 0, 3, 4, 18,
+		19, 56, 57, 61, "weapons/rg_hum.wav")
 {
 }
 

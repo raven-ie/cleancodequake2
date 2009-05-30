@@ -34,6 +34,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_local.h"
 #include "m_player.h"
 
+void OpenTestMenu (edict_t *ent);
+
 char *ClientTeam (edict_t *ent)
 {
 	char		*p;
@@ -140,6 +142,9 @@ void Cmd_PutAway_f (edict_t *ent)
 	ent->client->showscores = false;
 	ent->client->showhelp = false;
 	ent->client->showinventory = false;
+
+	if (ent->client->resp.MenuState.InMenu)
+		ent->client->resp.MenuState.CloseMenu ();
 }
 
 
@@ -469,6 +474,11 @@ void Cmd_Register ()
 	Cmd_AddCommand ("noclip",				Cmd_Noclip_f,			CMD_CHEAT);
 	Cmd_AddCommand ("give",					Cmd_Give_f,				CMD_CHEAT);
 	Cmd_AddCommand ("spawn",				Cmd_Give,				CMD_CHEAT);
+	
+	// CleanMenu commands
+	Cmd_AddCommand ("testmenu",				OpenTestMenu);
+	Cmd_AddCommand ("menu_left",			Cmd_MenuLeft_t,			CMD_SPECTATOR);
+	Cmd_AddCommand ("menu_right",			Cmd_MenuRight_t,		CMD_SPECTATOR);
 }
 
 /*

@@ -1158,10 +1158,6 @@
 				Name="Colors"
 				>
 				<File
-					RelativePath=".\cc_colors.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\cc_colors.h"
 					>
 				</File>
@@ -1187,6 +1183,42 @@
 				</File>
 				<File
 					RelativePath=".\cc_media.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Font"
+				>
+				<File
+					RelativePath=".\cc_conchars.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Menu"
+				>
+				<File
+					RelativePath=".\cc_controls.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_controls.h"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_menu.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_menu.h"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_menuevents.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_menuevents.h"
 					>
 				</File>
 			</Filter>

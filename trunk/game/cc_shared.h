@@ -31,6 +31,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Shared header, included by g_local.
 //
 
+#include "cc_conchars.h"
 #include "cc_indexing.h"
 #include "cc_media.h"
 #include "cc_print.h"
@@ -52,6 +53,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_pathfinding.h"
 #include "cc_monsters.h"
 #include "cc_monsterlist.h"
+#include "cc_menu.h"
 
 extern dmFlagsConfig dmFlags;
 

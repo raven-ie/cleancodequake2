@@ -37,8 +37,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 CGrenadeLauncher WeaponGrenadeLauncher;
 
 CGrenadeLauncher::CGrenadeLauncher() :
-CWeapon("models/weapons/v_launch/tris.md2", 0, 5, 6, 10,
-		17, 42, 60, 4)
+CWeapon("models/weapons/v_launch/tris.md2", 0, 5, 6, 16,
+		17, 59, 60, 64)
 {
 }
 

@@ -37,8 +37,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 CMachinegun WeaponMachinegun;
 
 CMachinegun::CMachinegun() :
-CWeapon("models/weapons/v_machn/tris.md2", 0, 3, 4, 2,
-		6, 38, 46, 3)
+CWeapon("models/weapons/v_machn/tris.md2", 0, 3, 4, 5,
+		6, 45, 46, 49)
 {
 }
 

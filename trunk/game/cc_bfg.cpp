@@ -37,8 +37,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 CBFG WeaponBFG;
 
 CBFG::CBFG() :
-CWeapon("models/weapons/v_bfg/tris.md2", 0, 8, 9, 23,
-		33, 22, 56, 2, "weapons/bfg_hum.wav")
+CWeapon("models/weapons/v_bfg/tris.md2", 0, 8, 9, 32,
+		33, 55, 56, 58, "weapons/bfg_hum.wav")
 {
 }
 

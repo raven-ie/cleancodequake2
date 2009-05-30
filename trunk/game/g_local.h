@@ -603,6 +603,8 @@ typedef struct
 #ifdef MONSTERS_USE_PATHFINDING
 	CPathNode	*LastNode;
 #endif
+
+	CMenuState	MenuState;
 } client_respawn_t;
 
 // this structure is cleared on each PutClientInServer(),
