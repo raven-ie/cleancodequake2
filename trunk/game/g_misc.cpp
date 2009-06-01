@@ -1828,7 +1828,6 @@ void teleporter_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurfa
 	}
 
 	// draw the teleport splash at source and on the player
-//	self->owner->s.event = EV_PLAYER_TELEPORT;
 	if (other->client)
 		other->s.event = EV_PLAYER_TELEPORT;
 	else

@@ -33,21 +33,6 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 
-/*	Cmd_AddCommand ("use",					Cmd_Use_f);
-	Cmd_AddCommand ("drop",					Cmd_Drop_f);
-	Cmd_AddCommand ("inven",				Cmd_Inven_f);
-	Cmd_AddCommand ("invuse",				Cmd_InvUse_f);
-	Cmd_AddCommand ("invdrop",				Cmd_InvDrop_f);
-	Cmd_AddCommand ("weapprev",				Cmd_WeapPrev_f);
-	Cmd_AddCommand ("weapnext",				Cmd_WeapNext_f);
-	Cmd_AddCommand ("weaplast",				Cmd_WeapLast_f);
-	Cmd_AddCommand ("invnext",				Cmd_SelectNextItem_f);
-	Cmd_AddCommand ("invprev",				Cmd_SelectPrevItem_f);
-	Cmd_AddCommand ("invnextw",				Cmd_SelectNextWeapon_f);
-	Cmd_AddCommand ("invprevw",				Cmd_SelectPrevWeapon_f);
-	Cmd_AddCommand ("invnextp",				Cmd_SelectNextPowerup_f);
-	Cmd_AddCommand ("invprevp",				Cmd_SelectPrevPowerup_f);*/
-
 CInventory::CInventory ()
 {
 	memset (Array, 0, sizeof(int)*MAX_CS_ITEMS);
@@ -97,11 +82,6 @@ void CInventory::SelectNextItem(EItemFlags Flags)
 {
 	int			index;
 
-	/*if (ent->client->chase_target) {
-		ChaseNext(ent);
-		return;
-	}*/
-
 	// scan  for the next valid one
 	for (int i=1 ; i<=MAX_CS_ITEMS ; i++)
 	{
@@ -125,11 +105,6 @@ void CInventory::SelectNextItem(EItemFlags Flags)
 void CInventory::SelectPrevItem(EItemFlags Flags)
 {
 	int			index;
-
-	/*if (ent->client->chase_target) {
-		ChaseNext(ent);
-		return;
-	}*/
 
 	// scan  for the next valid one
 	for (int i=1 ; i<=MAX_CS_ITEMS ; i++)
@@ -232,10 +207,60 @@ void Cmd_Use_f (edict_t *ent)
 	}
 
 	Item->Use (ent);
-
 	ent->client->pers.Inventory.ValidateSelectedItem();
 }
 
+
+/*
+==================
+Cmd_UseList_f
+
+Tries to use the items in the list from left to right, stopping
+when one gets used
+==================
+*/
+void Cmd_UseList_f (edict_t *ent)
+{
+	for (int i = 1; i < ArgCount(); i++)
+	{
+		char *s = ArgGets(i);
+
+		CBaseItem *Item = FindItem(s);
+		if (!Item)
+		{
+			Item = FindItemByClassname(s);
+
+			if (!Item)
+			{
+				ClientPrintf (ent, PRINT_HIGH, "Unknown item: %s\n", s);
+				continue;
+			}
+		}
+		if (!(Item->Flags & ITEMFLAG_USABLE))
+		{
+			ClientPrintf (ent, PRINT_HIGH, "Item is not usable.\n");
+			continue;
+		}
+		// Only warn us if it's unknown or not usable; not if we don't have it
+		if (!ent->client->pers.Inventory.Has(Item))
+		//{
+		//	ClientPrintf (ent, PRINT_HIGH, "Out of item: %s\n", s);
+			continue;
+		//}
+		// If it's a weapon and we don't have ammo, don't bother
+		if (Item->Flags & ITEMFLAG_WEAPON && !(Item->Flags & ITEMFLAG_AMMO))
+		{
+			CWeaponItem *Weapon = dynamic_cast<CWeaponItem*>(Item);
+			if (!ent->client->pers.Inventory.Has(Weapon->Ammo))
+				continue;
+		}
+
+		Item->Use (ent);
+		ent->client->pers.Inventory.ValidateSelectedItem();
+		return;
+	}
+	ClientPrintf (ent, PRINT_HIGH, "No item in list found!\n");
+}
 
 /*
 ==================
@@ -437,6 +462,13 @@ void Cmd_SelectNextItem_f (edict_t *ent)
 		ent->client->resp.MenuState.SelectNext();
 		return;
 	}
+
+	if (ent->client->chase_target)
+	{
+		ChaseNext(ent);
+		return;
+	}
+
 	ent->client->pers.Inventory.SelectNextItem (-1);
 }
 void Cmd_SelectPrevItem_f (edict_t *ent)
@@ -449,6 +481,13 @@ void Cmd_SelectPrevItem_f (edict_t *ent)
 		ent->client->resp.MenuState.SelectPrev();
 		return;
 	}
+
+	if (ent->client->chase_target)
+	{
+		ChasePrev(ent);
+		return;
+	}
+
 	ent->client->pers.Inventory.SelectPrevItem (-1);
 }
 void Cmd_SelectNextWeapon_f (edict_t *ent)

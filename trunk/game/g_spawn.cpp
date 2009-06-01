@@ -500,8 +500,14 @@ parsing textual entity definitions out of an ent file.
 ==============
 */
 extern int entityNumber;
+#include "cc_exceptionhandler.h"
+
 void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 {
+#ifdef CC_USE_EXCEPTION_HANDLER
+__try
+{
+#endif
 	edict_t		*ent;
 	int			inhibit;
 	char		*token;
@@ -609,6 +615,13 @@ void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 #endif
 
 	DebugPrintf ("Finished server initialization in %d ms\n", Sys_Milliseconds() - startTime);
+#ifdef CC_USE_EXCEPTION_HANDLER
+	}
+	__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
+	{
+		return;
+	}
+#endif
 }
 
 
@@ -701,24 +714,14 @@ void SP_worldspawn (edict_t *ent)
 
 	SoundIndex ("player/gasp1.wav");		// gasping for air
 	SoundIndex ("player/gasp2.wav");		// head breaking surface, not gasping
-
 	SoundIndex ("player/watr_in.wav");	// feet hitting water
 	SoundIndex ("player/watr_out.wav");	// feet leaving water
-
 	SoundIndex ("player/watr_un.wav");	// head going underwater
-	
 	SoundIndex ("player/u_breath1.wav");
 	SoundIndex ("player/u_breath2.wav");
-
-	SoundIndex ("items/pkup.wav");		// bonus item pickup
 	SoundIndex ("world/land.wav");		// landing thud
 	SoundIndex ("misc/h2ohit1.wav");		// landing splash
-
-	SoundIndex ("items/damage.wav");
-	SoundIndex ("items/protect.wav");
-	SoundIndex ("items/protect4.wav");
 	SoundIndex ("weapons/noammo.wav");
-
 	SoundIndex ("infantry/inflies1.wav");
 
 	InitGameMedia ();

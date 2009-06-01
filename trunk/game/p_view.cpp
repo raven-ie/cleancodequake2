@@ -569,7 +569,7 @@ static inline void P_FallingDamage (edict_t *ent)
 			damage = 1;
 		Vec3Set (dir, 0, 0, 1);
 
-		if (!deathmatch->Integer() || !dmFlags.dfNoFallingDamage )
+		if (!dmFlags.dfNoFallingDamage )
 			T_Damage (ent, world, world, dir, ent->s.origin, vec3Origin, damage, 0, 0, MOD_FALLING);
 	}
 	else

@@ -412,8 +412,14 @@ G_RunFrame
 Advances the world by 0.1 seconds
 ================
 */
+#include "cc_exceptionhandler.h"
+
 void G_RunFrame (void)
 {
+#ifdef CC_USE_EXCEPTION_HANDLER
+__try
+{
+#endif
 	int		i;
 	edict_t	*ent;
 
@@ -502,6 +508,13 @@ void G_RunFrame (void)
 
 #ifdef MONSTERS_USE_PATHFINDING
 	RunNodes();
+#endif
+#ifdef CC_USE_EXCEPTION_HANDLER
+	}
+	__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
+	{
+		return;
+	}
 #endif
 }
 

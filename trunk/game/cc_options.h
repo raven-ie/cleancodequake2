@@ -72,3 +72,6 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 // Define this if you want to use Microsoft Visual Studio 7.0+ safe functions
 #define CRT_USE_UNDEPRECATED_FUNCTIONS
+
+// Define this to use the CleanCode exception handler
+#define CC_USE_EXCEPTION_HANDLER

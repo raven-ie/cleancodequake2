@@ -38,6 +38,7 @@ public:
 };
 
 void Cmd_Use_f (edict_t *ent);
+void Cmd_UseList_f (edict_t *ent);
 void Cmd_Drop_f (edict_t *ent);
 void Cmd_Inven_f (edict_t *ent);
 void Cmd_InvUse_f (edict_t *ent);

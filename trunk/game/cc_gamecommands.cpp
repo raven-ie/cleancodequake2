@@ -453,6 +453,7 @@ void Cmd_Register ()
 	Cmd_AddCommand ("wave",					Cmd_Wave_f);
 
 	Cmd_AddCommand ("use",					Cmd_Use_f);
+	Cmd_AddCommand ("uselist",				Cmd_UseList_f); // Paril
 	Cmd_AddCommand ("drop",					Cmd_Drop_f);
 	Cmd_AddCommand ("inven",				Cmd_Inven_f);
 	Cmd_AddCommand ("invuse",				Cmd_InvUse_f);
