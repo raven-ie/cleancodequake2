@@ -262,11 +262,13 @@ void CMenuState::Select ()
 void Cmd_Kill_f (edict_t *ent);
 void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
 
-SSpinControlIndex TestIndexes[] =
+static SSpinControlIndex TestIndexes[] =
 {
 	{"Yes", "1"},
 	{"No", "0"},
-	{"Maybe", "?"}
+	{"Maybe", "?"},
+	{"Can't be!!!", "!!!"},
+	NULL
 };
 
 class CTestMenu : public CMenu
@@ -352,7 +354,7 @@ public:
 
 		Label = new Label3(this, 0, 16);
 		Label->Align = LA_RIGHT;
-		Q_snprintfz (Label->LabelString, sizeof(Label->LabelString), "Don't do anything");
+		Q_snprintfz (Label->LabelString, sizeof(Label->LabelString), "D:");
 		AddItem(Label);
 
 		Label = new Label3(this, 0, 32);
@@ -367,6 +369,14 @@ public:
 
 		CMenu_Spin *SpinTest = new CMenu_Spin (this, 0, 64, TestIndexes);
 		AddItem(SpinTest);
+
+		CMenu_Slider *SlideTest = new CMenu_Slider (this, 0, 86);
+		SlideTest->Min = 0;
+		SlideTest->Max = 9;
+		SlideTest->Value = 0;
+		SlideTest->Width = 9;
+		SlideTest->Step = 1;
+		AddItem(SlideTest);
 		return true;
 	};
 

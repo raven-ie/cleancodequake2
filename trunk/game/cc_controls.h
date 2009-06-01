@@ -100,10 +100,34 @@ public:
 	ELabelFlags				Flags;
 	ELabelAlign				Align;
 	int						Index; // Where we are in the spin control
-	int						NumIndices; // sizeof(Indices) / sizeof(SSpinControlIndex)
+	int						NumIndices;
 	SSpinControlIndex		*Indices;
 
 	CMenu_Spin				(CMenu *Menu, int x, int y, SSpinControlIndex *Indices);
+	virtual void Draw		(edict_t *ent, CStatusBar *DrawState);
+
+	virtual bool	CanSelect (edict_t *ent)
+	{
+		return Enabled;
+	}
+	virtual bool	Select (edict_t *ent)
+	{
+		return false;
+	}
+	virtual void	Update (edict_t *ent);
+};
+
+class CMenu_Slider : public CMenuItem
+{
+public:
+	ELabelAlign				Align;
+	int						Min;
+	int						Max;
+	int						Step;
+	int						Value;
+	int						Width; // 3 + Width
+
+	CMenu_Slider			(CMenu *Menu, int x, int y);
 	virtual void Draw		(edict_t *ent, CStatusBar *DrawState);
 
 	virtual bool	CanSelect (edict_t *ent)

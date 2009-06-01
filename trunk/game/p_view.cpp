@@ -419,13 +419,6 @@ static inline void SV_CalcBlend (edict_t *ent)
 	else
 		ent->client->ps.rdFlags &= ~RDF_UNDERWATER;
 
-	if (contents & (CONTENTS_SOLID|CONTENTS_LAVA))
-		SV_AddBlend (LavaColor, ent->client->pers.viewBlend);
-	else if (contents & CONTENTS_SLIME)
-		SV_AddBlend (SlimeColor, ent->client->pers.viewBlend);
-	else if (contents & CONTENTS_WATER)
-		SV_AddBlend (WaterColor, ent->client->pers.viewBlend);
-
 	// add for powerups
 	if (ent->client->quad_framenum > level.framenum)
 	{
@@ -492,6 +485,13 @@ static inline void SV_CalcBlend (edict_t *ent)
 		else
 			ent->client->bonus_alpha -= 15;
 	}
+
+	if (contents & (CONTENTS_SOLID|CONTENTS_LAVA))
+		SV_AddBlend (LavaColor, ent->client->pers.viewBlend);
+	else if (contents & CONTENTS_SLIME)
+		SV_AddBlend (SlimeColor, ent->client->pers.viewBlend);
+	else if (contents & CONTENTS_WATER)
+		SV_AddBlend (WaterColor, ent->client->pers.viewBlend);
 
 	ent->client->ps.viewBlend[0] = ((float)(ent->client->pers.viewBlend.R) / 255);
 	ent->client->ps.viewBlend[1] = ((float)(ent->client->pers.viewBlend.G) / 255);
@@ -896,7 +896,7 @@ newanim:
 	client->anim_duck = duck;
 	client->anim_run = run;
 
-	if (!ent->groundentity)
+	if (!ent->groundentity && !duck)
 	{
 		client->anim_priority = ANIM_JUMP;
 		if (ent->s.frame != FRAME_jump2)
@@ -995,7 +995,7 @@ void ClientEndServerFrame (edict_t *ent)
 	//
 	float xyspeed = sqrtf(ent->velocity[0]*ent->velocity[0] + ent->velocity[1]*ent->velocity[1]);
 
-	if (xyspeed < 5)
+	if (xyspeed < 5 || ent->client->ps.pMove.pmFlags & PMF_DUCKED)
 	{
 		bobmove = 0;
 		ent->client->bobtime = 0;	// start at beginning of cycle again

@@ -573,7 +573,7 @@ typedef struct
 	// ammo capacities
 	int			maxAmmoValues[AMMOTAG_MAX];
 
-	CWeapon		*Weapon;
+	CWeapon		*Weapon, *LastWeapon;
 	CArmor		*Armor; // Current armor.
 	// Stored here for convenience. (dynamic_cast ew)
 

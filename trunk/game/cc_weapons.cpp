@@ -345,17 +345,31 @@ void AddAmmoToList ()
 	ItemList->AddItemToList (BFG);
 }
 
+#define WEAP_BLASTER			1 
+#define WEAP_SHOTGUN			2 
+#define WEAP_SUPERSHOTGUN		3 
+#define WEAP_MACHINEGUN			4 
+#define WEAP_CHAINGUN			5 
+#define WEAP_GRENADES			6 
+#define WEAP_GRENADELAUNCHER	7 
+#define WEAP_ROCKETLAUNCHER		8 
+#define WEAP_HYPERBLASTER		9 
+#define WEAP_RAILGUN			10
+#define WEAP_BFG				11
+
 void DoWeaponVweps ()
 {
-	Blaster->Weapon->vwepIndex = ModelIndex(Blaster->VWepModel) - 3;
-	Shotgun->Weapon->vwepIndex = ModelIndex(Shotgun->VWepModel) - 3;
-	SuperShotgun->Weapon->vwepIndex = ModelIndex(SuperShotgun->VWepModel) - 3;
-	Machinegun->Weapon->vwepIndex = ModelIndex(Machinegun->VWepModel) - 3;
-	Chaingun->Weapon->vwepIndex = ModelIndex(Chaingun->VWepModel) - 3;
-	GrenadeLauncher->Weapon->vwepIndex = ModelIndex(GrenadeLauncher->VWepModel) - 3;
-	Grenades->Weapon->vwepIndex = ModelIndex(Grenades->VWepModel) - 3;
-	RocketLauncher->Weapon->vwepIndex = ModelIndex(RocketLauncher->VWepModel) - 3;
-	HyperBlaster->Weapon->vwepIndex = ModelIndex(HyperBlaster->VWepModel) - 3;
-	Railgun->Weapon->vwepIndex = ModelIndex(Railgun->VWepModel) - 3;
-	BFG->Weapon->vwepIndex = ModelIndex(BFG->VWepModel) - 3;
+	int takeAway = ModelIndex(Blaster->VWepModel) - 1;
+
+	Blaster->Weapon->vwepIndex = ModelIndex(Blaster->VWepModel) - takeAway;
+	Shotgun->Weapon->vwepIndex = ModelIndex(Shotgun->VWepModel) - takeAway;
+	SuperShotgun->Weapon->vwepIndex = ModelIndex(SuperShotgun->VWepModel) - takeAway;
+	Machinegun->Weapon->vwepIndex = ModelIndex(Machinegun->VWepModel) - takeAway;
+	Chaingun->Weapon->vwepIndex = ModelIndex(Chaingun->VWepModel) - takeAway;
+	GrenadeLauncher->Weapon->vwepIndex = ModelIndex(GrenadeLauncher->VWepModel) - takeAway;
+	Grenades->Weapon->vwepIndex = ModelIndex(Grenades->VWepModel) - takeAway;
+	RocketLauncher->Weapon->vwepIndex = ModelIndex(RocketLauncher->VWepModel) - takeAway;
+	HyperBlaster->Weapon->vwepIndex = ModelIndex(HyperBlaster->VWepModel) - takeAway;
+	Railgun->Weapon->vwepIndex = ModelIndex(Railgun->VWepModel) - takeAway;
+	BFG->Weapon->vwepIndex = ModelIndex(BFG->VWepModel) - takeAway;
 }

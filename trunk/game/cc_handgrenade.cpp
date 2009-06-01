@@ -38,7 +38,7 @@ CHandGrenade WeaponGrenades;
 
 CHandGrenade::CHandGrenade() :
 CWeapon("models/weapons/v_handgr/tris.md2", 0, 0, 0, 16,
-		17, 49, 0, 0)
+		17, 48, 0, 0)
 {
 }
 

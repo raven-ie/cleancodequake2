@@ -64,6 +64,8 @@ bool CArmor::Pickup (edict_t *ent, edict_t *other)
 			if (this->maxCount != -1 && (other->client->pers.Inventory.Has(other->client->pers.Armor) > this->maxCount))
 				other->client->pers.Inventory.Set(ent->client->pers.Armor, this->maxCount);
 		}
+		if (!(ent->spawnflags & DROPPED_ITEM) && (deathmatch->Integer()))
+			SetRespawn (ent, 20);
 		return true;
 	}
 

@@ -232,6 +232,8 @@ void Cmd_Use_f (edict_t *ent)
 	}
 
 	Item->Use (ent);
+
+	ent->client->pers.Inventory.ValidateSelectedItem();
 }
 
 
@@ -294,6 +296,8 @@ void Cmd_InvUse_f (edict_t *ent)
 		ent->client->resp.MenuState.Select();
 		return;
 	}
+	if (ent->health <= 0 || ent->deadflag)
+		return;
 
 	ent->client->pers.Inventory.ValidateSelectedItem ();
 
@@ -320,6 +324,8 @@ Cmd_WeapPrev_f
 void Cmd_WeapPrev_f (edict_t *ent)
 {
 	if (!ent->client->pers.Weapon)
+		return;
+	if (ent->health <= 0 || ent->deadflag)
 		return;
 
 	int selectedWeaponIndex = ent->client->pers.Weapon->Item->GetIndex();
@@ -350,6 +356,8 @@ void Cmd_WeapNext_f (edict_t *ent)
 {
 	if (!ent->client->pers.Weapon)
 		return;
+	if (ent->health <= 0 || ent->deadflag)
+		return;
 
 	int selectedWeaponIndex = ent->client->pers.Weapon->Item->GetIndex();
 
@@ -377,24 +385,18 @@ Cmd_WeapLast_f
 */
 void Cmd_WeapLast_f (edict_t *ent)
 {
-/*	gclient_t	*cl;
-	int			index;
-	gitem_t		*it;
+	gclient_t	*cl = ent->client;
 
-	cl = ent->client;
-
-	if (!cl->pers.weapon || !cl->pers.lastweapon)
+	if (!cl->pers.Weapon || !cl->pers.LastWeapon)
 		return;
 
-	index = ITEM_INDEX(cl->pers.lastweapon);
-	if (!cl->pers.inventory[index])
+	if (!cl->pers.Inventory.Has(cl->pers.LastWeapon->Item))
 		return;
-	it = &itemlist[index];
-	if (!it->use)
+	if (!(cl->pers.LastWeapon->Item->Flags & ITEMFLAG_USABLE))
 		return;
-	if (! (it->flags & IT_WEAPON) )
+	if (! (cl->pers.LastWeapon->Item->Flags & ITEMFLAG_WEAPON) )
 		return;
-	it->use (ent, it);*/
+	cl->pers.LastWeapon->Item->Use (ent);
 }
 
 /*
@@ -404,6 +406,9 @@ Cmd_InvDrop_f
 */
 void Cmd_InvDrop_f (edict_t *ent)
 {
+	if (ent->health <= 0 || ent->deadflag)
+		return;
+
 	ent->client->pers.Inventory.ValidateSelectedItem ();
 
 	if (ent->client->pers.Inventory.SelectedItem == -1)
@@ -424,6 +429,9 @@ void Cmd_InvDrop_f (edict_t *ent)
 
 void Cmd_SelectNextItem_f (edict_t *ent)
 {
+	if (ent->health <= 0 || ent->deadflag)
+		return;
+
 	if (ent->client->resp.MenuState.InMenu)
 	{
 		ent->client->resp.MenuState.SelectNext();
@@ -433,6 +441,9 @@ void Cmd_SelectNextItem_f (edict_t *ent)
 }
 void Cmd_SelectPrevItem_f (edict_t *ent)
 {
+	if (ent->health <= 0 || ent->deadflag)
+		return;
+
 	if (ent->client->resp.MenuState.InMenu)
 	{
 		ent->client->resp.MenuState.SelectPrev();
@@ -442,18 +453,30 @@ void Cmd_SelectPrevItem_f (edict_t *ent)
 }
 void Cmd_SelectNextWeapon_f (edict_t *ent)
 {
+	if (ent->health <= 0 || ent->deadflag)
+		return;
+
 	ent->client->pers.Inventory.SelectNextItem (ITEMFLAG_WEAPON);
 }
 void Cmd_SelectPrevWeapon_f (edict_t *ent)
 {
+	if (ent->health <= 0 || ent->deadflag)
+		return;
+
 	ent->client->pers.Inventory.SelectPrevItem (ITEMFLAG_WEAPON);
 }
 void Cmd_SelectNextPowerup_f (edict_t *ent)
 {
+	if (ent->health <= 0 || ent->deadflag)
+		return;
+
 	ent->client->pers.Inventory.SelectNextItem (ITEMFLAG_POWERUP);
 }
 void Cmd_SelectPrevPowerup_f (edict_t *ent)
 {
+	if (ent->health <= 0 || ent->deadflag)
+		return;
+
 	ent->client->pers.Inventory.SelectPrevItem (ITEMFLAG_POWERUP);
 }
 

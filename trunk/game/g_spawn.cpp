@@ -678,15 +678,12 @@ void SP_worldspawn (edict_t *ent)
 
 	//---------------
 	SetItemNames();
-	DoWeaponVweps ();
 
 	CCvar *gravity = new CCvar ("gravity", "800", 0);
 	if (!st.gravity)
 		gravity->Set("800");
 	else
 		gravity->Set(st.gravity);
-
-	InitGameMedia ();
 
 	SoundIndex ("player/lava1.wav");
 	SoundIndex ("player/lava2.wav");
@@ -699,6 +696,7 @@ void SP_worldspawn (edict_t *ent)
 	// gibs
 	SoundIndex ("items/respawn1.wav");
 
+	DoWeaponVweps ();
 	//-------------------
 
 	SoundIndex ("player/gasp1.wav");		// gasping for air
@@ -722,6 +720,8 @@ void SP_worldspawn (edict_t *ent)
 	SoundIndex ("weapons/noammo.wav");
 
 	SoundIndex ("infantry/inflies1.wav");
+
+	InitGameMedia ();
 
 //
 // Setup light animation tables. 'a' is total darkness, 'z' is doublebright.
