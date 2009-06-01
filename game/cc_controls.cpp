@@ -107,7 +107,14 @@ CMenuItem(Menu, x, y),
 Indices(Indices)
 {
 	Index = 0;
-	NumIndices = (sizeof(Indices) / sizeof(SSpinControlIndex));
+	//NumIndices = (sizeof(Indices) / sizeof(SSpinControlIndex
+
+	while (this->Indices->Text && *(this->Indices)->Text)
+	{
+		NumIndices++;
+		this->Indices++;
+	}
+	this->Indices = Indices;
 };
 
 void CMenu_Spin::Draw (edict_t *ent, CStatusBar *DrawState)
@@ -119,17 +126,18 @@ void CMenu_Spin::Draw (edict_t *ent, CStatusBar *DrawState)
 
 	if (Selected)
 	{
+		int numCharsOfSpace = strlen(Indices[Index].Text)*8;
 		// Is there any more indices to the left?
 		if (Index > 0)
 		{
-			DrawState->AddVirtualPoint_X (x + 160 - (((strlen(Indices[Index].Text)*8)/2)-8));
+			DrawState->AddVirtualPoint_X (x + 160 - 24);
 			DrawState->AddString ("<", false, false);
 		}
 
 		// To the right?
 		if (Index < (NumIndices-1))
 		{
-			DrawState->AddVirtualPoint_X (x + 160 + (((strlen(Indices[Index].Text)*8)/2)+8));
+			DrawState->AddVirtualPoint_X (x + 160 + ((numCharsOfSpace)+16));
 			DrawState->AddString (">", false, false);
 		}
 	}
@@ -150,6 +158,67 @@ void CMenu_Spin::Update (edict_t *ent)
 			return;
 
 		Index--;
+		break;
+	}
+};
+
+CMenu_Slider::CMenu_Slider (CMenu *Menu, int x, int y) :
+CMenuItem(Menu, x, y)
+{
+};
+
+void CMenu_Slider::Draw (edict_t *ent, CStatusBar *DrawState)
+{
+	DrawState->AddVirtualPoint_X (x + 160);
+	DrawState->AddVirtualPoint_Y (y + 120);
+
+	char Buffer[MAX_INFO_KEY];
+	int curX = (x + 168);
+	Buffer[0] = CCHAR_DOWNLOADBAR_LEFT;
+
+	// Which number is closest to the value?
+	int Percent = ((float)((Value == 0) ? 1 : (Value*100) / (Max-1)));
+	int BestValue = (Percent / (Width+(Step+2)));
+
+	if (BestValue > Width-1)
+		BestValue = Width-1;
+
+	for (int i = Min; i <= Width; i++, curX += 8)
+	{
+		Buffer[((i-Min)+1)] = (i == BestValue) ? CCHAR_DOWNLOADBAR_THUMB : CCHAR_DOWNLOADBAR_CENTER;
+	}
+
+	Buffer[Width+1] = CCHAR_DOWNLOADBAR_RIGHT;
+	Buffer[Width+2] = '\0';
+
+	DrawState->AddString (Buffer, false, false);
+
+	// Draw the value if desired
+	DrawState->AddVirtualPoint_X (x + 190 + (Width * 8));
+	_itoa_s (Value, Buffer, sizeof(Buffer), 10);
+
+	DrawState->AddString (Buffer, false, false);
+};
+
+void CMenu_Slider::Update (edict_t *ent)
+{
+	switch (ent->client->resp.MenuState.Key)
+	{
+	case KEY_RIGHT:
+		if (Value == (Max-1))
+			return; // Can't do that, Dave
+
+		Value += Step;
+		if (Value >= Max)
+			Value = Max-1;
+		break;
+	case KEY_LEFT:
+		if (Value == Min)
+			return;
+
+		Value -= Step;
+		if (Value < Min)
+			Value = Min;
 		break;
 	}
 };

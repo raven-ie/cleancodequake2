@@ -219,11 +219,11 @@ void CQuadDamage::DoPickup (edict_t *ent, edict_t *other)
 	{
 		if (!(ent->spawnflags & DROPPED_ITEM) )
 			SetRespawn (ent, 60);
-		if (dmFlags.dfInstantItems || (ent->spawnflags & DROPPED_PLAYER_ITEM))
-		{
+		if (ent->spawnflags & DROPPED_PLAYER_ITEM)
 			quad_drop_timeout_hack = (ent->nextthink - level.time) / FRAMETIME;
+
+		if (dmFlags.dfInstantItems)
 			Use (other);
-		}
 	}
 }
 

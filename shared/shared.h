@@ -651,14 +651,6 @@ struct pMoveNew_t
 	struct edict_s	*groundEntity;
 	int				waterType;
 	int				waterLevel;
-
-	// callbacks to test the world
-	cmTrace_t		(*trace) (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end);
-	int				(*pointContents) (vec3_t point);
-
-	float			multiplier;
-	BOOL			strafeHack;
-	BOOL			step;
 };
 
 /*

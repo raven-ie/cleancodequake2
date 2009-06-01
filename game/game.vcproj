@@ -54,6 +54,7 @@
 				ExceptionHandling="0"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="true"
+				DefaultCharIsUnsigned="true"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\debug/game.pch"
 				AssemblerListingLocation="$(IntDir)\"
@@ -161,6 +162,7 @@
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
+				DefaultCharIsUnsigned="true"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\release/game.pch"
 				AssemblerListingLocation="$(IntDir)\"
@@ -261,6 +263,7 @@
 				ExceptionHandling="0"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="true"
+				DefaultCharIsUnsigned="true"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\debug/game.pch"
 				AssemblerListingLocation="$(IntDir)\"
@@ -367,6 +370,7 @@
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
+				DefaultCharIsUnsigned="true"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\release/game.pch"
 				AssemblerListingLocation="$(IntDir)\"
@@ -754,6 +758,18 @@
 					</File>
 					<File
 						RelativePath=".\cc_sound.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="Pmove"
+					>
+					<File
+						RelativePath=".\cc_pmove.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_pmove.h"
 						>
 					</File>
 				</Filter>

@@ -54,6 +54,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_monsters.h"
 #include "cc_monsterlist.h"
 #include "cc_menu.h"
+#include "cc_pmove.h"
 
 extern dmFlagsConfig dmFlags;
 

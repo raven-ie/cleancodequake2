@@ -169,6 +169,9 @@ typedef struct gameImport_s
 	void	(*linkentity) (edict_t *ent);
 	void	(*unlinkentity) (edict_t *ent);		// call before removing an interactive edict
 	int		(*BoxEdicts) (vec3_t mins, vec3_t maxs, edict_t **list,	int maxCount, int areaType);
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (SV_Pmove)
+#endif
 	void	(*Pmove) (pMove_t *pMove);		// player movement code common with client prediction
 
 	// network messaging

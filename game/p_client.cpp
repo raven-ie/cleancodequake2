@@ -1767,7 +1767,7 @@ void ClientDisconnect (edict_t *ent)
 
 //==============================================================
 
-
+#ifdef USE_EXTENDED_GAME_IMPORTS
 edict_t	*pm_passent;
 
 // pmove doesn't need to know about passent and contentmask
@@ -1781,23 +1781,7 @@ _CC_DISABLE_DEPRECATION
 		return gi.trace(start, mins, maxs, end, pm_passent, CONTENTS_MASK_DEADSOLID);
 )
 }
-
-unsigned CheckBlock (void *b, int c)
-{
-	int	v,i;
-	v = 0;
-	for (i=0 ; i<c ; i++)
-		v+= ((byte *)b)[i];
-	return v;
-}
-void PrintPmove (pMove_t *pm)
-{
-	unsigned	c1, c2;
-
-	c1 = CheckBlock (&pm->state, sizeof(pm->state));
-	c2 = CheckBlock (&pm->cmd, sizeof(pm->cmd));
-	Com_Printf (0, "sv %3i:%i %i\n", pm->cmd.impulse, c1, c2);
-}
+#endif
 
 /*
 ==============
@@ -1812,7 +1796,11 @@ void ClientThink (edict_t *ent, userCmd_t *ucmd)
 	gclient_t	*client;
 	edict_t	*other;
 	int		i, j;
-	pMove_t	pm;
+#ifdef USE_EXTENDED_GAME_IMPORTS
+	pMove_t		pm;
+#else
+	pMoveNew_t	pm;
+#endif
 
 	level.current_entity = ent;
 	client = ent->client;
@@ -1827,7 +1815,9 @@ void ClientThink (edict_t *ent, userCmd_t *ucmd)
 		return;
 	}
 
+#ifdef USE_EXTENDED_GAME_IMPORTS
 	pm_passent = ent;
+#endif
 
 	if (ent->client->chase_target) {
 
@@ -1866,11 +1856,17 @@ void ClientThink (edict_t *ent, userCmd_t *ucmd)
 
 		pm.cmd = *ucmd;
 
-		pm.trace = PM_trace;	// adds default parms
+#ifdef USE_EXTENDED_GAME_IMPORTS
+		pm.trace = PM_trace;
 		pm.pointContents = gi.pointcontents;
+#endif
 
 		// perform a pmove
+#ifdef USE_EXTENDED_GAME_IMPORTS
 		gi.Pmove (&pm);
+#else
+		SV_Pmove (ent, &pm, 0);
+#endif
 
 		// save results of pmove
 		client->ps.pMove = pm.state;

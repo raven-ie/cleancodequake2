@@ -162,6 +162,7 @@ void CWeapon::WeaponGeneric (edict_t *ent)
 
 void CWeapon::ChangeWeapon (edict_t *ent)
 {
+	ent->client->pers.LastWeapon = ent->client->pers.Weapon;
 	ent->client->pers.Weapon = ent->client->NewWeapon;
 	ent->client->NewWeapon = NULL;
 	ent->client->machinegun_shots = 0;

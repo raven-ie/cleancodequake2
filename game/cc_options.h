@@ -48,7 +48,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 
 // "Extended game imports" refers to:
-// gi.cprintf, gi.dprintf, gi.centerprintf, gi.bprintf, gi.sound, gi.positioned_sound
+// gi.cprintf, gi.dprintf, gi.centerprintf, gi.bprintf, gi.sound, gi.positioned_sound, gi.pmove
 //#define USE_EXTENDED_GAME_IMPORTS
 
 // Define this if you don't want old function calls to warn you about deprecation.
