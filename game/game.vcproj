@@ -81,7 +81,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Winmm.lib"
+				AdditionalDependencies="Winmm.lib ../lib/zlibd.lib"
 				OutputFile="..\baseq2\gamex86.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -1235,6 +1235,18 @@
 				</File>
 				<File
 					RelativePath=".\cc_menuevents.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Exception Handling"
+				>
+				<File
+					RelativePath=".\cc_exceptionhandler.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_exceptionhandler.h"
 					>
 				</File>
 			</Filter>
