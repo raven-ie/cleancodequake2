@@ -42,7 +42,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include <conio.h>
 #include <process.h>
 #include <dbghelp.h>
-#include "../include/minizip/zlib.h"
+#include "../minizip/zlib.h"
 
 #define APP_FULLNAME "CleanCode Quake II"
 
