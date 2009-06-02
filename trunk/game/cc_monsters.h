@@ -359,3 +359,4 @@ void Monster_Think (edict_t *ent);
 #include "cc_icarus.h"
 #include "cc_mutant.h"
 #include "cc_insane.h"
+#include "cc_gladiator.h"

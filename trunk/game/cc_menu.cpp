@@ -262,121 +262,99 @@ void CMenuState::Select ()
 void Cmd_Kill_f (edict_t *ent);
 void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
 
-static SSpinControlIndex TestIndexes[] =
+static SSpinControlIndex AmmoIndexes[] =
 {
-	{"Yes", "1"},
-	{"No", "0"},
-	{"Maybe", "?"},
-	{"Can't be!!!", "!!!"},
+	{"Shells", "Shells"},
+	{"Bullets", "Bullets"},
+	{"Cells", "Cells"},
+	{"Rockets", "Rockets"},
+	{"Slugs", "Slugs"},
+	{"Grenades", "Grenades"},
 	NULL
 };
+
+void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
 
 class CTestMenu : public CMenu
 {
 public:
-	class Label1 : public CMenu_Label
+	CMenu_Label		*Label1, *Label2;
+	CMenu_Spin		*Spin1;
+	CMenu_Slider	*Slider1;
+
+	class CLabel1 : public CMenu_Label
 	{
 	public:
-		Label1 (CMenu *Menu, int x, int y) :
-		CMenu_Label(Menu,x,y)
+		CTestMenu	*Menu;
+		CLabel1 (CTestMenu *Menu, int x, int y) :
+		CMenu_Label(Menu,x,y),
+		Menu(Menu)
 		{
 		};
 
 		bool	Select (edict_t *ent)
 		{
-			Cmd_Kill_f (ent);
+			CAmmo *Ammo = dynamic_cast<CAmmo*>(FindItem(Menu->Spin1->Indices[Menu->Spin1->Index].Text));
+
+			if (Ammo)
+			{
+				edict_t *it_ent = G_Spawn();
+				it_ent->classname = Ammo->Classname;
+				SpawnItem (it_ent, Ammo);
+				it_ent->count = Menu->Slider1->Value;
+				TouchItem (it_ent, ent, NULL, NULL);
+				if (it_ent->inUse)
+					G_FreeEdict(it_ent);
+			}
 			return true;
-		}
-	};
-	class Label2 : public CMenu_Label
-	{
-	public:
-		Label2 (CMenu *Menu, int x, int y) :
-		CMenu_Label(Menu,x,y)
-		{
-		};
-
-		bool	Select (edict_t *ent)
-		{
-			edict_t *it_ent = G_Spawn();
-			CBaseItem *it = FindItem("Shotgun");
-			it_ent->classname = it->Classname;
-			SpawnItem (it_ent, it);
-			TouchItem (it_ent, ent, NULL, NULL);
-			if (it_ent->inUse)
-				G_FreeEdict(it_ent);
-			return true;
-		}
-	};
-	class Label3 : public CMenu_Label
-	{
-	public:
-		Label3 (CMenu *Menu, int x, int y) :
-		CMenu_Label(Menu,x,y)
-		{
-		};
-
-		bool	Select (edict_t *ent)
-		{
-			return false;
-		}
-	};
-	class Image1 : public CMenu_Image
-	{
-	public:
-		Image1 (CMenu *Menu, int x, int y) :
-		CMenu_Image(Menu,x,y)
-		{
-		};
-
-		bool	CanSelect (edict_t *ent)
-		{
-			return false;
 		}
 	};
 
 	CTestMenu			(edict_t *ent) :
 	CMenu(ent)
 	{
+		Cursor = 3;
 	};
 
 	bool				Open ()
 	{
-		CMenu_Label *Label = new Label1(this, 0, 0);
-		Label->Align = LA_CENTER;
-		Q_snprintfz (Label->LabelString, sizeof(Label->LabelString), "Kill self");
-		AddItem(Label);
+		Label1 = new CMenu_Label (this, 0, -48);
+		Label1->LabelString = "Pick an ammo and amount...\n\"menu_left\" and \"menu_right\" to choose";
+		Label1->Align = LA_CENTER;
+		Label1->Enabled = false;
+		AddItem(Label1);
 
-		Label = new Label2(this, 0, 8);
-		Label->Align = LA_LEFT;
-		Q_snprintfz (Label->LabelString, sizeof(Label->LabelString), "Gimme a shotgun");
-		AddItem(Label);
+		CMenu_Box *Box1 = new CMenu_Box (this, 0, -40);
+		Box1->Width = 11;
+		Box1->Type = 2;
+		Box1->Align = LA_CENTER;
+		AddItem (Box1);
 
-		Label = new Label3(this, 0, 16);
-		Label->Align = LA_RIGHT;
-		Q_snprintfz (Label->LabelString, sizeof(Label->LabelString), "D:");
-		AddItem(Label);
+		Box1 = new CMenu_Box (this, 0, -12);
+		Box1->Width = 11;
+		Box1->Height = 4;
+		Box1->Type = 1;
+		Box1->Align = LA_CENTER;
+		AddItem (Box1);
 
-		Label = new Label3(this, 0, 32);
-		Label->Align = LA_CENTER;
-		Label->Enabled = false;
-		Q_snprintfz (Label->LabelString, sizeof(Label->LabelString), "This multiline\nstring cannot be\nselected.");
-		AddItem(Label);
+		Spin1 = new CMenu_Spin (this, 0, -8, AmmoIndexes);
+		Spin1->Align = LA_CENTER;
+		AddItem (Spin1);
 
-		CMenu_Image *Image = new Image1 (this, -12, -24);
-		Q_snprintfz (Image->ImageString, sizeof(Image->ImageString), "k_security");
-		AddItem(Image);
+		Slider1 = new CMenu_Slider (this, -8, 8);
+		Slider1->Align = LA_CENTER;
+		Slider1->Min = 0;
+		Slider1->Max = 200;
+		Slider1->Width = 8;
+		Slider1->Step = 5;
+		Slider1->Value = 0;
+		AddItem(Slider1);
 
-		CMenu_Spin *SpinTest = new CMenu_Spin (this, 0, 64, TestIndexes);
-		AddItem(SpinTest);
+		Label2 = new CLabel1 (this, 0, 24);
+		Label2->LabelString = "Give!";
+		Label2->Align = LA_CENTER;
+		AddItem(Label2);
 
-		CMenu_Slider *SlideTest = new CMenu_Slider (this, 0, 86);
-		SlideTest->Min = 0;
-		SlideTest->Max = 9;
-		SlideTest->Value = 0;
-		SlideTest->Width = 9;
-		SlideTest->Step = 1;
-		AddItem(SlideTest);
 		return true;
 	};
 

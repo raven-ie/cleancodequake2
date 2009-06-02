@@ -253,7 +253,7 @@ typedef struct gameImport_s
 
 	// ClientCommand and ServerCommand parameter access
 #ifndef USE_EXTENDED_GAME_IMPORTS
-	_CC_INSECURE_DEPRECATE (ArgGetCount)
+	_CC_INSECURE_DEPRECATE (ArgCount)
 #endif
 	int		(*argc) (void);
 

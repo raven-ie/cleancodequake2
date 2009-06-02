@@ -27,38 +27,46 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_sbar.h
-// Contains a class to create statusbars easily, without the need to directly edit a string.
-// This can also be used for like, scoreboards (+ SendMsg)
+// cc_gladiator.h
+// WACHOOEYCHOY
 //
 
-class CStatusBar
+class CGladiator : public CMonster
 {
-	char bar[MAX_COMPRINT/2];
-	char temp[MAX_COMPRINT/2]; // A temp buffer used for adding stuffs to the bar buffer.
-
 public:
-	CStatusBar();
-	void Send ();
-	void SendMsg (edict_t *ent, bool reliable = true);
+	MediaIndex	SoundPain1;
+	MediaIndex	SoundPain2;
+	MediaIndex	SoundDie;
+	MediaIndex	SoundGun;
+	MediaIndex	SoundCleaverSwing;
+	MediaIndex	SoundCleaverHit;
+	MediaIndex	SoundCleaverMiss;
+	MediaIndex	SoundIdle;
+	MediaIndex	SoundSearch;
+	MediaIndex	SoundSight;
 
-	void AddToBarBuffer (char *string);
-	void AddVirtualPoint_Y (int y);
-	void AddVirtualPoint_X (int x);
-	void AddPoint_X (int x, bool inverted);
-	void AddPoint_Y (int y, bool inverted);
-	void AddString (char *string, bool highBi, bool center);
-	void AddStatString (int stat);
-	void AddPic (char *pic);
-	void AddPicStat (int stat);
-	void AddNumStat (int stat, int width);
-	void AddIf (int stat);
-	void AddEndIf ();
-	void AddAmmoNum ();
-	void AddHealthNum ();
-	void AddArmorNum ();
-	void AddClientBlock (int x, int y, int cNum, int score, int ping, int time);
-	void AddClientBlock (int x, int y, int cNum, int score, int ping);
+	CGladiator ();
+
+	void Allocate (edict_t *ent);
+
+	void Attack ();
+	void Idle ();
+	void Run ();
+	void Sight ();
+	void Stand ();
+	void Walk ();
+	void Melee ();
+	void Search ();
+
+	void FireRail ();
+	void SwingCleaver ();
+	void MeleeAttack ();
+
+	void Dead ();
+	void Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
+	void Pain (edict_t *other, float kick, int damage);
+
+	void Spawn ();
 };
 
-void HelpComputer (edict_t *ent);
+extern CGladiator Monster_Gladiator;

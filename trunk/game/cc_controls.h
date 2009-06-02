@@ -46,7 +46,7 @@ enum ELabelAlign
 class CMenu_Label : public CMenuItem
 {
 public:
-	char					LabelString[MAX_INFO_KEY*2];
+	char					*LabelString;
 	ELabelFlags				Flags;
 	ELabelAlign				Align;
 
@@ -117,15 +117,29 @@ public:
 	virtual void	Update (edict_t *ent);
 };
 
+typedef int ESliderTextPosition;
+enum
+{
+	STP_RIGHT,
+	STP_TOP,
+	STP_LEFT,
+	STP_BOTTOM,
+
+	STP_CUSTOM // Allows programmer to shove the text where ever he wants
+};
+
 class CMenu_Slider : public CMenuItem
 {
 public:
 	ELabelAlign				Align;
+	ESliderTextPosition		TextAlign;
+	int						TextX, TextY;
+
 	int						Min;
 	int						Max;
 	int						Step;
 	int						Value;
-	int						Width; // 3 + Width
+	int						Width;
 
 	CMenu_Slider			(CMenu *Menu, int x, int y);
 	virtual void Draw		(edict_t *ent, CStatusBar *DrawState);
@@ -139,4 +153,33 @@ public:
 		return false;
 	}
 	virtual void	Update (edict_t *ent);
+};
+
+class CMenu_Box : public CMenuItem
+{
+private:
+	bool					Enabled;
+
+public:
+	ELabelAlign				Align;
+
+	int						Width;
+	int						Height;
+	int						Type;
+
+	CMenu_Box			(CMenu *Menu, int x, int y);
+	virtual void Draw		(edict_t *ent, CStatusBar *DrawState);
+
+	// Can't select
+	bool	CanSelect (edict_t *ent)
+	{
+		return false;
+	}
+	bool	Select (edict_t *ent)
+	{
+		return false;
+	}
+	virtual void	Update (edict_t *ent)
+	{
+	};
 };
