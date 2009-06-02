@@ -119,10 +119,24 @@ Indices(Indices)
 
 void CMenu_Spin::Draw (edict_t *ent, CStatusBar *DrawState)
 {
-	DrawState->AddVirtualPoint_X (x + 160);
+	int drawX = x;
+
+	switch (Align)
+	{
+	case LA_LEFT:
+		drawX += 160;
+		break;
+	case LA_CENTER:
+		break;
+	case LA_RIGHT:
+		drawX += 160 - (strlen(Indices[Index].Text)*8);
+		break;
+	}
+
+	DrawState->AddVirtualPoint_X (drawX);
 	DrawState->AddVirtualPoint_Y (y + 120);
 
-	DrawState->AddString (Indices[Index].Text, Selected, false);
+	DrawState->AddString (Indices[Index].Text, Selected, (Align == LA_CENTER));
 
 	if (Selected)
 	{
@@ -130,15 +144,39 @@ void CMenu_Spin::Draw (edict_t *ent, CStatusBar *DrawState)
 		// Is there any more indices to the left?
 		if (Index > 0)
 		{
-			DrawState->AddVirtualPoint_X (x + 160 - 24);
-			DrawState->AddString ("<", false, false);
+			switch (Align)
+			{
+			case LA_LEFT:
+				drawX = x + 136;
+				break;
+			case LA_CENTER:
+				drawX = x - ((numCharsOfSpace / 2) + 24);
+				break;
+			case LA_RIGHT:
+				drawX = x + (136 + (8 * 2)) - (numCharsOfSpace + (8 * 3));
+				break;
+			};
+			DrawState->AddVirtualPoint_X (drawX);
+			DrawState->AddString ("<", false, (Align == LA_CENTER));
 		}
 
 		// To the right?
 		if (Index < (NumIndices-1))
 		{
-			DrawState->AddVirtualPoint_X (x + 160 + ((numCharsOfSpace)+16));
-			DrawState->AddString (">", false, false);
+			switch (Align)
+			{
+			case LA_LEFT:
+				drawX = x + 160 + numCharsOfSpace + (8 * 2);
+				break;
+			case LA_CENTER:
+				drawX = x + ((numCharsOfSpace / 2) + 24);
+				break;
+			case LA_RIGHT:
+				drawX = x + 136 + (8 * 6);
+				break;
+			};
+			DrawState->AddVirtualPoint_X (drawX);
+			DrawState->AddString (">", false, (Align == LA_CENTER));
 		}
 	}
 };
@@ -169,21 +207,33 @@ CMenuItem(Menu, x, y)
 
 void CMenu_Slider::Draw (edict_t *ent, CStatusBar *DrawState)
 {
-	DrawState->AddVirtualPoint_X (x + 160);
+	int drawX = x;
+
+	switch (Align)
+	{
+	case LA_LEFT:
+		drawX += 160;
+		break;
+	case LA_RIGHT:
+		drawX += 160 - (Width * 8);
+		break;
+	case LA_CENTER:
+		break;
+	}
+	DrawState->AddVirtualPoint_X (drawX);
 	DrawState->AddVirtualPoint_Y (y + 120);
 
 	char Buffer[MAX_INFO_KEY];
-	int curX = (x + 168);
 	Buffer[0] = CCHAR_DOWNLOADBAR_LEFT;
 
 	// Which number is closest to the value?
-	int Percent = ((float)((Value == 0) ? 1 : (Value*100) / (Max-1)));
-	int BestValue = (Percent / (Width+(Step+2)));
+	float Percent = (((Value == 0) ? 0.1 : ((float)Value / (float)Max)));
+	int BestValue = ((Width-1) * Percent);
 
-	if (BestValue > Width-1)
-		BestValue = Width-1;
+	if (BestValue > Width)
+		BestValue = Width;
 
-	for (int i = Min; i <= Width; i++, curX += 8)
+	for (int i = Min; i <= Width; i++)
 	{
 		Buffer[((i-Min)+1)] = (i == BestValue) ? CCHAR_DOWNLOADBAR_THUMB : CCHAR_DOWNLOADBAR_CENTER;
 	}
@@ -191,13 +241,26 @@ void CMenu_Slider::Draw (edict_t *ent, CStatusBar *DrawState)
 	Buffer[Width+1] = CCHAR_DOWNLOADBAR_RIGHT;
 	Buffer[Width+2] = '\0';
 
-	DrawState->AddString (Buffer, false, false);
+	DrawState->AddString (Buffer, false, (Align == LA_CENTER));
 
 	// Draw the value if desired
-	DrawState->AddVirtualPoint_X (x + 190 + (Width * 8));
+	switch (Align)
+	{
+	case LA_LEFT:
+		drawX = x + 190 + (Width * 8);
+		break;
+	case LA_RIGHT:
+		drawX = x + 190;
+		break;
+	case LA_CENTER:
+		drawX = x + 145 + (Width * 8);
+		break;
+	}
+
+	DrawState->AddVirtualPoint_X (drawX);
 	_itoa_s (Value, Buffer, sizeof(Buffer), 10);
 
-	DrawState->AddString (Buffer, false, false);
+	DrawState->AddString (Buffer, Selected, false);
 };
 
 void CMenu_Slider::Update (edict_t *ent)
@@ -205,12 +268,12 @@ void CMenu_Slider::Update (edict_t *ent)
 	switch (ent->client->resp.MenuState.Key)
 	{
 	case KEY_RIGHT:
-		if (Value == (Max-1))
+		if (Value == Max)
 			return; // Can't do that, Dave
 
 		Value += Step;
-		if (Value >= Max)
-			Value = Max-1;
+		if (Value > Max)
+			Value = Max;
 		break;
 	case KEY_LEFT:
 		if (Value == Min)
@@ -221,4 +284,111 @@ void CMenu_Slider::Update (edict_t *ent)
 			Value = Min;
 		break;
 	}
+};
+
+CMenu_Box::CMenu_Box (CMenu *Menu, int x, int y) :
+CMenuItem(Menu, x, y)
+{
+};
+
+void CMenu_Box::Draw (edict_t *ent, CStatusBar *DrawState)
+{
+	char		Buf[MAX_COMPRINT/2];
+	int			DrawX = (Align == LA_CENTER) ? x : x + 160, DrawY = y + 120, Index = 0;
+	int			W = Width+2, H = Height+2;
+
+	DrawState->AddVirtualPoint_X (DrawX);
+	DrawState->AddVirtualPoint_Y (DrawY);
+
+	// Setup buffer
+	switch (Type)
+	{
+	case 0:
+		for (int tY = 0; tY < H; tY++)
+		{
+			for (int tX = 0; tX < W; tX++)
+			{
+				if (tY == 0)
+				{
+					if (tX == 0)
+						Buf[Index++] = CCHAR_CONTAINER1_UPPERLEFT;
+					else if (tX == (W - 1))
+						Buf[Index++] = CCHAR_CONTAINER1_UPPERRIGHT;
+					else
+						Buf[Index++] = CCHAR_CONTAINER1_UPPERCENTER;
+				}
+				else if (tY == (H - 1))
+				{
+					if (tX == 0)
+						Buf[Index++] = CCHAR_CONTAINER1_LOWERLEFT;
+					else if (tX == (W - 1))
+						Buf[Index++] = CCHAR_CONTAINER1_LOWERRIGHT;
+					else
+						Buf[Index++] = CCHAR_CONTAINER1_LOWERCENTER;
+				}
+				else
+				{
+					if (tX == 0)
+						Buf[Index++] = CCHAR_CONTAINER1_MIDDLELEFT;
+					else if (tX == (W - 1))
+						Buf[Index++] = CCHAR_CONTAINER1_MIDDLERIGHT;
+					else
+						Buf[Index++] = CCHAR_CONTAINER1_MIDDLECENTER;
+				}
+			}
+			Buf[Index++] = '\n';
+		}
+		break;
+	case 1:
+		for (int tY = 0; tY < H; tY++)
+		{
+			for (int tX = 0; tX < W; tX++)
+			{
+				if (tY == 0)
+				{
+					if (tX == 0)
+						Buf[Index++] = CCHAR_CONTAINER2_UPPERLEFT;
+					else if (tX == (W - 1))
+						Buf[Index++] = CCHAR_CONTAINER2_UPPERRIGHT;
+					else
+						Buf[Index++] = CCHAR_CONTAINER2_UPPERCENTER;
+				}
+				else if (tY == (H - 1))
+				{
+					if (tX == 0)
+						Buf[Index++] = CCHAR_CONTAINER2_LOWERLEFT;
+					else if (tX == (W - 1))
+						Buf[Index++] = CCHAR_CONTAINER2_LOWERRIGHT;
+					else
+						Buf[Index++] = CCHAR_CONTAINER2_LOWERCENTER;
+				}
+				else
+				{
+					if (tX == 0)
+						Buf[Index++] = CCHAR_CONTAINER2_MIDDLELEFT;
+					else if (tX == (W - 1))
+						Buf[Index++] = CCHAR_CONTAINER2_MIDDLERIGHT;
+					else
+						Buf[Index++] = CCHAR_CONTAINER2_MIDDLECENTER;
+				}
+			}
+			Buf[Index++] = '\n';
+		}
+		break;
+	case 2:
+		for (int tX = 0; tX < W; tX++)
+		{
+			if (tX == 0)
+				Buf[Index++] = CCHAR_BAR1_LEFT;
+			else if (tX == (W - 1))
+				Buf[Index++] = CCHAR_BAR1_RIGHT;
+			else
+				Buf[Index++] = CCHAR_BAR1_CENTER;
+		}
+		Buf[Index++] = '\n';
+		break;
+	}
+	Buf[Index] = '\0';
+
+	DrawState->AddString (Buf, false, (Align == LA_CENTER));
 };

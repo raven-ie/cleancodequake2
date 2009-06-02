@@ -1073,6 +1073,14 @@
 						>
 					</File>
 					<File
+						RelativePath=".\cc_gladiator.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_gladiator.h"
+						>
+					</File>
+					<File
 						RelativePath=".\cc_gunner.cpp"
 						>
 					</File>
