@@ -687,12 +687,12 @@ void Cmd_Give (edict_t *ent)
 	// Calculate spawning direction
 	vec3_t Origin, Angles, forward;
 
-	Vec3Copy (ent->s.angles, Angles);
+	Vec3Copy (ent->state.angles, Angles);
 	Angles[0] = 0; // No pitch
 	Angles[2] = 0; // No roll
 
 	Angles_Vectors (Angles, forward, NULL, NULL);
-	Vec3Copy (ent->s.origin, Origin);
+	Vec3Copy (ent->state.origin, Origin);
 	Vec3MA (Origin, 150, forward, Origin);
 
 	if (gi.pointcontents(Origin) & CONTENTS_SOLID)
@@ -704,8 +704,8 @@ void Cmd_Give (edict_t *ent)
 	ED_CallSpawn (Spawned);
 	if (Spawned)
 	{
-		Vec3Copy (Origin, Spawned->s.origin);
-		Vec3Copy (Angles, Spawned->s.angles);
+		Vec3Copy (Origin, Spawned->state.origin);
+		Vec3Copy (Angles, Spawned->state.angles);
 
 		gi.linkentity(Spawned);
 	}

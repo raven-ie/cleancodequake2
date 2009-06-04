@@ -50,12 +50,12 @@ static void SP_FixCoopSpots (edict_t *self)
 			return;
 		if (!spot->targetname)
 			continue;
-		Vec3Subtract(self->s.origin, spot->s.origin, d);
+		Vec3Subtract(self->state.origin, spot->state.origin, d);
 		if (Vec3Length(d) < 384)
 		{
 			if ((!self->targetname) || Q_stricmp(self->targetname, spot->targetname) != 0)
 			{
-//				gi.dprintf("FixCoopSpots changed %s at %s targetname from %s to %s\n", self->classname, vtos(self->s.origin), self->targetname, spot->targetname);
+//				gi.dprintf("FixCoopSpots changed %s at %s targetname from %s to %s\n", self->classname, vtos(self->state.origin), self->targetname, spot->targetname);
 				self->targetname = spot->targetname;
 			}
 			return;
@@ -75,27 +75,27 @@ static void SP_CreateCoopSpots (edict_t *self)
 	{
 		spot = G_Spawn();
 		spot->classname = "info_player_coop";
-		spot->s.origin[0] = 188 - 64;
-		spot->s.origin[1] = -164;
-		spot->s.origin[2] = 80;
+		spot->state.origin[0] = 188 - 64;
+		spot->state.origin[1] = -164;
+		spot->state.origin[2] = 80;
 		spot->targetname = "jail3";
-		spot->s.angles[1] = 90;
+		spot->state.angles[1] = 90;
 
 		spot = G_Spawn();
 		spot->classname = "info_player_coop";
-		spot->s.origin[0] = 188 + 64;
-		spot->s.origin[1] = -164;
-		spot->s.origin[2] = 80;
+		spot->state.origin[0] = 188 + 64;
+		spot->state.origin[1] = -164;
+		spot->state.origin[2] = 80;
 		spot->targetname = "jail3";
-		spot->s.angles[1] = 90;
+		spot->state.angles[1] = 90;
 
 		spot = G_Spawn();
 		spot->classname = "info_player_coop";
-		spot->s.origin[0] = 188 + 128;
-		spot->s.origin[1] = -164;
-		spot->s.origin[2] = 80;
+		spot->state.origin[0] = 188 + 128;
+		spot->state.origin[1] = -164;
+		spot->state.origin[2] = 80;
 		spot->targetname = "jail3";
-		spot->s.angles[1] = 90;
+		spot->state.angles[1] = 90;
 
 		return;
 	}
@@ -661,15 +661,15 @@ void LookAtKiller (edict_t *self, edict_t *inflictor, edict_t *attacker)
 
 	if (attacker && attacker != world && attacker != self)
 	{
-		Vec3Subtract (attacker->s.origin, self->s.origin, dir);
+		Vec3Subtract (attacker->state.origin, self->state.origin, dir);
 	}
 	else if (inflictor && inflictor != world && inflictor != self)
 	{
-		Vec3Subtract (inflictor->s.origin, self->s.origin, dir);
+		Vec3Subtract (inflictor->state.origin, self->state.origin, dir);
 	}
 	else
 	{
-		self->client->killer_yaw = self->s.angles[YAW];
+		self->client->killer_yaw = self->state.angles[YAW];
 		return;
 	}
 
@@ -702,12 +702,12 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 	self->takedamage = DAMAGE_YES;
 	self->movetype = MOVETYPE_TOSS;
 
-	self->s.modelIndex2 = 0;	// remove linked weapon model
+	self->state.modelIndex2 = 0;	// remove linked weapon model
 
-	self->s.angles[0] = 0;
-	self->s.angles[2] = 0;
+	self->state.angles[0] = 0;
+	self->state.angles[2] = 0;
 
-	self->s.sound = 0;
+	self->state.sound = 0;
 	self->client->weapon_sound = 0;
 
 	self->maxs[2] = -8;
@@ -719,7 +719,7 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 	{
 		self->client->respawn_time = level.time + 1.0;
 		LookAtKiller (self, inflictor, attacker);
-		self->client->ps.pMove.pmType = PMT_DEAD;
+		self->client->playerState.pMove.pmType = PMT_DEAD;
 		ClientObituary (self, attacker);
 		TossClientWeapon (self);
 		if (deathmatch->Integer())
@@ -760,9 +760,9 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 			i = (i+1)%3;
 			// start a death animation
 			self->client->anim_priority = ANIM_DEATH;
-			if (self->client->ps.pMove.pmFlags & PMF_DUCKED)
+			if (self->client->playerState.pMove.pmFlags & PMF_DUCKED)
 			{
-				self->s.frame = FRAME_crdeath1-1;
+				self->state.frame = FRAME_crdeath1-1;
 				self->client->anim_end = FRAME_crdeath5;
 			}
 			else
@@ -770,15 +770,15 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 				switch (i)
 				{
 				case 0:
-					self->s.frame = FRAME_death101-1;
+					self->state.frame = FRAME_death101-1;
 					self->client->anim_end = FRAME_death106;
 					break;
 				case 1:
-					self->s.frame = FRAME_death201-1;
+					self->state.frame = FRAME_death201-1;
 					self->client->anim_end = FRAME_death206;
 					break;
 				case 2:
-					self->s.frame = FRAME_death301-1;
+					self->state.frame = FRAME_death301-1;
 					self->client->anim_end = FRAME_death308;
 					break;
 				}
@@ -908,7 +908,7 @@ float	PlayersRangeFromSpot (edict_t *spot)
 		if (player->health <= 0)
 			continue;
 
-		Vec3Subtract (spot->s.origin, player->s.origin, v);
+		Vec3Subtract (spot->state.origin, player->state.origin, v);
 		playerdistance = Vec3Length (v);
 
 		if (playerdistance < bestplayerdistance)
@@ -1106,9 +1106,9 @@ void	SelectSpawnPoint (edict_t *ent, vec3_t origin, vec3_t angles)
 		}
 	}
 
-	Vec3Copy (spot->s.origin, origin);
+	Vec3Copy (spot->state.origin, origin);
 	origin[2] += 9;
-	Vec3Copy (spot->s.angles, angles);
+	Vec3Copy (spot->state.angles, angles);
 }
 
 //======================================================================
@@ -1136,7 +1136,7 @@ void body_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage,
 		PlaySoundFrom (self, CHAN_BODY, SoundIndex ("misc/udeath.wav"));
 		for (n= 0; n < 4; n++)
 			ThrowGib (self, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		self->s.origin[2] -= 48;
+		self->state.origin[2] -= 48;
 		ThrowClientHead (self, damage);
 		self->takedamage = DAMAGE_NO;
 	}
@@ -1155,8 +1155,8 @@ void CopyToBodyQue (edict_t *ent)
 	gi.unlinkentity (ent);
 
 	gi.unlinkentity (body);
-	body->s = ent->s;
-	body->s.number = body - g_edicts;
+	body->state = ent->state;
+	body->state.number = body - g_edicts;
 
 	body->svFlags = ent->svFlags;
 	Vec3Copy (ent->mins, body->mins);
@@ -1187,11 +1187,11 @@ void respawn (edict_t *self)
 		PutClientInServer (self);
 
 		// add a teleportation effect
-		self->s.event = EV_PLAYER_TELEPORT;
+		self->state.event = EV_PLAYER_TELEPORT;
 
 		// hold in place briefly
-		self->client->ps.pMove.pmFlags = PMF_TIME_TELEPORT;
-		self->client->ps.pMove.pmTime = 14;
+		self->client->playerState.pMove.pmFlags = PMF_TIME_TELEPORT;
+		self->client->playerState.pMove.pmTime = 14;
 
 		self->client->respawn_time = level.time;
 
@@ -1264,11 +1264,11 @@ void spectator_respawn (edict_t *ent)
 	// add a teleportation effect
 	if (!ent->client->pers.spectator)  {
 		// send effect
-		CTempEnt::MuzzleFlash (ent->s.origin, ent-g_edicts, MZ_LOGIN);
+		CTempEnt::MuzzleFlash (ent->state.origin, ent-g_edicts, MZ_LOGIN);
 
 		// hold in place briefly
-		ent->client->ps.pMove.pmFlags = PMF_TIME_TELEPORT;
-		ent->client->ps.pMove.pmTime = 14;
+		ent->client->playerState.pMove.pmFlags = PMF_TIME_TELEPORT;
+		ent->client->playerState.pMove.pmTime = 14;
 	}
 
 	ent->client->respawn_time = level.time;
@@ -1298,8 +1298,8 @@ void PutClientInServer (edict_t *ent)
 	vec3_t	spawn_origin, spawn_angles;
 	gclient_t	*client;
 	int		i;
-	client_persistant_t	saved;
-	client_respawn_t	resp;
+	clientPersistent_t	saved;
+	clientRespawn_t	resp;
 
 	// find a spawn point
 	// do it before setting health back up, so farthest
@@ -1384,51 +1384,51 @@ void PutClientInServer (edict_t *ent)
 	Vec3Clear (ent->velocity);
 
 	// clear playerstate values
-	memset (&ent->client->ps, 0, sizeof(client->ps));
+	memset (&ent->client->playerState, 0, sizeof(client->playerState));
 
-	client->ps.pMove.origin[0] = spawn_origin[0]*8;
-	client->ps.pMove.origin[1] = spawn_origin[1]*8;
-	client->ps.pMove.origin[2] = spawn_origin[2]*8;
+	client->playerState.pMove.origin[0] = spawn_origin[0]*8;
+	client->playerState.pMove.origin[1] = spawn_origin[1]*8;
+	client->playerState.pMove.origin[2] = spawn_origin[2]*8;
 
 	if (deathmatch->Integer() && dmFlags.dfFixedFov)
 	{
-		client->ps.fov = 90;
+		client->playerState.fov = 90;
 	}
 	else
 	{
-		client->ps.fov = atoi(Info_ValueForKey(client->pers.userinfo, "fov"));
-		if (client->ps.fov < 1)
-			client->ps.fov = 90;
-		else if (client->ps.fov > 160)
-			client->ps.fov = 160;
+		client->playerState.fov = atoi(Info_ValueForKey(client->pers.userinfo, "fov"));
+		if (client->playerState.fov < 1)
+			client->playerState.fov = 90;
+		else if (client->playerState.fov > 160)
+			client->playerState.fov = 160;
 	}
 
-	//client->ps.gunIndex = ModelIndex(client->pers.weapon->view_model);
+	//client->playerState.gunIndex = ModelIndex(client->pers.weapon->view_model);
 
 	// clear entity state values
-	ent->s.effects = 0;
-	ent->s.modelIndex = 255;		// will use the skin specified model
-	ent->s.modelIndex2 = 255;		// custom gun model
+	ent->state.effects = 0;
+	ent->state.modelIndex = 255;		// will use the skin specified model
+	ent->state.modelIndex2 = 255;		// custom gun model
 	// sknum is player num and weapon number
 	// weapon number will be added in changeweapon
-	ent->s.skinNum = ent - g_edicts - 1;
+	ent->state.skinNum = ent - g_edicts - 1;
 
-	ent->s.frame = 0;
-	Vec3Copy (spawn_origin, ent->s.origin);
-	ent->s.origin[2] += 1;	// make sure off ground
-	Vec3Copy (ent->s.origin, ent->s.oldOrigin);
+	ent->state.frame = 0;
+	Vec3Copy (spawn_origin, ent->state.origin);
+	ent->state.origin[2] += 1;	// make sure off ground
+	Vec3Copy (ent->state.origin, ent->state.oldOrigin);
 
 	// set the delta angle
 	for (i=0 ; i<3 ; i++)
 	{
-		client->ps.pMove.deltaAngles[i] = ANGLE2SHORT(spawn_angles[i] - client->resp.cmd_angles[i]);
+		client->playerState.pMove.deltaAngles[i] = ANGLE2SHORT(spawn_angles[i] - client->resp.cmd_angles[i]);
 	}
 
-	ent->s.angles[PITCH] = 0;
-	ent->s.angles[YAW] = spawn_angles[YAW];
-	ent->s.angles[ROLL] = 0;
-	Vec3Copy (ent->s.angles, client->ps.viewAngles);
-	Vec3Copy (ent->s.angles, client->v_angle);
+	ent->state.angles[PITCH] = 0;
+	ent->state.angles[YAW] = spawn_angles[YAW];
+	ent->state.angles[ROLL] = 0;
+	Vec3Copy (ent->state.angles, client->playerState.viewAngles);
+	Vec3Copy (ent->state.angles, client->v_angle);
 
 	// spawn a spectator
 	if (client->pers.spectator) {
@@ -1439,7 +1439,7 @@ void PutClientInServer (edict_t *ent)
 		ent->movetype = MOVETYPE_NOCLIP;
 		ent->solid = SOLID_NOT;
 		ent->svFlags |= SVF_NOCLIENT;
-		ent->client->ps.gunIndex = 0;
+		ent->client->playerState.gunIndex = 0;
 		gi.linkentity (ent);
 		return;
 	} else
@@ -1481,7 +1481,7 @@ void ClientBeginDeathmatch (edict_t *ent)
 	}
 	else
 		// send effect
-		CTempEnt::MuzzleFlash (ent->s.origin, ent-g_edicts, MZ_LOGIN);
+		CTempEnt::MuzzleFlash (ent->state.origin, ent-g_edicts, MZ_LOGIN);
 
 	BroadcastPrintf (PRINT_HIGH, "%s entered the game\n", ent->client->pers.netname);
 
@@ -1519,7 +1519,7 @@ void ClientBegin (edict_t *ent)
 		// state when the game is saved, so we need to compensate
 		// with deltaangles
 		for (i=0 ; i<3 ; i++)
-			ent->client->ps.pMove.deltaAngles[i] = ANGLE2SHORT(ent->client->ps.viewAngles[i]);
+			ent->client->playerState.pMove.deltaAngles[i] = ANGLE2SHORT(ent->client->playerState.viewAngles[i]);
 	}
 	else
 	{
@@ -1541,7 +1541,7 @@ void ClientBegin (edict_t *ent)
 		// send effect if in a multiplayer game
 		if (game.maxclients > 1)
 		{
-			CTempEnt::MuzzleFlash (ent->s.origin, ent-g_edicts, MZ_LOGIN);
+			CTempEnt::MuzzleFlash (ent->state.origin, ent-g_edicts, MZ_LOGIN);
 			BroadcastPrintf (PRINT_HIGH, "%s entered the game\n", ent->client->pers.netname);
 		}
 	}
@@ -1591,14 +1591,14 @@ void ClientUserinfoChanged (edict_t *ent, char *userinfo)
 
 	// fov
 	if (deathmatch->Integer() && dmFlags.dfFixedFov)
-		ent->client->ps.fov = 90;
+		ent->client->playerState.fov = 90;
 	else
 	{
-		ent->client->ps.fov = atoi(Info_ValueForKey(userinfo, "fov"));
-		if (ent->client->ps.fov < 1)
-			ent->client->ps.fov = 90;
-		else if (ent->client->ps.fov > 160)
-			ent->client->ps.fov = 160;
+		ent->client->playerState.fov = atoi(Info_ValueForKey(userinfo, "fov"));
+		if (ent->client->playerState.fov < 1)
+			ent->client->playerState.fov = 90;
+		else if (ent->client->playerState.fov > 160)
+			ent->client->playerState.fov = 160;
 	}
 
 	// handedness
@@ -1751,10 +1751,10 @@ void ClientDisconnect (edict_t *ent)
 	BroadcastPrintf (PRINT_HIGH, "%s disconnected\n", ent->client->pers.netname);
 
 	// send effect
-	CTempEnt::MuzzleFlash (ent->s.origin, ent-g_edicts, MZ_LOGIN);
+	CTempEnt::MuzzleFlash (ent->state.origin, ent-g_edicts, MZ_LOGIN);
 
 	gi.unlinkentity (ent);
-	ent->s.modelIndex = 0;
+	ent->state.modelIndex = 0;
 	ent->solid = SOLID_NOT;
 	ent->inUse = false;
 	ent->classname = "disconnected";
@@ -1807,7 +1807,7 @@ void ClientThink (edict_t *ent, userCmd_t *ucmd)
 
 	if (level.intermissiontime)
 	{
-		client->ps.pMove.pmType = PMT_FREEZE;
+		client->playerState.pMove.pmType = PMT_FREEZE;
 		// can exit intermission after five seconds
 		if (level.time > level.intermissiontime + 5.0 
 			&& (ucmd->buttons & BUTTON_ANY) )
@@ -1831,20 +1831,20 @@ void ClientThink (edict_t *ent, userCmd_t *ucmd)
 		memset (&pm, 0, sizeof(pm));
 
 		if (ent->movetype == MOVETYPE_NOCLIP)
-			client->ps.pMove.pmType = PMT_SPECTATOR;
-		else if (ent->s.modelIndex != 255)
-			client->ps.pMove.pmType = PMT_GIB;
+			client->playerState.pMove.pmType = PMT_SPECTATOR;
+		else if (ent->state.modelIndex != 255)
+			client->playerState.pMove.pmType = PMT_GIB;
 		else if (ent->deadflag)
-			client->ps.pMove.pmType = PMT_DEAD;
+			client->playerState.pMove.pmType = PMT_DEAD;
 		else
-			client->ps.pMove.pmType = PMT_NORMAL;
+			client->playerState.pMove.pmType = PMT_NORMAL;
 
-		client->ps.pMove.gravity = sv_gravity->Float();
-		pm.state = client->ps.pMove;
+		client->playerState.pMove.gravity = sv_gravity->Float();
+		pm.state = client->playerState.pMove;
 
 		for (i=0 ; i<3 ; i++)
 		{
-			pm.state.origin[i] = ent->s.origin[i]*8;
+			pm.state.origin[i] = ent->state.origin[i]*8;
 			pm.state.velocity[i] = ent->velocity[i]*8;
 		}
 
@@ -1869,12 +1869,12 @@ void ClientThink (edict_t *ent, userCmd_t *ucmd)
 #endif
 
 		// save results of pmove
-		client->ps.pMove = pm.state;
+		client->playerState.pMove = pm.state;
 		client->old_pmove = pm.state;
 
 		for (i=0 ; i<3 ; i++)
 		{
-			ent->s.origin[i] = pm.state.origin[i]*0.125;
+			ent->state.origin[i] = pm.state.origin[i]*0.125;
 			ent->velocity[i] = pm.state.velocity[i]*0.125;
 		}
 
@@ -1888,7 +1888,7 @@ void ClientThink (edict_t *ent, userCmd_t *ucmd)
 		if (ent->groundentity && !pm.groundEntity && (pm.cmd.upMove >= 10) && (pm.waterLevel == 0))
 		{
 			PlaySoundFrom(ent, CHAN_VOICE, gMedia.Player.Jump);
-			PlayerNoise(ent, ent->s.origin, PNOISE_SELF);
+			PlayerNoise(ent, ent->state.origin, PNOISE_SELF);
 		}
 
 		ent->viewheight = pm.viewHeight;
@@ -1900,14 +1900,14 @@ void ClientThink (edict_t *ent, userCmd_t *ucmd)
 
 		if (ent->deadflag)
 		{
-			client->ps.viewAngles[ROLL] = 40;
-			client->ps.viewAngles[PITCH] = -15;
-			client->ps.viewAngles[YAW] = client->killer_yaw;
+			client->playerState.viewAngles[ROLL] = 40;
+			client->playerState.viewAngles[PITCH] = -15;
+			client->playerState.viewAngles[YAW] = client->killer_yaw;
 		}
 		else
 		{
 			Vec3Copy (pm.viewAngles, client->v_angle);
-			Vec3Copy (pm.viewAngles, client->ps.viewAngles);
+			Vec3Copy (pm.viewAngles, client->playerState.viewAngles);
 		}
 
 		gi.linkentity (ent);
@@ -1948,7 +1948,7 @@ void ClientThink (edict_t *ent, userCmd_t *ucmd)
 
 			if (client->chase_target) {
 				client->chase_target = NULL;
-				client->ps.pMove.pmFlags &= ~PMF_NO_PREDICTION;
+				client->playerState.pMove.pmFlags &= ~PMF_NO_PREDICTION;
 			} else
 				GetChaseTarget(ent);
 
@@ -1957,15 +1957,15 @@ void ClientThink (edict_t *ent, userCmd_t *ucmd)
 
 	if (client->resp.spectator) {
 		if (ucmd->upMove >= 10) {
-			if (!(client->ps.pMove.pmFlags & PMF_JUMP_HELD)) {
-				client->ps.pMove.pmFlags |= PMF_JUMP_HELD;
+			if (!(client->playerState.pMove.pmFlags & PMF_JUMP_HELD)) {
+				client->playerState.pMove.pmFlags |= PMF_JUMP_HELD;
 				if (client->chase_target)
 					ChaseNext(ent);
 				else
 					GetChaseTarget(ent);
 			}
 		} else
-			client->ps.pMove.pmFlags &= ~PMF_JUMP_HELD;
+			client->playerState.pMove.pmFlags &= ~PMF_JUMP_HELD;
 	}
 
 	// update chase cam if being followed
@@ -2030,7 +2030,7 @@ void ClientBeginServerFrame (edict_t *ent)
 	// add player trail so monsters can follow
 	if (!deathmatch->Integer())
 		if (!visible (ent, PlayerTrail_LastSpot() ) )
-			PlayerTrail_Add (ent->s.oldOrigin);
+			PlayerTrail_Add (ent->state.oldOrigin);
 
 	client->latched_buttons = 0;
 }

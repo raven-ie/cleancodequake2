@@ -44,7 +44,7 @@ CWeapon("models/weapons/v_hyperb/tris.md2", 0, 5, 6, 20,
 
 bool CHyperBlaster::CanFire (edict_t *ent)
 {
-	if (ent->client->ps.gunFrame >= 6 && ent->client->ps.gunFrame <= 11)
+	if (ent->client->playerState.gunFrame >= 6 && ent->client->playerState.gunFrame <= 11)
 		return true;
 	return false;
 }
@@ -84,7 +84,7 @@ void CHyperBlaster::Fire (edict_t *ent)
 	ent->client->weapon_sound = SoundIndex("weapons/hyprbl1a.wav");
 
 	if (!(ent->client->buttons & BUTTON_ATTACK))
-		ent->client->ps.gunFrame++;
+		ent->client->playerState.gunFrame++;
 	else
 	{
 		if (! ent->client->pers.Inventory.Has(ent->client->pers.Weapon->WeaponItem->Ammo) )
@@ -96,14 +96,14 @@ void CHyperBlaster::Fire (edict_t *ent)
 		{
 			// I replaced these with a table because they are constant.
 			// It always bugged me that they did operations like this.
-			/*rotation = (ent->client->ps.gunFrame - 5) * 2*M_PI/6;
+			/*rotation = (ent->client->playerState.gunFrame - 5) * 2*M_PI/6;
 			offset[0] = -4 * sinf(rotation);
 			offset[1] = 0;
 			offset[2] = 4 * cosf(rotation);*/
-			rotation = hyperblasterRotationTable[ent->client->ps.gunFrame - 6];
-			Vec3Copy (hyperblasterOffsetTable[ent->client->ps.gunFrame - 6], offset);
+			rotation = hyperblasterRotationTable[ent->client->playerState.gunFrame - 6];
+			Vec3Copy (hyperblasterOffsetTable[ent->client->playerState.gunFrame - 6], offset);
 
-			if ((ent->client->ps.gunFrame == 6) || (ent->client->ps.gunFrame == 9))
+			if ((ent->client->playerState.gunFrame == 6) || (ent->client->playerState.gunFrame == 9))
 				effect = EF_HYPERBLASTER;
 			else
 				effect = 0;
@@ -125,7 +125,7 @@ void CHyperBlaster::Fire (edict_t *ent)
 			Angles_Vectors (ent->client->v_angle, forward, right, NULL);
 			Vec3Set (noffset, 24, 8, ent->viewheight-8);
 			Vec3Add (noffset, offset, noffset);
-			P_ProjectSource (ent->client, ent->s.origin, noffset, forward, right, start);
+			P_ProjectSource (ent->client, ent->state.origin, noffset, forward, right, start);
 
 			Vec3Scale (forward, -2, ent->client->kick_origin);
 			ent->client->kick_angles[0] = -1;
@@ -143,12 +143,12 @@ void CHyperBlaster::Fire (edict_t *ent)
 			FireAnimation (ent);
 		}
 
-		ent->client->ps.gunFrame++;
-		if (ent->client->ps.gunFrame == 12 && ent->client->pers.Inventory.Has(ent->client->pers.Weapon->WeaponItem->Ammo))
-			ent->client->ps.gunFrame = 6;
+		ent->client->playerState.gunFrame++;
+		if (ent->client->playerState.gunFrame == 12 && ent->client->pers.Inventory.Has(ent->client->pers.Weapon->WeaponItem->Ammo))
+			ent->client->playerState.gunFrame = 6;
 	}
 
-	if (ent->client->ps.gunFrame == 12)
+	if (ent->client->playerState.gunFrame == 12)
 	{
 		PlaySoundFrom(ent, CHAN_AUTO, SoundIndex("weapons/hyprbd1a.wav"));
 		ent->client->weapon_sound = 0;

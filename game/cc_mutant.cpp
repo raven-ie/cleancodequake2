@@ -329,7 +329,7 @@ void CMutant::JumpTouch (edict_t *self, edict_t *other, plane_t *plane, cmBspSur
 
 			Vec3Copy (self->velocity, normal);
 			VectorNormalizeFastf(normal);
-			Vec3MA (self->s.origin, self->maxs[0], normal, point);
+			Vec3MA (self->state.origin, self->maxs[0], normal, point);
 			damage = 40 + 10 * random();
 			T_Damage (other, self, self, self->velocity, point, normal, damage, damage, 0, MOD_UNKNOWN);
 		}
@@ -356,7 +356,7 @@ void CMutant::JumpTakeOff ()
 
 	PlaySoundFrom (Entity, CHAN_VOICE, SoundSight);
 
-	Angles_Vectors (Entity->s.angles, forward, NULL, NULL);
+	Angles_Vectors (Entity->state.angles, forward, NULL, NULL);
 	Vec3Scale (forward, 600, Entity->velocity);
 	Entity->velocity[2] = 250;
 #else
@@ -364,11 +364,11 @@ void CMutant::JumpTakeOff ()
 
 	if (AttemptJumpToLastSight)
 	{
-		Vec3Subtract (LastSighting, Entity->s.origin, angles);
+		Vec3Subtract (LastSighting, Entity->state.origin, angles);
 		AttemptJumpToLastSight = false;
 	}
 	else
-		Vec3Subtract (Entity->enemy->s.origin, Entity->s.origin, angles);
+		Vec3Subtract (Entity->enemy->state.origin, Entity->state.origin, angles);
 	//Angles_Vectors (angles, forward, NULL, NULL);
 	//VectorNormalizef (forward, forward);
 	VecToAngles (angles, temp);
@@ -381,7 +381,7 @@ void CMutant::JumpTakeOff ()
 	//Entity->velocity[2] = 250;
 #endif
 
-	Entity->s.origin[2] += 1;
+	Entity->state.origin[2] += 1;
 	Entity->groundentity = NULL;
 	AIFlags |= AI_DUCKED;
 	AttackFinished = level.time + 3;
@@ -445,7 +445,7 @@ bool CMutant::CheckJump ()
 		if (AttemptJumpToLastSight)
 			return false;
 
-		Vec3Subtract (Entity->s.origin, LastSighting, temp);
+		Vec3Subtract (Entity->state.origin, LastSighting, temp);
 		if (Vec3Length(temp) > 400)
 		{
 			DebugPrintf ("Not attempting.\n");
@@ -454,9 +454,9 @@ bool CMutant::CheckJump ()
 
 		// So we lost sight of the player.
 		// Can we jump to the last spot we saw him?
-		CTrace trace = CTrace(Entity->s.origin, LastSighting, Entity, CONTENTS_MASK_MONSTERSOLID);
+		CTrace trace = CTrace(Entity->state.origin, LastSighting, Entity, CONTENTS_MASK_MONSTERSOLID);
 
-		CTempEnt_Trails::DebugTrail (Entity->s.origin, LastSighting);
+		CTempEnt_Trails::DebugTrail (Entity->state.origin, LastSighting);
 
 		// Clear shot
 		if (trace.fraction == 1.0)
@@ -481,7 +481,7 @@ bool CMutant::CheckJump ()
 			vec3_t temp, angles, forward;
 
 			// Keep going back about 15 units until we're clear
-			Vec3Subtract (LastSighting, Entity->s.origin, angles);
+			Vec3Subtract (LastSighting, Entity->state.origin, angles);
 			VecToAngles (angles, temp);
 			angles[0] = angles[2] = 0; // Only move the yaw
 			Angles_Vectors (temp, forward, NULL, NULL);
@@ -493,8 +493,8 @@ bool CMutant::CheckJump ()
 				escape++;
 			
 				Vec3MA (temp, -15, forward, temp);
-				trace = CTrace(Entity->s.origin, temp, Entity, CONTENTS_MASK_MONSTERSOLID);
-				CTempEnt_Trails::DebugTrail (Entity->s.origin, temp);
+				trace = CTrace(Entity->state.origin, temp, Entity, CONTENTS_MASK_MONSTERSOLID);
+				CTempEnt_Trails::DebugTrail (Entity->state.origin, temp);
 			}
 
 			// Push it up a bit
@@ -518,8 +518,8 @@ bool CMutant::CheckJump ()
 	//if (Entity->absMax[2] < (Entity->enemy->absMin[2] + 0.25 * Entity->enemy->size[2]))
 	//	return false;
 
-	vec3_t v = {Entity->s.origin[0] - Entity->enemy->s.origin[0],
-				Entity->s.origin[1] - Entity->enemy->s.origin[1],
+	vec3_t v = {Entity->state.origin[0] - Entity->enemy->state.origin[0],
+				Entity->state.origin[1] - Entity->enemy->state.origin[1],
 				0};
 	float distance = Vec3Length(v);
 
@@ -601,7 +601,7 @@ CAnim MutantMovePain3 (FRAME_pain301, FRAME_pain311, MutantFramesPain3, &CMonste
 void CMutant::Pain (edict_t *other, float kick, int damage)
 {
 	if (Entity->health < (Entity->max_health / 2))
-		Entity->s.skinNum = 1;
+		Entity->state.skinNum = 1;
 
 	if (level.time < Entity->pain_debounce_time)
 		return;
@@ -693,7 +693,7 @@ void CMutant::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t poi
 	PlaySoundFrom (Entity, CHAN_VOICE, SoundDeath);
 	Entity->deadflag = DEAD_DEAD;
 	Entity->takedamage = DAMAGE_YES;
-	Entity->s.skinNum = 1;
+	Entity->state.skinNum = 1;
 
 	CurrentMove = (random() < 0.5) ? &MutantMoveDeath1 : &MutantMoveDeath2;
 }
@@ -723,7 +723,7 @@ void CMutant::Spawn ()
 	
 	Entity->movetype = MOVETYPE_STEP;
 	Entity->solid = SOLID_BBOX;
-	Entity->s.modelIndex = ModelIndex ("models/monsters/mutant/tris.md2");
+	Entity->state.modelIndex = ModelIndex ("models/monsters/mutant/tris.md2");
 	Vec3Set (Entity->mins, -32, -32, -24);
 	Vec3Set (Entity->maxs, 32, 32, 48);
 

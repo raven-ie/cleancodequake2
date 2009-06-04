@@ -471,7 +471,7 @@ __try
 
 		level.current_entity = ent;
 
-		Vec3Copy (ent->s.origin, ent->s.oldOrigin);
+		Vec3Copy (ent->state.origin, ent->state.oldOrigin);
 
 		// if the ground entity moved, make sure we are still on it
 		if ((ent->groundentity) && (ent->groundentity->linkCount != ent->groundentity_linkcount))

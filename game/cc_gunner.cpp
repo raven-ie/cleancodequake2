@@ -279,7 +279,7 @@ CAnim GunnerMovePain1 (FRAME_pain101, FRAME_pain118, GunnerFramesPain1, ConvertD
 void CGunner::Pain (edict_t *other, float kick, int damage)
 {
 	if (Entity->health < (Entity->max_health / 2))
-		Entity->s.skinNum = 1;
+		Entity->state.skinNum = 1;
 
 #ifdef MONSTER_USE_ROGUE_AI
 	DoneDodge();
@@ -465,7 +465,7 @@ bool CGunner::GrenadeCheck()
 	// check for flag telling us that we're blindfiring
 	if (AIFlags & AI_MANUAL_STEERING)
 	{
-		if (Entity->s.origin[2]+Entity->viewheight < BlindFireTarget[2])
+		if (Entity->state.origin[2]+Entity->viewheight < BlindFireTarget[2])
 			return false;
 	}
 	else if(Entity->absMax[2] <= Entity->enemy->absMin[2])
@@ -473,17 +473,17 @@ bool CGunner::GrenadeCheck()
 
 	// check to see that we can trace to the player before we start
 	// tossing grenades around.
-	Angles_Vectors (Entity->s.angles, forward, right, NULL);
-	G_ProjectSource (Entity->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_GUNNER_GRENADE_1], forward, right, start);
+	Angles_Vectors (Entity->state.angles, forward, right, NULL);
+	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_GUNNER_GRENADE_1], forward, right, start);
 
 	// pmm - check for blindfire flag
 	if (AIFlags & AI_MANUAL_STEERING)
 		Vec3Copy (BlindFireTarget, target);
 	else
-		Vec3Copy (Entity->enemy->s.origin, target);
+		Vec3Copy (Entity->enemy->state.origin, target);
 
 	// see if we're too close
-	Vec3Subtract (Entity->s.origin, target, dir);
+	Vec3Subtract (Entity->state.origin, target, dir);
 
 	if (Vec3Length(dir) < 100)
 		return false;
@@ -502,13 +502,13 @@ void CGunner::Fire ()
 	vec3_t	forward, right;
 	vec3_t	target;
 	vec3_t	aim;
-	int		flash_number = MZ2_GUNNER_MACHINEGUN_1 + (Entity->s.frame - FRAME_attak216);
+	int		flash_number = MZ2_GUNNER_MACHINEGUN_1 + (Entity->state.frame - FRAME_attak216);
 
-	Angles_Vectors (Entity->s.angles, forward, right, NULL);
-	G_ProjectSource (Entity->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
+	Angles_Vectors (Entity->state.angles, forward, right, NULL);
+	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
 	// project enemy back a bit and target there
-	Vec3Copy (Entity->enemy->s.origin, target);
+	Vec3Copy (Entity->enemy->state.origin, target);
 	Vec3MA (target, -0.2, Entity->enemy->velocity, target);
 	target[2] += Entity->enemy->viewheight;
 
@@ -525,7 +525,7 @@ void CGunner::Grenade ()
 	vec3_t	aim;
 	int		flash_number;
 
-	switch (Entity->s.frame)
+	switch (Entity->state.frame)
 	{
 	case FRAME_attak105:
 		flash_number = MZ2_GUNNER_GRENADE_1;
@@ -540,8 +540,8 @@ void CGunner::Grenade ()
 		flash_number = MZ2_GUNNER_GRENADE_4;
 		break;
 	}
-	Angles_Vectors (Entity->s.angles, forward, right, NULL);
-	G_ProjectSource (Entity->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
+	Angles_Vectors (Entity->state.angles, forward, right, NULL);
+	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
 	//FIXME : do a spread -225 -75 75 225 degrees around forward
 	Vec3Copy (forward, aim);
@@ -560,7 +560,7 @@ void CGunner::Grenade ()
 	if(!Entity->enemy || !Entity->enemy->inUse)		//PGM
 		return;									//PGM
 
-	switch (Entity->s.frame)
+	switch (Entity->state.frame)
 	{
 	case FRAME_attak105:
 		flash_number = MZ2_GUNNER_GRENADE_1;
@@ -592,18 +592,18 @@ void CGunner::Grenade ()
 		Vec3Copy (BlindFireTarget, target);
 	}
 	else
-		Vec3Copy (Entity->s.origin, target);
+		Vec3Copy (Entity->state.origin, target);
 	// pmm
 
-	Angles_Vectors (Entity->s.angles, forward, right, up);	//PGM
-	G_ProjectSource (Entity->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
+	Angles_Vectors (Entity->state.angles, forward, right, up);	//PGM
+	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
 //PGM
 	if(Entity->enemy)
 	{
 		float	dist;
 
-		Vec3Subtract(target, Entity->s.origin, aim);
+		Vec3Subtract(target, Entity->state.origin, aim);
 		dist = Vec3Length(aim);
 
 		// aim up if they're on the same level as me and far away.
@@ -682,7 +682,7 @@ void CGunner::BlindCheck ()
 
 	if (AIFlags & AI_MANUAL_STEERING)
 	{
-		Vec3Subtract(BlindFireTarget, Entity->s.origin, aim);
+		Vec3Subtract(BlindFireTarget, Entity->state.origin, aim);
 		IdealYaw = VecToYaw(aim);
 	}
 }
@@ -854,7 +854,7 @@ void CGunner::Spawn ()
 
 	Entity->movetype = MOVETYPE_STEP;
 	Entity->solid = SOLID_BBOX;
-	Entity->s.modelIndex = ModelIndex ("models/monsters/gunner/tris.md2");
+	Entity->state.modelIndex = ModelIndex ("models/monsters/gunner/tris.md2");
 	Vec3Set (Entity->mins, -16, -16, -24);
 	Vec3Set (Entity->maxs, 16, 16, 32);
 

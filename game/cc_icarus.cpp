@@ -463,14 +463,14 @@ void CIcarus::FireBlaster ()
 	vec3_t	end;
 	vec3_t	dir;
 
-	Angles_Vectors (Entity->s.angles, forward, right, NULL);
-	G_ProjectSource (Entity->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_HOVER_BLASTER_1], forward, right, start);
+	Angles_Vectors (Entity->state.angles, forward, right, NULL);
+	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_HOVER_BLASTER_1], forward, right, start);
 
-	Vec3Copy (Entity->enemy->s.origin, end);
+	Vec3Copy (Entity->enemy->state.origin, end);
 	end[2] += Entity->enemy->viewheight;
 	Vec3Subtract (end, start, dir);
 
-	MonsterFireBlaster (start, dir, 1, 1000, MZ2_HOVER_BLASTER_1, (Entity->s.frame == FRAME_attak104) ? EF_HYPERBLASTER : 0);
+	MonsterFireBlaster (start, dir, 1, 1000, MZ2_HOVER_BLASTER_1, (Entity->state.frame == FRAME_attak104) ? EF_HYPERBLASTER : 0);
 }
 
 
@@ -528,7 +528,7 @@ void CIcarus::StartAttack()
 void CIcarus::Pain (edict_t *other, float kick, int damage)
 {
 	if (Entity->health < (Entity->max_health / 2))
-		Entity->s.skinNum = 1;
+		Entity->state.skinNum = 1;
 
 	if (level.time < Entity->pain_debounce_time)
 		return;
@@ -632,11 +632,11 @@ void CIcarus::Spawn ()
 
 	SoundIndex ("hover/hovatck1.wav");	
 
-	Entity->s.sound = SoundIndex ("hover/hovidle1.wav");
+	Entity->state.sound = SoundIndex ("hover/hovidle1.wav");
 
 	Entity->movetype = MOVETYPE_STEP;
 	Entity->solid = SOLID_BBOX;
-	Entity->s.modelIndex = ModelIndex("models/monsters/hover/tris.md2");
+	Entity->state.modelIndex = ModelIndex("models/monsters/hover/tris.md2");
 	Vec3Set (Entity->mins, -24, -24, -24);
 	Vec3Set (Entity->maxs, 24, 24, 32);
 

@@ -73,11 +73,11 @@ static inline void P_DamageFeedback (edict_t *player, vec3_t forward, vec3_t rig
 	client = player->client;
 
 	// flash the backgrounds behind the status numbers
-	client->ps.stats[STAT_FLASHES] = 0;
+	client->playerState.stats[STAT_FLASHES] = 0;
 	if (client->damage_blood)
-		client->ps.stats[STAT_FLASHES] |= 1;
+		client->playerState.stats[STAT_FLASHES] |= 1;
 	if (client->damage_armor && !(player->flags & FL_GODMODE) && (client->invincible_framenum <= level.framenum))
-		client->ps.stats[STAT_FLASHES] |= 2;
+		client->playerState.stats[STAT_FLASHES] |= 2;
 
 	// total points of damage shot at the player this frame
 	count = (client->damage_blood + client->damage_armor + client->damage_parmor);
@@ -85,14 +85,14 @@ static inline void P_DamageFeedback (edict_t *player, vec3_t forward, vec3_t rig
 		return;		// didn't take any damage
 
 	// start a pain animation if still in the player model
-	if (client->anim_priority < ANIM_PAIN && player->s.modelIndex == 255)
+	if (client->anim_priority < ANIM_PAIN && player->state.modelIndex == 255)
 	{
 		static int		i;
 
 		client->anim_priority = ANIM_PAIN;
-		if (client->ps.pMove.pmFlags & PMF_DUCKED)
+		if (client->playerState.pMove.pmFlags & PMF_DUCKED)
 		{
-			player->s.frame = FRAME_crpain1-1;
+			player->state.frame = FRAME_crpain1-1;
 			client->anim_end = FRAME_crpain4;
 		}
 		else
@@ -101,15 +101,15 @@ static inline void P_DamageFeedback (edict_t *player, vec3_t forward, vec3_t rig
 			switch (i)
 			{
 			case 0:
-				player->s.frame = FRAME_pain101-1;
+				player->state.frame = FRAME_pain101-1;
 				client->anim_end = FRAME_pain104;
 				break;
 			case 1:
-				player->s.frame = FRAME_pain201-1;
+				player->state.frame = FRAME_pain201-1;
 				client->anim_end = FRAME_pain204;
 				break;
 			case 2:
-				player->s.frame = FRAME_pain301-1;
+				player->state.frame = FRAME_pain301-1;
 				client->anim_end = FRAME_pain304;
 				break;
 			}
@@ -158,7 +158,7 @@ static inline void P_DamageFeedback (edict_t *player, vec3_t forward, vec3_t rig
 		if (kick > 50)
 			kick = 50;
 
-		Vec3Subtract (client->damage_from, player->s.origin, v);
+		Vec3Subtract (client->damage_from, player->state.origin, v);
 		VectorNormalizef (v, v);
 		
 		side = DotProduct (v, right);
@@ -210,16 +210,16 @@ static inline void SV_CalcViewOffset (edict_t *ent, vec3_t forward, vec3_t right
 //===================================
 
 	// base angles
-	angles = ent->client->ps.kickAngles;
+	angles = ent->client->playerState.kickAngles;
 
 	// if dead, fix the angle and don't add any kick
 	if (ent->deadflag)
 	{
 		Vec3Clear (angles);
 
-		ent->client->ps.viewAngles[ROLL] = 40;
-		ent->client->ps.viewAngles[PITCH] = -15;
-		ent->client->ps.viewAngles[YAW] = ent->client->killer_yaw;
+		ent->client->playerState.viewAngles[ROLL] = 40;
+		ent->client->playerState.viewAngles[PITCH] = -15;
+		ent->client->playerState.viewAngles[YAW] = ent->client->killer_yaw;
 	}
 	else
 	{
@@ -257,11 +257,11 @@ static inline void SV_CalcViewOffset (edict_t *ent, vec3_t forward, vec3_t right
 		// add angles based on bob
 
 		delta = bobfracsin * bob_pitch->Float() * xyspeed;
-		if (ent->client->ps.pMove.pmFlags & PMF_DUCKED)
+		if (ent->client->playerState.pMove.pmFlags & PMF_DUCKED)
 			delta *= 6;		// crouching
 		angles[PITCH] += delta;
 		delta = bobfracsin * bob_roll->Float() * xyspeed;
-		if (ent->client->ps.pMove.pmFlags & PMF_DUCKED)
+		if (ent->client->playerState.pMove.pmFlags & PMF_DUCKED)
 			delta *= 6;		// crouching
 		if (bobcycle & 1)
 			delta = -delta;
@@ -313,7 +313,7 @@ static inline void SV_CalcViewOffset (edict_t *ent, vec3_t forward, vec3_t right
 	else if (v[2] > 30)
 		v[2] = 30;
 
-	Vec3Copy (v, ent->client->ps.viewOffset);
+	Vec3Copy (v, ent->client->playerState.viewOffset);
 }
 
 /*
@@ -327,20 +327,20 @@ static inline void SV_CalcGunOffset (edict_t *ent, vec3_t forward, vec3_t right,
 	float	delta;
 
 	// gun angles from bobbing
-	ent->client->ps.gunAngles[ROLL] = xyspeed * bobfracsin * 0.005;
-	ent->client->ps.gunAngles[YAW] = xyspeed * bobfracsin * 0.01;
+	ent->client->playerState.gunAngles[ROLL] = xyspeed * bobfracsin * 0.005;
+	ent->client->playerState.gunAngles[YAW] = xyspeed * bobfracsin * 0.01;
 	if (bobcycle & 1)
 	{
-		ent->client->ps.gunAngles[ROLL] = -ent->client->ps.gunAngles[ROLL];
-		ent->client->ps.gunAngles[YAW] = -ent->client->ps.gunAngles[YAW];
+		ent->client->playerState.gunAngles[ROLL] = -ent->client->playerState.gunAngles[ROLL];
+		ent->client->playerState.gunAngles[YAW] = -ent->client->playerState.gunAngles[YAW];
 	}
 
-	ent->client->ps.gunAngles[PITCH] = xyspeed * bobfracsin * 0.005;
+	ent->client->playerState.gunAngles[PITCH] = xyspeed * bobfracsin * 0.005;
 
 	// gun angles from delta movement
 	for (i=0 ; i<3 ; i++)
 	{
-		delta = ent->client->oldviewangles[i] - ent->client->ps.viewAngles[i];
+		delta = ent->client->oldviewangles[i] - ent->client->playerState.viewAngles[i];
 		if (delta > 180)
 			delta -= 360;
 		if (delta < -180)
@@ -350,20 +350,20 @@ static inline void SV_CalcGunOffset (edict_t *ent, vec3_t forward, vec3_t right,
 		if (delta < -45)
 			delta = -45;
 		if (i == YAW)
-			ent->client->ps.gunAngles[ROLL] += 0.1*delta;
-		ent->client->ps.gunAngles[i] += 0.2 * delta;
+			ent->client->playerState.gunAngles[ROLL] += 0.1*delta;
+		ent->client->playerState.gunAngles[i] += 0.2 * delta;
 	}
 
 	// gun height
-	Vec3Clear (ent->client->ps.gunOffset);
+	Vec3Clear (ent->client->playerState.gunOffset);
 //	ent->ps->gunorigin[2] += bob;
 
 	// gun_x / gun_y / gun_z are development tools
 	for (i=0 ; i<3 ; i++)
 	{
-		ent->client->ps.gunOffset[i] += forward[i]*(gun_y->Float());
-		ent->client->ps.gunOffset[i] += right[i]*gun_x->Float();
-		ent->client->ps.gunOffset[i] += up[i]* (-gun_z->Float());
+		ent->client->playerState.gunOffset[i] += forward[i]*(gun_y->Float());
+		ent->client->playerState.gunOffset[i] += right[i]*gun_x->Float();
+		ent->client->playerState.gunOffset[i] += up[i]* (-gun_z->Float());
 	}
 }
 
@@ -411,13 +411,13 @@ static inline void SV_CalcBlend (edict_t *ent)
 
 	// add for contents
 	vec3_t	vieworg;
-	Vec3Add (ent->s.origin, ent->client->ps.viewOffset, vieworg);
+	Vec3Add (ent->state.origin, ent->client->playerState.viewOffset, vieworg);
 	int contents = gi.pointcontents (vieworg);
 
 	if (contents & (CONTENTS_LAVA|CONTENTS_SLIME|CONTENTS_WATER) )
-		ent->client->ps.rdFlags |= RDF_UNDERWATER;
+		ent->client->playerState.rdFlags |= RDF_UNDERWATER;
 	else
-		ent->client->ps.rdFlags &= ~RDF_UNDERWATER;
+		ent->client->playerState.rdFlags &= ~RDF_UNDERWATER;
 
 	// add for powerups
 	if (ent->client->quad_framenum > level.framenum)
@@ -493,10 +493,10 @@ static inline void SV_CalcBlend (edict_t *ent)
 	else if (contents & CONTENTS_WATER)
 		SV_AddBlend (WaterColor, ent->client->pers.viewBlend);
 
-	ent->client->ps.viewBlend[0] = ((float)(ent->client->pers.viewBlend.R) / 255);
-	ent->client->ps.viewBlend[1] = ((float)(ent->client->pers.viewBlend.G) / 255);
-	ent->client->ps.viewBlend[2] = ((float)(ent->client->pers.viewBlend.B) / 255);
-	ent->client->ps.viewBlend[3] = ((float)(ent->client->pers.viewBlend.A) / 255);
+	ent->client->playerState.viewBlend[0] = ((float)(ent->client->pers.viewBlend.R) / 255);
+	ent->client->playerState.viewBlend[1] = ((float)(ent->client->pers.viewBlend.G) / 255);
+	ent->client->playerState.viewBlend[2] = ((float)(ent->client->pers.viewBlend.B) / 255);
+	ent->client->playerState.viewBlend[3] = ((float)(ent->client->pers.viewBlend.A) / 255);
 }
 
 
@@ -514,7 +514,7 @@ static inline void P_FallingDamage (edict_t *ent)
 	if (dmFlags.dfNoFallingDamage)
 		return;
 
-	if (ent->s.modelIndex != 255)
+	if (ent->state.modelIndex != 255)
 		return;		// not in the player model
 
 	if (ent->movetype == MOVETYPE_NOCLIP)
@@ -545,7 +545,7 @@ static inline void P_FallingDamage (edict_t *ent)
 
 	if (delta < 15)
 	{
-		ent->s.event = EV_FOOTSTEP;
+		ent->state.event = EV_FOOTSTEP;
 		return;
 	}
 
@@ -559,9 +559,9 @@ static inline void P_FallingDamage (edict_t *ent)
 		if (ent->health > 0)
 		{
 			if (delta >= 55)
-				ent->s.event = EV_FALLFAR;
+				ent->state.event = EV_FALLFAR;
 			else
-				ent->s.event = EV_FALL;
+				ent->state.event = EV_FALL;
 		}
 		ent->pain_debounce_time = level.time;	// no normal pain sound
 		damage = (delta-30)/2;
@@ -570,11 +570,11 @@ static inline void P_FallingDamage (edict_t *ent)
 		Vec3Set (dir, 0, 0, 1);
 
 		if (!dmFlags.dfNoFallingDamage )
-			T_Damage (ent, world, world, dir, ent->s.origin, vec3Origin, damage, 0, 0, MOD_FALLING);
+			T_Damage (ent, world, world, dir, ent->state.origin, vec3Origin, damage, 0, 0, MOD_FALLING);
 	}
 	else
 	{
-		ent->s.event = EV_FALLSHORT;
+		ent->state.event = EV_FALLSHORT;
 		return;
 	}
 }
@@ -610,7 +610,7 @@ static inline void P_WorldEffects (edict_t *ent)
 	//
 	if (!old_waterlevel && waterlevel)
 	{
-		PlayerNoise(ent, ent->s.origin, PNOISE_SELF);
+		PlayerNoise(ent, ent->state.origin, PNOISE_SELF);
 		if (ent->watertype & CONTENTS_LAVA)
 			PlaySoundFrom (ent, CHAN_BODY, SoundIndex("player/lava_in.wav"));
 		else if (ent->watertype & CONTENTS_SLIME)
@@ -628,7 +628,7 @@ static inline void P_WorldEffects (edict_t *ent)
 	//
 	if (old_waterlevel && ! waterlevel)
 	{
-		PlayerNoise(ent, ent->s.origin, PNOISE_SELF);
+		PlayerNoise(ent, ent->state.origin, PNOISE_SELF);
 		PlaySoundFrom (ent, CHAN_BODY, SoundIndex("player/watr_out.wav"));
 		ent->flags &= ~FL_INWATER;
 	}
@@ -647,7 +647,7 @@ static inline void P_WorldEffects (edict_t *ent)
 		if (ent->air_finished < level.time)
 		{	// gasp for air
 			PlaySoundFrom (ent, CHAN_VOICE, SoundIndex("player/gasp1.wav"));
-			PlayerNoise(ent, ent->s.origin, PNOISE_SELF);
+			PlayerNoise(ent, ent->state.origin, PNOISE_SELF);
 		}
 		else  if (ent->air_finished < level.time + 11) // just break surface
 			PlaySoundFrom (ent, CHAN_VOICE, SoundIndex("player/gasp2.wav"));
@@ -667,7 +667,7 @@ static inline void P_WorldEffects (edict_t *ent)
 			{
 				PlaySoundFrom (ent, CHAN_AUTO, SoundIndex((!ent->client->breather_sound) ? "player/u_breath1.wav" : "player/u_breath2.wav"));
 				ent->client->breather_sound = !ent->client->breather_sound;
-				PlayerNoise(ent, ent->s.origin, PNOISE_SELF);
+				PlayerNoise(ent, ent->state.origin, PNOISE_SELF);
 				//FIXME: release a bubble?
 			}
 		}
@@ -693,7 +693,7 @@ static inline void P_WorldEffects (edict_t *ent)
 
 				ent->pain_debounce_time = level.time;
 
-				T_Damage (ent, world, world, vec3Origin, ent->s.origin, vec3Origin, ent->dmg, 0, DAMAGE_NO_ARMOR, MOD_WATER);
+				T_Damage (ent, world, world, vec3Origin, ent->state.origin, vec3Origin, ent->dmg, 0, DAMAGE_NO_ARMOR, MOD_WATER);
 			}
 		}
 	}
@@ -719,13 +719,13 @@ static inline void P_WorldEffects (edict_t *ent)
 			}
 
 			// take 1/3 damage with envirosuit
-			T_Damage (ent, world, world, vec3Origin, ent->s.origin, vec3Origin, (envirosuit) ? 1*waterlevel : 3*waterlevel, 0, 0, MOD_LAVA);
+			T_Damage (ent, world, world, vec3Origin, ent->state.origin, vec3Origin, (envirosuit) ? 1*waterlevel : 3*waterlevel, 0, 0, MOD_LAVA);
 		}
 
 		if (ent->watertype & CONTENTS_SLIME)
 		{
 			if (!envirosuit) // no damage from slime with envirosuit
-				T_Damage (ent, world, world, vec3Origin, ent->s.origin, vec3Origin, 1*waterlevel, 0, 0, MOD_SLIME);
+				T_Damage (ent, world, world, vec3Origin, ent->state.origin, vec3Origin, 1*waterlevel, 0, 0, MOD_SLIME);
 		}
 	}
 }
@@ -742,8 +742,8 @@ static inline void G_SetClientEffects (edict_t *ent)
 	int		pa_type;
 	int		remaining;
 
-	ent->s.effects = 0;
-	ent->s.renderFx = 0;
+	ent->state.effects = 0;
+	ent->state.renderFx = 0;
 
 	if (ent->health <= 0 || level.intermissiontime)
 		return;
@@ -753,12 +753,12 @@ static inline void G_SetClientEffects (edict_t *ent)
 		pa_type = PowerArmorType (ent);
 		if (pa_type == POWER_ARMOR_SCREEN)
 		{
-			ent->s.effects |= EF_POWERSCREEN;
+			ent->state.effects |= EF_POWERSCREEN;
 		}
 		else if (pa_type == POWER_ARMOR_SHIELD)
 		{
-			ent->s.effects |= EF_COLOR_SHELL;
-			ent->s.renderFx |= RF_SHELL_GREEN;
+			ent->state.effects |= EF_COLOR_SHELL;
+			ent->state.renderFx |= RF_SHELL_GREEN;
 		}
 	}
 
@@ -766,21 +766,21 @@ static inline void G_SetClientEffects (edict_t *ent)
 	{
 		remaining = ent->client->quad_framenum - level.framenum;
 		if (remaining > 30 || (remaining & 4) )
-			ent->s.effects |= EF_QUAD;
+			ent->state.effects |= EF_QUAD;
 	}
 
 	if (ent->client->invincible_framenum > level.framenum)
 	{
 		remaining = ent->client->invincible_framenum - level.framenum;
 		if (remaining > 30 || (remaining & 4) )
-			ent->s.effects |= EF_PENT;
+			ent->state.effects |= EF_PENT;
 	}
 
 	// show cheaters!!!
 	if (ent->flags & FL_GODMODE)
 	{
-		ent->s.effects |= EF_COLOR_SHELL;
-		ent->s.renderFx |= (RF_SHELL_RED|RF_SHELL_GREEN|RF_SHELL_BLUE);
+		ent->state.effects |= EF_COLOR_SHELL;
+		ent->state.renderFx |= (RF_SHELL_RED|RF_SHELL_GREEN|RF_SHELL_BLUE);
 	}
 }
 
@@ -792,13 +792,13 @@ G_SetClientEvent
 */
 static inline void G_SetClientEvent (edict_t *ent, float xyspeed)
 {
-	if (ent->s.event)
+	if (ent->state.event)
 		return;
 
 	if ( ent->groundentity && xyspeed > 225)
 	{
 		if ( (int)(ent->client->bobtime+bobmove) != bobcycle )
-			ent->s.event = EV_FOOTSTEP;
+			ent->state.event = EV_FOOTSTEP;
 	}
 }
 
@@ -823,13 +823,13 @@ static inline void G_SetClientSound (edict_t *ent)
 	}
 
 	if (ent->waterlevel && (ent->watertype&(CONTENTS_LAVA|CONTENTS_SLIME)) )
-		ent->s.sound = gMedia.FrySound;
+		ent->state.sound = gMedia.FrySound;
 	else if (ent->client->pers.Weapon && ent->client->pers.Weapon->WeaponSoundIndex)
-		ent->s.sound = ent->client->pers.Weapon->WeaponSoundIndex;
+		ent->state.sound = ent->client->pers.Weapon->WeaponSoundIndex;
 	else if (ent->client->weapon_sound)
-		ent->s.sound = ent->client->weapon_sound;
+		ent->state.sound = ent->client->weapon_sound;
 	else
-		ent->s.sound = 0;
+		ent->state.sound = 0;
 }
 
 /*
@@ -842,12 +842,12 @@ static inline void G_SetClientFrame (edict_t *ent, float xyspeed)
 	gclient_t	*client;
 	bool	duck, run;
 
-	if (ent->s.modelIndex != 255)
+	if (ent->state.modelIndex != 255)
 		return;		// not in the player model
 
 	client = ent->client;
 
-	if (client->ps.pMove.pmFlags & PMF_DUCKED)
+	if (client->playerState.pMove.pmFlags & PMF_DUCKED)
 		duck = true;
 	else
 		duck = false;
@@ -866,15 +866,15 @@ static inline void G_SetClientFrame (edict_t *ent, float xyspeed)
 
 	if(client->anim_priority == ANIM_REVERSE)
 	{
-		if(ent->s.frame > client->anim_end)
+		if(ent->state.frame > client->anim_end)
 		{
-			ent->s.frame--;
+			ent->state.frame--;
 			return;
 		}
 	}
-	else if (ent->s.frame < client->anim_end)
+	else if (ent->state.frame < client->anim_end)
 	{	// continue an animation
-		ent->s.frame++;
+		ent->state.frame++;
 		return;
 	}
 
@@ -885,7 +885,7 @@ static inline void G_SetClientFrame (edict_t *ent, float xyspeed)
 		if (!ent->groundentity)
 			return;		// stay there
 		ent->client->anim_priority = ANIM_WAVE;
-		ent->s.frame = FRAME_jump3;
+		ent->state.frame = FRAME_jump3;
 		ent->client->anim_end = FRAME_jump6;
 		return;
 	}
@@ -899,20 +899,20 @@ newanim:
 	if (!ent->groundentity && !duck)
 	{
 		client->anim_priority = ANIM_JUMP;
-		if (ent->s.frame != FRAME_jump2)
-			ent->s.frame = FRAME_jump1;
+		if (ent->state.frame != FRAME_jump2)
+			ent->state.frame = FRAME_jump1;
 		client->anim_end = FRAME_jump2;
 	}
 	else if (run)
 	{	// running
 		if (duck)
 		{
-			ent->s.frame = FRAME_crwalk1;
+			ent->state.frame = FRAME_crwalk1;
 			client->anim_end = FRAME_crwalk6;
 		}
 		else
 		{
-			ent->s.frame = FRAME_run1;
+			ent->state.frame = FRAME_run1;
 			client->anim_end = FRAME_run6;
 		}
 	}
@@ -920,12 +920,12 @@ newanim:
 	{	// standing
 		if (duck)
 		{
-			ent->s.frame = FRAME_crstnd01;
+			ent->state.frame = FRAME_crstnd01;
 			client->anim_end = FRAME_crstnd19;
 		}
 		else
 		{
-			ent->s.frame = FRAME_stand01;
+			ent->state.frame = FRAME_stand01;
 			client->anim_end = FRAME_stand40;
 		}
 	}
@@ -954,8 +954,8 @@ void ClientEndServerFrame (edict_t *ent)
 	//
 	for (i=0 ; i<3 ; i++)
 	{
-		ent->client->ps.pMove.origin[i] = ent->s.origin[i]*8.0;
-		ent->client->ps.pMove.velocity[i] = ent->velocity[i]*8.0;
+		ent->client->playerState.pMove.origin[i] = ent->state.origin[i]*8.0;
+		ent->client->playerState.pMove.velocity[i] = ent->velocity[i]*8.0;
 	}
 
 	//
@@ -965,8 +965,8 @@ void ClientEndServerFrame (edict_t *ent)
 	if (level.intermissiontime)
 	{
 		// FIXME: add view drifting here?
-		ent->client->ps.viewBlend[3] = 0;
-		ent->client->ps.fov = 90;
+		ent->client->playerState.viewBlend[3] = 0;
+		ent->client->playerState.fov = 90;
 		G_SetStats (ent);
 		return;
 	}
@@ -982,12 +982,12 @@ void ClientEndServerFrame (edict_t *ent)
 	// the world can tell which direction you are looking
 	//
 	if (ent->client->v_angle[PITCH] > 180)
-		ent->s.angles[PITCH] = (-360 + ent->client->v_angle[PITCH])/3;
+		ent->state.angles[PITCH] = (-360 + ent->client->v_angle[PITCH])/3;
 	else
-		ent->s.angles[PITCH] = ent->client->v_angle[PITCH]/3;
-	ent->s.angles[YAW] = ent->client->v_angle[YAW];
-	ent->s.angles[ROLL] = 0;
-	ent->s.angles[ROLL] = SV_CalcRoll (ent->s.angles, ent->velocity, right)*4;
+		ent->state.angles[PITCH] = ent->client->v_angle[PITCH]/3;
+	ent->state.angles[YAW] = ent->client->v_angle[YAW];
+	ent->state.angles[ROLL] = 0;
+	ent->state.angles[ROLL] = SV_CalcRoll (ent->state.angles, ent->velocity, right)*4;
 
 	//
 	// calculate speed and cycle to be used for
@@ -995,7 +995,7 @@ void ClientEndServerFrame (edict_t *ent)
 	//
 	float xyspeed = sqrtf(ent->velocity[0]*ent->velocity[0] + ent->velocity[1]*ent->velocity[1]);
 
-	if (xyspeed < 5 || ent->client->ps.pMove.pmFlags & PMF_DUCKED)
+	if (xyspeed < 5 || ent->client->playerState.pMove.pmFlags & PMF_DUCKED)
 	{
 		bobmove = 0;
 		ent->client->bobtime = 0;	// start at beginning of cycle again
@@ -1012,7 +1012,7 @@ void ClientEndServerFrame (edict_t *ent)
 	
 	bobtime = (ent->client->bobtime += bobmove);
 
-	if (ent->client->ps.pMove.pmFlags & PMF_DUCKED)
+	if (ent->client->playerState.pMove.pmFlags & PMF_DUCKED)
 		bobtime *= 4;
 
 	bobcycle = (int)bobtime;
@@ -1053,7 +1053,7 @@ void ClientEndServerFrame (edict_t *ent)
 	G_SetClientFrame (ent, xyspeed);
 
 	Vec3Copy (ent->velocity, ent->client->oldvelocity);
-	Vec3Copy (ent->client->ps.viewAngles, ent->client->oldviewangles);
+	Vec3Copy (ent->client->playerState.viewAngles, ent->client->oldviewangles);
 
 	// clear weapon kicks
 	Vec3Clear (ent->client->kick_origin);

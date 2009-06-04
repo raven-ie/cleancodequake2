@@ -36,15 +36,15 @@ void UpdateChaseCam(edict_t *ent)
 		ChaseNext(ent);
 		if (ent->client->chase_target == old) {
 			ent->client->chase_target = NULL;
-			ent->client->ps.pMove.pmFlags &= ~PMF_NO_PREDICTION;
+			ent->client->playerState.pMove.pmFlags &= ~PMF_NO_PREDICTION;
 			return;
 		}
 	}
 
 	targ = ent->client->chase_target;
 
-	Vec3Copy(targ->s.origin, ownerv);
-	Vec3Copy(ent->s.origin, oldgoal);
+	Vec3Copy(targ->state.origin, ownerv);
+	Vec3Copy(ent->state.origin, oldgoal);
 
 	ownerv[2] += targ->viewheight;
 
@@ -55,8 +55,8 @@ void UpdateChaseCam(edict_t *ent)
 	VectorNormalizef (forward, forward);
 	Vec3MA (ownerv, -30, forward, o);
 
-	if (o[2] < targ->s.origin[2] + 20)
-		o[2] = targ->s.origin[2] + 20;
+	if (o[2] < targ->state.origin[2] + 20)
+		o[2] = targ->state.origin[2] + 20;
 
 	// jump animation lifts
 	if (!targ->groundentity)
@@ -86,25 +86,25 @@ void UpdateChaseCam(edict_t *ent)
 	}
 
 	if (targ->deadflag)
-		ent->client->ps.pMove.pmType = PMT_DEAD;
+		ent->client->playerState.pMove.pmType = PMT_DEAD;
 	else
-		ent->client->ps.pMove.pmType = PMT_FREEZE;
+		ent->client->playerState.pMove.pmType = PMT_FREEZE;
 
-	Vec3Copy(goal, ent->s.origin);
+	Vec3Copy(goal, ent->state.origin);
 	for (i=0 ; i<3 ; i++)
-		ent->client->ps.pMove.deltaAngles[i] = ANGLE2SHORT(targ->client->v_angle[i] - ent->client->resp.cmd_angles[i]);
+		ent->client->playerState.pMove.deltaAngles[i] = ANGLE2SHORT(targ->client->v_angle[i] - ent->client->resp.cmd_angles[i]);
 
 	if (targ->deadflag) {
-		ent->client->ps.viewAngles[ROLL] = 40;
-		ent->client->ps.viewAngles[PITCH] = -15;
-		ent->client->ps.viewAngles[YAW] = targ->client->killer_yaw;
+		ent->client->playerState.viewAngles[ROLL] = 40;
+		ent->client->playerState.viewAngles[PITCH] = -15;
+		ent->client->playerState.viewAngles[YAW] = targ->client->killer_yaw;
 	} else {
-		Vec3Copy(targ->client->v_angle, ent->client->ps.viewAngles);
+		Vec3Copy(targ->client->v_angle, ent->client->playerState.viewAngles);
 		Vec3Copy(targ->client->v_angle, ent->client->v_angle);
 	}
 
 	ent->viewheight = 0;
-	ent->client->ps.pMove.pmFlags |= PMF_NO_PREDICTION;
+	ent->client->playerState.pMove.pmFlags |= PMF_NO_PREDICTION;
 	gi.linkentity(ent);
 }
 

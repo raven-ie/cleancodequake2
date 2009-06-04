@@ -586,12 +586,12 @@ typedef struct
 	bool		spectator;			// client is a spectator
 
 	colorb		viewBlend; // View blending
-} client_persistant_t;
+} clientPersistent_t;
 
 // client data that stays across deathmatch respawns
 typedef struct
 {
-	client_persistant_t	coop_respawn;	// what to set client->pers to on a respawn
+	clientPersistent_t	coop_respawn;	// what to set client->pers to on a respawn
 	int			enterframe;			// level.framenum the client entered the game
 	int			score;				// frags, etc
 	vec3_t		cmd_angles;			// angles sent over in the last command
@@ -605,19 +605,19 @@ typedef struct
 #endif
 
 	CMenuState	MenuState;
-} client_respawn_t;
+} clientRespawn_t;
 
 // this structure is cleared on each PutClientInServer(),
 // except for 'client->pers'
 struct gclient_s
 {
 	// known to server
-	playerState_t	ps;				// communicated by server to clients
+	playerState_t	playerState;				// communicated by server to clients
 	int				ping;
 
 	// private to game
-	client_persistant_t	pers;
-	client_respawn_t	resp;
+	clientPersistent_t	pers;
+	clientRespawn_t	resp;
 	pMoveState_t		old_pmove;	// for detecting out-of-pmove changes
 
 	bool		showscores;			// set layout stat
@@ -691,7 +691,7 @@ struct gclient_s
 
 struct edict_s
 {
-	entityStateOld_t	s;
+	entityStateOld_t	state;
 	struct gclient_s	*client;	// NULL if not a player
 									// the server expects the first part
 									// of gclient_s to be a player_state_t

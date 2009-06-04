@@ -44,7 +44,7 @@ CWeapon("models/weapons/v_rail/tris.md2", 0, 3, 4, 18,
 
 bool CRailgun::CanFire (edict_t *ent)
 {
-	switch (ent->client->ps.gunFrame)
+	switch (ent->client->playerState.gunFrame)
 	{
 	case 4:
 		return true;
@@ -54,7 +54,7 @@ bool CRailgun::CanFire (edict_t *ent)
 
 bool CRailgun::CanStopFidgetting (edict_t *ent)
 {
-	switch (ent->client->ps.gunFrame)
+	switch (ent->client->playerState.gunFrame)
 	{
 	case 56:
 		return true;
@@ -94,14 +94,14 @@ void CRailgun::Fire (edict_t *ent)
 	ent->client->kick_angles[0] = -3;
 
 	Vec3Set (offset, 0, 7,  ent->viewheight-8);
-	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
+	P_ProjectSource (ent->client, ent->state.origin, offset, forward, right, start);
 	fire_rail (ent, start, forward, damage, kick);
 
 	// send muzzle flash
 	Muzzle (ent, MZ_RAILGUN);
 	FireAnimation (ent);
 
-	ent->client->ps.gunFrame++;
+	ent->client->playerState.gunFrame++;
 	PlayerNoise(ent, start, PNOISE_WEAPON);
 
 	if (!dmFlags.dfInfiniteAmmo)

@@ -257,7 +257,7 @@ CAnim ChickMovePain3 (FRAME_pain301, FRAME_pain321, ChickFramesPain3, ConvertDer
 void CMaiden::Pain (edict_t *other, float kick, int damage)
 {
 	if (Entity->health < (Entity->max_health / 2))
-		Entity->s.skinNum = 1;
+		Entity->state.skinNum = 1;
 
 	if (level.time < Entity->pain_debounce_time)
 		return;
@@ -560,15 +560,15 @@ void CMaiden::Rocket ()
 	vec3_t	target;
 	bool blindfire = (AIFlags & AI_MANUAL_STEERING) ? true : false;
 
-	Angles_Vectors (Entity->s.angles, forward, right, NULL);
-	G_ProjectSource (Entity->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_CHICK_ROCKET_1], forward, right, start);
+	Angles_Vectors (Entity->state.angles, forward, right, NULL);
+	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_CHICK_ROCKET_1], forward, right, start);
 
 	rocketSpeed = 500 + (100 * skill->Integer());	// PGM rock & roll.... :)
 
 	if (blindfire)
 		Vec3Copy (BlindFireTarget, target);
 	else
-		Vec3Copy (Entity->enemy->s.origin, target);
+		Vec3Copy (Entity->enemy->state.origin, target);
 
 	if (blindfire)
 	{
@@ -646,10 +646,10 @@ void CMaiden::Rocket ()
 	vec3_t	dir;
 	vec3_t	vec;
 
-	Angles_Vectors (Entity->s.angles, forward, right, NULL);
-	G_ProjectSource (Entity->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_CHICK_ROCKET_1], forward, right, start);
+	Angles_Vectors (Entity->state.angles, forward, right, NULL);
+	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_CHICK_ROCKET_1], forward, right, start);
 
-	Vec3Copy (Entity->enemy->s.origin, vec);
+	Vec3Copy (Entity->enemy->state.origin, vec);
 	vec[2] += Entity->enemy->viewheight;
 	Vec3Subtract (vec, start, dir);
 	VectorNormalizef (dir, dir);
@@ -791,7 +791,7 @@ void CMaiden::Spawn ()
 {
 	Entity->movetype = MOVETYPE_STEP;
 	Entity->solid = SOLID_BBOX;
-	Entity->s.modelIndex = ModelIndex("models/monsters/bitch/tris.md2");
+	Entity->state.modelIndex = ModelIndex("models/monsters/bitch/tris.md2");
 	Vec3Set (Entity->mins, -16, -16, 0);
 	Vec3Set (Entity->maxs, 16, 16, 56);
 

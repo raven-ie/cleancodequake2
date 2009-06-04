@@ -155,8 +155,8 @@ int PlayerSort (void const *a, void const *b)
 	anum = *(int *)a;
 	bnum = *(int *)b;
 
-	anum = game.clients[anum].ps.stats[STAT_FRAGS];
-	bnum = game.clients[bnum].ps.stats[STAT_FRAGS];
+	anum = game.clients[anum].playerState.stats[STAT_FRAGS];
+	bnum = game.clients[bnum].playerState.stats[STAT_FRAGS];
 
 	if (anum < bnum)
 		return -1;
@@ -197,7 +197,7 @@ void Cmd_Players_f (edict_t *ent)
 	for (i = 0 ; i < count ; i++)
 	{
 		Q_snprintfz (small, sizeof(small), "%3i %s\n",
-			game.clients[index[i]].ps.stats[STAT_FRAGS],
+			game.clients[index[i]].playerState.stats[STAT_FRAGS],
 			game.clients[index[i]].pers.netname);
 		if (strlen (small) + strlen(large) > sizeof(large) - 100 )
 		{	// can't print all of them in one packet
@@ -220,7 +220,7 @@ Cmd_Wave_f
 void Cmd_Wave_f (edict_t *ent)
 {
 	// can't wave when ducked
-	if (ent->client->ps.pMove.pmFlags & PMF_DUCKED)
+	if (ent->client->playerState.pMove.pmFlags & PMF_DUCKED)
 		return;
 
 	if (ent->client->anim_priority > ANIM_WAVE)
@@ -232,28 +232,28 @@ void Cmd_Wave_f (edict_t *ent)
 	{
 	case 0:
 		ClientPrintf (ent, PRINT_HIGH, "flipoff\n");
-		ent->s.frame = FRAME_flip01-1;
+		ent->state.frame = FRAME_flip01-1;
 		ent->client->anim_end = FRAME_flip12;
 		break;
 	case 1:
 		ClientPrintf (ent, PRINT_HIGH, "salute\n");
-		ent->s.frame = FRAME_salute01-1;
+		ent->state.frame = FRAME_salute01-1;
 		ent->client->anim_end = FRAME_salute11;
 		break;
 	case 2:
 		ClientPrintf (ent, PRINT_HIGH, "taunt\n");
-		ent->s.frame = FRAME_taunt01-1;
+		ent->state.frame = FRAME_taunt01-1;
 		ent->client->anim_end = FRAME_taunt17;
 		break;
 	case 3:
 		ClientPrintf (ent, PRINT_HIGH, "wave\n");
-		ent->s.frame = FRAME_wave01-1;
+		ent->state.frame = FRAME_wave01-1;
 		ent->client->anim_end = FRAME_wave11;
 		break;
 	case 4:
 	default:
 		ClientPrintf (ent, PRINT_HIGH, "point\n");
-		ent->s.frame = FRAME_point01-1;
+		ent->state.frame = FRAME_point01-1;
 		ent->client->anim_end = FRAME_point12;
 		break;
 	}

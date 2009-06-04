@@ -44,7 +44,7 @@ CWeapon("models/weapons/v_blast/tris.md2", 0, 4, 5, 8,
 
 bool CBlaster::CanFire (edict_t *ent)
 {
-	switch (ent->client->ps.gunFrame)
+	switch (ent->client->playerState.gunFrame)
 	{
 	case 5:
 		return true;
@@ -54,7 +54,7 @@ bool CBlaster::CanFire (edict_t *ent)
 
 bool CBlaster::CanStopFidgetting (edict_t *ent)
 {
-	switch (ent->client->ps.gunFrame)
+	switch (ent->client->playerState.gunFrame)
 	{
 	case 19:
 	case 32:
@@ -83,7 +83,7 @@ void CBlaster::Fire (edict_t *ent)
 
 	Angles_Vectors (ent->client->v_angle, forward, right, NULL);
 	Vec3Set (offset, 24, 8, ent->viewheight-8);
-	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
+	P_ProjectSource (ent->client, ent->state.origin, offset, forward, right, start);
 
 	Vec3Scale (forward, -2, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -1;
@@ -96,5 +96,5 @@ void CBlaster::Fire (edict_t *ent)
 	PlayerNoise(ent, start, PNOISE_WEAPON);
 	FireAnimation(ent);
 
-	ent->client->ps.gunFrame++;
+	ent->client->playerState.gunFrame++;
 }

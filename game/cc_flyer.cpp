@@ -338,15 +338,15 @@ void CFlyer::Fire (int FlashNumber)
 	vec3_t	dir;
 	int		effect;
 
-	if ((Entity->s.frame == FRAME_attak204) || (Entity->s.frame == FRAME_attak207) || (Entity->s.frame == FRAME_attak210))
+	if ((Entity->state.frame == FRAME_attak204) || (Entity->state.frame == FRAME_attak207) || (Entity->state.frame == FRAME_attak210))
 		effect = EF_HYPERBLASTER;
 	else
 		effect = 0;
-	Angles_Vectors (Entity->s.angles, forward, right, NULL);
+	Angles_Vectors (Entity->state.angles, forward, right, NULL);
 
-	G_ProjectSource (Entity->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[FlashNumber], forward, right, start);
+	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[FlashNumber], forward, right, start);
 	
-	Vec3Copy (Entity->enemy->s.origin, end);
+	Vec3Copy (Entity->enemy->state.origin, end);
 	end[2] += Entity->enemy->viewheight;
 	Vec3Subtract (end, start, dir);
 
@@ -468,7 +468,7 @@ void CFlyer::CheckMelee ()
 void CFlyer::Pain (edict_t *other, float kick, int damage)
 {
 	if (Entity->health < (Entity->max_health / 2))
-		Entity->s.skinNum = 1;
+		Entity->state.skinNum = 1;
 
 	if (level.time < Entity->pain_debounce_time)
 		return;
@@ -533,13 +533,13 @@ void CFlyer::AI_Roll(float Dist)
 {
 	vec3_t	v;
 
-	Vec3Subtract (Entity->enemy->s.origin, Entity->s.origin, v);
+	Vec3Subtract (Entity->enemy->state.origin, Entity->state.origin, v);
 	IdealYaw = VecToYaw(v);
 	ChangeYaw ();
 
-	float Yaw = (Entity->s.angles[YAW] - 90);
+	float Yaw = (Entity->state.angles[YAW] - 90);
 	if (CurrentMove == &FlyerMoveRollRight)
-		Yaw = (Entity->s.angles[YAW] + 90);
+		Yaw = (Entity->state.angles[YAW] + 90);
 
 	if (Dist)
 		WalkMove (Yaw, Dist);
@@ -566,7 +566,7 @@ void CFlyer::Dodge (edict_t *attacker, float eta, CTrace *tr)
 	CTrace trace;
 	vec3_t right, end;
 
-	Angles_Vectors (Entity->s.angles, NULL, right, NULL);
+	Angles_Vectors (Entity->state.angles, NULL, right, NULL);
 	bool WantsLeft = (random() < 0.5);
 
 	// Approximate travel distance.
@@ -574,15 +574,15 @@ void CFlyer::Dodge (edict_t *attacker, float eta, CTrace *tr)
 	bool CanRollRight = false;
 	bool CanRollLeft = false;
 
-	Vec3MA (Entity->s.origin, -(15 * 5), right, end);
-	trace = CTrace (Entity->s.origin, Entity->mins, Entity->maxs, end, Entity, CONTENTS_MASK_MONSTERSOLID);
+	Vec3MA (Entity->state.origin, -(15 * 5), right, end);
+	trace = CTrace (Entity->state.origin, Entity->mins, Entity->maxs, end, Entity, CONTENTS_MASK_MONSTERSOLID);
 
 	if (trace.fraction == 1.0)
 		CanRollRight = true;
 
 	// Now check the left
-	Vec3MA (Entity->s.origin, (15 * 5), right, end);
-	trace = CTrace(Entity->s.origin, Entity->mins, Entity->maxs, end, Entity, CONTENTS_MASK_MONSTERSOLID);
+	Vec3MA (Entity->state.origin, (15 * 5), right, end);
+	trace = CTrace(Entity->state.origin, Entity->mins, Entity->maxs, end, Entity, CONTENTS_MASK_MONSTERSOLID);
 
 	if (trace.fraction == 1.0)
 		CanRollLeft = true;
@@ -613,7 +613,7 @@ void CFlyer::SideStep ()
 void CFlyer::Spawn ()
 {
 	// fix a map bug in jail5.bsp
-	if (!Q_stricmp(level.mapname, "jail5") && (Entity->s.origin[2] == -104))
+	if (!Q_stricmp(level.mapname, "jail5") && (Entity->state.origin[2] == -104))
 	{
 		Entity->targetname = Entity->target;
 		Entity->target = NULL;
@@ -629,13 +629,13 @@ void CFlyer::Spawn ()
 
 	SoundIndex ("flyer/flyatck3.wav");
 
-	Entity->s.modelIndex = ModelIndex ("models/monsters/flyer/tris.md2");
+	Entity->state.modelIndex = ModelIndex ("models/monsters/flyer/tris.md2");
 	Vec3Set (Entity->mins, -16, -16, -24);
 	Vec3Set (Entity->maxs, 16, 16, 16);
 	Entity->movetype = MOVETYPE_STEP;
 	Entity->solid = SOLID_BBOX;
 
-	Entity->s.sound = SoundIndex ("flyer/flyidle1.wav");
+	Entity->state.sound = SoundIndex ("flyer/flyidle1.wav");
 
 	Entity->health = 50;
 	Entity->mass = 50;

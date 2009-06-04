@@ -27,13 +27,12 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_local.h
-// Local header. Contains definitions local to CleanCode files and not necessarily used by the Quake2 base.
+// cc_gameapi.h
+// Contains overloads and other neat things
 //
 
-#include "g_local.h"
-#include "cc_cmds_local.h"
+void Cast (ECastFlags castFlags, edict_t *Ent);
+void Cast (ECastFlags castFlags, vec3_t Origin);
+void Cast (ECastType castType, ECastFlags castFlags, vec3_t Origin, edict_t *Ent);
 
-uint32 Com_HashGeneric(const char *name, const int hashSize);
-
-extern CItemList *ItemList;
+void SetModel (edict_t *ent, char *model);

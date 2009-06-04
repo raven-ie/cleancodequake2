@@ -294,7 +294,7 @@ CAnim SoldierMovePain4 (FRAME_pain401, FRAME_pain417, SoldierFramesPain4, Conver
 void CSoldierBase::Pain (edict_t *other, float kick, int damage)
 {
 	if (Entity->health < (Entity->max_health / 2))
-			Entity->s.skinNum |= 1;
+			Entity->state.skinNum |= 1;
 
 #ifdef MONSTER_USE_ROGUE_AI
 	DoneDodge ();
@@ -360,7 +360,7 @@ void CSoldierBase::Attack1_Refire1 ()
 	// pmm
 #endif
 
-	if (Entity->s.skinNum > 1)
+	if (Entity->state.skinNum > 1)
 		return;
 
 	if (Entity->enemy->health <= 0)
@@ -374,7 +374,7 @@ void CSoldierBase::Attack1_Refire1 ()
 
 void CSoldierBase::Attack1_Refire2 ()
 {
-	if (Entity->s.skinNum < 2)
+	if (Entity->state.skinNum < 2)
 		return;
 
 	if (Entity->enemy->health <= 0)
@@ -410,7 +410,7 @@ void CSoldierBase::Fire2 ()
 
 void CSoldierBase::Attack2_Refire1 ()
 {
-	if (Entity->s.skinNum > 1)
+	if (Entity->state.skinNum > 1)
 		return;
 
 	if (Entity->enemy->health <= 0)
@@ -424,7 +424,7 @@ void CSoldierBase::Attack2_Refire1 ()
 
 void CSoldierBase::Attack2_Refire2 ()
 {
-	if (Entity->s.skinNum < 2)
+	if (Entity->state.skinNum < 2)
 		return;
 
 	if (Entity->enemy->health <= 0)
@@ -549,7 +549,7 @@ void CSoldierBase::Attack6_Refire ()
 #ifdef MONSTER_USE_ROGUE_AI
 void CSoldierBase::Attack6_RefireBlaster ()
 {
-	if (Entity->s.skinNum > 1)
+	if (Entity->state.skinNum > 1)
 		return;
 
 	// PMM - make sure dodge & charge bits are cleared
@@ -627,7 +627,7 @@ void CSoldierBase::Sight ()
 
 	if ((skill->Integer() > 0) && (range(Entity, Entity->enemy) >= RANGE_NEAR))
 	{
-		if ((random() > 0.75) && (Entity->s.skinNum <= 3))
+		if ((random() > 0.75) && (Entity->state.skinNum <= 3))
 			CurrentMove = &SoldierMoveAttack6;
 	}
 }
@@ -989,11 +989,11 @@ void CSoldierBase::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_
 // regular death
 	Entity->deadflag = DEAD_DEAD;
 	Entity->takedamage = DAMAGE_YES;
-	Entity->s.skinNum |= 1;
+	Entity->state.skinNum |= 1;
 
 	PlaySoundFrom (Entity, CHAN_VOICE, SoundDeath);
 
-	if (fabs((Entity->s.origin[2] + Entity->viewheight) - point[2]) <= 4)
+	if (fabs((Entity->state.origin[2] + Entity->viewheight) - point[2]) <= 4)
 	{
 		// head shot
 		CurrentMove = &SoldierMoveDeath3;
@@ -1060,7 +1060,7 @@ void CSoldierBase::Duck (float eta)
 
 void CSoldierBase::SideStep ()
 {
-	if (Entity->s.skinNum <= 3)
+	if (Entity->state.skinNum <= 3)
 	{
 		if (CurrentMove != &SoldierMoveAttack6)
 			CurrentMove = &SoldierMoveAttack6;
@@ -1101,7 +1101,7 @@ void CSoldierBase::Spawn ()
 	Entity->movetype = MOVETYPE_STEP;
 	Entity->solid = SOLID_BBOX;
 
-	Entity->s.modelIndex = ModelIndex ("models/monsters/soldier/tris.md2");
+	Entity->state.modelIndex = ModelIndex ("models/monsters/soldier/tris.md2");
 
 	SoundIdle =	SoundIndex ("soldier/solidle1.wav");
 	SoundSight1 =	SoundIndex ("soldier/solsght1.wav");

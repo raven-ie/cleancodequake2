@@ -265,7 +265,7 @@ void ED_CallSpawn (edict_t *ent)
 	if (!ent->classname)
 	{
 		//gi.dprintf ("ED_CallSpawn: NULL classname\n");
-		MapPrint (MAPPRINT_ERROR, ent, ent->s.origin, "NULL classname!\n");
+		MapPrint (MAPPRINT_ERROR, ent, ent->state.origin, "NULL classname!\n");
 		return;
 	}
 
@@ -292,7 +292,7 @@ void ED_CallSpawn (edict_t *ent)
 		}
 	}
 	//gi.dprintf ("%s doesn't have a spawn function\n", ent->classname);
-	MapPrint (MAPPRINT_ERROR, ent, ent->s.origin, "Invalid entity (no spawn function)\n");
+	MapPrint (MAPPRINT_ERROR, ent, ent->state.origin, "Invalid entity (no spawn function)\n");
 }
 
 /*
@@ -383,7 +383,7 @@ static void ED_ParseField (char *key, char *value, edict_t *ent)
 		}
 	}
 	//gi.dprintf ("%s is not a field\n", key);
-	MapPrint (MAPPRINT_ERROR, ent, ent->s.origin, "\"%s\" is not a field\n", key);
+	MapPrint (MAPPRINT_ERROR, ent, ent->state.origin, "\"%s\" is not a field\n", key);
 }
 
 /*
@@ -649,7 +649,7 @@ void SP_worldspawn (edict_t *ent)
 	ent->movetype = MOVETYPE_PUSH;
 	ent->solid = SOLID_BSP;
 	ent->inUse = true;			// since the world doesn't use G_Spawn()
-	ent->s.modelIndex = 1;		// world model is always index 1
+	ent->state.modelIndex = 1;		// world model is always index 1
 
 	//---------------
 

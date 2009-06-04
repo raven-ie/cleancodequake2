@@ -44,7 +44,7 @@ CWeapon("models/weapons/v_machn/tris.md2", 0, 3, 4, 5,
 
 bool CMachinegun::CanFire (edict_t *ent)
 {
-	switch (ent->client->ps.gunFrame)
+	switch (ent->client->playerState.gunFrame)
 	{
 	case 4:
 	case 5:
@@ -55,7 +55,7 @@ bool CMachinegun::CanFire (edict_t *ent)
 
 bool CMachinegun::CanStopFidgetting (edict_t *ent)
 {
-	switch (ent->client->ps.gunFrame)
+	switch (ent->client->playerState.gunFrame)
 	{
 	case 23:
 	case 45:
@@ -67,14 +67,14 @@ bool CMachinegun::CanStopFidgetting (edict_t *ent)
 void CMachinegun::FireAnimation (edict_t *ent)
 {
 	ent->client->anim_priority = ANIM_ATTACK;
-	if (ent->client->ps.pMove.pmFlags & PMF_DUCKED)
+	if (ent->client->playerState.pMove.pmFlags & PMF_DUCKED)
 	{
-		ent->s.frame = FRAME_crattak1 - (int) (random()+0.25);
+		ent->state.frame = FRAME_crattak1 - (int) (random()+0.25);
 		ent->client->anim_end = FRAME_crattak9;
 	}
 	else
 	{
-		ent->s.frame = FRAME_attack1 - (int) (random()+0.25);
+		ent->state.frame = FRAME_attack1 - (int) (random()+0.25);
 		ent->client->anim_end = FRAME_attack8;
 	}
 }
@@ -92,18 +92,18 @@ void CMachinegun::Fire (edict_t *ent)
 	if (!(ent->client->buttons & BUTTON_ATTACK))
 	{
 		ent->client->machinegun_shots = 0;
-		ent->client->ps.gunFrame++;
+		ent->client->playerState.gunFrame++;
 		return;
 	}
 
-	if (ent->client->ps.gunFrame == 5)
-		ent->client->ps.gunFrame = 4;
+	if (ent->client->playerState.gunFrame == 5)
+		ent->client->playerState.gunFrame = 4;
 	else
-		ent->client->ps.gunFrame = 5;
+		ent->client->playerState.gunFrame = 5;
 
 	if (!AttemptToFire(ent))
 	{
-		ent->client->ps.gunFrame = 6;
+		ent->client->playerState.gunFrame = 6;
 		OutOfAmmo(ent);
 		NoAmmoWeaponChange (ent);
 		return;
@@ -136,7 +136,7 @@ void CMachinegun::Fire (edict_t *ent)
 	Vec3Add (ent->client->v_angle, ent->client->kick_angles, angles);
 	Angles_Vectors (angles, forward, right, NULL);
 	Vec3Set (offset, 0, 8, ent->viewheight-8);
-	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
+	P_ProjectSource (ent->client, ent->state.origin, offset, forward, right, start);
 	fire_bullet (ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN);
 
 	Muzzle (ent, MZ_MACHINEGUN);

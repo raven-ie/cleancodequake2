@@ -55,49 +55,15 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_monsterlist.h"
 #include "cc_menu.h"
 #include "cc_pmove.h"
+#include "cc_write.h"
+#include "cc_gameapi.h"
+#include "cc_mapprint.h"
 
 extern dmFlagsConfig dmFlags;
-
-void SetModel (edict_t *ent, char *model);
-
-void WriteDirection (vec3_t val);
-void WritePosition (vec3_t val);
-void WriteString (char *val);
-void WriteAngle (float val);
-void WriteFloat (float val);
-void WriteLong (long val);
-void WriteShort (short val);
-void WriteByte (byte val);
-void WriteChar (char val);
-
-void Cast (ECastFlags castFlags, edict_t *Ent);
-void Cast (ECastFlags castFlags, vec3_t Origin);
-void Cast (ECastType castType, ECastFlags castFlags, vec3_t Origin, edict_t *Ent);
-
-void Cmd_RunCommand (char *commandName, edict_t *ent);
-void Cmd_RemoveCommands ();
-void Cmd_AddCommand (char *commandName, void (*Func) (edict_t *ent), ECmdTypeFlags Flags = CMD_NORMAL);
 
 #if 0
 void DrawNewton ();
 #endif
-
-enum EMapPrintType
-{
-	MAPPRINT_WARNING,
-	MAPPRINT_ERROR,
-	MAPPRINT_NORMAL
-};
-
-void Map_Print (EMapPrintType printType, edict_t *ent, vec3_t origin);
-void MapPrint (EMapPrintType printType, edict_t *ent, vec3_t origin, char *fmt, ...);
-void EndMapCounter ();
-void InitMapCounter ();
-
-//#define MapPrint(printType, ent, origin, format, ...) Map_Print(printType, ent, origin); gi.dprintf (format, ##__VA_ARGS__)
-char *CC_ParseSpawnEntities (char *mapname, char *entities);
-
-uint32 Sys_Milliseconds ();
 
 enum EGender
 {

@@ -39,7 +39,7 @@ bool CanDamage (edict_t *targ, edict_t *inflictor)
 	{
 		Vec3Add (targ->absMin, targ->absMax, dest);
 		Vec3Scale (dest, 0.5, dest);
-		trace = CTrace (inflictor->s.origin, dest, inflictor, CONTENTS_MASK_SOLID);
+		trace = CTrace (inflictor->state.origin, dest, inflictor, CONTENTS_MASK_SOLID);
 		if (trace.fraction == 1.0)
 			return true;
 		if (trace.ent == targ)
@@ -47,35 +47,35 @@ bool CanDamage (edict_t *targ, edict_t *inflictor)
 		return false;
 	}
 	
-	trace = CTrace (inflictor->s.origin, targ->s.origin, inflictor, CONTENTS_MASK_SOLID);
+	trace = CTrace (inflictor->state.origin, targ->state.origin, inflictor, CONTENTS_MASK_SOLID);
 	if (trace.fraction == 1.0)
 		return true;
 
-	Vec3Copy (targ->s.origin, dest);
+	Vec3Copy (targ->state.origin, dest);
 	dest[0] += 15.0;
 	dest[1] += 15.0;
-	trace = CTrace (inflictor->s.origin, dest, inflictor, CONTENTS_MASK_SOLID);
+	trace = CTrace (inflictor->state.origin, dest, inflictor, CONTENTS_MASK_SOLID);
 	if (trace.fraction == 1.0)
 		return true;
 
-	Vec3Copy (targ->s.origin, dest);
+	Vec3Copy (targ->state.origin, dest);
 	dest[0] += 15.0;
 	dest[1] -= 15.0;
-	trace = CTrace (inflictor->s.origin, dest, inflictor, CONTENTS_MASK_SOLID);
+	trace = CTrace (inflictor->state.origin, dest, inflictor, CONTENTS_MASK_SOLID);
 	if (trace.fraction == 1.0)
 		return true;
 
-	Vec3Copy (targ->s.origin, dest);
+	Vec3Copy (targ->state.origin, dest);
 	dest[0] -= 15.0;
 	dest[1] += 15.0;
-	trace = CTrace (inflictor->s.origin, dest, inflictor, CONTENTS_MASK_SOLID);
+	trace = CTrace (inflictor->state.origin, dest, inflictor, CONTENTS_MASK_SOLID);
 	if (trace.fraction == 1.0)
 		return true;
 
-	Vec3Copy (targ->s.origin, dest);
+	Vec3Copy (targ->state.origin, dest);
 	dest[0] -= 15.0;
 	dest[1] -= 15.0;
-	trace = CTrace (inflictor->s.origin, dest, inflictor, CONTENTS_MASK_SOLID);
+	trace = CTrace (inflictor->state.origin, dest, inflictor, CONTENTS_MASK_SOLID);
 	if (trace.fraction == 1.0)
 		return true;
 
@@ -198,8 +198,8 @@ static int CheckPowerArmor (edict_t *ent, vec3_t point, vec3_t normal, int damag
 		vec3_t		forward;
 
 		// only works if damage point is in front
-		Angles_Vectors (ent->s.angles, forward, NULL, NULL);
-		Vec3Subtract (point, ent->s.origin, vec);
+		Angles_Vectors (ent->state.angles, forward, NULL, NULL);
+		Vec3Subtract (point, ent->state.origin, vec);
 		VectorNormalizef (vec, vec);
 		dot = DotProduct (vec, forward);
 		if (dot <= 0.3)
@@ -450,7 +450,7 @@ void T_RadiusDamage (edict_t *inflictor, edict_t *attacker, float damage, edict_
 	vec3_t	v;
 	vec3_t	dir;
 
-	while ((ent = findradius(ent, inflictor->s.origin, radius)) != NULL)
+	while ((ent = findradius(ent, inflictor->state.origin, radius)) != NULL)
 	{
 		if (ent == ignore)
 			continue;
@@ -458,8 +458,8 @@ void T_RadiusDamage (edict_t *inflictor, edict_t *attacker, float damage, edict_
 			continue;
 
 		Vec3Add (ent->mins, ent->maxs, v);
-		Vec3MA (ent->s.origin, 0.5, v, v);
-		Vec3Subtract (inflictor->s.origin, v, v);
+		Vec3MA (ent->state.origin, 0.5, v, v);
+		Vec3Subtract (inflictor->state.origin, v, v);
 		points = damage - 0.5 * Vec3Length (v);
 		if (ent == attacker)
 			points = points * 0.5;
@@ -467,8 +467,8 @@ void T_RadiusDamage (edict_t *inflictor, edict_t *attacker, float damage, edict_
 		{
 			if (CanDamage (ent, inflictor))
 			{
-				Vec3Subtract (ent->s.origin, inflictor->s.origin, dir);
-				T_Damage (ent, inflictor, attacker, dir, inflictor->s.origin, vec3Origin, (int)points, (int)points, DAMAGE_RADIUS, mod);
+				Vec3Subtract (ent->state.origin, inflictor->state.origin, dir);
+				T_Damage (ent, inflictor, attacker, dir, inflictor->state.origin, vec3Origin, (int)points, (int)points, DAMAGE_RADIUS, mod);
 			}
 		}
 	}

@@ -199,12 +199,12 @@ static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channe
 	{
 		if (entity->solid == SOLID_BSP)
 		{
-			originVec[0] = entity->s.origin[0] + 0.5f * (entity->mins[0] + entity->maxs[0]);
-			originVec[1] = entity->s.origin[1] + 0.5f * (entity->mins[1] + entity->maxs[1]);
-			originVec[2] = entity->s.origin[2] + 0.5f * (entity->mins[2] + entity->maxs[2]);
+			originVec[0] = entity->state.origin[0] + 0.5f * (entity->mins[0] + entity->maxs[0]);
+			originVec[1] = entity->state.origin[1] + 0.5f * (entity->mins[1] + entity->maxs[1]);
+			originVec[2] = entity->state.origin[2] + 0.5f * (entity->mins[2] + entity->maxs[2]);
 		}
 		else
-			Vec3Copy (entity->s.origin, originVec);
+			Vec3Copy (entity->state.origin, originVec);
 
 		origin = originVec;
 	}
@@ -221,11 +221,11 @@ static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channe
 		if (usePHS)
 		{
 			// Not hearable from here
-			if (!gi.inPHS (client->s.origin, origin))
+			if (!gi.inPHS (client->state.origin, origin))
 				continue;
 		}
 
-		Vec3Subtract (origin, client->s.origin, sourceVec);
+		Vec3Subtract (origin, client->state.origin, sourceVec);
 		distanceMult = attenuation * ((attenuation == ATTN_STATIC) ? 0.001f : 0.0005f);
 
 		dist = VectorNormalizef (sourceVec, sourceVec) - SOUND_FULLVOLUME;
@@ -233,7 +233,7 @@ static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channe
 			dist = 0;			// close enough to be at full volume
 		dist *= distanceMult;	// different attenuation levels
 
-		Angles_Vectors (client->s.angles, NULL, listenerRight, NULL);
+		Angles_Vectors (client->state.angles, NULL, listenerRight, NULL);
 		dot = DotProduct (listenerRight, sourceVec);
 
 		if (!distanceMult)

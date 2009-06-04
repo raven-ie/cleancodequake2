@@ -32,15 +32,15 @@ void MoveClientToIntermission (edict_t *ent)
 {
 	if (deathmatch->Integer() || coop->Integer())
 		ent->client->showscores = true;
-	Vec3Copy (level.intermission_origin, ent->s.origin);
-	ent->client->ps.pMove.origin[0] = level.intermission_origin[0]*8;
-	ent->client->ps.pMove.origin[1] = level.intermission_origin[1]*8;
-	ent->client->ps.pMove.origin[2] = level.intermission_origin[2]*8;
-	Vec3Copy (level.intermission_angle, ent->client->ps.viewAngles);
-	ent->client->ps.pMove.pmType = PMT_FREEZE;
-	ent->client->ps.gunIndex = 0;
-	ent->client->ps.viewBlend[3] = 0;
-	ent->client->ps.rdFlags &= ~RDF_UNDERWATER;
+	Vec3Copy (level.intermission_origin, ent->state.origin);
+	ent->client->playerState.pMove.origin[0] = level.intermission_origin[0]*8;
+	ent->client->playerState.pMove.origin[1] = level.intermission_origin[1]*8;
+	ent->client->playerState.pMove.origin[2] = level.intermission_origin[2]*8;
+	Vec3Copy (level.intermission_angle, ent->client->playerState.viewAngles);
+	ent->client->playerState.pMove.pmType = PMT_FREEZE;
+	ent->client->playerState.gunIndex = 0;
+	ent->client->playerState.viewBlend[3] = 0;
+	ent->client->playerState.rdFlags &= ~RDF_UNDERWATER;
 
 	// clean up powerup info
 	ent->client->quad_framenum = 0;
@@ -51,11 +51,11 @@ void MoveClientToIntermission (edict_t *ent)
 	ent->client->grenade_time = 0;
 
 	ent->viewheight = 0;
-	ent->s.modelIndex = 0;
-	ent->s.modelIndex2 = 0;
-	ent->s.modelIndex3 = 0;
-	ent->s.effects = 0;
-	ent->s.sound = 0;
+	ent->state.modelIndex = 0;
+	ent->state.modelIndex2 = 0;
+	ent->state.modelIndex3 = 0;
+	ent->state.effects = 0;
+	ent->state.sound = 0;
 	ent->solid = SOLID_NOT;
 
 	// add the layout
@@ -138,8 +138,8 @@ void BeginIntermission (edict_t *targ)
 		}
 	}
 
-	Vec3Copy (ent->s.origin, level.intermission_origin);
-	Vec3Copy (ent->s.angles, level.intermission_angle);
+	Vec3Copy (ent->state.origin, level.intermission_origin);
+	Vec3Copy (ent->state.angles, level.intermission_angle);
 
 	// move all clients to the intermission point
 	for (i=0 ; i<maxclients->Integer() ; i++)
@@ -236,8 +236,8 @@ void G_SetStats (edict_t *ent)
 	//
 	// health
 	//
-	ent->client->ps.stats[STAT_HEALTH_ICON] = gMedia.Hud.HealthPic;
-	ent->client->ps.stats[STAT_HEALTH] = ent->health;
+	ent->client->playerState.stats[STAT_HEALTH_ICON] = gMedia.Hud.HealthPic;
+	ent->client->playerState.stats[STAT_HEALTH] = ent->health;
 
 	//
 	// ammo
@@ -246,24 +246,24 @@ void G_SetStats (edict_t *ent)
 	{
 		if (ent->client->pers.Weapon->WeaponItem && ent->client->pers.Weapon->WeaponItem->Ammo)
 		{
-			ent->client->ps.stats[STAT_AMMO_ICON] = ent->client->pers.Weapon->WeaponItem->Ammo->IconIndex;
-			ent->client->ps.stats[STAT_AMMO] = ent->client->pers.Inventory.Has(ent->client->pers.Weapon->WeaponItem->Ammo->GetIndex());
+			ent->client->playerState.stats[STAT_AMMO_ICON] = ent->client->pers.Weapon->WeaponItem->Ammo->IconIndex;
+			ent->client->playerState.stats[STAT_AMMO] = ent->client->pers.Inventory.Has(ent->client->pers.Weapon->WeaponItem->Ammo->GetIndex());
 		}
 		else if (ent->client->pers.Weapon->Item && (ent->client->pers.Weapon->Item->Flags & ITEMFLAG_AMMO))
 		{
-			ent->client->ps.stats[STAT_AMMO_ICON] = ent->client->pers.Weapon->Item->IconIndex;
-			ent->client->ps.stats[STAT_AMMO] = ent->client->pers.Inventory.Has(ent->client->pers.Weapon->Item->GetIndex());
+			ent->client->playerState.stats[STAT_AMMO_ICON] = ent->client->pers.Weapon->Item->IconIndex;
+			ent->client->playerState.stats[STAT_AMMO] = ent->client->pers.Inventory.Has(ent->client->pers.Weapon->Item->GetIndex());
 		}
 		else
 		{
-			ent->client->ps.stats[STAT_AMMO_ICON] = 0;
-			ent->client->ps.stats[STAT_AMMO] = 0;
+			ent->client->playerState.stats[STAT_AMMO_ICON] = 0;
+			ent->client->playerState.stats[STAT_AMMO] = 0;
 		}
 	}
 	else
 	{
-		ent->client->ps.stats[STAT_AMMO_ICON] = 0;
-		ent->client->ps.stats[STAT_AMMO] = 0;
+		ent->client->playerState.stats[STAT_AMMO_ICON] = 0;
+		ent->client->playerState.stats[STAT_AMMO] = 0;
 	}
 	
 	//
@@ -285,18 +285,18 @@ void G_SetStats (edict_t *ent)
 	CArmor *Armor = ent->client->pers.Armor;
 	if (power_armor_type && (!Armor || (level.framenum & 8) ) )
 	{	// flash between power armor and other armor icon
-		ent->client->ps.stats[STAT_ARMOR_ICON] = gMedia.Hud.PowerShieldPic;
-		ent->client->ps.stats[STAT_ARMOR] = cells;
+		ent->client->playerState.stats[STAT_ARMOR_ICON] = gMedia.Hud.PowerShieldPic;
+		ent->client->playerState.stats[STAT_ARMOR] = cells;
 	}
 	else if (Armor)
 	{
-		ent->client->ps.stats[STAT_ARMOR_ICON] = Armor->IconIndex;
-		ent->client->ps.stats[STAT_ARMOR] = ent->client->pers.Inventory.Has(Armor);
+		ent->client->playerState.stats[STAT_ARMOR_ICON] = Armor->IconIndex;
+		ent->client->playerState.stats[STAT_ARMOR] = ent->client->pers.Inventory.Has(Armor);
 	}
 	else
 	{
-		ent->client->ps.stats[STAT_ARMOR_ICON] = 0;
-		ent->client->ps.stats[STAT_ARMOR] = 0;
+		ent->client->playerState.stats[STAT_ARMOR_ICON] = 0;
+		ent->client->playerState.stats[STAT_ARMOR] = 0;
 	}
 
 	//
@@ -304,8 +304,8 @@ void G_SetStats (edict_t *ent)
 	//
 	if (level.time > ent->client->pickup_msg_time)
 	{
-		ent->client->ps.stats[STAT_PICKUP_ICON] = 0;
-		ent->client->ps.stats[STAT_PICKUP_STRING] = 0;
+		ent->client->playerState.stats[STAT_PICKUP_ICON] = 0;
+		ent->client->playerState.stats[STAT_PICKUP_STRING] = 0;
 	}
 
 	//
@@ -313,77 +313,77 @@ void G_SetStats (edict_t *ent)
 	//
 	if (ent->client->quad_framenum > level.framenum)
 	{
-		ent->client->ps.stats[STAT_TIMER_ICON] = gMedia.Hud.QuadPic;
-		ent->client->ps.stats[STAT_TIMER] = (ent->client->quad_framenum - level.framenum)/10;
+		ent->client->playerState.stats[STAT_TIMER_ICON] = gMedia.Hud.QuadPic;
+		ent->client->playerState.stats[STAT_TIMER] = (ent->client->quad_framenum - level.framenum)/10;
 	}
 	else if (ent->client->invincible_framenum > level.framenum)
 	{
-		ent->client->ps.stats[STAT_TIMER_ICON] = gMedia.Hud.InvulPic;
-		ent->client->ps.stats[STAT_TIMER] = (ent->client->invincible_framenum - level.framenum)/10;
+		ent->client->playerState.stats[STAT_TIMER_ICON] = gMedia.Hud.InvulPic;
+		ent->client->playerState.stats[STAT_TIMER] = (ent->client->invincible_framenum - level.framenum)/10;
 	}
 	else if (ent->client->enviro_framenum > level.framenum)
 	{
-		ent->client->ps.stats[STAT_TIMER_ICON] = gMedia.Hud.EnviroPic;
-		ent->client->ps.stats[STAT_TIMER] = (ent->client->enviro_framenum - level.framenum)/10;
+		ent->client->playerState.stats[STAT_TIMER_ICON] = gMedia.Hud.EnviroPic;
+		ent->client->playerState.stats[STAT_TIMER] = (ent->client->enviro_framenum - level.framenum)/10;
 	}
 	else if (ent->client->breather_framenum > level.framenum)
 	{
-		ent->client->ps.stats[STAT_TIMER_ICON] = gMedia.Hud.RebreatherPic;
-		ent->client->ps.stats[STAT_TIMER] = (ent->client->breather_framenum - level.framenum)/10;
+		ent->client->playerState.stats[STAT_TIMER_ICON] = gMedia.Hud.RebreatherPic;
+		ent->client->playerState.stats[STAT_TIMER] = (ent->client->breather_framenum - level.framenum)/10;
 	}
 	// Paril, show silencer
 	else if (ent->client->silencer_shots)
 	{
-		ent->client->ps.stats[STAT_TIMER_ICON] = gMedia.Hud.SilencerPic;
-		ent->client->ps.stats[STAT_TIMER] = ent->client->silencer_shots;
+		ent->client->playerState.stats[STAT_TIMER_ICON] = gMedia.Hud.SilencerPic;
+		ent->client->playerState.stats[STAT_TIMER] = ent->client->silencer_shots;
 	}
 	// Paril
 	else
 	{
-		ent->client->ps.stats[STAT_TIMER_ICON] = 0;
-		ent->client->ps.stats[STAT_TIMER] = 0;
+		ent->client->playerState.stats[STAT_TIMER_ICON] = 0;
+		ent->client->playerState.stats[STAT_TIMER] = 0;
 	}
 
 	//
 	// selected item
 	//
 	if (ent->client->pers.Inventory.SelectedItem == -1)
-		ent->client->ps.stats[STAT_SELECTED_ICON] = 0;
+		ent->client->playerState.stats[STAT_SELECTED_ICON] = 0;
 	else
-		ent->client->ps.stats[STAT_SELECTED_ICON] = GetItemByIndex(ent->client->pers.Inventory.SelectedItem)->IconIndex;//ImageIndex (itemlist[ent->client->pers.selected_item].icon);
+		ent->client->playerState.stats[STAT_SELECTED_ICON] = GetItemByIndex(ent->client->pers.Inventory.SelectedItem)->IconIndex;//ImageIndex (itemlist[ent->client->pers.selected_item].icon);
 
-	ent->client->ps.stats[STAT_SELECTED_ITEM] = ent->client->pers.Inventory.SelectedItem;
+	ent->client->playerState.stats[STAT_SELECTED_ITEM] = ent->client->pers.Inventory.SelectedItem;
 
 	//
 	// layouts
 	//
-	ent->client->ps.stats[STAT_LAYOUTS] = 0;
+	ent->client->playerState.stats[STAT_LAYOUTS] = 0;
 
 	if (ent->client->pers.health <= 0 || ent->client->resp.MenuState.InMenu ||
 		((deathmatch->Integer() && (level.intermissiontime || ent->client->showscores)) || 
 		!deathmatch->Integer() && ent->client->showhelp))
-		ent->client->ps.stats[STAT_LAYOUTS] |= 1;
+		ent->client->playerState.stats[STAT_LAYOUTS] |= 1;
 	if (ent->client->showinventory && ent->client->pers.health > 0)
-		ent->client->ps.stats[STAT_LAYOUTS] |= 2;
+		ent->client->playerState.stats[STAT_LAYOUTS] |= 2;
 
 	//
 	// frags
 	//
-	ent->client->ps.stats[STAT_FRAGS] = ent->client->resp.score;
+	ent->client->playerState.stats[STAT_FRAGS] = ent->client->resp.score;
 
 	//
 	// help icon / current weapon if not shown
 	//
 	if (ent->client->pers.helpchanged && (level.framenum&8) )
-		ent->client->ps.stats[STAT_HELPICON] = gMedia.Hud.HelpPic;
+		ent->client->playerState.stats[STAT_HELPICON] = gMedia.Hud.HelpPic;
 
-	else if ( (ent->client->pers.hand == CENTER_HANDED || ent->client->ps.fov > 91)
+	else if ( (ent->client->pers.hand == CENTER_HANDED || ent->client->playerState.fov > 91)
 		&& ent->client->pers.Weapon)
-		ent->client->ps.stats[STAT_HELPICON] = ent->client->pers.Weapon->Item->IconIndex;
+		ent->client->playerState.stats[STAT_HELPICON] = ent->client->pers.Weapon->Item->IconIndex;
 	else
-		ent->client->ps.stats[STAT_HELPICON] = 0;
+		ent->client->playerState.stats[STAT_HELPICON] = 0;
 
-	ent->client->ps.stats[STAT_SPECTATOR] = 0;
+	ent->client->playerState.stats[STAT_SPECTATOR] = 0;
 }
 
 /*
@@ -400,7 +400,7 @@ void G_CheckChaseStats (edict_t *ent)
 		cl = g_edicts[i].client;
 		if (!g_edicts[i].inUse || cl->chase_target != ent)
 			continue;
-		memcpy(cl->ps.stats, ent->client->ps.stats, sizeof(cl->ps.stats));
+		memcpy(cl->playerState.stats, ent->client->playerState.stats, sizeof(cl->playerState.stats));
 		G_SetSpectatorStats(g_edicts + i);
 	}
 }
@@ -417,19 +417,19 @@ void G_SetSpectatorStats (edict_t *ent)
 	if (!cl->chase_target)
 		G_SetStats (ent);
 
-	cl->ps.stats[STAT_SPECTATOR] = 1;
+	cl->playerState.stats[STAT_SPECTATOR] = 1;
 
 	// layouts are independant in spectator
-	cl->ps.stats[STAT_LAYOUTS] = 0;
+	cl->playerState.stats[STAT_LAYOUTS] = 0;
 	if (cl->pers.health <= 0 || level.intermissiontime || cl->showscores)
-		cl->ps.stats[STAT_LAYOUTS] |= 1;
+		cl->playerState.stats[STAT_LAYOUTS] |= 1;
 	if (cl->showinventory && cl->pers.health > 0)
-		cl->ps.stats[STAT_LAYOUTS] |= 2;
+		cl->playerState.stats[STAT_LAYOUTS] |= 2;
 
 	if (cl->chase_target && cl->chase_target->inUse)
-		cl->ps.stats[STAT_CHASE] = CS_PLAYERSKINS + 
+		cl->playerState.stats[STAT_CHASE] = CS_PLAYERSKINS + 
 			(cl->chase_target - g_edicts) - 1;
 	else
-		cl->ps.stats[STAT_CHASE] = 0;
+		cl->playerState.stats[STAT_CHASE] = 0;
 }
 
