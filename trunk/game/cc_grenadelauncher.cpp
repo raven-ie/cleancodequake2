@@ -44,7 +44,7 @@ CWeapon("models/weapons/v_launch/tris.md2", 0, 5, 6, 16,
 
 bool CGrenadeLauncher::CanFire (edict_t *ent)
 {
-	switch (ent->client->ps.gunFrame)
+	switch (ent->client->playerState.gunFrame)
 	{
 	case 6:
 		return true;
@@ -54,7 +54,7 @@ bool CGrenadeLauncher::CanFire (edict_t *ent)
 
 bool CGrenadeLauncher::CanStopFidgetting (edict_t *ent)
 {
-	switch (ent->client->ps.gunFrame)
+	switch (ent->client->playerState.gunFrame)
 	{
 	case 34:
 	case 51:
@@ -83,7 +83,7 @@ void CGrenadeLauncher::Fire (edict_t *ent)
 
 	Vec3Set (offset, 8, 8, ent->viewheight-8);
 	Angles_Vectors (ent->client->v_angle, forward, right, NULL);
-	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
+	P_ProjectSource (ent->client, ent->state.origin, offset, forward, right, start);
 
 	Vec3Scale (forward, -2, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -1;
@@ -97,5 +97,5 @@ void CGrenadeLauncher::Fire (edict_t *ent)
 	if (!dmFlags.dfInfiniteAmmo)
 		DepleteAmmo(ent, 1);
 
-	ent->client->ps.gunFrame++;
+	ent->client->playerState.gunFrame++;
 }

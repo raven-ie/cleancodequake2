@@ -44,14 +44,14 @@ CWeapon("models/weapons/v_chain/tris.md2", 0, 4, 5, 31,
 
 bool CChaingun::CanFire (edict_t *ent)
 {
-	if (ent->client->ps.gunFrame >= 5 && ent->client->ps.gunFrame <= 21)
+	if (ent->client->playerState.gunFrame >= 5 && ent->client->playerState.gunFrame <= 21)
 		return true;
 	return false;
 }
 
 bool CChaingun::CanStopFidgetting (edict_t *ent)
 {
-	switch (ent->client->ps.gunFrame)
+	switch (ent->client->playerState.gunFrame)
 	{
 	case 38:
 	case 43:
@@ -65,14 +65,14 @@ bool CChaingun::CanStopFidgetting (edict_t *ent)
 void CChaingun::FireAnimation (edict_t *ent)
 {
 	ent->client->anim_priority = ANIM_ATTACK;
-	if (ent->client->ps.pMove.pmFlags & PMF_DUCKED)
+	if (ent->client->playerState.pMove.pmFlags & PMF_DUCKED)
 	{
-		ent->s.frame = FRAME_crattak1 - (ent->client->ps.gunFrame & 1);
+		ent->state.frame = FRAME_crattak1 - (ent->client->playerState.gunFrame & 1);
 		ent->client->anim_end = FRAME_crattak9;
 	}
 	else
 	{
-		ent->s.frame = FRAME_attack1 - (ent->client->ps.gunFrame & 1);
+		ent->state.frame = FRAME_attack1 - (ent->client->playerState.gunFrame & 1);
 		ent->client->anim_end = FRAME_attack8;
 	}
 }
@@ -93,26 +93,26 @@ void CChaingun::Fire (edict_t *ent)
 	else
 		damage = 8;
 
-	if (ent->client->ps.gunFrame == 5)
+	if (ent->client->playerState.gunFrame == 5)
 		PlaySoundFrom(ent, CHAN_AUTO, SoundIndex("weapons/chngnu1a.wav"));
 
-	if ((ent->client->ps.gunFrame == 14) && !(ent->client->buttons & BUTTON_ATTACK))
+	if ((ent->client->playerState.gunFrame == 14) && !(ent->client->buttons & BUTTON_ATTACK))
 	{
-		ent->client->ps.gunFrame = 31;
+		ent->client->playerState.gunFrame = 31;
 		ent->client->weapon_sound = 0;
 		return;
 	}
-	else if ((ent->client->ps.gunFrame == 21) && (ent->client->buttons & BUTTON_ATTACK)
+	else if ((ent->client->playerState.gunFrame == 21) && (ent->client->buttons & BUTTON_ATTACK)
 		&& ent->client->pers.Inventory.Has(ent->client->pers.Weapon->WeaponItem->Ammo))
 	{
-		ent->client->ps.gunFrame = 15;
+		ent->client->playerState.gunFrame = 15;
 	}
 	else
 	{
-		ent->client->ps.gunFrame++;
+		ent->client->playerState.gunFrame++;
 	}
 
-	if (ent->client->ps.gunFrame == 22)
+	if (ent->client->playerState.gunFrame == 22)
 	{
 		ent->client->weapon_sound = 0;
 		PlaySoundFrom(ent, CHAN_AUTO, SoundIndex("weapons/chngnd1a.wav"));
@@ -124,9 +124,9 @@ void CChaingun::Fire (edict_t *ent)
 
 	FireAnimation (ent);
 
-	if (ent->client->ps.gunFrame <= 9)
+	if (ent->client->playerState.gunFrame <= 9)
 		shots = 1;
-	else if (ent->client->ps.gunFrame <= 14)
+	else if (ent->client->playerState.gunFrame <= 14)
 	{
 		if (ent->client->buttons & BUTTON_ATTACK)
 			shots = 2;
@@ -166,7 +166,7 @@ void CChaingun::Fire (edict_t *ent)
 		r = 7 + crandom()*4;
 		u = crandom()*4;
 		Vec3Set (offset, 0, r, u + ent->viewheight-8);
-		P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
+		P_ProjectSource (ent->client, ent->state.origin, offset, forward, right, start);
 
 		fire_bullet (ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_CHAINGUN);
 	}

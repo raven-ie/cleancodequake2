@@ -44,7 +44,7 @@ CWeapon("models/weapons/v_shotg/tris.md2", 0, 7, 8, 18,
 
 bool CShotgun::CanFire (edict_t *ent)
 {
-	switch (ent->client->ps.gunFrame)
+	switch (ent->client->playerState.gunFrame)
 	{
 	case 8:
 		return true;
@@ -54,7 +54,7 @@ bool CShotgun::CanFire (edict_t *ent)
 
 bool CShotgun::CanStopFidgetting (edict_t *ent)
 {
-	switch (ent->client->ps.gunFrame)
+	switch (ent->client->playerState.gunFrame)
 	{
 	case 22:
 	case 28:
@@ -78,7 +78,7 @@ void CShotgun::Fire (edict_t *ent)
 	ent->client->kick_angles[0] = -2;
 
 	Vec3Set (offset, 0, 8,  ent->viewheight-8);
-	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
+	P_ProjectSource (ent->client, ent->state.origin, offset, forward, right, start);
 
 	if (isQuad)
 	{
@@ -95,7 +95,7 @@ void CShotgun::Fire (edict_t *ent)
 	// send muzzle flash
 	Muzzle (ent, MZ_SHOTGUN);
 
-	ent->client->ps.gunFrame++;
+	ent->client->playerState.gunFrame++;
 	PlayerNoise(ent, start, PNOISE_WEAPON);
 	FireAnimation (ent);
 

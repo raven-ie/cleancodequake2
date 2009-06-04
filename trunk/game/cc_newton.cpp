@@ -60,18 +60,18 @@ void SetMeshTransformEvent(const NewtonBody* body, const float* matrix)
 		tmp->setRotation(mat.getRotationDegrees());	// and rotation
 	}*/
 	//gi.dprintf ("%f %f %f\n", mat[12], mat[13], mat[14]);
-	attached->s.origin[0] = mat[12];
-	attached->s.origin[2] = mat[13];
-	attached->s.origin[1] = mat[14];
+	attached->state.origin[0] = mat[12];
+	attached->state.origin[2] = mat[13];
+	attached->state.origin[1] = mat[14];
 
-	NewtonGetEulerAngle (&mat[0], &attached->s.angles[0]);
-	attached->s.angles[0] = RAD2DEG(attached->s.angles[0]);
-	attached->s.angles[1] = RAD2DEG(attached->s.angles[1]) + 90;
-	attached->s.angles[2] = RAD2DEG(attached->s.angles[2]);
-	//gi.dprintf ("%f %f %f\n", attached->s.angles[0], attached->s.angles[1], attached->s.angles[2]);
+	NewtonGetEulerAngle (&mat[0], &attached->state.angles[0]);
+	attached->state.angles[0] = RAD2DEG(attached->state.angles[0]);
+	attached->state.angles[1] = RAD2DEG(attached->state.angles[1]) + 90;
+	attached->state.angles[2] = RAD2DEG(attached->state.angles[2]);
+	//gi.dprintf ("%f %f %f\n", attached->state.angles[0], attached->state.angles[1], attached->state.angles[2]);
 
 
-	//Test_MatrixToAngles(mat, attached->s.angles);
+	//Test_MatrixToAngles(mat, attached->state.angles);
 
 	//mat3x3_t ma;
 	//Matrix4_Matrix3 (mat, ma);
@@ -80,28 +80,28 @@ void SetMeshTransformEvent(const NewtonBody* body, const float* matrix)
 	//Matrix3_Angles (ma, angles);
 
 	//gi.dprintf ("%f %f %f\n", angles[0], angles[1], angles[2]);
-	//Vec3Copy (angles, attached->s.angles);
+	//Vec3Copy (angles, attached->state.angles);
 
     // Assuming the angles are in radians.
 	/*if (mat[10] > 0.998) { // singularity at north pole
-		attached->s.angles[0] = atan2(mat[2],mat[22]);
-		attached->s.angles[1] = M_PI/2;
-		attached->s.angles[2] = 0;
+		attached->state.angles[0] = atan2(mat[2],mat[22]);
+		attached->state.angles[1] = M_PI/2;
+		attached->state.angles[2] = 0;
 	}
 	else if (mat[10] < -0.998) { // singularity at south pole
-		attached->s.angles[0] = atan2(mat[2],mat[22]);
-		attached->s.angles[1] = -M_PI/2;
-		attached->s.angles[2] = 0;
+		attached->state.angles[0] = atan2(mat[2],mat[22]);
+		attached->state.angles[1] = -M_PI/2;
+		attached->state.angles[2] = 0;
 	}
 	else
 	{
-		attached->s.angles[0] = atan2(-mat[20],mat[0]);
-		attached->s.angles[1] = atan2(-mat[12],mat[11]);
-		attached->s.angles[2] = asin(mat[10]);
+		attached->state.angles[0] = atan2(-mat[20],mat[0]);
+		attached->state.angles[1] = atan2(-mat[12],mat[11]);
+		attached->state.angles[2] = asin(mat[10]);
 	}
-	attached->s.angles[0] = RAD2DEG(attached->s.angles[0]);
-	attached->s.angles[1] = RAD2DEG(attached->s.angles[1]);
-	attached->s.angles[2] = RAD2DEG(attached->s.angles[2]);*/
+	attached->state.angles[0] = RAD2DEG(attached->state.angles[0]);
+	attached->state.angles[1] = RAD2DEG(attached->state.angles[1]);
+	attached->state.angles[2] = RAD2DEG(attached->state.angles[2]);*/
 
 	gi.linkentity(attached);
 }
@@ -168,14 +168,14 @@ NewtonBody *MakeAStupidBox (edict_t *ent, NewtonCollision *collision, float x, f
 	NewtonBodySetMatrix (body, &mat[0]);
 
 	edict_t *init = G_Spawn();
-	init->s.origin[0] = x;
-	init->s.origin[1] = y;
-	init->s.origin[2] = z;
+	init->state.origin[0] = x;
+	init->state.origin[1] = y;
+	init->state.origin[2] = z;
 	//Vec3Set (init->mins, -50, -50, -50);
 	//Vec3Set (init->maxs, 50, 50, 50);
 	//init->solid = SOLID_BBOX;
-	Vec3Copy (init->s.origin, init->s.oldOrigin);
-	init->s.modelIndex = ModelIndex("models/crate.md2");
+	Vec3Copy (init->state.origin, init->state.oldOrigin);
+	init->state.modelIndex = ModelIndex("models/crate.md2");
 	init->movetype = MOVETYPE_NONE;
 	gi.linkentity(init);
 	NewtonBodySetUserData (body, (void*)init);
@@ -191,7 +191,7 @@ NewtonBody *MakeAStupidBox (edict_t *ent, NewtonCollision *collision, float x, f
 
 	if (ent)
 	{
-		//Matrix4_Rotate (mat, ent->s.angles[1], 0, 1, 0);
+		//Matrix4_Rotate (mat, ent->state.angles[1], 0, 1, 0);
 		//NewtonBodySetMatrix (body, &mat[0]);
 	}
 
@@ -214,10 +214,10 @@ NewtonBody *MakeARope (NewtonCollision *collision, float x, float y, float z)
 	NewtonBodySetMatrix (body, &mat[0]);
 
 	edict_t *init = G_Spawn();
-	init->s.origin[0] = mat[12];
-	init->s.origin[1] = mat[13];
-	init->s.origin[2] = mat[14];
-	init->s.modelIndex = ModelIndex("models/rope/tris.md2");
+	init->state.origin[0] = mat[12];
+	init->state.origin[1] = mat[13];
+	init->state.origin[2] = mat[14];
+	init->state.modelIndex = ModelIndex("models/rope/tris.md2");
 	gi.linkentity(init);
 	NewtonBodySetUserData (body, (void*)init);
 
@@ -453,11 +453,11 @@ NewtonRagDollBone *QuickRagdoll (edict_t *player, NewtonRagDoll *Ragdoll, Newton
 	}
 
 	edict_t *ent = G_Spawn();
-	ent->s.modelIndex = ModelIndex("models/ragdoll/tris.md2");
-	ent->s.frame = frame;
+	ent->state.modelIndex = ModelIndex("models/ragdoll/tris.md2");
+	ent->state.frame = frame;
 	ent->owner = player;
-	Vec3Set (ent->s.origin, x, y, z);
-	Vec3Copy (ent->s.oldOrigin, ent->s.origin);
+	Vec3Set (ent->state.origin, x, y, z);
+	Vec3Copy (ent->state.oldOrigin, ent->state.origin);
 	gi.linkentity(ent);
 
 	// Compile the 4x4 matrix.
@@ -530,35 +530,35 @@ void RagDollTransCallBackOfDoom (const NewtonRagDollBone* bone)
 		tmp->setRotation(mat.getRotationDegrees());	// and rotation
 	}*/
 	//gi.dprintf ("%f %f %f\n", mat[12], mat[13], mat[14]);
-	attached->s.origin[0] = mat[12];
-	attached->s.origin[2] = mat[13];
-	attached->s.origin[1] = mat[14];
+	attached->state.origin[0] = mat[12];
+	attached->state.origin[2] = mat[13];
+	attached->state.origin[1] = mat[14];
 
 	NewtonBodyGetMatrix (body, &mat[0]);
-	NewtonGetEulerAngle (&mat[0], &attached->s.angles[0]);
-	attached->s.angles[0] = RAD2DEG(attached->s.angles[0]);
-	attached->s.angles[1] = RAD2DEG(attached->s.angles[1]);
-	attached->s.angles[2] = RAD2DEG(attached->s.angles[2]);
+	NewtonGetEulerAngle (&mat[0], &attached->state.angles[0]);
+	attached->state.angles[0] = RAD2DEG(attached->state.angles[0]);
+	attached->state.angles[1] = RAD2DEG(attached->state.angles[1]);
+	attached->state.angles[2] = RAD2DEG(attached->state.angles[2]);
     // Assuming the angles are in radians.
 	/*if (mat[10] > 0.998) { // singularity at north pole
-		attached->s.angles[0] = atan2(mat[2],mat[22]);
-		attached->s.angles[1] = M_PI/2;
-		attached->s.angles[2] = 0;
+		attached->state.angles[0] = atan2(mat[2],mat[22]);
+		attached->state.angles[1] = M_PI/2;
+		attached->state.angles[2] = 0;
 	}
 	else if (mat[10] < -0.998) { // singularity at south pole
-		attached->s.angles[0] = atan2(mat[2],mat[22]);
-		attached->s.angles[1] = -M_PI/2;
-		attached->s.angles[2] = 0;
+		attached->state.angles[0] = atan2(mat[2],mat[22]);
+		attached->state.angles[1] = -M_PI/2;
+		attached->state.angles[2] = 0;
 	}
 	else
 	{
-		attached->s.angles[0] = atan2(-mat[20],mat[0]);
-		attached->s.angles[1] = atan2(-mat[12],mat[11]);
-		attached->s.angles[2] = asin(mat[10]);
+		attached->state.angles[0] = atan2(-mat[20],mat[0]);
+		attached->state.angles[1] = atan2(-mat[12],mat[11]);
+		attached->state.angles[2] = asin(mat[10]);
 	}
-	attached->s.angles[0] = RAD2DEG(attached->s.angles[0]);
-	attached->s.angles[1] = RAD2DEG(attached->s.angles[1]);
-	attached->s.angles[2] = RAD2DEG(attached->s.angles[2]);*/
+	attached->state.angles[0] = RAD2DEG(attached->state.angles[0]);
+	attached->state.angles[1] = RAD2DEG(attached->state.angles[1]);
+	attached->state.angles[2] = RAD2DEG(attached->state.angles[2]);*/
 
 	gi.linkentity(attached);
 }
@@ -570,11 +570,11 @@ void Cmd_NewtonBox (edict_t *ent)
 		vec3_t forward, end;
 
 		Angles_Vectors (ent->client->v_angle, forward, NULL, NULL);
-		Vec3MA (ent->s.origin, 8192, forward, end);
+		Vec3MA (ent->state.origin, 8192, forward, end);
 
 		CTrace trace;
 
-		trace.Trace(ent->s.origin, end, ent, CONTENTS_MASK_SHOT);
+		trace.Trace(ent->state.origin, end, ent, CONTENTS_MASK_SHOT);
 		if (trace.ent && trace.ent->inUse && trace.ent->newtonBody)
 		{
 			float mass; 
@@ -602,7 +602,7 @@ void Cmd_NewtonBox (edict_t *ent)
 	{
 		vec3_t origin;
 
-		Vec3Copy (ent->s.origin, origin);
+		Vec3Copy (ent->state.origin, origin);
 
 		MakeAStupidBox (ent, glob, origin[0], origin[2], origin[1]);
 		MakeAStupidBox (ent, glob, origin[0]+100, origin[2], origin[1]+50);
@@ -622,11 +622,11 @@ void Cmd_NewtonBox (edict_t *ent)
 		vec3_t forward, end;
 
 		Angles_Vectors (ent->client->v_angle, forward, NULL, NULL);
-		Vec3MA (ent->s.origin, 8192, forward, end);
+		Vec3MA (ent->state.origin, 8192, forward, end);
 
 		CTrace trace;
 
-		trace.Trace(ent->s.origin, end, ent, CONTENTS_MASK_SHOT);
+		trace.Trace(ent->state.origin, end, ent, CONTENTS_MASK_SHOT);
 		if (trace.ent && trace.ent->inUse && trace.ent->newtonBody)
 		{
 			NewtonDestroyBody (nWorld, trace.ent->newtonBody);
@@ -659,7 +659,7 @@ void Cmd_NewtonBox (edict_t *ent)
 
 		// Add the bones
 		// Body
-		NewtonRagDollBone *Body = QuickRagdoll (ent, NewRagdoll, NULL, ent->s.origin[0], ent->s.origin[1], ent->s.origin[2], 0);
+		NewtonRagDollBone *Body = QuickRagdoll (ent, NewRagdoll, NULL, ent->state.origin[0], ent->state.origin[1], ent->state.origin[2], 0);
 		QuickRagdoll (ent, NewRagdoll, Body, 0, 0, 7, 1);
 		NewtonRagDollBone *LT = QuickRagdoll (ent, NewRagdoll, Body, 4, 0, -10, 2);
 		QuickRagdoll (ent, NewRagdoll, LT, 4, 0, -8, 3);
@@ -709,7 +709,7 @@ void Cmd_NewtonBox (edict_t *ent)
 		return;*/
 	}
 
-	MakeAStupidBox (ent, glob, ent->s.origin[0], ent->s.origin[2]+16, ent->s.origin[1]);
+	MakeAStupidBox (ent, glob, ent->state.origin[0], ent->state.origin[2]+16, ent->state.origin[1]);
 }
 
 void ItFunc (const NewtonBody* body)
@@ -721,10 +721,10 @@ void ItFunc (const NewtonBody* body)
 		return;
 
 	/*NewtonBodyGetMatrix (body, &mat[0]);
-	NewtonGetEulerAngle (&mat[0], &attached->s.angles[0]);
-	attached->s.angles[0] = RAD2DEG(attached->s.angles[0]);
-	attached->s.angles[1] = RAD2DEG(attached->s.angles[1]);
-	attached->s.angles[2] = RAD2DEG(attached->s.angles[2]);*/
+	NewtonGetEulerAngle (&mat[0], &attached->state.angles[0]);
+	attached->state.angles[0] = RAD2DEG(attached->state.angles[0]);
+	attached->state.angles[1] = RAD2DEG(attached->state.angles[1]);
+	attached->state.angles[2] = RAD2DEG(attached->state.angles[2]);*/
 	attached->newtonBody = body;
 }
 

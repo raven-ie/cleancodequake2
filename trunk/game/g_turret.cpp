@@ -54,7 +54,7 @@ void turret_blocked(edict_t *self, edict_t *other)
 			attacker = self->teammaster->owner;
 		else
 			attacker = self->teammaster;
-		T_Damage (other, self, attacker, vec3Origin, other->s.origin, vec3Origin, self->teammaster->dmg, 10, 0, MOD_CRUSH);
+		T_Damage (other, self, attacker, vec3Origin, other->state.origin, vec3Origin, self->teammaster->dmg, 10, 0, MOD_CRUSH);
 	}
 }
 
@@ -81,8 +81,8 @@ void turret_breach_fire (edict_t *self)
 	int		damage;
 	int		speed;
 
-	Angles_Vectors (self->s.angles, f, r, u);
-	Vec3MA (self->s.origin, self->move_origin[0], f, start);
+	Angles_Vectors (self->state.angles, f, r, u);
+	Vec3MA (self->state.origin, self->move_origin[0], f, start);
 	Vec3MA (start, self->move_origin[1], r, start);
 	Vec3MA (start, self->move_origin[2], u, start);
 
@@ -98,7 +98,7 @@ void turret_breach_think (edict_t *self)
 	vec3_t	current_angles;
 	vec3_t	delta;
 
-	Vec3Copy (self->s.angles, current_angles);
+	Vec3Copy (self->state.angles, current_angles);
 	AnglesNormalize(current_angles);
 
 	AnglesNormalize(self->move_angles);
@@ -172,21 +172,21 @@ void turret_breach_think (edict_t *self)
 		self->owner->avelocity[1] = self->avelocity[1];
 
 		// x & y
-		angle = self->s.angles[1] + self->owner->move_origin[1];
+		angle = self->state.angles[1] + self->owner->move_origin[1];
 		angle *= (M_PI*2 / 360);
-		target[0] = SnapToEights(self->s.origin[0] + cosf(angle) * self->owner->move_origin[0]);
-		target[1] = SnapToEights(self->s.origin[1] + sinf(angle) * self->owner->move_origin[0]);
-		target[2] = self->owner->s.origin[2];
+		target[0] = SnapToEights(self->state.origin[0] + cosf(angle) * self->owner->move_origin[0]);
+		target[1] = SnapToEights(self->state.origin[1] + sinf(angle) * self->owner->move_origin[0]);
+		target[2] = self->owner->state.origin[2];
 
-		Vec3Subtract (target, self->owner->s.origin, dir);
+		Vec3Subtract (target, self->owner->state.origin, dir);
 		self->owner->velocity[0] = dir[0] * 1.0 / FRAMETIME;
 		self->owner->velocity[1] = dir[1] * 1.0 / FRAMETIME;
 
 		// z
-		angle = self->s.angles[PITCH] * (M_PI*2 / 360);
-		target_z = SnapToEights(self->s.origin[2] + self->owner->move_origin[0] * tan(angle) + self->owner->move_origin[2]);
+		angle = self->state.angles[PITCH] * (M_PI*2 / 360);
+		target_z = SnapToEights(self->state.origin[2] + self->owner->move_origin[0] * tan(angle) + self->owner->move_origin[2]);
 
-		diff = target_z - self->owner->s.origin[2];
+		diff = target_z - self->owner->state.origin[2];
 		self->owner->velocity[2] = diff * 1.0 / FRAMETIME;
 
 		if (self->spawnflags & 65536)
@@ -202,13 +202,13 @@ void turret_breach_finish_init (edict_t *self)
 	// get and save info for muzzle location
 	if (!self->target)
 	{
-		//gi.dprintf("%s at (%f %f %f) needs a target\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
-		MapPrint (MAPPRINT_ERROR, self, self->s.origin, "Needs a target\n");
+		//gi.dprintf("%s at (%f %f %f) needs a target\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
+		MapPrint (MAPPRINT_ERROR, self, self->state.origin, "Needs a target\n");
 	}
 	else
 	{
 		self->target_ent = G_PickTarget (self->target);
-		Vec3Subtract (self->target_ent->s.origin, self->s.origin, self->move_origin);
+		Vec3Subtract (self->target_ent->state.origin, self->state.origin, self->move_origin);
 		G_FreeEdict(self->target_ent);
 	}
 
@@ -240,7 +240,7 @@ void SP_turret_breach (edict_t *self)
 	self->pos2[PITCH] = -1 * st.maxpitch;
 	self->pos2[YAW]   = st.maxyaw;
 
-	self->ideal_yaw = self->s.angles[YAW];
+	self->ideal_yaw = self->state.angles[YAW];
 	self->move_angles[YAW] = self->ideal_yaw;
 
 	self->blocked = turret_blocked;
@@ -333,9 +333,9 @@ void turret_driver_think (edict_t *self)
 	}
 
 	// let the turret know where we want it to aim
-	Vec3Copy (self->enemy->s.origin, target);
+	Vec3Copy (self->enemy->state.origin, target);
 	target[2] += self->enemy->viewheight;
-	Vec3Subtract (target, self->target_ent->s.origin, dir);
+	Vec3Subtract (target, self->target_ent->state.origin, dir);
 	VecToAngles (dir, self->target_ent->move_angles);
 
 	// decide if we should shoot
@@ -362,19 +362,19 @@ void turret_driver_link (edict_t *self)
 	self->target_ent = G_PickTarget (self->target);
 	self->target_ent->owner = self;
 	self->target_ent->teammaster->owner = self;
-	Vec3Copy (self->target_ent->s.angles, self->s.angles);
+	Vec3Copy (self->target_ent->state.angles, self->state.angles);
 
-	vec[0] = self->target_ent->s.origin[0] - self->s.origin[0];
-	vec[1] = self->target_ent->s.origin[1] - self->s.origin[1];
+	vec[0] = self->target_ent->state.origin[0] - self->state.origin[0];
+	vec[1] = self->target_ent->state.origin[1] - self->state.origin[1];
 	vec[2] = 0;
 	self->move_origin[0] = Vec3Length(vec);
 
-	Vec3Subtract (self->s.origin, self->target_ent->s.origin, vec);
+	Vec3Subtract (self->state.origin, self->target_ent->state.origin, vec);
 	VecToAngles (vec, vec);
 	AnglesNormalize(vec);
 	self->move_origin[1] = vec[1];
 
-	self->move_origin[2] = self->s.origin[2] - self->target_ent->s.origin[2];
+	self->move_origin[2] = self->state.origin[2] - self->target_ent->state.origin[2];
 
 	// add the driver to the end of them team chain
 	for (ent = self->target_ent->teammaster; ent->teamchain; ent = ent->teamchain)
@@ -394,7 +394,7 @@ void SP_turret_driver (edict_t *self)
 
 	self->movetype = MOVETYPE_PUSH;
 	self->solid = SOLID_BBOX;
-	self->s.modelIndex = ModelIndex("models/monsters/infantry/tris.md2");
+	self->state.modelIndex = ModelIndex("models/monsters/infantry/tris.md2");
 	Vec3Set (self->mins, -16, -16, -24);
 	Vec3Set (self->maxs, 16, 16, 32);
 
@@ -411,19 +411,19 @@ void SP_turret_driver (edict_t *self)
 	level.total_monsters++;
 
 	self->svFlags |= SVF_MONSTER;
-	self->s.renderFx |= RF_FRAMELERP;
+	self->state.renderFx |= RF_FRAMELERP;
 	self->takedamage = DAMAGE_AIM;
 	self->use = monster_use;
 	self->clipMask = CONTENTS_MASK_MONSTERSOLID;
-	Vec3Copy (self->s.origin, self->s.oldOrigin);
+	Vec3Copy (self->state.origin, self->state.oldOrigin);
 	self->monsterinfo.aiflags |= AI_STAND_GROUND|AI_DUCKED;
 
 	if (st.item)
 	{
 		self->item = FindItemByClassname (st.item);
 		if (!self->item)
-			MapPrint (MAPPRINT_WARNING, self, self->s.origin, "Has bad item: \"%s\"\n", st.item);
-			//gi.dprintf("%s at (%f %f %f) has bad item: %s\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2], st.item);
+			MapPrint (MAPPRINT_WARNING, self, self->state.origin, "Has bad item: \"%s\"\n", st.item);
+			//gi.dprintf("%s at (%f %f %f) has bad item: %s\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2], st.item);
 	}
 
 	self->think = turret_driver_link;

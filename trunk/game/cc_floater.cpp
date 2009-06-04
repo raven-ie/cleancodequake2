@@ -65,7 +65,7 @@ void CFloater::FireBlaster ()
 	vec3_t	dir;
 	int		effect = 0;
 
-	switch (Entity->s.frame)
+	switch (Entity->state.frame)
 	{
 	case FRAME_attak104:
 	case FRAME_attak107:
@@ -73,10 +73,10 @@ void CFloater::FireBlaster ()
 		break;
 	}
 
-	Angles_Vectors (Entity->s.angles, forward, right, NULL);
-	G_ProjectSource (Entity->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_FLOAT_BLASTER_1], forward, right, start);
+	Angles_Vectors (Entity->state.angles, forward, right, NULL);
+	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_FLOAT_BLASTER_1], forward, right, start);
 
-	Vec3Copy (Entity->enemy->s.origin, end);
+	Vec3Copy (Entity->enemy->state.origin, end);
 	end[2] += Entity->enemy->viewheight;
 	Vec3Subtract (end, start, dir);
 
@@ -491,20 +491,20 @@ void CFloater::Zap ()
 	vec3_t	dir;
 	vec3_t	offset;
 
-	Vec3Subtract (Entity->enemy->s.origin, Entity->s.origin, dir);
+	Vec3Subtract (Entity->enemy->state.origin, Entity->state.origin, dir);
 
-	Angles_Vectors (Entity->s.angles, forward, right, NULL);
+	Angles_Vectors (Entity->state.angles, forward, right, NULL);
 	//FIXME use a flash and replace these two lines with the commented one
 	Vec3Set (offset, 18.5f, -0.9f, 10);
-	G_ProjectSource (Entity->s.origin, offset, forward, right, origin);
-//	G_ProjectSource (self->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, origin);
+	G_ProjectSource (Entity->state.origin, offset, forward, right, origin);
+//	G_ProjectSource (self->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, origin);
 
 	PlaySoundFrom (Entity, CHAN_WEAPON, SoundAttack2);
 
 	//FIXME use the flash, Luke
 	CTempEnt_Splashes::Splash (origin, vec3Origin, CTempEnt_Splashes::SPTSparks, 32);
 
-	T_Damage (Entity->enemy, Entity, Entity, vec3Origin, Entity->enemy->s.origin, vec3Origin, 5 + rand() % 6, -10, DAMAGE_ENERGY, MOD_UNKNOWN);
+	T_Damage (Entity->enemy, Entity, Entity, vec3Origin, Entity->enemy->state.origin, vec3Origin, 5 + rand() % 6, -10, DAMAGE_ENERGY, MOD_UNKNOWN);
 }
 
 void CFloater::Attack()
@@ -542,7 +542,7 @@ void CFloater::Melee ()
 void CFloater::Pain (edict_t *other, float kick, int damage)
 {
 	if (Entity->health < (Entity->max_health / 2))
-		Entity->s.skinNum = 1;
+		Entity->state.skinNum = 1;
 
 	if (level.time < Entity->pain_debounce_time)
 		return;
@@ -574,11 +574,11 @@ void CFloater::Spawn ()
 
 	SoundIndex ("floater/fltatck1.wav");
 
-	Entity->s.sound = SoundIndex ("floater/fltsrch1.wav");
+	Entity->state.sound = SoundIndex ("floater/fltsrch1.wav");
 
 	Entity->movetype = MOVETYPE_STEP;
 	Entity->solid = SOLID_BBOX;
-	Entity->s.modelIndex = ModelIndex ("models/monsters/float/tris.md2");
+	Entity->state.modelIndex = ModelIndex ("models/monsters/float/tris.md2");
 	Vec3Set (Entity->mins, -24, -24, -24);
 	Vec3Set (Entity->maxs, 24, 24, 32);
 

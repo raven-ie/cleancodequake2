@@ -226,7 +226,7 @@ void CBarracudaShark::Melee()
 void CBarracudaShark::Pain (edict_t *other, float kick, int damage)
 {
 	if (Entity->health < (Entity->max_health / 2))
-		Entity->s.skinNum = 1;
+		Entity->state.skinNum = 1;
 
 	if (level.time < Entity->pain_debounce_time)
 		return;
@@ -370,7 +370,7 @@ void CBarracudaShark::Spawn ()
 
 	Entity->movetype = MOVETYPE_STEP;
 	Entity->solid = SOLID_BBOX;
-	Entity->s.modelIndex = ModelIndex ("models/monsters/flipper/tris.md2");
+	Entity->state.modelIndex = ModelIndex ("models/monsters/flipper/tris.md2");
 	Vec3Set (Entity->mins, -16, -16, 0);
 	Vec3Set (Entity->maxs, 16, 16, 32);
 

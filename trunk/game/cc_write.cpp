@@ -68,9 +68,9 @@ void Cast (ECastType castType, ECastFlags castFlags, vec3_t Origin = NULL, edict
 			if (!e || !e->inUse || !e->client || !e->client->pers.connected)
 				continue;
 
-			if ((castFlags & CASTFLAG_PVS) && !gi.inPVS(Origin, e->s.origin))
+			if ((castFlags & CASTFLAG_PVS) && !gi.inPVS(Origin, e->state.origin))
 				continue;
-			if ((castFlags & CASTFLAG_PHS) && !gi.inPHS(Origin, e->s.origin))
+			if ((castFlags & CASTFLAG_PHS) && !gi.inPHS(Origin, e->state.origin))
 				continue;
 
 			gi.unicast (e, (castFlags & CASTFLAG_RELIABLE) ? true : false);
@@ -79,9 +79,9 @@ void Cast (ECastType castType, ECastFlags castFlags, vec3_t Origin = NULL, edict
 	// Send to one entity
 	else if (castType == CAST_UNI)
 	{
-		if ((castFlags & CASTFLAG_PVS) && !gi.inPVS(Origin, Ent->s.origin))
+		if ((castFlags & CASTFLAG_PVS) && !gi.inPVS(Origin, Ent->state.origin))
 			return;
-		if ((castFlags & CASTFLAG_PHS) && !gi.inPHS(Origin, Ent->s.origin))
+		if ((castFlags & CASTFLAG_PHS) && !gi.inPHS(Origin, Ent->state.origin))
 			return;
 
 		gi.unicast (Ent, (castFlags & CASTFLAG_RELIABLE) ? true : false);

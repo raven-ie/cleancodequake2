@@ -284,7 +284,7 @@ void PrintVerboseNodes (vec3_t origin, uint32 numNode)
 
 CPathNode *DropNode (edict_t *ent)
 {
-	NodeList.push_back(new CPathNode(ent->s.origin, NODE_REGULAR));
+	NodeList.push_back(new CPathNode(ent->state.origin, NODE_REGULAR));
 
 	SpawnNodeEntity (NodeList.at(NodeList.size() - 1));
 	ClientPrintf (ent, PRINT_HIGH, "Node %i added\n", NodeList.size());
@@ -318,8 +318,8 @@ void SpawnNodeEntity (CPathNode *Node)
 		return;
 
 	Node->Ent = G_Spawn();
-	Node->Ent->s.modelIndex = ModelIndex("models/objects/grenade2/tris.md2");
-	Vec3Copy (Node->Origin, Node->Ent->s.origin);
+	Node->Ent->state.modelIndex = ModelIndex("models/objects/grenade2/tris.md2");
+	Vec3Copy (Node->Origin, Node->Ent->state.origin);
 	gi.linkentity(Node->Ent);
 	CheckNodeFlags (Node);
 }
@@ -329,22 +329,22 @@ void CheckNodeFlags (CPathNode *Node)
 	if (!DebugNodes->Integer())
 		return;
 
-	Node->Ent->s.effects = 0;
-	Node->Ent->s.renderFx = 0;
+	Node->Ent->state.effects = 0;
+	Node->Ent->state.renderFx = 0;
 
 	switch (Node->Type)
 	{
 	case NODE_DOOR:
-		Node->Ent->s.effects = EF_COLOR_SHELL;
-		Node->Ent->s.renderFx = RF_SHELL_RED;
+		Node->Ent->state.effects = EF_COLOR_SHELL;
+		Node->Ent->state.renderFx = RF_SHELL_RED;
 		break;
 	case NODE_PLATFORM:
-		Node->Ent->s.effects = EF_COLOR_SHELL;
-		Node->Ent->s.renderFx = RF_SHELL_GREEN;
+		Node->Ent->state.effects = EF_COLOR_SHELL;
+		Node->Ent->state.renderFx = RF_SHELL_GREEN;
 		break;
 	case NODE_JUMP:
-		Node->Ent->s.effects = EF_COLOR_SHELL;
-		Node->Ent->s.renderFx = RF_SHELL_BLUE;
+		Node->Ent->state.effects = EF_COLOR_SHELL;
+		Node->Ent->state.renderFx = RF_SHELL_BLUE;
 		break;
 	}
 }
@@ -384,7 +384,7 @@ void CalculateTestPath (edict_t *ent, uint32 IDStart, uint32 IDEnd)
 									Test->NumNodes, Test->Weight);
 
 	for (size_t i = 0; i < Test->Path.size(); i++)
-		Test->Path[i]->Ent->s.modelIndex = ModelIndex("models/objects/grenade/tris.md2");
+		Test->Path[i]->Ent->state.modelIndex = ModelIndex("models/objects/grenade/tris.md2");
 
 	delete Test;
 
@@ -645,7 +645,7 @@ void Cmd_Node_f (edict_t *ent)
 	else if (Q_stricmp(cmd, "load") == 0)
 		LoadNodes ();
 	else if (Q_stricmp(cmd, "drop") == 0)
-		AddNode (ent, ent->s.origin);
+		AddNode (ent, ent->state.origin);
 	else if (Q_stricmp(cmd, "clearlastnode") == 0)
 		ent->client->resp.LastNode = NULL;
 	else if (Q_stricmp(cmd, "connect") == 0)
@@ -689,7 +689,7 @@ void Cmd_Node_f (edict_t *ent)
 	else if (Q_stricmp(cmd, "clearstate") == 0)
 	{
 		for (uint32 i = 0; i < NodeList.size(); i++)
-			NodeList[i]->Ent->s.modelIndex = ModelIndex("models/objects/grenade2/tris.md2");
+			NodeList[i]->Ent->state.modelIndex = ModelIndex("models/objects/grenade2/tris.md2");
 	}
 	else if (Q_stricmp(cmd, "settype") == 0)
 	{
@@ -716,9 +716,9 @@ void Cmd_Node_f (edict_t *ent)
 
 		vec3_t end, forward;
 		Angles_Vectors (ent->client->v_angle, forward, NULL, NULL);
-		Vec3MA (ent->s.origin, 8192, forward, end);
+		Vec3MA (ent->state.origin, 8192, forward, end);
 
-		CTrace trace = CTrace(ent->s.origin, end, ent, CONTENTS_MASK_ALL);
+		CTrace trace = CTrace(ent->state.origin, end, ent, CONTENTS_MASK_ALL);
 
 		if (trace.ent && trace.ent->model && trace.ent->model[0] == '*')
 		{
@@ -730,14 +730,14 @@ void Cmd_Node_f (edict_t *ent)
 	{
 		vec3_t end, forward;
 		Angles_Vectors (ent->client->v_angle, forward, NULL, NULL);
-		Vec3MA (ent->s.origin, 8192, forward, end);
+		Vec3MA (ent->state.origin, 8192, forward, end);
 
-		CTrace trace = CTrace(ent->s.origin, end, ent, CONTENTS_MASK_ALL);
+		CTrace trace = CTrace(ent->state.origin, end, ent, CONTENTS_MASK_ALL);
 
 		if (trace.ent && trace.ent->Monster)
 		{
 			if (Q_stricmp(ArgGets(2), "closest") == 0)
-				trace.ent->Monster->P_CurrentNode = GetClosestNodeTo(trace.ent->Monster->Entity->s.origin);
+				trace.ent->Monster->P_CurrentNode = GetClosestNodeTo(trace.ent->Monster->Entity->state.origin);
 			else
 				trace.ent->Monster->P_CurrentNode = NodeList[ArgGeti(2)];
 			trace.ent->Monster->P_CurrentGoalNode = NodeList[ArgGeti(3)];
@@ -787,9 +787,9 @@ void Cmd_Node_f (edict_t *ent)
 		Node->Origin[1] += y;
 		Node->Origin[2] += z;
 
-		Node->Ent->s.origin[0] += x;
-		Node->Ent->s.origin[1] += y;
-		Node->Ent->s.origin[2] += z;
+		Node->Ent->state.origin[0] += x;
+		Node->Ent->state.origin[1] += y;
+		Node->Ent->state.origin[2] += z;
 		gi.linkentity(Node->Ent);
 	}
 }

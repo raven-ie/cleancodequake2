@@ -27,8 +27,8 @@ void Use_Target_Tent (edict_t *ent, edict_t *other, edict_t *activator)
 {
 	WriteByte (SVC_TEMP_ENTITY);
 	WriteByte (ent->style);
-	WritePosition (ent->s.origin);
-	Cast (CASTFLAG_PVS, ent->s.origin);
+	WritePosition (ent->state.origin);
+	Cast (CASTFLAG_PVS, ent->state.origin);
 }
 
 void SP_target_temp_entity (edict_t *ent)
@@ -61,10 +61,10 @@ void Use_Target_Speaker (edict_t *ent, edict_t *other, edict_t *activator)
 
 	if (ent->spawnflags & 3)
 	{	// looping sound toggles
-		if (ent->s.sound)
-			ent->s.sound = 0;	// turn it off
+		if (ent->state.sound)
+			ent->state.sound = 0;	// turn it off
 		else
-			ent->s.sound = ent->noise_index;	// start it
+			ent->state.sound = ent->noise_index;	// start it
 	}
 	else
 	{	// normal sound
@@ -74,7 +74,7 @@ void Use_Target_Speaker (edict_t *ent, edict_t *other, edict_t *activator)
 			chan = CHAN_VOICE;
 		// use a positioned_sound, because this entity won't normally be
 		// sent to any clients because it is invisible
-		PlaySoundAt (ent->s.origin, ent, chan, ent->noise_index, ent->volume, ent->attenuation);
+		PlaySoundAt (ent->state.origin, ent, chan, ent->noise_index, ent->volume, ent->attenuation);
 	}
 }
 
@@ -84,8 +84,8 @@ void SP_target_speaker (edict_t *ent)
 
 	if(!st.noise)
 	{
-		//gi.dprintf("target_speaker with no noise set at (%f %f %f)\n", ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);
-		MapPrint (MAPPRINT_ERROR, ent, ent->s.origin, "No noise set\n");
+		//gi.dprintf("target_speaker with no noise set at (%f %f %f)\n", ent->state.origin[0], ent->state.origin[1], ent->state.origin[2]);
+		MapPrint (MAPPRINT_ERROR, ent, ent->state.origin, "No noise set\n");
 		return;
 	}
 	if (!strstr (st.noise, ".wav"))
@@ -104,7 +104,7 @@ void SP_target_speaker (edict_t *ent)
 
 	// check for prestarted looping sound
 	if (ent->spawnflags & 1)
-		ent->s.sound = ent->noise_index;
+		ent->state.sound = ent->noise_index;
 
 	ent->use = Use_Target_Speaker;
 
@@ -139,8 +139,8 @@ void SP_target_help(edict_t *ent)
 
 	if (!ent->message)
 	{
-		//gi.dprintf ("%s with no message at (%f %f %f)\n", ent->classname, ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);
-		MapPrint (MAPPRINT_ERROR, ent, ent->s.origin, "No message\n");
+		//gi.dprintf ("%s with no message at (%f %f %f)\n", ent->classname, ent->state.origin[0], ent->state.origin[1], ent->state.origin[2]);
+		MapPrint (MAPPRINT_ERROR, ent, ent->state.origin, "No message\n");
 		G_FreeEdict (ent);
 		return;
 	}
@@ -178,7 +178,7 @@ void SP_target_secret (edict_t *ent)
 	ent->svFlags = SVF_NOCLIENT;
 	level.total_secrets++;
 	// map bug hack
-	if (!Q_stricmp(level.mapname, "mine3") && ent->s.origin[0] == 280 && ent->s.origin[1] == -2048 && ent->s.origin[2] == -624)
+	if (!Q_stricmp(level.mapname, "mine3") && ent->state.origin[0] == 280 && ent->state.origin[1] == -2048 && ent->state.origin[2] == -624)
 		ent->message = "You have found a secret area.";
 }
 
@@ -230,7 +230,7 @@ void target_explosion_explode (edict_t *self)
 {
 	float		save;
 
-	CTempEnt_Explosions::RocketExplosion (self->s.origin, self);
+	CTempEnt_Explosions::RocketExplosion (self->state.origin, self);
 
 	T_RadiusDamage (self, self->activator, self->dmg, NULL, self->dmg+40, MOD_EXPLOSIVE);
 
@@ -280,7 +280,7 @@ void use_target_changelevel (edict_t *self, edict_t *other, edict_t *activator)
 	// if noexit, do a ton of damage to other
 	if (deathmatch->Integer() && !dmFlags.dfAllowExit && other != world)
 	{
-		T_Damage (other, self, self, vec3Origin, other->s.origin, vec3Origin, 10 * other->max_health, 1000, 0, MOD_EXIT);
+		T_Damage (other, self, self, vec3Origin, other->state.origin, vec3Origin, 10 * other->max_health, 1000, 0, MOD_EXIT);
 		return;
 	}
 
@@ -302,8 +302,8 @@ void SP_target_changelevel (edict_t *ent)
 {
 	if (!ent->map)
 	{
-		//gi.dprintf("target_changelevel with no map at (%f %f %f)\n", ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);
-		MapPrint (MAPPRINT_ERROR, ent, ent->s.origin, "No map\n");
+		//gi.dprintf("target_changelevel with no map at (%f %f %f)\n", ent->state.origin[0], ent->state.origin[1], ent->state.origin[2]);
+		MapPrint (MAPPRINT_ERROR, ent, ent->state.origin, "No map\n");
 		G_FreeEdict (ent);
 		return;
 	}
@@ -337,7 +337,7 @@ Set "sounds" to one of the following:
 
 void use_target_splash (edict_t *self, edict_t *other, edict_t *activator)
 {
-	CTempEnt_Splashes::Splash (self->s.origin, self->movedir, (CTempEnt_Splashes::ESplashType)self->sounds, self->count);
+	CTempEnt_Splashes::Splash (self->state.origin, self->movedir, (CTempEnt_Splashes::ESplashType)self->sounds, self->count);
 
 	if (self->dmg)
 		T_RadiusDamage (self, activator, self->dmg, NULL, self->dmg+40, MOD_SPLASH);
@@ -346,7 +346,7 @@ void use_target_splash (edict_t *self, edict_t *other, edict_t *activator)
 void SP_target_splash (edict_t *self)
 {
 	self->use = use_target_splash;
-	G_SetMovedir (self->s.angles, self->movedir);
+	G_SetMovedir (self->state.angles, self->movedir);
 
 	if (!self->count)
 		self->count = 32;
@@ -377,8 +377,8 @@ void use_target_spawner (edict_t *self, edict_t *other, edict_t *activator)
 
 	ent = G_Spawn();
 	ent->classname = self->target;
-	Vec3Copy (self->s.origin, ent->s.origin);
-	Vec3Copy (self->s.angles, ent->s.angles);
+	Vec3Copy (self->state.origin, ent->state.origin);
+	Vec3Copy (self->state.angles, ent->state.angles);
 	ED_CallSpawn (ent);
 	gi.unlinkentity (ent);
 	KillBox (ent);
@@ -393,7 +393,7 @@ void SP_target_spawner (edict_t *self)
 	self->svFlags = SVF_NOCLIENT;
 	if (self->speed)
 	{
-		G_SetMovedir (self->s.angles, self->movedir);
+		G_SetMovedir (self->state.angles, self->movedir);
 		Vec3Scale (self->movedir, self->speed, self->movedir);
 	}
 }
@@ -418,14 +418,14 @@ void use_target_blaster (edict_t *self, edict_t *other, edict_t *activator)
 	else
 		effect = EF_BLASTER;
 
-	fire_blaster (self, self->s.origin, self->movedir, self->dmg, self->speed, EF_BLASTER, true);
+	fire_blaster (self, self->state.origin, self->movedir, self->dmg, self->speed, EF_BLASTER, true);
 	PlaySoundFrom (self, CHAN_VOICE, self->noise_index);
 }
 
 void SP_target_blaster (edict_t *self)
 {
 	self->use = use_target_blaster;
-	G_SetMovedir (self->s.angles, self->movedir);
+	G_SetMovedir (self->state.angles, self->movedir);
 	self->noise_index = SoundIndex ("weapons/laser2.wav");
 
 	if (!self->dmg)
@@ -513,14 +513,14 @@ void target_laser_think (edict_t *self)
 	{
 		Vec3Copy (self->movedir, last_movedir);
 		Vec3MA (self->enemy->absMin, 0.5, self->enemy->size, point);
-		Vec3Subtract (point, self->s.origin, self->movedir);
+		Vec3Subtract (point, self->state.origin, self->movedir);
 		VectorNormalizef (self->movedir, self->movedir);
 		if (!Vec3Compare(self->movedir, last_movedir))
 			self->spawnflags |= 0x80000000;
 	}
 
 	ignore = self;
-	Vec3Copy (self->s.origin, start);
+	Vec3Copy (self->state.origin, start);
 	Vec3MA (start, 2048, self->movedir, end);
 	while(1)
 	{
@@ -539,7 +539,7 @@ void target_laser_think (edict_t *self)
 			if (self->spawnflags & 0x80000000)
 			{
 				self->spawnflags &= ~0x80000000;
-				CTempEnt_Splashes::Sparks (tr.endPos, tr.plane.normal, CTempEnt_Splashes::STLaserSparks, (CTempEnt_Splashes::ESplashType)(self->s.skinNum & 255), count);
+				CTempEnt_Splashes::Sparks (tr.endPos, tr.plane.normal, CTempEnt_Splashes::STLaserSparks, (CTempEnt_Splashes::ESplashType)(self->state.skinNum & 255), count);
 			}
 			break;
 		}
@@ -548,7 +548,7 @@ void target_laser_think (edict_t *self)
 		Vec3Copy (tr.endPos, start);
 	}
 
-	Vec3Copy (tr.endPos, self->s.oldOrigin);
+	Vec3Copy (tr.endPos, self->state.oldOrigin);
 
 	self->nextthink = level.time + FRAMETIME;
 }
@@ -590,26 +590,26 @@ void target_laser_start (edict_t *self)
 
 	self->movetype = MOVETYPE_NONE;
 	self->solid = SOLID_NOT;
-	self->s.renderFx |= RF_BEAM|RF_TRANSLUCENT;
-	self->s.modelIndex = 1;			// must be non-zero
+	self->state.renderFx |= RF_BEAM|RF_TRANSLUCENT;
+	self->state.modelIndex = 1;			// must be non-zero
 
 	// set the beam diameter
 	if (self->spawnflags & FAT)
-		self->s.frame = 16;
+		self->state.frame = 16;
 	else
-		self->s.frame = 4;
+		self->state.frame = 4;
 
 	// set the color
 	if (self->spawnflags & RED)
-		self->s.skinNum = ConvertColorsToBeamColor (CColors::PatriotRed, CColors::PatriotRed, CColors::Red, CColors::Red);
+		self->state.skinNum = ConvertColorsToBeamColor (CColors::PatriotRed, CColors::PatriotRed, CColors::Red, CColors::Red);
 	else if (self->spawnflags & GREEN)
-		self->s.skinNum = ConvertColorsToBeamColor (CColors::Green, CColors::Lime, CColors::FireSpeechGreen, CColors::Harlequin);
+		self->state.skinNum = ConvertColorsToBeamColor (CColors::Green, CColors::Lime, CColors::FireSpeechGreen, CColors::Harlequin);
 	else if (self->spawnflags & BLUE)
-		self->s.skinNum = ConvertColorsToBeamColor (CColors::PatriotBlue, CColors::PatriotBlue, CColors::NeonBlue, CColors::NeonBlue);
+		self->state.skinNum = ConvertColorsToBeamColor (CColors::PatriotBlue, CColors::PatriotBlue, CColors::NeonBlue, CColors::NeonBlue);
 	else if (self->spawnflags & YELLOW)
-		self->s.skinNum = ConvertColorsToBeamColor (CColors::ParisDaisy, CColors::Gorse, CColors::Lemon, CColors::Gold);
+		self->state.skinNum = ConvertColorsToBeamColor (CColors::ParisDaisy, CColors::Gorse, CColors::Lemon, CColors::Gold);
 	else if (self->spawnflags & ORANGE)
-		self->s.skinNum = ConvertColorsToBeamColor (CColors::HarvestGold, CColors::RobRoy, CColors::TulipTree, CColors::FireBush);
+		self->state.skinNum = ConvertColorsToBeamColor (CColors::HarvestGold, CColors::RobRoy, CColors::TulipTree, CColors::FireBush);
 
 	if (!self->enemy)
 	{
@@ -617,13 +617,13 @@ void target_laser_start (edict_t *self)
 		{
 			ent = G_Find (NULL, FOFS(targetname), self->target);
 			if (!ent)
-				//gi.dprintf ("%s at (%f %f %f): %s is a bad target\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2], self->target);
-				MapPrint (MAPPRINT_WARNING, self, self->s.origin, "\"%s\" is a bad target\n", self->target);
+				//gi.dprintf ("%s at (%f %f %f): %s is a bad target\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2], self->target);
+				MapPrint (MAPPRINT_WARNING, self, self->state.origin, "\"%s\" is a bad target\n", self->target);
 			self->enemy = ent;
 		}
 		else
 		{
-			G_SetMovedir (self->s.angles, self->movedir);
+			G_SetMovedir (self->state.angles, self->movedir);
 		}
 	}
 	self->use = target_laser_use;
@@ -708,8 +708,8 @@ void target_lightramp_use (edict_t *self, edict_t *other, edict_t *activator)
 				break;
 			if (strcmp(e->classname, "light") != 0)
 			{
-				//gi.dprintf("%s at (%f %f %f): target %s (%s at (%f %f %f)) is not a light\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2], self->target, e->classname, e->s.origin[0], e->s.origin[1], e->s.origin[2]);
-				MapPrint (MAPPRINT_WARNING, self, self->s.origin, "Target \"%s\" is not a light\n", self->target);
+				//gi.dprintf("%s at (%f %f %f): target %s (%s at (%f %f %f)) is not a light\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2], self->target, e->classname, e->state.origin[0], e->state.origin[1], e->state.origin[2]);
+				MapPrint (MAPPRINT_WARNING, self, self->state.origin, "Target \"%s\" is not a light\n", self->target);
 			}
 			else
 			{
@@ -719,8 +719,8 @@ void target_lightramp_use (edict_t *self, edict_t *other, edict_t *activator)
 
 		if (!self->enemy)
 		{
-			//gi.dprintf("%s target %s not found at (%f %f %f)\n", self->classname, self->target, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
-			MapPrint (MAPPRINT_ERROR, self, self->s.origin, "Target \"%s\" not found\n", self->target);
+			//gi.dprintf("%s target %s not found at (%f %f %f)\n", self->classname, self->target, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
+			MapPrint (MAPPRINT_ERROR, self, self->state.origin, "Target \"%s\" not found\n", self->target);
 			G_FreeEdict (self);
 			return;
 		}
@@ -734,8 +734,8 @@ void SP_target_lightramp (edict_t *self)
 {
 	if (!self->message || strlen(self->message) != 2 || self->message[0] < 'a' || self->message[0] > 'z' || self->message[1] < 'a' || self->message[1] > 'z' || self->message[0] == self->message[1])
 	{
-		//gi.dprintf("target_lightramp has bad ramp (%s) at (%f %f %f)\n", self->message, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
-		MapPrint (MAPPRINT_ERROR, self, self->s.origin, "Bad ramp (%s)\n", self->message);
+		//gi.dprintf("target_lightramp has bad ramp (%s) at (%f %f %f)\n", self->message, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
+		MapPrint (MAPPRINT_ERROR, self, self->state.origin, "Bad ramp (%s)\n", self->message);
 		G_FreeEdict (self);
 		return;
 	}
@@ -748,8 +748,8 @@ void SP_target_lightramp (edict_t *self)
 
 	if (!self->target)
 	{
-		//gi.dprintf("%s with no target at (%f %f %f)\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
-		MapPrint (MAPPRINT_ERROR, self, self->s.origin, "No target\n");
+		//gi.dprintf("%s with no target at (%f %f %f)\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
+		MapPrint (MAPPRINT_ERROR, self, self->state.origin, "No target\n");
 		G_FreeEdict (self);
 		return;
 	}
@@ -779,7 +779,7 @@ void target_earthquake_think (edict_t *self)
 
 	if (self->last_move_time < level.time)
 	{
-		PlaySoundAt (self->s.origin, self, CHAN_AUTO, self->noise_index, 1.0, ATTN_NONE);
+		PlaySoundAt (self->state.origin, self, CHAN_AUTO, self->noise_index, 1.0, ATTN_NONE);
 		self->last_move_time = level.time + 0.5;
 	}
 
@@ -813,8 +813,8 @@ void target_earthquake_use (edict_t *self, edict_t *other, edict_t *activator)
 void SP_target_earthquake (edict_t *self)
 {
 	if (!self->targetname)
-		MapPrint (MAPPRINT_ERROR, self, self->s.origin, "No targetname\n");
-		//gi.dprintf("untargeted %s at (%f %f %f)\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
+		MapPrint (MAPPRINT_ERROR, self, self->state.origin, "No targetname\n");
+		//gi.dprintf("untargeted %s at (%f %f %f)\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
 
 	if (!self->count)
 		self->count = 5;

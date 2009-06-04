@@ -44,7 +44,7 @@ CWeapon("models/weapons/v_shotg2/tris.md2", 0, 6, 7, 17,
 
 bool CSuperShotgun::CanFire (edict_t *ent)
 {
-	switch (ent->client->ps.gunFrame)
+	switch (ent->client->playerState.gunFrame)
 	{
 	case 7:
 		return true;
@@ -54,7 +54,7 @@ bool CSuperShotgun::CanFire (edict_t *ent)
 
 bool CSuperShotgun::CanStopFidgetting (edict_t *ent)
 {
-	switch (ent->client->ps.gunFrame)
+	switch (ent->client->playerState.gunFrame)
 	{
 	case 29:
 	case 42:
@@ -78,7 +78,7 @@ void CSuperShotgun::Fire (edict_t *ent)
 	ent->client->kick_angles[0] = -2;
 
 	Vec3Set (offset, 0, 8,  ent->viewheight-8);
-	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
+	P_ProjectSource (ent->client, ent->state.origin, offset, forward, right, start);
 
 	if (isQuad)
 	{
@@ -100,7 +100,7 @@ void CSuperShotgun::Fire (edict_t *ent)
 	Muzzle (ent, MZ_SSHOTGUN);
 	FireAnimation (ent);
 
-	ent->client->ps.gunFrame++;
+	ent->client->playerState.gunFrame++;
 	PlayerNoise(ent, start, PNOISE_WEAPON);
 
 	if (!dmFlags.dfInfiniteAmmo)

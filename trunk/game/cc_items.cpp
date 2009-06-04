@@ -107,7 +107,7 @@ void CBaseItem::DoRespawn (edict_t *ent)
 	gi.linkentity (ent);
 
 	// send an effect
-	ent->s.event = EV_ITEM_RESPAWN;
+	ent->state.event = EV_ITEM_RESPAWN;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -173,11 +173,11 @@ edict_t *CBaseItem::DropItem (edict_t *ent)
 	dropped->classname = this->Classname;
 	dropped->item = this;
 	dropped->spawnflags = DROPPED_ITEM;
-	dropped->s.effects = this->EffectFlags;
-	dropped->s.renderFx = RF_GLOW;
+	dropped->state.effects = this->EffectFlags;
+	dropped->state.renderFx = RF_GLOW;
 	Vec3Set (dropped->mins, -15, -15, -15);
 	Vec3Set (dropped->maxs, 15, 15, 15);
-	dropped->s.modelIndex = ModelIndex(this->WorldModel);
+	dropped->state.modelIndex = ModelIndex(this->WorldModel);
 	dropped->solid = SOLID_TRIGGER;
 	dropped->movetype = MOVETYPE_TOSS;  
 	dropped->touch = DropTempTouch;
@@ -189,15 +189,15 @@ edict_t *CBaseItem::DropItem (edict_t *ent)
 
 		Angles_Vectors (ent->client->v_angle, forward, right, NULL);
 		Vec3Set (offset, 24, 0, -16);
-		G_ProjectSource (ent->s.origin, offset, forward, right, dropped->s.origin);
-		trace = CTrace (ent->s.origin, dropped->mins, dropped->maxs,
-			dropped->s.origin, ent, CONTENTS_SOLID);
-		Vec3Copy (trace.endPos, dropped->s.origin);
+		G_ProjectSource (ent->state.origin, offset, forward, right, dropped->state.origin);
+		trace = CTrace (ent->state.origin, dropped->mins, dropped->maxs,
+			dropped->state.origin, ent, CONTENTS_SOLID);
+		Vec3Copy (trace.endPos, dropped->state.origin);
 	}
 	else
 	{
-		Angles_Vectors (ent->s.angles, forward, right, NULL);
-		Vec3Copy (ent->s.origin, dropped->s.origin);
+		Angles_Vectors (ent->state.angles, forward, right, NULL);
+		Vec3Copy (ent->state.origin, dropped->state.origin);
 	}
 
 	Vec3Scale (forward, 100, dropped->velocity);
@@ -243,13 +243,13 @@ void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *su
 	other->client->bonus_alpha = 64;	
 
 	// show icon and name on status bar
-	other->client->ps.stats[STAT_PICKUP_ICON] = ent->item->IconIndex;
-	other->client->ps.stats[STAT_PICKUP_STRING] = ent->item->GetConfigStringNumber();
+	other->client->playerState.stats[STAT_PICKUP_ICON] = ent->item->IconIndex;
+	other->client->playerState.stats[STAT_PICKUP_STRING] = ent->item->GetConfigStringNumber();
 	other->client->pickup_msg_time = level.time + 3.0;
 
 	// change selected item
 	if (ent->item->Flags & ITEMFLAG_USABLE)
-		other->client->pers.Inventory.SelectedItem = other->client->ps.stats[STAT_SELECTED_ITEM] = ent->item->GetIndex();
+		other->client->pers.Inventory.SelectedItem = other->client->playerState.stats[STAT_SELECTED_ITEM] = ent->item->GetIndex();
 
 	if (ent->item->PickupSound)
 		PlaySoundFrom(other, CHAN_ITEM, ent->item->PickupSoundIndex);
@@ -287,7 +287,7 @@ void DoRespawn (edict_t *ent)
 	gi.linkentity (ent);
 
 	// send an effect
-	ent->s.event = EV_ITEM_RESPAWN;
+	ent->state.event = EV_ITEM_RESPAWN;
 }
 
 void Use_Item (edict_t *ent, edict_t *other, edict_t *activator)
@@ -318,26 +318,26 @@ void DropItemToFloor (edict_t *ent)
 	ent->maxs[0] = ent->maxs[1] = ent->maxs[2] = 15;
 
 	if (ent->model)
-		ent->s.modelIndex = ModelIndex(ent->model);
+		ent->state.modelIndex = ModelIndex(ent->model);
 	else
-		ent->s.modelIndex = ModelIndex(ent->item->WorldModel);
+		ent->state.modelIndex = ModelIndex(ent->item->WorldModel);
 	ent->solid = SOLID_TRIGGER;
 	ent->movetype = MOVETYPE_TOSS;  
 	ent->touch = TouchItem;
 
 	vec3_t v = {0,0,-128};
-	Vec3Add (ent->s.origin, v, dest);
+	Vec3Add (ent->state.origin, v, dest);
 
-	tr = CTrace (ent->s.origin, ent->mins, ent->maxs, dest, ent, CONTENTS_MASK_SOLID);
+	tr = CTrace (ent->state.origin, ent->mins, ent->maxs, dest, ent, CONTENTS_MASK_SOLID);
 	if (tr.startSolid)
 	{
-		//gi.dprintf ("droptofloor: %s startsolid at (%f %f %f)\n", ent->classname, ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);
-		MapPrint (MAPPRINT_WARNING, ent, ent->s.origin, "Entity origin is in solid\n");
+		//gi.dprintf ("droptofloor: %s startsolid at (%f %f %f)\n", ent->classname, ent->state.origin[0], ent->state.origin[1], ent->state.origin[2]);
+		MapPrint (MAPPRINT_WARNING, ent, ent->state.origin, "Entity origin is in solid\n");
 		G_FreeEdict (ent);
 		return;
 	}
 
-	Vec3Copy (tr.endPos, ent->s.origin);
+	Vec3Copy (tr.endPos, ent->state.origin);
 
 	if (ent->team)
 	{
@@ -358,8 +358,8 @@ void DropItemToFloor (edict_t *ent)
 	{
 		ent->solid = SOLID_BBOX;
 		ent->touch = NULL;
-		ent->s.effects &= ~EF_ROTATE;
-		ent->s.renderFx &= ~RF_GLOW;
+		ent->state.effects &= ~EF_ROTATE;
+		ent->state.renderFx &= ~RF_GLOW;
 	}
 
 	if (ent->spawnflags & ITEM_TRIGGER_SPAWN)
@@ -381,8 +381,8 @@ void SpawnItem (edict_t *ent, CBaseItem *item)
 		if (strcmp(ent->classname, "key_power_cube") != 0)
 		{
 			ent->spawnflags = 0;
-			//gi.dprintf("%s at (%f %f %f) has invalid spawnflags set\n", ent->classname, ent->s.origin[0], ent->s.origin[1], ent->s.origin[2]);
-			MapPrint (MAPPRINT_ERROR, ent, ent->s.origin, "Invalid spawnflags (%i, should be 0)\n", ent->spawnflags);
+			//gi.dprintf("%s at (%f %f %f) has invalid spawnflags set\n", ent->classname, ent->state.origin[0], ent->state.origin[1], ent->state.origin[2]);
+			MapPrint (MAPPRINT_ERROR, ent, ent->state.origin, "Invalid spawnflags (%i, should be 0)\n", ent->spawnflags);
 		}
 	}
 
@@ -442,8 +442,8 @@ void SpawnItem (edict_t *ent, CBaseItem *item)
 	ent->item = item;
 	ent->nextthink = level.time + 2 * FRAMETIME;    // items start after other solids
 	ent->think = DropItemToFloor;
-	ent->s.effects = item->EffectFlags;
-	ent->s.renderFx = RF_GLOW;
+	ent->state.effects = item->EffectFlags;
+	ent->state.renderFx = RF_GLOW;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -488,7 +488,7 @@ void CTempEnt_Trails::HeatBeam (vec3_t Start, vec3_t End, short Ent, bool Monste
 void CTempEnt_Explosions::RocketExplosion (vec3_t Start, edict_t *ent, bool Water, bool Particles)
 {
 	// Water and NoParticles fight over a spot.. water will win, in the end
-	TECast cast (ent->s.origin, Water ? TE_ROCKET_EXPLOSION_WATER : (Particles ? TE_ROCKET_EXPLOSION : TE_EXPLOSION1_NP), CASTFLAG_PVS);
+	TECast cast (ent->state.origin, Water ? TE_ROCKET_EXPLOSION_WATER : (Particles ? TE_ROCKET_EXPLOSION : TE_EXPLOSION1_NP), CASTFLAG_PVS);
 	WritePosition (Start);
 }
 
@@ -506,7 +506,7 @@ void CTempEnt_Explosions::RocketExplosion (vec3_t Start, edict_t *ent, bool Wate
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void CTempEnt_Explosions::GrenadeExplosion (vec3_t Start, edict_t *ent, bool Water)
 {
-	TECast cast (ent->s.origin, Water ? TE_GRENADE_EXPLOSION_WATER : TE_GRENADE_EXPLOSION, CASTFLAG_PVS);
+	TECast cast (ent->state.origin, Water ? TE_GRENADE_EXPLOSION_WATER : TE_GRENADE_EXPLOSION, CASTFLAG_PVS);
 	WritePosition (Start);
 }
 

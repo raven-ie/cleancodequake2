@@ -21,8 +21,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 void InitTrigger (edict_t *self)
 {
-	if (!Vec3Compare (self->s.angles, vec3Origin))
-		G_SetMovedir (self->s.angles, self->movedir);
+	if (!Vec3Compare (self->state.angles, vec3Origin))
+		G_SetMovedir (self->state.angles, self->movedir);
 
 	self->solid = SOLID_TRIGGER;
 	self->movetype = MOVETYPE_NONE;
@@ -87,7 +87,7 @@ void Touch_Multi (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t 
 	{
 		vec3_t	forward;
 
-		Angles_Vectors(other->s.angles, forward, NULL, NULL);
+		Angles_Vectors(other->state.angles, forward, NULL, NULL);
 		if (DotProduct (forward, self->movedir) < 0)
 			return;
 	}
@@ -141,8 +141,8 @@ void SP_trigger_multiple (edict_t *ent)
 		ent->use = Use_Multi;
 	}
 
-	if (!Vec3Compare(ent->s.angles, vec3Origin))
-		G_SetMovedir (ent->s.angles, ent->movedir);
+	if (!Vec3Compare(ent->state.angles, vec3Origin))
+		G_SetMovedir (ent->state.angles, ent->movedir);
 
 	SetModel (ent, ent->model);
 	gi.linkentity (ent);
@@ -175,7 +175,7 @@ void SP_trigger_once(edict_t *ent)
 		Vec3MA (ent->mins, 0.5, ent->size, v);
 		ent->spawnflags &= ~1;
 		ent->spawnflags |= 4;
-		MapPrint (MAPPRINT_WARNING, ent, ent->s.origin, "Fixed TRIGGERED flag\n");
+		MapPrint (MAPPRINT_WARNING, ent, ent->state.origin, "Fixed TRIGGERED flag\n");
 		//gi.dprintf("fixed TRIGGERED flag on %s at (%f %f %f)\n", ent->classname, v[0], v[1], v[2]);
 	}
 
@@ -283,23 +283,23 @@ void SP_trigger_key (edict_t *self)
 {
 	if (!st.item)
 	{
-		//gi.dprintf("no key item for trigger_key at (%f %f %f)\n", self->s.origin[0], self->s.origin[1], self->s.origin[2]);
-		MapPrint (MAPPRINT_ERROR, self, self->s.origin, "No key item\n");
+		//gi.dprintf("no key item for trigger_key at (%f %f %f)\n", self->state.origin[0], self->state.origin[1], self->state.origin[2]);
+		MapPrint (MAPPRINT_ERROR, self, self->state.origin, "No key item\n");
 		return;
 	}
 	self->item = FindItemByClassname (st.item);
 
 	if (!self->item)
 	{
-		MapPrint (MAPPRINT_ERROR, self, self->s.origin, "Item \"%s\" not found\n", st.item);
-		//gi.dprintf("item %s not found for trigger_key at (%f %f %f)\n", st.item, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
+		MapPrint (MAPPRINT_ERROR, self, self->state.origin, "Item \"%s\" not found\n", st.item);
+		//gi.dprintf("item %s not found for trigger_key at (%f %f %f)\n", st.item, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
 		return;
 	}
 
 	if (!self->target)
 	{
-		MapPrint (MAPPRINT_ERROR, self, self->s.origin, "No target\n");
-		//gi.dprintf("%s at (%f %f %f) has no target\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
+		MapPrint (MAPPRINT_ERROR, self, self->state.origin, "No target\n");
+		//gi.dprintf("%s at (%f %f %f) has no target\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
 		return;
 	}
 
@@ -521,7 +521,7 @@ void hurt_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *
 		dflags = DAMAGE_NO_PROTECTION;
 	else
 		dflags = 0;
-	T_Damage (other, self, self, vec3Origin, other->s.origin, vec3Origin, self->dmg, self->dmg, dflags, MOD_TRIGGER_HURT);
+	T_Damage (other, self, self, vec3Origin, other->state.origin, vec3Origin, self->dmg, self->dmg, dflags, MOD_TRIGGER_HURT);
 }
 
 void SP_trigger_hurt (edict_t *self)
@@ -569,8 +569,8 @@ void SP_trigger_gravity (edict_t *self)
 {
 	if (st.gravity == 0)
 	{
-		//gi.dprintf("trigger_gravity without gravity set at (%f %f %f)\n", self->s.origin[0], self->s.origin[1], self->s.origin[2]);
-		MapPrint (MAPPRINT_ERROR, self, self->s.origin, "No gravity set\n");
+		//gi.dprintf("trigger_gravity without gravity set at (%f %f %f)\n", self->state.origin[0], self->state.origin[1], self->state.origin[2]);
+		MapPrint (MAPPRINT_ERROR, self, self->state.origin, "No gravity set\n");
 		G_FreeEdict  (self);
 		return;
 	}
@@ -638,8 +638,8 @@ void SP_trigger_monsterjump (edict_t *self)
 		self->speed = 200;
 	if (!st.height)
 		st.height = 200;
-	if (self->s.angles[YAW] == 0)
-		self->s.angles[YAW] = 360;
+	if (self->state.angles[YAW] == 0)
+		self->state.angles[YAW] = 360;
 	InitTrigger (self);
 	self->touch = trigger_monsterjump_touch;
 	self->movedir[2] = st.height;

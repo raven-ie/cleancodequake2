@@ -277,7 +277,7 @@ CAnim TankMovePain3 (FRAME_pain301, FRAME_pain316, TankFramesPain3, ConvertDeriv
 void CTank::Pain (edict_t *other, float kick, int damage)
 {
 	if (Entity->health < (Entity->max_health / 2))
-		Entity->s.skinNum |= 1;
+		Entity->state.skinNum |= 1;
 
 	if (damage <= 10)
 		return;
@@ -291,9 +291,9 @@ void CTank::Pain (edict_t *other, float kick, int damage)
 	// If hard or nightmare, don't go into pain while attacking
 	if ( skill->Integer() >= 2)
 	{
-		if ( (Entity->s.frame >= FRAME_attak301) && (Entity->s.frame <= FRAME_attak330) )
+		if ( (Entity->state.frame >= FRAME_attak301) && (Entity->state.frame <= FRAME_attak330) )
 			return;
-		if ( (Entity->s.frame >= FRAME_attak101) && (Entity->s.frame <= FRAME_attak116) )
+		if ( (Entity->state.frame >= FRAME_attak101) && (Entity->state.frame <= FRAME_attak116) )
 			return;
 	}
 
@@ -325,7 +325,7 @@ void CTank::Blaster ()
 	vec3_t	dir;
 	int		flash_number;
 
-	switch (Entity->s.frame)
+	switch (Entity->state.frame)
 	{
 	case FRAME_attak110:
 		flash_number = MZ2_TANK_BLASTER_1;
@@ -338,10 +338,10 @@ void CTank::Blaster ()
 		break;
 	}
 
-	Angles_Vectors (Entity->s.angles, forward, right, NULL);
-	G_ProjectSource (Entity->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
+	Angles_Vectors (Entity->state.angles, forward, right, NULL);
+	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
-	Vec3Copy (Entity->enemy->s.origin, end);
+	Vec3Copy (Entity->enemy->state.origin, end);
 	end[2] += Entity->enemy->viewheight;
 	Vec3Subtract (end, start, dir);
 
@@ -377,7 +377,7 @@ void CTank::Rocket ()
 		blindfire = true;
 #endif
 
-	switch (Entity->s.frame)
+	switch (Entity->state.frame)
 	{
 	case FRAME_attak324:
 		flash_number = MZ2_TANK_ROCKET_1;
@@ -390,8 +390,8 @@ void CTank::Rocket ()
 		break;
 	}
 
-	Angles_Vectors (Entity->s.angles, forward, right, NULL);
-	G_ProjectSource (Entity->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
+	Angles_Vectors (Entity->state.angles, forward, right, NULL);
+	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
 	rocketSpeed = 500 + (100 * skill->Integer());	// PGM rock & roll.... :)
 
@@ -401,10 +401,10 @@ void CTank::Rocket ()
 		Vec3Copy (BlindFireTarget, target);
 	else
 #endif
-		Vec3Copy (Entity->enemy->s.origin, target);
+		Vec3Copy (Entity->enemy->state.origin, target);
 	// pmm
 
-//	VectorCopy (self->enemy->s.origin, vec);
+//	VectorCopy (self->enemy->state.origin, vec);
 //	vec[2] += self->enemy->viewheight;
 //	VectorSubtract (vec, start, dir);
 
@@ -423,14 +423,14 @@ void CTank::Rocket ()
 	if(random() < 0.66 || (start[2] < Entity->enemy->absMin[2]))
 	{
 //		gi.dprintf("normal shot\n");
-		Vec3Copy (Entity->enemy->s.origin, vec);
+		Vec3Copy (Entity->enemy->state.origin, vec);
 		vec[2] += Entity->enemy->viewheight;
 		Vec3Subtract (vec, start, dir);
 	}
 	else
 	{
 //		gi.dprintf("shooting at feet!\n");
-		Vec3Copy (Entity->enemy->s.origin, vec);
+		Vec3Copy (Entity->enemy->state.origin, vec);
 		vec[2] = Entity->enemy->absMin[2];
 		Vec3Subtract (vec, start, dir);
 	}
@@ -511,14 +511,14 @@ void CTank::MachineGun ()
 	vec3_t	vec;
 	vec3_t	start;
 	vec3_t	forward, right;
-	int		flash_number = MZ2_TANK_MACHINEGUN_1 + (Entity->s.frame - FRAME_attak406);
+	int		flash_number = MZ2_TANK_MACHINEGUN_1 + (Entity->state.frame - FRAME_attak406);
 
-	Angles_Vectors (Entity->s.angles, forward, right, NULL);
-	G_ProjectSource (Entity->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
+	Angles_Vectors (Entity->state.angles, forward, right, NULL);
+	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
 	if (Entity->enemy)
 	{
-		Vec3Copy (Entity->enemy->s.origin, vec);
+		Vec3Copy (Entity->enemy->state.origin, vec);
 		vec[2] += Entity->enemy->viewheight;
 		Vec3Subtract (vec, start, vec);
 		VecToAngles (vec, vec);
@@ -527,10 +527,10 @@ void CTank::MachineGun ()
 	else
 		dir[0] = 0;
 
-	if (Entity->s.frame <= FRAME_attak415)
-		dir[1] = Entity->s.angles[1] - 8 * (Entity->s.frame - FRAME_attak411);
+	if (Entity->state.frame <= FRAME_attak415)
+		dir[1] = Entity->state.angles[1] - 8 * (Entity->state.frame - FRAME_attak411);
 	else
-		dir[1] = Entity->s.angles[1] + 8 * (Entity->s.frame - FRAME_attak419);
+		dir[1] = Entity->state.angles[1] + 8 * (Entity->state.frame - FRAME_attak419);
 	dir[2] = 0;
 
 	Angles_Vectors (dir, forward, NULL, NULL);
@@ -827,7 +827,7 @@ void CTank::Attack ()
 	// pmm
 #endif
 
-	Vec3Subtract (Entity->enemy->s.origin, Entity->s.origin, vec);
+	Vec3Subtract (Entity->enemy->state.origin, Entity->state.origin, vec);
 	range = Vec3Length (vec);
 
 	r = random();
@@ -948,7 +948,7 @@ void CTank::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point
 
 void CTank::Spawn ()
 {
-	Entity->s.modelIndex = ModelIndex ("models/monsters/tank/tris.md2");
+	Entity->state.modelIndex = ModelIndex ("models/monsters/tank/tris.md2");
 	Vec3Set (Entity->mins, -32, -32, -16);
 	Vec3Set (Entity->maxs, 32, 32, 72);
 	Entity->movetype = MOVETYPE_STEP;
@@ -993,5 +993,5 @@ void CTankCommander::Spawn ()
 	CTank::Spawn ();
 	Entity->health = 1000;
 	Entity->gib_health = -225;
-	Entity->s.skinNum = 2;
+	Entity->state.skinNum = 2;
 }

@@ -657,6 +657,10 @@
 					RelativePath=".\cc_gameapi.cpp"
 					>
 				</File>
+				<File
+					RelativePath=".\cc_gameapi.h"
+					>
+				</File>
 				<Filter
 					Name="Cvar"
 					>
@@ -694,6 +698,10 @@
 					</File>
 					<File
 						RelativePath=".\cc_write.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\cc_write.h"
 						>
 					</File>
 				</Filter>
@@ -786,6 +794,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\cc_cmds_local.h"
+					>
+				</File>
+				<File
 					RelativePath=".\cc_gamecommands.cpp"
 					>
 				</File>
@@ -808,6 +820,14 @@
 				<File
 					RelativePath=".\cc_ent.cpp"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
 				</File>
 			</Filter>
 			<Filter
@@ -1000,10 +1020,14 @@
 				<File
 					RelativePath=".\cc_newton.cpp"
 					>
-				</File>
-				<File
-					RelativePath=".\include\pal.h"
-					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
 				</File>
 			</Filter>
 			<Filter
@@ -1255,6 +1279,18 @@
 				</File>
 				<File
 					RelativePath=".\cc_exceptionhandler.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Map"
+				>
+				<File
+					RelativePath=".\cc_mapprint.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_mapprint.h"
 					>
 				</File>
 			</Filter>

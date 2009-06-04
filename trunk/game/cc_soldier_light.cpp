@@ -113,14 +113,14 @@ void CSoldierLight::FireGun (int FlashNumber)
 	float	r, u;
 	int		flashIndex = BlasterFlash[FlashNumber];
 
-	Angles_Vectors (Entity->s.angles, forward, right, NULL);
-	G_ProjectSource (Entity->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[flashIndex], forward, right, start);
+	Angles_Vectors (Entity->state.angles, forward, right, NULL);
+	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[flashIndex], forward, right, start);
 
 	if (FlashNumber == 5 || FlashNumber == 6)
 		Vec3Copy (forward, aim);
 	else
 	{
-		Vec3Copy (Entity->enemy->s.origin, end);
+		Vec3Copy (Entity->enemy->state.origin, end);
 		end[2] += Entity->enemy->viewheight;
 		Vec3Subtract (end, start, aim);
 		VecToAngles (aim, dir);
@@ -147,7 +147,7 @@ void CSoldierLight::SpawnSoldier ()
 	SoundIndex ("misc/lasfly.wav");
 	SoundIndex ("soldier/solatck2.wav");
 
-	Entity->s.skinNum = 0;
+	Entity->state.skinNum = 0;
 	Entity->health = 20;
 	Entity->gib_health = -30;
 

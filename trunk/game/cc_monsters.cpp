@@ -64,7 +64,7 @@ void CMonster::FoundPath ()
 
 	// If our first node is behind us and it's not too far away, we can
 	// just skip this node and go to the next one.	
-	if (VecInFront(Entity->s.angles, Entity->s.origin, P_CurrentPath->Path[P_CurrentNodeIndex]->Origin))
+	if (VecInFront(Entity->state.angles, Entity->state.origin, P_CurrentPath->Path[P_CurrentNodeIndex]->Origin))
 	//{
 		P_CurrentNodeIndex--;
 		//P_CurrentPath->Path.pop_back();
@@ -75,7 +75,7 @@ void CMonster::FoundPath ()
 
 	float timeOut = level.time + 2; // Always at least 2 seconds
 	// Calculate approximate distance and check how long we want this to time out for
-	switch (rangevector(Entity->s.origin, P_CurrentNode->Origin))
+	switch (rangevector(Entity->state.origin, P_CurrentNode->Origin))
 	{
 	case RANGE_MELEE:
 		timeOut += 6; // 10 seconds max
@@ -115,9 +115,9 @@ void CMonster::MoveToPath (float Dist)
 	vec3_t sub;
 	bool doit = false;
 	// Check if we hit our new path.
-	Vec3Subtract (Entity->s.origin, P_CurrentNode->Origin, sub);
+	Vec3Subtract (Entity->state.origin, P_CurrentNode->Origin, sub);
 
-	CTempEnt_Trails::FleshCable (Entity->s.origin, P_CurrentNode->Origin, Entity-g_edicts);
+	CTempEnt_Trails::FleshCable (Entity->state.origin, P_CurrentNode->Origin, Entity-g_edicts);
 	if (Vec3Length (sub) < 30)
 	{
 		bool shouldJump = (P_CurrentNode->Type == NODE_JUMP);
@@ -172,7 +172,7 @@ void CMonster::MoveToPath (float Dist)
 			if (shouldJump)
 			{
 				vec3_t sub2, forward;
-				Vec3Subtract (P_CurrentNode->Origin, Entity->s.origin, sub2);
+				Vec3Subtract (P_CurrentNode->Origin, Entity->state.origin, sub2);
 				Angles_Vectors (sub2, forward, NULL, NULL);
 				Vec3MA (Entity->velocity, 1.5, sub2, Entity->velocity);
 				Entity->velocity[2] = 300;
@@ -185,13 +185,13 @@ void CMonster::MoveToPath (float Dist)
 			if (Entity->enemy)
 			{
 				vec3_t sub;
-				Vec3Subtract (Entity->s.origin, Entity->enemy->s.origin, sub);
+				Vec3Subtract (Entity->state.origin, Entity->enemy->state.origin, sub);
 
 				if (Vec3Length(sub) < 250) // If we're still close enough that it's possible
 					// to hear him breathing (lol), startback on the trail
 				{
 					P_CurrentPath = NULL;
-					P_CurrentGoalNode = GetClosestNodeTo(Entity->enemy->s.origin);
+					P_CurrentGoalNode = GetClosestNodeTo(Entity->enemy->state.origin);
 					FoundPath ();
 					return;
 				}
@@ -206,18 +206,18 @@ void CMonster::MoveToPath (float Dist)
 		}
 	}
 
-	if (P_NodeFollowTimeout < level.time)
+	if (P_NodeFollowTimeout < level.time && P_CurrentPath && P_CurrentNode)
 	{
 		// Re-evaluate start and end nodes
 		CPathNode *End = P_CurrentPath->Path[0];
-		P_CurrentNode = GetClosestNodeTo(Entity->s.origin);
+		P_CurrentNode = GetClosestNodeTo(Entity->state.origin);
 		P_CurrentGoalNode = End;
 		P_CurrentPath = NULL;
 		FoundPath ();
 
 		float timeOut = level.time + 2; // Always at least 2 seconds
 		// Calculate approximate distance and check how long we want this to time out for
-		switch (rangevector(Entity->s.origin, P_CurrentNode->Origin))
+		switch (rangevector(Entity->state.origin, P_CurrentNode->Origin))
 		{
 		case RANGE_MELEE:
 			timeOut += 6; // 10 seconds max
@@ -248,8 +248,8 @@ void CMonster::MoveToPath (float Dist)
 			olddir = AngleModf ((int)(IdealYaw/45)*45);
 			turnaround = AngleModf (olddir - 180);
 
-			deltax = P_CurrentNode->Origin[0] - Entity->s.origin[0];
-			deltay = P_CurrentNode->Origin[1] - Entity->s.origin[1];
+			deltax = P_CurrentNode->Origin[0] - Entity->state.origin[0];
+			deltay = P_CurrentNode->Origin[1] - Entity->state.origin[1];
 			if (deltax>10)
 				d[1]= 0;
 			else if (deltax<-10)
@@ -385,7 +385,7 @@ int range (edict_t *self, edict_t *other)
 	vec3_t	v;
 	float	len;
 
-	Vec3Subtract (self->s.origin, other->s.origin, v);
+	Vec3Subtract (self->state.origin, other->state.origin, v);
 	len = Vec3Length (v);
 	if (len < MELEE_DISTANCE)
 		return RANGE_MELEE;
@@ -425,9 +425,9 @@ bool visible (edict_t *self, edict_t *other)
 	vec3_t	spot2;
 	CTrace	trace;
 
-	Vec3Copy (self->s.origin, spot1);
+	Vec3Copy (self->state.origin, spot1);
 	spot1[2] += self->viewheight;
-	Vec3Copy (other->s.origin, spot2);
+	Vec3Copy (other->state.origin, spot2);
 	spot2[2] += other->viewheight;
 	trace = CTrace (spot1, spot2, self, CONTENTS_MASK_OPAQUE);
 	
@@ -450,8 +450,8 @@ bool infront (edict_t *self, edict_t *other)
 	float	dot;
 	vec3_t	forward;
 	
-	Angles_Vectors (self->s.angles, forward, NULL, NULL);
-	Vec3Subtract (other->s.origin, self->s.origin, vec);
+	Angles_Vectors (self->state.angles, forward, NULL, NULL);
+	Vec3Subtract (other->state.origin, self->state.origin, vec);
 	VectorNormalizef (vec, vec);
 	dot = DotProduct (vec, forward);
 	
@@ -486,7 +486,7 @@ void CMonster::RunThink ()
 
 void CMonster::ChangeYaw ()
 {
-	float current = AngleModf (Entity->s.angles[YAW]);
+	float current = AngleModf (Entity->state.angles[YAW]);
 
 	if (current == IdealYaw)
 		return;
@@ -513,7 +513,7 @@ void CMonster::ChangeYaw ()
 			move = -YawSpeed;
 	}
 	
-	Entity->s.angles[YAW] = AngleModf (current + move);
+	Entity->state.angles[YAW] = AngleModf (current + move);
 }
 
 bool CMonster::CheckBottom ()
@@ -523,8 +523,8 @@ bool CMonster::CheckBottom ()
 	int		x, y;
 	float	mid, bottom;
 	
-	Vec3Add (Entity->s.origin, Entity->mins, mins);
-	Vec3Add (Entity->s.origin, Entity->maxs, maxs);
+	Vec3Add (Entity->state.origin, Entity->mins, mins);
+	Vec3Add (Entity->state.origin, Entity->maxs, maxs);
 
 // if all of the points under the corners are solid world, don't bother
 // with the tougher checks
@@ -623,8 +623,8 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 	int			contents;
 
 // try the move	
-	Vec3Copy (Entity->s.origin, oldorg);
-	Vec3Add (Entity->s.origin, move, neworg);
+	Vec3Copy (Entity->state.origin, oldorg);
+	Vec3Add (Entity->state.origin, move, neworg);
 
 // flying monsters don't step up
 	if ( Entity->flags & (FL_SWIM | FL_FLY) )
@@ -632,12 +632,12 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 	// try one move with vertical motion, then one without
 		for (i=0 ; i<2 ; i++)
 		{
-			Vec3Add (Entity->s.origin, move, neworg);
+			Vec3Add (Entity->state.origin, move, neworg);
 			if (i == 0 && Entity->enemy)
 			{
 				if (!Entity->goalentity)
 					Entity->goalentity = Entity->enemy;
-				dz = Entity->s.origin[2] - Entity->goalentity->s.origin[2];
+				dz = Entity->state.origin[2] - Entity->goalentity->state.origin[2];
 				if (Entity->goalentity->client)
 				{
 					if (dz > 40)
@@ -658,7 +658,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 						neworg[2] += dz;
 				}
 			}
-			trace = CTrace(Entity->s.origin, Entity->mins, Entity->maxs, neworg, Entity, CONTENTS_MASK_MONSTERSOLID);
+			trace = CTrace(Entity->state.origin, Entity->mins, Entity->maxs, neworg, Entity, CONTENTS_MASK_MONSTERSOLID);
 	
 			// fly monsters don't enter water voluntarily
 			if (Entity->flags & FL_FLY)
@@ -690,7 +690,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 
 			if (trace.fraction == 1)
 			{
-				Vec3Copy (trace.endPos, Entity->s.origin);
+				Vec3Copy (trace.endPos, Entity->state.origin);
 				if (ReLink)
 				{
 					gi.linkentity (Entity);
@@ -747,7 +747,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 	// if monster had the ground pulled out, go ahead and fall
 		if ( Entity->flags & FL_PARTIALGROUND )
 		{
-			Vec3Add (Entity->s.origin, move, Entity->s.origin);
+			Vec3Add (Entity->state.origin, move, Entity->state.origin);
 			if (ReLink)
 			{
 				gi.linkentity (Entity);
@@ -761,7 +761,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 	}
 
 // check point traces down for dangling corners
-	Vec3Copy (trace.endPos, Entity->s.origin);
+	Vec3Copy (trace.endPos, Entity->state.origin);
 	
 	if (!CheckBottom ())
 	{
@@ -777,8 +777,8 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 		}
 		// Check to see if there's floor just after this
 		vec3_t org, up, end2;
-		Angles_Vectors (Entity->s.angles, NULL, NULL, up);
-		Vec3Add (Entity->s.origin, move, org);
+		Angles_Vectors (Entity->state.angles, NULL, NULL, up);
+		Vec3Add (Entity->state.origin, move, org);
 
 		// Go down
 		Vec3MA (org, -STEPSIZE, up, end2);
@@ -789,7 +789,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 		// Couldn't make the move
 		if (trace.fraction == 1.0)
 		{
-			Vec3Copy (oldorg, Entity->s.origin);
+			Vec3Copy (oldorg, Entity->state.origin);
 			return false;
 		}
 	}
@@ -834,8 +834,8 @@ void CMonster::NewChaseDir (edict_t *Enemy, float Dist)
 	olddir = AngleModf ((int)(IdealYaw/45)*45);
 	turnaround = AngleModf (olddir - 180);
 
-	deltax = Enemy->s.origin[0] - Entity->s.origin[0];
-	deltay = Enemy->s.origin[1] - Entity->s.origin[1];
+	deltax = Enemy->state.origin[0] - Entity->state.origin[0];
+	deltay = Enemy->state.origin[1] - Entity->state.origin[1];
 	if (deltax>10)
 		d[1]= 0;
 	else if (deltax<-10)
@@ -920,13 +920,13 @@ bool CMonster::StepDirection (float Yaw, float Dist)
 	move[1] = sinf(Yaw)*Dist;
 	move[2] = 0;
 
-	Vec3Copy (Entity->s.origin, oldorigin);
+	Vec3Copy (Entity->state.origin, oldorigin);
 	if (MoveStep (move, false))
 	{
-		delta = Entity->s.angles[YAW] - IdealYaw;
+		delta = Entity->state.angles[YAW] - IdealYaw;
 		// not turned far enough, so don't take the step
 		if (delta > 45 && delta < 315)
-			Vec3Copy (oldorigin, Entity->s.origin);
+			Vec3Copy (oldorigin, Entity->state.origin);
 		gi.linkentity (Entity);
 		G_TouchTriggers (Entity);
 		return true;
@@ -945,7 +945,7 @@ void CMonster::WalkMonsterStartGo ()
 		if (Entity->groundentity)
 		{
 			if (!WalkMove (0, 0))
-				MapPrint (MAPPRINT_WARNING, Entity, Entity->s.origin, "In solid\n");
+				MapPrint (MAPPRINT_WARNING, Entity, Entity->state.origin, "In solid\n");
 		}
 	}
 	
@@ -988,7 +988,7 @@ void CMonster::SwimMonsterStart ()
 void CMonster::FlyMonsterStartGo ()
 {
 	if (!WalkMove (0, 0))
-		MapPrint (MAPPRINT_WARNING, Entity, Entity->s.origin, "Entity in solid\n");
+		MapPrint (MAPPRINT_WARNING, Entity, Entity->state.origin, "Entity in solid\n");
 
 	if (!YawSpeed)
 		YawSpeed = 10;
@@ -1031,8 +1031,8 @@ void CMonster::MonsterStartGo ()
 				notcombat = true;
 		}
 		if (notcombat && Entity->combattarget)
-			MapPrint (MAPPRINT_WARNING, Entity, Entity->s.origin, "Target with mixed types\n");
-			//gi.dprintf("%s at (%f %f %f) has target with mixed types\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
+			MapPrint (MAPPRINT_WARNING, Entity, Entity->state.origin, "Target with mixed types\n");
+			//gi.dprintf("%s at (%f %f %f) has target with mixed types\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
 		if (fixup)
 			Entity->target = NULL;
 	}
@@ -1046,7 +1046,7 @@ void CMonster::MonsterStartGo ()
 		while ((target = G_Find (target, FOFS(targetname), Entity->combattarget)) != NULL)
 		{
 			if (strcmp(target->classname, "point_combat") != 0)
-				MapPrint (MAPPRINT_WARNING, Entity, Entity->s.origin, "Has a bad combattarget (\"%s\")\n", Entity->combattarget);
+				MapPrint (MAPPRINT_WARNING, Entity, Entity->state.origin, "Has a bad combattarget (\"%s\")\n", Entity->combattarget);
 		}
 	}
 
@@ -1055,16 +1055,16 @@ void CMonster::MonsterStartGo ()
 		Entity->goalentity = Entity->movetarget = G_PickTarget(Entity->target);
 		if (!Entity->movetarget)
 		{
-			//gi.dprintf ("%s can't find target %s at (%f %f %f)\n", self->classname, self->target, self->s.origin[0], self->s.origin[1], self->s.origin[2]);
-			MapPrint (MAPPRINT_WARNING, Entity, Entity->s.origin, "Can't find target\n");
+			//gi.dprintf ("%s can't find target %s at (%f %f %f)\n", self->classname, self->target, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
+			MapPrint (MAPPRINT_WARNING, Entity, Entity->state.origin, "Can't find target\n");
 			Entity->target = NULL;
 			PauseTime = 100000000;
 			Stand ();
 		}
 		else if (strcmp (Entity->movetarget->classname, "path_corner") == 0)
 		{
-			Vec3Subtract (Entity->goalentity->s.origin, Entity->s.origin, v);
-			IdealYaw = Entity->s.angles[YAW] = VecToYaw(v);
+			Vec3Subtract (Entity->goalentity->state.origin, Entity->state.origin, v);
+			IdealYaw = Entity->state.angles[YAW] = VecToYaw(v);
 			Walk ();
 			Entity->target = NULL;
 		}
@@ -1104,7 +1104,7 @@ void CMonster::MonsterStart ()
 
 	NextThink = level.time + FRAMETIME;
 	Entity->svFlags |= SVF_MONSTER;
-	Entity->s.renderFx |= RF_FRAMELERP;
+	Entity->state.renderFx |= RF_FRAMELERP;
 	Entity->takedamage = DAMAGE_AIM;
 	Entity->air_finished = level.time + 12;
 	Entity->use = &CMonster::MonsterUse;
@@ -1114,19 +1114,19 @@ void CMonster::MonsterStart ()
 	Entity->deadflag = DEAD_NO;
 	Entity->svFlags &= ~SVF_DEADMONSTER;
 
-	Vec3Copy (Entity->s.origin, Entity->s.oldOrigin);
+	Vec3Copy (Entity->state.origin, Entity->state.oldOrigin);
 
 	if (st.item)
 	{
 		Entity->item = FindItemByClassname (st.item);
 		if (!Entity->item)
-			MapPrint (MAPPRINT_WARNING, Entity, Entity->s.origin, "Bad item: \"%s\"\n", st.item);
-			//gi.dprintf("%s at (%f %f %f) has bad item: %s\n", self->classname, self->s.origin[0], self->s.origin[1], self->s.origin[2], st.item);
+			MapPrint (MAPPRINT_WARNING, Entity, Entity->state.origin, "Bad item: \"%s\"\n", st.item);
+			//gi.dprintf("%s at (%f %f %f) has bad item: %s\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2], st.item);
 	}
 
 	// randomize what frame they start on
 	if (CurrentMove)
-		Entity->s.frame = CurrentMove->FirstFrame + (rand() % (CurrentMove->LastFrame - CurrentMove->FirstFrame + 1));
+		Entity->state.frame = CurrentMove->FirstFrame + (rand() % (CurrentMove->LastFrame - CurrentMove->FirstFrame + 1));
 
 #ifdef MONSTER_USE_ROGUE_AI
 	BaseHeight = Entity->maxs[2];
@@ -1177,7 +1177,7 @@ void _cdecl CMonster::MonsterTriggeredSpawnUse (edict_t *self, edict_t *other, e
 
 void CMonster::MonsterTriggeredSpawn ()
 {
-	Entity->s.origin[2] += 1;
+	Entity->state.origin[2] += 1;
 	KillBox (Entity);
 
 	Entity->solid = SOLID_BBOX;
@@ -1245,7 +1245,7 @@ void CMonster::AlertNearbyStroggs ()
 	if (dist > 2400)
 		dist = 2400;
 
-	while ( (strogg = findradius (strogg, Entity->s.origin, dist)) != NULL)
+	while ( (strogg = findradius (strogg, Entity->state.origin, dist)) != NULL)
 	{
 		if (strogg->health < 1 || !(strogg->takedamage))
 			continue;
@@ -1261,8 +1261,8 @@ void CMonster::AlertNearbyStroggs ()
 		
 #ifdef MONSTERS_USE_PATHFINDING
 		// Set us up for pathing
-		P_CurrentNode = GetClosestNodeTo(strogg->s.origin);
-		P_CurrentGoalNode = GetClosestNodeTo(Entity->enemy->s.origin);
+		P_CurrentNode = GetClosestNodeTo(strogg->state.origin);
+		P_CurrentGoalNode = GetClosestNodeTo(Entity->enemy->state.origin);
 		strogg->Monster->FoundPath ();
 #else
 		//strogg->enemy = Entity->enemy;
@@ -1374,9 +1374,9 @@ bool CMonster::CheckAttack ()
 	if (Entity->enemy->health > 0)
 	{
 	// see if any entities are in the way of the shot
-		Vec3Copy (Entity->s.origin, spot1);
+		Vec3Copy (Entity->state.origin, spot1);
 		spot1[2] += Entity->viewheight;
-		Vec3Copy (Entity->enemy->s.origin, spot2);
+		Vec3Copy (Entity->enemy->state.origin, spot2);
 		spot2[2] += Entity->enemy->viewheight;
 
 		tr = CTrace(spot1, spot2, Entity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
@@ -1459,9 +1459,9 @@ bool CMonster::CheckAttack ()
 	if (Entity->enemy->health > 0)
 	{
 	// see if any entities are in the way of the shot
-		Vec3Copy (Entity->s.origin, spot1);
+		Vec3Copy (Entity->state.origin, spot1);
 		spot1[2] += Entity->viewheight;
-		Vec3Copy (Entity->enemy->s.origin, spot2);
+		Vec3Copy (Entity->enemy->state.origin, spot2);
 		spot2[2] += Entity->enemy->viewheight;
 
 		tr = CTrace (spot1, spot2, Entity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
@@ -1595,16 +1595,16 @@ void CMonster::DropToFloor ()
 	vec3_t		end;
 	CTrace		trace;
 
-	Entity->s.origin[2] += 1;
-	Vec3Copy (Entity->s.origin, end);
+	Entity->state.origin[2] += 1;
+	Vec3Copy (Entity->state.origin, end);
 	end[2] -= 256;
 	
-	trace = CTrace (Entity->s.origin, Entity->mins, Entity->maxs, end, Entity, CONTENTS_MASK_MONSTERSOLID);
+	trace = CTrace (Entity->state.origin, Entity->mins, Entity->maxs, end, Entity, CONTENTS_MASK_MONSTERSOLID);
 
 	if (trace.fraction == 1 || trace.allSolid)
 		return;
 
-	Vec3Copy (trace.endPos, Entity->s.origin);
+	Vec3Copy (trace.endPos, Entity->state.origin);
 
 	gi.linkentity (Entity);
 	CheckGround ();
@@ -1616,12 +1616,12 @@ void CMonster::AI_Charge(float Dist)
 #ifndef MONSTER_USE_ROGUE_AI
 	vec3_t	v;
 
-	Vec3Subtract (Entity->enemy->s.origin, Entity->s.origin, v);
+	Vec3Subtract (Entity->enemy->state.origin, Entity->state.origin, v);
 	IdealYaw = VecToYaw(v);
 	ChangeYaw ();
 
 	if (Dist)
-		WalkMove (Entity->s.angles[YAW], Dist);
+		WalkMove (Entity->state.angles[YAW], Dist);
 #else
 	vec3_t	v;
 	// PMM
@@ -1638,12 +1638,12 @@ void CMonster::AI_Charge(float Dist)
 
 	// PMM - save blindfire target
 	if (visible(Entity, Entity->enemy))
-		Vec3Copy (Entity->enemy->s.origin, BlindFireTarget);
+		Vec3Copy (Entity->enemy->state.origin, BlindFireTarget);
 	// pmm 
 
 	if (!(AIFlags & AI_MANUAL_STEERING))
 	{
-		Vec3Subtract (Entity->enemy->s.origin, Entity->s.origin, v);
+		Vec3Subtract (Entity->enemy->state.origin, Entity->state.origin, v);
 		IdealYaw = VecToYaw(v);
 	}
 	ChangeYaw ();
@@ -1673,7 +1673,7 @@ void CMonster::AI_Charge(float Dist)
 			WalkMove (IdealYaw - ofs, Dist);
 		}
 		else
-			WalkMove (Entity->s.angles[YAW], Dist);
+			WalkMove (Entity->state.angles[YAW], Dist);
 	}
 // PMM
 #endif
@@ -1777,12 +1777,12 @@ bool CMonster::AI_CheckAttack()
 	if (EnemyVis)
 	{
 		SearchTime = level.time + 5;
-		Vec3Copy (Entity->enemy->s.origin, LastSighting);
+		Vec3Copy (Entity->enemy->state.origin, LastSighting);
 	}
 
 	EnemyInfront = infront(Entity, Entity->enemy);
 	EnemyRange = range(Entity, Entity->enemy);
-	Vec3Subtract (Entity->enemy->s.origin, Entity->s.origin, temp);
+	Vec3Subtract (Entity->enemy->state.origin, Entity->state.origin, temp);
 	EnemyYaw = VecToYaw(temp);
 
 	// JDC self->ideal_yaw = enemy_yaw;
@@ -1918,11 +1918,11 @@ bool CMonster::AI_CheckAttack()
 	if (EnemyVis)
 	{
 		SearchTime = level.time + 5;
-		Vec3Copy (Entity->enemy->s.origin, LastSighting);
+		Vec3Copy (Entity->enemy->state.origin, LastSighting);
 		// PMM
 		AIFlags &= ~AI_LOST_SIGHT;
 		TrailTime = level.time;
-		Vec3Copy (Entity->enemy->s.origin, BlindFireTarget);
+		Vec3Copy (Entity->enemy->state.origin, BlindFireTarget);
 		BlindFireDelay = 0;
 		// pmm
 	}
@@ -1936,7 +1936,7 @@ bool CMonster::AI_CheckAttack()
 
 	EnemyInfront = infront(Entity, Entity->enemy);
 	EnemyRange = range(Entity, Entity->enemy);
-	Vec3Subtract (Entity->enemy->s.origin, Entity->s.origin, temp);
+	Vec3Subtract (Entity->enemy->state.origin, Entity->state.origin, temp);
 	EnemyYaw = VecToYaw(temp);
 
 	// JDC self->ideal_yaw = enemy_yaw;
@@ -1976,7 +1976,7 @@ bool CMonster::AI_CheckAttack()
 
 void CMonster::AI_Move (float Dist)
 {
-	WalkMove (Entity->s.angles[YAW], Dist);
+	WalkMove (Entity->state.angles[YAW], Dist);
 }
 
 void CMonster::AI_Run(float Dist)
@@ -2012,7 +2012,7 @@ void CMonster::AI_Run(float Dist)
 	{
 		if (Entity->enemy)
 		{
-			Vec3Subtract (Entity->s.origin, Entity->enemy->s.origin, v);
+			Vec3Subtract (Entity->state.origin, Entity->enemy->state.origin, v);
 			if (Vec3Length(v) < 64)
 			{
 				AIFlags |= (AI_STAND_GROUND | AI_TEMP_STAND_GROUND);
@@ -2042,7 +2042,7 @@ void CMonster::AI_Run(float Dist)
 			//gi.dprintf("regained sight\n");
 		MoveToGoal (Dist);
 		AIFlags &= ~AI_LOST_SIGHT;
-		Vec3Copy (Entity->enemy->s.origin, LastSighting);
+		Vec3Copy (Entity->enemy->state.origin, LastSighting);
 		TrailTime = level.time;
 		return;
 	}
@@ -2075,8 +2075,8 @@ void CMonster::AI_Run(float Dist)
 
 #ifdef MONSTERS_USE_PATHFINDING
 		// Set us up for pathing
-		P_CurrentNode = GetClosestNodeTo(Entity->s.origin);
-		P_CurrentGoalNode = GetClosestNodeTo(Entity->enemy->s.origin);
+		P_CurrentNode = GetClosestNodeTo(Entity->state.origin);
+		P_CurrentGoalNode = GetClosestNodeTo(Entity->enemy->state.origin);
 		FoundPath ();
 #endif
 
@@ -2111,9 +2111,9 @@ void CMonster::AI_Run(float Dist)
 
 		if (marker)
 		{
-			Vec3Copy (marker->s.origin, LastSighting);
+			Vec3Copy (marker->state.origin, LastSighting);
 			TrailTime = marker->timestamp;
-			Entity->s.angles[YAW] = IdealYaw = marker->s.angles[YAW];
+			Entity->state.angles[YAW] = IdealYaw = marker->state.angles[YAW];
 //			dprint("heading is "); dprint(ftos(self.ideal_yaw)); dprint("\n");
 
 //			debug_drawline(self.origin, self.last_sighting, 52);
@@ -2121,7 +2121,7 @@ void CMonster::AI_Run(float Dist)
 		}
 	}
 
-	Vec3Subtract (Entity->s.origin, LastSighting, v);
+	Vec3Subtract (Entity->state.origin, LastSighting, v);
 	d1 = Vec3Length(v);
 	if (d1 <= Dist)
 	{
@@ -2129,30 +2129,30 @@ void CMonster::AI_Run(float Dist)
 		Dist = d1;
 	}
 
-	Vec3Copy (LastSighting, Entity->goalentity->s.origin);
+	Vec3Copy (LastSighting, Entity->goalentity->state.origin);
 
 	if (isNew)
 	{
 //		gi.dprintf("checking for course correction\n");
 
-		tr = CTrace (Entity->s.origin, Entity->mins, Entity->maxs, LastSighting, Entity, CONTENTS_MASK_PLAYERSOLID);
+		tr = CTrace (Entity->state.origin, Entity->mins, Entity->maxs, LastSighting, Entity, CONTENTS_MASK_PLAYERSOLID);
 		if (tr.fraction < 1)
 		{
-			Vec3Subtract (Entity->goalentity->s.origin, Entity->s.origin, v);
+			Vec3Subtract (Entity->goalentity->state.origin, Entity->state.origin, v);
 			d1 = Vec3Length(v);
 			center = tr.fraction;
 			d2 = d1 * ((center+1)/2);
-			Entity->s.angles[YAW] = IdealYaw = VecToYaw(v);
-			Angles_Vectors(Entity->s.angles, v_forward, v_right, NULL);
+			Entity->state.angles[YAW] = IdealYaw = VecToYaw(v);
+			Angles_Vectors(Entity->state.angles, v_forward, v_right, NULL);
 
 			Vec3Set (v, d2, -16, 0);
-			G_ProjectSource (Entity->s.origin, v, v_forward, v_right, left_target);
-			tr = CTrace(Entity->s.origin, Entity->mins, Entity->maxs, left_target, Entity, CONTENTS_MASK_PLAYERSOLID);
+			G_ProjectSource (Entity->state.origin, v, v_forward, v_right, left_target);
+			tr = CTrace(Entity->state.origin, Entity->mins, Entity->maxs, left_target, Entity, CONTENTS_MASK_PLAYERSOLID);
 			left = tr.fraction;
 
 			Vec3Set (v, d2, 16, 0);
-			G_ProjectSource (Entity->s.origin, v, v_forward, v_right, right_target);
-			tr = CTrace(Entity->s.origin, Entity->mins, Entity->maxs, right_target, Entity, CONTENTS_MASK_PLAYERSOLID);
+			G_ProjectSource (Entity->state.origin, v, v_forward, v_right, right_target);
+			tr = CTrace(Entity->state.origin, Entity->mins, Entity->maxs, right_target, Entity, CONTENTS_MASK_PLAYERSOLID);
 			right = tr.fraction;
 
 			center = (d1*center)/d2;
@@ -2161,15 +2161,15 @@ void CMonster::AI_Run(float Dist)
 				if (left < 1)
 				{
 					Vec3Set (v, d2 * left * 0.5, -16, 0);
-					G_ProjectSource (Entity->s.origin, v, v_forward, v_right, left_target);
+					G_ProjectSource (Entity->state.origin, v, v_forward, v_right, left_target);
 //					gi.dprintf("incomplete path, go part way and adjust again\n");
 				}
 				Vec3Copy (LastSighting, SavedGoal);
 				AIFlags |= AI_PURSUE_TEMP;
-				Vec3Copy (left_target, Entity->goalentity->s.origin);
+				Vec3Copy (left_target, Entity->goalentity->state.origin);
 				Vec3Copy (left_target, LastSighting);
-				Vec3Subtract (Entity->goalentity->s.origin, Entity->s.origin, v);
-				Entity->s.angles[YAW] = IdealYaw = VecToYaw(v);
+				Vec3Subtract (Entity->goalentity->state.origin, Entity->state.origin, v);
+				Entity->state.angles[YAW] = IdealYaw = VecToYaw(v);
 //				gi.dprintf("adjusted left\n");
 //				debug_drawline(self.origin, self.last_sighting, 152);
 			}
@@ -2177,15 +2177,15 @@ void CMonster::AI_Run(float Dist)
 			{
 				if (right < 1) {
 					Vec3Set (v, d2 * right * 0.5, 16, 0);
-					G_ProjectSource (Entity->s.origin, v, v_forward, v_right, right_target);
+					G_ProjectSource (Entity->state.origin, v, v_forward, v_right, right_target);
 //					gi.dprintf("incomplete path, go part way and adjust again\n");
 				}
 				Vec3Copy (LastSighting, SavedGoal);
 				AIFlags |= AI_PURSUE_TEMP;
-				Vec3Copy (right_target, Entity->goalentity->s.origin);
+				Vec3Copy (right_target, Entity->goalentity->state.origin);
 				Vec3Copy (right_target, LastSighting);
-				Vec3Subtract (Entity->goalentity->s.origin, Entity->s.origin, v);
-				Entity->s.angles[YAW] = IdealYaw = VecToYaw(v);
+				Vec3Subtract (Entity->goalentity->state.origin, Entity->state.origin, v);
+				Entity->state.angles[YAW] = IdealYaw = VecToYaw(v);
 //				gi.dprintf("adjusted right\n");
 //				debug_drawline(self.origin, self.last_sighting, 152);
 			}
@@ -2253,7 +2253,7 @@ void CMonster::AI_Run(float Dist)
 	{
 		// PMM - paranoia checking
 		if (Entity->enemy)
-			Vec3Subtract (Entity->s.origin, Entity->enemy->s.origin, v);
+			Vec3Subtract (Entity->state.origin, Entity->enemy->state.origin, v);
 
 		if ((!Entity->enemy) || (Vec3Length(v) < 64))
 		// pmm
@@ -2316,10 +2316,10 @@ void CMonster::AI_Run(float Dist)
 		if ((Entity->enemy) && (Entity->enemy->inUse) && (EnemyVis))
 		{
 			AIFlags &= ~AI_LOST_SIGHT;
-			Vec3Copy (Entity->enemy->s.origin, LastSighting);
+			Vec3Copy (Entity->enemy->state.origin, LastSighting);
 			TrailTime = level.time;
 			//PMM
-			Vec3Copy (Entity->enemy->s.origin, BlindFireTarget);
+			Vec3Copy (Entity->enemy->state.origin, BlindFireTarget);
 			BlindFireDelay = 0;
 			//pmm
 		}
@@ -2337,10 +2337,10 @@ void CMonster::AI_Run(float Dist)
 			return;			// PGM - g_touchtrigger free problem
 
 		AIFlags &= ~AI_LOST_SIGHT;
-		Vec3Copy (Entity->enemy->s.origin, LastSighting);
+		Vec3Copy (Entity->enemy->state.origin, LastSighting);
 		TrailTime = level.time;
 		// PMM
-		Vec3Copy (Entity->enemy->s.origin, BlindFireTarget);
+		Vec3Copy (Entity->enemy->state.origin, BlindFireTarget);
 		BlindFireDelay = 0;
 		// pmm
 		return;
@@ -2385,8 +2385,8 @@ void CMonster::AI_Run(float Dist)
 	else if ((AIFlags & AI_LOST_SIGHT) && P_NodePathTimeout < level.time)
 	{
 		// Set us up for pathing
-		P_CurrentNode = GetClosestNodeTo(Entity->s.origin);
-		P_CurrentGoalNode = GetClosestNodeTo(Entity->enemy->s.origin);
+		P_CurrentNode = GetClosestNodeTo(Entity->state.origin);
+		P_CurrentGoalNode = GetClosestNodeTo(Entity->enemy->state.origin);
 		FoundPath ();
 	}
 #endif
@@ -2415,15 +2415,15 @@ void CMonster::AI_Run(float Dist)
 
 		if (marker)
 		{
-			Vec3Copy (marker->s.origin, LastSighting);
+			Vec3Copy (marker->state.origin, LastSighting);
 			TrailTime = marker->timestamp;
-			Entity->s.angles[YAW] = IdealYaw = marker->s.angles[YAW];
+			Entity->state.angles[YAW] = IdealYaw = marker->state.angles[YAW];
 
 			isNew = true;
 		}
 	}
 
-	Vec3Subtract (Entity->s.origin, LastSighting, v);
+	Vec3Subtract (Entity->state.origin, LastSighting, v);
 	d1 = Vec3Length(v);
 	if (d1 <= Dist)
 	{
@@ -2431,28 +2431,28 @@ void CMonster::AI_Run(float Dist)
 		Dist = d1;
 	}
 
-	Vec3Copy (LastSighting, Entity->goalentity->s.origin);
+	Vec3Copy (LastSighting, Entity->goalentity->state.origin);
 
 	if (isNew)
 	{
-		tr = CTrace(Entity->s.origin, Entity->mins, Entity->maxs, LastSighting, Entity, CONTENTS_MASK_PLAYERSOLID);
+		tr = CTrace(Entity->state.origin, Entity->mins, Entity->maxs, LastSighting, Entity, CONTENTS_MASK_PLAYERSOLID);
 		if (tr.fraction < 1)
 		{
-			Vec3Subtract (Entity->goalentity->s.origin, Entity->s.origin, v);
+			Vec3Subtract (Entity->goalentity->state.origin, Entity->state.origin, v);
 			d1 = Vec3Length(v);
 			center = tr.fraction;
 			d2 = d1 * ((center+1)/2);
-			Entity->s.angles[YAW] = IdealYaw = VecToYaw(v);
-			Angles_Vectors(Entity->s.angles, v_forward, v_right, NULL);
+			Entity->state.angles[YAW] = IdealYaw = VecToYaw(v);
+			Angles_Vectors(Entity->state.angles, v_forward, v_right, NULL);
 
 			Vec3Set(v, d2, -16, 0);
-			G_ProjectSource (Entity->s.origin, v, v_forward, v_right, left_target);
-			tr = CTrace(Entity->s.origin, Entity->mins, Entity->maxs, left_target, Entity, CONTENTS_MASK_PLAYERSOLID);
+			G_ProjectSource (Entity->state.origin, v, v_forward, v_right, left_target);
+			tr = CTrace(Entity->state.origin, Entity->mins, Entity->maxs, left_target, Entity, CONTENTS_MASK_PLAYERSOLID);
 			left = tr.fraction;
 
 			Vec3Set(v, d2, 16, 0);
-			G_ProjectSource (Entity->s.origin, v, v_forward, v_right, right_target);
-			tr = CTrace(Entity->s.origin, Entity->mins, Entity->maxs, right_target, Entity, CONTENTS_MASK_PLAYERSOLID);
+			G_ProjectSource (Entity->state.origin, v, v_forward, v_right, right_target);
+			tr = CTrace(Entity->state.origin, Entity->mins, Entity->maxs, right_target, Entity, CONTENTS_MASK_PLAYERSOLID);
 			right = tr.fraction;
 
 			center = (d1*center)/d2;
@@ -2461,28 +2461,28 @@ void CMonster::AI_Run(float Dist)
 				if (left < 1)
 				{
 					Vec3Set(v, d2 * left * 0.5, -16, 0);
-					G_ProjectSource (Entity->s.origin, v, v_forward, v_right, left_target);
+					G_ProjectSource (Entity->state.origin, v, v_forward, v_right, left_target);
 				}
 				Vec3Copy (LastSighting, SavedGoal);
 				AIFlags |= AI_PURSUE_TEMP;
-				Vec3Copy (left_target, Entity->goalentity->s.origin);
+				Vec3Copy (left_target, Entity->goalentity->state.origin);
 				Vec3Copy (left_target, LastSighting);
-				Vec3Subtract (Entity->goalentity->s.origin, Entity->s.origin, v);
-				Entity->s.angles[YAW] = IdealYaw = VecToYaw(v);
+				Vec3Subtract (Entity->goalentity->state.origin, Entity->state.origin, v);
+				Entity->state.angles[YAW] = IdealYaw = VecToYaw(v);
 			}
 			else if (right >= center && right > left)
 			{
 				if (right < 1)
 				{
 					Vec3Set(v, d2 * right * 0.5, 16, 0);
-					G_ProjectSource (Entity->s.origin, v, v_forward, v_right, right_target);
+					G_ProjectSource (Entity->state.origin, v, v_forward, v_right, right_target);
 				}
 				Vec3Copy (LastSighting, SavedGoal);
 				AIFlags |= AI_PURSUE_TEMP;
-				Vec3Copy (right_target, Entity->goalentity->s.origin);
+				Vec3Copy (right_target, Entity->goalentity->state.origin);
 				Vec3Copy (right_target, LastSighting);
-				Vec3Subtract (Entity->goalentity->s.origin, Entity->s.origin, v);
-				Entity->s.angles[YAW] = IdealYaw = VecToYaw(v);
+				Vec3Subtract (Entity->goalentity->state.origin, Entity->state.origin, v);
+				Entity->state.angles[YAW] = IdealYaw = VecToYaw(v);
 			}
 		}
 	}
@@ -2604,7 +2604,7 @@ void CMonster::AI_Stand (float Dist)
 {
 #ifndef MONSTER_USE_ROGUE_AI
 	if (Dist)
-		WalkMove (Entity->s.angles[YAW], Dist);
+		WalkMove (Entity->state.angles[YAW], Dist);
 
 #ifdef MONSTERS_USE_PATHFINDING
 	if (FollowingPath)
@@ -2629,9 +2629,9 @@ void CMonster::AI_Stand (float Dist)
 		if (Entity->enemy)
 		{
 			vec3_t v;
-			Vec3Subtract (Entity->enemy->s.origin, Entity->s.origin, v);
+			Vec3Subtract (Entity->enemy->state.origin, Entity->state.origin, v);
 			IdealYaw = VecToYaw(v);
-			if (Entity->s.angles[YAW] != IdealYaw && AIFlags & AI_TEMP_STAND_GROUND)
+			if (Entity->state.angles[YAW] != IdealYaw && AIFlags & AI_TEMP_STAND_GROUND)
 			{
 				AIFlags &= ~(AI_STAND_GROUND | AI_TEMP_STAND_GROUND);
 				Run ();
@@ -2669,7 +2669,7 @@ void CMonster::AI_Stand (float Dist)
 	bool retval;
 
 	if (Dist)
-		WalkMove (Entity->s.angles[YAW], Dist);
+		WalkMove (Entity->state.angles[YAW], Dist);
 
 #ifdef MONSTERS_USE_PATHFINDING
 	if (FollowingPath)
@@ -2700,9 +2700,9 @@ void CMonster::AI_Stand (float Dist)
 	{
 		if (Entity->enemy)
 		{
-			Vec3Subtract (Entity->enemy->s.origin, Entity->s.origin, v);
+			Vec3Subtract (Entity->enemy->state.origin, Entity->state.origin, v);
 			IdealYaw = VecToYaw(v);
-			if (Entity->s.angles[YAW] != IdealYaw && AIFlags & AI_TEMP_STAND_GROUND)
+			if (Entity->state.angles[YAW] != IdealYaw && AIFlags & AI_TEMP_STAND_GROUND)
 			{
 				AIFlags &= ~(AI_STAND_GROUND | AI_TEMP_STAND_GROUND);
 				Run ();
@@ -2716,8 +2716,8 @@ void CMonster::AI_Stand (float Dist)
 			if ((Entity->enemy) && (Entity->enemy->inUse) && (visible(Entity, Entity->enemy)))
 			{
 				AIFlags &= ~AI_LOST_SIGHT;
-				Vec3Copy (Entity->enemy->s.origin, LastSighting);
-				Vec3Copy (Entity->enemy->s.origin, BlindFireTarget);
+				Vec3Copy (Entity->enemy->state.origin, LastSighting);
+				Vec3Copy (Entity->enemy->state.origin, BlindFireTarget);
 				TrailTime = level.time;
 				BlindFireDelay = 0;
 			}
@@ -2951,12 +2951,12 @@ void CMonster::MoveFrame ()
 	{
 		if ((NextFrame) && (NextFrame >= Move->LastFrame) && (NextFrame <= Move->FirstFrame))
 		{
-			Entity->s.frame = NextFrame;
+			Entity->state.frame = NextFrame;
 			NextFrame = 0;
 		}
 		else
 		{
-			if (Entity->s.frame == Move->LastFrame)
+			if (Entity->state.frame == Move->LastFrame)
 			{
 				if (Move->EndFunc)
 				{
@@ -2972,23 +2972,23 @@ void CMonster::MoveFrame ()
 				}
 			}
 
-			if (Entity->s.frame < Move->LastFrame || Entity->s.frame > Move->FirstFrame)
+			if (Entity->state.frame < Move->LastFrame || Entity->state.frame > Move->FirstFrame)
 			{
 				AIFlags &= ~AI_HOLD_FRAME;
-				Entity->s.frame = Move->FirstFrame;
+				Entity->state.frame = Move->FirstFrame;
 			}
 			else
 			{
 				if (!(AIFlags & AI_HOLD_FRAME))
 				{
-					Entity->s.frame--;
-					if (Entity->s.frame < Move->LastFrame)
-						Entity->s.frame = Move->FirstFrame;
+					Entity->state.frame--;
+					if (Entity->state.frame < Move->LastFrame)
+						Entity->state.frame = Move->FirstFrame;
 				}
 			}
 		}
 
-		index = Move->FirstFrame - Entity->s.frame;
+		index = Move->FirstFrame - Entity->state.frame;
 
 		void (CMonster::*AIFunc) (float Dist) = Move->Frames[index].AIFunc;
 		if (AIFunc)
@@ -3002,12 +3002,12 @@ void CMonster::MoveFrame ()
 	{
 		if ((NextFrame) && (NextFrame >= Move->FirstFrame) && (NextFrame <= Move->LastFrame))
 		{
-			Entity->s.frame = NextFrame;
+			Entity->state.frame = NextFrame;
 			NextFrame = 0;
 		}
 		else
 		{
-			if (Entity->s.frame == Move->LastFrame)
+			if (Entity->state.frame == Move->LastFrame)
 			{
 				if (Move->EndFunc)
 				{
@@ -3023,23 +3023,23 @@ void CMonster::MoveFrame ()
 				}
 			}
 
-			if (Entity->s.frame < Move->FirstFrame || Entity->s.frame > Move->LastFrame)
+			if (Entity->state.frame < Move->FirstFrame || Entity->state.frame > Move->LastFrame)
 			{
 				AIFlags &= ~AI_HOLD_FRAME;
-				Entity->s.frame = Move->FirstFrame;
+				Entity->state.frame = Move->FirstFrame;
 			}
 			else
 			{
 				if (!(AIFlags & AI_HOLD_FRAME))
 				{
-					Entity->s.frame++;
-					if (Entity->s.frame > Move->LastFrame)
-						Entity->s.frame = Move->FirstFrame;
+					Entity->state.frame++;
+					if (Entity->state.frame > Move->LastFrame)
+						Entity->state.frame = Move->FirstFrame;
 				}
 			}
 		}
 
-		index = Entity->s.frame - Move->FirstFrame;
+		index = Entity->state.frame - Move->FirstFrame;
 
 		void (CMonster::*AIFunc) (float Dist) = Move->Frames[index].AIFunc;
 		if (AIFunc)
@@ -3066,7 +3066,7 @@ void CMonster::FoundTarget ()
 #endif
 
 
-	Vec3Copy(Entity->enemy->s.origin, LastSighting);
+	Vec3Copy(Entity->enemy->state.origin, LastSighting);
 	TrailTime = level.time;
 
 	if (!Entity->combattarget)
@@ -3080,7 +3080,7 @@ void CMonster::FoundTarget ()
 	{
 		Entity->goalentity = Entity->movetarget = Entity->enemy;
 		HuntTarget ();
-		MapPrint (MAPPRINT_ERROR, Entity, Entity->s.origin, "combattarget %s not found\n", Entity->combattarget);
+		MapPrint (MAPPRINT_ERROR, Entity, Entity->state.origin, "combattarget %s not found\n", Entity->combattarget);
 		return;
 	}
 
@@ -3093,7 +3093,7 @@ void CMonster::FoundTarget ()
 	PauseTime = 0;
 #ifdef MONSTER_USE_ROGUE_AI
 	// PMM
-	Vec3Copy (Entity->enemy->s.origin, BlindFireTarget);
+	Vec3Copy (Entity->enemy->state.origin, BlindFireTarget);
 	BlindFireDelay = 0;
 	// PMM
 #endif
@@ -3104,13 +3104,13 @@ void CMonster::FoundTarget ()
 
 void CMonster::SetEffects()
 {
-	Entity->s.effects = 0;
-	Entity->s.renderFx = RF_FRAMELERP;
+	Entity->state.effects = 0;
+	Entity->state.renderFx = RF_FRAMELERP;
 
 	if (AIFlags & AI_RESURRECTING)
 	{
-		Entity->s.effects |= EF_COLOR_SHELL;
-		Entity->s.renderFx |= RF_SHELL_RED;
+		Entity->state.effects |= EF_COLOR_SHELL;
+		Entity->state.renderFx |= RF_SHELL_RED;
 	}
 
 	if (Entity->health <= 0)
@@ -3119,11 +3119,11 @@ void CMonster::SetEffects()
 	if (Entity->powerarmor_time > level.time)
 	{
 		if (PowerArmorType == POWER_ARMOR_SCREEN)
-			Entity->s.effects |= EF_POWERSCREEN;
+			Entity->state.effects |= EF_POWERSCREEN;
 		else if (PowerArmorType == POWER_ARMOR_SHIELD)
 		{
-			Entity->s.effects |= EF_COLOR_SHELL;
-			Entity->s.renderFx |= RF_SHELL_GREEN;
+			Entity->state.effects |= EF_COLOR_SHELL;
+			Entity->state.renderFx |= RF_SHELL_GREEN;
 		}
 	}
 }
@@ -3143,7 +3143,7 @@ void CMonster::WorldEffects()
 					int dmg = 2 + 2 * floor(level.time - Entity->air_finished);
 					if (dmg > 15)
 						dmg = 15;
-					T_Damage (Entity, world, world, vec3Origin, Entity->s.origin, vec3Origin, dmg, 0, DAMAGE_NO_ARMOR, MOD_WATER);
+					T_Damage (Entity, world, world, vec3Origin, Entity->state.origin, vec3Origin, dmg, 0, DAMAGE_NO_ARMOR, MOD_WATER);
 					Entity->pain_debounce_time = level.time + 1;
 				}
 			}
@@ -3159,7 +3159,7 @@ void CMonster::WorldEffects()
 					int dmg = 2 + 2 * floor(level.time - Entity->air_finished);
 					if (dmg > 15)
 						dmg = 15;
-					T_Damage (Entity, world, world, vec3Origin, Entity->s.origin, vec3Origin, dmg, 0, DAMAGE_NO_ARMOR, MOD_WATER);
+					T_Damage (Entity, world, world, vec3Origin, Entity->state.origin, vec3Origin, dmg, 0, DAMAGE_NO_ARMOR, MOD_WATER);
 					Entity->pain_debounce_time = level.time + 1;
 				}
 			}
@@ -3181,7 +3181,7 @@ void CMonster::WorldEffects()
 		if (Entity->damage_debounce_time < level.time)
 		{
 			Entity->damage_debounce_time = level.time + 0.2;
-			T_Damage (Entity, world, world, vec3Origin, Entity->s.origin, vec3Origin, 10*Entity->waterlevel, 0, 0, MOD_LAVA);
+			T_Damage (Entity, world, world, vec3Origin, Entity->state.origin, vec3Origin, 10*Entity->waterlevel, 0, 0, MOD_LAVA);
 		}
 	}
 	if ((Entity->watertype & CONTENTS_SLIME) && !(Entity->flags & FL_IMMUNE_SLIME))
@@ -3189,7 +3189,7 @@ void CMonster::WorldEffects()
 		if (Entity->damage_debounce_time < level.time)
 		{
 			Entity->damage_debounce_time = level.time + 1;
-			T_Damage (Entity, world, world, vec3Origin, Entity->s.origin, vec3Origin, 4*Entity->waterlevel, 0, 0, MOD_SLIME);
+			T_Damage (Entity, world, world, vec3Origin, Entity->state.origin, vec3Origin, 4*Entity->waterlevel, 0, 0, MOD_SLIME);
 		}
 	}
 	
@@ -3220,9 +3220,9 @@ void CMonster::CatagorizePosition()
 //
 // get waterlevel
 //
-	point[0] = Entity->s.origin[0];
-	point[1] = Entity->s.origin[1];
-	point[2] = Entity->s.origin[2] + Entity->mins[2] + 1;	
+	point[0] = Entity->state.origin[0];
+	point[1] = Entity->state.origin[1];
+	point[2] = Entity->state.origin[2] + Entity->mins[2] + 1;	
 	cont = gi.pointcontents (point);
 
 	if (!(cont & CONTENTS_MASK_WATER))
@@ -3261,11 +3261,11 @@ void CMonster::CheckGround()
 	}
 
 // if the hull point one-quarter unit down is solid the entity is on ground
-	point[0] = Entity->s.origin[0];
-	point[1] = Entity->s.origin[1];
-	point[2] = Entity->s.origin[2] - 0.25;
+	point[0] = Entity->state.origin[0];
+	point[1] = Entity->state.origin[1];
+	point[2] = Entity->state.origin[2] - 0.25;
 
-	trace = CTrace (Entity->s.origin, Entity->mins, Entity->maxs, point, Entity, CONTENTS_MASK_MONSTERSOLID);
+	trace = CTrace (Entity->state.origin, Entity->mins, Entity->maxs, point, Entity, CONTENTS_MASK_MONSTERSOLID);
 
 	// check steepness
 	if ( trace.plane.normal[2] < 0.7 && !trace.startSolid)
@@ -3276,7 +3276,7 @@ void CMonster::CheckGround()
 
 	if (!trace.startSolid && !trace.allSolid)
 	{
-		Vec3Copy (trace.endPos, Entity->s.origin);
+		Vec3Copy (trace.endPos, Entity->state.origin);
 		Entity->groundentity = trace.ent;
 		Entity->groundentity_linkcount = trace.ent->linkCount;
 		Entity->velocity[2] = 0;
@@ -3292,7 +3292,7 @@ void CMonster::HuntTarget()
 		Stand ();
 	else
 		Run ();
-	Vec3Subtract (Entity->enemy->s.origin, Entity->s.origin, vec);
+	Vec3Subtract (Entity->enemy->state.origin, Entity->state.origin, vec);
 	IdealYaw = VecToYaw(vec);
 	// wait a while before first attack
 	if (!(AIFlags & AI_STAND_GROUND))
@@ -3327,18 +3327,18 @@ bool CMonster::FindTarget()
 		vec3_t temp;
 		if (Entity->spawnflags & 1)
 		{
-			CTrace trace = CTrace(Entity->s.origin, level.NoiseNode->Origin, Entity, CONTENTS_MASK_SOLID);
+			CTrace trace = CTrace(Entity->state.origin, level.NoiseNode->Origin, Entity, CONTENTS_MASK_SOLID);
 
 			if (trace.fraction < 1.0)
 				return false;
 		}
 		else
 		{
-			if (!gi.inPHS(Entity->s.origin, level.NoiseNode->Origin))
+			if (!gi.inPHS(Entity->state.origin, level.NoiseNode->Origin))
 				return false;
 		}
 
-		Vec3Subtract (level.NoiseNode->Origin, Entity->s.origin, temp);
+		Vec3Subtract (level.NoiseNode->Origin, Entity->state.origin, temp);
 
 		if (Vec3Length(temp) > 1000)	// too far to hear
 			return false;
@@ -3349,7 +3349,7 @@ bool CMonster::FindTarget()
 		// hunt the sound for a bit; hopefully find the real player
 		//AIFlags |= AI_SOUND_TARGET;
 
-		P_CurrentNode = GetClosestNodeTo(Entity->s.origin);
+		P_CurrentNode = GetClosestNodeTo(Entity->state.origin);
 		P_CurrentGoalNode = level.NoiseNode;
 		FoundPath ();
 
@@ -3372,11 +3372,11 @@ bool CMonster::FindTarget()
 				}
 				else
 				{
-					if (!gi.inPHS(Entity->s.origin, client->s.origin))
+					if (!gi.inPHS(Entity->state.origin, client->state.origin))
 						return false;
 				}
 
-				Vec3Subtract (client->s.origin, Entity->s.origin, temp);
+				Vec3Subtract (client->state.origin, Entity->state.origin, temp);
 
 				if (Vec3Length(temp) > 1000)	// too far to hear
 					return false;
@@ -3533,11 +3533,11 @@ bool CMonster::FindTarget()
 		}
 		else
 		{
-			if (!gi.inPHS(Entity->s.origin, client->s.origin))
+			if (!gi.inPHS(Entity->state.origin, client->state.origin))
 				return false;
 		}
 
-		Vec3Subtract (client->s.origin, Entity->s.origin, temp);
+		Vec3Subtract (client->state.origin, Entity->state.origin, temp);
 
 		if (Vec3Length(temp) > 1000)	// too far to hear
 			return false;
@@ -3573,7 +3573,7 @@ bool CMonster::FindTarget()
 
 bool CMonster::FacingIdeal()
 {
-	float delta = AngleModf (Entity->s.angles[YAW] - IdealYaw);
+	float delta = AngleModf (Entity->state.angles[YAW] - IdealYaw);
 	if (delta > 45 && delta < 315)
 		return false;
 	return true;
@@ -3581,16 +3581,16 @@ bool CMonster::FacingIdeal()
 
 void CMonster::FliesOff()
 {
-	Entity->s.effects &= ~EF_FLIES;
-	Entity->s.sound = 0;
+	Entity->state.effects &= ~EF_FLIES;
+	Entity->state.sound = 0;
 }
 
 void CMonster::FliesOn ()
 {
 	if (Entity->waterlevel)
 		return;
-	Entity->s.effects |= EF_FLIES;
-	Entity->s.sound = SoundIndex ("infantry/inflies1.wav");
+	Entity->state.effects |= EF_FLIES;
+	Entity->state.sound = SoundIndex ("infantry/inflies1.wav");
 	Think = &CMonster::FliesOff;
 	NextThink = level.time + 60;
 }
@@ -3717,8 +3717,8 @@ void CMonster::Dodge (edict_t *attacker, float eta, CTrace *tr)
 		{
 			vec3_t right, diff;
 
-			Angles_Vectors (Entity->s.angles, NULL, right, NULL);
-			Vec3Subtract (tr->endPos, Entity->s.origin, diff);
+			Angles_Vectors (Entity->state.angles, NULL, right, NULL);
+			Vec3Subtract (tr->endPos, Entity->state.origin, diff);
 
 			if (DotProduct (right, diff) < 0)
 				Lefty = false;

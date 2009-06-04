@@ -79,7 +79,7 @@ bool fire_hit (edict_t *self, vec3_t aim, int damage, int kick)
 	vec3_t		dir;
 
 	//see if enemy is in range
-	Vec3Subtract (self->enemy->s.origin, self->s.origin, dir);
+	Vec3Subtract (self->enemy->state.origin, self->state.origin, dir);
 	range = Vec3Length(dir);
 	if (range > aim[0])
 		return false;
@@ -98,9 +98,9 @@ bool fire_hit (edict_t *self, vec3_t aim, int damage, int kick)
 			aim[1] = self->enemy->maxs[0];
 	}
 
-	Vec3MA (self->s.origin, range, dir, point);
+	Vec3MA (self->state.origin, range, dir, point);
 
-	tr = CTrace (self->s.origin, point, self, CONTENTS_MASK_SHOT);
+	tr = CTrace (self->state.origin, point, self, CONTENTS_MASK_SHOT);
 	if (tr.fraction < 1)
 	{
 		if (!tr.ent->takedamage)
@@ -110,11 +110,11 @@ bool fire_hit (edict_t *self, vec3_t aim, int damage, int kick)
 			tr.ent = self->enemy;
 	}
 
-	Angles_Vectors(self->s.angles, forward, right, up);
-	Vec3MA (self->s.origin, range, forward, point);
+	Angles_Vectors(self->state.angles, forward, right, up);
+	Vec3MA (self->state.origin, range, forward, point);
 	Vec3MA (point, aim[1], right, point);
 	Vec3MA (point, aim[2], up, point);
-	Vec3Subtract (point, self->enemy->s.origin, dir);
+	Vec3Subtract (point, self->enemy->state.origin, dir);
 
 	// do the damage
 	T_Damage (tr.ent, self, self, dir, point, vec3Origin, damage, kick/2, DAMAGE_NO_KNOCKBACK, MOD_HIT);
@@ -152,7 +152,7 @@ static void fire_lead (edict_t *self, vec3_t start, vec3_t aimdir, int damage, i
 	bool		water = false;
 	int			content_mask = CONTENTS_MASK_SHOT | CONTENTS_MASK_WATER;
 
-	tr = CTrace (self->s.origin, start, self, CONTENTS_MASK_SHOT);
+	tr = CTrace (self->state.origin, start, self, CONTENTS_MASK_SHOT);
 	if (!(tr.fraction < 1.0))
 	{
 		VecToAngles (aimdir, dir);
@@ -314,7 +314,7 @@ void blaster_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_
 	}
 
 	if (self->owner->client)
-		PlayerNoise(self->owner, self->s.origin, PNOISE_IMPACT);
+		PlayerNoise(self->owner, self->state.origin, PNOISE_IMPACT);
 
 	if (other->takedamage)
 	{
@@ -322,10 +322,10 @@ void blaster_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_
 			mod = MOD_HYPERBLASTER;
 		else
 			mod = MOD_BLASTER;
-		T_Damage (other, self, self->owner, self->velocity, self->s.origin, plane ? plane->normal : vec3Origin, self->dmg, 1, DAMAGE_ENERGY, mod);
+		T_Damage (other, self, self->owner, self->velocity, self->state.origin, plane ? plane->normal : vec3Origin, self->dmg, 1, DAMAGE_ENERGY, mod);
 	}
 	else
-		CTempEnt_Splashes::Blaster(self->s.origin, plane ? plane->normal : vec3Origin);
+		CTempEnt_Splashes::Blaster(self->state.origin, plane ? plane->normal : vec3Origin);
 
 	G_FreeEdict (self);
 }
@@ -344,18 +344,18 @@ void fire_blaster (edict_t *self, vec3_t start, vec3_t dir, int damage, int spee
 	// (blaster/hyperblaster shots), the player won't be solid clipped against
 	// the object.  Right now trying to run into a firing hyperblaster
 	// is very jerky since you are predicted 'against' the shots.
-	Vec3Copy (start, bolt->s.origin);
-	Vec3Copy (start, bolt->s.oldOrigin);
-	VecToAngles (dir, bolt->s.angles);
+	Vec3Copy (start, bolt->state.origin);
+	Vec3Copy (start, bolt->state.oldOrigin);
+	VecToAngles (dir, bolt->state.angles);
 	Vec3Scale (dir, speed, bolt->velocity);
 	bolt->movetype = MOVETYPE_FLYMISSILE;
 	bolt->clipMask = CONTENTS_MASK_SHOT;
 	bolt->solid = SOLID_BBOX;
-	bolt->s.effects |= effect;
+	bolt->state.effects |= effect;
 	Vec3Clear (bolt->mins);
 	Vec3Clear (bolt->maxs);
-	bolt->s.modelIndex = ModelIndex ("models/objects/laser/tris.md2");
-	bolt->s.sound = SoundIndex ("misc/lasfly.wav");
+	bolt->state.modelIndex = ModelIndex ("models/objects/laser/tris.md2");
+	bolt->state.sound = SoundIndex ("misc/lasfly.wav");
 	bolt->owner = self;
 	bolt->touch = blaster_touch;
 	bolt->nextthink = level.time + 2;
@@ -367,12 +367,12 @@ void fire_blaster (edict_t *self, vec3_t start, vec3_t dir, int damage, int spee
 	gi.linkentity (bolt);
 
 	if (self->client)
-		check_dodge (self, bolt->s.origin, dir, speed);
+		check_dodge (self, bolt->state.origin, dir, speed);
 
-	tr = CTrace (self->s.origin, bolt->s.origin, bolt, CONTENTS_MASK_SHOT);
+	tr = CTrace (self->state.origin, bolt->state.origin, bolt, CONTENTS_MASK_SHOT);
 	if (tr.fraction < 1.0)
 	{
-		Vec3MA (bolt->s.origin, -10, dir, bolt->s.origin);
+		Vec3MA (bolt->state.origin, -10, dir, bolt->state.origin);
 		bolt->touch (bolt, tr.ent, &tr.plane, tr.surface);
 	}
 }	
@@ -389,7 +389,7 @@ static void Grenade_Explode (edict_t *ent)
 	int			mod;
 
 	if (ent->owner->client)
-		PlayerNoise(ent->owner, ent->s.origin, PNOISE_IMPACT);
+		PlayerNoise(ent->owner, ent->state.origin, PNOISE_IMPACT);
 
 	//FIXME: if we are onground then raise our Z just a bit since we are a point?
 	if (ent->enemy)
@@ -399,15 +399,15 @@ static void Grenade_Explode (edict_t *ent)
 		vec3_t	dir;
 
 		Vec3Add (ent->enemy->mins, ent->enemy->maxs, v);
-		Vec3MA (ent->enemy->s.origin, 0.5, v, v);
-		Vec3Subtract (ent->s.origin, v, v);
+		Vec3MA (ent->enemy->state.origin, 0.5, v, v);
+		Vec3Subtract (ent->state.origin, v, v);
 		points = ent->dmg - 0.5 * Vec3Length (v);
-		Vec3Subtract (ent->enemy->s.origin, ent->s.origin, dir);
+		Vec3Subtract (ent->enemy->state.origin, ent->state.origin, dir);
 		if (ent->spawnflags & 1)
 			mod = MOD_HANDGRENADE;
 		else
 			mod = MOD_GRENADE;
-		T_Damage (ent->enemy, ent, ent->owner, dir, ent->s.origin, vec3Origin, (int)points, (int)points, DAMAGE_RADIUS, mod);
+		T_Damage (ent->enemy, ent, ent->owner, dir, ent->state.origin, vec3Origin, (int)points, (int)points, DAMAGE_RADIUS, mod);
 	}
 
 	if (ent->spawnflags & 2)
@@ -418,9 +418,9 @@ static void Grenade_Explode (edict_t *ent)
 		mod = MOD_G_SPLASH;
 	T_RadiusDamage(ent, ent->owner, ent->dmg, ent->enemy, ent->dmg_radius, mod);
 
-	Vec3Copy (ent->s.origin, origin);
+	Vec3Copy (ent->state.origin, origin);
 
-	Vec3MA (ent->s.origin, -0.02, ent->velocity, origin);
+	Vec3MA (ent->state.origin, -0.02, ent->velocity, origin);
 	if (ent->waterlevel)
 	{
 		if (ent->groundentity)
@@ -480,7 +480,7 @@ void fire_grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int s
 	Angles_Vectors (dir, forward, right, up);
 
 	grenade = G_Spawn();
-	Vec3Copy (start, grenade->s.origin);
+	Vec3Copy (start, grenade->state.origin);
 	Vec3Scale (aimdir, speed, grenade->velocity);
 	Vec3MA (grenade->velocity, 200 + crandom() * 10.0, up, grenade->velocity);
 	Vec3MA (grenade->velocity, crandom() * 10.0, right, grenade->velocity);
@@ -488,10 +488,10 @@ void fire_grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int s
 	grenade->movetype = MOVETYPE_BOUNCE;
 	grenade->clipMask = CONTENTS_MASK_SHOT;
 	grenade->solid = SOLID_BBOX;
-	grenade->s.effects |= EF_GRENADE;
+	grenade->state.effects |= EF_GRENADE;
 	Vec3Clear (grenade->mins);
 	Vec3Clear (grenade->maxs);
-	grenade->s.modelIndex = ModelIndex ("models/objects/grenade/tris.md2");
+	grenade->state.modelIndex = ModelIndex ("models/objects/grenade/tris.md2");
 	grenade->owner = self;
 	grenade->touch = Grenade_Touch;
 	grenade->nextthink = level.time + timer;
@@ -513,7 +513,7 @@ void fire_grenade2 (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int 
 	Angles_Vectors (dir, forward, right, up);
 
 	grenade = G_Spawn();
-	Vec3Copy (start, grenade->s.origin);
+	Vec3Copy (start, grenade->state.origin);
 	Vec3Scale (aimdir, speed, grenade->velocity);
 	Vec3MA (grenade->velocity, 200 + crandom() * 10.0, up, grenade->velocity);
 	Vec3MA (grenade->velocity, crandom() * 10.0, right, grenade->velocity);
@@ -521,10 +521,10 @@ void fire_grenade2 (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int 
 	grenade->movetype = MOVETYPE_BOUNCE;
 	grenade->clipMask = CONTENTS_MASK_SHOT;
 	grenade->solid = SOLID_BBOX;
-	grenade->s.effects |= EF_GRENADE;
+	grenade->state.effects |= EF_GRENADE;
 	Vec3Clear (grenade->mins);
 	Vec3Clear (grenade->maxs);
-	grenade->s.modelIndex = ModelIndex ("models/objects/grenade2/tris.md2");
+	grenade->state.modelIndex = ModelIndex ("models/objects/grenade2/tris.md2");
 	grenade->owner = self;
 	grenade->touch = Grenade_Touch;
 	grenade->nextthink = level.time + timer;
@@ -536,7 +536,7 @@ void fire_grenade2 (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int 
 		grenade->spawnflags = 3;
 	else
 		grenade->spawnflags = 1;
-	grenade->s.sound = SoundIndex("weapons/hgrenc1b.wav");
+	grenade->state.sound = SoundIndex("weapons/hgrenc1b.wav");
 
 	if (timer <= 0.0)
 		Grenade_Explode (grenade);
@@ -568,14 +568,14 @@ void rocket_touch (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t 
 	}
 
 	if (ent->owner->client)
-		PlayerNoise(ent->owner, ent->s.origin, PNOISE_IMPACT);
+		PlayerNoise(ent->owner, ent->state.origin, PNOISE_IMPACT);
 
 	// calculate position for the explosion entity
-	Vec3MA (ent->s.origin, -0.02, ent->velocity, origin);
+	Vec3MA (ent->state.origin, -0.02, ent->velocity, origin);
 
 	if (other->takedamage)
 	{
-		T_Damage (other, ent, ent->owner, ent->velocity, ent->s.origin, plane->normal, ent->dmg, 0, 0, MOD_ROCKET);
+		T_Damage (other, ent, ent->owner, ent->velocity, ent->state.origin, plane->normal, ent->dmg, 0, 0, MOD_ROCKET);
 	}
 	else
 	{
@@ -586,7 +586,7 @@ void rocket_touch (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t 
 			{
 				n = rand() % 5;
 				while(n--)
-					ThrowDebris (ent, "models/objects/debris2/tris.md2", 2, ent->s.origin);
+					ThrowDebris (ent, "models/objects/debris2/tris.md2", 2, ent->state.origin);
 			}
 		}
 	}
@@ -606,17 +606,17 @@ void fire_rocket (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed
 	edict_t	*rocket;
 
 	rocket = G_Spawn();
-	Vec3Copy (start, rocket->s.origin);
+	Vec3Copy (start, rocket->state.origin);
 	Vec3Copy (dir, rocket->movedir);
-	VecToAngles (dir, rocket->s.angles);
+	VecToAngles (dir, rocket->state.angles);
 	Vec3Scale (dir, speed, rocket->velocity);
 	rocket->movetype = MOVETYPE_FLYMISSILE;
 	rocket->clipMask = CONTENTS_MASK_SHOT;
 	rocket->solid = SOLID_BBOX;
-	rocket->s.effects |= EF_ROCKET;
+	rocket->state.effects |= EF_ROCKET;
 	Vec3Clear (rocket->mins);
 	Vec3Clear (rocket->maxs);
-	rocket->s.modelIndex = ModelIndex ("models/objects/rocket/tris.md2");
+	rocket->state.modelIndex = ModelIndex ("models/objects/rocket/tris.md2");
 	rocket->owner = self;
 	rocket->touch = rocket_touch;
 	rocket->nextthink = level.time + 8000/speed;
@@ -624,11 +624,11 @@ void fire_rocket (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed
 	rocket->dmg = damage;
 	rocket->radius_dmg = radius_damage;
 	rocket->dmg_radius = damage_radius;
-	rocket->s.sound = SoundIndex ("weapons/rockfly.wav");
+	rocket->state.sound = SoundIndex ("weapons/rockfly.wav");
 	rocket->classname = "rocket";
 
 	if (self->client)
-		check_dodge (self, rocket->s.origin, dir, speed);
+		check_dodge (self, rocket->state.origin, dir, speed);
 
 	gi.linkentity (rocket);
 }
@@ -709,11 +709,11 @@ void bfg_explode (edict_t *self)
 	vec3_t	v;
 	float	dist;
 
-	if (self->s.frame == 0)
+	if (self->state.frame == 0)
 	{
 		// the BFG effect
 		ent = NULL;
-		while ((ent = findradius(ent, self->s.origin, self->dmg_radius)) != NULL)
+		while ((ent = findradius(ent, self->state.origin, self->dmg_radius)) != NULL)
 		{
 			if (!ent->takedamage)
 				continue;
@@ -725,21 +725,21 @@ void bfg_explode (edict_t *self)
 				continue;
 
 			Vec3Add (ent->mins, ent->maxs, v);
-			Vec3MA (ent->s.origin, 0.5, v, v);
-			Vec3Subtract (self->s.origin, v, v);
+			Vec3MA (ent->state.origin, 0.5, v, v);
+			Vec3Subtract (self->state.origin, v, v);
 			dist = Vec3Length(v);
 			points = self->radius_dmg * (1.0f - sqrtf(dist/self->dmg_radius));
 			if (ent == self->owner)
 				points = points * 0.5;
 
-			CTempEnt_Explosions::BFGExplosion (ent->s.origin);
-			T_Damage (ent, self, self->owner, self->velocity, ent->s.origin, vec3Origin, (int)points, 0, DAMAGE_ENERGY, MOD_BFG_EFFECT);
+			CTempEnt_Explosions::BFGExplosion (ent->state.origin);
+			T_Damage (ent, self, self->owner, self->velocity, ent->state.origin, vec3Origin, (int)points, 0, DAMAGE_ENERGY, MOD_BFG_EFFECT);
 		}
 	}
 
 	self->nextthink = level.time + FRAMETIME;
-	self->s.frame++;
-	if (self->s.frame == 5)
+	self->state.frame++;
+	if (self->state.frame == 5)
 		self->think = G_FreeEdict;
 }
 
@@ -755,27 +755,27 @@ void bfg_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *s
 	}
 
 	if (self->owner->client)
-		PlayerNoise(self->owner, self->s.origin, PNOISE_IMPACT);
+		PlayerNoise(self->owner, self->state.origin, PNOISE_IMPACT);
 
 	// core explosion - prevents firing it into the wall/floor
 	if (other->takedamage)
-		T_Damage (other, self, self->owner, self->velocity, self->s.origin, plane->normal, 200, 0, 0, MOD_BFG_BLAST);
+		T_Damage (other, self, self->owner, self->velocity, self->state.origin, plane->normal, 200, 0, 0, MOD_BFG_BLAST);
 	T_RadiusDamage(self, self->owner, 200, other, 100, MOD_BFG_BLAST);
 
 	PlaySoundFrom (self, CHAN_VOICE, SoundIndex ("weapons/bfg__x1b.wav"));
 	self->solid = SOLID_NOT;
 	self->touch = NULL;
-	Vec3MA (self->s.origin, -1 * FRAMETIME, self->velocity, self->s.origin);
+	Vec3MA (self->state.origin, -1 * FRAMETIME, self->velocity, self->state.origin);
 	Vec3Clear (self->velocity);
-	self->s.modelIndex = ModelIndex ("sprites/s_bfg3.sp2");
-	self->s.frame = 0;
-	self->s.sound = 0;
-	self->s.effects &= ~EF_ANIM_ALLFAST;
+	self->state.modelIndex = ModelIndex ("sprites/s_bfg3.sp2");
+	self->state.frame = 0;
+	self->state.sound = 0;
+	self->state.effects &= ~EF_ANIM_ALLFAST;
 	self->think = bfg_explode;
 	self->nextthink = level.time + FRAMETIME;
 	self->enemy = other;
 
-	CTempEnt_Explosions::BFGExplosion (self->s.origin, true);
+	CTempEnt_Explosions::BFGExplosion (self->state.origin, true);
 }
 
 
@@ -796,7 +796,7 @@ void bfg_think (edict_t *self)
 		dmg = 10;
 
 	ent = NULL;
-	while ((ent = findradius(ent, self->s.origin, 256)) != NULL)
+	while ((ent = findradius(ent, self->state.origin, 256)) != NULL)
 	{
 		if (ent == self)
 			continue;
@@ -812,11 +812,11 @@ void bfg_think (edict_t *self)
 
 		Vec3MA (ent->absMin, 0.5, ent->size, point);
 
-		Vec3Subtract (point, self->s.origin, dir);
+		Vec3Subtract (point, self->state.origin, dir);
 		VectorNormalizef (dir, dir);
 
 		ignore = self;
-		Vec3Copy (self->s.origin, start);
+		Vec3Copy (self->state.origin, start);
 		Vec3MA (start, 2048, dir, end);
 		while(1)
 		{
@@ -832,7 +832,7 @@ void bfg_think (edict_t *self)
 			// if we hit something that's not a monster or player we're done
 			if (!(tr.ent->svFlags & SVF_MONSTER) && (!tr.ent->client))
 			{
-				CTempEnt_Splashes::Sparks (tr.endPos, tr.plane.normal, CTempEnt_Splashes::STLaserSparks, (CTempEnt_Splashes::ESplashType)self->s.skinNum, 4);
+				CTempEnt_Splashes::Sparks (tr.endPos, tr.plane.normal, CTempEnt_Splashes::STLaserSparks, (CTempEnt_Splashes::ESplashType)self->state.skinNum, 4);
 				break;
 			}
 
@@ -840,7 +840,7 @@ void bfg_think (edict_t *self)
 			Vec3Copy (tr.endPos, start);
 		}
 
-		CTempEnt_Trails::BFGLaser(self->s.origin, tr.endPos);
+		CTempEnt_Trails::BFGLaser(self->state.origin, tr.endPos);
 	}
 
 	self->nextthink = level.time + FRAMETIME;
@@ -852,17 +852,17 @@ void fire_bfg (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, f
 	edict_t	*bfg;
 
 	bfg = G_Spawn();
-	Vec3Copy (start, bfg->s.origin);
+	Vec3Copy (start, bfg->state.origin);
 	Vec3Copy (dir, bfg->movedir);
-	VecToAngles (dir, bfg->s.angles);
+	VecToAngles (dir, bfg->state.angles);
 	Vec3Scale (dir, speed, bfg->velocity);
 	bfg->movetype = MOVETYPE_FLYMISSILE;
 	bfg->clipMask = CONTENTS_MASK_SHOT;
 	bfg->solid = SOLID_BBOX;
-	bfg->s.effects |= EF_BFG | EF_ANIM_ALLFAST;
+	bfg->state.effects |= EF_BFG | EF_ANIM_ALLFAST;
 	Vec3Clear (bfg->mins);
 	Vec3Clear (bfg->maxs);
-	bfg->s.modelIndex = ModelIndex ("sprites/s_bfg1.sp2");
+	bfg->state.modelIndex = ModelIndex ("sprites/s_bfg1.sp2");
 	bfg->owner = self;
 	bfg->touch = bfg_touch;
 	bfg->nextthink = level.time + 8000/speed;
@@ -870,7 +870,7 @@ void fire_bfg (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, f
 	bfg->radius_dmg = damage;
 	bfg->dmg_radius = damage_radius;
 	bfg->classname = "bfg blast";
-	bfg->s.sound = SoundIndex ("weapons/bfg__l1a.wav");
+	bfg->state.sound = SoundIndex ("weapons/bfg__l1a.wav");
 
 	bfg->think = bfg_think;
 	bfg->nextthink = level.time + FRAMETIME;
@@ -878,7 +878,7 @@ void fire_bfg (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, f
 	bfg->teamchain = NULL;
 
 	if (self->client)
-		check_dodge (self, bfg->s.origin, dir, speed);
+		check_dodge (self, bfg->state.origin, dir, speed);
 
 	gi.linkentity (bfg);
 }

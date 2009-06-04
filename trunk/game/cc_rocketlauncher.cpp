@@ -44,7 +44,7 @@ CWeapon("models/weapons/v_rocket/tris.md2", 0, 4, 5, 12,
 
 bool CRocketLauncher::CanFire (edict_t *ent)
 {
-	switch (ent->client->ps.gunFrame)
+	switch (ent->client->playerState.gunFrame)
 	{
 	case 5:
 		return true;
@@ -54,7 +54,7 @@ bool CRocketLauncher::CanFire (edict_t *ent)
 
 bool CRocketLauncher::CanStopFidgetting (edict_t *ent)
 {
-	switch (ent->client->ps.gunFrame)
+	switch (ent->client->playerState.gunFrame)
 	{
 	case 25:
 	case 33:
@@ -89,7 +89,7 @@ void CRocketLauncher::Fire (edict_t *ent)
 	ent->client->kick_angles[0] = -1;
 
 	Vec3Set (offset, 8, 8, ent->viewheight-8);
-	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
+	P_ProjectSource (ent->client, ent->state.origin, offset, forward, right, start);
 	fire_rocket (ent, start, forward, damage, 650, damage_radius, radius_damage);
 
 	// send muzzle flash
@@ -101,5 +101,5 @@ void CRocketLauncher::Fire (edict_t *ent)
 	if (!dmFlags.dfInfiniteAmmo)
 		DepleteAmmo(ent, 1);
 
-	ent->client->ps.gunFrame++;
+	ent->client->playerState.gunFrame++;
 }

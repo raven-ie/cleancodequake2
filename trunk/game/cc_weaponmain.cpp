@@ -56,8 +56,8 @@ WeaponSound(WeaponSound)
 
 void CWeapon::InitWeapon (edict_t *ent)
 {
-	ent->client->ps.gunFrame = ActivationStart;
-	ent->client->ps.gunIndex = WeaponModelIndex;
+	ent->client->playerState.gunFrame = ActivationStart;
+	ent->client->playerState.gunIndex = WeaponModelIndex;
 	ent->client->weaponstate = WS_ACTIVATING;
 }
 
@@ -69,7 +69,7 @@ void CWeapon::WeaponGeneric (edict_t *ent)
 	switch (ent->client->weaponstate)
 	{
 	case WS_ACTIVATING:
-		if (ent->client->ps.gunFrame == ActivationEnd)
+		if (ent->client->playerState.gunFrame == ActivationEnd)
 		{
 			newFrame = IdleStart;
 			newState = WS_IDLE;
@@ -95,7 +95,7 @@ void CWeapon::WeaponGeneric (edict_t *ent)
 			if (AttemptToFire(ent))
 			{
 				// Got here, we can fire!
-				ent->client->ps.gunFrame = FireStart;
+				ent->client->playerState.gunFrame = FireStart;
 				ent->client->weaponstate = WS_FIRING;
 
 				// We need to check against us right away for first-frame firing
@@ -112,12 +112,12 @@ void CWeapon::WeaponGeneric (edict_t *ent)
 		// Either we are still idle or a failed fire.
 		if (newState == -1)
 		{
-			if (ent->client->ps.gunFrame == IdleEnd)
+			if (ent->client->playerState.gunFrame == IdleEnd)
 				newFrame = IdleStart;
 			else
 			{
 				if (CanStopFidgetting(ent) && (rand()&15))
-					newFrame = ent->client->ps.gunFrame;
+					newFrame = ent->client->playerState.gunFrame;
 			}
 		}
 		break;
@@ -130,19 +130,19 @@ void CWeapon::WeaponGeneric (edict_t *ent)
 			// Now, this call above CAN change the underlying frame and state.
 			// We need this block to make sure we are still doing what we are supposed to.
 			newState = ent->client->weaponstate;
-			newFrame = ent->client->ps.gunFrame;
+			newFrame = ent->client->playerState.gunFrame;
 		}
 
 		// Only do this if we haven't been explicitely set a newFrame
 		// because we might want to keep firing beyond this point
-		if (newFrame == -1 && ent->client->ps.gunFrame > FireEnd)
+		if (newFrame == -1 && ent->client->playerState.gunFrame > FireEnd)
 		{
 			newFrame = IdleStart+1;
 			newState = WS_IDLE;
 		}
 		break;
 	case WS_DEACTIVATING:
-		if (ent->client->ps.gunFrame == DeactEnd)
+		if (ent->client->playerState.gunFrame == DeactEnd)
 		{
 			// Change weapon
 			this->ChangeWeapon (ent);
@@ -152,12 +152,12 @@ void CWeapon::WeaponGeneric (edict_t *ent)
 	}
 
 	if (newFrame != -1)
-		ent->client->ps.gunFrame = newFrame;
+		ent->client->playerState.gunFrame = newFrame;
 	if (newState != -1)
 		ent->client->weaponstate = newState;
 
 	if (newFrame == -1 && newState == -1)
-		ent->client->ps.gunFrame++;
+		ent->client->playerState.gunFrame++;
 }
 
 void CWeapon::ChangeWeapon (edict_t *ent)
@@ -168,12 +168,12 @@ void CWeapon::ChangeWeapon (edict_t *ent)
 	ent->client->machinegun_shots = 0;
 
 	// set visible model
-	if (ent->client->pers.Weapon && ent->s.modelIndex == 255)
-		ent->s.skinNum = (ent - g_edicts - 1) | ((ent->client->pers.Weapon->vwepIndex & 0xff) << 8);
+	if (ent->client->pers.Weapon && ent->state.modelIndex == 255)
+		ent->state.skinNum = (ent - g_edicts - 1) | ((ent->client->pers.Weapon->vwepIndex & 0xff) << 8);
 
 	if (!ent->client->pers.Weapon)
 	{	// dead
-		ent->client->ps.gunIndex = 0;
+		ent->client->playerState.gunIndex = 0;
 		if (!ent->client->grenade_thrown && !ent->client->grenade_blew_up && ent->client->grenade_time >= level.time) // We had a grenade cocked
 		{
 			WeaponGrenades.FireGrenade(ent, false);
@@ -185,14 +185,14 @@ void CWeapon::ChangeWeapon (edict_t *ent)
 	ent->client->pers.Weapon->InitWeapon(ent);
 
 	ent->client->anim_priority = ANIM_PAIN;
-	if (ent->client->ps.pMove.pmFlags & PMF_DUCKED)
+	if (ent->client->playerState.pMove.pmFlags & PMF_DUCKED)
 	{
-		ent->s.frame = FRAME_crpain1;
+		ent->state.frame = FRAME_crpain1;
 		ent->client->anim_end = FRAME_crpain4;
 	}
 	else
 	{
-		ent->s.frame = FRAME_pain301;
+		ent->state.frame = FRAME_pain301;
 		ent->client->anim_end = FRAME_pain304;
 	}
 }
@@ -328,7 +328,7 @@ void PlayerNoise(edict_t *who, vec3_t where, int type)
 		level.sound2_entity_framenum = level.framenum;
 	}
 
-	Vec3Copy (where, noise->s.origin);
+	Vec3Copy (where, noise->state.origin);
 	Vec3Subtract (where, noise->maxs, noise->absMin);
 	Vec3Add (where, noise->maxs, noise->absMax);
 	noise->teleport_time = level.time;
@@ -344,7 +344,7 @@ void CWeapon::Muzzle (edict_t *ent, int muzzleNum)
 {
 	if (isSilenced)
 		muzzleNum |= MZ_SILENCED;
-	CTempEnt::MuzzleFlash(ent->s.origin, ent-g_edicts, muzzleNum);
+	CTempEnt::MuzzleFlash(ent->state.origin, ent-g_edicts, muzzleNum);
 }
 
 /*
@@ -473,14 +473,14 @@ void CWeapon::FireAnimation (edict_t *ent)
 {
 	// start the animation
 	ent->client->anim_priority = ANIM_ATTACK;
-	if (ent->client->ps.pMove.pmFlags & PMF_DUCKED)
+	if (ent->client->playerState.pMove.pmFlags & PMF_DUCKED)
 	{
-		ent->s.frame = FRAME_crattak1-1;
+		ent->state.frame = FRAME_crattak1-1;
 		ent->client->anim_end = FRAME_crattak9;
 	}
 	else
 	{
-		ent->s.frame = FRAME_attack1-1;
+		ent->state.frame = FRAME_attack1-1;
 		ent->client->anim_end = FRAME_attack8;
 	}
 }

@@ -44,7 +44,7 @@ CWeapon("models/weapons/v_bfg/tris.md2", 0, 8, 9, 32,
 
 bool CBFG::CanFire (edict_t *ent)
 {
-	switch (ent->client->ps.gunFrame)
+	switch (ent->client->playerState.gunFrame)
 	{
 	case 9:
 	case 17:
@@ -55,7 +55,7 @@ bool CBFG::CanFire (edict_t *ent)
 
 bool CBFG::CanStopFidgetting (edict_t *ent)
 {
-	switch (ent->client->ps.gunFrame)
+	switch (ent->client->playerState.gunFrame)
 	{
 	case 39:
 	case 45:
@@ -68,7 +68,7 @@ bool CBFG::CanStopFidgetting (edict_t *ent)
 
 void CBFG::Fire (edict_t *ent)
 {
-	switch (ent->client->ps.gunFrame)
+	switch (ent->client->playerState.gunFrame)
 	{
 	case 9:
 		MuzzleEffect (ent);
@@ -84,9 +84,9 @@ void CBFG::MuzzleEffect (edict_t *ent)
 	// send muzzle flash
 	Muzzle (ent, MZ_BFG);
 
-	ent->client->ps.gunFrame++;
+	ent->client->playerState.gunFrame++;
 
-	PlayerNoise(ent, ent->s.origin, PNOISE_WEAPON);
+	PlayerNoise(ent, ent->state.origin, PNOISE_WEAPON);
 }
 
 void CBFG::FireBFG (edict_t *ent)
@@ -105,7 +105,7 @@ void CBFG::FireBFG (edict_t *ent)
 	// check again and abort firing if we don't have enough now
 	if (ent->client->pers.Inventory.Has(ent->client->pers.Weapon->WeaponItem->Ammo) < 50)
 	{
-		ent->client->ps.gunFrame++;
+		ent->client->playerState.gunFrame++;
 		return;
 	}
 
@@ -127,10 +127,10 @@ void CBFG::FireBFG (edict_t *ent)
 	ent->client->v_dmg_time = level.time + DAMAGE_TIME;
 
 	Vec3Set (offset, 8, 8, ent->viewheight-8);
-	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
+	P_ProjectSource (ent->client, ent->state.origin, offset, forward, right, start);
 	fire_bfg (ent, start, forward, damage, 400, damage_radius);
 
-	ent->client->ps.gunFrame++;
+	ent->client->playerState.gunFrame++;
 
 	PlayerNoise(ent, start, PNOISE_WEAPON);
 

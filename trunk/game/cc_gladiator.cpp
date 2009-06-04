@@ -169,8 +169,8 @@ void CGladiator::FireRail ()
 	vec3_t	dir;
 	vec3_t	forward, right;
 
-	Angles_Vectors (Entity->s.angles, forward, right, NULL);
-	G_ProjectSource (Entity->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_GLADIATOR_RAILGUN_1], forward, right, start);
+	Angles_Vectors (Entity->state.angles, forward, right, NULL);
+	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_GLADIATOR_RAILGUN_1], forward, right, start);
 
 	// calc direction to where we targted
 	Vec3Subtract (Entity->pos1, start, dir);
@@ -199,14 +199,14 @@ void CGladiator::Attack ()
 	vec3_t	v;
 
 	// a small safe zone
-	Vec3Subtract (Entity->s.origin, Entity->enemy->s.origin, v);
+	Vec3Subtract (Entity->state.origin, Entity->enemy->state.origin, v);
 	range = Vec3Length(v);
 	if (range <= (MELEE_DISTANCE + 32))
 		return;
 
 	// charge up the railgun
 	PlaySoundFrom (Entity, CHAN_WEAPON, SoundGun);
-	Vec3Copy (Entity->enemy->s.origin, Entity->pos1);	//save for aiming the shot
+	Vec3Copy (Entity->enemy->state.origin, Entity->pos1);	//save for aiming the shot
 	Entity->pos1[2] += Entity->enemy->viewheight;
 	CurrentMove = &GladiatorMoveAttackGun;
 }
@@ -237,7 +237,7 @@ CAnim GladiatorMovePainAir (FRAME_painup1, FRAME_painup7, GladiatorFramesPainAir
 void CGladiator::Pain (edict_t *other, float kick, int damage)
 {
 	if (Entity->health < (Entity->max_health / 2))
-		Entity->s.skinNum = 1;
+		Entity->state.skinNum = 1;
 
 	if (level.time < Entity->pain_debounce_time)
 	{
@@ -338,7 +338,7 @@ void CGladiator::Spawn ()
 
 	Entity->movetype = MOVETYPE_STEP;
 	Entity->solid = SOLID_BBOX;
-	Entity->s.modelIndex = ModelIndex ("models/monsters/gladiatr/tris.md2");
+	Entity->state.modelIndex = ModelIndex ("models/monsters/gladiatr/tris.md2");
 	Vec3Set (Entity->mins, -32, -32, -24);
 	Vec3Set (Entity->maxs, 32, 32, 64);
 

@@ -77,7 +77,6 @@ public:
 	};
 };
 
-extern std::vector<CPathNode*>		Closed; // Nodes that have already been crossed
 // An actual "path"
 class CPath
 {

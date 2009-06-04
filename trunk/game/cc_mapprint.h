@@ -27,13 +27,22 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_local.h
-// Local header. Contains definitions local to CleanCode files and not necessarily used by the Quake2 base.
+// cc_mapprint.h
+// Contains a system to more easily-er warn about map errors
 //
 
-#include "g_local.h"
-#include "cc_cmds_local.h"
+enum EMapPrintType
+{
+	MAPPRINT_WARNING,
+	MAPPRINT_ERROR,
+	MAPPRINT_NORMAL
+};
 
-uint32 Com_HashGeneric(const char *name, const int hashSize);
+void Map_Print (EMapPrintType printType, edict_t *ent, vec3_t origin);
+void MapPrint (EMapPrintType printType, edict_t *ent, vec3_t origin, char *fmt, ...);
+void EndMapCounter ();
+void InitMapCounter ();
 
-extern CItemList *ItemList;
+char *CC_ParseSpawnEntities (char *mapname, char *entities);
+
+uint32 Sys_Milliseconds ();

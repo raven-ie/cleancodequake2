@@ -44,7 +44,7 @@ CWeapon("models/weapons/v_handgr/tris.md2", 0, 0, 0, 16,
 
 bool CHandGrenade::CanStopFidgetting (edict_t *ent)
 {
-	switch (ent->client->ps.gunFrame)
+	switch (ent->client->playerState.gunFrame)
 	{
 	case 29:
 	case 34:
@@ -74,14 +74,14 @@ void CHandGrenade::Hold (edict_t *ent)
 		FireGrenade (ent, true);
 		ent->client->grenade_blew_up = true;
 
-		ent->client->ps.gunFrame = 15;
+		ent->client->playerState.gunFrame = 15;
 		return;
 	}
 
 	if (ent->client->buttons & BUTTON_ATTACK)
 		return;
 
-	ent->client->ps.gunFrame++;
+	ent->client->playerState.gunFrame++;
 }
 
 void CHandGrenade::FireGrenade (edict_t *ent, bool inHand)
@@ -102,7 +102,7 @@ void CHandGrenade::FireGrenade (edict_t *ent, bool inHand)
 
 	Vec3Set (offset, 8, 8, ent->viewheight-8);
 	Angles_Vectors (ent->client->v_angle, forward, right, NULL);
-	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
+	P_ProjectSource (ent->client, ent->state.origin, offset, forward, right, start);
 
 	float timer = ent->client->grenade_time - level.time;
 	int speed = GRENADE_MINSPEED + (GRENADE_TIMER - timer) * ((GRENADE_MAXSPEED - GRENADE_MINSPEED) / GRENADE_TIMER);
@@ -112,22 +112,22 @@ void CHandGrenade::FireGrenade (edict_t *ent, bool inHand)
 	if (!dmFlags.dfInfiniteAmmo)
 		DepleteAmmo(ent, 1);
 
-	if(ent->health <= 0 || ent->deadflag || ent->s.modelIndex != 255) // VWep animations screw up corpses
+	if(ent->health <= 0 || ent->deadflag || ent->state.modelIndex != 255) // VWep animations screw up corpses
 		return;
 
-	if (ent->client->ps.pMove.pmFlags & PMF_DUCKED)
+	if (ent->client->playerState.pMove.pmFlags & PMF_DUCKED)
 	{
 		ent->client->anim_priority = ANIM_ATTACK;
-		ent->s.frame = FRAME_crattak1-1;
+		ent->state.frame = FRAME_crattak1-1;
 		ent->client->anim_end = FRAME_crattak3;
 	}
 	else
 	{
 		ent->client->anim_priority = ANIM_REVERSE;
-		ent->s.frame = FRAME_wave08;
+		ent->state.frame = FRAME_wave08;
 		ent->client->anim_end = FRAME_wave01;
 	}
-	ent->client->ps.gunFrame++;
+	ent->client->playerState.gunFrame++;
 }
 
 void CHandGrenade::Wait (edict_t *ent)
@@ -135,12 +135,12 @@ void CHandGrenade::Wait (edict_t *ent)
 	ent->client->grenade_blew_up = false;
 	if (level.time < ent->client->grenade_time)
 		return;
-	ent->client->ps.gunFrame++;
+	ent->client->playerState.gunFrame++;
 }
 
 void CHandGrenade::Fire (edict_t *ent)
 {
-	switch (ent->client->ps.gunFrame)
+	switch (ent->client->playerState.gunFrame)
 	{
 	case 11:
 		Hold (ent);
@@ -157,7 +157,7 @@ void CHandGrenade::Fire (edict_t *ent)
 
 bool CHandGrenade::CanFire (edict_t *ent)
 {
-	switch (ent->client->ps.gunFrame)
+	switch (ent->client->playerState.gunFrame)
 	{
 	case 5:
 		PlaySoundFrom(ent, CHAN_WEAPON, SoundIndex("weapons/hgrena1b.wav"));
@@ -197,7 +197,7 @@ void CHandGrenade::WeaponGeneric (edict_t *ent)
 			if (AttemptToFire(ent))
 			{
 				// Got here, we can fire!
-				ent->client->ps.gunFrame = FireStart;
+				ent->client->playerState.gunFrame = FireStart;
 				ent->client->weaponstate = WS_FIRING;
 				ent->client->grenade_time = 0;
 
@@ -215,12 +215,12 @@ void CHandGrenade::WeaponGeneric (edict_t *ent)
 		// Either we are still idle or a failed fire.
 		if (newState == -1)
 		{
-			if (ent->client->ps.gunFrame == IdleEnd)
+			if (ent->client->playerState.gunFrame == IdleEnd)
 				newFrame = IdleStart;
 			else
 			{
 				if (CanStopFidgetting(ent) && (rand()&15))
-					newFrame = ent->client->ps.gunFrame;
+					newFrame = ent->client->playerState.gunFrame;
 			}
 		}
 		break;
@@ -233,12 +233,12 @@ void CHandGrenade::WeaponGeneric (edict_t *ent)
 			// Now, this call above CAN change the underlying frame and state.
 			// We need this block to make sure we are still doing what we are supposed to.
 			newState = ent->client->weaponstate;
-			newFrame = ent->client->ps.gunFrame;
+			newFrame = ent->client->playerState.gunFrame;
 		}
 
 		// Only do this if we haven't been explicitely set a newFrame
 		// because we might want to keep firing beyond this point
-		if (newFrame == -1 && ent->client->ps.gunFrame == FireEnd)
+		if (newFrame == -1 && ent->client->playerState.gunFrame == FireEnd)
 		{
 			if (!ent->client->pers.Inventory.Has(this->Item))
 			{
@@ -265,10 +265,10 @@ void CHandGrenade::WeaponGeneric (edict_t *ent)
 	}
 
 	if (newFrame != -1)
-		ent->client->ps.gunFrame = newFrame;
+		ent->client->playerState.gunFrame = newFrame;
 	if (newState != -1)
 		ent->client->weaponstate = newState;
 
 	if (newFrame == -1 && newState == -1)
-		ent->client->ps.gunFrame++;
+		ent->client->playerState.gunFrame++;
 }

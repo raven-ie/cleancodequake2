@@ -27,13 +27,41 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_local.h
-// Local header. Contains definitions local to CleanCode files and not necessarily used by the Quake2 base.
+// cc_cmds_local.h
+// The class, local to CleanCode.
 //
 
-#include "g_local.h"
-#include "cc_cmds_local.h"
+#define MAX_COMMANDS 128
+#define MAX_CMD_HASH (MAX_COMMANDS/4)
 
-uint32 Com_HashGeneric(const char *name, const int hashSize);
+class CCmd
+{
+public:
+	uint32			hashValue;
+	CCmd			*hashNext;
+	char			*cmdName;
 
-extern CItemList *ItemList;
+	ECmdTypeFlags	CmdFlags;
+	void			(*RunFunction) (edict_t *ent);
+
+	CCmd (char *name, void (*Func) (edict_t *ent), ECmdTypeFlags Flags);
+	~CCmd();
+	void Run (edict_t *ent);
+};
+
+// Also throwing server command class here.
+class CServerCmd
+{
+public:
+	uint32			hashValue;
+	CServerCmd			*hashNext;
+	char			*cmdName;
+
+	ECmdTypeFlags	CmdFlags;
+	void			(*RunFunction) ();
+
+	CServerCmd (char *name, void (*Func) ());
+	~CServerCmd();
+
+	void Run ();
+};

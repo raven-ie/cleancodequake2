@@ -31,21 +31,6 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // ServerCommand and related classes
 //
 
-class CServerCmd
-{
-public:
-	uint32			hashValue;
-	CServerCmd			*hashNext;
-	char			*cmdName;
-
-	ECmdTypeFlags	CmdFlags;
-	void			(*RunFunction) ();
-
-	CServerCmd (char *name, void (*Func) ());
-	~CServerCmd();
-
-	void Run ();
-};
 
 void ServerCommand ();
 void SvCmd_Register ();

@@ -80,14 +80,14 @@ void CSoldierShotgun::FireGun (int FlashNumber)
 	float	r, u;
 	int		flashIndex = ShotgunFlash[FlashNumber];
 
-	Angles_Vectors (Entity->s.angles, forward, right, NULL);
-	G_ProjectSource (Entity->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[flashIndex], forward, right, start);
+	Angles_Vectors (Entity->state.angles, forward, right, NULL);
+	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[flashIndex], forward, right, start);
 
 	if (FlashNumber == 5 || FlashNumber == 6)
 		Vec3Copy (forward, aim);
 	else
 	{
-		Vec3Copy (Entity->enemy->s.origin, end);
+		Vec3Copy (Entity->enemy->state.origin, end);
 		end[2] += Entity->enemy->viewheight;
 		Vec3Subtract (end, start, aim);
 		VecToAngles (aim, dir);
@@ -111,7 +111,7 @@ void CSoldierShotgun::SpawnSoldier ()
 	SoundPain = SoundIndex ("soldier/solpain1.wav");
 	SoundDeath = SoundIndex ("soldier/soldeth1.wav");
 
-	Entity->s.skinNum = 2;
+	Entity->state.skinNum = 2;
 	Entity->health = 30;
 	Entity->gib_health = -30;
 }

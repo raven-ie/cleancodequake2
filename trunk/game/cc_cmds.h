@@ -41,17 +41,6 @@ enum ECmdTypeFlags
 	CMD_CHEAT		= 2
 };
 
-class CCmd
-{
-public:
-	uint32			hashValue;
-	CCmd			*hashNext;
-	char			*cmdName;
-
-	ECmdTypeFlags	CmdFlags;
-	void			(*RunFunction) (edict_t *ent);
-
-	CCmd (char *name, void (*Func) (edict_t *ent), ECmdTypeFlags Flags);
-	~CCmd();
-	void Run (edict_t *ent);
-};
+void Cmd_RunCommand (char *commandName, edict_t *ent);
+void Cmd_RemoveCommands ();
+void Cmd_AddCommand (char *commandName, void (*Func) (edict_t *ent), ECmdTypeFlags Flags = CMD_NORMAL);

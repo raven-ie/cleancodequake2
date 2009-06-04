@@ -90,7 +90,7 @@ edict_t *findradius (edict_t *from, vec3_t org, float rad)
 		if (from->solid == SOLID_NOT)
 			continue;
 		for (j=0 ; j<3 ; j++)
-			eorg[j] = org[j] - (from->s.origin[j] + (from->mins[j] + from->maxs[j])*0.5);
+			eorg[j] = org[j] - (from->state.origin[j] + (from->mins[j] + from->maxs[j])*0.5);
 		if (Vec3Length(eorg) > rad)
 			continue;
 		return from;
@@ -287,7 +287,7 @@ void G_InitEdict (edict_t *e)
 	e->inUse = true;
 	e->classname = "noclass";
 	e->gravity = 1.0;
-	e->s.number = e - g_edicts;
+	e->state.number = e - g_edicts;
 }
 
 /*
@@ -434,12 +434,12 @@ bool KillBox (edict_t *ent)
 
 	while (1)
 	{
-		tr = CTrace (ent->s.origin, ent->mins, ent->maxs, ent->s.origin, NULL, CONTENTS_MASK_PLAYERSOLID);
+		tr = CTrace (ent->state.origin, ent->mins, ent->maxs, ent->state.origin, NULL, CONTENTS_MASK_PLAYERSOLID);
 		if (!tr.ent)
 			break;
 
 		// nail it
-		T_Damage (tr.ent, ent, ent, vec3Origin, ent->s.origin, vec3Origin, 100000, 0, DAMAGE_NO_PROTECTION, MOD_TELEFRAG);
+		T_Damage (tr.ent, ent, ent, vec3Origin, ent->state.origin, vec3Origin, 100000, 0, DAMAGE_NO_PROTECTION, MOD_TELEFRAG);
 
 		// if we didn't kill it, fail
 		if (tr.ent->solid)

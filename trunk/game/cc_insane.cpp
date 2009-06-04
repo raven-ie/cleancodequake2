@@ -439,7 +439,7 @@ void CInsane::Cross ()
 
 void CInsane::Walk ()
 {
-	if ( (Entity->spawnflags & 16) && (Entity->s.frame == FRAME_cr_pain10) )			// Hold Ground?
+	if ( (Entity->spawnflags & 16) && (Entity->state.frame == FRAME_cr_pain10) )			// Hold Ground?
 	{
 		CurrentMove = &InsaneMoveDown;
 		return;
@@ -453,7 +453,7 @@ void CInsane::Walk ()
 
 void CInsane::Run ()
 {
-	if ( (Entity->spawnflags & 16) && (Entity->s.frame == FRAME_cr_pain10))			// Hold Ground?
+	if ( (Entity->spawnflags & 16) && (Entity->state.frame == FRAME_cr_pain10))			// Hold Ground?
 	{
 		CurrentMove = &InsaneMoveDown;
 		return;
@@ -471,7 +471,7 @@ void CInsane::Pain (edict_t *other, float kick, int damage)
 	int	l,r;
 
 //	if (self->health < (self->max_health / 2))
-//		self->s.skinnum = 1;
+//		self->state.skinnum = 1;
 
 	if (level.time < Entity->pain_debounce_time)
 		return;
@@ -502,7 +502,7 @@ void CInsane::Pain (edict_t *other, float kick, int damage)
 		return;
 	}
 	
-	if  ( ((Entity->s.frame >= FRAME_crawl1) && (Entity->s.frame <= FRAME_crawl9)) || ((Entity->s.frame >= FRAME_stand99) && (Entity->s.frame <= FRAME_stand160)) )
+	if  ( ((Entity->state.frame >= FRAME_crawl1) && (Entity->state.frame <= FRAME_crawl9)) || ((Entity->state.frame >= FRAME_stand99) && (Entity->state.frame <= FRAME_stand160)) )
 		CurrentMove = &InsaneMoveCrawlPain;
 	else
 		CurrentMove = &InsaneMoveStandPain;
@@ -586,7 +586,7 @@ void CInsane::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t poi
 		Dead ();
 	else
 	{
-		if ( ((Entity->s.frame >= FRAME_crawl1) && (Entity->s.frame <= FRAME_crawl9)) || ((Entity->s.frame >= FRAME_stand99) && (Entity->s.frame <= FRAME_stand160)) )		
+		if ( ((Entity->state.frame >= FRAME_crawl1) && (Entity->state.frame <= FRAME_crawl9)) || ((Entity->state.frame >= FRAME_stand99) && (Entity->state.frame <= FRAME_stand160)) )		
 			CurrentMove = &InsaneMoveCrawlDeath;
 		else
 			CurrentMove = &InsaneMoveStandDeath;
@@ -612,7 +612,7 @@ void CInsane::Spawn ()
 
 	Entity->movetype = MOVETYPE_STEP;
 	Entity->solid = SOLID_BBOX;
-	Entity->s.modelIndex = ModelIndex("models/monsters/insane/tris.md2");
+	Entity->state.modelIndex = ModelIndex("models/monsters/insane/tris.md2");
 
 	Vec3Set (Entity->mins, -16, -16, -24);
 	Vec3Set (Entity->maxs, 16, 16, 32);
@@ -641,5 +641,5 @@ void CInsane::Spawn ()
 	{
 		WalkMonsterStart ();
 	}
-	Entity->s.skinNum = rand()%3;
+	Entity->state.skinNum = rand()%3;
 }

@@ -27,13 +27,16 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_local.h
-// Local header. Contains definitions local to CleanCode files and not necessarily used by the Quake2 base.
+// cc_write.h
+// "Write" functions to write and check for malformed writes.
 //
 
-#include "g_local.h"
-#include "cc_cmds_local.h"
-
-uint32 Com_HashGeneric(const char *name, const int hashSize);
-
-extern CItemList *ItemList;
+void WriteDirection (vec3_t val);
+void WritePosition (vec3_t val);
+void WriteString (char *val);
+void WriteAngle (float val);
+void WriteFloat (float val);
+void WriteLong (long val);
+void WriteShort (short val);
+void WriteByte (byte val);
+void WriteChar (char val);

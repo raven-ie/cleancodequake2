@@ -216,7 +216,7 @@ CAnim InfantryMovePain2 (FRAME_pain201, FRAME_pain210, InfantryFramesPain2, Conv
 void CInfantry::Pain (edict_t *other, float kick, int damage)
 {
 	if (Entity->health < (Entity->max_health / 2))
-		Entity->s.skinNum = 1;
+		Entity->state.skinNum = 1;
 
 #ifdef MONSTER_USE_ROGUE_AI
 	DoneDodge();
@@ -263,30 +263,30 @@ void CInfantry::MachineGun ()
 	vec3_t	vec;
 	int		flash_number;
 
-	if (Entity->s.frame == FRAME_attak111)
+	if (Entity->state.frame == FRAME_attak111)
 	{
 		flash_number = MZ2_INFANTRY_MACHINEGUN_1;
-		Angles_Vectors (Entity->s.angles, forward, right, NULL);
-		G_ProjectSource (Entity->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
+		Angles_Vectors (Entity->state.angles, forward, right, NULL);
+		G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
 		if (Entity->enemy)
 		{
-			Vec3MA (Entity->enemy->s.origin, -0.2, Entity->enemy->velocity, target);
+			Vec3MA (Entity->enemy->state.origin, -0.2, Entity->enemy->velocity, target);
 			target[2] += Entity->enemy->viewheight;
 			Vec3Subtract (target, start, forward);
 			VectorNormalizef (forward, forward);
 		}
 		else
-			Angles_Vectors (Entity->s.angles, forward, right, NULL);
+			Angles_Vectors (Entity->state.angles, forward, right, NULL);
 	}
 	else
 	{
-		flash_number = MZ2_INFANTRY_MACHINEGUN_2 + (Entity->s.frame - FRAME_death211);
+		flash_number = MZ2_INFANTRY_MACHINEGUN_2 + (Entity->state.frame - FRAME_death211);
 
-		Angles_Vectors (Entity->s.angles, forward, right, NULL);
-		G_ProjectSource (Entity->s.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
+		Angles_Vectors (Entity->state.angles, forward, right, NULL);
+		G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
-		Vec3Subtract (Entity->s.angles, DeathAimAngles[flash_number-MZ2_INFANTRY_MACHINEGUN_2], vec);
+		Vec3Subtract (Entity->state.angles, DeathAimAngles[flash_number-MZ2_INFANTRY_MACHINEGUN_2], vec);
 		Angles_Vectors (vec, forward, NULL, NULL);
 	}
 
@@ -628,7 +628,7 @@ void CInfantry::Spawn ()
 {
 	Entity->movetype = MOVETYPE_STEP;
 	Entity->solid = SOLID_BBOX;
-	Entity->s.modelIndex = ModelIndex("models/monsters/infantry/tris.md2");
+	Entity->state.modelIndex = ModelIndex("models/monsters/infantry/tris.md2");
 	Vec3Set (Entity->mins, -16, -16, -24);
 	Vec3Set (Entity->maxs, 16, 16, 32);
 
