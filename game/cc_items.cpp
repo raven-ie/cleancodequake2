@@ -143,7 +143,7 @@ static void DropTempTouch (edict_t *ent, edict_t *other, plane_t *plane, cmBspSu
 static void DropMakeTouchable (edict_t *ent)
 {
 	ent->touch = TouchItem;
-	if (deathmatch->Integer())
+	if (game.mode == GAME_DEATHMATCH)
 	{
 		ent->nextthink = level.time + 29;
 		ent->think = G_FreeEdict;
@@ -254,7 +254,7 @@ void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *su
 	if (ent->item->PickupSound)
 		PlaySoundFrom(other, CHAN_ITEM, ent->item->PickupSoundIndex);
 
-	if (!((coop->Integer()) &&  (ent->item->Flags & ITEMFLAG_STAY_COOP)) || (ent->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)))
+	if ((game.mode != GAME_COOPERATIVE && (ent->item->Flags & ITEMFLAG_STAY_COOP)) || (ent->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)))
 	{
 		if (ent->flags & FL_RESPAWN)
 			ent->flags &= ~FL_RESPAWN;
@@ -387,7 +387,7 @@ void SpawnItem (edict_t *ent, CBaseItem *item)
 	}
 
 	// some items will be prevented in deathmatch
-	if (deathmatch->Integer())
+	if (game.mode == GAME_DEATHMATCH)
 	{
 		if (dmFlags.dfNoArmor)
 		{
@@ -427,7 +427,7 @@ void SpawnItem (edict_t *ent, CBaseItem *item)
 		}
 	}
 
-	if (coop->Integer() && (strcmp(ent->classname, "key_power_cube") == 0))
+	if ((game.mode == GAME_COOPERATIVE) && (strcmp(ent->classname, "key_power_cube") == 0))
 	{
 		ent->spawnflags |= (1 << (8 + level.power_cubes));
 		level.power_cubes++;

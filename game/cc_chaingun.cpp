@@ -85,13 +85,8 @@ void CChaingun::Fire (edict_t *ent)
 	vec3_t		forward, right, up;
 	float		r, u;
 	vec3_t		offset;
-	int			damage;
+	int			damage = (game.mode == GAME_DEATHMATCH) ? 6 : 8;
 	int			kick = 2;
-
-	if (deathmatch->Integer())
-		damage = 6;
-	else
-		damage = 8;
 
 	if (ent->client->playerState.gunFrame == 5)
 		PlaySoundFrom(ent, CHAN_AUTO, SoundIndex("weapons/chngnu1a.wav"));

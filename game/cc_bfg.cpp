@@ -93,13 +93,8 @@ void CBFG::FireBFG (edict_t *ent)
 {
 	vec3_t	offset, start;
 	vec3_t	forward, right;
-	int		damage;
+	int		damage = (game.mode == GAME_DEATHMATCH) ? 200 : 500;
 	float	damage_radius = 1000;
-
-	if (deathmatch->Integer())
-		damage = 200;
-	else
-		damage = 500;
 
 	// cells can go down during windup (from power armor hits), so
 	// check again and abort firing if we don't have enough now

@@ -580,7 +580,7 @@ void rocket_touch (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t 
 	else
 	{
 		// don't throw any debris in net games
-		if (!deathmatch->Integer() && !coop->Integer())
+		if (game.mode == GAME_SINGLEPLAYER)
 		{
 			if ((surf) && !(surf->flags & (SURF_TEXINFO_WARP|SURF_TEXINFO_TRANS33|SURF_TEXINFO_TRANS66|SURF_TEXINFO_FLOWING)))
 			{
@@ -790,7 +790,7 @@ void bfg_think (edict_t *self)
 	int		dmg;
 	CTrace	tr;
 
-	if (deathmatch->Integer())
+	if (game.mode == GAME_DEATHMATCH)
 		dmg = 5;
 	else
 		dmg = 10;

@@ -102,7 +102,7 @@ void Killed (edict_t *targ, edict_t *inflictor, edict_t *attacker, int damage, v
 		if (!(targ->Monster->AIFlags & AI_GOOD_GUY))
 		{
 			level.killed_monsters++;
-			if (coop->Integer() && attacker->client)
+			if (game.mode == GAME_COOPERATIVE && attacker->client)
 				attacker->client->resp.score++;
 			// medics won't heal monsters that they kill themselves
 			if (strcmp(attacker->classname, "monster_medic") == 0)
@@ -290,7 +290,7 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 	// friendly fire avoidance
 	// if enabled you can't hurt teammates (but you can hurt yourself)
 	// knockback still occurs
-	if ((targ != attacker) && (deathmatch->Integer() && (dmFlags.dfSkinTeams || dmFlags.dfModelTeams) || coop->Integer()))
+	if ((targ != attacker) && (game.mode == GAME_DEATHMATCH && (dmFlags.dfSkinTeams || dmFlags.dfModelTeams) || game.mode == GAME_COOPERATIVE))
 	{
 		if (OnSameTeam (targ, attacker))
 		{
@@ -303,7 +303,7 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 	meansOfDeath = mod;
 
 	// easy mode takes half damage
-	if (skill->Integer() == 0 && deathmatch->Integer() == 0 && targ->client)
+	if (skill->Integer() == 0 && game.mode != GAME_DEATHMATCH && targ->client)
 	{
 		damage *= 0.5;
 		if (!damage)

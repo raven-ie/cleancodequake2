@@ -60,7 +60,7 @@ CKey(Classname, WorldModel, EffectFlags, PickupSound, Icon, Name, Flags,
 
 bool CKey::Pickup (edict_t *ent, edict_t *other)
 {
-	if (coop->Integer())
+	if (game.mode == GAME_COOPERATIVE)
 	{
 		if (other->client->pers.Inventory.Has(this))
 			return false;
@@ -73,7 +73,7 @@ bool CKey::Pickup (edict_t *ent, edict_t *other)
 
 bool CPowerCube::Pickup (edict_t *ent, edict_t *other)
 {
-	if (coop->Integer())
+	if (game.mode == GAME_COOPERATIVE)
 	{
 		if (other->client->pers.power_cubes & ((ent->spawnflags & 0x0000ff00)>> 8))
 			return false;

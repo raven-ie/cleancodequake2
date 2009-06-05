@@ -176,10 +176,10 @@ void Cmd_Players_f (edict_t *ent)
 	int		count;
 	char	small[MAX_INFO_KEY];
 	char	large[MAX_INFO_STRING];
-	int		*index = new int[maxclients->Integer()];
+	int		*index = new int[game.maxclients];
 
 	count = 0;
-	for (i = 0 ; i < maxclients->Integer() ; i++)
+	for (i = 0 ; i < game.maxclients ; i++)
 	{
 		if (game.clients[i].pers.state >= SVCS_CONNECTED)
 		{
@@ -371,7 +371,7 @@ void Cmd_PlayerList_f(edict_t *ent)
 	*text = 0;
 
 	Q_snprintfz (text, sizeof(text), "Spawned:\n");
-	for (i = 0, e2 = g_edicts + 1; i < maxclients->Integer(); i++, e2++)
+	for (i = 0, e2 = g_edicts + 1; i < game.maxclients; i++, e2++)
 	{
 		if (!e2->inUse)
 			continue;
@@ -394,7 +394,7 @@ void Cmd_PlayerList_f(edict_t *ent)
 	}
 
 	Q_strcatz (text, "Connecting:\n", sizeof(text));
-	for (i = 0, e2 = g_edicts + 1; i < maxclients->Integer(); i++, e2++)
+	for (i = 0, e2 = g_edicts + 1; i < game.maxclients; i++, e2++)
 	{
 		if (!e2->inUse)
 			continue;

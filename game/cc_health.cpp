@@ -56,7 +56,7 @@ bool CHealth::Pickup (edict_t *ent, edict_t *other)
 			other->health = other->max_health;
 	}
 
-	if (!(ent->spawnflags & DROPPED_ITEM) && (deathmatch->Integer()))
+	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode == GAME_DEATHMATCH))
 		SetRespawn (ent, 30);
 
 	return true;

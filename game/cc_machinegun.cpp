@@ -125,7 +125,7 @@ void CMachinegun::Fire (edict_t *ent)
 	ent->client->kick_angles[0] = ent->client->machinegun_shots * -1.5;
 
 	// raise the gun as it is firing
-	if (!deathmatch->Integer())
+	if (game.mode != GAME_DEATHMATCH)
 	{
 		ent->client->machinegun_shots++;
 		if (ent->client->machinegun_shots > 9)

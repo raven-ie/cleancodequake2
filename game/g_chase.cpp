@@ -119,7 +119,7 @@ void ChaseNext(edict_t *ent)
 	i = ent->client->chase_target - g_edicts;
 	do {
 		i++;
-		if (i > maxclients->Integer())
+		if (i > game.maxclients)
 			i = 1;
 		e = g_edicts + i;
 		if (!e->inUse)
@@ -144,7 +144,7 @@ void ChasePrev(edict_t *ent)
 	do {
 		i--;
 		if (i < 1)
-			i = maxclients->Integer();
+			i = game.maxclients;
 		e = g_edicts + i;
 		if (!e->inUse)
 			continue;
@@ -161,7 +161,7 @@ void GetChaseTarget(edict_t *ent)
 	int i;
 	edict_t *other;
 
-	for (i = 1; i <= maxclients->Integer(); i++)
+	for (i = 1; i <= game.maxclients; i++)
 	{
 		other = g_edicts + i;
 		if (other->inUse && !other->client->resp.spectator)

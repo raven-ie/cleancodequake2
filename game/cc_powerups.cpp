@@ -47,7 +47,7 @@ bool CBasePowerUp::Pickup (edict_t *ent, edict_t *other)
 	if (PowerupFlags & POWERFLAG_STORE)
 	{
 		if (other->client->pers.Inventory.Has(this) > 0 &&
-			(!(PowerupFlags & POWERFLAG_STACK) || (PowerupFlags & (POWERFLAG_STACK|POWERFLAG_BUTNOTINCOOP) && coop->Integer()) || coop->Integer() && (this->Flags & ITEMFLAG_STAY_COOP)))
+			(!(PowerupFlags & POWERFLAG_STACK) || (PowerupFlags & (POWERFLAG_STACK|POWERFLAG_BUTNOTINCOOP) && (game.mode == GAME_COOPERATIVE)) || (game.mode == GAME_COOPERATIVE) && (this->Flags & ITEMFLAG_STAY_COOP)))
 			return false;
 
 		other->client->pers.Inventory += this;
@@ -160,7 +160,7 @@ void CMegaHealth::MegaHealthThink (edict_t *self)
 		return;
 	}
 
-	if (!(self->spawnflags & DROPPED_ITEM) && (deathmatch->Integer()))
+	if (!(self->spawnflags & DROPPED_ITEM) && (game.mode == GAME_DEATHMATCH))
 		self->item->SetRespawn (self, 20);
 	else
 		G_FreeEdict (self);
@@ -207,7 +207,7 @@ void CBackPack::DoPickup (edict_t *ent, edict_t *other)
 	Ammo = dynamic_cast<CAmmo*>(FindItem("Rockets"));
 	Ammo->AddAmmo (other, Ammo->Quantity);
 
-	if (!(ent->spawnflags & DROPPED_ITEM) && (deathmatch->Integer()))
+	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode == GAME_DEATHMATCH))
 		SetRespawn (ent, 180);
 }
 
@@ -215,7 +215,7 @@ static int	quad_drop_timeout_hack;
 
 void CQuadDamage::DoPickup (edict_t *ent, edict_t *other)
 {
-	if (deathmatch->Integer())
+	if (game.mode == GAME_DEATHMATCH)
 	{
 		if (!(ent->spawnflags & DROPPED_ITEM) )
 			SetRespawn (ent, 60);
@@ -249,7 +249,7 @@ void CQuadDamage::Use (edict_t *ent)
 
 void CInvulnerability::DoPickup (edict_t *ent, edict_t *other)
 {
-	if (deathmatch->Integer())
+	if (game.mode == GAME_DEATHMATCH)
 	{
 		if (!(ent->spawnflags & DROPPED_ITEM) )
 			SetRespawn (ent, 300);
@@ -272,7 +272,7 @@ void CInvulnerability::Use (edict_t *ent)
 
 void CSilencer::DoPickup (edict_t *ent, edict_t *other)
 {
-	if (deathmatch->Integer())
+	if (game.mode == GAME_DEATHMATCH)
 	{
 		if (!(ent->spawnflags & DROPPED_ITEM) )
 			SetRespawn (ent, 30);
@@ -289,7 +289,7 @@ void CSilencer::Use (edict_t *ent)
 
 void CRebreather::DoPickup (edict_t *ent, edict_t *other)
 {
-	if (deathmatch->Integer())
+	if (game.mode == GAME_DEATHMATCH)
 	{
 		if (!(ent->spawnflags & DROPPED_ITEM) )
 			SetRespawn (ent, 60);
@@ -310,7 +310,7 @@ void CRebreather::Use (edict_t *ent)
 
 void CEnvironmentSuit::DoPickup (edict_t *ent, edict_t *other)
 {
-	if (deathmatch->Integer())
+	if (game.mode == GAME_DEATHMATCH)
 	{
 		if (!(ent->spawnflags & DROPPED_ITEM) )
 			SetRespawn (ent, 60);
@@ -345,19 +345,19 @@ void CBandolier::DoPickup (edict_t *ent, edict_t *other)
 	Ammo = dynamic_cast<CAmmo*>(FindItem("Shells"));
 	Ammo->AddAmmo (other, Ammo->Quantity);
 
-	if (!(ent->spawnflags & DROPPED_ITEM) && (deathmatch->Integer()))
+	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode == GAME_DEATHMATCH))
 		SetRespawn (ent, 60);
 }
 
 void CAdrenaline::DoPickup (edict_t *ent, edict_t *other)
 {
-	if (!deathmatch->Integer())
+	if (game.mode != GAME_DEATHMATCH)
 		other->max_health += 1;
 
 	if (other->health < other->max_health)
 		other->health = other->max_health;
 
-	if (!(ent->spawnflags & DROPPED_ITEM) && (deathmatch->Integer()))
+	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode == GAME_DEATHMATCH))
 		SetRespawn (ent, 60);
 }
 
@@ -365,13 +365,13 @@ void CAncientHead::DoPickup (edict_t *ent, edict_t *other)
 {
 	other->max_health += 2;
 
-	if (!(ent->spawnflags & DROPPED_ITEM) && (deathmatch->Integer()))
+	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode == GAME_DEATHMATCH))
 		SetRespawn (ent, 60);
 }
 
 void CPowerShield::DoPickup (edict_t *ent, edict_t *other)
 {
-	if (deathmatch->Integer())
+	if (game.mode == GAME_DEATHMATCH)
 	{
 		if (!(ent->spawnflags & DROPPED_ITEM) )
 			SetRespawn (ent, 60);

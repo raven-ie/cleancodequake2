@@ -35,7 +35,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 void CCmd::Run (edict_t *ent)
 {
-	if ((CmdFlags & CMD_CHEAT) && !sv_cheats->Integer() && (deathmatch->Integer() || coop->Integer()))
+	if ((CmdFlags & CMD_CHEAT) && !game.cheats && (game.mode != GAME_SINGLEPLAYER))
 	{
 		ClientPrintf (ent, PRINT_HIGH, "Cheats must be enabled to use this command.\n");
 		return;

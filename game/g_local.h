@@ -153,6 +153,13 @@ typedef enum
 // it should be initialized at dll load time, and read/written to
 // the server.ssv file for savegames
 //
+enum EGameMode
+{
+	GAME_SINGLEPLAYER,
+	GAME_DEATHMATCH,
+	GAME_COOPERATIVE
+};
+
 typedef struct
 {
 	char		helpmessage1[512];
@@ -168,12 +175,15 @@ typedef struct
 
 	// store latched cvars here that we want to get at often
 	int			maxclients;
+	int			maxspectators;
 	int			maxentities;
 
 	// cross level triggers
 	int			serverflags;
 
 	bool		autosaved;
+
+	EGameMode	mode; // Game mode
 } game_locals_t;
 
 

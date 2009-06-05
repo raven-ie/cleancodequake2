@@ -107,10 +107,8 @@ void CHyperBlaster::Fire (edict_t *ent)
 				effect = EF_HYPERBLASTER;
 			else
 				effect = 0;
-			if (deathmatch->Integer())
-				damage = 15;
-			else
-				damage = 20;
+
+			damage = (game.mode == GAME_DEATHMATCH) ? 15 : 20;
 
 			vec3_t	forward, right;
 			vec3_t	start;

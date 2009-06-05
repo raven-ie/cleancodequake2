@@ -201,7 +201,7 @@ void ClientEndServerFrames (void)
 
 	// calc the player views now that all pushing
 	// and damage has been added
-	for (i=0 ; i<maxclients->Float() ; i++)
+	for (i=0 ; i<game.maxclients ; i++)
 	{
 		ent = g_edicts + 1 + i;
 		if (!ent->inUse || !ent->client)
@@ -340,7 +340,7 @@ void CheckDMRules (void)
 	if (level.intermissiontime)
 		return;
 
-	if (!deathmatch->Integer())
+	if (game.mode != GAME_DEATHMATCH)
 		return;
 
 	if (timelimit->Float())
@@ -355,7 +355,7 @@ void CheckDMRules (void)
 
 	if (fraglimit->Integer())
 	{
-		for (i=0 ; i<maxclients->Integer() ; i++)
+		for (i=0 ; i<game.maxclients ; i++)
 		{
 			cl = game.clients + i;
 			if (!g_edicts[i+1].inUse)
@@ -391,7 +391,7 @@ void ExitLevel (void)
 	ClientEndServerFrames ();
 
 	// clear some things before going to next level
-	for (i=0 ; i<maxclients->Integer() ; i++)
+	for (i=0 ; i<game.maxclients ; i++)
 	{
 		ent = g_edicts + 1 + i;
 		if (!ent->inUse)
@@ -426,7 +426,7 @@ __try
 	if (level.paused)
 	{
 		ent = &g_edicts[1];
-		for (i=1 ; i <= maxclients->Integer() ; i++, ent++)
+		for (i=1 ; i <= game.maxclients ; i++, ent++)
 		{
 			if (!ent->inUse)
 				continue;
@@ -448,7 +448,7 @@ __try
 		EndMapCounter();
 
 	// choose a client for monsters to target this frame
-	if (!deathmatch->Integer()) // Paril, lol
+	if (game.mode != GAME_DEATHMATCH) // Paril, lol
 		AI_SetSightClient ();
 
 	// exit intermissions
@@ -481,7 +481,7 @@ __try
 				ent->Monster->CheckGround ();
 		}
 
-		if (i > 0 && i <= maxclients->Integer())
+		if (i > 0 && i <= game.maxclients)
 		{
 			ClientBeginServerFrame (ent);
 			continue;

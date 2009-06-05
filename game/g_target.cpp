@@ -131,7 +131,7 @@ When fired, the "message" key becomes the current personal computer string, and 
 */
 void SP_target_help(edict_t *ent)
 {
-	if (deathmatch->Integer())
+	if (game.mode == GAME_DEATHMATCH)
 	{	// auto-remove for deathmatch
 		G_FreeEdict (ent);
 		return;
@@ -165,7 +165,7 @@ void use_target_secret (edict_t *ent, edict_t *other, edict_t *activator)
 
 void SP_target_secret (edict_t *ent)
 {
-	if (deathmatch->Integer())
+	if (game.mode == GAME_DEATHMATCH)
 	{	// auto-remove for deathmatch
 		G_FreeEdict (ent);
 		return;
@@ -203,7 +203,7 @@ void use_target_goal (edict_t *ent, edict_t *other, edict_t *activator)
 
 void SP_target_goal (edict_t *ent)
 {
-	if (deathmatch->Integer())
+	if (game.mode == GAME_DEATHMATCH)
 	{	// auto-remove for deathmatch
 		G_FreeEdict (ent);
 		return;
@@ -271,21 +271,21 @@ void use_target_changelevel (edict_t *self, edict_t *other, edict_t *activator)
 	if (level.intermissiontime)
 		return;		// already activated
 
-	if (!deathmatch->Integer() && !coop->Integer())
+	if (game.mode == GAME_SINGLEPLAYER)
 	{
 		if (g_edicts[1].health <= 0)
 			return;
 	}
 
 	// if noexit, do a ton of damage to other
-	if (deathmatch->Integer() && !dmFlags.dfAllowExit && other != world)
+	if ((game.mode == GAME_DEATHMATCH) && !dmFlags.dfAllowExit && other != world)
 	{
 		T_Damage (other, self, self, vec3Origin, other->state.origin, vec3Origin, 10 * other->max_health, 1000, 0, MOD_EXIT);
 		return;
 	}
 
 	// if multiplayer, let everyone know who hit the exit
-	if (deathmatch->Integer())
+	if (game.mode == GAME_DEATHMATCH)
 	{
 		if (activator && activator->client)
 			BroadcastPrintf (PRINT_HIGH, "%s exited the level.\n", activator->client->pers.netname);
@@ -740,7 +740,7 @@ void SP_target_lightramp (edict_t *self)
 		return;
 	}
 
-	if (deathmatch->Integer())
+	if (game.mode == GAME_DEATHMATCH)
 	{
 		G_FreeEdict (self);
 		return;
