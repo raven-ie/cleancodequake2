@@ -69,7 +69,7 @@ void ClientPrintf (edict_t *ent, EGamePrintLevel printLevel, char *fmt, ...)
 	if (ent)
 	{
 		n = ent - g_edicts;
-		if (n < 1 || n > maxclients->Integer())
+		if (n < 1 || n > game.maxclients)
 		{
 			Com_Printf (0, "CleanCode Warning: ClientPrintf to a non-client\n");
 			return;
@@ -126,7 +126,7 @@ void CenterPrintf (edict_t *ent, char *fmt, ...)
 	}
 
 	n = ent - g_edicts;
-	if ((n < 1) || (n > maxclients->Integer()))
+	if ((n < 1) || (n > game.maxclients))
 		return;
 
 	va_start (argptr,fmt);
@@ -162,7 +162,7 @@ void BroadcastPrintf (EGamePrintLevel printLevel, char *fmt, ...)
 
 	edict_t *cl;
 	int i;
-	for (i=1, cl=&g_edicts[1]; i<=maxclients->Integer() ; i++, cl++)
+	for (i=1, cl=&g_edicts[1]; i<=game.maxclients ; i++, cl++)
 	{
 		if (printLevel < cl->client->resp.messageLevel)
 			continue;

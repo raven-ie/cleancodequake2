@@ -70,7 +70,7 @@ void CRailgun::Fire (edict_t *ent)
 	int			damage;
 	int			kick;
 
-	if (deathmatch->Integer())
+	if (game.mode == GAME_DEATHMATCH)
 	{	// normal damage is too extreme in dm
 		damage = 100;
 		kick = 200;

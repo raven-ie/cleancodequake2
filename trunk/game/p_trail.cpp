@@ -49,7 +49,7 @@ void PlayerTrail_Init (void)
 {
 	int		n;
 
-	if (deathmatch->Integer() /* FIXME || coop */)
+	if (game.mode == GAME_DEATHMATCH)
 		return;
 
 	for (n = 0; n < TRAIL_LENGTH; n++)

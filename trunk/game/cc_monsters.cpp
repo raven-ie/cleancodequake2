@@ -1087,7 +1087,7 @@ void CMonster::MonsterStartGo ()
 
 void CMonster::MonsterStart ()
 {
-	if (deathmatch->Integer())
+	if (game.mode == GAME_DEATHMATCH)
 	{
 		G_FreeEdict (Entity);
 		return;
@@ -2048,7 +2048,7 @@ void CMonster::AI_Run(float Dist)
 	}
 
 	// coop will change to another enemy if visible
-	if (coop->Integer())
+	if (game.mode == GAME_COOPERATIVE)
 	{	// FIXME: insane guys get mad with this, which causes crashes!
 		if (FindTarget ())
 			return;
@@ -2348,7 +2348,7 @@ void CMonster::AI_Run(float Dist)
 
 // PMM - moved down here to allow monsters to get on hint paths
 	// coop will change to another enemy if visible
-	if (coop->Integer())
+	if (game.mode == GAME_COOPERATIVE)
 	{	// FIXME: insane guys get mad with this, which causes crashes!
 		if (FindTarget ())
 			return;

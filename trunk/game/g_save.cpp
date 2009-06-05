@@ -126,6 +126,54 @@ field_t		clientfields[] =
 	{NULL, 0, F_INT}
 };
 
+void SetupGamemode ()
+{
+	int dmInt = deathmatch->Integer(),
+		coopInt = coop->Integer();
+
+	// Did we request deathmatch?
+	if (dmInt)
+	{
+		// Did we also request coop?
+		if (coopInt)
+		{
+			// Which one takes priority?
+			if (dmInt > coopInt)
+			{
+				// We want deathmatch
+				coop->Set (0, false);
+				// Let it fall through
+			}
+			else if (coopInt > dmInt)
+			{
+				// We want coop
+				deathmatch->Set (0, false);
+				game.mode = GAME_COOPERATIVE;
+				return;
+			}
+			// We don't know what we want, forcing DM
+			else
+			{
+				coop->Set (0, false);
+				DebugPrintf		("CleanCode Warning: Both deathmatch and coop are 1; forcing to deathmatch.\n"
+								 "Did you know you can make one take priority if you intend to only set one?\n"
+								 "If deathmatch is 1 and you want to switch to coop, just type \"coop 2\" and change maps!\n");
+				// Let it fall through
+			}
+		}
+		game.mode = GAME_DEATHMATCH;
+		return;
+	}
+	// Did we request cooperative?
+	else if (coopInt)
+	{
+		// All the above code handles the case if deathmatch is true.
+		game.mode = GAME_COOPERATIVE;
+		return;
+	}
+	game.mode = GAME_SINGLEPLAYER;
+}
+
 /*
 ============
 InitGame
@@ -157,8 +205,6 @@ void G_Register ()
 
 	maxclients = new CCvar ("maxclients", "4", CVAR_SERVERINFO | CVAR_LATCH_SERVER);
 	maxspectators = new CCvar ("maxspectators", "4", CVAR_SERVERINFO);
-	deathmatch = new CCvar ("deathmatch", "0", CVAR_SERVERINFO|CVAR_LATCH_SERVER);
-	coop = new CCvar ("coop", "0", CVAR_LATCH_SERVER);
 	skill = new CCvar ("skill", "1", CVAR_LATCH_SERVER);
 	maxentities = new CCvar ("maxentities", 1024, CVAR_LATCH_SERVER);
 
@@ -194,6 +240,12 @@ void G_Register ()
 #ifdef MONSTERS_USE_PATHFINDING
 	InitNodes ();
 #endif
+
+	// Gamemodes
+	deathmatch = new CCvar ("deathmatch", "0", CVAR_SERVERINFO|CVAR_LATCH_SERVER);
+	coop = new CCvar ("coop", "0", CVAR_LATCH_SERVER);
+
+	SetupGamemode ();
 }
 
 void InitGame (void)
@@ -223,6 +275,10 @@ void InitGame (void)
 	game.maxclients = maxclients->Integer();
 	game.clients = (gclient_t*)gi.TagMalloc (game.maxclients * sizeof(game.clients[0]), TAG_GAME);
 	globals.numEdicts = game.maxclients+1;
+
+	// Vars
+	game.maxspectators = maxspectators->Integer();
+	game.cheats = sv_cheats->Integer();
 
 	DebugPrintf ("Running CleanCode Quake2, built on %s (%s %s)\n", __DATE__, BUILDSTRING, CPUSTRING);
 
@@ -783,7 +839,7 @@ void ReadLevel (char *filename)
 
 	// wipe all the entities
 	memset (g_edicts, 0, game.maxentities*sizeof(g_edicts[0]));
-	globals.numEdicts = maxclients->Integer()+1;
+	globals.numEdicts = game.maxclients+1;
 
 	// check edict size
 	fread (&i, sizeof(i), 1, f);
@@ -832,7 +888,7 @@ void ReadLevel (char *filename)
 	fclose (f);
 
 	// mark all clients as unconnected
-	for (i=0 ; i<maxclients->Integer() ; i++)
+	for (i=0 ; i<game.maxclients ; i++)
 	{
 		ent = &g_edicts[i+1];
 		ent->client = game.clients + i;

@@ -566,8 +566,10 @@ __try
 
 		entityNumber++;
 		// Remove things (except the world) from different skill levels or deathmatch
-		if (ent != g_edicts) {
-			if (deathmatch->Integer()) {
+		if (ent != g_edicts)
+		{
+			if (game.mode == GAME_DEATHMATCH)
+			{
 				if ( ent->spawnflags & SPAWNFLAG_NOT_DEATHMATCH )
 				{
 					G_FreeEdict (ent);	
@@ -575,12 +577,14 @@ __try
 					continue;
 				}
 			}
-			else {
-				if ( /* ((coop->Integer()) && (ent->spawnflags & SPAWNFLAG_NOT_COOP)) || */
+			else
+			{
+				if ( /* ((game.mode == GAME_COOPERATIVE) && (ent->spawnflags & SPAWNFLAG_NOT_COOP)) || */
 					((skill->Integer() == 0) && (ent->spawnflags & SPAWNFLAG_NOT_EASY)) ||
 					((skill->Integer() == 1) && (ent->spawnflags & SPAWNFLAG_NOT_MEDIUM)) ||
 					(((skill->Integer() == 2) || (skill->Integer() == 3)) && (ent->spawnflags & SPAWNFLAG_NOT_HARD))
-					) {
+					)
+					{
 						G_FreeEdict (ent);	
 						inhibit++;
 						continue;
@@ -681,10 +685,10 @@ void SP_worldspawn (edict_t *ent)
 
 	gi.configstring (CS_CDTRACK, Q_VarArgs ("%i", ent->sounds) );
 
-	gi.configstring (CS_MAXCLIENTS, Q_VarArgs ("%i", maxclients->Integer() ) );
+	gi.configstring (CS_MAXCLIENTS, maxclients->String() );
 
 	// status bar program
-	if (deathmatch->Integer())
+	if (game.mode == GAME_DEATHMATCH)
 		CreateDMStatusbar();
 	else
 		CreateSPStatusbar();

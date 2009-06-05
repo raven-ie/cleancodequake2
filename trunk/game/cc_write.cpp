@@ -63,7 +63,7 @@ void Cast (ECastType castType, ECastFlags castFlags, vec3_t Origin = NULL, edict
 	/*if (castType == CAST_MULTI)
 	{
 		edict_t *e = &g_edicts[1];
-		for (int i = 0; i < maxclients->Integer(); i++, e++)
+		for (int i = 0; i < game.maxclients; i++, e++)
 		{
 			if (!e || !e->inUse || !e->client || !e->client->pers.connected)
 				continue;

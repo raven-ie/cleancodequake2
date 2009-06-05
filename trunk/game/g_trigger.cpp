@@ -230,7 +230,7 @@ void trigger_key_use (edict_t *self, edict_t *other, edict_t *activator)
 	}
 
 	PlaySoundFrom (activator, CHAN_AUTO, SoundIndex ("misc/keyuse.wav"));
-	if (coop->Integer())
+	if (game.mode == GAME_COOPERATIVE)
 	{
 		int		player;
 		edict_t	*ent;

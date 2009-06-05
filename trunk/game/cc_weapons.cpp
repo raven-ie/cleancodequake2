@@ -74,7 +74,7 @@ bool CWeaponItem::Pickup (edict_t *ent, edict_t *other)
 
 	index = this->GetIndex();
 
-	if ( (dmFlags.dfWeaponsStay || coop->Integer()) 
+	if ( (dmFlags.dfWeaponsStay || game.mode == GAME_COOPERATIVE) 
 		&& other->client->pers.Inventory.Has(index))
 	{
 		if (!(ent->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM) ) )
@@ -96,14 +96,14 @@ bool CWeaponItem::Pickup (edict_t *ent, edict_t *other)
 
 		if (! (ent->spawnflags & DROPPED_PLAYER_ITEM) )
 		{
-			if (deathmatch->Integer())
+			if (game.mode == GAME_DEATHMATCH)
 			{
 				if (dmFlags.dfWeaponsStay)
 					ent->flags |= FL_RESPAWN;
 				else
 					SetRespawn (ent, 30);
 			}
-			if (coop->Integer())
+			if (game.mode == GAME_COOPERATIVE)
 				ent->flags |= FL_RESPAWN;
 		}
 	}
@@ -116,7 +116,7 @@ bool CWeaponItem::Pickup (edict_t *ent, edict_t *other)
 	{
 		if (other->client->pers.Weapon != this->Weapon && 
 			(other->client->pers.Inventory.Has(this) == 1) &&
-			( !deathmatch->Integer() || (other->client->pers.Weapon && other->client->pers.Weapon->WeaponItem == FindItem("blaster")) ) )
+			( game.mode != GAME_DEATHMATCH || (other->client->pers.Weapon && other->client->pers.Weapon->WeaponItem == FindItem("blaster")) ) )
 			other->client->NewWeapon = this->Weapon;
 	}
 
@@ -283,11 +283,11 @@ bool CAmmo::Pickup (edict_t *ent, edict_t *other)
 
 	if (weapon && !oldcount)
 	{
-		if (other->client->pers.Weapon != this->Weapon && ( !deathmatch->Integer() || (other->client->pers.Weapon && other->client->pers.Weapon->WeaponItem == FindItem("Blaster")) ) )
+		if (other->client->pers.Weapon != this->Weapon && ( game.mode != GAME_DEATHMATCH || (other->client->pers.Weapon && other->client->pers.Weapon->WeaponItem == FindItem("Blaster")) ) )
 			other->client->NewWeapon = this->Weapon;
 	}
 
-	if (!(ent->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)) && (deathmatch->Integer()))
+	if (!(ent->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)) && (game.mode == GAME_DEATHMATCH))
 		this->SetRespawn (ent, 30);
 	return true;
 }

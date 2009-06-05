@@ -30,7 +30,7 @@ INTERMISSION
 
 void MoveClientToIntermission (edict_t *ent)
 {
-	if (deathmatch->Integer() || coop->Integer())
+	if (game.mode != GAME_SINGLEPLAYER)
 		ent->client->showscores = true;
 	Vec3Copy (level.intermission_origin, ent->state.origin);
 	ent->client->playerState.pMove.origin[0] = level.intermission_origin[0]*8;
@@ -60,9 +60,8 @@ void MoveClientToIntermission (edict_t *ent)
 
 	// add the layout
 
-	if (deathmatch->Integer() || coop->Integer())
+	if (game.mode != GAME_SINGLEPLAYER)
 		DeathmatchScoreboardMessage (ent, NULL, true);
-
 }
 
 void BeginIntermission (edict_t *targ)
@@ -76,7 +75,7 @@ void BeginIntermission (edict_t *targ)
 	game.autosaved = false;
 
 	// respawn any dead clients
-	for (i=0 ; i<maxclients->Integer() ; i++)
+	for (i=0 ; i<game.maxclients ; i++)
 	{
 		client = g_edicts + 1 + i;
 		if (!client->inUse)
@@ -90,9 +89,9 @@ void BeginIntermission (edict_t *targ)
 
 	if (strstr(level.changemap, "*"))
 	{
-		if (coop->Integer())
+		if (game.mode == GAME_COOPERATIVE)
 		{
-			for (i=0 ; i<maxclients->Integer() ; i++)
+			for (i=0 ; i<game.maxclients ; i++)
 			{
 				client = g_edicts + 1 + i;
 				if (!client->inUse)
@@ -110,7 +109,7 @@ void BeginIntermission (edict_t *targ)
 	}
 	else
 	{
-		if (!deathmatch->Integer())
+		if (game.mode != GAME_DEATHMATCH)
 		{
 			level.exitintermission = 1;		// go immediately to the next level
 			return;
@@ -142,7 +141,7 @@ void BeginIntermission (edict_t *targ)
 	Vec3Copy (ent->state.angles, level.intermission_angle);
 
 	// move all clients to the intermission point
-	for (i=0 ; i<maxclients->Integer() ; i++)
+	for (i=0 ; i<game.maxclients ; i++)
 	{
 		client = g_edicts + 1 + i;
 		if (!client->inUse)
@@ -178,7 +177,7 @@ void Cmd_Score_f (edict_t *ent)
 	ent->client->showinventory = false;
 	ent->client->showhelp = false;
 
-	if (!deathmatch->Integer() && !coop->Integer())
+	if (game.mode == GAME_SINGLEPLAYER)
 		return;
 
 	if (ent->client->showscores)
@@ -201,7 +200,7 @@ Display the current help message
 void Cmd_Help_f (edict_t *ent)
 {
 	// this is for backwards compatability
-	if (deathmatch->Integer())
+	if (game.mode == GAME_DEATHMATCH)
 	{
 		Cmd_Score_f (ent);
 		return;
@@ -360,8 +359,8 @@ void G_SetStats (edict_t *ent)
 	ent->client->playerState.stats[STAT_LAYOUTS] = 0;
 
 	if (ent->client->pers.health <= 0 || ent->client->resp.MenuState.InMenu ||
-		((deathmatch->Integer() && (level.intermissiontime || ent->client->showscores)) || 
-		!deathmatch->Integer() && ent->client->showhelp))
+		(((game.mode == GAME_DEATHMATCH) && (level.intermissiontime || ent->client->showscores)) || 
+		(game.mode != GAME_DEATHMATCH) && ent->client->showhelp))
 		ent->client->playerState.stats[STAT_LAYOUTS] |= 1;
 	if (ent->client->showinventory && ent->client->pers.health > 0)
 		ent->client->playerState.stats[STAT_LAYOUTS] |= 2;
@@ -396,7 +395,7 @@ void G_CheckChaseStats (edict_t *ent)
 	int i;
 	gclient_t *cl;
 
-	for (i = 1; i <= maxclients->Integer(); i++) {
+	for (i = 1; i <= game.maxclients; i++) {
 		cl = g_edicts[i].client;
 		if (!g_edicts[i].inUse || cl->chase_target != ent)
 			continue;

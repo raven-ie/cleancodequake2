@@ -289,7 +289,7 @@ void PlayerNoise(edict_t *who, vec3_t where, int type)
 		}
 	}
 
-	if (deathmatch->Integer())
+	if (game.mode == GAME_DEATHMATCH)
 		return;
 
 	//if (who->flags & FL_NOTARGET)

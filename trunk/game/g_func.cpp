@@ -1150,7 +1150,7 @@ void SP_func_door (edict_t *ent)
 	
 	if (!ent->speed)
 		ent->speed = 100;
-	if (deathmatch->Integer())
+	if (game.mode == GAME_DEATHMATCH)
 		ent->speed *= 2;
 
 	if (!ent->accel)
