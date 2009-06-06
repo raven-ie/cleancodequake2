@@ -260,7 +260,6 @@ void CMenuState::Select ()
 }
 
 void Cmd_Kill_f (edict_t *ent);
-void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
 
 static SSpinControlIndex AmmoIndexes[] =
 {
@@ -273,8 +272,7 @@ static SSpinControlIndex AmmoIndexes[] =
 	NULL
 };
 
-void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
-
+#if 0
 class CTestMenu : public CMenu
 {
 public:
@@ -381,6 +379,7 @@ void OpenTestMenu (edict_t *ent)
 
 	ent->client->resp.MenuState.CurrentMenu->Draw (true);
 }
+#endif
 
 void Cmd_MenuLeft_t (edict_t *ent)
 {

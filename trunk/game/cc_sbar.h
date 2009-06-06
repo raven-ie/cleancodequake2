@@ -59,6 +59,8 @@ public:
 	void AddArmorNum ();
 	void AddClientBlock (int x, int y, int cNum, int score, int ping, int time);
 	void AddClientBlock (int x, int y, int cNum, int score, int ping);
+
+	size_t	Length ();
 };
 
 void HelpComputer (edict_t *ent);

@@ -41,7 +41,11 @@ dmFlagsConfig::dmFlagsConfig()
 	dfInstantItems = dfSameLevel = dfSkinTeams = dfModelTeams = dfNoFriendlyFire =
 	dfSpawnFarthest = dfForceRespawn = dfNoArmor = dfAllowExit =
 	dfInfiniteAmmo = dfQuadDrop = dfFixedFov = dfQuadFireDrop = dfNoMines =
-	dfNoStackDouble = dfNoNukes = dfNoSpheres = false;
+	dfNoStackDouble = dfNoNukes = dfNoSpheres = 
+#ifdef CLEANCTF_ENABLED
+	dfCtfNoTech = dfCtfForceJoin = dfCtfArmorProtect =
+#endif
+	false;
 };
 
 void dmFlagsConfig::UpdateFlags (int dmFlags)
@@ -89,4 +93,12 @@ void dmFlagsConfig::UpdateFlags (int dmFlags)
 		dfNoNukes = true;
 	if (dmFlags & DF_NO_SPHERES)
 		dfNoSpheres = true;
+#ifdef CLEANCTF_ENABLED
+	if (dmFlags & DF_CTF_FORCEJOIN)
+		dfCtfForceJoin = true;
+	if (dmFlags & DF_ARMOR_PROTECT)
+		dfCtfArmorProtect = true;
+	if (dmFlags & DF_CTF_NO_TECH)
+		dfCtfNoTech = true;
+#endif
 };

@@ -27,59 +27,32 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_shared.h
-// Shared header, included by g_local.
+// cc_grapple.h
+// CTF Grappling hook
 //
 
-#include "cc_conchars.h"
-#include "cc_indexing.h"
-#include "cc_media.h"
-#include "cc_print.h"
-#include "cc_sound.h"
-#include "cc_colors.h"
-#include "cc_cvar.h"
-#include "cc_dmflags.h"
-#include "cc_trace.h"
-#include "cc_tent.h"
-#include "cc_sbar.h"
-#include "cc_arg.h"
-#include "cc_cmds.h"
-#include "cc_servercommands.h"
-#include "cc_gamecommands.h"
-#include "cc_items.h"
-#include "cc_weaponmain.h"
-#include "cc_inventory.h"
-#include "cc_ban.h"
-#include "cc_pathfinding.h"
-#include "cc_monsters.h"
-#include "cc_monsterlist.h"
-#include "cc_menu.h"
-#include "cc_pmove.h"
-#include "cc_write.h"
-#include "cc_gameapi.h"
-#include "cc_mapprint.h"
-#ifdef CLEANCTF_ENABLED
-#include "cc_ctfadmin.h"
-#include "cc_ctfmenu.h"
-#endif
-
-extern dmFlagsConfig dmFlags;
-
-#if 0
-void DrawNewton ();
-#endif
-
-enum EGender
+class CGrapple : public CWeapon
 {
-	GenderMale,
-	GenderFemale,
-	GenderNeutral
+public:
+	CGrapple();
+
+	inline bool	CanFire	(edict_t *ent);
+	inline bool	CanStopFidgetting (edict_t *ent);
+	
+	// This function is called when the player hits the attack button.
+	// Returns "true" if the animation can go ahead (check for ammo, etc here)
+	inline bool	AttemptToFire (edict_t *ent); 
+	void	WeaponGeneric (edict_t *ent);
+
+	// The function called to "fire"
+	void	Fire (edict_t *ent);
+
+	static void		GrapplePull (edict_t *ent);
+	static void		GrappleDrawCable (edict_t *ent);
+	static void		GrappleTouch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
+	static void		ResetGrapple (edict_t *ent);
+	static void		PlayerResetGrapple (edict_t *ent);
+	void			FireGrapple (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, int effect);
 };
 
-// svClient->state options
-enum EClientState
-{
-	SVCS_FREE,		// can be reused for a new connection
-	SVCS_CONNECTED,	// has been assigned to a svClient_t, but not in game yet
-	SVCS_SPAWNED	// client is fully in game
-};
+extern CGrapple WeaponGrapple;

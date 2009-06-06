@@ -122,7 +122,7 @@ potential spawning position for deathmatch games
 */
 void SP_info_player_deathmatch(edict_t *self)
 {
-	if (game.mode != GAME_DEATHMATCH)
+	if (!(game.mode & GAME_DEATHMATCH))
 	{
 		self->solid = SOLID_NOT;
 		self->svFlags = SVF_NOCLIENT;
@@ -308,7 +308,7 @@ void _ClientObituary (edict_t *self, edict_t *inflictor, edict_t *attacker)
 		if (message)
 		{
 			BroadcastPrintf (PRINT_MEDIUM, "%s %s.\n", self->client->pers.netname, message);
-			if (game.mode == GAME_DEATHMATCH)
+			if (game.mode & GAME_DEATHMATCH)
 				self->client->resp.score--;
 			self->enemy = NULL;
 			return;
@@ -391,7 +391,7 @@ void _ClientObituary (edict_t *self, edict_t *inflictor, edict_t *attacker)
 			if (message)
 			{
 				BroadcastPrintf (PRINT_MEDIUM,"%s %s %s%s\n", self->client->pers.netname, message, attacker->client->pers.netname, message2);
-				if (game.mode == GAME_DEATHMATCH)
+				if (game.mode & GAME_DEATHMATCH)
 				{
 					if (ff)
 						attacker->client->resp.score--;
@@ -404,7 +404,7 @@ void _ClientObituary (edict_t *self, edict_t *inflictor, edict_t *attacker)
 	}
 
 	BroadcastPrintf (PRINT_MEDIUM,"%s died.\n", self->client->pers.netname);
-	if (game.mode == GAME_DEATHMATCH)
+	if (game.mode & GAME_DEATHMATCH)
 		self->client->resp.score--;
 }
 
@@ -465,7 +465,7 @@ void ClientObituary (edict_t *self, edict_t *attacker)
 			}
 			break;
 		}
-		if (game.mode == GAME_DEATHMATCH)
+		if (game.mode & GAME_DEATHMATCH)
 			self->client->resp.score--;
 		BroadcastPrintf (PRINT_MEDIUM, "%s %s.\n", self->client->pers.netname, message);
 	}
@@ -511,7 +511,7 @@ void ClientObituary (edict_t *self, edict_t *attacker)
 			break;
 		}
 
-		if (game.mode == GAME_DEATHMATCH)
+		if (game.mode & GAME_DEATHMATCH)
 			self->client->resp.score--;
 		BroadcastPrintf (PRINT_MEDIUM, "%s %s.\n", self->client->pers.netname, message);
 	}
@@ -587,9 +587,17 @@ void ClientObituary (edict_t *self, edict_t *attacker)
 			message = "tried to invade";
 			message2 = "'s personal space";
 			break;
+#ifdef CLEANCTF_ENABLED
+//ZOID
+		case MOD_GRAPPLE:
+			message = "was caught by";
+			message2 = "'s grapple";
+			break;
+//ZOID
+#endif
 		}
 		BroadcastPrintf (PRINT_MEDIUM,"%s %s %s%s\n", self->client->pers.netname, message, attacker->client->pers.netname, message2);
-		if (game.mode == GAME_DEATHMATCH)
+		if (game.mode & GAME_DEATHMATCH)
 		{
 			if ((self->client && attacker->client) && OnSameTeam(self, attacker))
 				attacker->client->resp.score--;
@@ -600,15 +608,14 @@ void ClientObituary (edict_t *self, edict_t *attacker)
 	else
 	{
 		BroadcastPrintf (PRINT_MEDIUM, "%s died.\n", self->client->pers.netname);
-		if (game.mode == GAME_DEATHMATCH)
+		if (game.mode & GAME_DEATHMATCH)
 			self->client->resp.score--;
 	}
 }
 
-void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
 void TossClientWeapon (edict_t *self)
 {
-	if (game.mode != GAME_DEATHMATCH)
+	if (!(game.mode & GAME_DEATHMATCH))
 		return;
 
 	CBaseItem *Item = ((self->client->pers.Weapon) ? ((self->client->pers.Weapon->WeaponItem) ? self->client->pers.Weapon->WeaponItem : self->client->pers.Weapon->Item) : NULL);
@@ -699,6 +706,7 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 	self->movetype = MOVETYPE_TOSS;
 
 	self->state.modelIndex2 = 0;	// remove linked weapon model
+	self->state.modelIndex3 = 0;	// remove linked ctf flag
 
 	self->state.angles[0] = 0;
 	self->state.angles[2] = 0;
@@ -717,8 +725,33 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 		LookAtKiller (self, inflictor, attacker);
 		self->client->playerState.pMove.pmType = PMT_DEAD;
 		ClientObituary (self, attacker);
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+		// if at start and same team, clear
+		if ((game.mode & GAME_CTF) && (meansOfDeath == MOD_TELEFRAG) &&
+			(self->client->resp.ctf_state < 2) &&
+			(self->client->resp.ctf_team == attacker->client->resp.ctf_team))
+		{
+			attacker->client->resp.score--;
+			self->client->resp.ctf_state = 0;
+		}
+
+		CTFFragBonuses(self, inflictor, attacker);
+//ZOID
+#endif
+
 		TossClientWeapon (self);
-		if (game.mode == GAME_DEATHMATCH)
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+		CGrapple::PlayerResetGrapple(self);
+		CTFDeadDropFlag(self);
+		CTFDeadDropTech(self);
+//ZOID
+#endif
+
+		if (game.mode & GAME_DEATHMATCH)
 			Cmd_Help_f (self);		// show scores
 
 		// clear inventory
@@ -746,6 +779,10 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 		ThrowClientHead (self, damage);
 
 		self->takedamage = DAMAGE_NO;
+//ZOID
+		self->client->anim_priority = ANIM_DEATH;
+		self->client->anim_end = 0;
+//ZOID
 	}
 	else
 	{	// normal death
@@ -804,14 +841,17 @@ void InitClientPersistant (edict_t *ent)
 
 	memset (&client->pers, 0, sizeof(client->pers));
 
-	/*item = FindItem("Blaster");
-	client->pers.selected_item = ITEM_INDEX(item);
-	client->pers.inventory[client->pers.selected_item] = 1;*/
 	FindItem("Blaster")->Add(ent, 1);
-
-	//client->pers.weapon = item;
 	client->pers.Weapon = &WeaponBlaster;
+	client->pers.LastWeapon = client->pers.Weapon;
 	client->pers.Inventory.SelectedItem = client->pers.Weapon->Item->GetIndex();
+
+#ifdef CLEANCTF_ENABLED
+	if (game.mode & GAME_CTF)
+		FindItem("Grapple")->Add(ent, 1);
+	client->pers.Flag = NULL;
+	client->pers.Tech = NULL;
+#endif
 
 	client->pers.Armor = NULL;
 
@@ -824,9 +864,31 @@ void InitClientPersistant (edict_t *ent)
 
 void InitClientResp (gclient_t *client)
 {
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	int ctf_team = client->resp.ctf_team;
+	bool id_state = client->resp.id_state;
+//ZOID
+#endif
+
 	memset (&client->resp, 0, sizeof(client->resp));
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	client->resp.ctf_team = ctf_team;
+	client->resp.id_state = id_state;
+//ZOID
+#endif
+
 	client->resp.enterframe = level.framenum;
 	client->resp.coop_respawn = client->pers;
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	if ((game.mode & GAME_CTF) && client->resp.ctf_team < CTF_TEAM1)
+		CTFAssignTeam(client);
+//ZOID
+#endif
 }
 
 /*
@@ -984,7 +1046,6 @@ edict_t *SelectFarthestDeathmatchSpawnPoint (void)
 	float	bestdistance, bestplayerdistance;
 	edict_t	*spot;
 
-
 	spot = NULL;
 	bestspot = NULL;
 	bestdistance = 0;
@@ -1052,10 +1113,8 @@ edict_t *SelectCoopSpawnPoint (edict_t *ent)
 		}
 	}
 
-
 	return spot;
 }
-
 
 /*
 ===========
@@ -1068,17 +1127,14 @@ void	SelectSpawnPoint (edict_t *ent, vec3_t origin, vec3_t angles)
 {
 	edict_t	*spot = NULL;
 
-	switch (game.mode)
-	{
-	case GAME_DEATHMATCH:
-		spot = SelectDeathmatchSpawnPoint ();
-		break;
-	case GAME_COOPERATIVE:
+	if (game.mode & GAME_DEATHMATCH)
+		spot = 
+#ifdef CLEANCTF_ENABLED
+		(game.mode & GAME_CTF) ? SelectCTFSpawnPoint(ent) :
+#endif
+		SelectDeathmatchSpawnPoint ();
+	else if (game.mode & GAME_COOPERATIVE)
 		spot = SelectCoopSpawnPoint (ent);
-		break;
-	default:
-		break;
-	}
 
 	// find a single player start spot
 	if (!spot)
@@ -1316,7 +1372,7 @@ void PutClientInServer (edict_t *ent)
 	switch (game.mode)
 	{
 	// deathmatch wipes most client data every spawn
-	case GAME_DEATHMATCH:
+	default:
 			resp = client->resp;
 			memcpy (userinfo, client->pers.userinfo, sizeof(userinfo));
 			InitClientPersistant (ent);
@@ -1333,7 +1389,7 @@ void PutClientInServer (edict_t *ent)
 			if (resp.score > client->pers.score)
 				client->pers.score = resp.score;
 		break;
-	default:
+	case GAME_SINGLEPLAYER:
 			memset (&resp, 0, sizeof(resp));
 		break;
 	}
@@ -1383,8 +1439,11 @@ void PutClientInServer (edict_t *ent)
 	client->playerState.pMove.origin[0] = spawn_origin[0]*8;
 	client->playerState.pMove.origin[1] = spawn_origin[1]*8;
 	client->playerState.pMove.origin[2] = spawn_origin[2]*8;
+//ZOID
+	client->playerState.pMove.pmFlags &= ~PMF_NO_PREDICTION;
+//ZOID
 
-	if (game.mode == GAME_DEATHMATCH && dmFlags.dfFixedFov)
+	if ((game.mode & GAME_DEATHMATCH) && dmFlags.dfFixedFov)
 		client->playerState.fov = 90;
 	else
 	{
@@ -1412,9 +1471,7 @@ void PutClientInServer (edict_t *ent)
 
 	// set the delta angle
 	for (i=0 ; i<3 ; i++)
-	{
 		client->playerState.pMove.deltaAngles[i] = ANGLE2SHORT(spawn_angles[i] - client->resp.cmd_angles[i]);
-	}
 
 	ent->state.angles[PITCH] = 0;
 	ent->state.angles[YAW] = spawn_angles[YAW];
@@ -1422,8 +1479,15 @@ void PutClientInServer (edict_t *ent)
 	Vec3Copy (ent->state.angles, client->playerState.viewAngles);
 	Vec3Copy (ent->state.angles, client->v_angle);
 
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	if (CTFStartClient(ent))
+		return;
+//ZOID
+#else
 	// spawn a spectator
-	if (client->pers.spectator) {
+	if (client->pers.spectator)
+	{
 		client->chase_target = NULL;
 
 		client->resp.spectator = true;
@@ -1434,8 +1498,10 @@ void PutClientInServer (edict_t *ent)
 		ent->client->playerState.gunIndex = 0;
 		gi.linkentity (ent);
 		return;
-	} else
+	}
+	else
 		client->resp.spectator = false;
+#endif
 
 	if (!KillBox (ent))
 	{	// could't spawn in?
@@ -1496,7 +1562,7 @@ void ClientBegin (edict_t *ent)
 
 	ent->client = game.clients + (ent - g_edicts - 1);
 
-	if (game.mode == GAME_DEATHMATCH)
+	if (game.mode & GAME_DEATHMATCH)
 	{
 		ClientBeginDeathmatch (ent);
 		return;
@@ -1568,7 +1634,7 @@ void ClientUserinfoChanged (edict_t *ent, char *userinfo)
 	// set spectator
 	s = Info_ValueForKey (userinfo, "spectator");
 	// spectators are only supported in deathmatch
-	if (game.mode == GAME_DEATHMATCH && *s && strcmp(s, "0"))
+	if ((game.mode & GAME_DEATHMATCH) && *s && strcmp(s, "0"))
 		ent->client->pers.spectator = true;
 	else
 		ent->client->pers.spectator = false;
@@ -1579,10 +1645,17 @@ void ClientUserinfoChanged (edict_t *ent, char *userinfo)
 	playernum = ent-g_edicts-1;
 
 	// combine name and skin into a configstring
-	gi.configstring (CS_PLAYERSKINS+playernum, Q_VarArgs ("%s\\%s", ent->client->pers.netname, s) );
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	if (game.mode & GAME_CTF)
+		CTFAssignSkin(ent, s);
+	else
+//ZOID
+#endif
+		gi.configstring (CS_PLAYERSKINS+playernum, Q_VarArgs ("%s\\%s", ent->client->pers.netname, s) );
 
 	// fov
-	if (game.mode == GAME_DEATHMATCH && dmFlags.dfFixedFov)
+	if ((game.mode & GAME_DEATHMATCH) && dmFlags.dfFixedFov)
 		ent->client->playerState.fov = 90;
 	else
 	{
@@ -1661,7 +1734,7 @@ BOOL ClientConnect (edict_t *ent, char *userinfo)
 
 	// check for a spectator
 	value = Info_ValueForKey (userinfo, "spectator");
-	if (game.mode == GAME_DEATHMATCH && *value && strcmp(value, "0"))
+	if ((game.mode & GAME_DEATHMATCH) && *value && strcmp(value, "0"))
 	{
 		int i, numspec;
 
@@ -1705,6 +1778,12 @@ BOOL ClientConnect (edict_t *ent, char *userinfo)
 	if (ent->inUse == false)
 	{
 		// clear the respawning variables
+#ifdef CLEANCTF_ENABLED
+//ZOID -- force team join
+		ent->client->resp.ctf_team = -1;
+		ent->client->resp.id_state = false; 
+//ZOID
+#endif
 		InitClientResp (ent->client);
 		if (!game.autosaved || !ent->client->pers.Weapon)
 			InitClientPersistant (ent);
@@ -1742,6 +1821,13 @@ void ClientDisconnect (edict_t *ent)
 		return;
 
 	BroadcastPrintf (PRINT_HIGH, "%s disconnected\n", ent->client->pers.netname);
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	CTFDeadDropFlag(ent);
+	CTFDeadDropTech(ent);
+//ZOID
+#endif
 
 	// send effect
 	CTempEnt::MuzzleFlash (ent->state.origin, ent-g_edicts, MZ_LOGIN);
@@ -1812,116 +1898,123 @@ void ClientThink (edict_t *ent, userCmd_t *ucmd)
 	pm_passent = ent;
 #endif
 
-	if (ent->client->chase_target) {
-
+//ZOID
+	if (ent->client->chase_target)
+	{
 		client->resp.cmd_angles[0] = SHORT2ANGLE(ucmd->angles[0]);
 		client->resp.cmd_angles[1] = SHORT2ANGLE(ucmd->angles[1]);
 		client->resp.cmd_angles[2] = SHORT2ANGLE(ucmd->angles[2]);
-
+		return;
 	}
-	else {
-		// set up for pmove
-		memset (&pm, 0, sizeof(pm));
+//ZOID
 
-		if (ent->movetype == MOVETYPE_NOCLIP)
-			client->playerState.pMove.pmType = PMT_SPECTATOR;
-		else if (ent->state.modelIndex != 255)
-			client->playerState.pMove.pmType = PMT_GIB;
-		else if (ent->deadflag)
-			client->playerState.pMove.pmType = PMT_DEAD;
-		else
-			client->playerState.pMove.pmType = PMT_NORMAL;
+	// set up for pmove
+	memset (&pm, 0, sizeof(pm));
 
-		client->playerState.pMove.gravity = sv_gravity->Float();
-		pm.state = client->playerState.pMove;
+	if (ent->movetype == MOVETYPE_NOCLIP)
+		client->playerState.pMove.pmType = PMT_SPECTATOR;
+	else if (ent->state.modelIndex != 255)
+		client->playerState.pMove.pmType = PMT_GIB;
+	else if (ent->deadflag)
+		client->playerState.pMove.pmType = PMT_DEAD;
+	else
+		client->playerState.pMove.pmType = PMT_NORMAL;
 
-		for (i=0 ; i<3 ; i++)
-		{
-			pm.state.origin[i] = ent->state.origin[i]*8;
-			pm.state.velocity[i] = ent->velocity[i]*8;
-		}
+	client->playerState.pMove.gravity = sv_gravity->Float();
+	pm.state = client->playerState.pMove;
 
-		if (memcmp (&client->old_pmove, &pm.state, sizeof(pm.state)))
-		{
-			pm.snapInitial = true;
-	//		gi.dprintf ("pmove changed!\n");
-		}
+	for (i=0 ; i<3 ; i++)
+	{
+		pm.state.origin[i] = ent->state.origin[i]*8;
+		pm.state.velocity[i] = ent->velocity[i]*8;
+	}
 
-		pm.cmd = *ucmd;
+	if (memcmp (&client->old_pmove, &pm.state, sizeof(pm.state)))
+	{
+		pm.snapInitial = true;
+//		gi.dprintf ("pmove changed!\n");
+	}
+
+	pm.cmd = *ucmd;
 
 #ifdef USE_EXTENDED_GAME_IMPORTS
-		pm.trace = PM_trace;
-		pm.pointContents = gi.pointcontents;
+	pm.trace = PM_trace;
+	pm.pointContents = gi.pointcontents;
 #endif
 
-		// perform a pmove
+	// perform a pmove
 #ifdef USE_EXTENDED_GAME_IMPORTS
-		gi.Pmove (&pm);
+	gi.Pmove (&pm);
 #else
-		SV_Pmove (ent, &pm, 0);
+	SV_Pmove (ent, &pm, 0);
 #endif
 
-		// save results of pmove
-		client->playerState.pMove = pm.state;
-		client->old_pmove = pm.state;
+	// save results of pmove
+	client->playerState.pMove = pm.state;
+	client->old_pmove = pm.state;
 
-		for (i=0 ; i<3 ; i++)
-		{
-			ent->state.origin[i] = pm.state.origin[i]*0.125;
-			ent->velocity[i] = pm.state.velocity[i]*0.125;
-		}
+	for (i=0 ; i<3 ; i++)
+	{
+		ent->state.origin[i] = pm.state.origin[i]*0.125;
+		ent->velocity[i] = pm.state.velocity[i]*0.125;
+	}
 
-		Vec3Copy (pm.mins, ent->mins);
-		Vec3Copy (pm.maxs, ent->maxs);
+	Vec3Copy (pm.mins, ent->mins);
+	Vec3Copy (pm.maxs, ent->maxs);
 
-		client->resp.cmd_angles[0] = SHORT2ANGLE(ucmd->angles[0]);
-		client->resp.cmd_angles[1] = SHORT2ANGLE(ucmd->angles[1]);
-		client->resp.cmd_angles[2] = SHORT2ANGLE(ucmd->angles[2]);
+	client->resp.cmd_angles[0] = SHORT2ANGLE(ucmd->angles[0]);
+	client->resp.cmd_angles[1] = SHORT2ANGLE(ucmd->angles[1]);
+	client->resp.cmd_angles[2] = SHORT2ANGLE(ucmd->angles[2]);
 
-		if (ent->groundentity && !pm.groundEntity && (pm.cmd.upMove >= 10) && (pm.waterLevel == 0))
-		{
-			PlaySoundFrom(ent, CHAN_VOICE, gMedia.Player.Jump);
-			PlayerNoise(ent, ent->state.origin, PNOISE_SELF);
-		}
+	if (ent->groundentity && !pm.groundEntity && (pm.cmd.upMove >= 10) && (pm.waterLevel == 0))
+	{
+		PlaySoundFrom(ent, CHAN_VOICE, gMedia.Player.Jump);
+		PlayerNoise(ent, ent->state.origin, PNOISE_SELF);
+	}
 
-		ent->viewheight = pm.viewHeight;
-		ent->waterlevel = pm.waterLevel;
-		ent->watertype = pm.waterType;
-		ent->groundentity = pm.groundEntity;
-		if (pm.groundEntity)
-			ent->groundentity_linkcount = pm.groundEntity->linkCount;
+	ent->viewheight = pm.viewHeight;
+	ent->waterlevel = pm.waterLevel;
+	ent->watertype = pm.waterType;
+	ent->groundentity = pm.groundEntity;
+	if (pm.groundEntity)
+		ent->groundentity_linkcount = pm.groundEntity->linkCount;
 
-		if (ent->deadflag)
-		{
-			client->playerState.viewAngles[ROLL] = 40;
-			client->playerState.viewAngles[PITCH] = -15;
-			client->playerState.viewAngles[YAW] = client->killer_yaw;
-		}
-		else
-		{
-			Vec3Copy (pm.viewAngles, client->v_angle);
-			Vec3Copy (pm.viewAngles, client->playerState.viewAngles);
-		}
+	if (ent->deadflag)
+	{
+		client->playerState.viewAngles[ROLL] = 40;
+		client->playerState.viewAngles[PITCH] = -15;
+		client->playerState.viewAngles[YAW] = client->killer_yaw;
+	}
+	else
+	{
+		Vec3Copy (pm.viewAngles, client->v_angle);
+		Vec3Copy (pm.viewAngles, client->playerState.viewAngles);
+	}
 
-		gi.linkentity (ent);
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	if (client->ctf_grapple)
+		CGrapple::GrapplePull(client->ctf_grapple);
+//ZOID
+#endif
 
-		if (ent->movetype != MOVETYPE_NOCLIP)
-			G_TouchTriggers (ent);
+	gi.linkentity (ent);
 
-		// touch other objects
-		for (i=0 ; i<pm.numTouch ; i++)
-		{
-			other = pm.touchEnts[i];
-			for (j=0 ; j<i ; j++)
-				if (pm.touchEnts[j] == other)
-					break;
-			if (j != i)
-				continue;	// duplicated
-			if (!other->touch)
-				continue;
-			other->touch (other, ent, NULL, NULL);
-		}
+	if (ent->movetype != MOVETYPE_NOCLIP)
+		G_TouchTriggers (ent);
 
+	// touch other objects
+	for (i=0 ; i<pm.numTouch ; i++)
+	{
+		other = pm.touchEnts[i];
+		for (j=0 ; j<i ; j++)
+			if (pm.touchEnts[j] == other)
+				break;
+		if (j != i)
+			continue;	// duplicated
+		if (!other->touch)
+			continue;
+		other->touch (other, ent, NULL, NULL);
 	}
 
 	int oldbuttons = client->buttons;
@@ -1932,34 +2025,12 @@ void ClientThink (edict_t *ent, userCmd_t *ucmd)
 	// monster sighting AI
 	ent->light_level = ucmd->lightLevel;
 
-	// fire weapon from final position if needed
-	if (client->latched_buttons & BUTTON_ATTACK)
-	{
-		if (client->resp.spectator) {
-
-			client->latched_buttons = 0;
-
-			if (client->chase_target) {
-				client->chase_target = NULL;
-				client->playerState.pMove.pmFlags &= ~PMF_NO_PREDICTION;
-			} else
-				GetChaseTarget(ent);
-
-		}
-	}
-
-	if (client->resp.spectator) {
-		if (ucmd->upMove >= 10) {
-			if (!(client->playerState.pMove.pmFlags & PMF_JUMP_HELD)) {
-				client->playerState.pMove.pmFlags |= PMF_JUMP_HELD;
-				if (client->chase_target)
-					ChaseNext(ent);
-				else
-					GetChaseTarget(ent);
-			}
-		} else
-			client->playerState.pMove.pmFlags &= ~PMF_JUMP_HELD;
-	}
+#ifdef CLEANCTF_ENABLED
+//ZOID
+//regen tech
+	CTFApplyRegeneration(ent);
+//ZOID
+#endif
 
 	// update chase cam if being followed
 	for (i = 1; i <= game.maxclients; i++) {
@@ -1988,7 +2059,7 @@ void ClientBeginServerFrame (edict_t *ent)
 
 	client = ent->client;
 
-	if (game.mode == GAME_DEATHMATCH &&
+	if ((game.mode & GAME_DEATHMATCH) &&
 		client->pers.spectator != client->resp.spectator &&
 		(level.time - client->respawn_time) >= 5) {
 		spectator_respawn(ent);
@@ -1997,7 +2068,7 @@ void ClientBeginServerFrame (edict_t *ent)
 
 	// run weapon animations
 	if (!client->resp.spectator && client->pers.Weapon)
-		client->pers.Weapon->Think (ent);
+			client->pers.Weapon->Think (ent);
 
 	if (ent->deadflag)
 	{
@@ -2005,13 +2076,13 @@ void ClientBeginServerFrame (edict_t *ent)
 		if ( level.time > client->respawn_time)
 		{
 			// in deathmatch, only wait for attack button
-			if (game.mode == GAME_DEATHMATCH)
+			if (game.mode & GAME_DEATHMATCH)
 				buttonMask = BUTTON_ATTACK;
 			else
 				buttonMask = -1;
 
 			if ( ( client->latched_buttons & buttonMask ) ||
-				(game.mode == GAME_DEATHMATCH && dmFlags.dfForceRespawn ) )
+				((game.mode & GAME_DEATHMATCH) && dmFlags.dfForceRespawn ) )
 			{
 				respawn(ent);
 				client->latched_buttons = 0;
@@ -2021,7 +2092,7 @@ void ClientBeginServerFrame (edict_t *ent)
 	}
 
 	// add player trail so monsters can follow
-	if (!game.mode == GAME_DEATHMATCH)
+	if (!(game.mode & GAME_DEATHMATCH))
 	{
 		if (!visible (ent, PlayerTrail_LastSpot() ) )
 			PlayerTrail_Add (ent->state.oldOrigin);

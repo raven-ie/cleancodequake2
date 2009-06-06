@@ -272,7 +272,21 @@ Drop an inventory item
 void Cmd_Drop_f (edict_t *ent)
 {
 	char *s = ArgGetConcatenatedString();
+#ifdef CLEANCTF_ENABLED
+	CBaseItem *Item;
+
+//ZOID--special case for tech powerups
+	if (Q_stricmp(s, "tech") == 0 && ent->client->pers.Tech)
+	{
+		ent->client->pers.Tech->Drop (ent);
+		ent->client->pers.Inventory.ValidateSelectedItem();
+		return;
+	}
+	Item = FindItem(s);
+//ZOID
+#else
 	CBaseItem *Item = FindItem(s);
+#endif
 	if (!Item)
 	{
 		Item = FindItemByClassname(s);
@@ -306,6 +320,22 @@ Cmd_Inven_f
 */
 void Cmd_Inven_f (edict_t *ent)
 {
+	if (ent->client->resp.MenuState.InMenu)
+	{
+		ent->client->resp.MenuState.CloseMenu();
+		ent->client->update_chase = true;
+		return;
+	}
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	if ((game.mode & GAME_CTF) && ent->client->resp.ctf_team == CTF_NOTEAM)
+	{
+		CTFOpenJoinMenu(ent);
+		return;
+	}
+//ZOID
+#endif
+
 	ent->client->pers.Inventory.Draw(ent);
 }
 
@@ -527,7 +557,6 @@ Give items to a client
 Old-style "give"
 ==================
 */
-void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
 void Cmd_Give_f (edict_t *ent)
 {
 	char		*name;

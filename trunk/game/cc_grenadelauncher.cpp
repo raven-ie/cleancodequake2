@@ -74,10 +74,7 @@ void CGrenadeLauncher::Fire (edict_t *ent)
 
 	radius = damage+40;
 	if (isQuad)
-	{
-		PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
 		damage *= 4;
-	}
 
 	FireAnimation (ent);
 
@@ -91,6 +88,7 @@ void CGrenadeLauncher::Fire (edict_t *ent)
 	fire_grenade (ent, start, forward, damage, 600, 2.5, radius);
 
 	Muzzle (ent, MZ_GRENADE);
+	AttackSound (ent);
 
 	PlayerNoise(ent, start, PNOISE_WEAPON);
 

@@ -76,10 +76,7 @@ void CBlaster::Fire (edict_t *ent)
 	vec3_t	offset;
 
 	if (isQuad)
-	{
 		damage *= 4;
-		PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
-	}
 
 	Angles_Vectors (ent->client->v_angle, forward, right, NULL);
 	Vec3Set (offset, 24, 8, ent->viewheight-8);
@@ -92,6 +89,7 @@ void CBlaster::Fire (edict_t *ent)
 
 	// send muzzle flash
 	Muzzle (ent, MZ_BLASTER);
+	AttackSound (ent);
 
 	PlayerNoise(ent, start, PNOISE_WEAPON);
 	FireAnimation(ent);

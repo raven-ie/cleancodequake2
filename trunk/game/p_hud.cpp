@@ -72,6 +72,13 @@ void BeginIntermission (edict_t *targ)
 	if (level.intermissiontime)
 		return;		// already activated
 
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	if (game.mode & GAME_CTF)
+		CTFCalcScores();
+//ZOID
+#endif
+
 	game.autosaved = false;
 
 	// respawn any dead clients
@@ -109,7 +116,7 @@ void BeginIntermission (edict_t *targ)
 	}
 	else
 	{
-		if (game.mode != GAME_DEATHMATCH)
+		if (!(game.mode & GAME_DEATHMATCH))
 		{
 			level.exitintermission = 1;		// go immediately to the next level
 			return;
@@ -177,12 +184,19 @@ void Cmd_Score_f (edict_t *ent)
 	ent->client->showinventory = false;
 	ent->client->showhelp = false;
 
+	if (ent->client->resp.MenuState.InMenu)
+	{
+		ent->client->resp.MenuState.CloseMenu();
+		return;
+	}
+
 	if (game.mode == GAME_SINGLEPLAYER)
 		return;
 
 	if (ent->client->showscores)
 	{
 		ent->client->showscores = false;
+		ent->client->update_chase = true;
 		return;
 	}
 
@@ -200,7 +214,7 @@ Display the current help message
 void Cmd_Help_f (edict_t *ent)
 {
 	// this is for backwards compatability
-	if (game.mode == GAME_DEATHMATCH)
+	if (game.mode & GAME_DEATHMATCH)
 	{
 		Cmd_Score_f (ent);
 		return;
@@ -208,6 +222,12 @@ void Cmd_Help_f (edict_t *ent)
 
 	ent->client->showinventory = false;
 	ent->client->showscores = false;
+
+	if (ent->client->resp.MenuState.InMenu)
+	{
+		ent->client->resp.MenuState.CloseMenu();
+		return;
+	}
 
 	if (ent->client->showhelp && (ent->client->pers.game_helpchanged == game.helpchanged))
 	{
@@ -229,7 +249,6 @@ G_SetStats
 ===============
 */
 int PowerArmorType (edict_t *ent);
-int ArmorIndex (edict_t *ent);
 void G_SetStats (edict_t *ent)
 {
 	//
@@ -359,8 +378,8 @@ void G_SetStats (edict_t *ent)
 	ent->client->playerState.stats[STAT_LAYOUTS] = 0;
 
 	if (ent->client->pers.health <= 0 || ent->client->resp.MenuState.InMenu ||
-		(((game.mode == GAME_DEATHMATCH) && (level.intermissiontime || ent->client->showscores)) || 
-		(game.mode != GAME_DEATHMATCH) && ent->client->showhelp))
+		(((game.mode & GAME_DEATHMATCH) && (level.intermissiontime || ent->client->showscores)) || 
+		(!(game.mode & GAME_DEATHMATCH)) && ent->client->showhelp))
 		ent->client->playerState.stats[STAT_LAYOUTS] |= 1;
 	if (ent->client->showinventory && ent->client->pers.health > 0)
 		ent->client->playerState.stats[STAT_LAYOUTS] |= 2;
@@ -383,6 +402,12 @@ void G_SetStats (edict_t *ent)
 		ent->client->playerState.stats[STAT_HELPICON] = 0;
 
 	ent->client->playerState.stats[STAT_SPECTATOR] = 0;
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	SetCTFStats(ent);
+//ZOID
+#endif
 }
 
 /*

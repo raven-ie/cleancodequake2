@@ -108,17 +108,14 @@ void CHyperBlaster::Fire (edict_t *ent)
 			else
 				effect = 0;
 
-			damage = (game.mode == GAME_DEATHMATCH) ? 15 : 20;
+			damage = (game.mode & GAME_DEATHMATCH) ? 15 : 20;
 
 			vec3_t	forward, right;
 			vec3_t	start;
 			vec3_t	noffset;
 
 			if (isQuad)
-			{
 				damage *= 4;
-				PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
-			}
 
 			Angles_Vectors (ent->client->v_angle, forward, right, NULL);
 			Vec3Set (noffset, 24, 8, ent->viewheight-8);
@@ -132,6 +129,7 @@ void CHyperBlaster::Fire (edict_t *ent)
 
 			// send muzzle flash
 			Muzzle (ent, MZ_HYPERBLASTER);
+			AttackSound (ent);
 
 			PlayerNoise(ent, start, PNOISE_WEAPON);
 

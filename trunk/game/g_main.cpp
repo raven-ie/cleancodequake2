@@ -70,6 +70,13 @@ CCvar	*flood_waitdelay;
 
 CCvar	*sv_maplist;
 
+#ifdef CLEANCTF_ENABLED
+//ZOID
+CCvar	*capturelimit;
+CCvar	*instantweap;
+//ZOID
+#endif
+
 void SpawnEntities (char *mapname, char *entities, char *spawnpoint);
 void ClientThink (edict_t *ent, userCmd_t *cmd);
 BOOL ClientConnect (edict_t *ent, char *userinfo);
@@ -97,8 +104,8 @@ void ShutdownGame (void)
 
 	gi.FreeTags (TAG_LEVEL);
 	gi.FreeTags (TAG_GAME);
-	gi.FreeTags (TAG_CLEAN_GAME);
-	gi.FreeTags (TAG_CLEAN_LEVEL);
+	//gi.FreeTags (TAG_CLEAN_GAME);
+	//gi.FreeTags (TAG_CLEAN_LEVEL);
 }
 
 
@@ -252,12 +259,17 @@ void EndDMLevel (void)
 		return;
 	}
 
+	if (*level.forcemap) {
+		BeginIntermission (CreateTargetChangeLevel (level.forcemap) );
+		return;
+	}
+
 	// see if it's in the map list
 	if (*sv_maplist->String()) {
 		s = G_CopyString(sv_maplist->String());
 		f = NULL;
 #ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
-		t = strtok_s(s, seps);
+		t = strtok(s, seps);
 #else
 		t = strtok_s (s, seps, &nextToken);
 #endif
@@ -340,8 +352,20 @@ void CheckDMRules (void)
 	if (level.intermissiontime)
 		return;
 
-	if (game.mode != GAME_DEATHMATCH)
+	if (!(game.mode & GAME_DEATHMATCH))
 		return;
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	if ((game.mode & GAME_CTF) && CTFCheckRules())
+	{
+		EndDMLevel ();
+		return;
+	}
+	if (CTFInMatch())
+		return; // no checking in match mode
+//ZOID
+#endif
 
 	if (timelimit->Float())
 	{
@@ -448,7 +472,7 @@ __try
 		EndMapCounter();
 
 	// choose a client for monsters to target this frame
-	if (game.mode != GAME_DEATHMATCH) // Paril, lol
+	if (!(game.mode & GAME_DEATHMATCH)) // Paril, lol
 		AI_SetSightClient ();
 
 	// exit intermissions

@@ -27,59 +27,35 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_shared.h
-// Shared header, included by g_local.
+// cc_ctfitems.h
+// Flags and Techs
 //
 
-#include "cc_conchars.h"
-#include "cc_indexing.h"
-#include "cc_media.h"
-#include "cc_print.h"
-#include "cc_sound.h"
-#include "cc_colors.h"
-#include "cc_cvar.h"
-#include "cc_dmflags.h"
-#include "cc_trace.h"
-#include "cc_tent.h"
-#include "cc_sbar.h"
-#include "cc_arg.h"
-#include "cc_cmds.h"
-#include "cc_servercommands.h"
-#include "cc_gamecommands.h"
-#include "cc_items.h"
-#include "cc_weaponmain.h"
-#include "cc_inventory.h"
-#include "cc_ban.h"
-#include "cc_pathfinding.h"
-#include "cc_monsters.h"
-#include "cc_monsterlist.h"
-#include "cc_menu.h"
-#include "cc_pmove.h"
-#include "cc_write.h"
-#include "cc_gameapi.h"
-#include "cc_mapprint.h"
-#ifdef CLEANCTF_ENABLED
-#include "cc_ctfadmin.h"
-#include "cc_ctfmenu.h"
-#endif
-
-extern dmFlagsConfig dmFlags;
-
-#if 0
-void DrawNewton ();
-#endif
-
-enum EGender
+class CTech : public CBaseItem
 {
-	GenderMale,
-	GenderFemale,
-	GenderNeutral
+public:
+	CTech (char *Classname, char *WorldModel, int EffectFlags,
+			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
+			   char *Precache);
+
+	bool	Pickup (edict_t *ent, edict_t *other);
+	void	Drop (edict_t *ent);
+	void	Use (edict_t *ent);
 };
 
-// svClient->state options
-enum EClientState
+class CFlag : public CBaseItem
 {
-	SVCS_FREE,		// can be reused for a new connection
-	SVCS_CONNECTED,	// has been assigned to a svClient_t, but not in game yet
-	SVCS_SPAWNED	// client is fully in game
+public:
+	int		team;
+
+	CFlag (char *Classname, char *WorldModel, int EffectFlags,
+			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
+			   char *Precache, int team);
+
+	bool	Pickup (edict_t *ent, edict_t *other);
+	void	Drop (edict_t *ent);
+	void	Use (edict_t *ent);
 };
+
+void AddTechsToList ();
+void AddFlagsToList ();

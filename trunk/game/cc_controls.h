@@ -46,7 +46,7 @@ enum ELabelAlign
 class CMenu_Label : public CMenuItem
 {
 public:
-	char					*LabelString;
+	char					LabelString[MAX_COMPRINT/4];
 	ELabelFlags				Flags;
 	ELabelAlign				Align;
 

@@ -48,7 +48,21 @@ bool CHealth::Pickup (edict_t *ent, edict_t *other)
 	if (!(this->HealthFlags & HEALTHFLAG_IGNOREMAX) && (other->health >= other->max_health))
 		return false;
 
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	if (other->health >= 250 && ent->count > 25)
+		return false;
+//ZOID
+#endif
+
 	other->health += this->Amount;
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	if (other->health > 250 && ent->count > 25)
+		other->health = 250;
+//ZOID
+#endif
 
 	if (!(this->HealthFlags & HEALTHFLAG_IGNOREMAX))
 	{
@@ -56,7 +70,7 @@ bool CHealth::Pickup (edict_t *ent, edict_t *other)
 			other->health = other->max_health;
 	}
 
-	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode == GAME_DEATHMATCH))
+	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
 		SetRespawn (ent, 30);
 
 	return true;

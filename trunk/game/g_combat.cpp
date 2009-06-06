@@ -236,7 +236,6 @@ static int CheckPowerArmor (edict_t *ent, vec3_t point, vec3_t normal, int damag
 	return save;
 }
 
-int ArmorIndex (edict_t *ent);
 static int CheckArmor (edict_t *ent, vec3_t point, vec3_t normal, int damage, int dflags)
 {
 	if (!damage)
@@ -271,6 +270,17 @@ static int CheckArmor (edict_t *ent, vec3_t point, vec3_t normal, int damage, in
 
 bool CheckTeamDamage (edict_t *targ, edict_t *attacker)
 {
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	if ((game.mode & GAME_CTF) && targ->client && attacker->client)
+	{
+		if (targ->client->resp.ctf_team == attacker->client->resp.ctf_team &&
+			targ != attacker)
+			return true;
+	}
+//ZOID
+#endif
+
 		//FIXME make the next line real and uncomment this block
 		// if ((ability to damage a teammate == OFF) && (targ's team == attacker's team))
 	return false;
@@ -290,7 +300,7 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 	// friendly fire avoidance
 	// if enabled you can't hurt teammates (but you can hurt yourself)
 	// knockback still occurs
-	if ((targ != attacker) && (game.mode == GAME_DEATHMATCH && (dmFlags.dfSkinTeams || dmFlags.dfModelTeams) || game.mode == GAME_COOPERATIVE))
+	if ((targ != attacker) && ((game.mode & GAME_DEATHMATCH) && (dmFlags.dfSkinTeams || dmFlags.dfModelTeams) || game.mode == GAME_COOPERATIVE))
 	{
 		if (OnSameTeam (targ, attacker))
 		{
@@ -303,7 +313,7 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 	meansOfDeath = mod;
 
 	// easy mode takes half damage
-	if (skill->Integer() == 0 && game.mode != GAME_DEATHMATCH && targ->client)
+	if (skill->Integer() == 0 && !(game.mode & GAME_DEATHMATCH) && targ->client)
 	{
 		damage *= 0.5;
 		if (!damage)
@@ -317,6 +327,13 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 // bonus damage for suprising a monster
 	if (!(dflags & DAMAGE_RADIUS) && (targ->svFlags & SVF_MONSTER) && (attacker->client) && (!targ->enemy) && (targ->health > 0))
 		damage *= 2;
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+//strength tech
+	damage = CTFApplyStrength(attacker, damage);
+//ZOID
+#endif
 
 	if (targ->flags & FL_NO_KNOCKBACK)
 		knockback = 0;
@@ -366,18 +383,45 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 		save = damage;
 	}
 
-	psave = CheckPowerArmor (targ, point, normal, take, dflags);
-	take -= psave;
+#ifdef CLEANCTF_ENABLED
+//ZOID
+//team armor protect
+	if ((game.mode & GAME_CTF) && targ->client && attacker->client &&
+		targ->client->resp.ctf_team == attacker->client->resp.ctf_team &&
+		targ != attacker && dmFlags.dfCtfArmorProtect)
+		psave = asave = 0;
+	else
+	{
+//ZOID
+#endif
+		psave = CheckPowerArmor (targ, point, normal, take, dflags);
+		take -= psave;
 
-	asave = CheckArmor (targ, point, normal, take, dflags);
-	take -= asave;
+		asave = CheckArmor (targ, point, normal, take, dflags);
+		take -= asave;
+#ifdef CLEANCTF_ENABLED
+	}
+#endif
 
 	//treat cheat/powerup savings the same as armor
 	asave += save;
 
+#ifdef CLEANCTF_ENABLED
+//ZOID
+//resistance tech
+	take = CTFApplyResistance(targ, take);
+//ZOID
+#endif
+
 	// team damage avoidance
 	if (!(dflags & DAMAGE_NO_PROTECTION) && CheckTeamDamage (targ, attacker))
 		return;
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	CTFCheckHurtCarrier(targ, attacker);
+//ZOID
+#endif
 
 // do the damage
 	if (take)

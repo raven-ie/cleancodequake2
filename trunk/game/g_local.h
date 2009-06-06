@@ -153,11 +153,16 @@ typedef enum
 // it should be initialized at dll load time, and read/written to
 // the server.ssv file for savegames
 //
-enum EGameMode
+typedef int EGameMode;
+enum //EGameMode
 {
-	GAME_SINGLEPLAYER,
-	GAME_DEATHMATCH,
-	GAME_COOPERATIVE
+	GAME_SINGLEPLAYER		=	1,
+	GAME_DEATHMATCH			=	2,
+	GAME_COOPERATIVE		=	4,
+
+#ifdef CLEANCTF_ENABLED
+	GAME_CTF				=	8
+#endif
 };
 
 typedef struct
@@ -184,6 +189,7 @@ typedef struct
 	bool		autosaved;
 
 	EGameMode	mode; // Game mode
+	bool		cheats;
 } game_locals_t;
 
 
@@ -199,6 +205,7 @@ typedef struct
 	char		level_name[MAX_QPATH];	// the descriptive name (Outer Base, etc)
 	char		mapname[MAX_QPATH];		// the server name (base1, etc)
 	char		nextmap[MAX_QPATH];		// go here when fraglimit is hit
+	char		forcemap[MAX_QPATH];	// go here
 
 	// intermission state
 	float		intermissiontime;		// time the intermission was started
@@ -343,6 +350,9 @@ enum // EMeansOfDeath
 	MOD_TRIGGER_HURT,
 	MOD_HIT,
 	MOD_TARGET_BLASTER,
+#ifdef CLEANCTF_ENABLED
+	MOD_GRAPPLE,
+#endif
 
 	MOD_FRIENDLY_FIRE		=	512
 };
@@ -585,6 +595,10 @@ typedef struct
 
 	CWeapon		*Weapon, *LastWeapon;
 	CArmor		*Armor; // Current armor.
+#ifdef CLEANCTF_ENABLED
+	CFlag		*Flag; // Set if holding a flag
+	CTech		*Tech; // Set if holding a tech
+#endif
 	// Stored here for convenience. (dynamic_cast ew)
 
 	int			power_cubes;	// used for tracking the cubes in coop games
@@ -615,6 +629,22 @@ typedef struct
 #endif
 
 	CMenuState	MenuState;
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	int			ctf_team;			// CTF team
+	int			ctf_state;
+	float		ctf_lasthurtcarrier;
+	float		ctf_lastreturnedflag;
+	float		ctf_flagsince;
+	float		ctf_lastfraggedcarrier;
+	bool		id_state;
+	bool		voted; // for elections
+	bool		ready;
+	bool		admin;
+	struct ghost_s *ghost; // for ghost codes
+//ZOID
+#endif
 } clientRespawn_t;
 
 // this structure is cleared on each PutClientInServer(),
@@ -695,7 +725,18 @@ struct gclient_s
 	float		respawn_time;		// can respawn when time > this
 
 	edict_t		*chase_target;		// player we are chasing
-	bool	update_chase;		// need to update chase info?
+	bool		update_chase;		// need to update chase info?
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	edict_t		*ctf_grapple;		// entity of grapple
+	int			ctf_grapplestate;		// true if pulling
+	float		ctf_grapplereleasetime;	// time of grapple release
+	float		ctf_regentime;		// regen tech
+	float		ctf_techsndtime;
+	float		ctf_lasttechmsg;
+//ZOID
+#endif
 };
 
 
@@ -888,4 +929,15 @@ extern	CCvar	*flood_waitdelay;
 
 extern	CCvar	*sv_maplist;
 
+#ifdef CLEANCTF_ENABLED
+extern	CCvar	*capturelimit;
+extern	CCvar	*instantweap;
+#endif
+
 extern void P_ProjectSource (gclient_t *client, vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result);
+
+#ifdef CLEANCTF_ENABLED
+#include "cc_ctf.h"
+#endif
+
+bool CheckTeamDamage (edict_t *targ, edict_t *attacker);

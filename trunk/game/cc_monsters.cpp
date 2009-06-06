@@ -1087,7 +1087,7 @@ void CMonster::MonsterStartGo ()
 
 void CMonster::MonsterStart ()
 {
-	if (game.mode == GAME_DEATHMATCH)
+	if (game.mode & GAME_DEATHMATCH)
 	{
 		G_FreeEdict (Entity);
 		return;

@@ -153,14 +153,20 @@ CBasePowerUp(Classname, WorldModel, EffectFlags, PickupSound, Icon, Name, Flags,
 
 void CMegaHealth::MegaHealthThink (edict_t *self)
 {
-	if (self->owner->health > self->owner->max_health)
+	if (self->owner->health > self->owner->max_health
+#ifdef CLEANCTF_ENABLED
+//ZOID
+		&& !CTFHasRegeneration(self->owner)
+//ZOID
+#endif
+		)
 	{
 		self->nextthink = level.time + 1;
 		self->owner->health -= 1;
 		return;
 	}
 
-	if (!(self->spawnflags & DROPPED_ITEM) && (game.mode == GAME_DEATHMATCH))
+	if (!(self->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
 		self->item->SetRespawn (self, 20);
 	else
 		G_FreeEdict (self);
@@ -169,14 +175,23 @@ void CMegaHealth::MegaHealthThink (edict_t *self)
 // Seperate powerup classes
 void CMegaHealth::DoPickup (edict_t *ent, edict_t *other)
 {
-	ent->think = &CMegaHealth::MegaHealthThink;
-	ent->nextthink = level.time + 5;
-	ent->owner = other;
-	ent->flags |= FL_RESPAWN;
-	ent->svFlags |= SVF_NOCLIENT;
-	ent->solid = SOLID_NOT;
+#ifdef CLEANCTF_ENABLED
+	if (!CTFHasRegeneration(other))
+	{
+#endif
+		ent->think = &CMegaHealth::MegaHealthThink;
+		ent->nextthink = level.time + 5;
+		ent->owner = other;
+		ent->flags |= FL_RESPAWN;
+		ent->svFlags |= SVF_NOCLIENT;
+		ent->solid = SOLID_NOT;
 
-	other->health += 100;
+		other->health += 100;
+#ifdef CLEANCTF_ENABLED
+	}
+	else if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
+		ent->item->SetRespawn (ent, 30);
+#endif
 }
 
 void CBackPack::DoPickup (edict_t *ent, edict_t *other)
@@ -207,7 +222,7 @@ void CBackPack::DoPickup (edict_t *ent, edict_t *other)
 	Ammo = dynamic_cast<CAmmo*>(FindItem("Rockets"));
 	Ammo->AddAmmo (other, Ammo->Quantity);
 
-	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode == GAME_DEATHMATCH))
+	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
 		SetRespawn (ent, 180);
 }
 
@@ -215,7 +230,7 @@ static int	quad_drop_timeout_hack;
 
 void CQuadDamage::DoPickup (edict_t *ent, edict_t *other)
 {
-	if (game.mode == GAME_DEATHMATCH)
+	if (game.mode & GAME_DEATHMATCH)
 	{
 		if (!(ent->spawnflags & DROPPED_ITEM) )
 			SetRespawn (ent, 60);
@@ -272,7 +287,7 @@ void CInvulnerability::Use (edict_t *ent)
 
 void CSilencer::DoPickup (edict_t *ent, edict_t *other)
 {
-	if (game.mode == GAME_DEATHMATCH)
+	if (game.mode & GAME_DEATHMATCH)
 	{
 		if (!(ent->spawnflags & DROPPED_ITEM) )
 			SetRespawn (ent, 30);
@@ -289,7 +304,7 @@ void CSilencer::Use (edict_t *ent)
 
 void CRebreather::DoPickup (edict_t *ent, edict_t *other)
 {
-	if (game.mode == GAME_DEATHMATCH)
+	if (game.mode & GAME_DEATHMATCH)
 	{
 		if (!(ent->spawnflags & DROPPED_ITEM) )
 			SetRespawn (ent, 60);
@@ -310,7 +325,7 @@ void CRebreather::Use (edict_t *ent)
 
 void CEnvironmentSuit::DoPickup (edict_t *ent, edict_t *other)
 {
-	if (game.mode == GAME_DEATHMATCH)
+	if (game.mode & GAME_DEATHMATCH)
 	{
 		if (!(ent->spawnflags & DROPPED_ITEM) )
 			SetRespawn (ent, 60);
@@ -345,19 +360,19 @@ void CBandolier::DoPickup (edict_t *ent, edict_t *other)
 	Ammo = dynamic_cast<CAmmo*>(FindItem("Shells"));
 	Ammo->AddAmmo (other, Ammo->Quantity);
 
-	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode == GAME_DEATHMATCH))
+	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
 		SetRespawn (ent, 60);
 }
 
 void CAdrenaline::DoPickup (edict_t *ent, edict_t *other)
 {
-	if (game.mode != GAME_DEATHMATCH)
+	if (!(game.mode & GAME_DEATHMATCH))
 		other->max_health += 1;
 
 	if (other->health < other->max_health)
 		other->health = other->max_health;
 
-	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode == GAME_DEATHMATCH))
+	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
 		SetRespawn (ent, 60);
 }
 
@@ -365,13 +380,13 @@ void CAncientHead::DoPickup (edict_t *ent, edict_t *other)
 {
 	other->max_health += 2;
 
-	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode == GAME_DEATHMATCH))
+	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
 		SetRespawn (ent, 60);
 }
 
 void CPowerShield::DoPickup (edict_t *ent, edict_t *other)
 {
-	if (game.mode == GAME_DEATHMATCH)
+	if (game.mode & GAME_DEATHMATCH)
 	{
 		if (!(ent->spawnflags & DROPPED_ITEM) )
 			SetRespawn (ent, 60);

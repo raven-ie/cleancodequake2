@@ -96,7 +96,7 @@ bool CWeaponItem::Pickup (edict_t *ent, edict_t *other)
 
 		if (! (ent->spawnflags & DROPPED_PLAYER_ITEM) )
 		{
-			if (game.mode == GAME_DEATHMATCH)
+			if (game.mode & GAME_DEATHMATCH)
 			{
 				if (dmFlags.dfWeaponsStay)
 					ent->flags |= FL_RESPAWN;
@@ -108,15 +108,13 @@ bool CWeaponItem::Pickup (edict_t *ent, edict_t *other)
 		}
 	}
 	else if (ent->count)
-	{
 		this->Ammo->AddAmmo (other, ent->count);
-	}
 
 	if (this->Weapon)
 	{
 		if (other->client->pers.Weapon != this->Weapon && 
 			(other->client->pers.Inventory.Has(this) == 1) &&
-			( game.mode != GAME_DEATHMATCH || (other->client->pers.Weapon && other->client->pers.Weapon->WeaponItem == FindItem("blaster")) ) )
+			( !(game.mode & GAME_DEATHMATCH) || (other->client->pers.Weapon && other->client->pers.Weapon->WeaponItem == FindItem("blaster")) ) )
 			other->client->NewWeapon = this->Weapon;
 	}
 
@@ -283,11 +281,11 @@ bool CAmmo::Pickup (edict_t *ent, edict_t *other)
 
 	if (weapon && !oldcount)
 	{
-		if (other->client->pers.Weapon != this->Weapon && ( game.mode != GAME_DEATHMATCH || (other->client->pers.Weapon && other->client->pers.Weapon->WeaponItem == FindItem("Blaster")) ) )
+		if (other->client->pers.Weapon != this->Weapon && ( !(game.mode & GAME_DEATHMATCH) || (other->client->pers.Weapon && other->client->pers.Weapon->WeaponItem == FindItem("Blaster")) ) )
 			other->client->NewWeapon = this->Weapon;
 	}
 
-	if (!(ent->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)) && (game.mode == GAME_DEATHMATCH))
+	if (!(ent->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)) && (game.mode & GAME_DEATHMATCH))
 		this->SetRespawn (ent, 30);
 	return true;
 }
@@ -304,6 +302,9 @@ static CWeaponItem *HyperBlaster;
 static CWeaponItem *Railgun;
 static CWeaponItem *BFG;
 static CAmmo *Grenades;
+#ifdef CLEANCTF_ENABLED
+static CWeaponItem	*Grapple;
+#endif
 
 void AddAmmoToList ()
 {
@@ -333,6 +334,10 @@ void AddAmmoToList ()
 	Railgun = new CWeaponItem("weapon_railgun", "models/weapons/g_rail/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_railgun", "Railgun", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponRailgun, Slugs, 1, "#w_railgun.md2");
 	BFG = new CWeaponItem("weapon_bfg", "models/weapons/g_bfg/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_bfg", "BFG10k", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponBFG, Cells, 50, "#w_bfg.md2");
 
+#ifdef CLEANCTF_ENABLED
+	Grapple = new CWeaponItem (NULL, NULL, 0, NULL, "w_grapple", "Grapple", ITEMFLAG_WEAPON|ITEMFLAG_USABLE, "", &WeaponGrapple, NULL, 0, "#w_grapple.md2");
+#endif
+
 	ItemList->AddItemToList (Blaster);
 	ItemList->AddItemToList (Shotgun);
 	ItemList->AddItemToList (SuperShotgun);
@@ -343,6 +348,10 @@ void AddAmmoToList ()
 	ItemList->AddItemToList (HyperBlaster);
 	ItemList->AddItemToList (Railgun);
 	ItemList->AddItemToList (BFG);
+
+#ifdef CLEANCTF_ENABLED
+	ItemList->AddItemToList (Grapple);
+#endif
 }
 
 #define WEAP_BLASTER			1 
@@ -356,6 +365,9 @@ void AddAmmoToList ()
 #define WEAP_HYPERBLASTER		9 
 #define WEAP_RAILGUN			10
 #define WEAP_BFG				11
+#ifdef CLEANCTF_ENABLED
+#define WEAP_GRAPPLE			12
+#endif
 
 void DoWeaponVweps ()
 {
@@ -372,4 +384,7 @@ void DoWeaponVweps ()
 	HyperBlaster->Weapon->vwepIndex = ModelIndex(HyperBlaster->VWepModel) - takeAway;
 	Railgun->Weapon->vwepIndex = ModelIndex(Railgun->VWepModel) - takeAway;
 	BFG->Weapon->vwepIndex = ModelIndex(BFG->VWepModel) - takeAway;
+#ifdef CLEANCTF_ENABLED
+	Grapple->Weapon->vwepIndex = ModelIndex(Grapple->VWepModel) - takeAway;
+#endif
 }

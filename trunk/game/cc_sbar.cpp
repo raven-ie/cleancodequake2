@@ -39,17 +39,23 @@ CStatusBar::CStatusBar()
 	Q_snprintfz (bar, sizeof(bar), "");
 	Q_snprintfz (temp, sizeof(temp), "");
 }
+
+size_t CStatusBar::Length ()
+{
+	return strlen(bar);
+}
+
 void CStatusBar::Send ()
 {
 	gi.configstring (CS_STATUSBAR, bar);
 }
+
 void CStatusBar::SendMsg (edict_t *ent, bool reliable)
 {
 	WriteByte (SVC_LAYOUT);
 	WriteString (bar);
 	Cast ((reliable) ? CASTFLAG_RELIABLE : CASTFLAG_UNRELIABLE, ent);
 }
-
 
 void CStatusBar::AddToBarBuffer (char *string)
 {
@@ -142,144 +148,150 @@ void CStatusBar::AddArmorNum ()
 
 void CStatusBar::AddClientBlock (int x, int y, int cNum, int score, int ping, int time)
 {
+	assert (!(cNum >= game.maxclients || cNum < 0));
+
 	Q_snprintfz (temp, sizeof(temp), "client %i %i %i %i %i %i ", x, y, cNum, score, ping, time);
 	AddToBarBuffer(temp);
 }
 
 void CStatusBar::AddClientBlock (int x, int y, int cNum, int score, int ping)
 {
+	assert (!(cNum >= game.maxclients || cNum < 0));
+
 	Q_snprintfz (temp, sizeof(temp), "ctf %i %i %i %i %i %i ", x, y, cNum, score, ping);
 	AddToBarBuffer(temp);
 }
 
 void CreateDMStatusbar ()
 {
-	CStatusBar *DMBar = new CStatusBar;
+	CStatusBar DMBar;
 
-	DMBar->AddPoint_Y (-24, true);
+	DMBar.AddPoint_Y (-24, true);
 
-	DMBar->AddVirtualPoint_X (0);
-	DMBar->AddHealthNum ();
-	DMBar->AddVirtualPoint_X (50);
-	DMBar->AddPicStat (STAT_HEALTH_ICON);
+	DMBar.AddVirtualPoint_X (0);
+	DMBar.AddHealthNum ();
+	DMBar.AddVirtualPoint_X (50);
+	DMBar.AddPicStat (STAT_HEALTH_ICON);
 
-	DMBar->AddIf (STAT_AMMO_ICON);
-	DMBar->AddVirtualPoint_X (100);
-	DMBar->AddAmmoNum ();
-	DMBar->AddVirtualPoint_X (150);
-	DMBar->AddPicStat (STAT_AMMO_ICON);
-	DMBar->AddEndIf ();
+	DMBar.AddIf (STAT_AMMO_ICON);
+	DMBar.AddVirtualPoint_X (100);
+	DMBar.AddAmmoNum ();
+	DMBar.AddVirtualPoint_X (150);
+	DMBar.AddPicStat (STAT_AMMO_ICON);
+	DMBar.AddEndIf ();
 
-	DMBar->AddIf (STAT_ARMOR);
-	DMBar->AddVirtualPoint_X (200);
-	DMBar->AddArmorNum ();
-	DMBar->AddVirtualPoint_X (250);
-	DMBar->AddPicStat (STAT_ARMOR_ICON);
-	DMBar->AddEndIf ();
+	DMBar.AddIf (STAT_ARMOR);
+	DMBar.AddVirtualPoint_X (200);
+	DMBar.AddArmorNum ();
+	DMBar.AddVirtualPoint_X (250);
+	DMBar.AddPicStat (STAT_ARMOR_ICON);
+	DMBar.AddEndIf ();
 
-	DMBar->AddIf (STAT_SELECTED_ICON);
-	DMBar->AddVirtualPoint_X (296);
-	DMBar->AddPicStat (STAT_SELECTED_ICON);
-	DMBar->AddEndIf ();
+	DMBar.AddIf (STAT_SELECTED_ICON);
+	DMBar.AddVirtualPoint_X (296);
+	DMBar.AddPicStat (STAT_SELECTED_ICON);
+	DMBar.AddEndIf ();
 
-	DMBar->AddPoint_Y (-50, true);
+	DMBar.AddPoint_Y (-50, true);
 
-	DMBar->AddIf (STAT_PICKUP_ICON);
-	DMBar->AddVirtualPoint_X (0);
-	DMBar->AddPicStat (STAT_PICKUP_ICON);
-	DMBar->AddVirtualPoint_X (26);
-	DMBar->AddPoint_Y (-42, true);
-	DMBar->AddStatString (STAT_PICKUP_STRING);
-	DMBar->AddPoint_Y (-50, true);
-	DMBar->AddEndIf ();
+	DMBar.AddIf (STAT_PICKUP_ICON);
+	DMBar.AddVirtualPoint_X (0);
+	DMBar.AddPicStat (STAT_PICKUP_ICON);
+	DMBar.AddVirtualPoint_X (26);
+	DMBar.AddPoint_Y (-42, true);
+	DMBar.AddStatString (STAT_PICKUP_STRING);
+	DMBar.AddPoint_Y (-50, true);
+	DMBar.AddEndIf ();
 
-	DMBar->AddIf (STAT_TIMER_ICON);
-	DMBar->AddVirtualPoint_X (246);
-	DMBar->AddNumStat (STAT_TIMER, 2);
-	DMBar->AddVirtualPoint_X (296);
-	DMBar->AddPicStat (STAT_TIMER_ICON);
-	DMBar->AddEndIf ();
+	DMBar.AddIf (STAT_TIMER_ICON);
+	DMBar.AddVirtualPoint_X (246);
+	DMBar.AddNumStat (STAT_TIMER, 2);
+	DMBar.AddVirtualPoint_X (296);
+	DMBar.AddPicStat (STAT_TIMER_ICON);
+	DMBar.AddEndIf ();
 
-	DMBar->AddIf (STAT_HELPICON);
-	DMBar->AddVirtualPoint_X (148);
-	DMBar->AddPicStat (STAT_HELPICON);
-	DMBar->AddEndIf ();
+	DMBar.AddIf (STAT_HELPICON);
+	DMBar.AddVirtualPoint_X (148);
+	DMBar.AddPicStat (STAT_HELPICON);
+	DMBar.AddEndIf ();
 
-	DMBar->AddPoint_X (-50, true);
-	DMBar->AddPoint_Y (2);
-	DMBar->AddNumStat (STAT_FRAGS);
+	DMBar.AddPoint_X (-50, true);
+	DMBar.AddPoint_Y (2);
+	DMBar.AddNumStat (STAT_FRAGS);
 
-	DMBar->AddIf (STAT_SPECTATOR);
-	DMBar->AddVirtualPoint_X (0);
-	DMBar->AddPoint_Y (-58, true);
-	DMBar->AddString ("SPECTATOR MODE", true);
-	DMBar->AddEndIf ();
+#ifndef CLEANCTF_ENABLED
+	DMBar.AddIf (STAT_SPECTATOR);
+	DMBar.AddVirtualPoint_X (0);
+	DMBar.AddPoint_Y (-58, true);
+	DMBar.AddString ("SPECTATOR MODE", true);
+	DMBar.AddEndIf ();
+#endif
 
-	DMBar->AddIf (STAT_CHASE);
-	DMBar->AddVirtualPoint_X (0);
-	DMBar->AddPoint_Y (-68, true);
-	DMBar->AddString ("Chasing");
-	DMBar->AddVirtualPoint_X (64);
-	DMBar->AddStatString (STAT_CHASE);
-	DMBar->AddEndIf ();
+	DMBar.AddIf (STAT_CHASE);
+	DMBar.AddVirtualPoint_X (0);
+	DMBar.AddPoint_Y (-68, true);
+	DMBar.AddString ("Chasing");
+	DMBar.AddVirtualPoint_X (64);
+	DMBar.AddStatString (STAT_CHASE);
+	DMBar.AddEndIf ();
 
-	DMBar->Send();
+	DMBar.Send();
 }
 
 void CreateSPStatusbar ()
 {
-	CStatusBar *SPBar = new CStatusBar;
+	CStatusBar SPBar;
 
-	SPBar->AddPoint_Y (-24, true);
+	SPBar.AddPoint_Y (-24, true);
 
-	SPBar->AddVirtualPoint_X (0);
-	SPBar->AddHealthNum ();
-	SPBar->AddVirtualPoint_X (50);
-	SPBar->AddPicStat (STAT_HEALTH_ICON);
+	SPBar.AddVirtualPoint_X (0);
+	SPBar.AddHealthNum ();
+	SPBar.AddVirtualPoint_X (50);
+	SPBar.AddPicStat (STAT_HEALTH_ICON);
 
-	SPBar->AddIf (STAT_AMMO_ICON);
-	SPBar->AddVirtualPoint_X (100);
-	SPBar->AddAmmoNum ();
-	SPBar->AddVirtualPoint_X (150);
-	SPBar->AddPicStat (STAT_AMMO_ICON);
-	SPBar->AddEndIf ();
+	SPBar.AddIf (STAT_AMMO_ICON);
+	SPBar.AddVirtualPoint_X (100);
+	SPBar.AddAmmoNum ();
+	SPBar.AddVirtualPoint_X (150);
+	SPBar.AddPicStat (STAT_AMMO_ICON);
+	SPBar.AddEndIf ();
 
-	SPBar->AddIf (STAT_ARMOR);
-	SPBar->AddVirtualPoint_X (200);
-	SPBar->AddArmorNum ();
-	SPBar->AddVirtualPoint_X (250);
-	SPBar->AddPicStat (STAT_ARMOR_ICON);
-	SPBar->AddEndIf ();
+	SPBar.AddIf (STAT_ARMOR);
+	SPBar.AddVirtualPoint_X (200);
+	SPBar.AddArmorNum ();
+	SPBar.AddVirtualPoint_X (250);
+	SPBar.AddPicStat (STAT_ARMOR_ICON);
+	SPBar.AddEndIf ();
 
-	SPBar->AddIf (STAT_SELECTED_ICON);
-	SPBar->AddVirtualPoint_X (296);
-	SPBar->AddPicStat (STAT_SELECTED_ICON);
-	SPBar->AddEndIf ();
+	SPBar.AddIf (STAT_SELECTED_ICON);
+	SPBar.AddVirtualPoint_X (296);
+	SPBar.AddPicStat (STAT_SELECTED_ICON);
+	SPBar.AddEndIf ();
 
-	SPBar->AddPoint_Y (-50, true);
+	SPBar.AddPoint_Y (-50, true);
 
-	SPBar->AddIf (STAT_PICKUP_ICON);
-	SPBar->AddVirtualPoint_X (0);
-	SPBar->AddPicStat (STAT_PICKUP_ICON);
-	SPBar->AddVirtualPoint_X (26);
-	SPBar->AddPoint_Y (-42, true);
-	SPBar->AddStatString (STAT_PICKUP_STRING);
-	SPBar->AddPoint_Y (-50, true);
-	SPBar->AddEndIf ();
+	SPBar.AddIf (STAT_PICKUP_ICON);
+	SPBar.AddVirtualPoint_X (0);
+	SPBar.AddPicStat (STAT_PICKUP_ICON);
+	SPBar.AddVirtualPoint_X (26);
+	SPBar.AddPoint_Y (-42, true);
+	SPBar.AddStatString (STAT_PICKUP_STRING);
+	SPBar.AddPoint_Y (-50, true);
+	SPBar.AddEndIf ();
 
-	SPBar->AddIf (STAT_TIMER_ICON);
-	SPBar->AddVirtualPoint_X (246);
-	SPBar->AddNumStat (STAT_TIMER, 2);
-	SPBar->AddVirtualPoint_X (296);
-	SPBar->AddPicStat (STAT_TIMER_ICON);
-	SPBar->AddEndIf ();
+	SPBar.AddIf (STAT_TIMER_ICON);
+	SPBar.AddVirtualPoint_X (246);
+	SPBar.AddNumStat (STAT_TIMER, 2);
+	SPBar.AddVirtualPoint_X (296);
+	SPBar.AddPicStat (STAT_TIMER_ICON);
+	SPBar.AddEndIf ();
 
-	SPBar->AddIf (STAT_HELPICON);
-	SPBar->AddVirtualPoint_X (148);
-	SPBar->AddPicStat (STAT_HELPICON);
-	SPBar->AddEndIf ();
+	SPBar.AddIf (STAT_HELPICON);
+	SPBar.AddVirtualPoint_X (148);
+	SPBar.AddPicStat (STAT_HELPICON);
+	SPBar.AddEndIf ();
 
-	SPBar->Send();
+	SPBar.Send();
 }
 
 
@@ -290,6 +302,14 @@ DeathmatchScoreboardMessage
 */
 void DeathmatchScoreboardMessage (edict_t *ent, edict_t *killer, bool reliable = true)
 {
+//ZOID
+	if (game.mode & GAME_CTF)
+	{
+		CTFScoreboardMessage (ent, killer, reliable);
+		return;
+	}
+//ZOID
+
 	CStatusBar Scoreboard;
 	int		sorted[MAX_CS_CLIENTS];
 	int		sortedscores[MAX_CS_CLIENTS];

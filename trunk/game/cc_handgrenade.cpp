@@ -93,10 +93,7 @@ void CHandGrenade::FireGrenade (edict_t *ent, bool inHand)
 
 	float radius = damage+40;
 	if (isQuad)
-	{
 		damage *= 4;
-		PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/damage3.wav")); // Make sure people know. REOOOOOOOO
-	}
 
 	ent->client->grenade_thrown = true;
 
@@ -108,12 +105,14 @@ void CHandGrenade::FireGrenade (edict_t *ent, bool inHand)
 	int speed = GRENADE_MINSPEED + (GRENADE_TIMER - timer) * ((GRENADE_MAXSPEED - GRENADE_MINSPEED) / GRENADE_TIMER);
 	fire_grenade2 (ent, start, forward, damage, speed, timer, radius, inHand);
 
-	ent->client->grenade_time = level.time + 1.0;
+	ent->client->grenade_time = level.time + (CTFApplyHaste(ent) ? 0.5f : 1.0f);
 	if (!dmFlags.dfInfiniteAmmo)
 		DepleteAmmo(ent, 1);
 
 	if(ent->health <= 0 || ent->deadflag || ent->state.modelIndex != 255) // VWep animations screw up corpses
 		return;
+
+	AttackSound (ent);
 
 	if (ent->client->playerState.pMove.pmFlags & PMF_DUCKED)
 	{

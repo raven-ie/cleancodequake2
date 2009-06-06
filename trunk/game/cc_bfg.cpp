@@ -93,7 +93,7 @@ void CBFG::FireBFG (edict_t *ent)
 {
 	vec3_t	offset, start;
 	vec3_t	forward, right;
-	int		damage = (game.mode == GAME_DEATHMATCH) ? 200 : 500;
+	int		damage = (game.mode & GAME_DEATHMATCH) ? 200 : 500;
 	float	damage_radius = 1000;
 
 	// cells can go down during windup (from power armor hits), so
@@ -107,10 +107,7 @@ void CBFG::FireBFG (edict_t *ent)
 	FireAnimation (ent);
 
 	if (isQuad)
-	{
 		damage *= 4;
-		PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
-	}
 
 	Angles_Vectors (ent->client->v_angle, forward, right, NULL);
 
@@ -124,6 +121,7 @@ void CBFG::FireBFG (edict_t *ent)
 	Vec3Set (offset, 8, 8, ent->viewheight-8);
 	P_ProjectSource (ent->client, ent->state.origin, offset, forward, right, start);
 	fire_bfg (ent, start, forward, damage, 400, damage_radius);
+	AttackSound (ent);
 
 	ent->client->playerState.gunFrame++;
 

@@ -134,6 +134,12 @@ spawn_t	spawns[] = {
 	{"info_player_deathmatch", SP_info_player_deathmatch},
 	{"info_player_coop", SP_info_player_coop},
 	{"info_player_intermission", SP_info_player_intermission},
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	{"info_player_team1", SP_info_player_team1},
+	{"info_player_team2", SP_info_player_team2},
+//ZOID
+#endif
 
 	{"func_plat", SP_func_plat},
 	{"func_button", SP_func_button},
@@ -164,6 +170,12 @@ spawn_t	spawns[] = {
 	{"trigger_gravity", SP_trigger_gravity},
 	{"trigger_teleport", SP_trigger_teleport},
 	{"trigger_monsterjump", SP_trigger_monsterjump},
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	{"trigger_teleport", SP_trigger_teleport},
+	{"info_teleport_destination", SP_info_teleport_destination},
+//ZOID
+#endif
 
 	{"target_temp_entity", SP_target_temp_entity},
 	{"target_speaker", SP_target_speaker},
@@ -218,6 +230,12 @@ spawn_t	spawns[] = {
 	{"misc_easterchick", SP_misc_easterchick},
 	{"misc_easterchick2", SP_misc_easterchick2},
 	{"misc_model", SP_misc_model},
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	{"misc_ctf_banner", SP_misc_ctf_banner},
+	{"misc_ctf_small_banner", SP_misc_ctf_small_banner},
+//ZOID
+#endif
 
 /*	{"monster_berserk", SP_monster_berserk},
 	{"monster_gladiator", SP_monster_gladiator},
@@ -568,7 +586,7 @@ __try
 		// Remove things (except the world) from different skill levels or deathmatch
 		if (ent != g_edicts)
 		{
-			if (game.mode == GAME_DEATHMATCH)
+			if (game.mode & GAME_DEATHMATCH)
 			{
 				if ( ent->spawnflags & SPAWNFLAG_NOT_DEATHMATCH )
 				{
@@ -616,6 +634,12 @@ __try
 #ifdef MONSTERS_USE_PATHFINDING
 	LoadNodes();
 	LoadPathTable ();
+#endif
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	CTFSpawn();
+//ZOID
 #endif
 
 	DebugPrintf ("Finished server initialization in %d ms\n", Sys_Milliseconds() - startTime);
@@ -688,8 +712,28 @@ void SP_worldspawn (edict_t *ent)
 	gi.configstring (CS_MAXCLIENTS, maxclients->String() );
 
 	// status bar program
-	if (game.mode == GAME_DEATHMATCH)
+	if (game.mode & GAME_DEATHMATCH)
+#ifdef CLEANCTF_ENABLED
+	{
+//ZOID
+		if (game.mode & GAME_CTF)
+		{
+			CreateCTFStatusbar();
+
+			//precaches
+			ImageIndex("i_ctf1");
+			ImageIndex("i_ctf2");
+			ImageIndex("i_ctf1d");
+			ImageIndex("i_ctf2d");
+			ImageIndex("i_ctf1t");
+			ImageIndex("i_ctf2t");
+			ImageIndex("i_ctfj");
+		}
+		else
+//ZOID
 		CreateDMStatusbar();
+	}
+#endif
 	else
 		CreateSPStatusbar();
 
