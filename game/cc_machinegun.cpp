@@ -113,7 +113,6 @@ void CMachinegun::Fire (edict_t *ent)
 	{
 		damage *= 4;
 		kick *= 4;
-		PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
 	}
 
 	for (i=1 ; i<3 ; i++)
@@ -125,7 +124,7 @@ void CMachinegun::Fire (edict_t *ent)
 	ent->client->kick_angles[0] = ent->client->machinegun_shots * -1.5;
 
 	// raise the gun as it is firing
-	if (game.mode != GAME_DEATHMATCH)
+	if (!(game.mode & GAME_DEATHMATCH))
 	{
 		ent->client->machinegun_shots++;
 		if (ent->client->machinegun_shots > 9)
@@ -140,6 +139,7 @@ void CMachinegun::Fire (edict_t *ent)
 	fire_bullet (ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN);
 
 	Muzzle (ent, MZ_MACHINEGUN);
+	AttackSound (ent);
 
 	PlayerNoise(ent, start, PNOISE_WEAPON);
 

@@ -85,7 +85,7 @@ void CChaingun::Fire (edict_t *ent)
 	vec3_t		forward, right, up;
 	float		r, u;
 	vec3_t		offset;
-	int			damage = (game.mode == GAME_DEATHMATCH) ? 6 : 8;
+	int			damage = (game.mode & GAME_DEATHMATCH) ? 6 : 8;
 	int			kick = 2;
 
 	if (ent->client->playerState.gunFrame == 5)
@@ -145,7 +145,6 @@ void CChaingun::Fire (edict_t *ent)
 	{
 		damage *= 4;
 		kick *= 4;
-		PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
 	}
 
 	for (i=0 ; i<3 ; i++)
@@ -168,6 +167,7 @@ void CChaingun::Fire (edict_t *ent)
 
 	// send muzzle flash
 	Muzzle (ent, MZ_CHAINGUN1 + shots - 1);
+	AttackSound (ent);
 
 	PlayerNoise(ent, start, PNOISE_WEAPON);
 

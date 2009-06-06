@@ -790,7 +790,7 @@ void bfg_think (edict_t *self)
 	int		dmg;
 	CTrace	tr;
 
-	if (game.mode == GAME_DEATHMATCH)
+	if (game.mode & GAME_DEATHMATCH)
 		dmg = 5;
 	else
 		dmg = 10;
@@ -809,6 +809,16 @@ void bfg_think (edict_t *self)
 
 		if (!(ent->svFlags & SVF_MONSTER) && (!ent->client) && (strcmp(ent->classname, "misc_explobox") != 0))
 			continue;
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+		//don't target players in CTF
+		if ((game.mode & GAME_CTF) && ent->client &&
+			self->owner->client &&
+			ent->client->resp.ctf_team == self->owner->client->resp.ctf_team)
+			continue;
+//ZOID
+#endif
 
 		Vec3MA (ent->absMin, 0.5, ent->size, point);
 

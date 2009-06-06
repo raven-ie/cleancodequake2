@@ -386,7 +386,7 @@ void turret_driver_link (edict_t *self)
 
 void SP_turret_driver (edict_t *self)
 {
-	if (game.mode == GAME_DEATHMATCH)
+	if (game.mode & GAME_DEATHMATCH)
 	{
 		G_FreeEdict (self);
 		return;

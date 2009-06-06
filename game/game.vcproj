@@ -1294,6 +1294,50 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="CTF Addon"
+				>
+				<File
+					RelativePath=".\cc_ctf.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_ctf.h"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_ctfadmin.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_ctfadmin.h"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_ctfitems.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_ctfitems.h"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_ctfmenu.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_ctfmenu.h"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_grapple.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_grapple.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 	</Files>
 	<Globals>

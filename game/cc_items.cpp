@@ -131,7 +131,6 @@ void CBaseItem::SetRespawn (edict_t *ent, float delay)
 	gi.linkentity (ent);
 }
 
-void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
 static void DropTempTouch (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf)
 {
 	if (other == ent->owner)
@@ -143,7 +142,7 @@ static void DropTempTouch (edict_t *ent, edict_t *other, plane_t *plane, cmBspSu
 static void DropMakeTouchable (edict_t *ent)
 {
 	ent->touch = TouchItem;
-	if (game.mode == GAME_DEATHMATCH)
+	if (game.mode & GAME_DEATHMATCH)
 	{
 		ent->nextthink = level.time + 29;
 		ent->think = G_FreeEdict;
@@ -252,7 +251,11 @@ void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *su
 		other->client->pers.Inventory.SelectedItem = other->client->playerState.stats[STAT_SELECTED_ITEM] = ent->item->GetIndex();
 
 	if (ent->item->PickupSound)
-		PlaySoundFrom(other, CHAN_ITEM, ent->item->PickupSoundIndex);
+		PlaySoundFrom(other, CHAN_ITEM, ent->item->PickupSoundIndex
+#ifdef CLEANCTF_ENABLED
+		, 1, (ent->item == RedFlag || ent->item == BlueFlag) ? ATTN_NONE : ATTN_NORM
+#endif
+		);
 
 	if ((game.mode != GAME_COOPERATIVE && (ent->item->Flags & ITEMFLAG_STAY_COOP)) || (ent->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)))
 	{
@@ -273,13 +276,28 @@ void DoRespawn (edict_t *ent)
 
 		master = ent->teammaster;
 
-		for (count = 0, ent = master; ent; ent = ent->chain, count++)
-			;
+#ifdef CLEANCTF_ENABLED
+//ZOID
+//in ctf, when we are weapons stay, only the master of a team of weapons
+//is spawned
+		if ((game.mode & GAME_CTF) &&
+			dmFlags.dfWeaponsStay &&
+			master->item && (master->item->Flags & ITEMFLAG_WEAPON))
+			ent = master;
+		else
+		{
+//ZOID
+#endif
+			for (count = 0, ent = master; ent; ent = ent->chain, count++)
+				;
 
-		choice = rand() % count;
+			choice = rand() % count;
 
-		for (count = 0, ent = master; count < choice; ent = ent->chain, count++)
-			;
+			for (count = 0, ent = master; count < choice; ent = ent->chain, count++)
+				;
+#ifdef CLEANCTF_ENABLED
+		}
+#endif
 	}
 
 	ent->svFlags &= ~SVF_NOCLIENT;
@@ -387,7 +405,7 @@ void SpawnItem (edict_t *ent, CBaseItem *item)
 	}
 
 	// some items will be prevented in deathmatch
-	if (game.mode == GAME_DEATHMATCH)
+	if (game.mode & GAME_DEATHMATCH)
 	{
 		if (dmFlags.dfNoArmor)
 		{
@@ -439,11 +457,34 @@ void SpawnItem (edict_t *ent, CBaseItem *item)
 		item->drop = NULL;
 	}*/
 
+#ifdef CLEANCTF_ENABLED
+//ZOID
+//Don't spawn the flags unless enabled
+	if (!(game.mode & GAME_CTF) &&
+		(strcmp(ent->classname, "item_flag_team1") == 0 ||
+		strcmp(ent->classname, "item_flag_team2") == 0))
+	{
+		G_FreeEdict(ent);
+		return;
+	}
+//ZOID
+#endif
+
 	ent->item = item;
 	ent->nextthink = level.time + 2 * FRAMETIME;    // items start after other solids
 	ent->think = DropItemToFloor;
 	ent->state.effects = item->EffectFlags;
 	ent->state.renderFx = RF_GLOW;
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+//flags are server animated and have special handling
+	if (strcmp(ent->classname, "item_flag_team1") == 0 ||
+		strcmp(ent->classname, "item_flag_team2") == 0) {
+		ent->think = CTFFlagSetup;
+	}
+//ZOID
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -73,6 +73,7 @@ public:
 	// Muzzle flash
 	virtual void	Muzzle (edict_t *ent, int muzzleNum);
 	virtual inline void	FireAnimation (edict_t *ent);
+	void		AttackSound (edict_t *ent); // Sound for quad and CTF techs
 
 	// General animating function.
 	// Doesn't need to be changed.
@@ -112,3 +113,6 @@ public:
 #include "cc_hyperblaster.h"
 #include "cc_railgun.h"
 #include "cc_bfg.h"
+#ifdef CLEANCTF_ENABLED
+#include "cc_grapple.h"
+#endif

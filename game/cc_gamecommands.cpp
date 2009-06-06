@@ -34,8 +34,6 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_local.h"
 #include "m_player.h"
 
-void OpenTestMenu (edict_t *ent);
-
 char *ClientTeam (edict_t *ent)
 {
 	char		*p;
@@ -124,8 +122,14 @@ Cmd_Kill_f
 */
 void Cmd_Kill_f (edict_t *ent)
 {
+//ZOID
+	if (ent->solid == SOLID_NOT)
+		return;
+//ZOID
+
 	if((level.time - ent->client->respawn_time) < 5)
 		return;
+
 	ent->flags &= ~FL_GODMODE;
 	ent->health = 0;
 	meansOfDeath = MOD_SUICIDE;
@@ -145,6 +149,8 @@ void Cmd_PutAway_f (edict_t *ent)
 
 	if (ent->client->resp.MenuState.InMenu)
 		ent->client->resp.MenuState.CloseMenu ();
+
+	ent->client->update_chase = true;
 }
 
 
@@ -266,13 +272,42 @@ Cmd_Say_f
 */
 #define MAX_TALK_STRING 100
 
+bool CheckFlood(edict_t *ent)
+{
+	int		i;
+	gclient_t *cl;
+
+	if (flood_msgs->Integer()) {
+		cl = ent->client;
+
+        if (level.time < cl->flood_locktill) {
+			ClientPrintf(ent, PRINT_HIGH, "You can't talk for %d more seconds\n",
+				(int)(cl->flood_locktill - level.time));
+            return true;
+        }
+        i = cl->flood_whenhead - flood_msgs->Integer() + 1;
+        if (i < 0)
+            i = (sizeof(cl->flood_when)/sizeof(cl->flood_when[0])) + i;
+		if (cl->flood_when[i] && 
+			level.time - cl->flood_when[i] < flood_persecond->Integer()) {
+			cl->flood_locktill = level.time + flood_waitdelay->Float();
+			ClientPrintf(ent, PRINT_CHAT, "Flood protection:  You can't talk for %d seconds.\n",
+				flood_waitdelay->Integer());
+            return true;
+        }
+		cl->flood_whenhead = (cl->flood_whenhead + 1) %
+			(sizeof(cl->flood_when)/sizeof(cl->flood_when[0]));
+		cl->flood_when[cl->flood_whenhead] = level.time;
+	}
+	return false;
+}
+
 void Cmd_Say_f (edict_t *ent, bool team, bool arg0)
 {
-	int		i, j;
+	int		j;
 	edict_t	*other;
 	char	*p;
 	char	text[MAX_TALK_STRING];
-	gclient_t *cl;
 
 	if (ArgCount () < 2 && !arg0)
 		return;
@@ -315,31 +350,8 @@ void Cmd_Say_f (edict_t *ent, bool team, bool arg0)
 
 	Q_strcatz(text, "\n", sizeof(text));
 
-	if (flood_msgs->Integer())
-	{
-		cl = ent->client;
-
-        if (level.time < cl->flood_locktill)
-		{
-			ClientPrintf(ent, PRINT_HIGH, "You can't talk for %d more seconds\n",
-				(int)(cl->flood_locktill - level.time));
-            return;
-        }
-        i = cl->flood_whenhead - flood_msgs->Integer() + 1;
-        if (i < 0)
-            i = (sizeof(cl->flood_when)/sizeof(cl->flood_when[0])) + i;
-		if (cl->flood_when[i] && 
-			level.time - cl->flood_when[i] < flood_persecond->Float())
-		{
-			cl->flood_locktill = level.time + flood_waitdelay->Float();
-			ClientPrintf(ent, PRINT_CHAT, "Flood protection:  You can't talk for %d seconds.\n",
-				flood_waitdelay->Integer());
-            return;
-        }
-		cl->flood_whenhead = (cl->flood_whenhead + 1) %
-			(sizeof(cl->flood_when)/sizeof(cl->flood_when[0]));
-		cl->flood_when[cl->flood_whenhead] = level.time;
-	}
+	if (CheckFlood(ent))
+		return;
 
 	if (dedicated->Integer())
 		ClientPrintf(NULL, PRINT_CHAT, "%s", text);
@@ -435,6 +447,7 @@ void Cmd_Test_f (edict_t *ent)
 	PlaySoundFrom (ent, CHAN_AUTO, 70, 1, ATTN_NONE);
 }
 
+void GCTFSay_Team (edict_t *ent);
 void Cmd_Register ()
 {
 	// These commands are generic, and can be executed any time
@@ -444,11 +457,16 @@ void Cmd_Register ()
 	Cmd_AddCommand ("score",				Cmd_Score_f,			CMD_SPECTATOR);
 	Cmd_AddCommand ("help",					Cmd_Help_f,				CMD_SPECTATOR);
 	Cmd_AddCommand ("putaway",				Cmd_PutAway_f,			CMD_SPECTATOR);
-	Cmd_AddCommand ("playerlist",			Cmd_PlayerList_f,		CMD_SPECTATOR);
+	Cmd_AddCommand ("playerlist",			
+#ifdef CLEANCTF_ENABLED
+		CTFPlayerList,		
+#else
+		Cmd_PlayerList_f,		
+#endif
+		CMD_SPECTATOR);
 
 	// These commands are also generic, but can only be executed
 	// by in-game players during the game
-	Cmd_AddCommand ("say_team",				GCmd_SayTeam_f);
 	Cmd_AddCommand ("kill",					Cmd_Kill_f);
 	Cmd_AddCommand ("wave",					Cmd_Wave_f);
 
@@ -477,9 +495,24 @@ void Cmd_Register ()
 	Cmd_AddCommand ("spawn",				Cmd_Give,				CMD_CHEAT);
 	
 	// CleanMenu commands
-	Cmd_AddCommand ("testmenu",				OpenTestMenu);
 	Cmd_AddCommand ("menu_left",			Cmd_MenuLeft_t,			CMD_SPECTATOR);
 	Cmd_AddCommand ("menu_right",			Cmd_MenuRight_t,		CMD_SPECTATOR);
+
+#ifdef CLEANCTF_ENABLED
+	Cmd_AddCommand ("say_team",				GCTFSay_Team,			CMD_SPECTATOR);
+	Cmd_AddCommand ("team",					CTFTeam_f);
+	Cmd_AddCommand ("id",					CTFID_f);
+	Cmd_AddCommand ("yes",					CTFVoteYes);
+	Cmd_AddCommand ("no",					CTFVoteNo);
+	Cmd_AddCommand ("ready",				CTFReady);
+	Cmd_AddCommand ("notready",				CTFNotReady);
+	Cmd_AddCommand ("ghost",				CTFGhost);
+	Cmd_AddCommand ("admin",				CTFAdmin);
+	Cmd_AddCommand ("stats",				CTFStats);
+	Cmd_AddCommand ("warp",					CTFWarp);
+	Cmd_AddCommand ("boot",					CTFBoot);
+	Cmd_AddCommand ("observer",				CTFObserver);
+#endif
 }
 
 /*

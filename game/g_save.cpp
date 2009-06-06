@@ -130,6 +130,9 @@ void SetupGamemode ()
 {
 	int dmInt = deathmatch->Integer(),
 		coopInt = coop->Integer();
+#ifdef CLEANCTF_ENABLED
+	int ctfInt = ctf->Integer();
+#endif
 
 	// Did we request deathmatch?
 	if (dmInt)
@@ -162,7 +165,6 @@ void SetupGamemode ()
 			}
 		}
 		game.mode = GAME_DEATHMATCH;
-		return;
 	}
 	// Did we request cooperative?
 	else if (coopInt)
@@ -171,7 +173,17 @@ void SetupGamemode ()
 		game.mode = GAME_COOPERATIVE;
 		return;
 	}
-	game.mode = GAME_SINGLEPLAYER;
+	else
+	{
+		game.mode = GAME_SINGLEPLAYER;
+		return;
+	}
+
+	// If we reached here, we wanted deathmatch
+#ifdef CLEANCTF_ENABLED
+	if (ctfInt)
+		game.mode |= GAME_CTF;
+#endif
 }
 
 /*
@@ -245,7 +257,12 @@ void G_Register ()
 	deathmatch = new CCvar ("deathmatch", "0", CVAR_SERVERINFO|CVAR_LATCH_SERVER);
 	coop = new CCvar ("coop", "0", CVAR_LATCH_SERVER);
 
-	SetupGamemode ();
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	capturelimit = new CCvar ("capturelimit", "0", CVAR_SERVERINFO);
+	instantweap = new CCvar ("instantweap", "0", CVAR_SERVERINFO);
+//ZOID
+#endif
 }
 
 void InitGame (void)
@@ -278,11 +295,19 @@ void InitGame (void)
 
 	// Vars
 	game.maxspectators = maxspectators->Integer();
-	game.cheats = sv_cheats->Integer();
+	game.cheats = (sv_cheats->Integer()) ? true : false;
 
 	DebugPrintf ("Running CleanCode Quake2, built on %s (%s %s)\n", __DATE__, BUILDSTRING, CPUSTRING);
 
 	Bans.LoadFromFile ();
+
+#ifdef CLEANCTF_ENABLED
+	// Setup CTF if we have it
+	CTFInit();
+#endif
+
+	// Setup the gamemode
+	SetupGamemode ();
 }
 
 //=========================================================

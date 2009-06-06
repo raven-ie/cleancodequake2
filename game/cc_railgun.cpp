@@ -70,7 +70,7 @@ void CRailgun::Fire (edict_t *ent)
 	int			damage;
 	int			kick;
 
-	if (game.mode == GAME_DEATHMATCH)
+	if (game.mode & GAME_DEATHMATCH)
 	{	// normal damage is too extreme in dm
 		damage = 100;
 		kick = 200;
@@ -85,7 +85,6 @@ void CRailgun::Fire (edict_t *ent)
 	{
 		damage *= 4;
 		kick *= 4;
-		PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
 	}
 
 	Angles_Vectors (ent->client->v_angle, forward, right, NULL);
@@ -100,6 +99,7 @@ void CRailgun::Fire (edict_t *ent)
 	// send muzzle flash
 	Muzzle (ent, MZ_RAILGUN);
 	FireAnimation (ent);
+	AttackSound (ent);
 
 	ent->client->playerState.gunFrame++;
 	PlayerNoise(ent, start, PNOISE_WEAPON);

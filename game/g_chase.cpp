@@ -106,6 +106,22 @@ void UpdateChaseCam(edict_t *ent)
 	ent->viewheight = 0;
 	ent->client->playerState.pMove.pmFlags |= PMF_NO_PREDICTION;
 	gi.linkentity(ent);
+
+	if ((!ent->client->showscores && !ent->client->resp.MenuState.InMenu &&
+		!ent->client->showinventory && !ent->client->showhelp &&
+		!(level.framenum & 31)) || ent->client->update_chase)
+	{
+		CStatusBar Chasing;
+		char temp[128];
+		Q_snprintfz (temp, sizeof(temp), "Chasing %s", targ->client->pers.netname);
+
+		Chasing.AddVirtualPoint_X (0);
+		Chasing.AddVirtualPoint_Y (-68);
+		Chasing.AddString (temp, true, false);
+		Chasing.SendMsg (ent, false);
+
+		ent->client->update_chase = false;
+	}
 }
 
 void ChaseNext(edict_t *ent)
@@ -174,4 +190,5 @@ void GetChaseTarget(edict_t *ent)
 	}
 	CenterPrintf(ent, "No other players to chase.");
 }
+
 

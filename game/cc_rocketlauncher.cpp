@@ -80,7 +80,6 @@ void CRocketLauncher::Fire (edict_t *ent)
 	{
 		damage *= 4;
 		radius_damage *= 4;
-		PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
 	}
 
 	Angles_Vectors (ent->client->v_angle, forward, right, NULL);
@@ -94,6 +93,7 @@ void CRocketLauncher::Fire (edict_t *ent)
 
 	// send muzzle flash
 	Muzzle (ent, MZ_ROCKET);
+	AttackSound (ent);
 
 	PlayerNoise(ent, start, PNOISE_WEAPON);
 	FireAnimation (ent);

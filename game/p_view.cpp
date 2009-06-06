@@ -520,10 +520,18 @@ static inline void P_FallingDamage (edict_t *ent)
 	if (ent->movetype == MOVETYPE_NOCLIP)
 		return;
 
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	// never take damage if just release grapple or on grapple
+	if (level.time - ent->client->ctf_grapplereleasetime <= FRAMETIME * 2 ||
+		(ent->client->ctf_grapple && 
+		ent->client->ctf_grapplestate > CTF_GRAPPLE_STATE_FLY))
+		return;
+//ZOID
+#endif
+
 	if ((ent->client->oldvelocity[2] < 0) && (ent->velocity[2] > ent->client->oldvelocity[2]) && (!ent->groundentity))
-	{
 		delta = ent->client->oldvelocity[2];
-	}
 	else
 	{
 		if (!ent->groundentity)
@@ -762,6 +770,12 @@ static inline void G_SetClientEffects (edict_t *ent)
 		}
 	}
 
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	CTFEffects(ent);
+//ZOID
+#endif
+
 	if (ent->client->quad_framenum > level.framenum)
 	{
 		remaining = ent->client->quad_framenum - level.framenum;
@@ -898,10 +912,25 @@ newanim:
 
 	if (!ent->groundentity && !duck)
 	{
-		client->anim_priority = ANIM_JUMP;
-		if (ent->state.frame != FRAME_jump2)
-			ent->state.frame = FRAME_jump1;
-		client->anim_end = FRAME_jump2;
+#ifdef CLEANCTF_ENABLED
+//ZOID: if on grapple, don't go into jump frame, go into standing
+//frame
+		if (client->ctf_grapple)
+		{
+			ent->state.frame = FRAME_stand01;
+			client->anim_end = FRAME_stand40;
+		}
+		else
+		{
+//ZOID
+#endif
+			client->anim_priority = ANIM_JUMP;
+			if (ent->state.frame != FRAME_jump2)
+				ent->state.frame = FRAME_jump1;
+			client->anim_end = FRAME_jump2;
+#ifdef CLEANCTF_ENABLED
+		}
+#endif
 	}
 	else if (run)
 	{	// running
@@ -1038,11 +1067,34 @@ void ClientEndServerFrame (edict_t *ent)
 	SV_CalcBlend (ent);
 
 	// chase cam stuff
+#ifndef CLEANCTF_ENABLED
 	if (ent->client->resp.spectator)
 		G_SetSpectatorStats(ent);
 	else
+#else
+//ZOID
+	if (!ent->client->chase_target)
+//ZOID
+#endif
 		G_SetStats (ent);
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+//update chasecam follower stats
+	for (i = 1; i <= game.maxclients; i++) {
+		edict_t *e = g_edicts + i;
+		if (!e->inUse || e->client->chase_target != ent)
+			continue;
+		memcpy(e->client->playerState.stats, 
+			ent->client->playerState.stats, 
+			sizeof(ent->client->playerState.stats));
+		e->client->playerState.stats[STAT_LAYOUTS] = 1;
+		break;
+	}
+//ZOID
+#else
 	G_CheckChaseStats(ent);
+#endif
 
 	G_SetClientEvent (ent, xyspeed);
 

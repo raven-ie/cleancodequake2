@@ -45,6 +45,9 @@ enum// EItemFlags
 	ITEMFLAG_GRABBABLE			= 128,
 	ITEMFLAG_USABLE				= 256,
 	ITEMFLAG_DROPPABLE			= 512,
+#ifdef CLEANCTF_ENABLED
+	ITEMFLAG_TECH				= 1024,
+#endif
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -152,6 +155,7 @@ public:
 };
 
 void SpawnItem (edict_t *ent, CBaseItem *item);
+void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
 
 #include "cc_weapons.h"
 #include "cc_health.h"
@@ -159,3 +163,6 @@ void SpawnItem (edict_t *ent, CBaseItem *item);
 #include "cc_keys.h"
 #include "cc_powerups.h"
 #include "cc_itemlist.h"
+#ifdef CLEANCTF_ENABLED
+#include "cc_ctfitems.h"
+#endif

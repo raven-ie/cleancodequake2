@@ -84,16 +84,16 @@ void CShotgun::Fire (edict_t *ent)
 	{
 		damage *= 4;
 		kick *= 4;
-		PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
 	}
 
-	if (game.mode == GAME_DEATHMATCH)
+	if (game.mode & GAME_DEATHMATCH)
 		fire_shotgun (ent, start, forward, damage, kick, 500, 500, DEFAULT_DEATHMATCH_SHOTGUN_COUNT, MOD_SHOTGUN);
 	else
 		fire_shotgun (ent, start, forward, damage, kick, 500, 500, DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);
 
 	// send muzzle flash
 	Muzzle (ent, MZ_SHOTGUN);
+	AttackSound (ent);
 
 	ent->client->playerState.gunFrame++;
 	PlayerNoise(ent, start, PNOISE_WEAPON);

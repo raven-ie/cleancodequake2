@@ -283,6 +283,32 @@ void ThrowDebris (edict_t *self, char *modelname, float speed, vec3_t origin)
 
 void BecomeExplosion1 (edict_t *self)
 {
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	//flags are important
+	if (strcmp(self->classname, "item_flag_team1") == 0)
+	{
+		CTFResetFlag(CTF_TEAM1); // this will free self!
+		BroadcastPrintf(PRINT_HIGH, "The %s flag has returned!\n",
+			CTFTeamName(CTF_TEAM1));
+		return;
+	}
+	if (strcmp(self->classname, "item_flag_team2") == 0)
+	{
+		CTFResetFlag(CTF_TEAM2); // this will free self!
+		BroadcastPrintf(PRINT_HIGH, "The %s flag has returned!\n",
+			CTFTeamName(CTF_TEAM2));
+		return;
+	}
+	// techs are important too
+	if (self->item && (self->item->Flags & ITEMFLAG_TECH))
+	{
+		CTFRespawnTech(self); // this frees self!
+		return;
+	}
+//ZOID
+#endif
+
 	CTempEnt_Explosions::RocketExplosion (self->state.origin, self);
 	G_FreeEdict (self);
 }
@@ -447,7 +473,7 @@ void point_combat_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSur
 
 void SP_point_combat (edict_t *self)
 {
-	if (game.mode == GAME_DEATHMATCH)
+	if (game.mode & GAME_DEATHMATCH)
 	{
 		G_FreeEdict (self);
 		return;
@@ -533,7 +559,7 @@ static void light_use (edict_t *self, edict_t *other, edict_t *activator)
 void SP_light (edict_t *self)
 {
 	// no targeted lights in deathmatch, because they cause global messages
-	if (!self->targetname || game.mode == GAME_DEATHMATCH)
+	if (!self->targetname || (game.mode & GAME_DEATHMATCH))
 	{
 		G_FreeEdict (self);
 		return;
@@ -797,7 +823,7 @@ void func_explosive_spawn (edict_t *self, edict_t *other, edict_t *activator)
 
 void SP_func_explosive (edict_t *self)
 {
-	if (game.mode == GAME_DEATHMATCH)
+	if (game.mode & GAME_DEATHMATCH)
 	{	// auto-remove for deathmatch
 		G_FreeEdict (self);
 		return;
@@ -993,7 +1019,7 @@ void barrel_delay (edict_t *self, edict_t *inflictor, edict_t *attacker, int dam
 
 void SP_misc_explobox (edict_t *self)
 {
-	if (game.mode == GAME_DEATHMATCH)
+	if (game.mode & GAME_DEATHMATCH)
 	{	// auto-remove for deathmatch
 		G_FreeEdict (self);
 		return;
@@ -1239,7 +1265,7 @@ void misc_deadsoldier_die (edict_t *self, edict_t *inflictor, edict_t *attacker,
 
 void SP_misc_deadsoldier (edict_t *ent)
 {
-	if (game.mode == GAME_DEATHMATCH)
+	if (game.mode & GAME_DEATHMATCH)
 	{	// auto-remove for deathmatch
 		G_FreeEdict (ent);
 		return;
@@ -1811,6 +1837,13 @@ void teleporter_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurfa
 		DebugPrintf ("Couldn't find destination\n");
 		return;
 	}
+
+#ifdef CLEANCTF_ENABLED
+	//ZOID
+	if (other->client)
+		CGrapple::PlayerResetGrapple(other);
+	//ZOID
+#endif
 
 	// unlink to make sure it can't possibly interfere with KillBox
 	gi.unlinkentity (other);

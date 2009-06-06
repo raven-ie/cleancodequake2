@@ -583,24 +583,6 @@ void SP_trigger_gravity (edict_t *self)
 /*
 ==============================================================================
 
-trigger_teleport
-
-==============================================================================
-*/
-
-void teleporter_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
-void SP_trigger_teleport (edict_t *self)
-{
-	InitTrigger (self);
-
-	self->touch = teleporter_touch;
-
-	gi.linkentity (self);
-}
-
-/*
-==============================================================================
-
 trigger_monsterjump
 
 ==============================================================================

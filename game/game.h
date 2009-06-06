@@ -27,6 +27,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #define SVF_NOCLIENT			0x00000001	// don't send entity to clients, even if it has effects
 #define SVF_DEADMONSTER			0x00000002	// treat as CONTENTS_DEADMONSTER for collision
 #define SVF_MONSTER				0x00000004	// treat as CONTENTS_MONSTER for collision
+//ZOID
+#define SVF_PROJECTILE			0x00000008  // entity is simple projectile, used for network optimization
+// if an entity is projectile, the model index/x/y/z/pitch/yaw are sent, encoded into
+// seven (or eight) bytes.  This is to speed up projectiles.  Currently, only the
+// hyperblaster makes use of this.  use for items that are moving with a constant
+// velocity that don't change direction or model
+//ZOID
 
 // edict->solid values
 typedef enum {

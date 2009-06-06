@@ -75,3 +75,6 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 // Define this to use the CleanCode exception handler
 #define CC_USE_EXCEPTION_HANDLER
+
+// Define this to allow GAME_CTF
+#define CLEANCTF_ENABLED

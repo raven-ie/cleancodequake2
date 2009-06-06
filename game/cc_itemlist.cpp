@@ -149,6 +149,8 @@ void InitItemlist ()
 	AddArmorToList();
 	AddPowerupsToList();
 	AddKeysToList();
+	AddFlagsToList();
+	AddTechsToList();
 }
 
 void SetItemNames ()

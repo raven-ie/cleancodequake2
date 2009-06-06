@@ -57,6 +57,12 @@ public:
 	bool				dfNoNukes;
 	bool				dfNoSpheres;
 
+#ifdef CLEANCTF_ENABLED
+	bool				dfCtfNoTech;
+	bool				dfCtfForceJoin;
+	bool				dfCtfArmorProtect;
+#endif
+
 	dmFlagsConfig();
 	void UpdateFlags (int dmFlags);
 };

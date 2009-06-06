@@ -289,7 +289,7 @@ void PlayerNoise(edict_t *who, vec3_t where, int type)
 		}
 	}
 
-	if (game.mode == GAME_DEATHMATCH)
+	if (game.mode & GAME_DEATHMATCH)
 		return;
 
 	//if (who->flags & FL_NOTARGET)
@@ -356,6 +356,11 @@ Called by ClientBeginServerFrame and ClientThink
 */
 void CWeapon::Think (edict_t *ent)
 {
+#ifdef CLEANCTF_ENABLED
+	if ((game.mode & GAME_CTF) && !ent->client->resp.ctf_team)
+		return;
+#endif
+
 	// if just died, put the weapon away
 	if (ent->health < 1)
 	{
@@ -368,6 +373,24 @@ void CWeapon::Think (edict_t *ent)
 	isQuad = (ent->client->quad_framenum > level.framenum);
 	isSilenced = (ent->client->silencer_shots) ? true : false;
 	WeaponGeneric (ent);
+	if (this != &WeaponGrapple && CTFApplyHaste(ent))
+		WeaponGeneric(ent);
+}
+
+void CWeapon::AttackSound(edict_t *ent)
+{
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	if (!CTFApplyStrengthSound(ent))
+//ZOID
+#endif
+	if (isQuad)
+		PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	CTFApplyHasteSound(ent);
+//ZOID
+#endif
 }
 
 // YUCK
