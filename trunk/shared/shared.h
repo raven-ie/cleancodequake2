@@ -1176,6 +1176,11 @@ enum
 #define DF_NO_NUKES			0x00080000
 #define DF_NO_SPHERES		0x00100000
 
+#ifdef CLEANCTF_ENABLED
+#define DF_CTF_FORCEJOIN	0x00200000	
+#define DF_ARMOR_PROTECT	0x00400000
+#define DF_CTF_NO_TECH      0x00800000
+#endif
 /*
 ==============================================================================
 
@@ -1333,6 +1338,21 @@ enum
 	STAT_FLASHES,					// cleared each frame, 1 = health, 2 = armor
 	STAT_CHASE,
 	STAT_SPECTATOR,
+
+#ifdef CLEANCTF_ENABLED
+	STAT_CTF_TEAM1_PIC,
+	STAT_CTF_TEAM1_CAPS,
+	STAT_CTF_TEAM2_PIC,
+	STAT_CTF_TEAM2_CAPS,
+	STAT_CTF_FLAG_PIC,
+	STAT_CTF_JOINED_TEAM1_PIC,
+	STAT_CTF_JOINED_TEAM2_PIC,
+	STAT_CTF_TEAM1_HEADER,
+	STAT_CTF_TEAM2_HEADER,
+	STAT_CTF_TECH,
+	STAT_CTF_ID_VIEW,
+	STAT_CTF_MATCH,
+#endif
 
 	MAX_STATS				= 32
 };
