@@ -59,23 +59,23 @@ void CInventory::Remove (int Index, int Num)
 	Array[Index] -= Num;
 }
 
-void CInventory::Draw (edict_t *ent)
+void CInventory::Draw (CPlayerEntity *ent)
 {
-	ent->client->showscores = false;
-	ent->client->showhelp = false;
+	ent->Client.showscores = false;
+	ent->Client.showhelp = false;
 
-	if (ent->client->showinventory)
+	if (ent->Client.showinventory)
 	{
-		ent->client->showinventory = false;
+		ent->Client.showinventory = false;
 		return;
 	}
 
-	ent->client->showinventory = true;
+	ent->Client.showinventory = true;
 
 	WriteByte (SVC_INVENTORY);
 	for (int i=0 ; i<MAX_CS_ITEMS ; i++)
 		WriteShort (Array[i]);
-	Cast (CASTFLAG_RELIABLE, ent);
+	Cast (CASTFLAG_RELIABLE, ent->gameEntity);
 }
 
 void CInventory::SelectNextItem(EItemFlags Flags)
@@ -181,7 +181,7 @@ Cmd_Use_f
 Use an inventory item
 ==================
 */
-void Cmd_Use_f (edict_t *ent)
+void Cmd_Use_f (CPlayerEntity *ent)
 {
 	char *s = ArgGetConcatenatedString();
 	CBaseItem *Item = FindItem(s);
@@ -191,23 +191,23 @@ void Cmd_Use_f (edict_t *ent)
 
 		if (!Item)
 		{
-			ClientPrintf (ent, PRINT_HIGH, "Unknown item: %s\n", s);
+			ClientPrintf (ent->gameEntity, PRINT_HIGH, "Unknown item: %s\n", s);
 			return;
 		}
 	}
 	if (!(Item->Flags & ITEMFLAG_USABLE))
 	{
-		ClientPrintf (ent, PRINT_HIGH, "Item is not usable.\n");
+		ClientPrintf (ent->gameEntity, PRINT_HIGH, "Item is not usable.\n");
 		return;
 	}
-	if (!ent->client->pers.Inventory.Has(Item))
+	if (!ent->Client.pers.Inventory.Has(Item))
 	{
-		ClientPrintf (ent, PRINT_HIGH, "Out of item: %s\n", s);
+		ClientPrintf (ent->gameEntity, PRINT_HIGH, "Out of item: %s\n", s);
 		return;
 	}
 
 	Item->Use (ent);
-	ent->client->pers.Inventory.ValidateSelectedItem();
+	ent->Client.pers.Inventory.ValidateSelectedItem();
 }
 
 
@@ -219,7 +219,7 @@ Tries to use the items in the list from left to right, stopping
 when one gets used
 ==================
 */
-void Cmd_UseList_f (edict_t *ent)
+void Cmd_UseList_f (CPlayerEntity *ent)
 {
 	for (int i = 1; i < ArgCount(); i++)
 	{
@@ -232,34 +232,32 @@ void Cmd_UseList_f (edict_t *ent)
 
 			if (!Item)
 			{
-				ClientPrintf (ent, PRINT_HIGH, "Unknown item: %s\n", s);
+				ClientPrintf (ent->gameEntity, PRINT_HIGH, "Unknown item: %s\n", s);
 				continue;
 			}
 		}
 		if (!(Item->Flags & ITEMFLAG_USABLE))
 		{
-			ClientPrintf (ent, PRINT_HIGH, "Item is not usable.\n");
+			ClientPrintf (ent->gameEntity, PRINT_HIGH, "Item is not usable.\n");
 			continue;
 		}
 		// Only warn us if it's unknown or not usable; not if we don't have it
-		if (!ent->client->pers.Inventory.Has(Item))
-		//{
-		//	ClientPrintf (ent, PRINT_HIGH, "Out of item: %s\n", s);
+		if (!ent->Client.pers.Inventory.Has(Item))
 			continue;
-		//}
+
 		// If it's a weapon and we don't have ammo, don't bother
 		if (Item->Flags & ITEMFLAG_WEAPON && !(Item->Flags & ITEMFLAG_AMMO))
 		{
 			CWeaponItem *Weapon = dynamic_cast<CWeaponItem*>(Item);
-			if (!ent->client->pers.Inventory.Has(Weapon->Ammo))
+			if (!ent->Client.pers.Inventory.Has(Weapon->Ammo))
 				continue;
 		}
 
 		Item->Use (ent);
-		ent->client->pers.Inventory.ValidateSelectedItem();
+		ent->Client.pers.Inventory.ValidateSelectedItem();
 		return;
 	}
-	ClientPrintf (ent, PRINT_HIGH, "No item in list found!\n");
+	ClientPrintf (ent->gameEntity, PRINT_HIGH, "No item in list found!\n");
 }
 
 /*
@@ -269,17 +267,17 @@ Cmd_Drop_f
 Drop an inventory item
 ==================
 */
-void Cmd_Drop_f (edict_t *ent)
+void Cmd_Drop_f (CPlayerEntity *ent)
 {
 	char *s = ArgGetConcatenatedString();
 #ifdef CLEANCTF_ENABLED
 	CBaseItem *Item;
 
 //ZOID--special case for tech powerups
-	if (Q_stricmp(s, "tech") == 0 && ent->client->pers.Tech)
+	if (Q_stricmp(s, "tech") == 0 && ent->Client.pers.Tech)
 	{
-		ent->client->pers.Tech->Drop (ent);
-		ent->client->pers.Inventory.ValidateSelectedItem();
+		ent->Client.pers.Tech->Drop (ent);
+		ent->Client.pers.Inventory.ValidateSelectedItem();
 		return;
 	}
 	Item = FindItem(s);
@@ -293,23 +291,23 @@ void Cmd_Drop_f (edict_t *ent)
 
 		if (!Item)
 		{
-			ClientPrintf (ent, PRINT_HIGH, "Unknown item: %s\n", s);
+			ClientPrintf (ent->gameEntity, PRINT_HIGH, "Unknown item: %s\n", s);
 			return;
 		}
 	}
 	if (!(Item->Flags & ITEMFLAG_DROPPABLE))
 	{
-		ClientPrintf (ent, PRINT_HIGH, "Item is not dropable.\n");
+		ClientPrintf (ent->gameEntity, PRINT_HIGH, "Item is not dropable.\n");
 		return;
 	}
-	if (!ent->client->pers.Inventory.Has(Item))
+	if (!ent->Client.pers.Inventory.Has(Item))
 	{
-		ClientPrintf (ent, PRINT_HIGH, "Out of item: %s\n", s);
+		ClientPrintf (ent->gameEntity, PRINT_HIGH, "Out of item: %s\n", s);
 		return;
 	}
 
 	Item->Drop (ent);
-	ent->client->pers.Inventory.ValidateSelectedItem();
+	ent->Client.pers.Inventory.ValidateSelectedItem();
 }
 
 
@@ -318,17 +316,17 @@ void Cmd_Drop_f (edict_t *ent)
 Cmd_Inven_f
 =================
 */
-void Cmd_Inven_f (edict_t *ent)
+void Cmd_Inven_f (CPlayerEntity *ent)
 {
-	if (ent->client->resp.MenuState.InMenu)
+	if (ent->Client.resp.MenuState.InMenu)
 	{
-		ent->client->resp.MenuState.CloseMenu();
-		ent->client->update_chase = true;
+		ent->Client.resp.MenuState.CloseMenu();
+		ent->Client.update_chase = true;
 		return;
 	}
 #ifdef CLEANCTF_ENABLED
 //ZOID
-	if ((game.mode & GAME_CTF) && ent->client->resp.ctf_team == CTF_NOTEAM)
+	if ((game.mode & GAME_CTF) && ent->Client.resp.ctf_team == CTF_NOTEAM)
 	{
 		CTFOpenJoinMenu(ent);
 		return;
@@ -336,7 +334,7 @@ void Cmd_Inven_f (edict_t *ent)
 //ZOID
 #endif
 
-	ent->client->pers.Inventory.Draw(ent);
+	ent->Client.pers.Inventory.Draw(ent);
 }
 
 /*
@@ -344,28 +342,28 @@ void Cmd_Inven_f (edict_t *ent)
 Cmd_InvUse_f
 =================
 */
-void Cmd_InvUse_f (edict_t *ent)
+void Cmd_InvUse_f (CPlayerEntity *ent)
 {
-	if (ent->client->resp.MenuState.InMenu)
+	if (ent->Client.resp.MenuState.InMenu)
 	{
-		ent->client->resp.MenuState.Select();
+		ent->Client.resp.MenuState.Select();
 		return;
 	}
-	if (ent->health <= 0 || ent->deadflag)
+	if (ent->gameEntity->health <= 0 || ent->gameEntity->deadflag)
 		return;
 
-	ent->client->pers.Inventory.ValidateSelectedItem ();
+	ent->Client.pers.Inventory.ValidateSelectedItem ();
 
-	if (ent->client->pers.Inventory.SelectedItem == -1)
+	if (ent->Client.pers.Inventory.SelectedItem == -1)
 	{
-		ClientPrintf (ent, PRINT_HIGH, "No item to use.\n");
+		ClientPrintf (ent->gameEntity, PRINT_HIGH, "No item to use.\n");
 		return;
 	}
 
-	CBaseItem *it = GetItemByIndex(ent->client->pers.Inventory.SelectedItem);
+	CBaseItem *it = GetItemByIndex(ent->Client.pers.Inventory.SelectedItem);
 	if (!(it->Flags & ITEMFLAG_USABLE))
 	{
-		ClientPrintf (ent, PRINT_HIGH, "Item is not usable.\n");
+		ClientPrintf (ent->gameEntity, PRINT_HIGH, "Item is not usable.\n");
 		return;
 	}
 	it->Use (ent);
@@ -376,20 +374,20 @@ void Cmd_InvUse_f (edict_t *ent)
 Cmd_WeapPrev_f
 =================
 */
-void Cmd_WeapPrev_f (edict_t *ent)
+void Cmd_WeapPrev_f (CPlayerEntity *ent)
 {
-	if (!ent->client->pers.Weapon)
+	if (!ent->Client.pers.Weapon)
 		return;
-	if (ent->health <= 0 || ent->deadflag)
+	if (ent->gameEntity->health <= 0 || ent->gameEntity->deadflag)
 		return;
 
-	int selectedWeaponIndex = ent->client->pers.Weapon->Item->GetIndex();
+	int selectedWeaponIndex = ent->Client.pers.Weapon->Item->GetIndex();
 
 	// scan  for the next valid one
 	for (int i=0 ; i<=GetNumItems() ; i++)
 	{
 		int index = (selectedWeaponIndex + MAX_ITEMS - i)%MAX_CS_ITEMS;
-		if (!ent->client->pers.Inventory.Has(index))
+		if (!ent->Client.pers.Inventory.Has(index))
 			continue;
 		CBaseItem *Item = GetItemByIndex(index);
 		if (!(Item->Flags & ITEMFLAG_USABLE))
@@ -397,7 +395,7 @@ void Cmd_WeapPrev_f (edict_t *ent)
 		if (! (Item->Flags & ITEMFLAG_WEAPON) )
 			continue;
 		Item->Use (ent);
-		if (ent->client->NewWeapon && ent->client->NewWeapon->Item == Item || ent->client->pers.Weapon->Item == Item)
+		if (ent->Client.NewWeapon && ent->Client.NewWeapon->Item == Item || ent->Client.pers.Weapon->Item == Item)
 			return;	// successful
 	}
 }
@@ -407,20 +405,20 @@ void Cmd_WeapPrev_f (edict_t *ent)
 Cmd_WeapNext_f
 =================
 */
-void Cmd_WeapNext_f (edict_t *ent)
+void Cmd_WeapNext_f (CPlayerEntity *ent)
 {
-	if (!ent->client->pers.Weapon)
+	if (!ent->Client.pers.Weapon)
 		return;
-	if (ent->health <= 0 || ent->deadflag)
+	if (ent->gameEntity->health <= 0 || ent->gameEntity->deadflag)
 		return;
 
-	int selectedWeaponIndex = ent->client->pers.Weapon->Item->GetIndex();
+	int selectedWeaponIndex = ent->Client.pers.Weapon->Item->GetIndex();
 
 	// scan  for the next valid one
 	for (int i=0 ; i<=GetNumItems() ; i++)
 	{
 		int index = (selectedWeaponIndex + i)%MAX_CS_ITEMS;
-		if (!ent->client->pers.Inventory.Has(index))
+		if (!ent->Client.pers.Inventory.Has(index))
 			continue;
 		CBaseItem *Item = GetItemByIndex(index);
 		if (!(Item->Flags & ITEMFLAG_USABLE))
@@ -428,7 +426,7 @@ void Cmd_WeapNext_f (edict_t *ent)
 		if (! (Item->Flags & ITEMFLAG_WEAPON) )
 			continue;
 		Item->Use (ent);
-		if (ent->client->NewWeapon && ent->client->NewWeapon->Item == Item || ent->client->pers.Weapon->Item == Item)
+		if (ent->Client.NewWeapon && ent->Client.NewWeapon->Item == Item || ent->Client.pers.Weapon->Item == Item)
 			return;	// successful
 	}
 }
@@ -438,20 +436,18 @@ void Cmd_WeapNext_f (edict_t *ent)
 Cmd_WeapLast_f
 =================
 */
-void Cmd_WeapLast_f (edict_t *ent)
+void Cmd_WeapLast_f (CPlayerEntity *ent)
 {
-	gclient_t	*cl = ent->client;
-
-	if (!cl->pers.Weapon || !cl->pers.LastWeapon)
+	if (!ent->Client.pers.Weapon || !ent->Client.pers.LastWeapon)
 		return;
 
-	if (!cl->pers.Inventory.Has(cl->pers.LastWeapon->Item))
+	if (!ent->Client.pers.Inventory.Has(ent->Client.pers.LastWeapon->Item))
 		return;
-	if (!(cl->pers.LastWeapon->Item->Flags & ITEMFLAG_USABLE))
+	if (!(ent->Client.pers.LastWeapon->Item->Flags & ITEMFLAG_USABLE))
 		return;
-	if (! (cl->pers.LastWeapon->Item->Flags & ITEMFLAG_WEAPON) )
+	if (! (ent->Client.pers.LastWeapon->Item->Flags & ITEMFLAG_WEAPON) )
 		return;
-	cl->pers.LastWeapon->Item->Use (ent);
+	ent->Client.pers.LastWeapon->Item->Use (ent);
 }
 
 /*
@@ -459,94 +455,94 @@ void Cmd_WeapLast_f (edict_t *ent)
 Cmd_InvDrop_f
 =================
 */
-void Cmd_InvDrop_f (edict_t *ent)
+void Cmd_InvDrop_f (CPlayerEntity *ent)
 {
-	if (ent->health <= 0 || ent->deadflag)
+	if (ent->gameEntity->health <= 0 || ent->gameEntity->deadflag)
 		return;
 
-	ent->client->pers.Inventory.ValidateSelectedItem ();
+	ent->Client.pers.Inventory.ValidateSelectedItem ();
 
-	if (ent->client->pers.Inventory.SelectedItem == -1)
+	if (ent->Client.pers.Inventory.SelectedItem == -1)
 	{
-		ClientPrintf (ent, PRINT_HIGH, "No item to drop.\n");
+		ClientPrintf (ent->gameEntity, PRINT_HIGH, "No item to drop.\n");
 		return;
 	}
 
-	CBaseItem *Item = GetItemByIndex(ent->client->pers.Inventory.SelectedItem);
+	CBaseItem *Item = GetItemByIndex(ent->Client.pers.Inventory.SelectedItem);
 	if (!(Item->Flags & ITEMFLAG_DROPPABLE))
 	{
-		ClientPrintf (ent, PRINT_HIGH, "Item is not dropable.\n");
+		ClientPrintf (ent->gameEntity, PRINT_HIGH, "Item is not dropable.\n");
 		return;
 	}
 	Item->Drop (ent);
-	ent->client->pers.Inventory.ValidateSelectedItem();
+	ent->Client.pers.Inventory.ValidateSelectedItem();
 }
 
-void Cmd_SelectNextItem_f (edict_t *ent)
+void Cmd_SelectNextItem_f (CPlayerEntity *ent)
 {
-	if (ent->health <= 0 || ent->deadflag)
+	if (ent->gameEntity->health <= 0 || ent->gameEntity->deadflag)
 		return;
 
-	if (ent->client->resp.MenuState.InMenu)
+	if (ent->Client.resp.MenuState.InMenu)
 	{
-		ent->client->resp.MenuState.SelectNext();
+		ent->Client.resp.MenuState.SelectNext();
 		return;
 	}
 
-	if (ent->client->chase_target)
+	if (ent->Client.chase_target)
 	{
 		ChaseNext(ent);
 		return;
 	}
 
-	ent->client->pers.Inventory.SelectNextItem (-1);
+	ent->Client.pers.Inventory.SelectNextItem (-1);
 }
-void Cmd_SelectPrevItem_f (edict_t *ent)
+void Cmd_SelectPrevItem_f (CPlayerEntity *ent)
 {
-	if (ent->health <= 0 || ent->deadflag)
+	if (ent->gameEntity->health <= 0 || ent->gameEntity->deadflag)
 		return;
 
-	if (ent->client->resp.MenuState.InMenu)
+	if (ent->Client.resp.MenuState.InMenu)
 	{
-		ent->client->resp.MenuState.SelectPrev();
+		ent->Client.resp.MenuState.SelectPrev();
 		return;
 	}
 
-	if (ent->client->chase_target)
+	if (ent->Client.chase_target)
 	{
 		ChasePrev(ent);
 		return;
 	}
 
-	ent->client->pers.Inventory.SelectPrevItem (-1);
+	ent->Client.pers.Inventory.SelectPrevItem (-1);
 }
-void Cmd_SelectNextWeapon_f (edict_t *ent)
+void Cmd_SelectNextWeapon_f (CPlayerEntity *ent)
 {
-	if (ent->health <= 0 || ent->deadflag)
+	if (ent->gameEntity->health <= 0 || ent->gameEntity->deadflag)
 		return;
 
-	ent->client->pers.Inventory.SelectNextItem (ITEMFLAG_WEAPON);
+	ent->Client.pers.Inventory.SelectNextItem (ITEMFLAG_WEAPON);
 }
-void Cmd_SelectPrevWeapon_f (edict_t *ent)
+void Cmd_SelectPrevWeapon_f (CPlayerEntity *ent)
 {
-	if (ent->health <= 0 || ent->deadflag)
+	if (ent->gameEntity->health <= 0 || ent->gameEntity->deadflag)
 		return;
 
-	ent->client->pers.Inventory.SelectPrevItem (ITEMFLAG_WEAPON);
+	ent->Client.pers.Inventory.SelectPrevItem (ITEMFLAG_WEAPON);
 }
-void Cmd_SelectNextPowerup_f (edict_t *ent)
+void Cmd_SelectNextPowerup_f (CPlayerEntity *ent)
 {
-	if (ent->health <= 0 || ent->deadflag)
+	if (ent->gameEntity->health <= 0 || ent->gameEntity->deadflag)
 		return;
 
-	ent->client->pers.Inventory.SelectNextItem (ITEMFLAG_POWERUP);
+	ent->Client.pers.Inventory.SelectNextItem (ITEMFLAG_POWERUP);
 }
-void Cmd_SelectPrevPowerup_f (edict_t *ent)
+void Cmd_SelectPrevPowerup_f (CPlayerEntity *ent)
 {
-	if (ent->health <= 0 || ent->deadflag)
+	if (ent->gameEntity->health <= 0 || ent->gameEntity->deadflag)
 		return;
 
-	ent->client->pers.Inventory.SelectPrevItem (ITEMFLAG_POWERUP);
+	ent->Client.pers.Inventory.SelectPrevItem (ITEMFLAG_POWERUP);
 }
 
 /*
@@ -557,7 +553,7 @@ Give items to a client
 Old-style "give"
 ==================
 */
-void Cmd_Give_f (edict_t *ent)
+void Cmd_Give_f (CPlayerEntity *ent)
 {
 	char		*name;
 	int			i;
@@ -574,9 +570,9 @@ void Cmd_Give_f (edict_t *ent)
 	if (give_all || Q_stricmp(name, "health") == 0)
 	{
 		if (ArgCount() == 3)
-			ent->health = ArgGeti(2);
+			ent->gameEntity->health = ArgGeti(2);
 		else
-			ent->health = ent->max_health;
+			ent->gameEntity->health = ent->gameEntity->max_health;
 		if (!give_all)
 			return;
 	}
@@ -590,7 +586,7 @@ void Cmd_Give_f (edict_t *ent)
 				continue;
 			if (!(it->Flags & ITEMFLAG_WEAPON))
 				continue;
-			ent->client->pers.Inventory += it;
+			ent->Client.pers.Inventory += it;
 		}
 		if (!give_all)
 			return;
@@ -615,15 +611,15 @@ void Cmd_Give_f (edict_t *ent)
 
 	if (give_all || Q_stricmp(name, "armor") == 0)
 	{
-		ent->client->pers.Inventory.Set(FindItem("Jacket Armor")->GetIndex(), 0);
-		ent->client->pers.Inventory.Set(FindItem("Combat Armor")->GetIndex(), 0);
+		ent->Client.pers.Inventory.Set(FindItem("Jacket Armor")->GetIndex(), 0);
+		ent->Client.pers.Inventory.Set(FindItem("Combat Armor")->GetIndex(), 0);
 
 		CArmor *Armor = dynamic_cast<CArmor*>(FindItem("Body Armor"));
-		ent->client->pers.Inventory.Set(Armor->GetIndex(), Armor->maxCount);
-		ent->client->pers.Armor = Armor;
+		ent->Client.pers.Inventory.Set(Armor->GetIndex(), Armor->maxCount);
+		ent->Client.pers.Armor = Armor;
 
 		if (ArgCount() >= 3)
-			ent->client->pers.Inventory.Set(Armor->GetIndex(), ArgGeti(2));
+			ent->Client.pers.Inventory.Set(Armor->GetIndex(), ArgGeti(2));
 
 		if (!give_all)
 			return;
@@ -635,7 +631,7 @@ void Cmd_Give_f (edict_t *ent)
 		edict_t *it_ent = G_Spawn();
 		it_ent->classname = it->Classname;
 		SpawnItem (it_ent, it);
-		TouchItem (it_ent, ent, NULL, NULL);
+		TouchItem (it_ent, ent->gameEntity, NULL, NULL);
 		if (it_ent->inUse)
 			G_FreeEdict(it_ent);
 
@@ -652,7 +648,7 @@ void Cmd_Give_f (edict_t *ent)
 				continue;
 			if (it->Flags & (ITEMFLAG_HEALTH|ITEMFLAG_ARMOR|ITEMFLAG_WEAPON|ITEMFLAG_AMMO))
 				continue;
-			ent->client->pers.Inventory.Set (i, 1);
+			ent->Client.pers.Inventory.Set (i, 1);
 		}
 		return;
 	}
@@ -668,7 +664,7 @@ void Cmd_Give_f (edict_t *ent)
 			it = FindItemByClassname (name);
 			if (!it)
 			{
-				ClientPrintf (ent, PRINT_HIGH, "Unknown Item\n");
+				ClientPrintf (ent->gameEntity, PRINT_HIGH, "Unknown Item\n");
 				return;
 			}
 		}
@@ -676,7 +672,7 @@ void Cmd_Give_f (edict_t *ent)
 
 	if (!(it->Flags & ITEMFLAG_GRABBABLE))
 	{
-		ClientPrintf (ent, PRINT_HIGH, "Non-Pickup Item\n");
+		ClientPrintf (ent->gameEntity, PRINT_HIGH, "Non-Pickup Item\n");
 		return;
 	}
 
@@ -684,16 +680,16 @@ void Cmd_Give_f (edict_t *ent)
 	{
 		CAmmo *Ammo = dynamic_cast<CAmmo*>(it);
 		if (ArgCount() == 3)
-			ent->client->pers.Inventory.Set (Ammo, ArgGeti(2));
+			ent->Client.pers.Inventory.Set (Ammo, ArgGeti(2));
 		else
-			ent->client->pers.Inventory.Add(Ammo, Ammo->Quantity);
+			ent->Client.pers.Inventory.Add(Ammo, Ammo->Quantity);
 	}
 	else
 	{
 		edict_t *it_ent = G_Spawn();
 		it_ent->classname = it->Classname;
 		SpawnItem (it_ent, it);
-		TouchItem (it_ent, ent, NULL, NULL);
+		TouchItem (it_ent, ent->gameEntity, NULL, NULL);
 		if (it_ent->inUse)
 			G_FreeEdict(it_ent);
 	}
@@ -704,7 +700,7 @@ void Cmd_Give_f (edict_t *ent)
 // Allows you to spawn the item instead of giving it.
 // Also, you can spawn monsters and other goodies from here.
 void ED_CallSpawn (edict_t *ent);
-void Cmd_Give (edict_t *ent)
+void Cmd_Give (CPlayerEntity *ent)
 {
 	// Handle give all from old give.
 	if (Q_stricmp(ArgGets(1), "all") == 0)
@@ -716,12 +712,12 @@ void Cmd_Give (edict_t *ent)
 	// Calculate spawning direction
 	vec3_t Origin, Angles, forward;
 
-	Vec3Copy (ent->state.angles, Angles);
+	Vec3Copy (ent->gameEntity->state.angles, Angles);
 	Angles[0] = 0; // No pitch
 	Angles[2] = 0; // No roll
 
 	Angles_Vectors (Angles, forward, NULL, NULL);
-	Vec3Copy (ent->state.origin, Origin);
+	Vec3Copy (ent->gameEntity->state.origin, Origin);
 	Vec3MA (Origin, 150, forward, Origin);
 
 	if (gi.pointcontents(Origin) & CONTENTS_SOLID)

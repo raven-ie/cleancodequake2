@@ -36,23 +36,23 @@ class CGrapple : public CWeapon
 public:
 	CGrapple();
 
-	inline bool	CanFire	(edict_t *ent);
-	inline bool	CanStopFidgetting (edict_t *ent);
+	inline bool	CanFire	(CPlayerEntity *Player);
+	inline bool	CanStopFidgetting (CPlayerEntity *Player);
 	
 	// This function is called when the player hits the attack button.
 	// Returns "true" if the animation can go ahead (check for ammo, etc here)
-	inline bool	AttemptToFire (edict_t *ent); 
-	void	WeaponGeneric (edict_t *ent);
+	inline bool	AttemptToFire (CPlayerEntity *Player); 
+	void	WeaponGeneric (CPlayerEntity *Player);
 
 	// The function called to "fire"
-	void	Fire (edict_t *ent);
+	void	Fire (CPlayerEntity *Player);
 
-	static void		GrapplePull (edict_t *ent);
-	static void		GrappleDrawCable (edict_t *ent);
+	static void		GrapplePull (edict_t *self);
+	static void		GrappleDrawCable (edict_t *self);
 	static void		GrappleTouch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
-	static void		ResetGrapple (edict_t *ent);
-	static void		PlayerResetGrapple (edict_t *ent);
-	void			FireGrapple (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, int effect);
+	static void		ResetGrapple (edict_t *self);
+	static void		PlayerResetGrapple (CPlayerEntity *Player);
+	void			FireGrapple (CPlayerEntity *Player, vec3_t start, vec3_t dir, int damage, int speed, int effect);
 };
 
 extern CGrapple WeaponGrapple;

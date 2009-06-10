@@ -375,7 +375,7 @@ void CTFOpenJoinMenu(edict_t *ent);
 class CCTFCreditsMenu : public CMenu
 {
 public:
-	CCTFCreditsMenu			(edict_t *ent) :
+	CCTFCreditsMenu			(CPlayerEntity *ent) :
 	CMenu(ent)
 	{
 		Cursor = 2;
@@ -389,9 +389,9 @@ public:
 		{
 		};
 
-		bool Select (edict_t *ent)
+		bool Select (CPlayerEntity *ent)
 		{
-			ent->client->resp.MenuState.CloseMenu();
+			ent->Client.resp.MenuState.CloseMenu();
 			CTFOpenJoinMenu (ent);
 
 			// Has to be false so we can tell it to switch manually
@@ -439,26 +439,25 @@ public:
 		CStatusBar Bar;
 
 		DrawItems(&Bar);
-		Bar.SendMsg(ent, reliable);
+		Bar.SendMsg(ent->gameEntity, reliable);
 	};
 };
 
-void CTFOpenCreditsMenu(edict_t *ent)
+void CTFOpenCreditsMenu(CPlayerEntity *ent)
 {
-	if (ent->client->resp.MenuState.InMenu)
+	if (ent->Client.resp.MenuState.InMenu)
 		return;
 
-	ent->client->resp.MenuState.CurrentMenu = new CCTFCreditsMenu(ent);
-	ent->client->resp.MenuState.OpenMenu ();
+	ent->Client.resp.MenuState.CurrentMenu = new CCTFCreditsMenu(ent);
+	ent->Client.resp.MenuState.OpenMenu ();
 
-	ent->client->resp.MenuState.CurrentMenu->Draw (true);
+	ent->Client.resp.MenuState.CurrentMenu->Draw (true);
 }
 
-void CTFAssignGhost(edict_t *ent);
 class CCTFMainMenu : public CMenu
 {
 public:
-	CCTFMainMenu			(edict_t *ent) :
+	CCTFMainMenu			(CPlayerEntity *ent) :
 	CMenu(ent)
 	{
 		Cursor = 3;
@@ -475,38 +474,38 @@ public:
 		{
 		};
 
-		bool Select (edict_t *ent)
+		bool Select (CPlayerEntity *ent)
 		{
-			ent->svFlags &= ~SVF_NOCLIENT;
-			ent->client->resp.ctf_team = team;
-			ent->client->resp.ctf_state = 0;
-			char *s = Info_ValueForKey (ent->client->pers.userinfo, "skin");
-			CTFAssignSkin(ent, s);
+			ent->SetSvFlags(ent->GetSvFlags() & ~SVF_NOCLIENT);
+			ent->Client.resp.ctf_team = team;
+			ent->Client.resp.ctf_state = 0;
+			char *s = Info_ValueForKey (ent->Client.pers.userinfo, "skin");
+			ent->CTFAssignSkin(s);
 
 			// assign a ghost if we are in match mode
 			if (ctfgame.match == MATCH_GAME)
 			{
-				if (ent->client->resp.ghost)
-					ent->client->resp.ghost->code = 0;
-				ent->client->resp.ghost = NULL;
-				CTFAssignGhost(ent);
+				if (ent->Client.resp.ghost)
+					ent->Client.resp.ghost->code = 0;
+				ent->Client.resp.ghost = NULL;
+				ent->CTFAssignGhost();
 			}
 
-			PutClientInServer (ent);
+			ent->PutInServer ();
 			// add a teleportation effect
-			ent->state.event = EV_PLAYER_TELEPORT;
+			ent->gameEntity->state.event = EV_PLAYER_TELEPORT;
 			// hold in place briefly
-			ent->client->playerState.pMove.pmFlags = PMF_TIME_TELEPORT;
-			ent->client->playerState.pMove.pmTime = 14;
+			ent->Client.PlayerState.GetPMove()->pmFlags = PMF_TIME_TELEPORT;
+			ent->Client.PlayerState.GetPMove()->pmTime = 14;
 			BroadcastPrintf(PRINT_HIGH, "%s joined the %s team.\n",
-				ent->client->pers.netname, CTFTeamName(team));
+				ent->Client.pers.netname, CTFTeamName(team));
 
 			if (ctfgame.match == MATCH_SETUP)
 			{
-				CenterPrintf(ent,	"***********************\n"
-										"Type \"ready\" in console\n"
-										"to ready up.\n"
-										"***********************");
+				CenterPrintf(ent->gameEntity,	"***********************\n"
+												"Type \"ready\" in console\n"
+												"to ready up.\n"
+												"***********************");
 			}
 			return true;
 		};
@@ -520,26 +519,26 @@ public:
 		{
 		};
 
-		bool Select (edict_t *ent)
+		bool Select (CPlayerEntity *ent)
 		{
-			if (ent->client->chase_target)
+			if (ent->Client.chase_target)
 			{
-				ent->client->chase_target = NULL;
+				ent->Client.chase_target = NULL;
 				return true;
 			}
 
 			for (int i = 1; i <= game.maxclients; i++)
 			{
-				edict_t *e = g_edicts + i;
-				if (e->inUse && e->solid != SOLID_NOT)
+				CPlayerEntity *e = dynamic_cast<CPlayerEntity*>((g_edicts + i)->Entity);
+				if (e->IsInUse() && e->GetSolid() != SOLID_NOT)
 				{
-					ent->client->chase_target = e;
-					ent->client->update_chase = true;
+					ent->Client.chase_target = e;
+					ent->Client.update_chase = true;
 					return true;
 				}
 			}
 
-			CenterPrintf (ent, "No one to chase\n");
+			CenterPrintf (ent->gameEntity, "No one to chase\n");
 			return true;
 		};
 	};
@@ -551,9 +550,9 @@ public:
 		{
 		};
 
-		bool Select (edict_t *ent)
+		bool Select (CPlayerEntity *ent)
 		{
-			ent->client->resp.MenuState.CloseMenu();
+			ent->Client.resp.MenuState.CloseMenu();
 			CTFOpenCreditsMenu (ent);
 
 			// Has to be false so we can tell it to switch manually
@@ -567,11 +566,12 @@ public:
 		int num1 = 0, num2 = 0;
 		for (int i = 0; i < game.maxclients; i++)
 		{
-			if (!g_edicts[i+1].inUse)
+			CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity);
+			if (!Player->IsInUse())
 				continue;
-			if (game.clients[i].resp.ctf_team == CTF_TEAM1)
+			if (Player->Client.resp.ctf_team == CTF_TEAM1)
 				num1++;
-			else if (game.clients[i].resp.ctf_team == CTF_TEAM2)
+			else if (Player->Client.resp.ctf_team == CTF_TEAM2)
 				num2++;
 		}
 
@@ -700,7 +700,7 @@ public:
 		CObserverLabel *ChaseCam = new CObserverLabel(this, x, y);
 		ChaseCam->Enabled = true;
 		ChaseCam->Align = LA_LEFT;
-		if (ent->client->chase_target)
+		if (ent->Client.chase_target)
 			Q_snprintfz (ChaseCam->LabelString, sizeof(ChaseCam->LabelString), "Leave Chase Camera");
 		else
 			Q_snprintfz (ChaseCam->LabelString, sizeof(ChaseCam->LabelString), "Chase Camera");
@@ -725,18 +725,18 @@ public:
 		CStatusBar Bar;
 
 		DrawItems(&Bar);
-		Bar.SendMsg(ent, reliable);
+		Bar.SendMsg(ent->gameEntity, reliable);
 	};
 };
 
-void CTFOpenJoinMenu(edict_t *ent)
+void CTFOpenJoinMenu(CPlayerEntity *ent)
 {
-	if (ent->client->resp.MenuState.InMenu)
+	if (ent->Client.resp.MenuState.InMenu)
 		return;
 
-	ent->client->resp.MenuState.CurrentMenu = new CCTFMainMenu(ent);
-	ent->client->resp.MenuState.OpenMenu ();
+	ent->Client.resp.MenuState.CurrentMenu = new CCTFMainMenu(ent);
+	ent->Client.resp.MenuState.OpenMenu ();
 
-	ent->client->resp.MenuState.CurrentMenu->Draw (true);
+	ent->Client.resp.MenuState.CurrentMenu->Draw (true);
 }
 #endif

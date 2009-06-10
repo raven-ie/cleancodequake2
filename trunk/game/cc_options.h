@@ -78,3 +78,18 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 // Define this to allow GAME_CTF
 #define CLEANCTF_ENABLED
+
+// Don't touch this.
+#define GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
+
+// Define this if you want monsters to not be able to go through monstersolids
+//#define MONSTERS_HIT_MONSTERSOLID
+
+// Define this if you intend to use quaternions
+//#define SHARED_ALLOW_QUATERNIONS
+
+// Define this if you intend to use 3x3 matrix'
+//#define SHARED_ALLOW_3x3_MATRIX
+
+// Define this if you intend to use 4x4 matrix'
+//#define SHARED_ALLOW_4x4_MATRIX

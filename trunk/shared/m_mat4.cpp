@@ -168,6 +168,7 @@ void Matrix4_Identity(mat4x4_t mat)
 Matrix4_Matrix3
 ===============
 */
+#ifdef SHARED_ALLOW_3x3_MATRIX
 void Matrix4_Matrix3(const mat4x4_t in, mat3x3_t out)
 {
 	out[0][0] = in[0 ];
@@ -182,7 +183,7 @@ void Matrix4_Matrix3(const mat4x4_t in, mat3x3_t out)
 	out[2][1] = in[6 ];
 	out[2][2] = in[10];
 }
-
+#endif
 
 /*
 ===============

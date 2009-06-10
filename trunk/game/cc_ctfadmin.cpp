@@ -363,22 +363,23 @@ void CTFAdmin(edict_t *ent)
 	CTFOpenAdminMenu(ent);
 }
 #endif
-bool CTFBeginElection(edict_t *ent, elect_t type, char *msg);
+bool CTFBeginElection(CPlayerEntity *ent, elect_t type, char *msg);
 
-void CTFAdmin(edict_t *ent)
+void CTFAdmin(CPlayerEntity *ent)
 {
 	char text[1024];
 
 	if (ArgCount() > 1 && admin_password->String() && *admin_password->String() &&
-		!ent->client->resp.admin && strcmp(admin_password->String(), ArgGets(1)) == 0) {
-		ent->client->resp.admin = true;
+		!ent->Client.resp.admin && strcmp(admin_password->String(), ArgGets(1)) == 0)
+	{
+		ent->Client.resp.admin = true;
 		BroadcastPrintf(PRINT_HIGH, "%s has become an admin.\n", ent->client->pers.netname);
-		ClientPrintf(ent, PRINT_HIGH, "Type 'admin' to access the adminstration menu.\n");
+		ClientPrintf(ent->gameEntity, PRINT_HIGH, "Type 'admin' to access the adminstration menu.\n");
 	}
 
-	if (!ent->client->resp.admin) {
+	if (!ent->Client.resp.admin) {
 		Q_snprintfz(text, sizeof(text), "%s has requested admin rights.",
-			ent->client->pers.netname);
+			ent->Client.pers.netname);
 		CTFBeginElection(ent, ELECT_ADMIN, text);
 		return;
 	}

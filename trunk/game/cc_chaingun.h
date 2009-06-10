@@ -36,13 +36,13 @@ class CChaingun : public CWeapon
 public:
 	CChaingun();
 
-	inline bool	CanFire	(edict_t *ent);
-	inline bool	CanStopFidgetting (edict_t *ent);
+	inline bool	CanFire	(CPlayerEntity *Player);
+	inline bool	CanStopFidgetting (CPlayerEntity *Player);
 
-	inline void FireAnimation (edict_t *ent);
+	inline void FireAnimation (CPlayerEntity *Player);
 
 	// The function called to "fire"
-	void	Fire (edict_t *ent);
+	void	Fire (CPlayerEntity *Player);
 };
 
 extern CChaingun WeaponChaingun;

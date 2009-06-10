@@ -151,7 +151,7 @@ public:
 	inline int		GetIndex ();
 	inline int		GetConfigStringNumber ();
 
-	virtual void	Add (edict_t *ent, int quantity);
+	virtual void	Add (CPlayerEntity *ent, int quantity);
 };
 
 void SpawnItem (edict_t *ent, CBaseItem *item);

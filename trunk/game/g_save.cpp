@@ -269,6 +269,8 @@ void InitGame (void)
 {
 	DebugPrintf ("==== InitGame ====\n");
 
+	seedMT (time(NULL));
+
 	// Register cvars/commands
 	G_Register();
 
@@ -292,6 +294,13 @@ void InitGame (void)
 	game.maxclients = maxclients->Integer();
 	game.clients = (gclient_t*)gi.TagMalloc (game.maxclients * sizeof(game.clients[0]), TAG_GAME);
 	globals.numEdicts = game.maxclients+1;
+
+	// Set up the client entities
+	for (int i = 1; i <= game.maxclients; i++)
+	{
+		edict_t *ent = &g_edicts[i];
+		ent->Entity = new CPlayerEntity(i);
+	}
 
 	// Vars
 	game.maxspectators = maxspectators->Integer();

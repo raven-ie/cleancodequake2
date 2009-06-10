@@ -422,23 +422,6 @@ void CPowerShield::Drop (edict_t *ent)
 	CBasePowerUp::Drop (ent);
 }
 
-int PowerArmorType (edict_t *ent)
-{
-	if (!ent->client)
-		return POWER_ARMOR_NONE;
-
-	if (!(ent->flags & FL_POWER_ARMOR))
-		return POWER_ARMOR_NONE;
-
-	if (ent->client->pers.Inventory.Has(FindItem("Power Shield")) > 0)
-		return POWER_ARMOR_SHIELD;
-
-	if (ent->client->pers.Inventory.Has(FindItem("Power Screen")) > 0)
-		return POWER_ARMOR_SCREEN;
-
-	return POWER_ARMOR_NONE;
-}
-
 void AddPowerupsToList ()
 {
 	CMegaHealth *MegaHealth = new CMegaHealth("item_health_mega", "models/items/mega_h/tris.md2", 0, "items/m_health.wav", "i_health", "MegaHealth", ITEMFLAG_HEALTH|ITEMFLAG_POWERUP|ITEMFLAG_GRABBABLE, "", 0);

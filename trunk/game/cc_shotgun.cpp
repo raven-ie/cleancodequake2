@@ -42,9 +42,9 @@ CWeapon("models/weapons/v_shotg/tris.md2", 0, 7, 8, 18,
 {
 }
 
-bool CShotgun::CanFire (edict_t *ent)
+bool CShotgun::CanFire (CPlayerEntity *ent)
 {
-	switch (ent->client->playerState.gunFrame)
+	switch (ent->Client.PlayerState.GetGunFrame())
 	{
 	case 8:
 		return true;
@@ -52,9 +52,9 @@ bool CShotgun::CanFire (edict_t *ent)
 	return false;
 }
 
-bool CShotgun::CanStopFidgetting (edict_t *ent)
+bool CShotgun::CanStopFidgetting (CPlayerEntity *ent)
 {
-	switch (ent->client->playerState.gunFrame)
+	switch (ent->Client.PlayerState.GetGunFrame())
 	{
 	case 22:
 	case 28:
@@ -64,7 +64,7 @@ bool CShotgun::CanStopFidgetting (edict_t *ent)
 	return false;
 }
 
-void CShotgun::Fire (edict_t *ent)
+void CShotgun::Fire (CPlayerEntity *ent)
 {
 	vec3_t		start;
 	vec3_t		forward, right;
@@ -72,13 +72,13 @@ void CShotgun::Fire (edict_t *ent)
 	int			damage = 4;
 	int			kick = 8;
 
-	Angles_Vectors (ent->client->v_angle, forward, right, NULL);
+	Angles_Vectors (ent->Client.v_angle, forward, right, NULL);
 
-	Vec3Scale (forward, -2, ent->client->kick_origin);
-	ent->client->kick_angles[0] = -2;
+	Vec3Scale (forward, -2, ent->Client.kick_origin);
+	ent->Client.kick_angles[0] = -2;
 
-	Vec3Set (offset, 0, 8,  ent->viewheight-8);
-	P_ProjectSource (ent->client, ent->state.origin, offset, forward, right, start);
+	Vec3Set (offset, 0, 8,  ent->gameEntity->viewheight-8);
+	P_ProjectSource (ent, ent->gameEntity->state.origin, offset, forward, right, start);
 
 	if (isQuad)
 	{
@@ -87,15 +87,15 @@ void CShotgun::Fire (edict_t *ent)
 	}
 
 	if (game.mode & GAME_DEATHMATCH)
-		fire_shotgun (ent, start, forward, damage, kick, 500, 500, DEFAULT_DEATHMATCH_SHOTGUN_COUNT, MOD_SHOTGUN);
+		fire_shotgun (ent->gameEntity, start, forward, damage, kick, 500, 500, DEFAULT_DEATHMATCH_SHOTGUN_COUNT, MOD_SHOTGUN);
 	else
-		fire_shotgun (ent, start, forward, damage, kick, 500, 500, DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);
+		fire_shotgun (ent->gameEntity, start, forward, damage, kick, 500, 500, DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);
 
 	// send muzzle flash
 	Muzzle (ent, MZ_SHOTGUN);
 	AttackSound (ent);
 
-	ent->client->playerState.gunFrame++;
+	ent->Client.PlayerState.SetGunFrame(ent->Client.PlayerState.GetGunFrame() + 1);
 	PlayerNoise(ent, start, PNOISE_WEAPON);
 	FireAnimation (ent);
 

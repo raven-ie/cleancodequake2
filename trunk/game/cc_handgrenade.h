@@ -38,17 +38,17 @@ public:
 	CHandGrenade(char *model, int FireStart, int FireNumFrames,
 						 int IdleStart, int IdleNumFrames);
 
-	inline bool	CanFire	(edict_t *ent);
-	inline bool	CanStopFidgetting (edict_t *ent);
+	inline bool	CanFire	(CPlayerEntity *Player);
+	inline bool	CanStopFidgetting (CPlayerEntity *Player);
 
-	void	WeaponGeneric (edict_t *ent);
+	void	WeaponGeneric (CPlayerEntity *Player);
 
 	// The function called to "fire"
-	void	Fire (edict_t *ent);
+	void	Fire (CPlayerEntity *Player);
 
-	void	Hold (edict_t *ent);
-	void	FireGrenade (edict_t *ent, bool inHand);
-	void	Wait (edict_t *ent);
+	void	Hold (CPlayerEntity *Player);
+	void	FireGrenade (CPlayerEntity *Player, bool inHand);
+	void	Wait (CPlayerEntity *Player);
 };
 
 extern CHandGrenade WeaponGrenades;

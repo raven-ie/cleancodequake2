@@ -224,7 +224,7 @@ static void loc_buildboxpoints(vec3_t p[8], vec3_t org, vec3_t mins, vec3_t maxs
 	p[7][1] -= maxs[1];
 }
 
-static bool loc_CanSee (edict_t *targ, edict_t *inflictor)
+bool loc_CanSee (edict_t *targ, edict_t *inflictor)
 {
 	CTrace	trace;
 	vec3_t	targpoints[8];
@@ -316,36 +316,6 @@ int CTFOtherTeam(int team)
 edict_t *SelectRandomDeathmatchSpawnPoint (void);
 edict_t *SelectFarthestDeathmatchSpawnPoint (void);
 float	PlayersRangeFromSpot (edict_t *spot);
-
-void CTFAssignSkin(edict_t *ent, char *s)
-{
-	int playernum = ent-g_edicts-1;
-	char *p;
-	char t[64];
-
-	Q_snprintfz(t, sizeof(t), "%s", s);
-
-	if ((p = strrchr(t, '/')) != NULL)
-		p[1] = 0;
-	else
-		Q_strncpyz(t, "male/", sizeof(t));
-
-	switch (ent->client->resp.ctf_team) {
-	case CTF_TEAM1:
-		gi.configstring (CS_PLAYERSKINS+playernum, Q_VarArgs("%s\\%s%s", 
-			ent->client->pers.netname, t, CTF_TEAM1_SKIN) );
-		break;
-	case CTF_TEAM2:
-		gi.configstring (CS_PLAYERSKINS+playernum,
-			Q_VarArgs("%s\\%s%s", ent->client->pers.netname, t, CTF_TEAM2_SKIN) );
-		break;
-	default:
-		gi.configstring (CS_PLAYERSKINS+playernum, 
-			Q_VarArgs("%s\\%s", ent->client->pers.netname, s) );
-		break;
-	}
-//	ClientPrintf(ent, PRINT_HIGH, "You have been assigned to %s team.\n", ent->client->pers.netname);
-}
 
 void CTFAssignTeam(gclient_t *who)
 {
@@ -771,17 +741,6 @@ void CTFFlagSetup (edict_t *ent)
 	ent->think = CTFFlagThink;
 }
 
-void CTFEffects(edict_t *player)
-{
-	player->state.effects &= ~(EF_FLAG1 | EF_FLAG2);
-	if (player->health > 0 && (player->client->pers.Flag))
-		player->state.effects |= player->client->pers.Flag->EffectFlags;
-	if (player->client->pers.Flag)
-		player->state.modelIndex3 = ModelIndex(player->client->pers.Flag->WorldModel);
-	else
-		player->state.modelIndex3 = 0;
-}
-
 // called when we enter the intermission
 void CTFCalcScores(void)
 {
@@ -807,190 +766,6 @@ void CTFID_f (edict_t *ent)
 		ClientPrintf(ent, PRINT_HIGH, "Activating player identication display.\n");
 		ent->client->resp.id_state = true;
 	}
-}
-
-static void CTFSetIDView(edict_t *ent)
-{
-	vec3_t	forward, dir;
-	CTrace	tr;
-	edict_t	*who, *best;
-	float	bd = 0, d;
-	int i;
-
-	ent->client->playerState.stats[STAT_CTF_ID_VIEW] = 0;
-
-	Angles_Vectors(ent->client->v_angle, forward, NULL, NULL);
-	Vec3Scale(forward, 1024, forward);
-	Vec3Add(ent->state.origin, forward, forward);
-	tr = CTrace(ent->state.origin, forward, ent, CONTENTS_MASK_SOLID);
-	if (tr.fraction < 1 && tr.ent && tr.ent->client) {
-		ent->client->playerState.stats[STAT_CTF_ID_VIEW] = 
-			CS_PLAYERSKINS + (ent - g_edicts - 1);
-		return;
-	}
-
-	Angles_Vectors(ent->client->v_angle, forward, NULL, NULL);
-	best = NULL;
-	for (i = 1; i <= game.maxclients; i++) {
-		who = g_edicts + i;
-		if (!who->inUse || who->solid == SOLID_NOT)
-			continue;
-		Vec3Subtract(who->state.origin, ent->state.origin, dir);
-		VectorNormalizeFastf(dir);
-		d = DotProduct(forward, dir);
-		if (d > bd && loc_CanSee(ent, who)) {
-			bd = d;
-			best = who;
-		}
-	}
-	if (bd > 0.90)
-		ent->client->playerState.stats[STAT_CTF_ID_VIEW] = 
-			CS_PLAYERSKINS + (best - g_edicts - 1);
-}
-
-void SetCTFStats(edict_t *ent)
-{
-	int i;
-	int p1, p2;
-	edict_t *e;
-
-	if (ctfgame.match > MATCH_NONE)
-		ent->client->playerState.stats[STAT_CTF_MATCH] = CONFIG_CTF_MATCH;
-	else
-		ent->client->playerState.stats[STAT_CTF_MATCH] = 0;
-
-	//ghosting
-	if (ent->client->resp.ghost) {
-		ent->client->resp.ghost->score = ent->client->resp.score;
-		Q_strncpyz(ent->client->resp.ghost->netname, ent->client->pers.netname, sizeof(ent->client->resp.ghost->netname));
-		ent->client->resp.ghost->number = ent->state.number;
-	}
-
-	// logo headers for the frag display
-	ent->client->playerState.stats[STAT_CTF_TEAM1_HEADER] = ImageIndex ("ctfsb1");
-	ent->client->playerState.stats[STAT_CTF_TEAM2_HEADER] = ImageIndex ("ctfsb2");
-
-	// if during intermission, we must blink the team header of the winning team
-	if (level.intermissiontime && (level.framenum & 8)) { // blink 1/8th second
-		// note that ctfgame.total[12] is set when we go to intermission
-		if (ctfgame.team1 > ctfgame.team2)
-			ent->client->playerState.stats[STAT_CTF_TEAM1_HEADER] = 0;
-		else if (ctfgame.team2 > ctfgame.team1)
-			ent->client->playerState.stats[STAT_CTF_TEAM2_HEADER] = 0;
-		else if (ctfgame.total1 > ctfgame.total2) // frag tie breaker
-			ent->client->playerState.stats[STAT_CTF_TEAM1_HEADER] = 0;
-		else if (ctfgame.total2 > ctfgame.total1) 
-			ent->client->playerState.stats[STAT_CTF_TEAM2_HEADER] = 0;
-		else { // tie game!
-			ent->client->playerState.stats[STAT_CTF_TEAM1_HEADER] = 0;
-			ent->client->playerState.stats[STAT_CTF_TEAM2_HEADER] = 0;
-		}
-	}
-
-	// tech icon
-	i = 0;
-	ent->client->playerState.stats[STAT_CTF_TECH] = 0;
-	if (ent->client->pers.Tech)
-		ent->client->playerState.stats[STAT_CTF_TECH] = ent->client->pers.Tech->IconIndex;
-
-	// figure out what icon to display for team logos
-	// three states:
-	//   flag at base
-	//   flag taken
-	//   flag dropped
-	p1 = ImageIndex ("i_ctf1");
-	e = G_Find(NULL, FOFS(classname), "item_flag_team1");
-	if (e != NULL)
-	{
-		if (e->solid == SOLID_NOT)
-		{
-			int i;
-
-			// not at base
-			// check if on player
-			p1 = ImageIndex ("i_ctf1d"); // default to dropped
-			for (i = 1; i <= game.maxclients; i++)
-				if (g_edicts[i].inUse &&
-					(g_edicts[i].client->pers.Flag == RedFlag))
-				{
-					// enemy has it
-					p1 = ImageIndex ("i_ctf1t");
-					break;
-				}
-		}
-		else if (e->spawnflags & DROPPED_ITEM)
-			p1 = ImageIndex ("i_ctf1d"); // must be dropped
-	}
-	p2 = ImageIndex ("i_ctf2");
-	e = G_Find(NULL, FOFS(classname), "item_flag_team2");
-	if (e != NULL)
-	{
-		if (e->solid == SOLID_NOT)
-		{
-			int i;
-
-			// not at base
-			// check if on player
-			p2 = ImageIndex ("i_ctf2d"); // default to dropped
-			for (i = 1; i <= game.maxclients; i++)
-				if (g_edicts[i].inUse &&
-					(g_edicts[i].client->pers.Flag == BlueFlag))
-				{
-					// enemy has it
-					p2 = ImageIndex ("i_ctf2t");
-					break;
-				}
-		}
-		else if (e->spawnflags & DROPPED_ITEM)
-			p2 = ImageIndex ("i_ctf2d"); // must be dropped
-	}
-
-
-	ent->client->playerState.stats[STAT_CTF_TEAM1_PIC] = p1;
-	ent->client->playerState.stats[STAT_CTF_TEAM2_PIC] = p2;
-
-	if (ctfgame.last_flag_capture && level.time - ctfgame.last_flag_capture < 5)
-	{
-		if (ctfgame.last_capture_team == CTF_TEAM1)
-		{
-			if (level.framenum & 8)
-				ent->client->playerState.stats[STAT_CTF_TEAM1_PIC] = p1;
-			else
-				ent->client->playerState.stats[STAT_CTF_TEAM1_PIC] = 0;
-		}
-		else
-		{
-			if (level.framenum & 8)
-				ent->client->playerState.stats[STAT_CTF_TEAM2_PIC] = p2;
-			else
-				ent->client->playerState.stats[STAT_CTF_TEAM2_PIC] = 0;
-		}
-	}
-
-	ent->client->playerState.stats[STAT_CTF_TEAM1_CAPS] = ctfgame.team1;
-	ent->client->playerState.stats[STAT_CTF_TEAM2_CAPS] = ctfgame.team2;
-
-	ent->client->playerState.stats[STAT_CTF_FLAG_PIC] = 0;
-	if (ent->client->resp.ctf_team == CTF_TEAM1 &&
-		(ent->client->pers.Flag == BlueFlag) &&
-		(level.framenum & 8))
-		ent->client->playerState.stats[STAT_CTF_FLAG_PIC] = ImageIndex ("i_ctf2");
-
-	else if (ent->client->resp.ctf_team == CTF_TEAM2 &&
-		(ent->client->pers.Flag == RedFlag) &&
-		(level.framenum & 8))
-		ent->client->playerState.stats[STAT_CTF_FLAG_PIC] = ImageIndex ("i_ctf1");
-
-	ent->client->playerState.stats[STAT_CTF_JOINED_TEAM1_PIC] = 0;
-	ent->client->playerState.stats[STAT_CTF_JOINED_TEAM2_PIC] = 0;
-	if (ent->client->resp.ctf_team == CTF_TEAM1)
-		ent->client->playerState.stats[STAT_CTF_JOINED_TEAM1_PIC] = ImageIndex ("i_ctfj");
-	else if (ent->client->resp.ctf_team == CTF_TEAM2)
-		ent->client->playerState.stats[STAT_CTF_JOINED_TEAM2_PIC] = ImageIndex ("i_ctfj");
-
-	ent->client->playerState.stats[STAT_CTF_ID_VIEW] = 0;
-	if (ent->client->resp.id_state)
-		CTFSetIDView(ent);
 }
 
 /*------------------------------------------------------------------------*/
@@ -1073,238 +848,45 @@ void CTFTeam_f (edict_t *ent)
 		ent->client->pers.netname, CTFTeamName(desired_team));
 }
 
-/*
-==================
-CTFScoreboardMessage
-==================
-*/
-void CTFScoreboardMessage (edict_t *ent, edict_t *killer, bool reliable)
-{
-	CStatusBar			Bar;
-	char				entry[1024];
-	int					len;
-	int					sorted[2][MAX_CS_CLIENTS];
-	int					sortedscores[2][MAX_CS_CLIENTS];
-	int					score, total[2], totalscore[2];
-	int					last[2];
-	int					n, j, k;
-	char				str[MAX_COMPRINT/4];
-	gclient_t			*cl;
-	edict_t				*cl_ent;
-	int					team;
-
-	// sort the clients by team and score
-	total[0] = total[1] = 0;
-	last[0] = last[1] = 0;
-	totalscore[0] = totalscore[1] = 0;
-	for (int i=0 ; i<game.maxclients ; i++)
-	{
-		cl_ent = g_edicts + 1 + i;
-		if (!cl_ent->inUse)
-			continue;
-		if (game.clients[i].resp.ctf_team == CTF_TEAM1)
-			team = 0;
-		else if (game.clients[i].resp.ctf_team == CTF_TEAM2)
-			team = 1;
-		else
-			continue; // unknown team?
-
-		score = game.clients[i].resp.score;
-		for (j=0 ; j<total[team] ; j++)
-		{
-			if (score > sortedscores[team][j])
-				break;
-		}
-		for (k=total[team] ; k>j ; k--)
-		{
-			sorted[team][k] = sorted[team][k-1];
-			sortedscores[team][k] = sortedscores[team][k-1];
-		}
-		sorted[team][j] = i;
-		sortedscores[team][j] = score;
-		totalscore[team] += score;
-		total[team]++;
-	}
-
-	// print level name and exit rules
-	// add the clients in sorted order
-	len = 0;
-
-	// team one
-	// Team 1
-	Bar.AddIf (STAT_CTF_TEAM1_HEADER);
-		Bar.AddVirtualPoint_X (8);
-		Bar.AddVirtualPoint_Y (8);
-		Bar.AddPicStat (STAT_CTF_TEAM1_HEADER);
-	Bar.AddEndIf ();
-	Bar.AddVirtualPoint_X (40);
-	Bar.AddVirtualPoint_Y (28);
-	Q_snprintfz (str, sizeof(str), "%4d/%-3d", totalscore[0], total[0]);
-	Bar.AddString (str, false, false);
-	Bar.AddVirtualPoint_X (98);
-	Bar.AddVirtualPoint_Y (12);
-	Bar.AddNumStat (STAT_CTF_TEAM1_CAPS, 2);
-
-	// Team2
-	Bar.AddIf (STAT_CTF_TEAM2_HEADER);
-		Bar.AddVirtualPoint_X (168);
-		Bar.AddVirtualPoint_Y (8);
-		Bar.AddPicStat (STAT_CTF_TEAM2_HEADER);
-	Bar.AddEndIf ();
-	Bar.AddVirtualPoint_X (200);
-	Bar.AddVirtualPoint_Y (28);
-	Q_snprintfz (str, sizeof(str), "%4d/%-3d", totalscore[1], total[1]);
-	Bar.AddString (str, false, false);
-	Bar.AddVirtualPoint_X (256);
-	Bar.AddVirtualPoint_Y (12);
-	Bar.AddNumStat (STAT_CTF_TEAM2_CAPS, 2);
-
-	len = Bar.Length ();
-
-	for (int i=0 ; i<16 ; i++)
-	{
-		if (i >= total[0] && i >= total[1])
-			break; // we're done
-
-		*entry = 0;
-
-		// left side
-		if (i < total[0])
-		{
-			cl = &game.clients[sorted[0][i]];
-			cl_ent = g_edicts + 1 + sorted[0][i];
-
-			Bar.AddClientBlock (0, 42 + i * 8, sorted[0][i], cl->resp.score, clamp(cl->ping, 0, 999));
-
-			if (cl_ent->client->pers.Flag == BlueFlag)
-			{
-				Bar.AddVirtualPoint_X (56);
-				Bar.AddVirtualPoint_Y (42 + i * 8);
-				Bar.AddPic ("sbfctf2");
-			}
-
-			len = Bar.Length ();
-			last[0] = i;
-		}
-
-		// right side
-		if (i < total[1])
-		{
-			cl = &game.clients[sorted[1][i]];
-			cl_ent = g_edicts + 1 + sorted[1][i];
-
-			Bar.AddClientBlock (160, 42 + i * 8, sorted[0][i], cl->resp.score, clamp(cl->ping, 0, 999));
-
-			if (cl_ent->client->pers.Flag == RedFlag)
-			{
-				Bar.AddVirtualPoint_X (216);
-				Bar.AddVirtualPoint_Y (42 + i * 8);
-				Bar.AddPic ("sbfctf1");
-			}
-
-			len = Bar.Length ();
-			last[1] = i;
-		}
-	}
-
-	// put in spectators if we have enough room
-	if (last[0] > last[1])
-		j = last[0];
-	else
-		j = last[1];
-	j = (j + 2) * 8 + 42;
-
-	k = n = 0;
-	if ((MAX_COMPRINT / 4) - len > 50)
-	{
-		for (int i = 0; i < game.maxclients; i++)
-		{
-			cl_ent = g_edicts + 1 + i;
-			cl = &game.clients[i];
-			if (!cl_ent->inUse ||
-				cl_ent->solid != SOLID_NOT ||
-				cl_ent->client->resp.ctf_team != CTF_NOTEAM)
-				continue;
-
-			if (!k)
-			{
-				k = 1;
-				Bar.AddVirtualPoint_X (0);
-				Bar.AddVirtualPoint_Y (j);
-				Bar.AddString ("Spectators", true, false);
-				len = Bar.Length();
-				j += 8;
-			}
-
-			Bar.AddClientBlock ((n & 1) ? 160 : 0, j, i, cl->resp.score, clamp(cl->ping, 0, 999));
-			len = Bar.Length();
-			
-			if (n & 1)
-				j += 8;
-			n++;
-		}
-	}
-
-	if (total[0] - last[0] > 1) // couldn't fit everyone
-	{
-		//Q_snprintfz(string + strlen(string), "xv 8 yv %d string \"..and %d more\" ",
-		//	42 + (last[0]+1)*8, total[0] - last[0] - 1);
-		Bar.AddVirtualPoint_X (8);
-		Bar.AddVirtualPoint_Y (42 + (last[0]+1)*8);
-		Q_snprintfz (str, sizeof(str), "..and %d more", total[0] - last[0] - 1);
-		Bar.AddString (str, false, false);
-	}
-	if (total[1] - last[1] > 1) // couldn't fit everyone
-	{
-		Bar.AddVirtualPoint_X (168);
-		Bar.AddVirtualPoint_Y (42 + (last[1]+1)*8);
-		Q_snprintfz (str, sizeof(str), "..and %d more", total[1] - last[1] - 1);
-		Bar.AddString (str, false, false);
-	}
-
-	Bar.SendMsg (ent, reliable);
-}
-
-int CTFApplyResistance(edict_t *ent, int dmg)
+int CTFApplyResistance(CPlayerEntity *ent, int dmg)
 {
 	float volume = 1.0;
 
-	if (ent->client && ent->client->silencer_shots)
+	if (ent->Client.silencer_shots)
 		volume = 0.2f;
 
-	if (dmg && (ent->client->pers.Tech == Resistance))
+	if (dmg && (ent->Client.pers.Tech == Resistance))
 	{
 		// make noise
-	   	PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("ctf/tech1.wav"), volume, ATTN_NORM, 0);
+	   	PlaySoundFrom(ent->gameEntity, CHAN_ITEM, SoundIndex("ctf/tech1.wav"), volume, ATTN_NORM, 0);
 		return dmg / 2;
 	}
 	return dmg;
 }
 
-int CTFApplyStrength(edict_t *ent, int dmg)
+int CTFApplyStrength(CPlayerEntity *ent, int dmg)
 {
-	if (dmg && ent->client && (ent->client->pers.Tech == Strength))
-	{
+	if (dmg && (ent->Client.pers.Tech == Strength))
 		return dmg * 2;
-	}
 	return dmg;
 }
 
-bool CTFApplyStrengthSound(edict_t *ent)
+bool CTFApplyStrengthSound(CPlayerEntity *ent)
 {
 	float volume = 1.0;
 
-	if (ent->client && ent->client->silencer_shots)
+	if (ent->Client.silencer_shots)
 		volume = 0.2f;
 
-	if (ent->client &&
-		(ent->client->pers.Tech == Strength)) {
-		if (ent->client->ctf_techsndtime < level.time) {
-			ent->client->ctf_techsndtime = level.time + 1;
-			if (ent->client->quad_framenum > level.framenum)
-				PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("ctf/tech2x.wav"), volume, ATTN_NORM, 0);
+	if (ent->Client.pers.Tech == Strength)
+	{
+		if (ent->Client.ctf_techsndtime < level.time)
+		{
+			ent->Client.ctf_techsndtime = level.time + 1;
+			if (ent->Client.quad_framenum > level.framenum)
+				PlaySoundFrom(ent->gameEntity, CHAN_ITEM, SoundIndex("ctf/tech2x.wav"), volume, ATTN_NORM, 0);
 			else
-				PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("ctf/tech2.wav"), volume, ATTN_NORM, 0);
+				PlaySoundFrom(ent->gameEntity, CHAN_ITEM, SoundIndex("ctf/tech2.wav"), volume, ATTN_NORM, 0);
 		}
 		return true;
 	}
@@ -1312,74 +894,72 @@ bool CTFApplyStrengthSound(edict_t *ent)
 }
 
 
-bool CTFApplyHaste(edict_t *ent)
+bool CTFApplyHaste(CPlayerEntity *ent)
 {
-	if (ent->client &&
-		(ent->client->pers.Tech == Haste))
+	if (ent->Client.pers.Tech == Haste)
 		return true;
 	return false;
 }
 
-void CTFApplyHasteSound(edict_t *ent)
+void CTFApplyHasteSound(CPlayerEntity *ent)
 {
 	float volume = 1.0;
 
-	if (ent->client && ent->client->silencer_shots)
+	if (ent->Client.silencer_shots)
 		volume = 0.2f;
 
-	if (ent->client &&
-		(ent->client->pers.Tech == Haste) &&
-		ent->client->ctf_techsndtime < level.time) {
-		ent->client->ctf_techsndtime = level.time + 1;
-		PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("ctf/tech3.wav"), volume, ATTN_NORM, 0);
+	if (ent->Client.pers.Tech == Haste) &&
+		ent->Client.ctf_techsndtime < level.time)
+	{
+		ent->Client.ctf_techsndtime = level.time + 1;
+		PlaySoundFrom(ent->gameEntity, CHAN_ITEM, SoundIndex("ctf/tech3.wav"), volume, ATTN_NORM, 0);
 	}
 }
 
 int ArmorIndex (edict_t *ent);
-void CTFApplyRegeneration(edict_t *ent)
+void CTFApplyRegeneration(CPlayerEntity *ent)
 {
 	bool noise = false;
-	gclient_t *client;
 	CBaseItem *index;
 	float volume = 1.0;
 
-	client = ent->client;
-	if (!client)
-		return;
-
-	if (ent->client->silencer_shots)
+	if (ent->Client.silencer_shots)
 		volume = 0.2f;
 
-	if (ent->client->pers.Tech == Regeneration) {
-		if (client->ctf_regentime < level.time) {
-			client->ctf_regentime = level.time;
-			if (ent->health < 150) {
-				ent->health += 5;
-				if (ent->health > 150)
-					ent->health = 150;
-				client->ctf_regentime += 0.5;
+	if (ent->client->pers.Tech == Regeneration)
+	{
+		if (ent->Client.ctf_regentime < level.time)
+		{
+			ent->Client.ctf_regentime = level.time;
+			if (ent->gameEntity->health < 150)
+			{
+				ent->gameEntity->health += 5;
+				if (ent->gameEntity->health > 150)
+					ent->gameEntity->health = 150;
+				ent->Client.ctf_regentime += 0.5;
 				noise = true;
 			}
-			index = ent->client->pers.Armor;
-			if (index && client->pers.Inventory.Has(index) < 150) {
-				client->pers.Inventory.Add (index, 5);
-				if (client->pers.Inventory.Has(index) > 150)
-					client->pers.Inventory.Set(index, 150);
-				client->ctf_regentime += 0.5;
+			index = ent->Client.pers.Armor;
+			if (index && ent->Client.pers.Inventory.Has(index) < 150)
+			{
+				ent->Client.pers.Inventory.Add (index, 5);
+				if (ent->Client.pers.Inventory.Has(index) > 150)
+					ent->Client.pers.Inventory.Set(index, 150);
+				ent->Client.ctf_regentime += 0.5;
 				noise = true;
 			}
 		}
-		if (noise && ent->client->ctf_techsndtime < level.time) {
-			ent->client->ctf_techsndtime = level.time + 1;
-			PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("ctf/tech4.wav"), volume, ATTN_NORM, 0);
+		if (noise && ent->Client.ctf_techsndtime < level.time)
+		{
+			ent->Client.ctf_techsndtime = level.time + 1;
+			PlaySoundFrom(ent->gameEntity, CHAN_ITEM, SoundIndex("ctf/tech4.wav"), volume, ATTN_NORM, 0);
 		}
 	}
 }
 
-bool CTFHasRegeneration(edict_t *ent)
+bool CTFHasRegeneration(CPlayerEntity *ent)
 {
-	if (ent->client &&
-		(ent->client->pers.Tech == Regeneration))
+	if (ent->Client.pers.Tech == Regeneration)
 		return true;
 	return false;
 }
@@ -1757,11 +1337,10 @@ void SP_misc_ctf_small_banner (edict_t *ent)
 
 /* ELECTIONS */
 
-bool CTFBeginElection(edict_t *ent, elect_t type, char *msg)
+bool CTFBeginElection(CPlayerEntity *ent, elect_t type, char *msg)
 {
 	int i;
 	int count;
-	edict_t *e;
 
 	if (electpercentage->Integer() == 0) {
 		ClientPrintf(ent, PRINT_HIGH, "Elections are disabled, only an admin can process this action.\n");
@@ -1776,14 +1355,16 @@ bool CTFBeginElection(edict_t *ent, elect_t type, char *msg)
 
 	// clear votes
 	count = 0;
-	for (i = 1; i <= game.maxclients; i++) {
-		e = g_edicts + i;
-		e->client->resp.voted = false;
-		if (e->inUse)
+	for (i = 1; i <= game.maxclients; i++)
+	{
+		CPlayerEntity *e = dynamic_cast<CPlayerEntity*>((g_edicts + i)->Entity);
+		e->Client.resp.voted = false;
+		if (e->IsInUse())
 			count++;
 	}
 
-	if (count < 2) {
+	if (count < 2)
+	{
 		ClientPrintf(ent, PRINT_HIGH, "Not enough players for election.\n");
 		return false;
 	}
@@ -1811,7 +1392,8 @@ void CTFResetAllPlayers(void)
 	int i;
 	edict_t *ent;
 
-	for (i = 1; i <= game.maxclients; i++) {
+	for (i = 1; i <= game.maxclients; i++)
+	{
 		ent = g_edicts + i;
 		if (!ent->inUse)
 			continue;
@@ -1846,33 +1428,6 @@ void CTFResetAllPlayers(void)
 	}
 	if (ctfgame.match == MATCH_SETUP)
 		ctfgame.matchtime = level.time + matchsetuptime->Integer() * 60;
-}
-
-void CTFAssignGhost(edict_t *ent)
-{
-	int ghost, i;
-
-	for (ghost = 0; ghost < MAX_CS_CLIENTS; ghost++)
-		if (!ctfgame.ghosts[ghost].code)
-			break;
-	if (ghost == MAX_CS_CLIENTS)
-		return;
-	ctfgame.ghosts[ghost].team = ent->client->resp.ctf_team;
-	ctfgame.ghosts[ghost].score = 0;
-	for (;;) {
-		ctfgame.ghosts[ghost].code = 10000 + (rand() % 90000);
-		for (i = 0; i < MAX_CS_CLIENTS; i++)
-			if (i != ghost && ctfgame.ghosts[i].code == ctfgame.ghosts[ghost].code)
-				break;
-		if (i == MAX_CS_CLIENTS)
-			break;
-	}
-	ctfgame.ghosts[ghost].ent = ent;
-	Q_strncpyz(ctfgame.ghosts[ghost].netname, ent->client->pers.netname, sizeof(ctfgame.ghosts[ghost].netname));
-	ent->client->resp.ghost = ctfgame.ghosts + ghost;
-	ClientPrintf(ent, PRINT_CHAT, "Your ghost code is **** %d ****\n", ctfgame.ghosts[ghost].code);
-	ClientPrintf(ent, PRINT_HIGH, "If you lose connection, you can rejoin with your score "
-		"intact by typing \"ghost %d\".\n", ctfgame.ghosts[ghost].code);
 }
 
 // start a match
@@ -2164,27 +1719,6 @@ bool CTFMatchOn(void)
 
 
 /*-----------------------------------------------------------------------*/
-
-bool CTFStartClient(edict_t *ent)
-{
-	if (ent->client->resp.ctf_team != CTF_NOTEAM)
-		return false;
-
-	if ((!dmFlags.dfCtfForceJoin || ctfgame.match >= MATCH_SETUP))
-	{
-		// start as 'observer'
-		ent->movetype = MOVETYPE_NOCLIP;
-		ent->solid = SOLID_NOT;
-		ent->svFlags |= SVF_NOCLIENT;
-		ent->client->resp.ctf_team = CTF_NOTEAM;
-		ent->client->playerState.gunIndex = 0;
-		gi.linkentity (ent);
-
-		CTFOpenJoinMenu(ent);
-		return true;
-	}
-	return false;
-}
 
 void CTFObserver(edict_t *ent)
 {

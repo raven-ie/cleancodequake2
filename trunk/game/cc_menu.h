@@ -41,21 +41,21 @@ public:
 
 	CMenuItem		(class CMenu *Menu, int x, int y);
 
-	virtual void	Draw (edict_t *ent, CStatusBar *DrawState) = 0;
+	virtual void	Draw (CPlayerEntity *ent, CStatusBar *DrawState) = 0;
 
-	virtual bool	CanSelect (edict_t *ent); // Returns false if the option can't be selected
-	virtual void	Update (edict_t *ent); // Updates the control
-	virtual bool	Select (edict_t *ent); // What happens when you hit enter (return true to close the menu)
+	virtual bool	CanSelect (CPlayerEntity *ent); // Returns false if the option can't be selected
+	virtual void	Update (CPlayerEntity *ent); // Updates the control
+	virtual bool	Select (CPlayerEntity *ent); // What happens when you hit enter (return true to close the menu)
 };
 
 class CMenu abstract 
 {
 public:
 	int							Cursor; // Where to position the cursor on start
-	edict_t						*ent; // A pointer to the entity that is running the show (needed?)
+	CPlayerEntity				*ent; // A pointer to the entity that is running the show (needed?)
 	std::vector<CMenuItem*>		Items;
 
-	CMenu						(edict_t *ent);
+	CMenu						(CPlayerEntity *ent);
 	~CMenu						();
 
 	virtual bool				Open () = 0;
@@ -77,7 +77,7 @@ enum EMenuKeys
 class CMenuState
 {
 public:
-	edict_t				*ent; // A pointer to the entity that is running the show (needed?)
+	CPlayerEntity		*ent; // A pointer to the entity that is running the show (needed?)
 	int					Cursor; // Cursor position (relative to order)
 	EMenuKeys			Key; // Key hit this frame
 	// CurrentMenu is set to a copy of whatever menu class
@@ -86,7 +86,7 @@ public:
 	bool				InMenu;
 
 	CMenuState			();
-	CMenuState			(edict_t *ent);
+	CMenuState			(CPlayerEntity *ent);
 
 	void OpenMenu		(); // Do this AFTER setting CurrentMenu
 	void CloseMenu		();
@@ -96,9 +96,8 @@ public:
 	void Select			(); // invuse
 };
 
-void Cmd_MenuLeft_t (edict_t *ent);
-void Cmd_MenuRight_t (edict_t *ent);
+void Cmd_MenuLeft_t (CPlayerEntity *ent);
+void Cmd_MenuRight_t (CPlayerEntity *ent);
 
 // Controls
-#include "cc_menuevents.h"
 #include "cc_controls.h"

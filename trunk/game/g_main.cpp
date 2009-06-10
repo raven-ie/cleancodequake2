@@ -203,17 +203,14 @@ ClientEndServerFrames
 */
 void ClientEndServerFrames (void)
 {
-	int		i;
-	edict_t	*ent;
-
 	// calc the player views now that all pushing
 	// and damage has been added
-	for (i=0 ; i<game.maxclients ; i++)
+	for (int i = 1; i <= game.maxclients ; i++)
 	{
-		ent = g_edicts + 1 + i;
-		if (!ent->inUse || !ent->client)
+		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(&g_edicts[i].Entity);
+		if (!Player->IsInUse())
 			continue;
-		ClientEndServerFrame (ent);
+		Player->EndServerFrame ();
 	}
 
 }
@@ -447,24 +444,6 @@ __try
 	int		i;
 	edict_t	*ent;
 
-	if (level.paused)
-	{
-		ent = &g_edicts[1];
-		for (i=1 ; i <= game.maxclients ; i++, ent++)
-		{
-			if (!ent->inUse)
-				continue;
-			ClientBeginServerFrame (ent);
-		}
-
-		// build the playerstate_t structures for all players
-		ClientEndServerFrames ();
-
-		if (dmflags->Modified())
-			dmFlags.UpdateFlags(dmflags->Integer());
-		return;
-	}
-
 	level.framenum++;
 	level.time = level.framenum*FRAMETIME;
 
@@ -505,11 +484,13 @@ __try
 				ent->Monster->CheckGround ();
 		}
 
-		if (i > 0 && i <= game.maxclients)
+		/*if (i > 0 && i <= game.maxclients)
 		{
 			ClientBeginServerFrame (ent);
 			continue;
-		}
+		}*/
+		if (ent->Entity)
+			ent->Entity->Run ();
 
 		G_RunEntity (ent);
 	}

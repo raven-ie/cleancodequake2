@@ -36,13 +36,13 @@ class CBFG : public CWeapon
 public:
 	CBFG();
 
-	inline bool	CanFire	(edict_t *ent);
-	inline bool	CanStopFidgetting (edict_t *ent);
+	inline bool	CanFire	(CPlayerEntity *Player);
+	inline bool	CanStopFidgetting (CPlayerEntity *Player);
 
 	// The function called to "fire"
-	void	MuzzleEffect (edict_t *ent);
-	void	FireBFG	(edict_t *ent);
-	void	Fire (edict_t *ent);
+	void	MuzzleEffect (CPlayerEntity *Player);
+	void	FireBFG	(CPlayerEntity *Player);
+	void	Fire (CPlayerEntity *Player);
 };
 
 extern CBFG WeaponBFG;

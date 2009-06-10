@@ -39,6 +39,7 @@ float AngleModf (float a)
 Angles_Matrix3
 ===============
 */
+#ifdef SHARED_ALLOW_3x3_MATRIX
 void Angles_Matrix3 (vec3_t angles, mat3x3_t axis)
 {
 	float angle;
@@ -66,7 +67,7 @@ void Angles_Matrix3 (vec3_t angles, mat3x3_t axis)
 	axis[2][1] = (cr * sp * sy + -sr * cy);
 	axis[2][2] = cr * cp;
 }
-
+#endif
 
 /*
 ===============

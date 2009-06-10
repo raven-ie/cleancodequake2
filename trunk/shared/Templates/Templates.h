@@ -114,7 +114,10 @@ static inline bool IsPowOfTwo(const uint32 Value)
 # define ArrayCount(a) (sizeof(a)/sizeof((a)[0]))
 #endif
 
+#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 #include "TArray.h"
 #include "TAutoPtr.h"
 #include "TMap.h"
+#endif
+
 #include "TString.h"

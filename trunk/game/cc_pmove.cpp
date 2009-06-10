@@ -31,12 +31,12 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Necessary to keep 3.21 compatibility and allow cgame dlls
 //
 
-// Paril
-// Crouch-jumping!
 
 #ifndef USE_EXTENDED_GAME_IMPORTS
 
-#define ALLOW_CROUCH_JUMPING
+// Paril
+// Crouch-jumping!
+//#define ALLOW_CROUCH_JUMPING
 
 #include "cc_local.h"
 
