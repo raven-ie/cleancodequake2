@@ -49,11 +49,11 @@ public:
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
 			   char *Precache, EPowerupFlags PowerupFlags);
 
-	virtual bool	Pickup (edict_t *ent, edict_t *other);
-	virtual void	Use (edict_t *ent);
-	virtual void	Drop (edict_t *ent);
+	virtual bool	Pickup (edict_t *ent, CPlayerEntity *other);
+	virtual void	Use (CPlayerEntity *ent);
+	virtual void	Drop (CPlayerEntity *ent);
 
-	virtual void DoPickup (edict_t *ent, edict_t *other);
+	virtual void DoPickup (edict_t *ent, CPlayerEntity *other);
 };
 
 // Mega Health powerup
@@ -65,7 +65,7 @@ public:
 			   char *Precache, EPowerupFlags PowerupFlags);
 
 	static void __cdecl MegaHealthThink (edict_t *ent);
-	void DoPickup (edict_t *ent, edict_t *other);
+	void DoPickup (edict_t *ent, CPlayerEntity *other);
 };
 
 // Backpack powerup
@@ -76,7 +76,7 @@ public:
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
 			   char *Precache, EPowerupFlags PowerupFlags);
 
-	void DoPickup (edict_t *ent, edict_t *other);
+	void DoPickup (edict_t *ent, CPlayerEntity *other);
 };
 
 // Quad Damage
@@ -87,8 +87,8 @@ public:
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
 			   char *Precache, EPowerupFlags PowerupFlags);
 
-	void DoPickup (edict_t *ent, edict_t *other);
-	void Use (edict_t *ent);
+	void DoPickup (edict_t *ent, CPlayerEntity *other);
+	void Use (CPlayerEntity *ent);
 };
 
 // Invul
@@ -99,8 +99,8 @@ public:
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
 			   char *Precache, EPowerupFlags PowerupFlags);
 
-	void DoPickup (edict_t *ent, edict_t *other);
-	void Use (edict_t *ent);
+	void DoPickup (edict_t *ent, CPlayerEntity *other);
+	void Use (CPlayerEntity *ent);
 };
 
 // Silèncier
@@ -111,8 +111,8 @@ public:
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
 			   char *Precache, EPowerupFlags PowerupFlags);
 
-	void DoPickup (edict_t *ent, edict_t *other);
-	void Use (edict_t *ent);
+	void DoPickup (edict_t *ent, CPlayerEntity *other);
+	void Use (CPlayerEntity *ent);
 };
 
 // Rebreather (noun, "to breathe again")
@@ -123,8 +123,8 @@ public:
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
 			   char *Precache, EPowerupFlags PowerupFlags);
 
-	void DoPickup (edict_t *ent, edict_t *other);
-	void Use (edict_t *ent);
+	void DoPickup (edict_t *ent, CPlayerEntity *other);
+	void Use (CPlayerEntity *ent);
 };
 
 // Rebreather (noun, "to breathe again")
@@ -135,8 +135,8 @@ public:
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
 			   char *Precache, EPowerupFlags PowerupFlags);
 
-	void DoPickup (edict_t *ent, edict_t *other);
-	void Use (edict_t *ent);
+	void DoPickup (edict_t *ent, CPlayerEntity *other);
+	void Use (CPlayerEntity *ent);
 };
 
 // Bandolier
@@ -147,7 +147,7 @@ public:
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
 			   char *Precache, EPowerupFlags PowerupFlags);
 
-	void DoPickup (edict_t *ent, edict_t *other);
+	void DoPickup (edict_t *ent, CPlayerEntity *other);
 };
 
 // Adrenaline
@@ -158,7 +158,7 @@ public:
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
 			   char *Precache, EPowerupFlags PowerupFlags);
 
-	void DoPickup (edict_t *ent, edict_t *other);
+	void DoPickup (edict_t *ent, CPlayerEntity *other);
 };
 
 // Ancient Head
@@ -169,7 +169,7 @@ public:
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
 			   char *Precache, EPowerupFlags PowerupFlags);
 
-	void DoPickup (edict_t *ent, edict_t *other);
+	void DoPickup (edict_t *ent, CPlayerEntity *other);
 };
 
 // Power Shield
@@ -180,9 +180,9 @@ public:
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
 			   char *Precache, EPowerupFlags PowerupFlags);
 
-	void DoPickup (edict_t *ent, edict_t *other);
-	void Use (edict_t *ent);
-	void Drop (edict_t *ent);
+	void DoPickup (edict_t *ent, CPlayerEntity *other);
+	void Use (CPlayerEntity *ent);
+	void Drop (CPlayerEntity *ent);
 };
 
 void AddPowerupsToList();

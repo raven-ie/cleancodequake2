@@ -50,9 +50,9 @@ public:
 	int					Quantity;
 	char	*VWepModel;
 
-	bool	Pickup (edict_t *ent, edict_t *other);
-	void	Use (edict_t *ent);
-	void	Drop (edict_t *ent);
+	bool	Pickup (edict_t *ent, CPlayerEntity *other);
+	void	Use (CPlayerEntity *ent);
+	void	Drop (CPlayerEntity *ent);
 };
 
 // Class for ammo.
@@ -87,13 +87,13 @@ public:
 	char	*VWepModel;
 
 	// Only thing different about ammo is how it's picked up.
-	bool	Pickup (edict_t *ent, edict_t *other);
-	void	Use (edict_t *ent);
-	void	Drop (edict_t *ent);
+	bool	Pickup (edict_t *ent, CPlayerEntity *other);
+	void	Use (CPlayerEntity *ent);
+	void	Drop (CPlayerEntity *ent);
 
 	// Member functions
-	bool	AddAmmo (edict_t *ent, int count);
-	int		GetMax(edict_t *ent);
+	bool	AddAmmo (CPlayerEntity *ent, int count);
+	int		GetMax(CPlayerEntity *ent);
 };
 
 void AddAmmoToList();

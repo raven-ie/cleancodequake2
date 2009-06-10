@@ -46,65 +46,65 @@ energyProtection(energyProtection)
 {
 };
 
-bool CArmor::Pickup (edict_t *ent, edict_t *other)
+bool CArmor::Pickup (edict_t *ent, CPlayerEntity *other)
 {
 	if (this->normalProtection == -1)
 	{
-		if (other->client->pers.Armor == NULL)
+		if (other->Client.pers.Armor == NULL)
 		{
-			other->client->pers.Inventory.Set (FindItem("Jacket Armor"), 2);
-			other->client->pers.Armor = dynamic_cast<CArmor*>(FindItem("Jacket Armor"));
+			other->Client.pers.Inventory.Set (FindItem("Jacket Armor"), 2);
+			other->Client.pers.Armor = dynamic_cast<CArmor*>(FindItem("Jacket Armor"));
 		}
 		else
 		{
-			if (this->maxCount != -1 && (other->client->pers.Inventory.Has(ent->client->pers.Armor) >= this->maxCount))
+			if (this->maxCount != -1 && (other->Client.pers.Inventory.Has(other->Client.pers.Armor) >= this->maxCount))
 				return false;
 
-			other->client->pers.Inventory.Add (other->client->pers.Armor, 2);
-			if (this->maxCount != -1 && (other->client->pers.Inventory.Has(other->client->pers.Armor) > this->maxCount))
-				other->client->pers.Inventory.Set(ent->client->pers.Armor, this->maxCount);
+			other->Client.pers.Inventory.Add (other->Client.pers.Armor, 2);
+			if (this->maxCount != -1 && (other->Client.pers.Inventory.Has(other->Client.pers.Armor) > this->maxCount))
+				other->Client.pers.Inventory.Set(other->Client.pers.Armor, this->maxCount);
 		}
 		if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
 			SetRespawn (ent, 20);
 		return true;
 	}
 
-	if (other->client->pers.Armor != NULL)
+	if (other->Client.pers.Armor != NULL)
 	{
-		if (this->normalProtection > other->client->pers.Armor->normalProtection)
+		if (this->normalProtection > other->Client.pers.Armor->normalProtection)
 		{
 			// calc new armor values
-			int newCount = this->baseCount + ((other->client->pers.Armor->normalProtection / this->normalProtection) * other->client->pers.Inventory.Has(other->client->pers.Armor));
+			int newCount = this->baseCount + ((other->Client.pers.Armor->normalProtection / this->normalProtection) * other->Client.pers.Inventory.Has(other->Client.pers.Armor));
 			if (newCount > this->maxCount)
 				newCount = this->maxCount;
 
 			// zero count of old armor so it goes away
-			other->client->pers.Inventory.Set(other->client->pers.Armor, 0);
+			other->Client.pers.Inventory.Set(other->Client.pers.Armor, 0);
 
 			// change armor to new item with computed value
-			other->client->pers.Inventory.Set(this, newCount);
-			other->client->pers.Armor = this;
+			other->Client.pers.Inventory.Set(this, newCount);
+			other->Client.pers.Armor = this;
 		}
 		else
 		{
 			// calc new armor values
-			int newCount = other->client->pers.Inventory.Has(other->client->pers.Armor) + ((this->normalProtection / other->client->pers.Armor->normalProtection) * this->baseCount);
-			if (newCount > other->client->pers.Armor->maxCount)
-				newCount = other->client->pers.Armor->maxCount;
+			int newCount = other->Client.pers.Inventory.Has(other->Client.pers.Armor) + ((this->normalProtection / other->Client.pers.Armor->normalProtection) * this->baseCount);
+			if (newCount > other->Client.pers.Armor->maxCount)
+				newCount = other->Client.pers.Armor->maxCount;
 
 			// if we're already maxed out then we don't need the new armor
-			if (other->client->pers.Inventory.Has(other->client->pers.Armor) >= newCount)
+			if (other->Client.pers.Inventory.Has(other->Client.pers.Armor) >= newCount)
 				return false;
 
 			// update current armor value
-			other->client->pers.Inventory.Set(other->client->pers.Armor, newCount);
+			other->Client.pers.Inventory.Set(other->Client.pers.Armor, newCount);
 		}
 	}
 	// Player has no other armor, just use it
 	else
 	{
-		other->client->pers.Armor = this;
-		other->client->pers.Inventory.Set(this, this->baseCount);
+		other->Client.pers.Armor = this;
+		other->Client.pers.Inventory.Set(this, this->baseCount);
 	}
 
 	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
@@ -114,11 +114,11 @@ bool CArmor::Pickup (edict_t *ent, edict_t *other)
 }
 
 // No dropping or using armor.
-void CArmor::Use(edict_t *ent)
+void CArmor::Use(CPlayerEntity *ent)
 {
 }
 
-void CArmor::Drop (edict_t *ent)
+void CArmor::Drop (CPlayerEntity *ent)
 {
 }
 

@@ -28,46 +28,10 @@ INTERMISSION
 ======================================================================
 */
 
-void MoveClientToIntermission (edict_t *ent)
-{
-	if (game.mode != GAME_SINGLEPLAYER)
-		ent->client->showscores = true;
-	Vec3Copy (level.intermission_origin, ent->state.origin);
-	ent->client->playerState.pMove.origin[0] = level.intermission_origin[0]*8;
-	ent->client->playerState.pMove.origin[1] = level.intermission_origin[1]*8;
-	ent->client->playerState.pMove.origin[2] = level.intermission_origin[2]*8;
-	Vec3Copy (level.intermission_angle, ent->client->playerState.viewAngles);
-	ent->client->playerState.pMove.pmType = PMT_FREEZE;
-	ent->client->playerState.gunIndex = 0;
-	ent->client->playerState.viewBlend[3] = 0;
-	ent->client->playerState.rdFlags &= ~RDF_UNDERWATER;
-
-	// clean up powerup info
-	ent->client->quad_framenum = 0;
-	ent->client->invincible_framenum = 0;
-	ent->client->breather_framenum = 0;
-	ent->client->enviro_framenum = 0;
-	ent->client->grenade_blew_up = ent->client->grenade_thrown = false;
-	ent->client->grenade_time = 0;
-
-	ent->viewheight = 0;
-	ent->state.modelIndex = 0;
-	ent->state.modelIndex2 = 0;
-	ent->state.modelIndex3 = 0;
-	ent->state.effects = 0;
-	ent->state.sound = 0;
-	ent->solid = SOLID_NOT;
-
-	// add the layout
-
-	if (game.mode != GAME_SINGLEPLAYER)
-		DeathmatchScoreboardMessage (ent, NULL, true);
-}
-
 void BeginIntermission (edict_t *targ)
 {
 	int		i, n;
-	edict_t	*ent, *client;
+	edict_t	*ent;
 
 	if (level.intermissiontime)
 		return;		// already activated
@@ -84,11 +48,11 @@ void BeginIntermission (edict_t *targ)
 	// respawn any dead clients
 	for (i=0 ; i<game.maxclients ; i++)
 	{
-		client = g_edicts + 1 + i;
-		if (!client->inUse)
+		CPlayerEntity *client = dynamic_cast<CPlayerEntity*>((g_edicts + 1 + i)->Entity);
+		if (!client->IsInUse())
 			continue;
-		if (client->health <= 0)
-			respawn(client);
+		if (client->gameEntity->health <= 0)
+			client->Respawn();
 	}
 
 	level.intermissiontime = level.time;
@@ -100,8 +64,8 @@ void BeginIntermission (edict_t *targ)
 		{
 			for (i=0 ; i<game.maxclients ; i++)
 			{
-				client = g_edicts + 1 + i;
-				if (!client->inUse)
+				CPlayerEntity *client = dynamic_cast<CPlayerEntity*>((g_edicts + 1 + i)->Entity);
+				if (!client->IsInUse())
 					continue;
 				// strip players of all keys between units
 				for (n = 0; n < MAX_CS_ITEMS; n++)
@@ -109,7 +73,7 @@ void BeginIntermission (edict_t *targ)
 					if (n >= GetNumItems())
 						break;
 					if (GetItemByIndex(n)->Flags & ITEMFLAG_KEY)
-						client->client->pers.Inventory.Set(n, 0);
+						client->Client.pers.Inventory.Set(n, 0);
 				}
 			}
 		}
@@ -150,10 +114,10 @@ void BeginIntermission (edict_t *targ)
 	// move all clients to the intermission point
 	for (i=0 ; i<game.maxclients ; i++)
 	{
-		client = g_edicts + 1 + i;
-		if (!client->inUse)
+		CPlayerEntity *client = dynamic_cast<CPlayerEntity*>((g_edicts + 1 + i)->Entity);
+		if (!client->IsInUse())
 			continue;
-		MoveClientToIntermission (client);
+		client->MoveToIntermission();
 	}
 }
 
@@ -166,9 +130,9 @@ Draw instead of help message.
 Note that it isn't that hard to overflow the 1400 byte message limit!
 ==================
 */
-void DeathmatchScoreboard (edict_t *ent)
+void DeathmatchScoreboard (CPlayerEntity *ent)
 {
-	DeathmatchScoreboardMessage (ent, ent->enemy, true);
+	ent->DeathmatchScoreboardMessage (true);
 }
 
 
@@ -179,28 +143,28 @@ Cmd_Score_f
 Display the scoreboard
 ==================
 */
-void Cmd_Score_f (edict_t *ent)
+void Cmd_Score_f (CPlayerEntity *ent)
 {
-	ent->client->showinventory = false;
-	ent->client->showhelp = false;
+	ent->Client.showinventory = false;
+	ent->Client.showhelp = false;
 
-	if (ent->client->resp.MenuState.InMenu)
+	if (ent->Client.resp.MenuState.InMenu)
 	{
-		ent->client->resp.MenuState.CloseMenu();
+		ent->Client.resp.MenuState.CloseMenu();
 		return;
 	}
 
 	if (game.mode == GAME_SINGLEPLAYER)
 		return;
 
-	if (ent->client->showscores)
+	if (ent->Client.showscores)
 	{
-		ent->client->showscores = false;
-		ent->client->update_chase = true;
+		ent->Client.showscores = false;
+		ent->Client.update_chase = true;
 		return;
 	}
 
-	ent->client->showscores = true;
+	ent->Client.showscores = true;
 	DeathmatchScoreboard (ent);
 }
 
@@ -211,7 +175,7 @@ Cmd_Help_f
 Display the current help message
 ==================
 */
-void Cmd_Help_f (edict_t *ent)
+void Cmd_Help_f (CPlayerEntity *ent)
 {
 	// this is for backwards compatability
 	if (game.mode & GAME_DEATHMATCH)
@@ -220,22 +184,22 @@ void Cmd_Help_f (edict_t *ent)
 		return;
 	}
 
-	ent->client->showinventory = false;
-	ent->client->showscores = false;
+	ent->Client.showinventory = false;
+	ent->Client.showscores = false;
 
-	if (ent->client->resp.MenuState.InMenu)
+	if (ent->Client.resp.MenuState.InMenu)
 	{
-		ent->client->resp.MenuState.CloseMenu();
+		ent->Client.resp.MenuState.CloseMenu();
 		return;
 	}
 
-	if (ent->client->showhelp && (ent->client->pers.game_helpchanged == game.helpchanged))
+	if (ent->Client.showhelp && (ent->Client.pers.game_helpchanged == game.helpchanged))
 	{
-		ent->client->showhelp = false;
+		ent->Client.showhelp = false;
 		return;
 	}
 
-	ent->client->showhelp = true;
-	ent->client->pers.helpchanged = 0;
+	ent->Client.showhelp = true;
+	ent->Client.pers.helpchanged = 0;
 	HelpComputer (ent);
 }

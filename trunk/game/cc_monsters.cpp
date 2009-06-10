@@ -345,7 +345,7 @@ void AI_SetSightClient (void)
 	if (level.sight_client == NULL)
 		start = 1;
 	else
-		start = level.sight_client - g_edicts;
+		start = level.sight_client->gameEntity - g_edicts;
 
 	check = start;
 	while (1)
@@ -358,7 +358,7 @@ void AI_SetSightClient (void)
 			&& ent->health > 0
 			&& !(ent->flags & FL_NOTARGET) )
 		{
-			level.sight_client = ent;
+			level.sight_client = dynamic_cast<CPlayerEntity*>(ent->Entity);
 			return;		// got one
 		}
 		if (check == start)
@@ -2914,7 +2914,8 @@ void CMonster::MonsterDeathUse ()
 
 	if (Entity->item)
 	{
-		Entity->item->Drop (Entity);
+		// Paril FIXME!
+		//Entity->item->Drop (Entity);
 		Entity->item = NULL;
 	}
 
@@ -3301,9 +3302,9 @@ void CMonster::HuntTarget()
 
 bool CMonster::FindTarget()
 {
-	edict_t		*client;
 	bool		heardit;
 	int			r;
+	CPlayerEntity *client;
 
 	if (AIFlags & AI_GOOD_GUY)
 	{
@@ -3362,34 +3363,34 @@ bool CMonster::FindTarget()
 			{
 				vec3_t	temp;
 
-				if (client->flags & FL_NOTARGET)
+				if (client->gameEntity->flags & FL_NOTARGET)
 					return false;
 
 				if (Entity->spawnflags & 1)
 				{
-					if (!visible (Entity, client))
+					if (!visible (Entity, client->gameEntity))
 						return false;
 				}
 				else
 				{
-					if (!gi.inPHS(Entity->state.origin, client->state.origin))
+					if (!gi.inPHS(Entity->state.origin, client->gameEntity->state.origin))
 						return false;
 				}
 
-				Vec3Subtract (client->state.origin, Entity->state.origin, temp);
+				Vec3Subtract (client->gameEntity->state.origin, Entity->state.origin, temp);
 
 				if (Vec3Length(temp) > 1000)	// too far to hear
 					return false;
 
 				// check area portals - if they are different and not connected then we can't hear it
-				if (client->areaNum != Entity->areaNum)
+				if (client->GetAreaNum() != Entity->areaNum)
 				{
-					if (!gi.AreasConnected(Entity->areaNum, client->areaNum))
+					if (!gi.AreasConnected(Entity->areaNum, client->GetAreaNum()))
 						return false;
 				}
 
 				// hunt the sound for a bit; hopefully find the real player
-				Entity->enemy = client;
+				Entity->enemy = client->gameEntity;
 
 				FoundTarget ();
 				AlertNearbyStroggs ();
@@ -3451,27 +3452,15 @@ bool CMonster::FindTarget()
 		return false;
 
 	// if the entity went away, forget it
-	if (!client->inUse)
+	if (!client->IsInUse())
 		return false;
 
-	if (visible(Entity, client) && client == Entity->enemy)
+	if (visible(Entity, client->gameEntity) && client->gameEntity == Entity->enemy)
 		return true;	// JDC false;
 
-	if (client->client)
+	if (client)
 	{
-		if (client->flags & FL_NOTARGET)
-			return false;
-	}
-	else if (client->svFlags & SVF_MONSTER)
-	{
-		if (!client->enemy)
-			return false;
-		if (client->enemy->flags & FL_NOTARGET)
-			return false;
-	}
-	else if (heardit)
-	{
-		if (client->owner->flags & FL_NOTARGET)
+		if (client->gameEntity->flags & FL_NOTARGET)
 			return false;
 	}
 	else
@@ -3480,7 +3469,7 @@ bool CMonster::FindTarget()
 	edict_t *old = Entity->enemy;
 	if (!heardit)
 	{
-		r = range (Entity, client);
+		r = range (Entity, client->gameEntity);
 
 		if (r == RANGE_FAR)
 			return false;
@@ -3488,37 +3477,34 @@ bool CMonster::FindTarget()
 // this is where we would check invisibility
 
 		// is client in an spot too dark to be seen?
-		if (client->light_level <= 5)
+		if (client->gameEntity->light_level <= 5)
 			return false;
 
-		if (!visible (Entity, client))
+		if (!visible (Entity, client->gameEntity))
 			return false;
 
 		if (r == RANGE_NEAR)
 		{
-			if (client->show_hostile < level.time && !infront (Entity, client))
+			if (client->gameEntity->show_hostile < level.time && !infront (Entity, client->gameEntity))
 				return false;
 		}
 		else if (r == RANGE_MID)
 		{
-			if (!infront (Entity, client))
+			if (!infront (Entity, client->gameEntity))
 				return false;
 		}
 
-		Entity->enemy = client;
+		Entity->enemy = client->gameEntity;
 
-		if (strcmp(Entity->enemy->classname, "player_noise") != 0)
+		AIFlags &= ~AI_SOUND_TARGET;
+
+		if (!Entity->enemy->client)
 		{
-			AIFlags &= ~AI_SOUND_TARGET;
-
+			Entity->enemy = Entity->enemy->enemy;
 			if (!Entity->enemy->client)
 			{
-				Entity->enemy = Entity->enemy->enemy;
-				if (!Entity->enemy->client)
-				{
-					Entity->enemy = NULL;
-					return false;
-				}
+				Entity->enemy = NULL;
+				return false;
 			}
 		}
 	}
@@ -3528,24 +3514,24 @@ bool CMonster::FindTarget()
 
 		if (Entity->spawnflags & 1)
 		{
-			if (!visible (Entity, client))
+			if (!visible (Entity, client->gameEntity))
 				return false;
 		}
 		else
 		{
-			if (!gi.inPHS(Entity->state.origin, client->state.origin))
+			if (!gi.inPHS(Entity->state.origin, client->gameEntity->state.origin))
 				return false;
 		}
 
-		Vec3Subtract (client->state.origin, Entity->state.origin, temp);
+		Vec3Subtract (client->gameEntity->state.origin, Entity->state.origin, temp);
 
 		if (Vec3Length(temp) > 1000)	// too far to hear
 			return false;
 
 		// check area portals - if they are different and not connected then we can't hear it
-		if (client->areaNum != Entity->areaNum)
+		if (client->GetAreaNum() != Entity->areaNum)
 		{
-			if (!gi.AreasConnected(Entity->areaNum, client->areaNum))
+			if (!gi.AreasConnected(Entity->areaNum, client->GetAreaNum()))
 				return false;
 		}
 
@@ -3554,7 +3540,7 @@ bool CMonster::FindTarget()
 
 		// hunt the sound for a bit; hopefully find the real player
 		//AIFlags |= AI_SOUND_TARGET;
-		Entity->enemy = client;
+		Entity->enemy = client->gameEntity;
 	}
 
 //

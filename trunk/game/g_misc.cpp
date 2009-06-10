@@ -230,8 +230,9 @@ void ThrowClientHead (edict_t *self, int damage)
 
 	if (self->client)	// bodies in the queue don't have a client anymore
 	{
-		self->client->anim_priority = ANIM_DEATH;
-		self->client->anim_end = self->state.frame;
+		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(self->Entity);
+		Player->Client.anim_priority = ANIM_DEATH;
+		Player->Client.anim_end = self->state.frame;
 	}
 	else
 	{
@@ -1838,10 +1839,14 @@ void teleporter_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurfa
 		return;
 	}
 
+	CPlayerEntity	*Player = NULL;
+	if (other->Entity)
+		Player = dynamic_cast<CPlayerEntity*>(other->Entity);
+
 #ifdef CLEANCTF_ENABLED
 	//ZOID
-	if (other->client)
-		CGrapple::PlayerResetGrapple(other);
+	if (Player)
+		CGrapple::PlayerResetGrapple(Player);
 	//ZOID
 #endif
 
@@ -1854,14 +1859,14 @@ void teleporter_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurfa
 
 	// clear the velocity and hold them in place briefly
 	Vec3Clear (other->velocity);
-	if (other->client)
+	if (Player)
 	{
-		other->client->playerState.pMove.pmTime = 160>>3;		// hold time
-		other->client->playerState.pMove.pmFlags |= PMF_TIME_TELEPORT;
+		Player->Client.PlayerState.GetPMove()->pmTime = 160>>3;		// hold time
+		Player->Client.PlayerState.GetPMove()->pmFlags |= PMF_TIME_TELEPORT;
 	}
 
 	// draw the teleport splash at source and on the player
-	if (other->client)
+	if (Player)
 		other->state.event = EV_PLAYER_TELEPORT;
 	else
 		other->state.event = EV_OTHER_TELEPORT;
@@ -1870,14 +1875,14 @@ void teleporter_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurfa
 	if (other->client)
 	{
 		for (i=0 ; i<3 ; i++)
-			other->client->playerState.pMove.deltaAngles[i] = ANGLE2SHORT(dest->state.angles[i] - other->client->resp.cmd_angles[i]);
+			Player->Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(dest->state.angles[i] - Player->Client.resp.cmd_angles[i]);
 	}
 
 	Vec3Clear (other->state.angles);
-	if (other->client)
+	if (Player)
 	{
-		Vec3Clear (other->client->playerState.viewAngles);
-		Vec3Clear (other->client->v_angle);
+		Player->Client.PlayerState.SetViewAngles (vec3Origin);
+		Vec3Clear (Player->Client.v_angle);
 	}
 
 	// kill anything at the destination

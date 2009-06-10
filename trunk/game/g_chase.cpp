@@ -19,10 +19,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "g_local.h"
 
-void UpdateChaseCam(edict_t *ent)
+void UpdateChaseCam(CPlayerEntity *ent)
 {
 	vec3_t o, ownerv, goal;
-	edict_t *targ;
 	vec3_t forward, right;
 	CTrace trace;
 	int i;
@@ -30,39 +29,41 @@ void UpdateChaseCam(edict_t *ent)
 	vec3_t angles;
 
 	// is our chase target gone?
-	if (!ent->client->chase_target->inUse
-		|| ent->client->chase_target->client->resp.spectator) {
-		edict_t *old = ent->client->chase_target;
+	if (!ent->Client.chase_target->IsInUse()
+		|| ent->Client.chase_target->Client.resp.spectator)
+	{
+		CPlayerEntity *old = ent->Client.chase_target;
 		ChaseNext(ent);
-		if (ent->client->chase_target == old) {
-			ent->client->chase_target = NULL;
-			ent->client->playerState.pMove.pmFlags &= ~PMF_NO_PREDICTION;
+		if (ent->Client.chase_target == old)
+		{
+			ent->Client.chase_target = NULL;
+			ent->Client.PlayerState.GetPMove()->pmFlags &= ~PMF_NO_PREDICTION;
 			return;
 		}
 	}
 
-	targ = ent->client->chase_target;
+	CPlayerEntity *targ = ent->Client.chase_target;
 
-	Vec3Copy(targ->state.origin, ownerv);
-	Vec3Copy(ent->state.origin, oldgoal);
+	Vec3Copy(targ->gameEntity->state.origin, ownerv);
+	Vec3Copy(ent->gameEntity->state.origin, oldgoal);
 
-	ownerv[2] += targ->viewheight;
+	ownerv[2] += targ->gameEntity->viewheight;
 
-	Vec3Copy(targ->client->v_angle, angles);
+	Vec3Copy(targ->Client.v_angle, angles);
 	if (angles[PITCH] > 56)
 		angles[PITCH] = 56;
 	Angles_Vectors (angles, forward, right, NULL);
 	VectorNormalizef (forward, forward);
 	Vec3MA (ownerv, -30, forward, o);
 
-	if (o[2] < targ->state.origin[2] + 20)
-		o[2] = targ->state.origin[2] + 20;
+	if (o[2] < targ->gameEntity->state.origin[2] + 20)
+		o[2] = targ->gameEntity->state.origin[2] + 20;
 
 	// jump animation lifts
-	if (!targ->groundentity)
+	if (!targ->gameEntity->groundentity)
 		o[2] += 16;
 
-	trace = CTrace (ownerv, vec3Origin, vec3Origin, o, targ, CONTENTS_MASK_SOLID);
+	trace = CTrace (ownerv, vec3Origin, vec3Origin, o, targ->gameEntity, CONTENTS_MASK_SOLID);
 
 	Vec3Copy(trace.endPos, goal);
 
@@ -71,124 +72,124 @@ void UpdateChaseCam(edict_t *ent)
 	// pad for floors and ceilings
 	Vec3Copy(goal, o);
 	o[2] += 6;
-	trace = CTrace (goal, vec3Origin, vec3Origin, o, targ, CONTENTS_MASK_SOLID);
-	if (trace.fraction < 1) {
+	trace = CTrace (goal, vec3Origin, vec3Origin, o, targ->gameEntity, CONTENTS_MASK_SOLID);
+	if (trace.fraction < 1)
+	{
 		Vec3Copy(trace.endPos, goal);
 		goal[2] -= 6;
 	}
 
 	Vec3Copy(goal, o);
 	o[2] -= 6;
-	trace = CTrace (goal, vec3Origin, vec3Origin, o, targ, CONTENTS_MASK_SOLID);
-	if (trace.fraction < 1) {
+	trace = CTrace (goal, vec3Origin, vec3Origin, o, targ->gameEntity, CONTENTS_MASK_SOLID);
+	if (trace.fraction < 1)
+	{
 		Vec3Copy(trace.endPos, goal);
 		goal[2] += 6;
 	}
 
-	if (targ->deadflag)
-		ent->client->playerState.pMove.pmType = PMT_DEAD;
+	if (targ->gameEntity->deadflag)
+		ent->Client.PlayerState.GetPMove()->pmType = PMT_DEAD;
 	else
-		ent->client->playerState.pMove.pmType = PMT_FREEZE;
+		ent->Client.PlayerState.GetPMove()->pmType = PMT_FREEZE;
 
-	Vec3Copy(goal, ent->state.origin);
+	Vec3Copy(goal, ent->gameEntity->state.origin);
 	for (i=0 ; i<3 ; i++)
-		ent->client->playerState.pMove.deltaAngles[i] = ANGLE2SHORT(targ->client->v_angle[i] - ent->client->resp.cmd_angles[i]);
+		ent->Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(targ->Client.v_angle[i] - ent->Client.resp.cmd_angles[i]);
 
-	if (targ->deadflag) {
-		ent->client->playerState.viewAngles[ROLL] = 40;
-		ent->client->playerState.viewAngles[PITCH] = -15;
-		ent->client->playerState.viewAngles[YAW] = targ->client->killer_yaw;
-	} else {
-		Vec3Copy(targ->client->v_angle, ent->client->playerState.viewAngles);
-		Vec3Copy(targ->client->v_angle, ent->client->v_angle);
+	if (targ->gameEntity->deadflag)
+		ent->Client.PlayerState.SetViewAngles (vec3f(40, -15, targ->Client.killer_yaw));
+	else
+	{
+		ent->Client.PlayerState.SetViewAngles(targ->Client.v_angle);
+		Vec3Copy(targ->Client.v_angle, ent->Client.v_angle);
 	}
 
-	ent->viewheight = 0;
-	ent->client->playerState.pMove.pmFlags |= PMF_NO_PREDICTION;
-	gi.linkentity(ent);
+	ent->gameEntity->viewheight = 0;
+	ent->Client.PlayerState.GetPMove()->pmFlags |= PMF_NO_PREDICTION;
+	gi.linkentity(ent->gameEntity);
 
-	if ((!ent->client->showscores && !ent->client->resp.MenuState.InMenu &&
-		!ent->client->showinventory && !ent->client->showhelp &&
-		!(level.framenum & 31)) || ent->client->update_chase)
+	if ((!ent->Client.showscores && !ent->Client.resp.MenuState.InMenu &&
+		!ent->Client.showinventory && !ent->Client.showhelp &&
+		!(level.framenum & 31)) || ent->Client.update_chase)
 	{
 		CStatusBar Chasing;
 		char temp[128];
-		Q_snprintfz (temp, sizeof(temp), "Chasing %s", targ->client->pers.netname);
+		Q_snprintfz (temp, sizeof(temp), "Chasing %s", targ->Client.pers.netname);
 
 		Chasing.AddVirtualPoint_X (0);
 		Chasing.AddVirtualPoint_Y (-68);
 		Chasing.AddString (temp, true, false);
-		Chasing.SendMsg (ent, false);
+		Chasing.SendMsg (ent->gameEntity, false);
 
-		ent->client->update_chase = false;
+		ent->Client.update_chase = false;
 	}
 }
 
-void ChaseNext(edict_t *ent)
+void ChaseNext(CPlayerEntity *ent)
 {
 	int i;
-	edict_t *e;
+	CPlayerEntity *e;
 
-	if (!ent->client->chase_target)
+	if (!ent->Client.chase_target)
 		return;
 
-	i = ent->client->chase_target - g_edicts;
+	i = ent->Client.chase_target->gameEntity - g_edicts;
 	do {
 		i++;
 		if (i > game.maxclients)
 			i = 1;
-		e = g_edicts + i;
-		if (!e->inUse)
+		e = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+		if (!e->IsInUse())
 			continue;
-		if (!e->client->resp.spectator)
+		if (!e->Client.resp.spectator)
 			break;
-	} while (e != ent->client->chase_target);
+	} while (e != ent->Client.chase_target);
 
-	ent->client->chase_target = e;
-	ent->client->update_chase = true;
+	ent->Client.chase_target = e;
+	ent->Client.update_chase = true;
 }
 
-void ChasePrev(edict_t *ent)
+void ChasePrev(CPlayerEntity *ent)
 {
 	int i;
-	edict_t *e;
+	CPlayerEntity *e;
 
-	if (!ent->client->chase_target)
+	if (!ent->Client.chase_target)
 		return;
 
-	i = ent->client->chase_target - g_edicts;
+	i = ent->Client.chase_target->gameEntity - g_edicts;
 	do {
 		i--;
 		if (i < 1)
 			i = game.maxclients;
-		e = g_edicts + i;
-		if (!e->inUse)
+		e = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+		if (!e->IsInUse())
 			continue;
-		if (!e->client->resp.spectator)
+		if (!e->Client.resp.spectator)
 			break;
-	} while (e != ent->client->chase_target);
+	} while (e != ent->Client.chase_target);
 
-	ent->client->chase_target = e;
-	ent->client->update_chase = true;
+	ent->Client.chase_target = e;
+	ent->Client.update_chase = true;
 }
 
-void GetChaseTarget(edict_t *ent)
+void GetChaseTarget(CPlayerEntity *ent)
 {
 	int i;
-	edict_t *other;
 
 	for (i = 1; i <= game.maxclients; i++)
 	{
-		other = g_edicts + i;
-		if (other->inUse && !other->client->resp.spectator)
+		CPlayerEntity *other = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+		if (other->IsInUse() && !other->Client.resp.spectator)
 		{
-			ent->client->chase_target = other;
-			ent->client->update_chase = true;
+			ent->Client.chase_target = other;
+			ent->Client.update_chase = true;
 			UpdateChaseCam(ent);
 			return;
 		}
 	}
-	CenterPrintf(ent, "No other players to chase.");
+	CenterPrintf(ent->gameEntity, "No other players to chase.");
 }
 
 

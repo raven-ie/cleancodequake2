@@ -41,11 +41,11 @@ CBaseItem(Classname, WorldModel, EffectFlags, PickupSound, Icon, Name, Flags,
 {
 };
 
-void CKey::Use (edict_t *ent)
+void CKey::Use (CPlayerEntity *ent)
 {
 }
 
-void CKey::Drop (edict_t *ent)
+void CKey::Drop (CPlayerEntity *ent)
 {
 }
 
@@ -58,30 +58,30 @@ CKey(Classname, WorldModel, EffectFlags, PickupSound, Icon, Name, Flags,
 };
 
 
-bool CKey::Pickup (edict_t *ent, edict_t *other)
+bool CKey::Pickup (edict_t *ent, CPlayerEntity *other)
 {
 	if (game.mode == GAME_COOPERATIVE)
 	{
-		if (other->client->pers.Inventory.Has(this))
+		if (other->Client.pers.Inventory.Has(this))
 			return false;
-		other->client->pers.Inventory.Set (this, 1);
+		other->Client.pers.Inventory.Set (this, 1);
 		return true;
 	}
-	other->client->pers.Inventory += this;
+	other->Client.pers.Inventory += this;
 	return true;
 }
 
-bool CPowerCube::Pickup (edict_t *ent, edict_t *other)
+bool CPowerCube::Pickup (edict_t *ent, CPlayerEntity *other)
 {
 	if (game.mode == GAME_COOPERATIVE)
 	{
-		if (other->client->pers.power_cubes & ((ent->spawnflags & 0x0000ff00)>> 8))
+		if (other->Client.pers.power_cubes & ((ent->spawnflags & 0x0000ff00)>> 8))
 			return false;
-		other->client->pers.Inventory += this;
-		other->client->pers.power_cubes |= ((ent->spawnflags & 0x0000ff00) >> 8);
+		other->Client.pers.Inventory += this;
+		other->Client.pers.power_cubes |= ((ent->spawnflags & 0x0000ff00) >> 8);
 		return true;
 	}
-	other->client->pers.Inventory += this;
+	other->Client.pers.Inventory += this;
 	return true;
 }
 

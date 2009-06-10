@@ -34,42 +34,6 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_local.h"
 #include "m_player.h"
 
-char *ClientTeam (edict_t *ent)
-{
-	char		*p;
-	// Paril todo fixme, this sucks.
-	static char	value[MAX_INFO_STRING];
-
-	value[0] = 0;
-
-	if (!ent->client)
-		return value;
-
-	Q_strncpyz(value, Info_ValueForKey (ent->client->pers.userinfo, "skin"), MAX_INFO_STRING);
-	p = strchr(value, '/');
-	if (!p)
-		return value;
-
-	if (dmFlags.dfModelTeams)
-	{
-		*p = 0;
-		return value;
-	}
-
-	// if ((int)(dmflags->floatVal) & DF_SKINTEAMS)
-	return ++p;
-}
-
-bool OnSameTeam (edict_t *ent1, edict_t *ent2)
-{
-	if (!(dmFlags.dfSkinTeams || dmFlags.dfModelTeams))
-		return false;
-
-	if (strcmp(ClientTeam (ent1), ClientTeam (ent2)) == 0)
-		return true;
-	return false;
-}
-
 /*
 ==================
 Cmd_God_f
@@ -79,10 +43,10 @@ Sets client to godmode
 argv(0) god
 ==================
 */
-void Cmd_God_f (edict_t *ent)
+void Cmd_God_f (CPlayerEntity *ent)
 {
-	ent->flags ^= FL_GODMODE;
-	ClientPrintf (ent, PRINT_HIGH, "God mode %s\n", (!(ent->flags & FL_GODMODE)) ? "off" : "on");
+	ent->gameEntity->flags ^= FL_GODMODE;
+	ClientPrintf (ent->gameEntity, PRINT_HIGH, "God mode %s\n", (!(ent->gameEntity->flags & FL_GODMODE)) ? "off" : "on");
 }
 
 
@@ -95,10 +59,10 @@ Sets client to notarget
 argv(0) notarget
 ==================
 */
-void Cmd_Notarget_f (edict_t *ent)
+void Cmd_Notarget_f (CPlayerEntity *ent)
 {
-	ent->flags ^= FL_NOTARGET;
-	ClientPrintf (ent, PRINT_HIGH, "Notarget %s\n", (!(ent->flags & FL_NOTARGET)) ? "off" : "on");
+	ent->gameEntity->flags ^= FL_NOTARGET;
+	ClientPrintf (ent->gameEntity, PRINT_HIGH, "Notarget %s\n", (!(ent->gameEntity->flags & FL_NOTARGET)) ? "off" : "on");
 }
 
 
@@ -109,10 +73,10 @@ Cmd_Noclip_f
 argv(0) noclip
 ==================
 */
-void Cmd_Noclip_f (edict_t *ent)
+void Cmd_Noclip_f (CPlayerEntity *ent)
 {
-	ent->movetype = (ent->movetype == MOVETYPE_NOCLIP) ? MOVETYPE_WALK : MOVETYPE_NOCLIP;
-	ClientPrintf (ent, PRINT_HIGH, "Noclip %s\n", (ent->movetype == MOVETYPE_NOCLIP) ? "on" : "off");
+	ent->gameEntity->movetype = (ent->gameEntity->movetype == MOVETYPE_NOCLIP) ? MOVETYPE_WALK : MOVETYPE_NOCLIP;
+	ClientPrintf (ent->gameEntity, PRINT_HIGH, "Noclip %s\n", (ent->gameEntity->movetype == MOVETYPE_NOCLIP) ? "on" : "off");
 }
 
 /*
@@ -120,20 +84,20 @@ void Cmd_Noclip_f (edict_t *ent)
 Cmd_Kill_f
 =================
 */
-void Cmd_Kill_f (edict_t *ent)
+void Cmd_Kill_f (CPlayerEntity *ent)
 {
 //ZOID
-	if (ent->solid == SOLID_NOT)
+	if (ent->gameEntity->solid == SOLID_NOT)
 		return;
 //ZOID
 
-	if((level.time - ent->client->respawn_time) < 5)
+	if((level.time - ent->Client.respawn_time) < 5)
 		return;
 
-	ent->flags &= ~FL_GODMODE;
-	ent->health = 0;
+	ent->gameEntity->flags &= ~FL_GODMODE;
+	ent->gameEntity->health = 0;
 	meansOfDeath = MOD_SUICIDE;
-	player_die (ent, ent, ent, 100000, vec3Origin);
+	player_die (ent->gameEntity, ent->gameEntity, ent->gameEntity, 100000, vec3Origin);
 }
 
 /*
@@ -141,16 +105,16 @@ void Cmd_Kill_f (edict_t *ent)
 Cmd_PutAway_f
 =================
 */
-void Cmd_PutAway_f (edict_t *ent)
+void Cmd_PutAway_f (CPlayerEntity *ent)
 {
-	ent->client->showscores = false;
-	ent->client->showhelp = false;
-	ent->client->showinventory = false;
+	ent->Client.showscores = false;
+	ent->Client.showhelp = false;
+	ent->Client.showinventory = false;
 
-	if (ent->client->resp.MenuState.InMenu)
-		ent->client->resp.MenuState.CloseMenu ();
+	if (ent->Client.resp.MenuState.InMenu)
+		ent->Client.resp.MenuState.CloseMenu ();
 
-	ent->client->update_chase = true;
+	ent->Client.update_chase = true;
 }
 
 
@@ -176,7 +140,7 @@ int PlayerSort (void const *a, void const *b)
 Cmd_Players_f
 =================
 */
-void Cmd_Players_f (edict_t *ent)
+void Cmd_Players_f (CPlayerEntity *ent)
 {
 	int		i;
 	int		count;
@@ -187,7 +151,8 @@ void Cmd_Players_f (edict_t *ent)
 	count = 0;
 	for (i = 0 ; i < game.maxclients ; i++)
 	{
-		if (game.clients[i].pers.state >= SVCS_CONNECTED)
+		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity);
+		if (Player->Client.pers.state >= SVCS_CONNECTED)
 		{
 			index[count] = i;
 			count++;
@@ -202,9 +167,10 @@ void Cmd_Players_f (edict_t *ent)
 
 	for (i = 0 ; i < count ; i++)
 	{
+		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity);
 		Q_snprintfz (small, sizeof(small), "%3i %s\n",
-			game.clients[index[i]].playerState.stats[STAT_FRAGS],
-			game.clients[index[i]].pers.netname);
+			Player->Client.PlayerState.GetStat(STAT_FRAGS),
+			Player->Client.pers.netname);
 		if (strlen (small) + strlen(large) > sizeof(large) - 100 )
 		{	// can't print all of them in one packet
 			Q_strcatz (large, "...\n", MAX_INFO_STRING);
@@ -213,7 +179,7 @@ void Cmd_Players_f (edict_t *ent)
 		Q_strcatz (large, small, MAX_INFO_STRING);
 	}
 
-	ClientPrintf (ent, PRINT_HIGH, "%s\n%i players\n", large, count);
+	ClientPrintf (ent->gameEntity, PRINT_HIGH, "%s\n%i players\n", large, count);
 
 	delete[] index;
 }
@@ -223,44 +189,44 @@ void Cmd_Players_f (edict_t *ent)
 Cmd_Wave_f
 =================
 */
-void Cmd_Wave_f (edict_t *ent)
+void Cmd_Wave_f (CPlayerEntity *ent)
 {
 	// can't wave when ducked
-	if (ent->client->playerState.pMove.pmFlags & PMF_DUCKED)
+	if (ent->Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED)
 		return;
 
-	if (ent->client->anim_priority > ANIM_WAVE)
+	if (ent->Client.anim_priority > ANIM_WAVE)
 		return;
 
-	ent->client->anim_priority = ANIM_WAVE;
+	ent->Client.anim_priority = ANIM_WAVE;
 
 	switch (ArgGeti(1))
 	{
 	case 0:
-		ClientPrintf (ent, PRINT_HIGH, "flipoff\n");
-		ent->state.frame = FRAME_flip01-1;
-		ent->client->anim_end = FRAME_flip12;
+		ClientPrintf (ent->gameEntity, PRINT_HIGH, "flipoff\n");
+		ent->gameEntity->state.frame = FRAME_flip01-1;
+		ent->Client.anim_end = FRAME_flip12;
 		break;
 	case 1:
-		ClientPrintf (ent, PRINT_HIGH, "salute\n");
-		ent->state.frame = FRAME_salute01-1;
-		ent->client->anim_end = FRAME_salute11;
+		ClientPrintf (ent->gameEntity, PRINT_HIGH, "salute\n");
+		ent->gameEntity->state.frame = FRAME_salute01-1;
+		ent->Client.anim_end = FRAME_salute11;
 		break;
 	case 2:
-		ClientPrintf (ent, PRINT_HIGH, "taunt\n");
-		ent->state.frame = FRAME_taunt01-1;
-		ent->client->anim_end = FRAME_taunt17;
+		ClientPrintf (ent->gameEntity, PRINT_HIGH, "taunt\n");
+		ent->gameEntity->state.frame = FRAME_taunt01-1;
+		ent->Client.anim_end = FRAME_taunt17;
 		break;
 	case 3:
-		ClientPrintf (ent, PRINT_HIGH, "wave\n");
-		ent->state.frame = FRAME_wave01-1;
-		ent->client->anim_end = FRAME_wave11;
+		ClientPrintf (ent->gameEntity, PRINT_HIGH, "wave\n");
+		ent->gameEntity->state.frame = FRAME_wave01-1;
+		ent->Client.anim_end = FRAME_wave11;
 		break;
 	case 4:
 	default:
-		ClientPrintf (ent, PRINT_HIGH, "point\n");
-		ent->state.frame = FRAME_point01-1;
-		ent->client->anim_end = FRAME_point12;
+		ClientPrintf (ent->gameEntity, PRINT_HIGH, "point\n");
+		ent->gameEntity->state.frame = FRAME_point01-1;
+		ent->Client.anim_end = FRAME_point12;
 		break;
 	}
 }
@@ -272,49 +238,48 @@ Cmd_Say_f
 */
 #define MAX_TALK_STRING 100
 
-bool CheckFlood(edict_t *ent)
+bool CheckFlood(CPlayerEntity *ent)
 {
 	int		i;
-	gclient_t *cl;
 
-	if (flood_msgs->Integer()) {
-		cl = ent->client;
-
-        if (level.time < cl->flood_locktill) {
-			ClientPrintf(ent, PRINT_HIGH, "You can't talk for %d more seconds\n",
-				(int)(cl->flood_locktill - level.time));
+	if (flood_msgs->Integer())
+	{
+        if (level.time < ent->Client.flood_locktill)
+		{
+			ClientPrintf(ent->gameEntity, PRINT_HIGH, "You can't talk for %d more seconds\n",
+				(int)(ent->Client.flood_locktill - level.time));
             return true;
         }
-        i = cl->flood_whenhead - flood_msgs->Integer() + 1;
+        i = ent->Client.flood_whenhead - flood_msgs->Integer() + 1;
         if (i < 0)
-            i = (sizeof(cl->flood_when)/sizeof(cl->flood_when[0])) + i;
-		if (cl->flood_when[i] && 
-			level.time - cl->flood_when[i] < flood_persecond->Integer()) {
-			cl->flood_locktill = level.time + flood_waitdelay->Float();
-			ClientPrintf(ent, PRINT_CHAT, "Flood protection:  You can't talk for %d seconds.\n",
+            i = (sizeof(ent->Client.flood_when)/sizeof(ent->Client.flood_when[0])) + i;
+		if (ent->Client.flood_when[i] && 
+			level.time - ent->Client.flood_when[i] < flood_persecond->Integer())
+		{
+			ent->Client.flood_locktill = level.time + flood_waitdelay->Float();
+			ClientPrintf(ent->gameEntity, PRINT_CHAT, "Flood protection:  You can't talk for %d seconds.\n",
 				flood_waitdelay->Integer());
             return true;
         }
-		cl->flood_whenhead = (cl->flood_whenhead + 1) %
-			(sizeof(cl->flood_when)/sizeof(cl->flood_when[0]));
-		cl->flood_when[cl->flood_whenhead] = level.time;
+		ent->Client.flood_whenhead = (ent->Client.flood_whenhead + 1) %
+			(sizeof(ent->Client.flood_when)/sizeof(ent->Client.flood_when[0]));
+		ent->Client.flood_when[ent->Client.flood_whenhead] = level.time;
 	}
 	return false;
 }
 
-void Cmd_Say_f (edict_t *ent, bool team, bool arg0)
+void Cmd_Say_f (CPlayerEntity *ent, bool team, bool arg0)
 {
 	int		j;
-	edict_t	*other;
 	char	*p;
 	char	text[MAX_TALK_STRING];
 
 	if (ArgCount () < 2 && !arg0)
 		return;
 
-	if (Bans.IsSquelched(ent->client->pers.IP) || Bans.IsSquelched(ent->client->pers.netname))
+	if (Bans.IsSquelched(ent->Client.pers.IP) || Bans.IsSquelched(ent->Client.pers.netname))
 	{
-		ClientPrintf (ent, PRINT_HIGH, "You are squelched and may not talk.\n");
+		ClientPrintf (ent->gameEntity, PRINT_HIGH, "You are squelched and may not talk.\n");
 		return;
 	}
 
@@ -322,9 +287,9 @@ void Cmd_Say_f (edict_t *ent, bool team, bool arg0)
 		team = false;
 
 	if (team)
-		Q_snprintfz (text, sizeof(text), "(%s): ", ent->client->pers.netname);
+		Q_snprintfz (text, sizeof(text), "(%s): ", ent->Client.pers.netname);
 	else
-		Q_snprintfz (text, sizeof(text), "%s: ", ent->client->pers.netname);
+		Q_snprintfz (text, sizeof(text), "%s: ", ent->Client.pers.netname);
 
 	if (arg0)
 	{
@@ -358,85 +323,77 @@ void Cmd_Say_f (edict_t *ent, bool team, bool arg0)
 
 	for (j = 1; j <= game.maxclients; j++)
 	{
-		other = &g_edicts[j];
-		if (!other->inUse)
+		CPlayerEntity *other = dynamic_cast<CPlayerEntity*>(g_edicts[j].Entity);
+		if (!other->IsInUse())
 			continue;
-		if (!other->client)
-			continue;
-		if (team)
-		{
-			if (!OnSameTeam(ent, other))
-				continue;
-		}
-		ClientPrintf(other, PRINT_CHAT, "%s", text);
+		ClientPrintf(other->gameEntity, PRINT_CHAT, "%s", text);
 	}
 }
 
-void Cmd_PlayerList_f(edict_t *ent)
+void Cmd_PlayerList_f(CPlayerEntity *ent)
 {
 	int i;
 	char st[80];
 	char text[MAX_COMPRINT/4];
-	edict_t *e2;
 
 	// connect time, ping, score, name
 	*text = 0;
 
 	Q_snprintfz (text, sizeof(text), "Spawned:\n");
-	for (i = 0, e2 = g_edicts + 1; i < game.maxclients; i++, e2++)
+	for (i = 0; i < game.maxclients; i++)
 	{
-		if (!e2->inUse)
+		CPlayerEntity *e2 = dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity);
+		if (!e2->IsInUse())
 			continue;
-		if (e2->client->pers.state != SVCS_SPAWNED)
+		if (e2->Client.pers.state != SVCS_SPAWNED)
 			continue;
 
 		Q_snprintfz(st, sizeof(st), " - %02d:%02d %4d %3d %s%s\n",
-			(level.framenum - e2->client->resp.enterframe) / 600,
-			((level.framenum - e2->client->resp.enterframe) % 600)/10,
-			e2->client->ping,
-			e2->client->resp.score,
-			e2->client->pers.netname,
-			e2->client->resp.spectator ? " (spectator)" : "");
+			(level.framenum - e2->Client.resp.enterframe) / 600,
+			((level.framenum - e2->Client.resp.enterframe) % 600)/10,
+			e2->Client.GetPing(),
+			e2->Client.resp.score,
+			e2->Client.pers.netname,
+			e2->Client.resp.spectator ? " (spectator)" : "");
 		if (strlen(text) + strlen(st) > sizeof(text) - 50) {
 			Q_snprintfz (text+strlen(text), sizeof(text), "And more...\n");
-			ClientPrintf(ent, PRINT_HIGH, "%s", text);
+			ClientPrintf(ent->gameEntity, PRINT_HIGH, "%s", text);
 			return;
 		}
 		Q_strcatz(text, st, sizeof(text));
 	}
 
 	Q_strcatz (text, "Connecting:\n", sizeof(text));
-	for (i = 0, e2 = g_edicts + 1; i < game.maxclients; i++, e2++)
+	for (i = 0; i < game.maxclients; i++)
 	{
-		if (!e2->inUse)
-			continue;
-		if (e2->client->pers.state == SVCS_SPAWNED)
+		CPlayerEntity *e2 = dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity);
+		if (e2->Client.pers.state == SVCS_SPAWNED)
 			continue;
 
 		Q_snprintfz(st, sizeof(st), " - %s%s\n",
-			e2->client->pers.netname,
-			e2->client->resp.spectator ? " (spectator)" : "");
+			e2->Client.pers.netname,
+			e2->Client.resp.spectator ? " (spectator)" : "");
 		if (strlen(text) + strlen(st) > sizeof(text) - 50) {
 			Q_snprintfz (text+strlen(text), sizeof(text), "And more...\n");
-			ClientPrintf(ent, PRINT_HIGH, "%s", text);
+			ClientPrintf(ent->gameEntity, PRINT_HIGH, "%s", text);
 			return;
 		}
 		Q_strcatz(text, st, sizeof(text));
 	}
-	ClientPrintf(ent, PRINT_HIGH, "%s", text);
+	ClientPrintf(ent->gameEntity, PRINT_HIGH, "%s", text);
 }
 
-void GCmd_Say_f (edict_t *ent)
+void GCmd_Say_f (CPlayerEntity *ent)
 {
 	Cmd_Say_f (ent, false, false);
 }
 
-void GCmd_SayTeam_f (edict_t *ent)
+void GCmd_SayTeam_f (CPlayerEntity *ent)
 {
 	Cmd_Say_f (ent, true, false);
 }
 
-void Cmd_Test_f (edict_t *ent)
+void Cmd_Test_f (CPlayerEntity *ent)
 {
 	char *sound = ArgGets(1);
 
@@ -444,10 +401,10 @@ void Cmd_Test_f (edict_t *ent)
 		return;
 
 	gi.configstring (CS_SOUNDS+70, sound);
-	PlaySoundFrom (ent, CHAN_AUTO, 70, 1, ATTN_NONE);
+	PlaySoundFrom (ent->gameEntity, CHAN_AUTO, 70, 1, ATTN_NONE);
 }
 
-void GCTFSay_Team (edict_t *ent);
+void GCTFSay_Team (CPlayerEntity *ent);
 void Cmd_Register ()
 {
 	// These commands are generic, and can be executed any time
@@ -526,6 +483,6 @@ void ClientCommand (edict_t *ent)
 		return;		// not fully in game yet
 
 	InitArg ();
-	Cmd_RunCommand (ArgGets(0), ent);
+	Cmd_RunCommand (ArgGets(0), dynamic_cast<CPlayerEntity*>(ent->Entity));
 	EndArg ();
 }

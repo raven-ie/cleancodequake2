@@ -42,11 +42,11 @@ public:
 	char			*cmdName;
 
 	ECmdTypeFlags	CmdFlags;
-	void			(*RunFunction) (edict_t *ent);
+	void			(*RunFunction) (CPlayerEntity *ent);
 
-	CCmd (char *name, void (*Func) (edict_t *ent), ECmdTypeFlags Flags);
+	CCmd (char *name, void (*Func) (CPlayerEntity *ent), ECmdTypeFlags Flags);
 	~CCmd();
-	void Run (edict_t *ent);
+	void Run (CPlayerEntity *ent);
 };
 
 // Also throwing server command class here.

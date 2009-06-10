@@ -182,11 +182,12 @@ edict_t *CBaseItem::DropItem (edict_t *ent)
 	dropped->touch = DropTempTouch;
 	dropped->owner = ent;
 
-	if (ent->client)
+	if (ent->Entity && (ent->Entity->EntityFlags & ENT_PLAYER))
 	{
+		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(ent->Entity);
 		CTrace	trace;
 
-		Angles_Vectors (ent->client->v_angle, forward, right, NULL);
+		Angles_Vectors (Player->Client.v_angle, forward, right, NULL);
 		Vec3Set (offset, 24, 0, -16);
 		G_ProjectSource (ent->state.origin, offset, forward, right, dropped->state.origin);
 		trace = CTrace (ent->state.origin, dropped->mins, dropped->maxs,
@@ -222,12 +223,17 @@ be on an entity that hasn't spawned yet.
 */
 void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf)
 {
-	if (!other->client)
+	if (!other->Entity)
 		return;
+	if (other->Entity && !(other->Entity->EntityFlags & ENT_PLAYER))
+		return;
+
 	if (other->health < 1)
 		return;		// dead people can't pickup
 	if (!(ent->item->Flags & ITEMFLAG_GRABBABLE))
 		return;		// not a grabbable item?
+
+	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(other->Entity);
 
 	if (!(ent->spawnflags & ITEM_TARGETS_USED))
 	{
@@ -235,20 +241,23 @@ void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *su
 		ent->spawnflags |= ITEM_TARGETS_USED;
 	}
 
-	if (!ent->item->Pickup(ent,other))
+	if (!ent->item->Pickup(ent,Player))
 		return;
 
 	// flash the screen
-	other->client->bonus_alpha = 64;	
+	Player->Client.bonus_alpha = 64;	
 
 	// show icon and name on status bar
-	other->client->playerState.stats[STAT_PICKUP_ICON] = ent->item->IconIndex;
-	other->client->playerState.stats[STAT_PICKUP_STRING] = ent->item->GetConfigStringNumber();
-	other->client->pickup_msg_time = level.time + 3.0;
+	Player->Client.PlayerState.SetStat(STAT_PICKUP_ICON, ent->item->IconIndex);
+	Player->Client.PlayerState.SetStat(STAT_PICKUP_STRING, ent->item->GetConfigStringNumber());
+	Player->Client.pickup_msg_time = level.time + 3.0;
 
 	// change selected item
 	if (ent->item->Flags & ITEMFLAG_USABLE)
-		other->client->pers.Inventory.SelectedItem = other->client->playerState.stats[STAT_SELECTED_ITEM] = ent->item->GetIndex();
+	{
+		Player->Client.pers.Inventory.SelectedItem = ent->item->GetIndex();
+		Player->Client.PlayerState.SetStat(STAT_SELECTED_ITEM, Player->Client.pers.Inventory.SelectedItem);
+	}
 
 	if (ent->item->PickupSound)
 		PlaySoundFrom(other, CHAN_ITEM, ent->item->PickupSoundIndex

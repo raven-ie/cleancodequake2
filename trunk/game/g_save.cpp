@@ -117,15 +117,6 @@ field_t		levelfields[] =
 	{NULL, 0, F_INT}
 };
 
-field_t		clientfields[] =
-{
-	{"pers.Weapon", CLOFS(pers.Weapon), F_NEWITEM},
-	//{"pers.lastweapon", CLOFS(pers.lastweapon), F_ITEM},
-	{"NewWeapon", CLOFS(NewWeapon), F_NEWITEM},
-
-	{NULL, 0, F_INT}
-};
-
 void SetupGamemode ()
 {
 	int dmInt = deathmatch->Integer(),
@@ -497,35 +488,29 @@ WriteClient
 All pointer variables (except function pointers) must be handled specially.
 ==============
 */
-void WriteClient (FILE *f, gclient_t *client)
+void WriteClient (FILE *f, CPlayerEntity *Player)
 {
-//	field_t		*field;
-	gclient_t	temp;
-	
-	// all of the ints, floats, and vectors stay as they are
-	temp = *client;
-
-	// change the pointers to lengths or indexes
-	//for (field=clientfields ; field->name ; field++)
-	//{
-	//	WriteField1 (f, field, (byte *)&temp);
-	//}
 	// Write pers.weapon and pers.newweapon
-	int pwIndex = -1, nwIndex = -1;
+	int pwIndex = -1, nwIndex = -1, lwIndex = -1;
 
-	if (client->pers.Weapon)
+	if (Player->Client.pers.Weapon)
 	{
-		CBaseItem *Item = client->pers.Weapon->Item;
+		CBaseItem *Item = Player->Client.pers.Weapon->Item;
 		pwIndex = Item->GetIndex();
 	}
-	if (client->NewWeapon)
+	if (Player->Client.pers.LastWeapon)
 	{
-		CBaseItem *Item = client->NewWeapon->Item;
+		CBaseItem *Item = Player->Client.pers.LastWeapon->Item;
+		lwIndex = Item->GetIndex();
+	}
+	if (Player->Client.NewWeapon)
+	{
+		CBaseItem *Item = Player->Client.NewWeapon->Item;
 		nwIndex = Item->GetIndex();
 	}
 
 	// write the block
-	fwrite (&temp, sizeof(temp), 1, f);
+	fwrite (&Player->Client, sizeof(CClient), 1, f);
 
 	// now write any allocated data following the edict
 	/*for (field=clientfields ; field->name ; field++)
@@ -533,6 +518,7 @@ void WriteClient (FILE *f, gclient_t *client)
 		WriteField2 (f, field, (byte *)client);
 	}*/
 	fwrite (&pwIndex, sizeof(int), 1, f);
+	fwrite (&lwIndex, sizeof(int), 1, f);
 	fwrite (&nwIndex, sizeof(int), 1, f);
 }
 
@@ -543,18 +529,19 @@ ReadClient
 All pointer variables (except function pointers) must be handled specially.
 ==============
 */
-void ReadClient (FILE *f, gclient_t *client)
+void ReadClient (FILE *f, CPlayerEntity *Player)
 {
 //	field_t		*field;
 
-	fread (client, sizeof(*client), 1, f);
+	fread (&Player->Client, sizeof(CClient), 1, f);
 
 	/*for (field=clientfields ; field->name ; field++)
 	{
 		ReadField (f, field, (byte *)client);
 	}*/
-	int pwIndex, nwIndex;
+	int pwIndex, nwIndex, lwIndex;
 	fread (&pwIndex, sizeof(int), 1, f);
+	fread (&lwIndex, sizeof(int), 1, f);
 	fread (&nwIndex, sizeof(int), 1, f);
 
 	if (pwIndex != -1)
@@ -565,17 +552,37 @@ void ReadClient (FILE *f, gclient_t *client)
 			if (It->Flags & ITEMFLAG_AMMO)
 			{
 				CAmmo *Ammo = static_cast<CAmmo*>(It);
-				client->pers.Weapon = Ammo->Weapon;
+				Player->Client.pers.Weapon = Ammo->Weapon;
 			}
 			else
 			{
 				CWeaponItem *Weapon = static_cast<CWeaponItem*>(It);
-				client->pers.Weapon = Weapon->Weapon;
+				Player->Client.pers.Weapon = Weapon->Weapon;
 			}
 		}
 	}
 	else
-		client->pers.Weapon = NULL;
+		Player->Client.pers.Weapon = NULL;
+
+	if (lwIndex != -1)
+	{
+		CBaseItem *It = GetItemByIndex (lwIndex);
+		if (It->Flags & ITEMFLAG_WEAPON)
+		{
+			if (It->Flags & ITEMFLAG_AMMO)
+			{
+				CAmmo *Ammo = static_cast<CAmmo*>(It);
+				Player->Client.pers.LastWeapon = Ammo->Weapon;
+			}
+			else
+			{
+				CWeaponItem *Weapon = static_cast<CWeaponItem*>(It);
+				Player->Client.pers.LastWeapon = Weapon->Weapon;
+			}
+		}
+	}
+	else
+		Player->Client.pers.LastWeapon = NULL;
 
 	if (nwIndex != -1)
 	{
@@ -585,17 +592,17 @@ void ReadClient (FILE *f, gclient_t *client)
 			if (It->Flags & ITEMFLAG_AMMO)
 			{
 				CAmmo *Ammo = static_cast<CAmmo*>(It);
-				client->NewWeapon = Ammo->Weapon;
+				Player->Client.NewWeapon = Ammo->Weapon;
 			}
 			else
 			{
 				CWeaponItem *Weapon = static_cast<CWeaponItem*>(It);
-				client->NewWeapon = Weapon->Weapon;
+				Player->Client.NewWeapon = Weapon->Weapon;
 			}
 		}
 	}
 	else
-		client->NewWeapon = NULL;
+		Player->Client.NewWeapon = NULL;
 }
 
 /*
@@ -639,7 +646,7 @@ void WriteGame (char *filename, BOOL autosave)
 	game.autosaved = false;
 
 	for (i=0 ; i<game.maxclients ; i++)
-		WriteClient (f, &game.clients[i]);
+		WriteClient (f, dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity));
 
 	fclose (f);
 }
@@ -675,7 +682,7 @@ void ReadGame (char *filename)
 	fread (&game, sizeof(game), 1, f);
 	game.clients = (gclient_t*)gi.TagMalloc (game.maxclients * sizeof(game.clients[0]), TAG_GAME);
 	for (i=0 ; i<game.maxclients ; i++)
-		ReadClient (f, &game.clients[i]);
+		ReadClient (f, dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity));
 
 	fclose (f);
 }
@@ -926,7 +933,10 @@ void ReadLevel (char *filename)
 	{
 		ent = &g_edicts[i+1];
 		ent->client = game.clients + i;
-		ent->client->pers.state = SVCS_FREE;
+		ent->Entity = new CPlayerEntity(i+1);
+
+		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(ent->Entity);
+		Player->Client.pers.state = SVCS_FREE;
 	}
 
 	// do any load time things at this point

@@ -33,20 +33,20 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 
-void CCmd::Run (edict_t *ent)
+void CCmd::Run (CPlayerEntity *ent)
 {
 	if ((CmdFlags & CMD_CHEAT) && !game.cheats && (game.mode != GAME_SINGLEPLAYER))
 	{
-		ClientPrintf (ent, PRINT_HIGH, "Cheats must be enabled to use this command.\n");
+		ClientPrintf (ent->gameEntity, PRINT_HIGH, "Cheats must be enabled to use this command.\n");
 		return;
 	}
-	if (ent->client->resp.spectator && !(CmdFlags & CMD_SPECTATOR))	
+	if (ent->Client.resp.spectator && !(CmdFlags & CMD_SPECTATOR))	
 		return;
 
 	RunFunction (ent);
 };
 
-CCmd::CCmd (char *name, void (*Func)(edict_t *ent), ECmdTypeFlags Flags)
+CCmd::CCmd (char *name, void (*Func)(CPlayerEntity *ent), ECmdTypeFlags Flags)
 {
 	cmdName = (char*)gi.TagMalloc(strlen(name)+1, TAG_GAME);
 	Q_snprintfz (cmdName, strlen(name)+1, "%s", name);
@@ -77,7 +77,7 @@ CCmd *Cmd_FindCommand (char *commandName)
 	return NULL;
 }
 
-void Cmd_AddCommand (char *commandName, void (*Func) (edict_t *ent), ECmdTypeFlags Flags)
+void Cmd_AddCommand (char *commandName, void (*Func) (CPlayerEntity *ent), ECmdTypeFlags Flags)
 {
 	// Make sure the function doesn't already exist
 	if (Cmd_FindCommand(commandName))
@@ -104,12 +104,12 @@ void Cmd_RemoveCommands ()
 	}
 }
 
-void Cmd_RunCommand (char *commandName, edict_t *ent)
+void Cmd_RunCommand (char *commandName, CPlayerEntity *ent)
 {
 	CCmd *Command = Cmd_FindCommand(commandName);
 
 	if (Command)
 		Command->Run(ent);
 	else
-		ClientPrintf (ent, PRINT_HIGH, "Unknown command \"%s\"\n", commandName);
+		ClientPrintf (ent->gameEntity, PRINT_HIGH, "Unknown command \"%s\"\n", commandName);
 }

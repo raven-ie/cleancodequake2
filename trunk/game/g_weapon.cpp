@@ -235,7 +235,7 @@ static void fire_lead (edict_t *self, vec3_t start, vec3_t aimdir, int damage, i
 						CTempEnt_Splashes::Shotgun (tr.endPos, tr.plane.normal);
 
 					if (self->client)
-						PlayerNoise(self, tr.endPos, PNOISE_IMPACT);
+						PlayerNoise(dynamic_cast<CPlayerEntity*>(self->Entity), tr.endPos, PNOISE_IMPACT);
 				}
 			}
 		}
@@ -314,7 +314,7 @@ void blaster_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_
 	}
 
 	if (self->owner->client)
-		PlayerNoise(self->owner, self->state.origin, PNOISE_IMPACT);
+		PlayerNoise(dynamic_cast<CPlayerEntity*>(self->owner->Entity), self->state.origin, PNOISE_IMPACT);
 
 	if (other->takedamage)
 	{
@@ -389,7 +389,7 @@ static void Grenade_Explode (edict_t *ent)
 	int			mod;
 
 	if (ent->owner->client)
-		PlayerNoise(ent->owner, ent->state.origin, PNOISE_IMPACT);
+		PlayerNoise(dynamic_cast<CPlayerEntity*>(ent->owner->Entity), ent->state.origin, PNOISE_IMPACT);
 
 	//FIXME: if we are onground then raise our Z just a bit since we are a point?
 	if (ent->enemy)
@@ -568,7 +568,7 @@ void rocket_touch (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t 
 	}
 
 	if (ent->owner->client)
-		PlayerNoise(ent->owner, ent->state.origin, PNOISE_IMPACT);
+		PlayerNoise(dynamic_cast<CPlayerEntity*>(ent->owner->Entity), ent->state.origin, PNOISE_IMPACT);
 
 	// calculate position for the explosion entity
 	Vec3MA (ent->state.origin, -0.02, ent->velocity, origin);
@@ -693,7 +693,7 @@ void fire_rail (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick
 		CTempEnt_Trails::RailTrail (start, tr.endPos);
 
 	if (self->client)
-		PlayerNoise(self, tr.endPos, PNOISE_IMPACT);
+		PlayerNoise(dynamic_cast<CPlayerEntity*>(self->Entity), tr.endPos, PNOISE_IMPACT);
 }
 
 
@@ -755,7 +755,7 @@ void bfg_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *s
 	}
 
 	if (self->owner->client)
-		PlayerNoise(self->owner, self->state.origin, PNOISE_IMPACT);
+		PlayerNoise(dynamic_cast<CPlayerEntity*>(self->owner->Entity), self->state.origin, PNOISE_IMPACT);
 
 	// core explosion - prevents firing it into the wall/floor
 	if (other->takedamage)
@@ -813,10 +813,12 @@ void bfg_think (edict_t *self)
 #ifdef CLEANCTF_ENABLED
 //ZOID
 		//don't target players in CTF
-		if ((game.mode & GAME_CTF) && ent->client &&
-			self->owner->client &&
-			ent->client->resp.ctf_team == self->owner->client->resp.ctf_team)
+		if ((game.mode & GAME_CTF) && ent->Entity && (ent->Entity->EntityFlags & ENT_PLAYER) &&
+			self->owner->client)
+		{
+			if ((dynamic_cast<CPlayerEntity*>(ent->Entity))->Client.resp.ctf_team == (dynamic_cast<CPlayerEntity*>(self->owner->Entity))->Client.resp.ctf_team)
 			continue;
+		}
 //ZOID
 #endif
 

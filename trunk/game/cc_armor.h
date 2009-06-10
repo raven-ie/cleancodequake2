@@ -44,9 +44,9 @@ public:
 			   char *Precache, int baseCount, int maxCount, float normalProtection,
 			   float energyProtection);
 
-	bool	Pickup (edict_t *ent, edict_t *other);
-	void	Use (edict_t *ent);
-	void	Drop (edict_t *ent);
+	bool	Pickup (edict_t *ent, CPlayerEntity *other);
+	void	Use (CPlayerEntity *ent);
+	void	Drop (CPlayerEntity *ent);
 };
 
 void AddArmorToList ();

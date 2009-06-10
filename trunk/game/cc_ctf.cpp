@@ -2004,21 +2004,22 @@ void CTFStats(edict_t *ent)
 	ClientPrintf(ent, PRINT_HIGH, "%s", text);
 }
 
-void CTFPlayerList(edict_t *ent)
+void CTFPlayerList(CPlayerEntity *ent)
 {
 	int i;
 	char st[80];
 	char text[1400];
-	edict_t *e2;
 
 	*text = 0;
-	if (ctfgame.match == MATCH_SETUP) {
-		for (i = 1; i <= game.maxclients; i++) {
-			e2 = g_edicts + i;
-			if (!e2->inUse)
+	if (ctfgame.match == MATCH_SETUP)
+	{
+		for (i = 1; i <= game.maxclients; i++)
+		{
+			CPlayerEntity *e2 = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+			if (!e2->IsInUse)
 				continue;
-			if (!e2->client->resp.ready && e2->client->resp.ctf_team != CTF_NOTEAM) {
-				Q_snprintfz(st, sizeof(st), "%s is not ready.\n", e2->client->pers.netname);
+			if (!e2->Client.resp.ready && e2->Client.resp.ctf_team != CTF_NOTEAM) {
+				Q_snprintfz(st, sizeof(st), "%s is not ready.\n", e2->Client.pers.netname);
 				if (strlen(text) + strlen(st) < sizeof(text) - 50)
 					Q_strcatz(text, st, sizeof(text));
 			}
@@ -2028,28 +2029,31 @@ void CTFPlayerList(edict_t *ent)
 	// number, name, connect time, ping, score, admin
 
 	*text = 0;
-	for (i = 0, e2 = g_edicts + 1; i < game.maxclients; i++, e2++) {
-		if (!e2->inUse)
+	for (i = 1; i <= game.maxclients; i++)
+	{
+		CPlayerEntity *e2 = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+		if (!e2->IsInUse)
 			continue;
 
 		Q_snprintfz(st, sizeof(st), "%3d %-16.16s %02d:%02d %4d %3d%s%s\n",
 			i + 1,
-			e2->client->pers.netname,
-			(level.framenum - e2->client->resp.enterframe) / 600,
-			((level.framenum - e2->client->resp.enterframe) % 600)/10,
-			e2->client->ping,
-			e2->client->resp.score,
+			e2->Client.pers.netname,
+			(level.framenum - e2->Client.resp.enterframe) / 600,
+			((level.framenum - e2->Client.resp.enterframe) % 600)/10,
+			e2->Client.ping,
+			e2->Client.resp.score,
 			(ctfgame.match == MATCH_SETUP || ctfgame.match == MATCH_PREGAME) ?
-			(e2->client->resp.ready ? " (ready)" : " (notready)") : "",
-			e2->client->resp.admin ? " (admin)" : "");
-		if (strlen(text) + strlen(st) > sizeof(text) - 50) {
+			(e2->Client.resp.ready ? " (ready)" : " (notready)") : "",
+			e2->Client.resp.admin ? " (admin)" : "");
+		if (strlen(text) + strlen(st) > sizeof(text) - 50)
+		{
 			Q_snprintfz(text+strlen(text), sizeof(text), "And more...\n");
-			ClientPrintf(ent, PRINT_HIGH, "%s", text);
+			ClientPrintf(ent->gameEntity, PRINT_HIGH, "%s", text);
 			return;
 		}
 		Q_strcatz(text, st, sizeof(text));
 	}
-	ClientPrintf(ent, PRINT_HIGH, "%s", text);
+	ClientPrintf(ent->gameEntity, PRINT_HIGH, "%s", text);
 }
 
 

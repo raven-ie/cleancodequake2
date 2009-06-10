@@ -288,7 +288,10 @@ void use_target_changelevel (edict_t *self, edict_t *other, edict_t *activator)
 	if (game.mode & GAME_DEATHMATCH)
 	{
 		if (activator && activator->client)
-			BroadcastPrintf (PRINT_HIGH, "%s exited the level.\n", activator->client->pers.netname);
+		{
+			CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(activator->Entity);
+			BroadcastPrintf (PRINT_HIGH, "%s exited the level.\n", Player->Client.pers.netname);
+		}
 	}
 
 	// if going to a new unit, clear cross triggers

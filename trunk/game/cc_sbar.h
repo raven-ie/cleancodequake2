@@ -63,4 +63,4 @@ public:
 	size_t	Length ();
 };
 
-void HelpComputer (edict_t *ent);
+void HelpComputer (CPlayerEntity *ent);
