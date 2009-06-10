@@ -109,9 +109,9 @@ CBaseItem *FindItem (char *name)
 /// \param	ent		 - If non-null, the entity to add the amount to. 
 /// \param	quantity - The amount to add. 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void CBaseItem::Add (edict_t *ent, int quantity)
+void CBaseItem::Add (CPlayerEntity *ent, int quantity)
 {
-	ent->client->pers.Inventory.Add(this, quantity);
+	ent->Client.pers.Inventory.Add(this, quantity);
 }
 
 CBaseItem *FindItemByClassname (char *name)

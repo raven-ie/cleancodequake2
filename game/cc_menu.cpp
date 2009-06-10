@@ -42,21 +42,21 @@ Enabled(true)
 {
 };
 
-bool CMenuItem::CanSelect (edict_t *ent)
+bool CMenuItem::CanSelect (CPlayerEntity *ent)
 {
 	return Enabled;
 }
 
-void CMenuItem::Update (edict_t *ent)
+void CMenuItem::Update (CPlayerEntity *ent)
 {
 }
 
-bool CMenuItem::Select (edict_t *ent)
+bool CMenuItem::Select (CPlayerEntity *ent)
 {
 	return false;
 }
 
-CMenu::CMenu (edict_t *ent) :
+CMenu::CMenu (CPlayerEntity *ent) :
 Cursor(0),
 ent(ent)
 {
@@ -87,7 +87,7 @@ CMenuState::CMenuState ()
 {
 };
 
-CMenuState::CMenuState (edict_t *ent) :
+CMenuState::CMenuState (CPlayerEntity *ent) :
 ent(ent),
 Cursor(-1),
 CurrentMenu(NULL),
@@ -259,152 +259,30 @@ void CMenuState::Select ()
 		CloseMenu ();
 }
 
-void Cmd_Kill_f (edict_t *ent);
-
-static SSpinControlIndex AmmoIndexes[] =
+void Cmd_MenuLeft_t (CPlayerEntity *Player)
 {
-	{"Shells", "Shells"},
-	{"Bullets", "Bullets"},
-	{"Cells", "Cells"},
-	{"Rockets", "Rockets"},
-	{"Slugs", "Slugs"},
-	{"Grenades", "Grenades"},
-	NULL
-};
-
-#if 0
-class CTestMenu : public CMenu
-{
-public:
-	CMenu_Label		*Label1, *Label2;
-	CMenu_Spin		*Spin1;
-	CMenu_Slider	*Slider1;
-
-	class CLabel1 : public CMenu_Label
-	{
-	public:
-		CTestMenu	*Menu;
-		CLabel1 (CTestMenu *Menu, int x, int y) :
-		CMenu_Label(Menu,x,y),
-		Menu(Menu)
-		{
-		};
-
-		bool	Select (edict_t *ent)
-		{
-			CAmmo *Ammo = dynamic_cast<CAmmo*>(FindItem(Menu->Spin1->Indices[Menu->Spin1->Index].Text));
-
-			if (Ammo)
-			{
-				edict_t *it_ent = G_Spawn();
-				it_ent->classname = Ammo->Classname;
-				SpawnItem (it_ent, Ammo);
-				it_ent->count = Menu->Slider1->Value;
-				TouchItem (it_ent, ent, NULL, NULL);
-				if (it_ent->inUse)
-					G_FreeEdict(it_ent);
-			}
-			return true;
-		}
-	};
-
-	CTestMenu			(edict_t *ent) :
-	CMenu(ent)
-	{
-		Cursor = 3;
-	};
-
-	bool				Open ()
-	{
-		Label1 = new CMenu_Label (this, 0, -48);
-		Label1->LabelString = "Pick an ammo and amount...\n\"menu_left\" and \"menu_right\" to choose";
-		Label1->Align = LA_CENTER;
-		Label1->Enabled = false;
-		AddItem(Label1);
-
-		CMenu_Box *Box1 = new CMenu_Box (this, 0, -40);
-		Box1->Width = 11;
-		Box1->Type = 2;
-		Box1->Align = LA_CENTER;
-		AddItem (Box1);
-
-		Box1 = new CMenu_Box (this, 0, -12);
-		Box1->Width = 11;
-		Box1->Height = 4;
-		Box1->Type = 1;
-		Box1->Align = LA_CENTER;
-		AddItem (Box1);
-
-		Spin1 = new CMenu_Spin (this, 0, -8, AmmoIndexes);
-		Spin1->Align = LA_CENTER;
-		AddItem (Spin1);
-
-		Slider1 = new CMenu_Slider (this, -8, 8);
-		Slider1->Align = LA_CENTER;
-		Slider1->Min = 0;
-		Slider1->Max = 200;
-		Slider1->Width = 8;
-		Slider1->Step = 5;
-		Slider1->Value = 0;
-		AddItem(Slider1);
-
-		Label2 = new CLabel1 (this, 0, 24);
-		Label2->LabelString = "Give!";
-		Label2->Align = LA_CENTER;
-		AddItem(Label2);
-
-		return true;
-	};
-
-	void				Close ()
-	{
-	};
-
-	void				Draw (bool reliable)
-	{
-		CStatusBar Bar;
-
-		DrawItems(&Bar);
-		Bar.SendMsg(ent, reliable);
-	};
-};
-
-void OpenTestMenu (edict_t *ent)
-{
-	if (ent->client->resp.MenuState.InMenu)
+	if (!Player->Client.resp.MenuState.InMenu)
 		return;
 
-	ent->client->resp.MenuState.CurrentMenu = new CTestMenu(ent);
-	ent->client->resp.MenuState.OpenMenu ();
-
-	ent->client->resp.MenuState.CurrentMenu->Draw (true);
-}
-#endif
-
-void Cmd_MenuLeft_t (edict_t *ent)
-{
-	if (!ent->client->resp.MenuState.InMenu)
-		return;
-
-	ent->client->resp.MenuState.Key = KEY_LEFT;
+	Player->Client.resp.MenuState.Key = KEY_LEFT;
 
 	// Update the currently selected control
-	if (ent->client->resp.MenuState.Cursor != -1)
-		ent->client->resp.MenuState.CurrentMenu->Items.at(ent->client->resp.MenuState.Cursor)->Update(ent);
+	if (Player->Client.resp.MenuState.Cursor != -1)
+		Player->Client.resp.MenuState.CurrentMenu->Items.at(Player->Client.resp.MenuState.Cursor)->Update(ent);
 
-	ent->client->resp.MenuState.Key = KEY_NONE;
+	Player->Client.resp.MenuState.Key = KEY_NONE;
 }
 
-void Cmd_MenuRight_t (edict_t *ent)
+void Cmd_MenuRight_t (CPlayerEntity *Player)
 {
-	if (!ent->client->resp.MenuState.InMenu)
+	if (!Player->Client.resp.MenuState.InMenu)
 		return;
 
-	ent->client->resp.MenuState.Key = KEY_RIGHT;
+	Player->Client.resp.MenuState.Key = KEY_RIGHT;
 
 	// Update the currently selected control
-	if (ent->client->resp.MenuState.Cursor != -1)
-		ent->client->resp.MenuState.CurrentMenu->Items.at(ent->client->resp.MenuState.Cursor)->Update(ent);
+	if (Player->Client.resp.MenuState.Cursor != -1)
+		Player->Client.resp.MenuState.CurrentMenu->Items.at(Player->Client.resp.MenuState.Cursor)->Update(ent);
 
-	ent->client->resp.MenuState.Key = KEY_NONE;
+	Player->Client.resp.MenuState.Key = KEY_NONE;
 }

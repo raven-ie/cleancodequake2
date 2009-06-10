@@ -42,9 +42,9 @@ CWeapon("models/weapons/v_shotg2/tris.md2", 0, 6, 7, 17,
 {
 }
 
-bool CSuperShotgun::CanFire (edict_t *ent)
+bool CSuperShotgun::CanFire (CPlayerEntity *ent)
 {
-	switch (ent->client->playerState.gunFrame)
+	switch (ent->Client.PlayerState.GetGunFrame())
 	{
 	case 7:
 		return true;
@@ -52,9 +52,9 @@ bool CSuperShotgun::CanFire (edict_t *ent)
 	return false;
 }
 
-bool CSuperShotgun::CanStopFidgetting (edict_t *ent)
+bool CSuperShotgun::CanStopFidgetting (CPlayerEntity *ent)
 {
-	switch (ent->client->playerState.gunFrame)
+	switch (ent->Client.PlayerState.GetGunFrame())
 	{
 	case 29:
 	case 42:
@@ -64,7 +64,7 @@ bool CSuperShotgun::CanStopFidgetting (edict_t *ent)
 	return false;
 }
 
-void CSuperShotgun::Fire (edict_t *ent)
+void CSuperShotgun::Fire (CPlayerEntity *ent)
 {	vec3_t		start;
 	vec3_t		forward, right;
 	vec3_t		offset;
@@ -72,13 +72,13 @@ void CSuperShotgun::Fire (edict_t *ent)
 	int			damage = 6;
 	int			kick = 12;
 
-	Angles_Vectors (ent->client->v_angle, forward, right, NULL);
+	Angles_Vectors (ent->Client.v_angle, forward, right, NULL);
 
-	Vec3Scale (forward, -2, ent->client->kick_origin);
-	ent->client->kick_angles[0] = -2;
+	Vec3Scale (forward, -2, ent->Client.kick_origin);
+	ent->Client.kick_angles[0] = -2;
 
-	Vec3Set (offset, 0, 8,  ent->viewheight-8);
-	P_ProjectSource (ent->client, ent->state.origin, offset, forward, right, start);
+	Vec3Set (offset, 0, 8,  ent->gameEntity->viewheight-8);
+	P_ProjectSource (ent, ent->gameEntity->state.origin, offset, forward, right, start);
 
 	if (isQuad)
 	{
@@ -86,14 +86,14 @@ void CSuperShotgun::Fire (edict_t *ent)
 		kick *= 4;
 	}
 
-	v[PITCH] = ent->client->v_angle[PITCH];
-	v[YAW]   = ent->client->v_angle[YAW] - 5;
-	v[ROLL]  = ent->client->v_angle[ROLL];
+	v[PITCH] = ent->Client.v_angle[PITCH];
+	v[YAW]   = ent->Client.v_angle[YAW] - 5;
+	v[ROLL]  = ent->Client.v_angle[ROLL];
 	Angles_Vectors (v, forward, NULL, NULL);
-	fire_shotgun (ent, start, forward, damage, kick, DEFAULT_SHOTGUN_HSPREAD, DEFAULT_SHOTGUN_VSPREAD, DEFAULT_SSHOTGUN_COUNT/2, MOD_SSHOTGUN);
-	v[YAW]   = ent->client->v_angle[YAW] + 5;
+	fire_shotgun (ent->gameEntity, start, forward, damage, kick, DEFAULT_SHOTGUN_HSPREAD, DEFAULT_SHOTGUN_VSPREAD, DEFAULT_SSHOTGUN_COUNT/2, MOD_SSHOTGUN);
+	v[YAW]   = ent->Client.v_angle[YAW] + 5;
 	Angles_Vectors (v, forward, NULL, NULL);
-	fire_shotgun (ent, start, forward, damage, kick, DEFAULT_SHOTGUN_HSPREAD, DEFAULT_SHOTGUN_VSPREAD, DEFAULT_SSHOTGUN_COUNT/2, MOD_SSHOTGUN);
+	fire_shotgun (ent->gameEntity, start, forward, damage, kick, DEFAULT_SHOTGUN_HSPREAD, DEFAULT_SHOTGUN_VSPREAD, DEFAULT_SSHOTGUN_COUNT/2, MOD_SSHOTGUN);
 
 	// send muzzle flash
 	Muzzle (ent, MZ_SSHOTGUN);
@@ -101,7 +101,7 @@ void CSuperShotgun::Fire (edict_t *ent)
 
 	AttackSound (ent);
 
-	ent->client->playerState.gunFrame++;
+	ent->Client.PlayerState.SetGunFrame(ent->Client.PlayerState.GetGunFrame() + 1);
 	PlayerNoise(ent, start, PNOISE_WEAPON);
 
 	if (!dmFlags.dfInfiniteAmmo)

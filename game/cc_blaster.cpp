@@ -42,9 +42,9 @@ CWeapon("models/weapons/v_blast/tris.md2", 0, 4, 5, 8,
 {
 }
 
-bool CBlaster::CanFire (edict_t *ent)
+bool CBlaster::CanFire (CPlayerEntity *ent)
 {
-	switch (ent->client->playerState.gunFrame)
+	switch (ent->Client.PlayerState.GetGunFrame())
 	{
 	case 5:
 		return true;
@@ -52,9 +52,9 @@ bool CBlaster::CanFire (edict_t *ent)
 	return false;
 }
 
-bool CBlaster::CanStopFidgetting (edict_t *ent)
+bool CBlaster::CanStopFidgetting (CPlayerEntity *ent)
 {
-	switch (ent->client->playerState.gunFrame)
+	switch (ent->Client.PlayerState.GetGunFrame())
 	{
 	case 19:
 	case 32:
@@ -63,12 +63,12 @@ bool CBlaster::CanStopFidgetting (edict_t *ent)
 	return false;
 }
 
-bool CBlaster::AttemptToFire (edict_t *ent)
+bool CBlaster::AttemptToFire (CPlayerEntity *ent)
 {
 	return true;
 }
 
-void CBlaster::Fire (edict_t *ent)
+void CBlaster::Fire (CPlayerEntity *ent)
 {
 	int damage = deathmatch->Integer() ? 15 : 10;
 	vec3_t	forward, right;
@@ -78,14 +78,14 @@ void CBlaster::Fire (edict_t *ent)
 	if (isQuad)
 		damage *= 4;
 
-	Angles_Vectors (ent->client->v_angle, forward, right, NULL);
-	Vec3Set (offset, 24, 8, ent->viewheight-8);
-	P_ProjectSource (ent->client, ent->state.origin, offset, forward, right, start);
+	Angles_Vectors (ent->Client.v_angle, forward, right, NULL);
+	Vec3Set (offset, 24, 8, ent->gameEntity->viewheight-8);
+	P_ProjectSource (ent, ent->gameEntity->state.origin, offset, forward, right, start);
 
-	Vec3Scale (forward, -2, ent->client->kick_origin);
-	ent->client->kick_angles[0] = -1;
+	Vec3Scale (forward, -2, ent->Client.kick_origin);
+	ent->Client.kick_angles[0] = -1;
 
-	fire_blaster (ent, start, forward, damage, 1000, EF_BLASTER, false);
+	fire_blaster (ent->gameEntity, start, forward, damage, 1000, EF_BLASTER, false);
 
 	// send muzzle flash
 	Muzzle (ent, MZ_BLASTER);
@@ -94,5 +94,5 @@ void CBlaster::Fire (edict_t *ent)
 	PlayerNoise(ent, start, PNOISE_WEAPON);
 	FireAnimation(ent);
 
-	ent->client->playerState.gunFrame++;
+	ent->Client.PlayerState.SetGunFrame(ent->Client.PlayerState.GetGunFrame() + 1);
 }

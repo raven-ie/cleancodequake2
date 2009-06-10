@@ -21,8 +21,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 // m_quad.c
 //
 
+
 #include "shared.h"
 
+#ifdef SHARED_ALLOW_QUATERNIONS
 quat_t		quatIdentity = {
 	0, 0, 0, 1
 };
@@ -213,3 +215,4 @@ void Quat_TransformVector (quat_t q, vec3_t v, vec3_t out)
 	out[1] = (float)((xy + wz) * v[0] + (1.0f - xx - zz) * v[1] + (yz - wx) * v[2]);
 	out[2] = (float)((xz - wy) * v[0] + (yz + wx) * v[1] + (1.0f - xx - yy) * v[2]);
 }
+#endif

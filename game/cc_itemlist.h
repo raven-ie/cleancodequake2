@@ -34,7 +34,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 // Just to conform to the configstrings
 #define MAX_ITEMS		256
-#define MAX_ITEMS_HASH	(MAX_COMMANDS/2)
+#define MAX_ITEMS_HASH	(MAX_ITEMS/2)
 
 // Generic itemlist.
 class CItemList

@@ -43,9 +43,9 @@ CWeapon("models/weapons/grapple/tris.md2", 0, 5, 6, 9,
 {
 }
 
-bool CGrapple::CanFire (edict_t *ent)
+bool CGrapple::CanFire (CPlayerEntity *ent)
 {
-	switch (ent->client->playerState.gunFrame)
+	switch (ent->Client.PlayerState.GetGunFrame())
 	{
 	case 6:
 		return true;
@@ -53,9 +53,9 @@ bool CGrapple::CanFire (edict_t *ent)
 	return false;
 }
 
-bool CGrapple::CanStopFidgetting (edict_t *ent)
+bool CGrapple::CanStopFidgetting (CPlayerEntity *ent)
 {
-	switch (ent->client->playerState.gunFrame)
+	switch (ent->Client.PlayerState.GetGunFrame())
 	{
 	case 10:
 	case 18:
@@ -65,35 +65,34 @@ bool CGrapple::CanStopFidgetting (edict_t *ent)
 	return false;
 }
 
-bool CGrapple::AttemptToFire (edict_t *ent)
+bool CGrapple::AttemptToFire (CPlayerEntity *ent)
 {
 	return true;
 }
 
 // ent is player
-void CGrapple::PlayerResetGrapple(edict_t *ent)
+void CGrapple::PlayerResetGrapple(CPlayerEntity *ent)
 {
-	if (ent->client && ent->client->ctf_grapple)
-		ResetGrapple(ent->client->ctf_grapple);
+	if (ent->Client.ctf_grapple)
+		ResetGrapple(ent->Client.ctf_grapple);
 }
 
 // self is grapple, not player
 void CGrapple::ResetGrapple(edict_t *self)
 {
-	if (self->owner->client->ctf_grapple)
+	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(self->owner->Entity);
+	if (Player->Client.ctf_grapple)
 	{
 		float volume = 1.0;
-		gclient_t *cl;
 
-		if (self->owner->client->silencer_shots)
+		if (Player->Client.silencer_shots)
 			volume = 0.2f;
 
-		PlaySoundFrom (self->owner, CHAN_WEAPON, SoundIndex("weapons/grapple/grreset.wav"), volume, ATTN_NORM, 0);
-		cl = self->owner->client;
-		cl->ctf_grapple = NULL;
-		cl->ctf_grapplereleasetime = level.time;
-		cl->ctf_grapplestate = CTF_GRAPPLE_STATE_HANG+1; // we're firing, not on hook
-		cl->playerState.pMove.pmFlags &= ~PMF_NO_PREDICTION;
+		PlaySoundFrom (Player->gameEntity, CHAN_WEAPON, SoundIndex("weapons/grapple/grreset.wav"), volume, ATTN_NORM, 0);
+		Player->Client.ctf_grapple = NULL;
+		Player->Client.ctf_grapplereleasetime = level.time;
+		Player->Client.ctf_grapplestate = CTF_GRAPPLE_STATE_HANG+1; // we're firing, not on hook
+		Player->Client.PlayerState.GetPMove()->pmFlags &= ~PMF_NO_PREDICTION;
 		G_FreeEdict(self);
 	}
 }
@@ -105,7 +104,8 @@ void CGrapple::GrappleTouch (edict_t *self, edict_t *other, plane_t *plane, cmBs
 	if (other == self->owner)
 		return;
 
-	if (self->owner->client->ctf_grapplestate != CTF_GRAPPLE_STATE_FLY)
+	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(self->owner->Entity);
+	if (Player->Client.ctf_grapplestate != CTF_GRAPPLE_STATE_FLY)
 		return;
 
 	if (surf && (surf->flags & SURF_TEXINFO_SKY))
@@ -116,23 +116,24 @@ void CGrapple::GrappleTouch (edict_t *self, edict_t *other, plane_t *plane, cmBs
 
 	Vec3Copy(vec3Origin, self->velocity);
 
-	PlayerNoise(self->owner, self->state.origin, PNOISE_IMPACT);
+	PlayerNoise(Player, self->state.origin, PNOISE_IMPACT);
 
-	if (other->takedamage) {
-		T_Damage (other, self, self->owner, self->velocity, self->state.origin, plane->normal, self->dmg, 1, 0, MOD_GRAPPLE);
+	if (other->takedamage)
+	{
+		T_Damage (other, self, Player->gameEntity, self->velocity, self->state.origin, plane->normal, self->dmg, 1, 0, MOD_GRAPPLE);
 		ResetGrapple(self);
 		return;
 	}
 
-	self->owner->client->ctf_grapplestate = CTF_GRAPPLE_STATE_PULL; // we're on hook
+	Player->Client.ctf_grapplestate = CTF_GRAPPLE_STATE_PULL; // we're on hook
 	self->enemy = other;
 
 	self->solid = SOLID_NOT;
 
-	if (self->owner->client->silencer_shots)
+	if (Player->Client.silencer_shots)
 		volume = 0.2f;
 
-	PlaySoundFrom (self->owner, CHAN_WEAPON, SoundIndex("weapons/grapple/grpull.wav"), volume, ATTN_NORM, 0);
+	PlaySoundFrom (Player->gameEntity, CHAN_WEAPON, SoundIndex("weapons/grapple/grpull.wav"), volume, ATTN_NORM, 0);
 	PlaySoundFrom (self, CHAN_WEAPON, SoundIndex("weapons/grapple/grhit.wav"), volume, ATTN_NORM, 0);
 
 	WriteByte (SVC_TEMP_ENTITY);
@@ -151,12 +152,13 @@ void CGrapple::GrappleDrawCable(edict_t *self)
 	vec3_t	offset, start, end, f, r;
 	vec3_t	dir;
 	float	distance;
+	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(self->owner->Entity);
 
-	Angles_Vectors (self->owner->client->v_angle, f, r, NULL);
-	Vec3Set(offset, 16, 16, self->owner->viewheight-8);
-	P_ProjectSource (self->owner->client, self->owner->state.origin, offset, f, r, start);
+	Angles_Vectors (Player->Client.v_angle, f, r, NULL);
+	Vec3Set(offset, 16, 16, Player->gameEntity->viewheight-8);
+	P_ProjectSource (Player, Player->gameEntity->state.origin, offset, f, r, start);
 
-	Vec3Subtract(start, self->owner->state.origin, offset);
+	Vec3Subtract(start, Player->gameEntity->state.origin, offset);
 
 	Vec3Subtract (start, self->state.origin, dir);
 	distance = Vec3Length(dir);
@@ -164,47 +166,10 @@ void CGrapple::GrappleDrawCable(edict_t *self)
 	if (distance < 64)
 		return;
 
-#if 0
-	if (distance > 256)
-		return;
-
-	// check for min/max pitch
-	vectoangles (dir, angles);
-	if (angles[0] < -180)
-		angles[0] += 360;
-	if (fabs(angles[0]) > 45)
-		return;
-
-	CTrace	tr; //!!
-
-	tr = CTrace (start, self->state.origin, self, CONTENTS_MASK_SHOT);
-	if (tr.ent != self) {
-		CTFResetGrapple(self);
-		return;
-	}
-#endif
-
 	// adjust start for beam origin being in middle of a segment
-//	Vec3MA (start, 8, f, start);
-
 	Vec3Copy (self->state.origin, end);
-	// adjust end z for end spot since the monster is currently dead
-//	end[2] = self->absmin[2] + self->size[2] / 2;
 
-	WriteByte (SVC_TEMP_ENTITY);
-#if 1 //def USE_GRAPPLE_CABLE
-	WriteByte (TE_GRAPPLE_CABLE);
-	WriteShort (self->owner - g_edicts);
-	WritePosition (self->owner->state.origin);
-	WritePosition (end);
-	WritePosition (offset);
-#else
-	WriteByte (TE_MEDIC_CABLE_ATTACK);
-	WriteShort (self - g_edicts);
-	WritePosition (end);
-	WritePosition (start);
-#endif
-	Cast (CASTFLAG_PVS, self->state.origin);
+	CTempEnt_Trails::GrappleCable (Player->gameEntity->state.origin, end, Player->gameEntity - g_edicts, offset);
 }
 
 void SV_AddGravity (edict_t *ent);
@@ -214,11 +179,13 @@ void CGrapple::GrapplePull(edict_t *self)
 {
 	vec3_t hookdir, v;
 	float vlen;
+	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(self->owner->Entity);
 
-	if (self->owner->client->pers.Weapon->Item == FindItem("Grapple") &&
-		!self->owner->client->NewWeapon &&
-		self->owner->client->weaponstate != WS_FIRING &&
-		self->owner->client->weaponstate != WS_ACTIVATING) {
+	if (Player->Client.pers.Weapon->Item == FindItem("Grapple") &&
+		!Player->Client.NewWeapon &&
+		Player->Client.weaponstate != WS_FIRING &&
+		Player->Client.weaponstate != WS_ACTIVATING)
+	{
 		ResetGrapple(self);
 		return;
 	}
@@ -236,20 +203,22 @@ void CGrapple::GrapplePull(edict_t *self)
 			Vec3Add(v, self->enemy->state.origin, v);
 			Vec3Add(v, self->enemy->mins, self->state.origin);
 			gi.linkentity (self);
-		} else
+		}
+		else
 			Vec3Copy(self->enemy->velocity, self->velocity);
 		if (self->enemy->takedamage &&
-			!CheckTeamDamage (self->enemy, self->owner))
+			!CheckTeamDamage (self->enemy, Player->gameEntity))
 		{
 			float volume = 1.0;
 
-			if (self->owner->client->silencer_shots)
+			if (Player->Client.silencer_shots)
 				volume = 0.2f;
 
-			T_Damage (self->enemy, self, self->owner, self->velocity, self->state.origin, vec3Origin, 1, 1, 0, MOD_GRAPPLE);
+			T_Damage (self->enemy, self, Player->gameEntity, self->velocity, self->state.origin, vec3Origin, 1, 1, 0, MOD_GRAPPLE);
 			PlaySoundFrom (self, CHAN_WEAPON, SoundIndex("weapons/grapple/grhurt.wav"), volume, ATTN_NORM, 0);
 		}
-		if (self->enemy->deadflag) { // he died
+		if (self->enemy->deadflag)
+		{ // he died
 			ResetGrapple(self);
 			return;
 		}
@@ -257,7 +226,8 @@ void CGrapple::GrapplePull(edict_t *self)
 
 	GrappleDrawCable(self);
 
-	if (self->owner->client->ctf_grapplestate > CTF_GRAPPLE_STATE_FLY) {
+	if (Player->Client.ctf_grapplestate > CTF_GRAPPLE_STATE_FLY)
+	{
 		// pull player toward grapple
 		// this causes icky stuff with prediction, we need to extend
 		// the prediction layer to include two new fields in the player
@@ -265,34 +235,34 @@ void CGrapple::GrapplePull(edict_t *self)
 		// that velociy in the direction of the point
 		vec3_t forward, up;
 
-		Angles_Vectors (self->owner->client->v_angle, forward, NULL, up);
-		Vec3Copy(self->owner->state.origin, v);
-		v[2] += self->owner->viewheight;
+		Angles_Vectors (Player->Client.v_angle, forward, NULL, up);
+		Vec3Copy(Player->gameEntity->state.origin, v);
+		v[2] += Player->gameEntity->viewheight;
 		Vec3Subtract (self->state.origin, v, hookdir);
 
 		vlen = Vec3Length(hookdir);
 
-		if (self->owner->client->ctf_grapplestate == CTF_GRAPPLE_STATE_PULL &&
+		if (Player->Client.ctf_grapplestate == CTF_GRAPPLE_STATE_PULL &&
 			vlen < 64)
 		{
 			float volume = 1.0;
 
-			if (self->owner->client->silencer_shots)
+			if (Player->Client.silencer_shots)
 				volume = 0.2f;
 
-			self->owner->client->playerState.pMove.pmFlags |= PMF_NO_PREDICTION;
-			PlaySoundFrom (self->owner, CHAN_WEAPON, SoundIndex("weapons/grapple/grhang.wav"), volume, ATTN_NORM, 0);
-			self->owner->client->ctf_grapplestate = CTF_GRAPPLE_STATE_HANG;
+			Player->Client.PlayerState.GetPMove()->pmFlags |= PMF_NO_PREDICTION;
+			PlaySoundFrom (Player->gameEntity, CHAN_WEAPON, SoundIndex("weapons/grapple/grhang.wav"), volume, ATTN_NORM, 0);
+			Player->Client.ctf_grapplestate = CTF_GRAPPLE_STATE_HANG;
 		}
 
 		VectorNormalizeFastf (hookdir);
 		Vec3Scale(hookdir, CTF_GRAPPLE_PULL_SPEED, hookdir);
-		Vec3Copy(hookdir, self->owner->velocity);
-		SV_AddGravity(self->owner);
+		Vec3Copy(hookdir, Player->gameEntity->velocity);
+		SV_AddGravity(Player->gameEntity);
 	}
 }
 
-void CGrapple::FireGrapple (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, int effect)
+void CGrapple::FireGrapple (CPlayerEntity *Player, vec3_t start, vec3_t dir, int damage, int speed, int effect)
 {
 	edict_t	*grapple;
 
@@ -310,17 +280,14 @@ void CGrapple::FireGrapple (edict_t *self, vec3_t start, vec3_t dir, int damage,
 	Vec3Clear (grapple->mins);
 	Vec3Clear (grapple->maxs);
 	grapple->state.modelIndex = ModelIndex ("models/weapons/grapple/hook/tris.md2");
-//	grapple->state.sound = SoundIndex ("misc/lasfly.wav");
-	grapple->owner = self;
+	grapple->owner = Player->gameEntity;
 	grapple->touch = GrappleTouch;
-//	grapple->nextthink = level.time + FRAMETIME;
-//	grapple->think = CTFGrappleThink;
 	grapple->dmg = damage;
-	self->client->ctf_grapple = grapple;
-	self->client->ctf_grapplestate = CTF_GRAPPLE_STATE_FLY; // we're firing, not on hook
+	Player->Client.ctf_grapple = grapple;
+	Player->Client.ctf_grapplestate = CTF_GRAPPLE_STATE_FLY; // we're firing, not on hook
 	gi.linkentity (grapple);
 
-	CTrace tr = CTrace (self->state.origin, grapple->state.origin, grapple, CONTENTS_MASK_SHOT);
+	CTrace tr = CTrace (Player->gameEntity->state.origin, grapple->state.origin, grapple, CONTENTS_MASK_SHOT);
 	if (tr.fraction < 1.0)
 	{
 		Vec3MA (grapple->state.origin, -10, dir, grapple->state.origin);
@@ -328,52 +295,52 @@ void CGrapple::FireGrapple (edict_t *self, vec3_t start, vec3_t dir, int damage,
 	}
 }	
 
-void CGrapple::Fire (edict_t *ent)
+void CGrapple::Fire (CPlayerEntity *Player)
 {
 	vec3_t	forward, right;
 	vec3_t	start;
 	vec3_t	offset;
 	float volume = 1.0;
 
-	if (ent->client->ctf_grapplestate > CTF_GRAPPLE_STATE_FLY)
+	if (Player->Client.ctf_grapplestate > CTF_GRAPPLE_STATE_FLY)
 		return; // it's already out
 
-	Angles_Vectors (ent->client->v_angle, forward, right, NULL);
-	Vec3Set(offset, 24, 8, ent->viewheight-8+2);
-	P_ProjectSource (ent->client, ent->state.origin, offset, forward, right, start);
+	Angles_Vectors (Player->Client.v_angle, forward, right, NULL);
+	Vec3Set(offset, 24, 8, Player->gameEntity->viewheight-8+2);
+	P_ProjectSource (Player, Player->gameEntity->state.origin, offset, forward, right, start);
 
-	Vec3Scale (forward, -2, ent->client->kick_origin);
-	ent->client->kick_angles[0] = -1;
+	Vec3Scale (forward, -2, Player->Client.kick_origin);
+	Player->Client.kick_angles[0] = -1;
 
-	if (ent->client->silencer_shots)
+	if (Player->Client.silencer_shots)
 		volume = 0.2f;
 
-	PlaySoundFrom (ent, CHAN_WEAPON, SoundIndex("weapons/grapple/grfire.wav"), volume, ATTN_NORM, 0);
-	FireGrapple (ent, start, forward, 10, CTF_GRAPPLE_SPEED, 0);
+	PlaySoundFrom (Player->gameEntity, CHAN_WEAPON, SoundIndex("weapons/grapple/grfire.wav"), volume, ATTN_NORM, 0);
+	FireGrapple (Player, start, forward, 10, CTF_GRAPPLE_SPEED, 0);
 
-	PlayerNoise(ent, start, PNOISE_WEAPON);
-	FireAnimation(ent);
+	PlayerNoise(Player, start, PNOISE_WEAPON);
+	FireAnimation(Player);
 
-	ent->client->playerState.gunFrame++;
+	Player->Client.PlayerState.SetGunFrame (Player->Client.PlayerState.GetGunFrame() + 1);
 }
 
-void CGrapple::WeaponGeneric (edict_t *ent)
+void CGrapple::WeaponGeneric (CPlayerEntity *Player)
 {
 	// Idea from Brazen source
 	int newFrame = -1, newState = -1;
 
-	switch (ent->client->weaponstate)
+	switch (Player->Client.weaponstate)
 	{
 	case WS_ACTIVATING:
-		if (ent->client->playerState.gunFrame == ActivationEnd)
+		if (Player->Client.PlayerState.GetGunFrame() == ActivationEnd)
 		{
 			newFrame = IdleStart;
 			newState = WS_IDLE;
 		
 			// if we just switched back to grapple, immediately go to fire frame
-			if (ent->client->ctf_grapplestate > CTF_GRAPPLE_STATE_FLY)
+			if (Player->Client.ctf_grapplestate > CTF_GRAPPLE_STATE_FLY)
 			{
-				if (!(ent->client->buttons & BUTTON_ATTACK))
+				if (!(Player->Client.buttons & BUTTON_ATTACK))
 					newFrame = 9;
 				else
 					newFrame = 5;
@@ -382,90 +349,90 @@ void CGrapple::WeaponGeneric (edict_t *ent)
 		}
 		break;
 	case WS_IDLE:
-		if (ent->client->ctf_grapplestate == CTF_GRAPPLE_STATE_HANG+1)
+		if (Player->Client.ctf_grapplestate == CTF_GRAPPLE_STATE_HANG+1)
 		{
-			ent->client->ctf_grapplestate = CTF_GRAPPLE_STATE_FLY;
-			PlaySoundFrom (ent, CHAN_WEAPON, SoundIndex("weapons/grapple/grreset.wav"), (ent->client->silencer_shots) ? 0.2f : 1.0, ATTN_NORM, 0);
+			Player->Client.ctf_grapplestate = CTF_GRAPPLE_STATE_FLY;
+			PlaySoundFrom (Player->gameEntity, CHAN_WEAPON, SoundIndex("weapons/grapple/grreset.wav"), (Player->Client.silencer_shots) ? 0.2f : 1.0, ATTN_NORM, 0);
 		}
-		if (ent->client->NewWeapon && ent->client->NewWeapon != this)
+		if (Player->Client.NewWeapon && Player->Client.NewWeapon != this)
 		{
 			// We want to go away!
 			newState = WS_DEACTIVATING;
 			newFrame = DeactStart;
 		}
-		else if ((ent->client->buttons|ent->client->latched_buttons) & BUTTON_ATTACK)
+		else if ((Player->Client.buttons|Player->Client.latched_buttons) & BUTTON_ATTACK)
 		{
-			ent->client->latched_buttons &= ~BUTTON_ATTACK;
+			Player->Client.latched_buttons &= ~BUTTON_ATTACK;
 
 			// This here is ugly, but necessary so that machinegun/chaingun/hyperblaster
 			// get the right acceptance on first-frame-firing
-			ent->client->buttons |= BUTTON_ATTACK;
+			Player->Client.buttons |= BUTTON_ATTACK;
 
 			// We want to attack!
 			// First call, check AttemptToFire
-			if (AttemptToFire(ent))
+			if (AttemptToFire(Player))
 			{
 				// Got here, we can fire!
-				ent->client->playerState.gunFrame = FireStart;
-				ent->client->weaponstate = WS_FIRING;
+				Player->Client.PlayerState.SetGunFrame(FireStart);
+				Player->Client.weaponstate = WS_FIRING;
 
 				// We need to check against us right away for first-frame firing
-				WeaponGeneric(ent);
+				WeaponGeneric(Player);
 				return;
 			}
 			else
 			{
-				OutOfAmmo(ent);
-				NoAmmoWeaponChange (ent);
+				OutOfAmmo(Player);
+				NoAmmoWeaponChange (Player);
 			}
 		}
 
 		// Either we are still idle or a failed fire.
 		if (newState == -1)
 		{
-			if (ent->client->playerState.gunFrame == IdleEnd)
+			if (Player->Client.PlayerState.GetGunFrame() == IdleEnd)
 				newFrame = IdleStart;
 			else
 			{
-				if (CanStopFidgetting(ent) && (rand()&15))
-					newFrame = ent->client->playerState.gunFrame;
+				if (CanStopFidgetting(Player) && (rand()&15))
+					newFrame = Player->Client.PlayerState.GetGunFrame();
 			}
 		}
 		break;
 	case WS_FIRING:
 		// Check if this is a firing frame.
-		if (CanFire(ent))
+		if (CanFire(Player))
 		{
-			Fire(ent);
+			Fire(Player);
 
 			// Now, this call above CAN change the underlying frame and state.
 			// We need this block to make sure we are still doing what we are supposed to.
-			newState = ent->client->weaponstate;
-			newFrame = ent->client->playerState.gunFrame;
+			newState = Player->Client.weaponstate;
+			newFrame = Player->Client.PlayerState.GetGunFrame();
 		}
 
 		// Only do this if we haven't been explicitely set a newFrame
 		// because we might want to keep firing beyond this point
 		// Go right away if we aren't holding attack
-		else if (!(ent->client->buttons & BUTTON_ATTACK))
+		else if (!(Player->Client.buttons & BUTTON_ATTACK))
 		{
-			ResetGrapple(ent->client->ctf_grapple);
+			ResetGrapple(Player->Client.ctf_grapple);
 			newFrame = IdleStart+1;
 			newState = WS_IDLE;
 		}
-		else if (ent->client->NewWeapon && 
-			ent->client->ctf_grapplestate > CTF_GRAPPLE_STATE_FLY)
+		else if (Player->Client.NewWeapon && 
+			Player->Client.ctf_grapplestate > CTF_GRAPPLE_STATE_FLY)
 		{
 			// he wants to change weapons while grappled
 			newState = WS_DEACTIVATING;
 			newFrame = 32;
 		}
-		else if (newFrame == -1 && ent->client->playerState.gunFrame > FireEnd)
+		else if (newFrame == -1 && Player->Client.PlayerState.GetGunFrame() > FireEnd)
 		{
 			// Grapple shouldn't change unless we want it to
-			if ((ent->client->buttons & BUTTON_ATTACK) && 
-				ent->client->ctf_grapple)
-				newFrame = ent->client->playerState.gunFrame;
+			if ((Player->Client.buttons & BUTTON_ATTACK) && 
+				Player->Client.ctf_grapple)
+				newFrame = Player->Client.PlayerState.GetGunFrame();
 			else
 			{
 				newFrame = IdleStart+1;
@@ -474,21 +441,21 @@ void CGrapple::WeaponGeneric (edict_t *ent)
 		}
 		break;
 	case WS_DEACTIVATING:
-		if (ent->client->playerState.gunFrame == DeactEnd)
+		if (Player->Client.PlayerState.GetGunFrame() == DeactEnd)
 		{
 			// Change weapon
-			this->ChangeWeapon (ent);
+			ChangeWeapon (Player);
 			return;
 		}
 		break;
 	}
 
 	if (newFrame != -1)
-		ent->client->playerState.gunFrame = newFrame;
+		Player->Client.PlayerState.SetGunFrame (newFrame);
 	if (newState != -1)
-		ent->client->weaponstate = newState;
+		Player->Client.weaponstate = newState;
 
 	if (newFrame == -1 && newState == -1)
-		ent->client->playerState.gunFrame++;
+		Player->Client.PlayerState.SetGunFrame (Player->Client.PlayerState.GetGunFrame() + 1);
 }
 #endif

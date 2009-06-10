@@ -42,9 +42,9 @@ CWeapon("models/weapons/v_machn/tris.md2", 0, 3, 4, 5,
 {
 }
 
-bool CMachinegun::CanFire (edict_t *ent)
+bool CMachinegun::CanFire (CPlayerEntity *ent)
 {
-	switch (ent->client->playerState.gunFrame)
+	switch (ent->Client.PlayerState.GetGunFrame())
 	{
 	case 4:
 	case 5:
@@ -53,9 +53,9 @@ bool CMachinegun::CanFire (edict_t *ent)
 	return false;
 }
 
-bool CMachinegun::CanStopFidgetting (edict_t *ent)
+bool CMachinegun::CanStopFidgetting (CPlayerEntity *ent)
 {
-	switch (ent->client->playerState.gunFrame)
+	switch (ent->Client.PlayerState.GetGunFrame())
 	{
 	case 23:
 	case 45:
@@ -64,22 +64,22 @@ bool CMachinegun::CanStopFidgetting (edict_t *ent)
 	return false;
 }
 
-void CMachinegun::FireAnimation (edict_t *ent)
+void CMachinegun::FireAnimation (CPlayerEntity *ent)
 {
-	ent->client->anim_priority = ANIM_ATTACK;
-	if (ent->client->playerState.pMove.pmFlags & PMF_DUCKED)
+	ent->Client.anim_priority = ANIM_ATTACK;
+	if (ent->Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED)
 	{
-		ent->state.frame = FRAME_crattak1 - (int) (random()+0.25);
-		ent->client->anim_end = FRAME_crattak9;
+		ent->gameEntity->state.frame = FRAME_crattak1 - (int) (random()+0.25);
+		ent->Client.anim_end = FRAME_crattak9;
 	}
 	else
 	{
-		ent->state.frame = FRAME_attack1 - (int) (random()+0.25);
-		ent->client->anim_end = FRAME_attack8;
+		ent->gameEntity->state.frame = FRAME_attack1 - (int) (random()+0.25);
+		ent->Client.anim_end = FRAME_attack8;
 	}
 }
 
-void CMachinegun::Fire (edict_t *ent)
+void CMachinegun::Fire (CPlayerEntity *ent)
 {
 	int	i;
 	vec3_t		start;
@@ -89,21 +89,21 @@ void CMachinegun::Fire (edict_t *ent)
 	int			kick = 2;
 	vec3_t		offset;
 
-	if (!(ent->client->buttons & BUTTON_ATTACK))
+	if (!(ent->Client.buttons & BUTTON_ATTACK))
 	{
-		ent->client->machinegun_shots = 0;
-		ent->client->playerState.gunFrame++;
+		ent->Client.machinegun_shots = 0;
+		ent->Client.PlayerState.SetGunFrame(ent->Client.PlayerState.GetGunFrame() + 1);
 		return;
 	}
 
-	if (ent->client->playerState.gunFrame == 5)
-		ent->client->playerState.gunFrame = 4;
+	if (ent->Client.PlayerState.GetGunFrame() == 5)
+		ent->Client.PlayerState.SetGunFrame(4);
 	else
-		ent->client->playerState.gunFrame = 5;
+		ent->Client.PlayerState.SetGunFrame(5);
 
 	if (!AttemptToFire(ent))
 	{
-		ent->client->playerState.gunFrame = 6;
+		ent->Client.PlayerState.SetGunFrame (6);
 		OutOfAmmo(ent);
 		NoAmmoWeaponChange (ent);
 		return;
@@ -117,26 +117,26 @@ void CMachinegun::Fire (edict_t *ent)
 
 	for (i=1 ; i<3 ; i++)
 	{
-		ent->client->kick_origin[i] = crandom() * 0.35;
-		ent->client->kick_angles[i] = crandom() * 0.7;
+		ent->Client.kick_origin[i] = crandom() * 0.35;
+		ent->Client.kick_angles[i] = crandom() * 0.7;
 	}
-	ent->client->kick_origin[0] = crandom() * 0.35;
-	ent->client->kick_angles[0] = ent->client->machinegun_shots * -1.5;
+	ent->Client.kick_origin[0] = crandom() * 0.35;
+	ent->Client.kick_angles[0] = ent->Client.machinegun_shots * -1.5;
 
 	// raise the gun as it is firing
 	if (!(game.mode & GAME_DEATHMATCH))
 	{
-		ent->client->machinegun_shots++;
-		if (ent->client->machinegun_shots > 9)
-			ent->client->machinegun_shots = 9;
+		ent->Client.machinegun_shots++;
+		if (ent->Client.machinegun_shots > 9)
+			ent->Client.machinegun_shots = 9;
 	}
 
 	// get start / end positions
-	Vec3Add (ent->client->v_angle, ent->client->kick_angles, angles);
+	Vec3Add (ent->Client.v_angle, ent->Client.kick_angles, angles);
 	Angles_Vectors (angles, forward, right, NULL);
-	Vec3Set (offset, 0, 8, ent->viewheight-8);
-	P_ProjectSource (ent->client, ent->state.origin, offset, forward, right, start);
-	fire_bullet (ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN);
+	Vec3Set (offset, 0, 8, ent->gameEntity->viewheight-8);
+	P_ProjectSource (ent, ent->gameEntity->state.origin, offset, forward, right, start);
+	fire_bullet (ent->gameEntity, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN);
 
 	Muzzle (ent, MZ_MACHINEGUN);
 	AttackSound (ent);

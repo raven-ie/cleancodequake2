@@ -42,16 +42,16 @@ CWeapon("models/weapons/v_chain/tris.md2", 0, 4, 5, 31,
 {
 }
 
-bool CChaingun::CanFire (edict_t *ent)
+bool CChaingun::CanFire (CPlayerEntity *ent)
 {
-	if (ent->client->playerState.gunFrame >= 5 && ent->client->playerState.gunFrame <= 21)
+	if (ent->Client.PlayerState.GetGunFrame() >= 5 && ent->Client.PlayerState.GetGunFrame() <= 21)
 		return true;
 	return false;
 }
 
-bool CChaingun::CanStopFidgetting (edict_t *ent)
+bool CChaingun::CanStopFidgetting (CPlayerEntity *ent)
 {
-	switch (ent->client->playerState.gunFrame)
+	switch (ent->Client.PlayerState.GetGunFrame())
 	{
 	case 38:
 	case 43:
@@ -62,22 +62,22 @@ bool CChaingun::CanStopFidgetting (edict_t *ent)
 	return false;
 }
 
-void CChaingun::FireAnimation (edict_t *ent)
+void CChaingun::FireAnimation (CPlayerEntity *ent)
 {
-	ent->client->anim_priority = ANIM_ATTACK;
-	if (ent->client->playerState.pMove.pmFlags & PMF_DUCKED)
+	ent->Client.anim_priority = ANIM_ATTACK;
+	if (ent->Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED)
 	{
-		ent->state.frame = FRAME_crattak1 - (ent->client->playerState.gunFrame & 1);
-		ent->client->anim_end = FRAME_crattak9;
+		ent->gameEntity->state.frame = FRAME_crattak1 - (ent->Client.PlayerState.GetGunFrame() & 1);
+		ent->Client.anim_end = FRAME_crattak9;
 	}
 	else
 	{
-		ent->state.frame = FRAME_attack1 - (ent->client->playerState.gunFrame & 1);
-		ent->client->anim_end = FRAME_attack8;
+		ent->gameEntity->state.frame = FRAME_attack1 - (ent->Client.PlayerState.GetGunFrame() & 1);
+		ent->Client.anim_end = FRAME_attack8;
 	}
 }
 
-void CChaingun::Fire (edict_t *ent)
+void CChaingun::Fire (CPlayerEntity *ent)
 {
 	int			i;
 	int			shots;
@@ -88,42 +88,38 @@ void CChaingun::Fire (edict_t *ent)
 	int			damage = (game.mode & GAME_DEATHMATCH) ? 6 : 8;
 	int			kick = 2;
 
-	if (ent->client->playerState.gunFrame == 5)
-		PlaySoundFrom(ent, CHAN_AUTO, SoundIndex("weapons/chngnu1a.wav"));
+	if (ent->Client.PlayerState.GetGunFrame() == 5)
+		PlaySoundFrom(ent->gameEntity, CHAN_AUTO, SoundIndex("weapons/chngnu1a.wav"));
 
-	if ((ent->client->playerState.gunFrame == 14) && !(ent->client->buttons & BUTTON_ATTACK))
+	if ((ent->Client.PlayerState.GetGunFrame() == 14) && !(ent->Client.buttons & BUTTON_ATTACK))
 	{
-		ent->client->playerState.gunFrame = 31;
-		ent->client->weapon_sound = 0;
+		ent->Client.PlayerState.SetGunFrame (31);
+		ent->Client.weapon_sound = 0;
 		return;
 	}
-	else if ((ent->client->playerState.gunFrame == 21) && (ent->client->buttons & BUTTON_ATTACK)
-		&& ent->client->pers.Inventory.Has(ent->client->pers.Weapon->WeaponItem->Ammo))
+	else if ((ent->Client.PlayerState.GetGunFrame() == 21) && (ent->Client.buttons & BUTTON_ATTACK)
+		&& ent->Client.pers.Inventory.Has(ent->Client.pers.Weapon->WeaponItem->Ammo))
 	{
-		ent->client->playerState.gunFrame = 15;
+		ent->Client.PlayerState.SetGunFrame(15);
 	}
 	else
-	{
-		ent->client->playerState.gunFrame++;
-	}
+		ent->Client.PlayerState.SetGunFrame(ent->Client.PlayerState.GetGunFrame() + 1);
 
-	if (ent->client->playerState.gunFrame == 22)
+	if (ent->Client.PlayerState.GetGunFrame() == 22)
 	{
-		ent->client->weapon_sound = 0;
-		PlaySoundFrom(ent, CHAN_AUTO, SoundIndex("weapons/chngnd1a.wav"));
+		ent->Client.weapon_sound = 0;
+		PlaySoundFrom(ent->gameEntity, CHAN_AUTO, SoundIndex("weapons/chngnd1a.wav"));
 	}
 	else
-	{
-		ent->client->weapon_sound = SoundIndex("weapons/chngnl1a.wav");
-	}
+		ent->Client.weapon_sound = SoundIndex("weapons/chngnl1a.wav");
 
 	FireAnimation (ent);
 
-	if (ent->client->playerState.gunFrame <= 9)
+	if (ent->Client.PlayerState.GetGunFrame() <= 9)
 		shots = 1;
-	else if (ent->client->playerState.gunFrame <= 14)
+	else if (ent->Client.PlayerState.GetGunFrame() <= 14)
 	{
-		if (ent->client->buttons & BUTTON_ATTACK)
+		if (ent->Client.buttons & BUTTON_ATTACK)
 			shots = 2;
 		else
 			shots = 1;
@@ -131,8 +127,8 @@ void CChaingun::Fire (edict_t *ent)
 	else
 		shots = 3;
 
-	if (ent->client->pers.Inventory.Has(ent->client->pers.Weapon->WeaponItem->Ammo) < shots)
-		shots = ent->client->pers.Inventory.Has(ent->client->pers.Weapon->WeaponItem->Ammo);
+	if (ent->Client.pers.Inventory.Has(ent->Client.pers.Weapon->WeaponItem->Ammo) < shots)
+		shots = ent->Client.pers.Inventory.Has(ent->Client.pers.Weapon->WeaponItem->Ammo);
 
 	if (!shots)
 	{
@@ -149,20 +145,20 @@ void CChaingun::Fire (edict_t *ent)
 
 	for (i=0 ; i<3 ; i++)
 	{
-		ent->client->kick_origin[i] = crandom() * 0.35;
-		ent->client->kick_angles[i] = crandom() * 0.7;
+		ent->Client.kick_origin[i] = crandom() * 0.35;
+		ent->Client.kick_angles[i] = crandom() * 0.7;
 	}
 
 	for (i=0 ; i<shots ; i++)
 	{
 		// get start / end positions
-		Angles_Vectors (ent->client->v_angle, forward, right, up);
+		Angles_Vectors (ent->Client.v_angle, forward, right, up);
 		r = 7 + crandom()*4;
 		u = crandom()*4;
-		Vec3Set (offset, 0, r, u + ent->viewheight-8);
-		P_ProjectSource (ent->client, ent->state.origin, offset, forward, right, start);
+		Vec3Set (offset, 0, r, u + ent->gameEntity->viewheight-8);
+		P_ProjectSource (ent, ent->gameEntity->state.origin, offset, forward, right, start);
 
-		fire_bullet (ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_CHAINGUN);
+		fire_bullet (ent->gameEntity, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_CHAINGUN);
 	}
 
 	// send muzzle flash

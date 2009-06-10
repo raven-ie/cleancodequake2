@@ -84,7 +84,7 @@ typedef struct ctfgame_s
 	int lasttime;		// last time update
 
 	elect_t election;	// election type
-	edict_t *etarget;	// for admin election, who's being elected
+	CPlayerEntity *etarget;	// for admin election, who's being elected
 	char elevel[32];	// for map election, target level
 	int evotes;			// votes so far
 	int needvotes;		// votes needed
@@ -159,18 +159,17 @@ bool CTFPickup_Tech (edict_t *ent, edict_t *other);
 void CTFDrop_Tech(edict_t *ent, CBaseItem *item);
 void CTFDeadDropTech(edict_t *ent);
 void CTFSetupTechSpawn(void);
-int CTFApplyResistance(edict_t *ent, int dmg);
-int CTFApplyStrength(edict_t *ent, int dmg);
-bool CTFApplyStrengthSound(edict_t *ent);
-bool CTFApplyHaste(edict_t *ent);
-void CTFApplyHasteSound(edict_t *ent);
-void CTFApplyRegeneration(edict_t *ent);
-bool CTFHasRegeneration(edict_t *ent);
+int CTFApplyResistance(CPlayerEntity *ent, int dmg);
+int CTFApplyStrength(CPlayerEntity *ent, int dmg);
+bool CTFApplyStrengthSound(CPlayerEntity *ent);
+bool CTFApplyHaste(CPlayerEntity *ent);
+void CTFApplyHasteSound(CPlayerEntity *ent);
+void CTFApplyRegeneration(CPlayerEntity *ent);
+bool CTFHasRegeneration(CPlayerEntity *ent);
 void CTFRespawnTech(edict_t *ent);
 void CTFResetTech(void);
 
-void CTFOpenJoinMenu(edict_t *ent);
-bool CTFStartClient(edict_t *ent);
+void CTFOpenJoinMenu(CPlayerEntity *ent);
 void CTFVoteYes(edict_t *ent);
 void CTFVoteNo(edict_t *ent);
 void CTFReady(edict_t *ent);

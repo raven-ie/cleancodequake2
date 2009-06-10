@@ -274,15 +274,15 @@ bool CheckTeamDamage (edict_t *targ, edict_t *attacker)
 //ZOID
 	if ((game.mode & GAME_CTF) && targ->client && attacker->client)
 	{
-		if (targ->client->resp.ctf_team == attacker->client->resp.ctf_team &&
+		CPlayerEntity *Targ = dynamic_cast<CPlayerEntity*>(targ->Entity);
+		CPlayerEntity *Attacker = dynamic_cast<CPlayerEntity*>(attacker->Entity);
+		if (Targ->Client.resp.ctf_team == Attacker->Client.resp.ctf_team &&
 			targ != attacker)
 			return true;
 	}
 //ZOID
 #endif
 
-		//FIXME make the next line real and uncomment this block
-		// if ((ability to damage a teammate == OFF) && (targ's team == attacker's team))
 	return false;
 }
 

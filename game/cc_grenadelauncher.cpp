@@ -42,9 +42,9 @@ CWeapon("models/weapons/v_launch/tris.md2", 0, 5, 6, 16,
 {
 }
 
-bool CGrenadeLauncher::CanFire (edict_t *ent)
+bool CGrenadeLauncher::CanFire (CPlayerEntity *ent)
 {
-	switch (ent->client->playerState.gunFrame)
+	switch (ent->Client.PlayerState.GetGunFrame())
 	{
 	case 6:
 		return true;
@@ -52,9 +52,9 @@ bool CGrenadeLauncher::CanFire (edict_t *ent)
 	return false;
 }
 
-bool CGrenadeLauncher::CanStopFidgetting (edict_t *ent)
+bool CGrenadeLauncher::CanStopFidgetting (CPlayerEntity *ent)
 {
-	switch (ent->client->playerState.gunFrame)
+	switch (ent->Client.PlayerState.GetGunFrame())
 	{
 	case 34:
 	case 51:
@@ -64,7 +64,7 @@ bool CGrenadeLauncher::CanStopFidgetting (edict_t *ent)
 	return false;
 }
 
-void CGrenadeLauncher::Fire (edict_t *ent)
+void CGrenadeLauncher::Fire (CPlayerEntity *ent)
 {
 	vec3_t	offset;
 	vec3_t	forward, right;
@@ -78,14 +78,14 @@ void CGrenadeLauncher::Fire (edict_t *ent)
 
 	FireAnimation (ent);
 
-	Vec3Set (offset, 8, 8, ent->viewheight-8);
-	Angles_Vectors (ent->client->v_angle, forward, right, NULL);
-	P_ProjectSource (ent->client, ent->state.origin, offset, forward, right, start);
+	Vec3Set (offset, 8, 8, ent->gameEntity->viewheight-8);
+	Angles_Vectors (ent->Client.v_angle, forward, right, NULL);
+	P_ProjectSource (ent, ent->gameEntity->state.origin, offset, forward, right, start);
 
-	Vec3Scale (forward, -2, ent->client->kick_origin);
-	ent->client->kick_angles[0] = -1;
+	Vec3Scale (forward, -2, ent->Client.kick_origin);
+	ent->Client.kick_angles[0] = -1;
 
-	fire_grenade (ent, start, forward, damage, 600, 2.5, radius);
+	fire_grenade (ent->gameEntity, start, forward, damage, 600, 2.5, radius);
 
 	Muzzle (ent, MZ_GRENADE);
 	AttackSound (ent);
@@ -95,5 +95,5 @@ void CGrenadeLauncher::Fire (edict_t *ent)
 	if (!dmFlags.dfInfiniteAmmo)
 		DepleteAmmo(ent, 1);
 
-	ent->client->playerState.gunFrame++;
+	ent->Client.PlayerState.SetGunFrame(ent->Client.PlayerState.GetGunFrame()+1);
 }

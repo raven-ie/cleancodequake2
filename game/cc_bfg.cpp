@@ -42,9 +42,9 @@ CWeapon("models/weapons/v_bfg/tris.md2", 0, 8, 9, 32,
 {
 }
 
-bool CBFG::CanFire (edict_t *ent)
+bool CBFG::CanFire (CPlayerEntity *ent)
 {
-	switch (ent->client->playerState.gunFrame)
+	switch (ent->Client.PlayerState.GetGunFrame())
 	{
 	case 9:
 	case 17:
@@ -53,9 +53,9 @@ bool CBFG::CanFire (edict_t *ent)
 	return false;
 }
 
-bool CBFG::CanStopFidgetting (edict_t *ent)
+bool CBFG::CanStopFidgetting (CPlayerEntity *ent)
 {
-	switch (ent->client->playerState.gunFrame)
+	switch (ent->Client.PlayerState.GetGunFrame())
 	{
 	case 39:
 	case 45:
@@ -66,9 +66,9 @@ bool CBFG::CanStopFidgetting (edict_t *ent)
 	return false;
 }
 
-void CBFG::Fire (edict_t *ent)
+void CBFG::Fire (CPlayerEntity *ent)
 {
-	switch (ent->client->playerState.gunFrame)
+	switch (ent->Client.PlayerState.GetGunFrame())
 	{
 	case 9:
 		MuzzleEffect (ent);
@@ -79,17 +79,17 @@ void CBFG::Fire (edict_t *ent)
 	}
 }
 
-void CBFG::MuzzleEffect (edict_t *ent)
+void CBFG::MuzzleEffect (CPlayerEntity *ent)
 {
 	// send muzzle flash
 	Muzzle (ent, MZ_BFG);
 
-	ent->client->playerState.gunFrame++;
+	ent->Client.PlayerState.SetGunFrame (ent->Client.PlayerState.GetGunFrame()+1);
 
-	PlayerNoise(ent, ent->state.origin, PNOISE_WEAPON);
+	PlayerNoise(ent, ent->gameEntity->state.origin, PNOISE_WEAPON);
 }
 
-void CBFG::FireBFG (edict_t *ent)
+void CBFG::FireBFG (CPlayerEntity *ent)
 {
 	vec3_t	offset, start;
 	vec3_t	forward, right;
@@ -98,9 +98,9 @@ void CBFG::FireBFG (edict_t *ent)
 
 	// cells can go down during windup (from power armor hits), so
 	// check again and abort firing if we don't have enough now
-	if (ent->client->pers.Inventory.Has(ent->client->pers.Weapon->WeaponItem->Ammo) < 50)
+	if (ent->Client.pers.Inventory.Has(ent->Client.pers.Weapon->WeaponItem->Ammo) < 50)
 	{
-		ent->client->playerState.gunFrame++;
+		ent->Client.PlayerState.SetGunFrame (ent->Client.PlayerState.GetGunFrame()+1);
 		return;
 	}
 
@@ -109,21 +109,21 @@ void CBFG::FireBFG (edict_t *ent)
 	if (isQuad)
 		damage *= 4;
 
-	Angles_Vectors (ent->client->v_angle, forward, right, NULL);
+	Angles_Vectors (ent->Client.v_angle, forward, right, NULL);
 
-	Vec3Scale (forward, -2, ent->client->kick_origin);
+	Vec3Scale (forward, -2, ent->Client.kick_origin);
 
 	// make a big pitch kick with an inverse fall
-	ent->client->v_dmg_pitch = -40;
-	ent->client->v_dmg_roll = crandom()*8;
-	ent->client->v_dmg_time = level.time + DAMAGE_TIME;
+	ent->Client.v_dmg_pitch = -40;
+	ent->Client.v_dmg_roll = crandom()*8;
+	ent->Client.v_dmg_time = level.time + DAMAGE_TIME;
 
-	Vec3Set (offset, 8, 8, ent->viewheight-8);
-	P_ProjectSource (ent->client, ent->state.origin, offset, forward, right, start);
-	fire_bfg (ent, start, forward, damage, 400, damage_radius);
+	Vec3Set (offset, 8, 8, ent->gameEntity->viewheight-8);
+	P_ProjectSource (ent, ent->gameEntity->state.origin, offset, forward, right, start);
+	fire_bfg (ent->gameEntity, start, forward, damage, 400, damage_radius);
 	AttackSound (ent);
 
-	ent->client->playerState.gunFrame++;
+	ent->Client.PlayerState.SetGunFrame (ent->Client.PlayerState.GetGunFrame()+1);
 
 	PlayerNoise(ent, start, PNOISE_WEAPON);
 

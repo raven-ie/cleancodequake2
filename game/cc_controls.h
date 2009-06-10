@@ -51,17 +51,17 @@ public:
 	ELabelAlign				Align;
 
 	CMenu_Label				(CMenu *Menu, int x, int y);
-	virtual void Draw		(edict_t *ent, CStatusBar *DrawState);
+	virtual void Draw		(CPlayerEntity *ent, CStatusBar *DrawState);
 
-	virtual bool	CanSelect (edict_t *ent)
+	virtual bool	CanSelect (CPlayerEntity *ent)
 	{
 		return Enabled;
 	}
-	virtual bool	Select (edict_t *ent)
+	virtual bool	Select (CPlayerEntity *ent)
 	{
 		return false;
 	}
-	virtual void	Update (edict_t *ent)
+	virtual void	Update (CPlayerEntity *ent)
 	{
 	}
 };
@@ -73,17 +73,17 @@ public:
 	int						Width, Height;
 
 	CMenu_Image				(CMenu *Menu, int x, int y);
-	virtual void Draw		(edict_t *ent, CStatusBar *DrawState);
+	virtual void Draw		(CPlayerEntity *ent, CStatusBar *DrawState);
 
-	virtual bool	CanSelect (edict_t *ent)
+	virtual bool	CanSelect (CPlayerEntity *ent)
 	{
 		return Enabled;
 	}
-	virtual bool	Select (edict_t *ent)
+	virtual bool	Select (CPlayerEntity *ent)
 	{
 		return false;
 	}
-	virtual void	Update (edict_t *ent)
+	virtual void	Update (CPlayerEntity *ent)
 	{
 	}
 };
@@ -104,17 +104,17 @@ public:
 	SSpinControlIndex		*Indices;
 
 	CMenu_Spin				(CMenu *Menu, int x, int y, SSpinControlIndex *Indices);
-	virtual void Draw		(edict_t *ent, CStatusBar *DrawState);
+	virtual void Draw		(CPlayerEntity *ent, CStatusBar *DrawState);
 
-	virtual bool	CanSelect (edict_t *ent)
+	virtual bool	CanSelect (CPlayerEntity *ent)
 	{
 		return Enabled;
 	}
-	virtual bool	Select (edict_t *ent)
+	virtual bool	Select (CPlayerEntity *ent)
 	{
 		return false;
 	}
-	virtual void	Update (edict_t *ent);
+	virtual void	Update (CPlayerEntity *ent);
 };
 
 typedef int ESliderTextPosition;
@@ -142,17 +142,17 @@ public:
 	int						Width;
 
 	CMenu_Slider			(CMenu *Menu, int x, int y);
-	virtual void Draw		(edict_t *ent, CStatusBar *DrawState);
+	virtual void Draw		(CPlayerEntity *ent, CStatusBar *DrawState);
 
-	virtual bool	CanSelect (edict_t *ent)
+	virtual bool	CanSelect (CPlayerEntity *ent)
 	{
 		return Enabled;
 	}
-	virtual bool	Select (edict_t *ent)
+	virtual bool	Select (CPlayerEntity *ent)
 	{
 		return false;
 	}
-	virtual void	Update (edict_t *ent);
+	virtual void	Update (CPlayerEntity *ent);
 };
 
 class CMenu_Box : public CMenuItem
@@ -168,18 +168,18 @@ public:
 	int						Type;
 
 	CMenu_Box			(CMenu *Menu, int x, int y);
-	virtual void Draw		(edict_t *ent, CStatusBar *DrawState);
+	virtual void Draw		(CPlayerEntity *ent, CStatusBar *DrawState);
 
 	// Can't select
-	bool	CanSelect (edict_t *ent)
+	bool	CanSelect (CPlayerEntity *ent)
 	{
 		return false;
 	}
-	bool	Select (edict_t *ent)
+	bool	Select (CPlayerEntity *ent)
 	{
 		return false;
 	}
-	virtual void	Update (edict_t *ent)
+	virtual void	Update (CPlayerEntity *ent)
 	{
 	};
 };

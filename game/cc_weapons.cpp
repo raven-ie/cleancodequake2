@@ -159,16 +159,6 @@ void CWeaponItem::Drop (edict_t *ent)
 	}
 }
 
-void InitItemMaxValues (edict_t *ent)
-{
-	ent->client->pers.maxAmmoValues[AMMOTAG_SHELLS] = 100;
-	ent->client->pers.maxAmmoValues[AMMOTAG_BULLETS] = 200;
-	ent->client->pers.maxAmmoValues[AMMOTAG_GRENADES] = 50;
-	ent->client->pers.maxAmmoValues[AMMOTAG_ROCKETS] = 50;
-	ent->client->pers.maxAmmoValues[AMMOTAG_CELLS] = 200;
-	ent->client->pers.maxAmmoValues[AMMOTAG_SLUGS] = 50;
-}
-
 int maxBackpackAmmoValues[AMMOTAG_MAX] =
 {
 	200,

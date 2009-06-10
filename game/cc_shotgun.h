@@ -36,11 +36,11 @@ class CShotgun : public CWeapon
 public:
 	CShotgun();
 
-	inline bool	CanFire	(edict_t *ent);
-	inline bool	CanStopFidgetting (edict_t *ent);
+	inline bool	CanFire	(CPlayerEntity *Player);
+	inline bool	CanStopFidgetting (CPlayerEntity *Player);
 
 	// The function called to "fire"
-	void	Fire (edict_t *ent);
+	void	Fire (CPlayerEntity *Player);
 };
 
 extern CShotgun WeaponShotgun;

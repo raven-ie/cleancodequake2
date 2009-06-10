@@ -22,7 +22,7 @@ public:
 	void	Remove (int Index, int Num);
 
 	// Draw the inventory
-	void	Draw (edict_t *ent);
+	void	Draw (CPlayerEntity *ent);
 
 	// Validate items selected with functions below
 	void	ValidateSelectedItem ();
@@ -37,20 +37,20 @@ public:
 	void	Set	(int Index, int Num);
 };
 
-void Cmd_Use_f (edict_t *ent);
-void Cmd_UseList_f (edict_t *ent);
-void Cmd_Drop_f (edict_t *ent);
-void Cmd_Inven_f (edict_t *ent);
-void Cmd_InvUse_f (edict_t *ent);
-void Cmd_WeapPrev_f (edict_t *ent);
-void Cmd_WeapNext_f (edict_t *ent);
-void Cmd_WeapLast_f (edict_t *ent);
-void Cmd_InvDrop_f (edict_t *ent);
-void Cmd_SelectNextItem_f (edict_t *ent);
-void Cmd_SelectPrevItem_f (edict_t *ent);
-void Cmd_SelectNextWeapon_f (edict_t *ent);
-void Cmd_SelectPrevWeapon_f (edict_t *ent);
-void Cmd_SelectNextPowerup_f (edict_t *ent);
-void Cmd_SelectPrevPowerup_f (edict_t *ent);
-void Cmd_Give (edict_t *ent);
-void Cmd_Give_f (edict_t *ent);
+void Cmd_Use_f (CPlayerEntity *ent);
+void Cmd_UseList_f (CPlayerEntity *ent);
+void Cmd_Drop_f (CPlayerEntity *ent);
+void Cmd_Inven_f (CPlayerEntity *ent);
+void Cmd_InvUse_f (CPlayerEntity *ent);
+void Cmd_WeapPrev_f (CPlayerEntity *ent);
+void Cmd_WeapNext_f (CPlayerEntity *ent);
+void Cmd_WeapLast_f (CPlayerEntity *ent);
+void Cmd_InvDrop_f (CPlayerEntity *ent);
+void Cmd_SelectNextItem_f (CPlayerEntity *ent);
+void Cmd_SelectPrevItem_f (CPlayerEntity *ent);
+void Cmd_SelectNextWeapon_f (CPlayerEntity *ent);
+void Cmd_SelectPrevWeapon_f (CPlayerEntity *ent);
+void Cmd_SelectNextPowerup_f (CPlayerEntity *ent);
+void Cmd_SelectPrevPowerup_f (CPlayerEntity *ent);
+void Cmd_Give (CPlayerEntity *ent);
+void Cmd_Give_f (CPlayerEntity *ent);

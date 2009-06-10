@@ -54,163 +54,163 @@ WeaponSound(WeaponSound)
 	DeactNumFrames = (DeactEnd - DeactStart);
 };
 
-void CWeapon::InitWeapon (edict_t *ent)
+void CWeapon::InitWeapon (CPlayerEntity *Player)
 {
-	ent->client->playerState.gunFrame = ActivationStart;
-	ent->client->playerState.gunIndex = WeaponModelIndex;
-	ent->client->weaponstate = WS_ACTIVATING;
+	Player->Client.PlayerState.SetGunFrame (ActivationStart);
+	Player->Client.PlayerState.SetGunIndex (WeaponModelIndex);
+	Player->Client.weaponstate = WS_ACTIVATING;
 }
 
-void CWeapon::WeaponGeneric (edict_t *ent)
+void CWeapon::WeaponGeneric (CPlayerEntity *Player)
 {
 	// Idea from Brazen source
 	int newFrame = -1, newState = -1;
 
-	switch (ent->client->weaponstate)
+	switch (Player->Client.weaponstate)
 	{
 	case WS_ACTIVATING:
-		if (ent->client->playerState.gunFrame == ActivationEnd)
+		if (Player->Client.PlayerState.GetGunFrame() == ActivationEnd)
 		{
 			newFrame = IdleStart;
 			newState = WS_IDLE;
 		}
 		break;
 	case WS_IDLE:
-		if (ent->client->NewWeapon && ent->client->NewWeapon != this)
+		if (Player->Client.NewWeapon && Player->Client.NewWeapon != this)
 		{
 			// We want to go away!
 			newState = WS_DEACTIVATING;
 			newFrame = DeactStart;
 		}
-		else if ((ent->client->buttons|ent->client->latched_buttons) & BUTTON_ATTACK)
+		else if ((Player->Client.buttons|Player->Client.latched_buttons) & BUTTON_ATTACK)
 		{
-			ent->client->latched_buttons &= ~BUTTON_ATTACK;
+			Player->Client.latched_buttons &= ~BUTTON_ATTACK;
 
 			// This here is ugly, but necessary so that machinegun/chaingun/hyperblaster
 			// get the right acceptance on first-frame-firing
-			ent->client->buttons |= BUTTON_ATTACK;
+			Player->Client.buttons |= BUTTON_ATTACK;
 
 			// We want to attack!
 			// First call, check AttemptToFire
-			if (AttemptToFire(ent))
+			if (AttemptToFire(Player))
 			{
 				// Got here, we can fire!
-				ent->client->playerState.gunFrame = FireStart;
-				ent->client->weaponstate = WS_FIRING;
+				Player->Client.PlayerState.SetGunFrame(FireStart);
+				Player->Client.weaponstate = WS_FIRING;
 
 				// We need to check against us right away for first-frame firing
-				WeaponGeneric(ent);
+				WeaponGeneric(Player);
 				return;
 			}
 			else
 			{
-				OutOfAmmo(ent);
-				NoAmmoWeaponChange (ent);
+				OutOfAmmo(Player);
+				NoAmmoWeaponChange (Player);
 			}
 		}
 
 		// Either we are still idle or a failed fire.
 		if (newState == -1)
 		{
-			if (ent->client->playerState.gunFrame == IdleEnd)
+			if (Player->Client.PlayerState.GetGunFrame() == IdleEnd)
 				newFrame = IdleStart;
 			else
 			{
-				if (CanStopFidgetting(ent) && (rand()&15))
-					newFrame = ent->client->playerState.gunFrame;
+				if (CanStopFidgetting(Player) && (rand()&15))
+					newFrame = Player->Client.PlayerState.GetGunFrame();
 			}
 		}
 		break;
 	case WS_FIRING:
 		// Check if this is a firing frame.
-		if (CanFire(ent))
+		if (CanFire(Player))
 		{
-			Fire(ent);
+			Fire(Player);
 
 			// Now, this call above CAN change the underlying frame and state.
 			// We need this block to make sure we are still doing what we are supposed to.
-			newState = ent->client->weaponstate;
-			newFrame = ent->client->playerState.gunFrame;
+			newState = Player->Client.weaponstate;
+			newFrame = Player->Client.PlayerState.GetGunFrame();
 		}
 
 		// Only do this if we haven't been explicitely set a newFrame
 		// because we might want to keep firing beyond this point
-		if (newFrame == -1 && ent->client->playerState.gunFrame > FireEnd)
+		if (newFrame == -1 && Player->Client.PlayerState.GetGunFrame() > FireEnd)
 		{
 			newFrame = IdleStart+1;
 			newState = WS_IDLE;
 		}
 		break;
 	case WS_DEACTIVATING:
-		if (ent->client->playerState.gunFrame == DeactEnd)
+		if (Player->Client.PlayerState.GetGunFrame() == DeactEnd)
 		{
 			// Change weapon
-			this->ChangeWeapon (ent);
+			ChangeWeapon (Player);
 			return;
 		}
 		break;
 	}
 
 	if (newFrame != -1)
-		ent->client->playerState.gunFrame = newFrame;
+		Player->Client.PlayerState.SetGunFrame(newFrame);
 	if (newState != -1)
-		ent->client->weaponstate = newState;
+		Player->Client.weaponstate = newState;
 
 	if (newFrame == -1 && newState == -1)
-		ent->client->playerState.gunFrame++;
+		Player->Client.PlayerState.SetGunFrame (Player->Client.PlyaerState.GetGunFrame() + 1);
 }
 
-void CWeapon::ChangeWeapon (edict_t *ent)
+void CWeapon::ChangeWeapon (CPlayerEntity *Player)
 {
-	ent->client->pers.LastWeapon = ent->client->pers.Weapon;
-	ent->client->pers.Weapon = ent->client->NewWeapon;
-	ent->client->NewWeapon = NULL;
-	ent->client->machinegun_shots = 0;
+	Player->Client.pers.LastWeapon = Player->Client.pers.Weapon;
+	Player->Client.pers.Weapon = Player->Client.NewWeapon;
+	Player->Client.NewWeapon = NULL;
+	Player->Client.machinegun_shots = 0;
 
 	// set visible model
-	if (ent->client->pers.Weapon && ent->state.modelIndex == 255)
-		ent->state.skinNum = (ent - g_edicts - 1) | ((ent->client->pers.Weapon->vwepIndex & 0xff) << 8);
+	if (Player->Client.pers.Weapon && Player->gameEntity->state.modelIndex == 255)
+		Player->gameEntity->state.skinNum = (Player->gameEntity - g_edicts - 1) | ((Player->Client.pers.Weapon->vwepIndex & 0xff) << 8);
 
-	if (!ent->client->pers.Weapon)
+	if (!Player->Client.pers.Weapon)
 	{	// dead
-		ent->client->playerState.gunIndex = 0;
-		if (!ent->client->grenade_thrown && !ent->client->grenade_blew_up && ent->client->grenade_time >= level.time) // We had a grenade cocked
+		Player->Client.PlayerState.SetGunIndex(0);
+		if (!Player->Client.grenade_thrown && !Player->Client.grenade_blew_up && Player->Client.grenade_time >= level.time) // We had a grenade cocked
 		{
-			WeaponGrenades.FireGrenade(ent, false);
-			ent->client->grenade_time = 0;
+			WeaponGrenades.FireGrenade(Player, false);
+			Player->Client.grenade_time = 0;
 		}
 		return;
 	}
 
-	ent->client->pers.Weapon->InitWeapon(ent);
+	Player->Client.pers.Weapon->InitWeapon(Player);
 
-	ent->client->anim_priority = ANIM_PAIN;
-	if (ent->client->playerState.pMove.pmFlags & PMF_DUCKED)
+	Player->Client.anim_priority = ANIM_PAIN;
+	if (Player->Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED)
 	{
-		ent->state.frame = FRAME_crpain1;
-		ent->client->anim_end = FRAME_crpain4;
+		Player->gameEntity->state.frame = FRAME_crpain1;
+		Player->Client.anim_end = FRAME_crpain4;
 	}
 	else
 	{
-		ent->state.frame = FRAME_pain301;
-		ent->client->anim_end = FRAME_pain304;
+		Player->gameEntity->state.frame = FRAME_pain301;
+		Player->Client.anim_end = FRAME_pain304;
 	}
 }
 
-void CWeapon::DepleteAmmo (edict_t *ent, int Amount = 1)
+void CWeapon::DepleteAmmo (CPlayerEntity *Player, int Amount = 1)
 {
 	if (this->WeaponItem)
 	{
 		CAmmo *Ammo = this->WeaponItem->Ammo;
 
 		if (Ammo)
-			ent->client->pers.Inventory.Remove (Ammo, Amount);
+			Player->Client.pers.Inventory.Remove (Ammo, Amount);
 	}
 	else if (this->Item && (this->Item->Flags & ITEMFLAG_AMMO))
-		ent->client->pers.Inventory.Remove (this->Item, Amount);
+		Player->Client.pers.Inventory.Remove (this->Item, Amount);
 }
 
-bool CWeapon::AttemptToFire (edict_t *ent)
+bool CWeapon::AttemptToFire (CPlayerEntity *Player)
 {
 	int numAmmo = 0;
 	CAmmo *Ammo;
@@ -218,7 +218,7 @@ bool CWeapon::AttemptToFire (edict_t *ent)
 
 	if (this->Item && (this->Item->Flags & ITEMFLAG_AMMO))
 	{
-		numAmmo = ent->client->pers.Inventory.Has(this->Item);
+		numAmmo = Player->Client.pers.Inventory.Has(this->Item);
 		Ammo = dynamic_cast<CAmmo*>(this->Item);
 		quantity = Ammo->Amount;
 	}
@@ -230,7 +230,7 @@ bool CWeapon::AttemptToFire (edict_t *ent)
 			Ammo = this->WeaponItem->Ammo;
 			quantity = this->WeaponItem->Quantity;
 			if (Ammo)
-				numAmmo = ent->client->pers.Inventory.Has(Ammo);
+				numAmmo = Player->Client.pers.Inventory.Has(Ammo);
 		}
 		else
 			return true;
@@ -242,39 +242,36 @@ bool CWeapon::AttemptToFire (edict_t *ent)
 		return true;
 }
 
-void CWeapon::OutOfAmmo (edict_t *ent)
+void CWeapon::OutOfAmmo (CPlayerEntity *Player)
 {
 	// Doesn't affect pain anymore!
-	if (level.time >= ent->damage_debounce_time)
+	if (level.time >= Player->Client.damage_debounce_time)
 	{
-		PlaySoundFrom(ent, CHAN_AUTO, SoundIndex("weapons/noammo.wav"));
-		ent->damage_debounce_time = level.time + 1;
+		PlaySoundFrom(Player->gameEntity, CHAN_AUTO, SoundIndex("weapons/noammo.wav"));
+		Player->gameEntity->damage_debounce_time = level.time + 1;
 	}
 }
 
 // Routines
-inline void P_ProjectSource (gclient_t *client, vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result)
+inline void P_ProjectSource (CPlayerEntity *Player, vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result)
 {
 	vec3_t	_distance;
 
 	Vec3Copy (distance, _distance);
-	if (client->pers.hand == LEFT_HANDED)
+	if (Player->Client.pers.hand == LEFT_HANDED)
 		_distance[1] *= -1;
-	else if (client->pers.hand == CENTER_HANDED)
+	else if (Player->Client.pers.hand == CENTER_HANDED)
 		_distance[1] = 0;
 	G_ProjectSource (point, _distance, forward, right, result);
 }
-
 
 /*
 ===============
 PlayerNoise
 Revised for CleanCode.
-
-
 ===============
 */
-void PlayerNoise(edict_t *who, vec3_t where, int type)
+void PlayerNoise(CPlayerEntity *Player, vec3_t where, int type)
 {
 #ifndef MONSTERS_USE_PATHFINDING
 	edict_t		*noise;
@@ -282,9 +279,9 @@ void PlayerNoise(edict_t *who, vec3_t where, int type)
 
 	if (type == PNOISE_WEAPON)
 	{
-		if (who->client->silencer_shots)
+		if (Player->Client.silencer_shots)
 		{
-			who->client->silencer_shots--;
+			Player->Client.silencer_shots--;
 			return;
 		}
 	}
@@ -340,89 +337,89 @@ void PlayerNoise(edict_t *who, vec3_t where, int type)
 #endif
 }
 
-void CWeapon::Muzzle (edict_t *ent, int muzzleNum)
+void CWeapon::Muzzle (CPlayerEntity *Player, int muzzleNum)
 {
 	if (isSilenced)
 		muzzleNum |= MZ_SILENCED;
-	CTempEnt::MuzzleFlash(ent->state.origin, ent-g_edicts, muzzleNum);
+	CTempEnt::MuzzleFlash(Player->gameEntity->state.origin, Player->gameEntity-g_edicts, muzzleNum);
 }
 
 /*
 =================
 Think_Weapon
 
-Called by ClientBeginServerFrame and ClientThink
+Called by ClientBeginServerFrame
 =================
 */
-void CWeapon::Think (edict_t *ent)
+void CWeapon::Think (CPlayerEntity *Player)
 {
 #ifdef CLEANCTF_ENABLED
-	if ((game.mode & GAME_CTF) && !ent->client->resp.ctf_team)
+	if ((game.mode & GAME_CTF) && !Player->Client.resp.ctf_team)
 		return;
 #endif
 
 	// if just died, put the weapon away
-	if (ent->health < 1)
+	if (Player->gameEntity->health < 1)
 	{
-		ent->client->NewWeapon = NULL;
-		ChangeWeapon (ent);
+		Player->Client.NewWeapon = NULL;
+		ChangeWeapon (Player);
 		return;
 	}
 
 	// call active weapon think routine
-	isQuad = (ent->client->quad_framenum > level.framenum);
-	isSilenced = (ent->client->silencer_shots) ? true : false;
-	WeaponGeneric (ent);
-	if (this != &WeaponGrapple && CTFApplyHaste(ent))
-		WeaponGeneric(ent);
+	isQuad = (Player->Client.quad_framenum > level.framenum);
+	isSilenced = (Player->Client.silencer_shots) ? true : false;
+	WeaponGeneric (Player);
+	if (this != &WeaponGrapple && CTFApplyHaste(Player))
+		WeaponGeneric(Player);
 }
 
-void CWeapon::AttackSound(edict_t *ent)
+void CWeapon::AttackSound(CPlayerEntity *Player)
 {
 #ifdef CLEANCTF_ENABLED
 //ZOID
-	if (!CTFApplyStrengthSound(ent))
+	if (!CTFApplyStrengthSound(Player))
 //ZOID
 #endif
 	if (isQuad)
-		PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/damage3.wav"));
+		PlaySoundFrom(Player->gameEntity, CHAN_ITEM, SoundIndex("items/damage3.wav"));
 #ifdef CLEANCTF_ENABLED
 //ZOID
-	CTFApplyHasteSound(ent);
+	CTFApplyHasteSound(Player);
 //ZOID
 #endif
 }
 
 // YUCK
 // Better way?
-void CWeapon::NoAmmoWeaponChange (edict_t *ent)
+void CWeapon::NoAmmoWeaponChange (CPlayerEntity *Player)
 {
 	// Dead?
-	if (!ent->client->pers.Weapon || ent->health <= 0 || ent->deadflag)
+	if (!Player->Client.pers.Weapon || Player->gameEntity->health <= 0 || Player->gameEntity->deadflag)
 		return;
 
 	// Collect info on our current state
-	bool HasShotgun = (ent->client->pers.Inventory.Has(FindItem("Shotgun")) != 0);
-	bool HasSuperShotgun = (ent->client->pers.Inventory.Has(FindItem("Super Shotgun")) != 0);
-	bool HasMachinegun = (ent->client->pers.Inventory.Has(FindItem("Machinegun")) != 0);
-	bool HasChaingun = (ent->client->pers.Inventory.Has(FindItem("Chaingun")) != 0);
-	bool HasGrenadeLauncher = (ent->client->pers.Inventory.Has(FindItem("Grenade Launcher")) != 0);
-	bool HasRocketLauncher = (ent->client->pers.Inventory.Has(FindItem("Rocket Launcher")) != 0);
-	bool HasHyperblaster = (ent->client->pers.Inventory.Has(FindItem("Hyperblaster")) != 0);
-	bool HasRailgun = (ent->client->pers.Inventory.Has(FindItem("Railgun")) != 0);
-	bool HasBFG = (ent->client->pers.Inventory.Has(FindItem("BFG10k")) != 0);
+	bool HasShotgun = (Player->Client.pers.Inventory.Has(FindItem("Shotgun")) != 0);
+	bool HasSuperShotgun = (Player->Client.pers.Inventory.Has(FindItem("Super Shotgun")) != 0);
+	bool HasMachinegun = (Player->Client.pers.Inventory.Has(FindItem("Machinegun")) != 0);
+	bool HasChaingun = (Player->Client.pers.Inventory.Has(FindItem("Chaingun")) != 0);
+	bool HasGrenadeLauncher = (Player->Client.pers.Inventory.Has(FindItem("Grenade Launcher")) != 0);
+	bool HasRocketLauncher = (Player->Client.pers.Inventory.Has(FindItem("Rocket Launcher")) != 0);
+	bool HasHyperblaster = (Player->Client.pers.Inventory.Has(FindItem("Hyperblaster")) != 0);
+	bool HasRailgun = (Player->Client.pers.Inventory.Has(FindItem("Railgun")) != 0);
+	bool HasBFG = (Player->Client.pers.Inventory.Has(FindItem("BFG10k")) != 0);
 
-	bool HasShells = (ent->client->pers.Inventory.Has(FindItem("Shells")) != 0);
-	bool HasShells_ForSuperShotty = (ent->client->pers.Inventory.Has(FindItem("Shells")) > 5);
-	bool HasBullets = (ent->client->pers.Inventory.Has(FindItem("Bullets")) != 0);
-	bool HasBullets_ForChaingun = (ent->client->pers.Inventory.Has(FindItem("Bullets")) >= 50);
-	bool HasGrenades = (ent->client->pers.Inventory.Has(FindItem("Grenades")) != 0);
-	bool HasRockets = (ent->client->pers.Inventory.Has (FindItem("Rockets")) != 0);
-	bool HasCells = (ent->client->pers.Inventory.Has (FindItem("Cells")) != 0);
-	bool HasCells_ForBFG = (ent->client->pers.Inventory.Has (FindItem("Cells")) >= 50);
-	bool HasSlugs = (ent->client->pers.Inventory.Has(FindItem("Slugs")) != 0);
+	bool HasShells = (Player->Client.pers.Inventory.Has(FindItem("Shells")) != 0);
+	bool HasShells_ForSuperShotty = (Player->Client.pers.Inventory.Has(FindItem("Shells")) > 5);
+	bool HasBullets = (Player->Client.pers.Inventory.Has(FindItem("Bullets")) != 0);
+	bool HasBullets_ForChaingun = (Player->Client.pers.Inventory.Has(FindItem("Bullets")) >= 50);
+	bool HasGrenades = (Player->Client.pers.Inventory.Has(FindItem("Grenades")) != 0);
+	bool HasRockets = (Player->Client.pers.Inventory.Has (FindItem("Rockets")) != 0);
+	bool HasCells = (Player->Client.->pers.Inventory.Has (FindItem("Cells")) != 0);
+	bool HasCells_ForBFG = (Player->Client.pers.Inventory.Has (FindItem("Cells")) >= 50);
+	bool HasSlugs = (Player->Client.pers.Inventory.Has(FindItem("Slugs")) != 0);
 
-	bool AlmostDead = (ent->health <= 20);
+	bool AlmostDead = (Player->gameEntity->health <= 20);
 
 	CWeaponItem	*Chosen_Weapon = NULL;
 	CAmmo		*Chosen_Ammo = NULL;
@@ -484,26 +481,26 @@ void CWeapon::NoAmmoWeaponChange (edict_t *ent)
 
 	bool HasCurrentWeapon = true;
 	// Do a quick check to see if we still even have the weapon we're holding.
-	if (ent->client->pers.Weapon->WeaponItem && !ent->client->pers.Inventory.Has(ent->client->pers.Weapon->WeaponItem))
+	if (Player->Client.pers.Weapon->WeaponItem && !Player->Client.pers.Inventory.Has(Player->Client.pers.Weapon->WeaponItem))
 		HasCurrentWeapon = false;
 
-	ent->client->NewWeapon = (Chosen_Weapon == NULL) ? Chosen_Ammo->Weapon : Chosen_Weapon->Weapon;
+	Player->Client.NewWeapon = (Chosen_Weapon == NULL) ? Chosen_Ammo->Weapon : Chosen_Weapon->Weapon;
 	if (!HasCurrentWeapon)
-		ent->client->pers.Weapon->ChangeWeapon(ent);
+		Player->Client.pers.Weapon->ChangeWeapon(Player);
 }
 
-void CWeapon::FireAnimation (edict_t *ent)
+void CWeapon::FireAnimation (CPlayerEntity *Player)
 {
 	// start the animation
-	ent->client->anim_priority = ANIM_ATTACK;
-	if (ent->client->playerState.pMove.pmFlags & PMF_DUCKED)
+	Player->Client.anim_priority = ANIM_ATTACK;
+	if (Player->Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED)
 	{
-		ent->state.frame = FRAME_crattak1-1;
-		ent->client->anim_end = FRAME_crattak9;
+		Player->gameEntity->state.frame = FRAME_crattak1-1;
+		Player->Client.anim_end = FRAME_crattak9;
 	}
 	else
 	{
-		ent->state.frame = FRAME_attack1-1;
-		ent->client->anim_end = FRAME_attack8;
+		Player->gameEntity->state.frame = FRAME_attack1-1;
+		Player->Client.anim_end = FRAME_attack8;
 	}
 }

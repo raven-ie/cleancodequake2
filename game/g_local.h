@@ -226,7 +226,7 @@ typedef struct
 #else
 	class		CPathNode	*NoiseNode;
 	float		SoundEntityFramenum;
-	edict_t		*SoundEntity;
+	CPlayerEntity		*SoundEntity;
 #endif
 
 	int			total_secrets;
@@ -242,7 +242,6 @@ typedef struct
 	int			body_que;			// dead bodies
 
 	int			power_cubes;		// ugly necessity for coop
-	bool		paused;
 } level_locals_t;
 
 
@@ -509,13 +508,9 @@ edict_t	*PlayerTrail_LastSpot (void);
 //
 // g_client.c
 //
-void respawn (edict_t *ent);
 void BeginIntermission (edict_t *targ);
-void PutClientInServer (edict_t *ent);
-void InitClientPersistant (edict_t *ent);
 void InitClientResp (gclient_t *client);
 void InitBodyQue (void);
-void ClientBeginServerFrame (edict_t *ent);
 
 //
 // g_player.c
@@ -540,7 +535,7 @@ void DeathmatchScoreboardMessage (edict_t *ent, edict_t *killer, bool reliable);
 //
 // g_pweapon.c
 //
-void PlayerNoise(edict_t *who, vec3_t where, int type);
+void PlayerNoise(CPlayerEntity *who, vec3_t where, int type);
 
 //
 // g_phys.c
@@ -572,81 +567,6 @@ void GetChaseTarget(edict_t *ent);
 #define ANIM_DEATH		5
 #define ANIM_REVERSE	6
 
-// client data that stays across multiple level loads
-typedef struct
-{
-	char		userinfo[MAX_INFO_STRING];
-	IPAddress	IP;
-	char		netname[16];
-	int			hand;
-
-	EClientState state;			// a loadgame will leave valid entities that
-									// just don't have a connection yet
-
-	// values saved and restored from edicts when changing levels
-	int			health;
-	int			max_health;
-	int			savedFlags;
-
-	CInventory	Inventory;
-
-	// ammo capacities
-	int			maxAmmoValues[AMMOTAG_MAX];
-
-	CWeapon		*Weapon, *LastWeapon;
-	CArmor		*Armor; // Current armor.
-#ifdef CLEANCTF_ENABLED
-	CFlag		*Flag; // Set if holding a flag
-	CTech		*Tech; // Set if holding a tech
-#endif
-	// Stored here for convenience. (dynamic_cast ew)
-
-	int			power_cubes;	// used for tracking the cubes in coop games
-	int			score;			// for calculating total unit score in coop games
-
-	int			game_helpchanged;
-	int			helpchanged;
-
-	bool		spectator;			// client is a spectator
-
-	colorb		viewBlend; // View blending
-} clientPersistent_t;
-
-// client data that stays across deathmatch respawns
-typedef struct
-{
-	clientPersistent_t	coop_respawn;	// what to set client->pers to on a respawn
-	int			enterframe;			// level.framenum the client entered the game
-	int			score;				// frags, etc
-	vec3_t		cmd_angles;			// angles sent over in the last command
-
-	bool		spectator;			// client is a spectator
-	EGender		Gender;
-	int			messageLevel;
-
-#ifdef MONSTERS_USE_PATHFINDING
-	CPathNode	*LastNode;
-#endif
-
-	CMenuState	MenuState;
-
-#ifdef CLEANCTF_ENABLED
-//ZOID
-	int			ctf_team;			// CTF team
-	int			ctf_state;
-	float		ctf_lasthurtcarrier;
-	float		ctf_lastreturnedflag;
-	float		ctf_flagsince;
-	float		ctf_lastfraggedcarrier;
-	bool		id_state;
-	bool		voted; // for elections
-	bool		ready;
-	bool		admin;
-	struct ghost_s *ghost; // for ghost codes
-//ZOID
-#endif
-} clientRespawn_t;
-
 // this structure is cleared on each PutClientInServer(),
 // except for 'client->pers'
 struct gclient_s
@@ -654,89 +574,6 @@ struct gclient_s
 	// known to server
 	playerState_t	playerState;				// communicated by server to clients
 	int				ping;
-
-	// private to game
-	clientPersistent_t	pers;
-	clientRespawn_t	resp;
-	pMoveState_t		old_pmove;	// for detecting out-of-pmove changes
-
-	bool		showscores;			// set layout stat
-	bool		showinventory;		// set layout stat
-	bool		showhelp;
-	bool		showhelpicon;
-
-	int			buttons;
-	int			latched_buttons;
-
-	CWeapon		*NewWeapon;
-
-	// sum up damage over an entire frame, so
-	// shotgun blasts give a single big kick
-	int			damage_armor;		// damage absorbed by armor
-	int			damage_parmor;		// damage absorbed by power armor
-	int			damage_blood;		// damage taken out of health
-	int			damage_knockback;	// impact damage
-	vec3_t		damage_from;		// origin for vector calculation
-
-	float		killer_yaw;			// when dead, look at killer
-
-	EWeaponState weaponstate;
-	vec3_t		kick_angles;	// weapon kicks
-	vec3_t		kick_origin;
-	float		v_dmg_roll, v_dmg_pitch, v_dmg_time;	// damage kicks
-	float		fall_time, fall_value;		// for view drop on fall
-	byte		bonus_alpha;
-	colorb		damage_blend;
-	vec3_t		v_angle;			// aiming direction
-	float		bobtime;			// so off-ground doesn't change it
-	vec3_t		oldviewangles;
-	vec3_t		oldvelocity;
-
-	float		next_drown_time;
-	int			old_waterlevel;
-	int			breather_sound;
-
-	int			machinegun_shots;	// for weapon raising
-
-	// animation vars
-	int			anim_end;
-	int			anim_priority;
-	bool		anim_duck;
-	bool		anim_run;
-
-	// powerup timers
-	int			quad_framenum;
-	int			invincible_framenum;
-	int			breather_framenum;
-	int			enviro_framenum;
-
-	bool		grenade_blew_up;
-	bool		grenade_thrown;
-	float		grenade_time;
-	int			silencer_shots;
-	MediaIndex	weapon_sound;
-
-	float		pickup_msg_time;
-
-	float		flood_locktill;		// locked from talking
-	float		flood_when[10];		// when messages were said
-	int			flood_whenhead;		// head pointer for when said
-
-	float		respawn_time;		// can respawn when time > this
-
-	edict_t		*chase_target;		// player we are chasing
-	bool		update_chase;		// need to update chase info?
-
-#ifdef CLEANCTF_ENABLED
-//ZOID
-	edict_t		*ctf_grapple;		// entity of grapple
-	int			ctf_grapplestate;		// true if pulling
-	float		ctf_grapplereleasetime;	// time of grapple release
-	float		ctf_regentime;		// regen tech
-	float		ctf_techsndtime;
-	float		ctf_lasttechmsg;
-//ZOID
-#endif
 };
 
 
@@ -876,17 +713,17 @@ struct edict_s
 	vec3_t		move_origin;
 	vec3_t		move_angles;
 
-	// move this to clientinfo?
 	int			light_level;
-
 	int			style;			// also used as areaportal number
-
-	CBaseItem		*item;
-	CMonster		*Monster;
 
 	// common data blocks
 	moveinfo_t		moveinfo;
 
+	// Paril
+	CBaseItem		*item;
+	CMonster		*Monster;
+
+	CBaseEntity		*Entity;
 #if 0
 	const NewtonBody	*newtonBody;
 #endif
@@ -934,10 +771,9 @@ extern	CCvar	*capturelimit;
 extern	CCvar	*instantweap;
 #endif
 
-extern void P_ProjectSource (gclient_t *client, vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result);
-
 #ifdef CLEANCTF_ENABLED
 #include "cc_ctf.h"
 #endif
 
 bool CheckTeamDamage (edict_t *targ, edict_t *attacker);
+void	SelectSpawnPoint (edict_t *ent, vec3_t origin, vec3_t angles);

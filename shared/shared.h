@@ -49,6 +49,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 =============================================================================
 */
 
+#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 #define ORIGINAL_PROTOCOL_VERSION		34
 
 #define ENHANCED_PROTOCOL_VERSION		35
@@ -57,6 +58,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #define MINOR_VERSION_R1Q2_BASE			1903
 #define MINOR_VERSION_R1Q2_UCMD_UPDATES	1904
 #define	MINOR_VERSION_R1Q2_32BIT_SOLID	1905
+#endif
 
 //
 // server to client
@@ -199,12 +201,15 @@ void		Swap_Init (void);
 ==============================================================================
 */
 
+#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 typedef uint32				fileHandle_t;
+#endif
 
 #define MAX_QEXT			16		// max length of a quake game pathname extension
 #define MAX_QPATH			64		// max length of a quake game pathname
 #define MAX_OSPATH			128		// max length of a filesystem pathname
 
+#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 // directory searching
 #define SFF_ARCH	0x01
 #define SFF_HIDDEN	0x02
@@ -233,6 +238,7 @@ enum EFSSeekOrigin
 
 // for FS_FindFiles
 #define FS_MAX_FINDFILES	65536
+#endif
 
 //
 // this is only here so the functions in shared/ can link
@@ -260,6 +266,7 @@ enum EComErrorType
 };
 void	Com_Error (EComErrorType code, char *fmt, ...);
 
+#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 //
 // styles for R_DrawString/Char
 //
@@ -272,6 +279,7 @@ enum
 	FS_SHADOW				= BIT(4),
 	FS_SQUARE				= BIT(5),	// Force the width/height to the character width/height value that's largest
 };
+#endif
 
 /*
 ==============================================================================
@@ -290,10 +298,13 @@ enum
 	CVAR_SERVERINFO		= BIT(2),	// added to serverinfo when changed
 	CVAR_READONLY		= BIT(3),	// can only be changed when forced through code
 	CVAR_LATCH_SERVER	= BIT(4),	// delay changes until server restart
+
+#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 	CVAR_LATCH_VIDEO	= BIT(5),	// delay changes until video restart
 	CVAR_LATCH_AUDIO	= BIT(6),	// delay changes until audio restart
 	CVAR_RESET_GAMEDIR	= BIT(7),	// reset game dir when this cvar is modified
 	CVAR_CHEAT			= BIT(8),	// clamp to the default value when cheats are off
+#endif
 };
 
 struct cVar_t
@@ -305,9 +316,12 @@ struct cVar_t
 	BOOL			modified;		// set each time the cvar is changed
 	float			floatVal;
 
+#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 	int				intVal;
+#endif
 };
 
+#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 /*
 ==============================================================================
 
@@ -320,6 +334,7 @@ enum
 {
 	CMD_CGAME		= BIT(0),	// Automatically added by the engine
 };
+#endif
 
 /*
 ==============================================================================
@@ -340,9 +355,11 @@ enum
 #define CONTENTS_WATER			32
 #define CONTENTS_MIST			64
 
+#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 // Q3BSP
 #define CONTENTS_FOG			64
 // !Q3BSP
+#endif
 
 //
 // remaining contents are non-visible, and don't eat brushes
@@ -369,6 +386,7 @@ enum
 #define CONTENTS_TRANSLUCENT	0x10000000	// auto set if any surface has trans
 #define CONTENTS_LADDER			0x20000000
 
+#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 // Q3BSP
 #define Q3CNTNTS_TELEPORTER		0x40000
 #define Q3CNTNTS_JUMPPAD		0x80000
@@ -385,6 +403,7 @@ enum
 #define Q3CNTNTS_TRIGGER		0x40000000
 #define Q3CNTNTS_NODROP			0x80000000	// don't leave bodies or items (death fog, lava)
 // !Q3BSP
+#endif
 
 //
 // content masks
@@ -393,7 +412,11 @@ enum
 #define CONTENTS_MASK_SOLID			(CONTENTS_SOLID|CONTENTS_WINDOW)
 #define CONTENTS_MASK_PLAYERSOLID	(CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_WINDOW|CONTENTS_MONSTER)
 #define CONTENTS_MASK_DEADSOLID		(CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_WINDOW)
+#ifdef MONSTERS_HIT_MONSTERSOLID
+#define CONTENTS_MASK_MONSTERSOLID	(CONTENTS_SOLID|CONTENTS_WINDOW|CONTENTS_MONSTER|CONTENTS_MONSTERSOLID)
+#else
 #define CONTENTS_MASK_MONSTERSOLID	(CONTENTS_SOLID|CONTENTS_WINDOW|CONTENTS_MONSTER)
+#endif
 #define CONTENTS_MASK_WATER			(CONTENTS_WATER|CONTENTS_LAVA|CONTENTS_SLIME)
 #define CONTENTS_MASK_OPAQUE		(CONTENTS_SOLID|CONTENTS_SLIME|CONTENTS_LAVA)
 #define CONTENTS_MASK_SHOT			(CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_WINDOW|CONTENTS_DEADMONSTER)
@@ -412,6 +435,7 @@ enum
 #define SURF_TEXINFO_HINT		0x100	// these aren't known to the engine I believe
 #define SURF_TEXINFO_SKIP		0x200	// only the compiler uses them
 
+#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 // Q3BSP
 #define SHREF_NODAMAGE			0x1		// never give falling damage
 #define SHREF_SLICK				0x2		// effects game physics
@@ -433,6 +457,7 @@ enum
 #define SHREF_NODLIGHT			0x20000	// never add dynamic lights
 #define SHREF_DUST				0x40000 // leave a dust trail when walking on this surface
 // !Q3BSP
+#endif
 
 //
 // gi.BoxEdicts() can return a list of either solid or trigger entities
@@ -502,8 +527,10 @@ struct cmBspSurface_t
 	int				flags;
 	int				value;
 
+#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 	// Q3BSP
 	int				contents;
+#endif
 };
 
 // A trace is returned when a box is swept through the world
@@ -575,6 +602,7 @@ struct pMoveState_t
 #define BUTTON_ATTACK		1
 #define BUTTON_USE			2
 
+#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 //stolen for r1q2 in the name of bandwidth
 #define	BUTTON_UCMD_DBLFORWARD	4
 #define BUTTON_UCMD_DBLSIDE		8
@@ -582,6 +610,7 @@ struct pMoveState_t
 
 #define BUTTON_UCMD_DBL_ANGLE1	32
 #define BUTTON_UCMD_DBL_ANGLE2	64
+#endif
 
 #define BUTTON_ANY			128			// any key whatsoever
 
@@ -603,6 +632,7 @@ struct userCmd_t
 
 
 #define MAXTOUCH	32
+#ifdef USE_EXTENDED_GAME_IMPORTS
 struct pMove_t
 {
 	// state (in / out)
@@ -629,6 +659,7 @@ struct pMove_t
 	cmTrace_t		(*trace) (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end);
 	int				(*pointContents) (vec3_t point);
 };
+#endif
 
 struct pMoveNew_t
 {
@@ -730,9 +761,12 @@ struct pMoveNew_t
 #define RF_SHELL_HALF_DAM	0x00020000
 #define RF_USE_DISGUISE		0x00040000
 
+#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 #define RF_NOSHADOW			0x00080000
 #define RF_CULLHACK			0x00100000
 #define RF_FORCENOLOD		0x00200000
+#endif
+
 #define RF_SHELLMASK		(RF_SHELL_HALF_DAM|RF_SHELL_DOUBLE|RF_SHELL_RED|RF_SHELL_GREEN|RF_SHELL_BLUE)
 
 /*
@@ -1115,7 +1149,8 @@ enum
 
 //
 // sound channels
-// channel 0 never willingly overrides other channels (1-7) allways override
+// channel 0 never willingly overrides.
+// Other channels (1-7) allways override
 // a playing sound on that channel
 //
 typedef int EEntSndChannel;
@@ -1250,6 +1285,7 @@ enum
 	EV_OTHER_TELEPORT
 };
 
+#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 // entityState_t is the information conveyed from the server in an update
 // message about entities that the client will need to render in some way
 struct entityState_t
@@ -1280,6 +1316,7 @@ struct entityState_t
 								// are automatically cleared each frame
 	vec3_t			velocity;	// for new ENHANCED_PROTOCOL_VERSION
 };
+#endif
 
 struct entityStateOld_t
 {
@@ -1371,6 +1408,7 @@ enum
 // playerState_t is the information needed in addition to pMoveState_t to
 // rendered a view.  There will only be 10 playerState_t sent each second, but
 // the number of pMoveState_t changes will be reletive to client frame rates
+#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 struct playerStateNew_t
 {
 	pMoveState_t	pMove;				// for prediction
@@ -1385,7 +1423,7 @@ struct playerStateNew_t
 	int				gunIndex;
 	int				gunFrame;
 
-	float			viewBlend[4];		// rgba full screen effect
+	vec4_t			viewBlend;		// rgba full screen effect
 	
 	float			fov;				// horizontal field of view
 
@@ -1396,6 +1434,7 @@ struct playerStateNew_t
 	vec3_t			mins;
 	vec3_t			maxs;
 };
+#endif
 
 struct playerState_t
 {
@@ -1411,7 +1450,7 @@ struct playerState_t
 	int				gunIndex;
 	int				gunFrame;
 
-	float			viewBlend[4];		// rgba full screen effect
+	vec4_t			viewBlend;		// rgba full screen effect
 	
 	float			fov;				// horizontal field of view
 

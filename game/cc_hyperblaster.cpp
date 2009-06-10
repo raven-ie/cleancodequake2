@@ -42,14 +42,14 @@ CWeapon("models/weapons/v_hyperb/tris.md2", 0, 5, 6, 20,
 {
 }
 
-bool CHyperBlaster::CanFire (edict_t *ent)
+bool CHyperBlaster::CanFire (CPlayerEntity *ent)
 {
-	if (ent->client->playerState.gunFrame >= 6 && ent->client->playerState.gunFrame <= 11)
+	if (ent->Client.PlayerState.GetGunFrame() >= 6 && ent->Client.PlayerState.GetGunFrame() <= 11)
 		return true;
 	return false;
 }
 
-bool CHyperBlaster::CanStopFidgetting (edict_t *ent)
+bool CHyperBlaster::CanStopFidgetting (CPlayerEntity *ent)
 {
 	return false;
 }
@@ -74,36 +74,31 @@ vec3_t hyperblasterOffsetTable[] =
 	{ 0, 0, 4.0f		}
 };
 
-void CHyperBlaster::Fire (edict_t *ent)
+void CHyperBlaster::Fire (CPlayerEntity *ent)
 {
 	float	rotation;
 	vec3_t	offset;
 	int		effect;
 	int		damage;
 
-	ent->client->weapon_sound = SoundIndex("weapons/hyprbl1a.wav");
+	ent->Client.weapon_sound = SoundIndex("weapons/hyprbl1a.wav");
 
-	if (!(ent->client->buttons & BUTTON_ATTACK))
-		ent->client->playerState.gunFrame++;
+	if (!(ent->Client.buttons & BUTTON_ATTACK))
+		ent->Client.PlayerState.SetGunFrame(ent->Client.PlayerState.GetGunFrame() + 1);
 	else
 	{
-		if (! ent->client->pers.Inventory.Has(ent->client->pers.Weapon->WeaponItem->Ammo) )
+		if (!ent->Client.pers.Inventory.Has(ent->Client.pers.Weapon->WeaponItem->Ammo) )
 		{
 			OutOfAmmo(ent);
 			NoAmmoWeaponChange (ent);
 		}
 		else
 		{
-			// I replaced these with a table because they are constant.
-			// It always bugged me that they did operations like this.
-			/*rotation = (ent->client->playerState.gunFrame - 5) * 2*M_PI/6;
-			offset[0] = -4 * sinf(rotation);
-			offset[1] = 0;
-			offset[2] = 4 * cosf(rotation);*/
-			rotation = hyperblasterRotationTable[ent->client->playerState.gunFrame - 6];
-			Vec3Copy (hyperblasterOffsetTable[ent->client->playerState.gunFrame - 6], offset);
+			// I replaced this part with a table because they are constant.
+			rotation = hyperblasterRotationTable[ent->Client.PlayerState.GetGunFrame() - 6];
+			Vec3Copy (hyperblasterOffsetTable[ent->Client.PlayerState.GetGunFrame() - 6], offset);
 
-			if ((ent->client->playerState.gunFrame == 6) || (ent->client->playerState.gunFrame == 9))
+			if ((ent->Client.PlayerState.GetGunFrame() == 6) || (ent->Client.PlayerState.GetGunFrame() == 9))
 				effect = EF_HYPERBLASTER;
 			else
 				effect = 0;
@@ -117,15 +112,15 @@ void CHyperBlaster::Fire (edict_t *ent)
 			if (isQuad)
 				damage *= 4;
 
-			Angles_Vectors (ent->client->v_angle, forward, right, NULL);
-			Vec3Set (noffset, 24, 8, ent->viewheight-8);
+			Angles_Vectors (ent->Client.v_angle, forward, right, NULL);
+			Vec3Set (noffset, 24, 8, ent->gameEntity->viewheight-8);
 			Vec3Add (noffset, offset, noffset);
-			P_ProjectSource (ent->client, ent->state.origin, noffset, forward, right, start);
+			P_ProjectSource (ent, ent->gameEntity->state.origin, noffset, forward, right, start);
 
-			Vec3Scale (forward, -2, ent->client->kick_origin);
-			ent->client->kick_angles[0] = -1;
+			Vec3Scale (forward, -2, ent->Client.kick_origin);
+			ent->Client.kick_angles[0] = -1;
 
-			fire_blaster (ent, start, forward, damage, 1000, effect, true);
+			fire_blaster (ent->gameEntity, start, forward, damage, 1000, effect, true);
 
 			// send muzzle flash
 			Muzzle (ent, MZ_HYPERBLASTER);
@@ -139,14 +134,14 @@ void CHyperBlaster::Fire (edict_t *ent)
 			FireAnimation (ent);
 		}
 
-		ent->client->playerState.gunFrame++;
-		if (ent->client->playerState.gunFrame == 12 && ent->client->pers.Inventory.Has(ent->client->pers.Weapon->WeaponItem->Ammo))
-			ent->client->playerState.gunFrame = 6;
+		ent->Client.PlayerState.SetGunFrame (ent->Client.PlayerState.GetGunFrame() + 1);
+		if (ent->Client.PlayerState.GetGunFrame() == 12 && ent->Client.pers.Inventory.Has(ent->Client.pers.Weapon->WeaponItem->Ammo))
+			ent->Client.PlayerState.SetGunFrame (6);
 	}
 
-	if (ent->client->playerState.gunFrame == 12)
+	if (ent->Client.PlayerState.GetGunFrame() == 12)
 	{
-		PlaySoundFrom(ent, CHAN_AUTO, SoundIndex("weapons/hyprbd1a.wav"));
-		ent->client->weapon_sound = 0;
+		PlaySoundFrom(ent->gameEntity, CHAN_AUTO, SoundIndex("weapons/hyprbd1a.wav"));
+		ent->Client.weapon_sound = 0;
 	}
 }

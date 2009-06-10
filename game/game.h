@@ -179,7 +179,13 @@ typedef struct gameImport_s
 #ifndef USE_EXTENDED_GAME_IMPORTS
 	_CC_INSECURE_DEPRECATE (SV_Pmove)
 #endif
-	void	(*Pmove) (pMove_t *pMove);		// player movement code common with client prediction
+	void	(*Pmove) (
+#ifdef USE_EXTENDED_GAME_IMPORTS
+	pMove_t *pMove
+#else
+	pMoveNew_t *pMove // Just to supress error
+#endif
+	);		// player movement code common with client prediction
 
 	// network messaging
 #ifndef USE_EXTENDED_GAME_IMPORTS

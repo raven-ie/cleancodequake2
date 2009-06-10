@@ -818,16 +818,27 @@
 				Name="Entities"
 				>
 				<File
-					RelativePath=".\cc_ent.cpp"
+					RelativePath=".\cc_baseentity.cpp"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
-						ExcludedFromBuild="true"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
 						/>
 					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\cc_baseentity.h"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_playerentity.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_playerentity.h"
+					>
 				</File>
 			</Filter>
 			<Filter
@@ -1259,14 +1270,6 @@
 				</File>
 				<File
 					RelativePath=".\cc_menu.h"
-					>
-				</File>
-				<File
-					RelativePath=".\cc_menuevents.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\cc_menuevents.h"
 					>
 				</File>
 			</Filter>

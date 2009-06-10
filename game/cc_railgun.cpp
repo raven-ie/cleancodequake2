@@ -42,9 +42,9 @@ CWeapon("models/weapons/v_rail/tris.md2", 0, 3, 4, 18,
 {
 }
 
-bool CRailgun::CanFire (edict_t *ent)
+bool CRailgun::CanFire (CPlayerEntity *ent)
 {
-	switch (ent->client->playerState.gunFrame)
+	switch (ent->Client.PlayerState.GetGunFrame())
 	{
 	case 4:
 		return true;
@@ -52,9 +52,9 @@ bool CRailgun::CanFire (edict_t *ent)
 	return false;
 }
 
-bool CRailgun::CanStopFidgetting (edict_t *ent)
+bool CRailgun::CanStopFidgetting (CPlayerEntity *ent)
 {
-	switch (ent->client->playerState.gunFrame)
+	switch (ent->Client.PlayerState.GetGunFrame())
 	{
 	case 56:
 		return true;
@@ -62,7 +62,7 @@ bool CRailgun::CanStopFidgetting (edict_t *ent)
 	return false;
 }
 
-void CRailgun::Fire (edict_t *ent)
+void CRailgun::Fire (CPlayerEntity *ent)
 {
 	vec3_t		start;
 	vec3_t		forward, right;
@@ -87,21 +87,21 @@ void CRailgun::Fire (edict_t *ent)
 		kick *= 4;
 	}
 
-	Angles_Vectors (ent->client->v_angle, forward, right, NULL);
+	Angles_Vectors (ent->Client.v_angle, forward, right, NULL);
 
-	Vec3Scale (forward, -3, ent->client->kick_origin);
-	ent->client->kick_angles[0] = -3;
+	Vec3Scale (forward, -3, ent->Client.kick_origin);
+	ent->Client.kick_angles[0] = -3;
 
-	Vec3Set (offset, 0, 7,  ent->viewheight-8);
-	P_ProjectSource (ent->client, ent->state.origin, offset, forward, right, start);
-	fire_rail (ent, start, forward, damage, kick);
+	Vec3Set (offset, 0, 7,  ent->gameEntity->viewheight-8);
+	P_ProjectSource (ent, ent->gameEntity->state.origin, offset, forward, right, start);
+	fire_rail (ent->gameEntity, start, forward, damage, kick);
 
 	// send muzzle flash
 	Muzzle (ent, MZ_RAILGUN);
 	FireAnimation (ent);
 	AttackSound (ent);
 
-	ent->client->playerState.gunFrame++;
+	ent->Client.PlayerState.SetGunFrame(ent->Client.PlayerState.GetGunFrame()+1);
 	PlayerNoise(ent, start, PNOISE_WEAPON);
 
 	if (!dmFlags.dfInfiniteAmmo)

@@ -68,39 +68,41 @@ public:
 				 int IdleStart, int IdleEnd, int DeactStart, int DeactEnd, char *WeaponSound = NULL);
 
 	// InitWeapon "clears" the previous weapon by introducing the current weapon.
-	virtual void	InitWeapon (edict_t *ent);
+	virtual void	InitWeapon (CPlayerEntity *ent);
 
 	// Muzzle flash
-	virtual void	Muzzle (edict_t *ent, int muzzleNum);
-	virtual inline void	FireAnimation (edict_t *ent);
-	void		AttackSound (edict_t *ent); // Sound for quad and CTF techs
+	virtual void	Muzzle (CPlayerEntity *ent, int muzzleNum);
+	virtual inline void	FireAnimation (CPlayerEntity *ent);
+	void		AttackSound (CPlayerEntity *ent); // Sound for quad and CTF techs
 
 	// General animating function.
 	// Doesn't need to be changed.
-	virtual void	WeaponGeneric (edict_t *ent);
+	virtual void	WeaponGeneric (CPlayerEntity *ent);
 
 	// These two functions replace the need for an array for
 	// pause and fire frames.
-	virtual inline bool	CanFire	(edict_t *ent) = 0;
-	virtual inline bool	CanStopFidgetting (edict_t *ent) = 0;
+	virtual inline bool	CanFire	(CPlayerEntity *ent) = 0;
+	virtual inline bool	CanStopFidgetting (CPlayerEntity *ent) = 0;
 
 	// Ammo usage
-	virtual void	DepleteAmmo(edict_t *ent, int Amount);
+	virtual void	DepleteAmmo(CPlayerEntity *ent, int Amount);
 	
 	// This function is called when the player hits the attack button.
 	// Returns "true" if the animation can go ahead (check for ammo, etc here)
-	virtual void	OutOfAmmo (edict_t *ent);
-	virtual bool	AttemptToFire (edict_t *ent); 
+	virtual void	OutOfAmmo (CPlayerEntity *ent);
+	virtual bool	AttemptToFire (CPlayerEntity *ent); 
 
 	// The function called to "fire"
-	virtual void	Fire (edict_t *ent) = 0;
+	virtual void	Fire (CPlayerEntity *ent) = 0;
 
-	void ChangeWeapon (edict_t *ent);
+	void ChangeWeapon (CPlayerEntity *ent);
 
-	virtual void	Think (edict_t *ent);
+	virtual void	Think (CPlayerEntity *ent);
 
-	void	NoAmmoWeaponChange (edict_t *ent);
+	void	NoAmmoWeaponChange (CPlayerEntity *ent);
 };
+
+inline void P_ProjectSource (CPlayerEntity *Player, vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result);
 
 #include "cc_blaster.h"
 #include "cc_shotgun.h"

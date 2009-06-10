@@ -46,6 +46,7 @@ int __cdecl Q_tolower (int c);
 int		Q_WildcardMatch (const char *filter, const char *string, int ignoreCase);
 char	*Q_VarArgs (char *format, ...);
 
+#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 /*
 ==============================================================================
 
@@ -572,3 +573,4 @@ public:
 		return (Result + (Result>>5));
 	}
 };
+#endif
