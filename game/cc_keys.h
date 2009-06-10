@@ -39,9 +39,9 @@ public:
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
 			   char *Precache);
 
-	bool	Pickup (edict_t *ent, edict_t *other);
-	void	Use (edict_t *ent);
-	void	Drop (edict_t *ent);
+	bool	Pickup (edict_t *ent, CPlayerEntity *other);
+	void	Use (CPlayerEntity *ent);
+	void	Drop (CPlayerEntity *ent);
 };
 
 class CPowerCube : public CKey
@@ -51,7 +51,7 @@ public:
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
 			   char *Precache);
 
-	bool	Pickup (edict_t *ent, edict_t *other);
+	bool	Pickup (edict_t *ent, CPlayerEntity *other);
 };
 
 void AddKeysToList ();

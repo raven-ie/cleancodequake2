@@ -145,9 +145,9 @@ void CTFCalcScores(void);
 void SetCTFStats(edict_t *ent);
 void CTFDeadDropFlag(edict_t *self);
 void CTFScoreboardMessage (edict_t *ent, edict_t *killer, bool reliable);
-void CTFTeam_f (edict_t *ent);
-void CTFID_f (edict_t *ent);
-void CTFSay_Team(edict_t *who, char *msg);
+void CTFTeam_f (CPlayerEntity *ent);
+void CTFID_f (CPlayerEntity *ent);
+void CTFSay_Team(CPlayerEntity *who, char *msg);
 void CTFFlagSetup (edict_t *ent);
 void CTFResetFlag(int ctf_team);
 void CTFFragBonuses(edict_t *targ, edict_t *inflictor, edict_t *attacker);
@@ -170,20 +170,20 @@ void CTFRespawnTech(edict_t *ent);
 void CTFResetTech(void);
 
 void CTFOpenJoinMenu(CPlayerEntity *ent);
-void CTFVoteYes(edict_t *ent);
-void CTFVoteNo(edict_t *ent);
-void CTFReady(edict_t *ent);
-void CTFNotReady(edict_t *ent);
+void CTFVoteYes(CPlayerEntity *ent);
+void CTFVoteNo(CPlayerEntity *ent);
+void CTFReady(CPlayerEntity *ent);
+void CTFNotReady(CPlayerEntity *ent);
 bool CTFNextMap(void);
 bool CTFMatchSetup(void);
 bool CTFMatchOn(void);
-void CTFGhost(edict_t *ent);
-void CTFAdmin(edict_t *ent);
+void CTFGhost(CPlayerEntity *ent);
+void CTFAdmin(CPlayerEntity *ent);
 bool CTFInMatch(void);
-void CTFStats(edict_t *ent);
-void CTFWarp(edict_t *ent);
-void CTFBoot(edict_t *ent);
-void CTFPlayerList(edict_t *ent);
+void CTFStats(CPlayerEntity *ent);
+void CTFWarp(CPlayerEntity *ent);
+void CTFBoot(CPlayerEntity *ent);
+void CTFPlayerList(CPlayerEntity *ent);
 
 bool CTFCheckRules(void);
 
@@ -196,7 +196,7 @@ void UpdateChaseCam(edict_t *ent);
 void ChaseNext(edict_t *ent);
 void ChasePrev(edict_t *ent);
 
-void CTFObserver(edict_t *ent);
+void CTFObserver(CPlayerEntity *ent);
 
 void SP_trigger_teleport (edict_t *ent);
 void SP_info_teleport_destination (edict_t *ent);

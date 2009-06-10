@@ -42,35 +42,37 @@ PowerupFlags(PowerupFlags)
 };
 
 // Powerups!
-bool CBasePowerUp::Pickup (edict_t *ent, edict_t *other)
+bool CBasePowerUp::Pickup (edict_t *ent, CPlayerEntity *other)
 {
 	if (PowerupFlags & POWERFLAG_STORE)
 	{
-		if (other->client->pers.Inventory.Has(this) > 0 &&
-			(!(PowerupFlags & POWERFLAG_STACK) || (PowerupFlags & (POWERFLAG_STACK|POWERFLAG_BUTNOTINCOOP) && (game.mode == GAME_COOPERATIVE)) || (game.mode == GAME_COOPERATIVE) && (this->Flags & ITEMFLAG_STAY_COOP)))
+		if (other->Client.pers.Inventory.Has(this) > 0 &&
+			(!(PowerupFlags & POWERFLAG_STACK) ||
+			(PowerupFlags & (POWERFLAG_STACK|POWERFLAG_BUTNOTINCOOP) && (game.mode == GAME_COOPERATIVE)) ||
+			(game.mode == GAME_COOPERATIVE) && (this->Flags & ITEMFLAG_STAY_COOP)))
 			return false;
 
-		other->client->pers.Inventory += this;
+		other->Client.pers.Inventory += this;
 	}
 
 	DoPickup (ent, other);
 	return true;
 }
 
-void CBasePowerUp::DoPickup (edict_t *ent, edict_t *other)
+void CBasePowerUp::DoPickup (edict_t *ent, CPlayerEntity *other)
 {
 }
 
-void CBasePowerUp::Use (edict_t *ent)
+void CBasePowerUp::Use (CPlayerEntity *ent)
 {
 }
 
-void CBasePowerUp::Drop (edict_t *ent)
+void CBasePowerUp::Drop (CPlayerEntity *ent)
 {
 	if (PowerupFlags & POWERFLAG_STORE)
 	{	
-		DropItem (ent);
-		ent->client->pers.Inventory -= this;
+		DropItem (ent->gameEntity);
+		ent->Client.pers.Inventory -= this;
 	}
 }
 
@@ -153,10 +155,11 @@ CBasePowerUp(Classname, WorldModel, EffectFlags, PickupSound, Icon, Name, Flags,
 
 void CMegaHealth::MegaHealthThink (edict_t *self)
 {
+	CPlayerEntity *Owner = dynamic_cast<CPlayerEntity*>(self->owner->Entity);
 	if (self->owner->health > self->owner->max_health
 #ifdef CLEANCTF_ENABLED
 //ZOID
-		&& !CTFHasRegeneration(self->owner)
+		&& !CTFHasRegeneration(Owner)
 //ZOID
 #endif
 		)
@@ -173,7 +176,7 @@ void CMegaHealth::MegaHealthThink (edict_t *self)
 }
 
 // Seperate powerup classes
-void CMegaHealth::DoPickup (edict_t *ent, edict_t *other)
+void CMegaHealth::DoPickup (edict_t *ent, CPlayerEntity *other)
 {
 #ifdef CLEANCTF_ENABLED
 	if (!CTFHasRegeneration(other))
@@ -181,12 +184,12 @@ void CMegaHealth::DoPickup (edict_t *ent, edict_t *other)
 #endif
 		ent->think = &CMegaHealth::MegaHealthThink;
 		ent->nextthink = level.time + 5;
-		ent->owner = other;
+		ent->owner = other->gameEntity;
 		ent->flags |= FL_RESPAWN;
 		ent->svFlags |= SVF_NOCLIENT;
 		ent->solid = SOLID_NOT;
 
-		other->health += 100;
+		other->gameEntity->health += 100;
 #ifdef CLEANCTF_ENABLED
 	}
 	else if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
@@ -194,13 +197,13 @@ void CMegaHealth::DoPickup (edict_t *ent, edict_t *other)
 #endif
 }
 
-void CBackPack::DoPickup (edict_t *ent, edict_t *other)
+void CBackPack::DoPickup (edict_t *ent, CPlayerEntity *other)
 {
 	// Increase their max ammo, if applicable
 	for (int i = 0; i < AMMOTAG_MAX; i++)
 	{
-		if (other->client->pers.maxAmmoValues[i] < maxBackpackAmmoValues[i])
-			other->client->pers.maxAmmoValues[i] = maxBackpackAmmoValues[i];
+		if (other->Client.pers.maxAmmoValues[i] < maxBackpackAmmoValues[i])
+			other->Client.pers.maxAmmoValues[i] = maxBackpackAmmoValues[i];
 	}
 
 	// Give them some more ammo
@@ -228,7 +231,7 @@ void CBackPack::DoPickup (edict_t *ent, edict_t *other)
 
 static int	quad_drop_timeout_hack;
 
-void CQuadDamage::DoPickup (edict_t *ent, edict_t *other)
+void CQuadDamage::DoPickup (edict_t *ent, CPlayerEntity *other)
 {
 	if (game.mode & GAME_DEATHMATCH)
 	{
@@ -242,7 +245,7 @@ void CQuadDamage::DoPickup (edict_t *ent, edict_t *other)
 	}
 }
 
-void CQuadDamage::Use (edict_t *ent)
+void CQuadDamage::Use (CPlayerEntity *ent)
 {
 	int timeOut = 300;
 
@@ -252,17 +255,17 @@ void CQuadDamage::Use (edict_t *ent)
 		quad_drop_timeout_hack = 0;
 	}
 
-	if (ent->client->quad_framenum > level.framenum)
-		ent->client->quad_framenum += timeOut;
+	if (ent->Client.quad_framenum > level.framenum)
+		ent->Client.quad_framenum += timeOut;
 	else
-		ent->client->quad_framenum = level.framenum + timeOut;
+		ent->Client.quad_framenum = level.framenum + timeOut;
 
-	ent->client->pers.Inventory -= this;
+	ent->Client.pers.Inventory -= this;
 
-	PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/damage.wav"));
+	PlaySoundFrom(ent->gameEntity, CHAN_ITEM, SoundIndex("items/damage.wav"));
 }
 
-void CInvulnerability::DoPickup (edict_t *ent, edict_t *other)
+void CInvulnerability::DoPickup (edict_t *ent, CPlayerEntity *other)
 {
 	if (game.mode == GAME_DEATHMATCH)
 	{
@@ -273,19 +276,19 @@ void CInvulnerability::DoPickup (edict_t *ent, edict_t *other)
 	}
 }
 
-void CInvulnerability::Use (edict_t *ent)
+void CInvulnerability::Use (CPlayerEntity *ent)
 {
-	ent->client->pers.Inventory -= this;
+	ent->Client.pers.Inventory -= this;
 
-	if (ent->client->invincible_framenum > level.framenum)
-		ent->client->invincible_framenum += 300;
+	if (ent->Client.invincible_framenum > level.framenum)
+		ent->Client.invincible_framenum += 300;
 	else
-		ent->client->invincible_framenum = level.framenum + 300;
+		ent->Client.invincible_framenum = level.framenum + 300;
 
-	PlaySoundFrom(ent, CHAN_ITEM, SoundIndex("items/protect.wav"));
+	PlaySoundFrom(ent->gameEntity, CHAN_ITEM, SoundIndex("items/protect.wav"));
 }
 
-void CSilencer::DoPickup (edict_t *ent, edict_t *other)
+void CSilencer::DoPickup (edict_t *ent, CPlayerEntity *other)
 {
 	if (game.mode & GAME_DEATHMATCH)
 	{
@@ -296,34 +299,13 @@ void CSilencer::DoPickup (edict_t *ent, edict_t *other)
 	}
 }
 
-void CSilencer::Use (edict_t *ent)
+void CSilencer::Use (CPlayerEntity *ent)
 {
-	ent->client->pers.Inventory -= this;
-	ent->client->silencer_shots += 30;
+	ent->Client.pers.Inventory -= this;
+	ent->Client.silencer_shots += 30;
 }
 
-void CRebreather::DoPickup (edict_t *ent, edict_t *other)
-{
-	if (game.mode & GAME_DEATHMATCH)
-	{
-		if (!(ent->spawnflags & DROPPED_ITEM) )
-			SetRespawn (ent, 60);
-		if (dmFlags.dfInstantItems || (ent->spawnflags & DROPPED_PLAYER_ITEM))
-			Use (other);
-	}
-}
-
-void CRebreather::Use (edict_t *ent)
-{
-	ent->client->pers.Inventory -= this;
-
-	if (ent->client->breather_framenum > level.framenum)
-		ent->client->breather_framenum += 300;
-	else
-		ent->client->breather_framenum = level.framenum + 300;
-}
-
-void CEnvironmentSuit::DoPickup (edict_t *ent, edict_t *other)
+void CRebreather::DoPickup (edict_t *ent, CPlayerEntity *other)
 {
 	if (game.mode & GAME_DEATHMATCH)
 	{
@@ -334,23 +316,44 @@ void CEnvironmentSuit::DoPickup (edict_t *ent, edict_t *other)
 	}
 }
 
-void CEnvironmentSuit::Use (edict_t *ent)
+void CRebreather::Use (CPlayerEntity *ent)
 {
-	ent->client->pers.Inventory -= this;
+	ent->Client.pers.Inventory -= this;
 
-	if (ent->client->enviro_framenum > level.framenum)
-		ent->client->enviro_framenum += 300;
+	if (ent->Client.breather_framenum > level.framenum)
+		ent->Client.breather_framenum += 300;
 	else
-		ent->client->enviro_framenum = level.framenum + 300;
+		ent->Client.breather_framenum = level.framenum + 300;
 }
 
-void CBandolier::DoPickup (edict_t *ent, edict_t *other)
+void CEnvironmentSuit::DoPickup (edict_t *ent, CPlayerEntity *other)
+{
+	if (game.mode & GAME_DEATHMATCH)
+	{
+		if (!(ent->spawnflags & DROPPED_ITEM) )
+			SetRespawn (ent, 60);
+		if (dmFlags.dfInstantItems || (ent->spawnflags & DROPPED_PLAYER_ITEM))
+			Use (other);
+	}
+}
+
+void CEnvironmentSuit::Use (CPlayerEntity *ent)
+{
+	ent->Client.pers.Inventory -= this;
+
+	if (ent->Client.enviro_framenum > level.framenum)
+		ent->Client.enviro_framenum += 300;
+	else
+		ent->Client.enviro_framenum = level.framenum + 300;
+}
+
+void CBandolier::DoPickup (edict_t *ent, CPlayerEntity *other)
 {
 	// Increase their max ammo, if applicable
 	for (int i = 0; i < AMMOTAG_MAX; i++)
 	{
-		if (other->client->pers.maxAmmoValues[i] < maxBandolierAmmoValues[i])
-			other->client->pers.maxAmmoValues[i] = maxBandolierAmmoValues[i];
+		if (other->Client.pers.maxAmmoValues[i] < maxBandolierAmmoValues[i])
+			other->Client.pers.maxAmmoValues[i] = maxBandolierAmmoValues[i];
 	}
 
 	// Give them some more ammo
@@ -364,60 +367,61 @@ void CBandolier::DoPickup (edict_t *ent, edict_t *other)
 		SetRespawn (ent, 60);
 }
 
-void CAdrenaline::DoPickup (edict_t *ent, edict_t *other)
+void CAdrenaline::DoPickup (edict_t *ent, CPlayerEntity *other)
 {
 	if (!(game.mode & GAME_DEATHMATCH))
-		other->max_health += 1;
+		other->gameEntity->max_health += 1;
 
-	if (other->health < other->max_health)
-		other->health = other->max_health;
+	if (other->gameEntity->health < other->gameEntity->max_health)
+		other->gameEntity->health = other->gameEntity->max_health;
 
 	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
 		SetRespawn (ent, 60);
 }
 
-void CAncientHead::DoPickup (edict_t *ent, edict_t *other)
+void CAncientHead::DoPickup (edict_t *ent, CPlayerEntity *other)
 {
-	other->max_health += 2;
+	other->gameEntity->max_health += 2;
 
 	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
 		SetRespawn (ent, 60);
 }
 
-void CPowerShield::DoPickup (edict_t *ent, edict_t *other)
+void CPowerShield::DoPickup (edict_t *ent, CPlayerEntity *other)
 {
 	if (game.mode & GAME_DEATHMATCH)
 	{
 		if (!(ent->spawnflags & DROPPED_ITEM) )
 			SetRespawn (ent, 60);
+
 		// auto-use for DM only if we didn't already have one
-		if (!other->client->pers.Inventory.Has(this))
+		if (!other->Client.pers.Inventory.Has(this))
 			Use (other);
 	}
 }
 
-void CPowerShield::Use (edict_t *ent)
+void CPowerShield::Use (CPlayerEntity *ent)
 {
-	if (ent->flags & FL_POWER_ARMOR)
+	if (ent->gameEntity->flags & FL_POWER_ARMOR)
 	{
-		ent->flags &= ~FL_POWER_ARMOR;
-		PlaySoundFrom(ent, CHAN_AUTO, SoundIndex("misc/power2.wav"));
+		ent->gameEntity->flags &= ~FL_POWER_ARMOR;
+		PlaySoundFrom(ent->gameEntity, CHAN_AUTO, SoundIndex("misc/power2.wav"));
 	}
 	else
 	{
-		if (!ent->client->pers.Inventory.Has(FindItem("Cells")))
+		if (!ent->Client.pers.Inventory.Has(FindItem("Cells")))
 		{
-			ClientPrintf (ent, PRINT_HIGH, "No cells for power armor.\n");
+			ClientPrintf (ent->gameEntity, PRINT_HIGH, "No cells for power armor.\n");
 			return;
 		}
-		ent->flags |= FL_POWER_ARMOR;
-		PlaySoundFrom(ent, CHAN_AUTO, SoundIndex("misc/power1.wav"));
+		ent->gameEntity->flags |= FL_POWER_ARMOR;
+		PlaySoundFrom(ent->gameEntity, CHAN_AUTO, SoundIndex("misc/power1.wav"));
 	}
 }
 
-void CPowerShield::Drop (edict_t *ent)
+void CPowerShield::Drop (CPlayerEntity *ent)
 {
-	if ((ent->flags & FL_POWER_ARMOR) && (ent->client->pers.Inventory.Has(this) == 1))
+	if ((ent->gameEntity->flags & FL_POWER_ARMOR) && (ent->Client.pers.Inventory.Has(this) == 1))
 		Use (ent);
 	CBasePowerUp::Drop (ent);
 }

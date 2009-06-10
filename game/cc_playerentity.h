@@ -330,6 +330,8 @@ public:
 	void			CTFAssignGhost ();
 #endif
 
+	void			MoveToIntermission ();
+
 	void			DeathmatchScoreboardMessage (bool reliable);
 	void			EndServerFrame ();
 #ifdef CLEANCTF_ENABLED

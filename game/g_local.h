@@ -214,7 +214,7 @@ typedef struct
 	vec3_t		intermission_origin;
 	vec3_t		intermission_angle;
 
-	edict_t		*sight_client;	// changed once each frame for coop games
+	CPlayerEntity		*sight_client;	// changed once each frame for coop games
 
 #ifndef MONSTERS_USE_PATHFINDING
 	edict_t		*sight_entity;
@@ -364,7 +364,7 @@ extern	edict_t			*g_edicts;
 #define FOFS(x) (int)&(((edict_t *)0)->x)
 #define STOFS(x) (int)&(((spawn_temp_t *)0)->x)
 #define LLOFS(x) (int)&(((level_locals_t *)0)->x)
-#define CLOFS(x) (int)&(((gclient_t *)0)->x)
+#define CLOFS(x) (int)&(((CClient *)0)->x)
 
 #define random()	((rand () & 0x7fff) / ((float)0x7fff))
 #define crandom()	(2.0 * (random() - 0.5))
@@ -417,8 +417,8 @@ extern	field_t fields[];
 //
 // g_cmds.c
 //
-void Cmd_Help_f (edict_t *ent);
-void Cmd_Score_f (edict_t *ent);
+void Cmd_Help_f (CPlayerEntity *ent);
+void Cmd_Score_f (CPlayerEntity *ent);
 
 //
 // g_utils.c
@@ -551,10 +551,10 @@ void FetchClientEntData (edict_t *ent);
 //
 // g_chase.c
 //
-void UpdateChaseCam(edict_t *ent);
-void ChaseNext(edict_t *ent);
-void ChasePrev(edict_t *ent);
-void GetChaseTarget(edict_t *ent);
+void UpdateChaseCam(CPlayerEntity *ent);
+void ChaseNext(CPlayerEntity *ent);
+void ChasePrev(CPlayerEntity *ent);
+void GetChaseTarget(CPlayerEntity *ent);
 
 //============================================================================
 

@@ -41,6 +41,6 @@ enum ECmdTypeFlags
 	CMD_CHEAT		= 2
 };
 
-void Cmd_RunCommand (char *commandName, edict_t *ent);
+void Cmd_RunCommand (char *commandName, CPlayerEntity *ent);
 void Cmd_RemoveCommands ();
-void Cmd_AddCommand (char *commandName, void (*Func) (edict_t *ent), ECmdTypeFlags Flags = CMD_NORMAL);
+void Cmd_AddCommand (char *commandName, void (*Func) (CPlayerEntity *ent), ECmdTypeFlags Flags = CMD_NORMAL);

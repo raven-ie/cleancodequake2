@@ -218,8 +218,10 @@ void trigger_key_use (edict_t *self, edict_t *other, edict_t *activator)
 	if (!activator->client)
 		return;
 
+	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(other->Entity);
+
 	index = self->item->GetIndex();
-	if (!activator->client->pers.Inventory.Has(index))
+	if (!Player->Client.pers.Inventory.Has(index))
 	{
 		if (level.time < self->touch_debounce_time)
 			return;
@@ -233,26 +235,23 @@ void trigger_key_use (edict_t *self, edict_t *other, edict_t *activator)
 	if (game.mode == GAME_COOPERATIVE)
 	{
 		int		player;
-		edict_t	*ent;
 
 		if (strcmp(self->item->Classname, "key_power_cube") == 0)
 		{
 			int	cube;
 
 			for (cube = 0; cube < 8; cube++)
-				if (activator->client->pers.power_cubes & (1 << cube))
+				if (Player->Client.pers.power_cubes & (1 << cube))
 					break;
 			for (player = 1; player <= game.maxclients; player++)
 			{
-				ent = &g_edicts[player];
-				if (!ent->inUse)
+				CPlayerEntity *ent = dynamic_cast<CPlayerEntity*>(g_edicts[player].Entity);
+				if (!ent->IsInUse())
 					continue;
-				if (!ent->client)
-					continue;
-				if (ent->client->pers.power_cubes & (1 << cube))
+				if (ent->Client.pers.power_cubes & (1 << cube))
 				{
-					ent->client->pers.Inventory -= index;
-					ent->client->pers.power_cubes &= ~(1 << cube);
+					ent->Client.pers.Inventory -= index;
+					ent->Client.pers.power_cubes &= ~(1 << cube);
 				}
 			}
 		}
@@ -260,19 +259,15 @@ void trigger_key_use (edict_t *self, edict_t *other, edict_t *activator)
 		{
 			for (player = 1; player <= game.maxclients; player++)
 			{
-				ent = &g_edicts[player];
-				if (!ent->inUse)
+				CPlayerEntity *ent = dynamic_cast<CPlayerEntity*>(g_edicts[player].Entity);
+				if (!ent->IsInUse())
 					continue;
-				if (!ent->client)
-					continue;
-				ent->client->pers.Inventory.Set(index, 0);
+				ent->Client.pers.Inventory.Set(index, 0);
 			}
 		}
 	}
 	else
-	{
-		activator->client->pers.Inventory -= index;
-	}
+		Player->Client.pers.Inventory -= index;
 
 	G_UseTargets (self, activator);
 
@@ -397,17 +392,16 @@ static int windsound;
 void trigger_push_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *surf)
 {
 	if (strcmp(other->classname, "grenade") == 0)
-	{
 		Vec3Scale (self->movedir, self->speed * 10, other->velocity);
-	}
 	else if (other->health > 0)
 	{
 		Vec3Scale (self->movedir, self->speed * 10, other->velocity);
 
 		if (other->client)
 		{
+			CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(other->Entity);
 			// don't take falling damage immediately from this
-			Vec3Copy (other->velocity, other->client->oldvelocity);
+			Vec3Copy (other->velocity, Player->Client.oldvelocity);
 			if (other->fly_sound_debounce_time < level.time)
 			{
 				other->fly_sound_debounce_time = level.time + 1.5;
@@ -426,7 +420,8 @@ void trigger_push_q3touch (edict_t *self, edict_t *other, plane_t *plane, cmBspS
 	if (other->client)
 	{
 		// don't take falling damage immediately from this
-		Vec3Copy (other->velocity, other->client->oldvelocity);
+		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(other->Entity);
+		Vec3Copy (other->velocity, Player->Client.oldvelocity);
 	}
 }
 

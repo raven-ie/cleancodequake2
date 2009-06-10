@@ -301,7 +301,7 @@ HelpComputer
 Draw help computer.
 ==================
 */
-void HelpComputer (edict_t *ent)
+void HelpComputer (CPlayerEntity *ent)
 {
 	CStatusBar Scoreboard;
 	static char	*sk = NULL;
@@ -357,5 +357,5 @@ void HelpComputer (edict_t *ent)
 
 	Scoreboard.AddString (tempBuffer, true);
 
-	Scoreboard.SendMsg (ent, true);
+	Scoreboard.SendMsg (ent->gameEntity, true);
 }

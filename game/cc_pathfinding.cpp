@@ -247,7 +247,7 @@ void CPath::Load (FILE *fp)
 	}
 }
 
-void Cmd_Node_f (edict_t *ent);
+void Cmd_Node_f (CPlayerEntity *ent);
 CCvar *DebugNodes;
 
 void InitNodes ()
@@ -350,19 +350,19 @@ void CheckNodeFlags (CPathNode *Node)
 }
 
 void ConnectNode (CPathNode *Node1, CPathNode *Node2);
-void AddNode (edict_t *ent, vec3_t origin)
+void AddNode (CPlayerEntity *ent, vec3_t origin)
 {
 	NodeList.push_back(new CPathNode(origin, NODE_REGULAR));
 
 	SpawnNodeEntity (NodeList.at(NodeList.size() - 1));
-	ClientPrintf (ent, PRINT_HIGH, "Node %i added\n", NodeList.size());
+	ClientPrintf (ent->gameEntity, PRINT_HIGH, "Node %i added\n", NodeList.size());
 
 	if (Q_stricmp(ArgGets(2), "connect") == 0)
 	{
-		if (ent->client->resp.LastNode)
-			ConnectNode (ent->client->resp.LastNode, NodeList.at(NodeList.size() - 1));
+		if (ent->Client.resp.LastNode)
+			ConnectNode (ent->Client.resp.LastNode, NodeList.at(NodeList.size() - 1));
 	}
-	ent->client->resp.LastNode = NodeList.at(NodeList.size() - 1);
+	ent->Client.resp.LastNode = NodeList.at(NodeList.size() - 1);
 }
 
 void ConnectNode (CPathNode *Node1, CPathNode *Node2)
@@ -374,22 +374,6 @@ void ConnectNode (CPathNode *Node1, CPathNode *Node2)
 
 	if (Q_stricmp(ArgGets(4), "one"))
 		Node2->Children.push_back (Node1);
-}
-
-void CalculateTestPath (edict_t *ent, uint32 IDStart, uint32 IDEnd)
-{
-	CPath *Test = new CPath (NodeList[IDStart], NodeList[IDEnd]);
-
-	ClientPrintf (ent, PRINT_HIGH, "BEST: (%u n, %u w)\n",
-									Test->NumNodes, Test->Weight);
-
-	for (size_t i = 0; i < Test->Path.size(); i++)
-		Test->Path[i]->Ent->state.modelIndex = ModelIndex("models/objects/grenade/tris.md2");
-
-	delete Test;
-
-	Open.clear();
-	Closed.clear();
 }
 
 uint32 GetNodeIndex (CPathNode *Node)
@@ -636,7 +620,7 @@ CPathNode *GetClosestNodeTo (vec3_t origin)
 	return Best;
 }
 
-void Cmd_Node_f (edict_t *ent)
+void Cmd_Node_f (CPlayerEntity *ent)
 {
 	char *cmd = ArgGets(1);
 
@@ -645,9 +629,9 @@ void Cmd_Node_f (edict_t *ent)
 	else if (Q_stricmp(cmd, "load") == 0)
 		LoadNodes ();
 	else if (Q_stricmp(cmd, "drop") == 0)
-		AddNode (ent, ent->state.origin);
+		AddNode (ent, ent->gameEntity->state.origin);
 	else if (Q_stricmp(cmd, "clearlastnode") == 0)
-		ent->client->resp.LastNode = NULL;
+		ent->Client.resp.LastNode = NULL;
 	else if (Q_stricmp(cmd, "connect") == 0)
 	{
 		uint32 firstId = ArgGeti(2);
@@ -655,36 +639,17 @@ void Cmd_Node_f (edict_t *ent)
 
 		if (firstId >= NodeList.size())
 		{
-			ClientPrintf (ent, PRINT_HIGH, "Node %i doesn't exist!\n", firstId);
+			ClientPrintf (ent->gameEntity, PRINT_HIGH, "Node %i doesn't exist!\n", firstId);
 			return;
 		}
 		if (secondId >= NodeList.size())
 		{
-			ClientPrintf (ent, PRINT_HIGH, "Node %i doesn't exist!\n", secondId);
+			ClientPrintf (ent->gameEntity, PRINT_HIGH, "Node %i doesn't exist!\n", secondId);
 			return;
 		}
 
-		ClientPrintf (ent, PRINT_HIGH, "Connecting nodes %i and %i...\n", firstId, secondId);
+		ClientPrintf (ent->gameEntity, PRINT_HIGH, "Connecting nodes %i and %i...\n", firstId, secondId);
 		ConnectNode (NodeList[firstId], NodeList[secondId]);
-	}
-	else if (Q_stricmp(cmd, "testpath") == 0)
-	{
-		uint32 firstId = ArgGeti(2);
-		uint32 secondId = ArgGeti(3);
-
-		if (firstId >= NodeList.size())
-		{
-			ClientPrintf (ent, PRINT_HIGH, "Node %i doesn't exist!\n", firstId);
-			return;
-		}
-		if (secondId >= NodeList.size())
-		{
-			ClientPrintf (ent, PRINT_HIGH, "Node %i doesn't exist!\n", secondId);
-			return;
-		}
-
-		ClientPrintf (ent, PRINT_HIGH, "Testing path %i and %i...\n", firstId, secondId);
-		CalculateTestPath (ent, firstId, secondId);
 	}
 	else if (Q_stricmp(cmd, "clearstate") == 0)
 	{
@@ -715,10 +680,10 @@ void Cmd_Node_f (edict_t *ent)
 		CPathNode *Node = NodeList[ArgGeti(2)];
 
 		vec3_t end, forward;
-		Angles_Vectors (ent->client->v_angle, forward, NULL, NULL);
-		Vec3MA (ent->state.origin, 8192, forward, end);
+		Angles_Vectors (ent->Client.v_angle, forward, NULL, NULL);
+		Vec3MA (ent->gameEntity->state.origin, 8192, forward, end);
 
-		CTrace trace = CTrace(ent->state.origin, end, ent, CONTENTS_MASK_ALL);
+		CTrace trace = CTrace(ent->gameEntity->state.origin, end, ent->gameEntity, CONTENTS_MASK_ALL);
 
 		if (trace.ent && trace.ent->model && trace.ent->model[0] == '*')
 		{
@@ -729,10 +694,10 @@ void Cmd_Node_f (edict_t *ent)
 	else if (Q_stricmp(cmd, "monstergoal") == 0)
 	{
 		vec3_t end, forward;
-		Angles_Vectors (ent->client->v_angle, forward, NULL, NULL);
-		Vec3MA (ent->state.origin, 8192, forward, end);
+		Angles_Vectors (ent->Client.v_angle, forward, NULL, NULL);
+		Vec3MA (ent->gameEntity->state.origin, 8192, forward, end);
 
-		CTrace trace = CTrace(ent->state.origin, end, ent, CONTENTS_MASK_ALL);
+		CTrace trace = CTrace(ent->gameEntity->state.origin, end, ent->gameEntity, CONTENTS_MASK_ALL);
 
 		if (trace.ent && trace.ent->Monster)
 		{

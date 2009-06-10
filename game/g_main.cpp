@@ -207,7 +207,7 @@ void ClientEndServerFrames (void)
 	// and damage has been added
 	for (int i = 1; i <= game.maxclients ; i++)
 	{
-		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(&g_edicts[i].Entity);
+		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
 		if (!Player->IsInUse())
 			continue;
 		Player->EndServerFrame ();
@@ -344,7 +344,6 @@ CheckDMRules
 void CheckDMRules (void)
 {
 	int			i;
-	gclient_t	*cl;
 
 	if (level.intermissiontime)
 		return;
@@ -378,11 +377,11 @@ void CheckDMRules (void)
 	{
 		for (i=0 ; i<game.maxclients ; i++)
 		{
-			cl = game.clients + i;
-			if (!g_edicts[i+1].inUse)
+			CPlayerEntity *cl = dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity);
+			if (!cl->IsInUse())
 				continue;
 
-			if (cl->resp.score >= fraglimit->Integer())
+			if (cl->Client.resp.score >= fraglimit->Integer())
 			{
 				BroadcastPrintf (PRINT_HIGH, "Fraglimit hit.\n");
 				EndDMLevel ();
@@ -401,7 +400,6 @@ ExitLevel
 void ExitLevel (void)
 {
 	int		i;
-	edict_t	*ent;
 	char	command [256];
 
 	Q_snprintfz (command, sizeof(command), "gamemap \"%s\"\n", level.changemap);
@@ -414,11 +412,11 @@ void ExitLevel (void)
 	// clear some things before going to next level
 	for (i=0 ; i<game.maxclients ; i++)
 	{
-		ent = g_edicts + 1 + i;
-		if (!ent->inUse)
+		CPlayerEntity *ent = dynamic_cast<CPlayerEntity*>(g_edicts[1 + i].Entity);
+		if (!ent->IsInUse())
 			continue;
-		if (ent->health > ent->client->pers.max_health)
-			ent->health = ent->client->pers.max_health;
+		if (ent->gameEntity->health > ent->Client.pers.max_health)
+			ent->gameEntity->health = ent->Client.pers.max_health;
 	}
 
 #ifdef MONSTERS_USE_PATHFINDING

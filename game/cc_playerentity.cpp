@@ -2536,3 +2536,45 @@ void CPlayerEntity::CTFAssignGhost()
 		"intact by typing \"ghost %d\".\n", ctfgame.ghosts[ghost].code);
 }
 #endif
+
+void CPlayerEntity::MoveToIntermission ()
+{
+	if (game.mode != GAME_SINGLEPLAYER)
+		Client.showscores = true;
+	Vec3Copy (level.intermission_origin, gameEntity->state.origin);
+	Client.PlayerState.GetPMove()->origin[0] = level.intermission_origin[0]*8;
+	Client.PlayerState.GetPMove()->origin[1] = level.intermission_origin[1]*8;
+	Client.PlayerState.GetPMove()->origin[2] = level.intermission_origin[2]*8;
+	Client.PlayerState.SetViewAngles (level.intermission_angle);
+	Client.PlayerState.GetPMove()->pmType = PMT_FREEZE;
+	Client.PlayerState.SetGunIndex (0);
+
+	vec4_t viewBlend;
+	Client.PlayerState.GetViewBlend (viewBlend);
+
+	viewBlend[3] = 0;
+	Client.PlayerState.SetViewBlend (viewBlend);
+
+	Client.PlayerState.SetRdFlags (Client.PlayerState.GetRdFlags() & ~RDF_UNDERWATER);
+
+	// clean up powerup info
+	Client.quad_framenum = 0;
+	Client.invincible_framenum = 0;
+	Client.breather_framenum = 0;
+	Client.enviro_framenum = 0;
+	Client.grenade_blew_up = Client.grenade_thrown = false;
+	Client.grenade_time = 0;
+
+	gameEntity->viewheight = 0;
+	gameEntity->state.modelIndex = 0;
+	gameEntity->state.modelIndex2 = 0;
+	gameEntity->state.modelIndex3 = 0;
+	gameEntity->state.effects = 0;
+	gameEntity->state.sound = 0;
+	SetSolid (SOLID_NOT);
+
+	// add the layout
+	gameEntity->enemy = NULL;
+	if (game.mode != GAME_SINGLEPLAYER)
+		DeathmatchScoreboardMessage (true);
+}
