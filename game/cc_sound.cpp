@@ -212,10 +212,11 @@ static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channe
 	// Cycle through the different targets and do attenuation calculations
 	for (i=1, client=&g_edicts[1] ; i<=game.maxclients ; i++, client++)
 	{
-		if (client->client->pers.state == SVCS_FREE)
+		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(client->Entity);
+		if (Player->Client.pers.state == SVCS_FREE)
 			continue;
 
-		if (client->client->pers.state != SVCS_SPAWNED && !(channel & CHAN_RELIABLE))
+		if (Player->Client.pers.state != SVCS_SPAWNED && !(channel & CHAN_RELIABLE))
 			continue;
 
 		if (usePHS)
