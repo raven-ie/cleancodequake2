@@ -268,7 +268,7 @@ void Cmd_MenuLeft_t (CPlayerEntity *Player)
 
 	// Update the currently selected control
 	if (Player->Client.resp.MenuState.Cursor != -1)
-		Player->Client.resp.MenuState.CurrentMenu->Items.at(Player->Client.resp.MenuState.Cursor)->Update(ent);
+		Player->Client.resp.MenuState.CurrentMenu->Items.at(Player->Client.resp.MenuState.Cursor)->Update(Player);
 
 	Player->Client.resp.MenuState.Key = KEY_NONE;
 }
@@ -282,7 +282,7 @@ void Cmd_MenuRight_t (CPlayerEntity *Player)
 
 	// Update the currently selected control
 	if (Player->Client.resp.MenuState.Cursor != -1)
-		Player->Client.resp.MenuState.CurrentMenu->Items.at(Player->Client.resp.MenuState.Cursor)->Update(ent);
+		Player->Client.resp.MenuState.CurrentMenu->Items.at(Player->Client.resp.MenuState.Cursor)->Update(Player);
 
 	Player->Client.resp.MenuState.Key = KEY_NONE;
 }
