@@ -157,7 +157,7 @@ void CWeapon::WeaponGeneric (CPlayerEntity *Player)
 		Player->Client.weaponstate = newState;
 
 	if (newFrame == -1 && newState == -1)
-		Player->Client.PlayerState.SetGunFrame (Player->Client.PlyaerState.GetGunFrame() + 1);
+		Player->Client.PlayerState.SetGunFrame (Player->Client.PlayerState.GetGunFrame() + 1);
 }
 
 void CWeapon::ChangeWeapon (CPlayerEntity *Player)
@@ -245,7 +245,7 @@ bool CWeapon::AttemptToFire (CPlayerEntity *Player)
 void CWeapon::OutOfAmmo (CPlayerEntity *Player)
 {
 	// Doesn't affect pain anymore!
-	if (level.time >= Player->Client.damage_debounce_time)
+	if (level.time >= Player->gameEntity->damage_debounce_time)
 	{
 		PlaySoundFrom(Player->gameEntity, CHAN_AUTO, SoundIndex("weapons/noammo.wav"));
 		Player->gameEntity->damage_debounce_time = level.time + 1;
@@ -333,7 +333,7 @@ void PlayerNoise(CPlayerEntity *Player, vec3_t where, int type)
 #else
 	level.NoiseNode = GetClosestNodeTo(where);
 	level.SoundEntityFramenum = level.framenum;
-	level.SoundEntity = who;
+	level.SoundEntity = Player;
 #endif
 }
 
@@ -415,7 +415,7 @@ void CWeapon::NoAmmoWeaponChange (CPlayerEntity *Player)
 	bool HasBullets_ForChaingun = (Player->Client.pers.Inventory.Has(FindItem("Bullets")) >= 50);
 	bool HasGrenades = (Player->Client.pers.Inventory.Has(FindItem("Grenades")) != 0);
 	bool HasRockets = (Player->Client.pers.Inventory.Has (FindItem("Rockets")) != 0);
-	bool HasCells = (Player->Client.->pers.Inventory.Has (FindItem("Cells")) != 0);
+	bool HasCells = (Player->Client.pers.Inventory.Has (FindItem("Cells")) != 0);
 	bool HasCells_ForBFG = (Player->Client.pers.Inventory.Has (FindItem("Cells")) >= 50);
 	bool HasSlugs = (Player->Client.pers.Inventory.Has(FindItem("Slugs")) != 0);
 
