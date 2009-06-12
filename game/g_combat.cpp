@@ -102,8 +102,8 @@ void Killed (edict_t *targ, edict_t *inflictor, edict_t *attacker, int damage, v
 		if (!(targ->Monster->AIFlags & AI_GOOD_GUY))
 		{
 			level.killed_monsters++;
-			if (game.mode == GAME_COOPERATIVE && attacker->client)
-				attacker->client->resp.score++;
+			if (game.mode == GAME_COOPERATIVE && (attacker->client))
+				(dynamic_cast<CPlayerEntity*>(attacker->Entity))->Client.resp.score++;
 			// medics won't heal monsters that they kill themselves
 			if (strcmp(attacker->classname, "monster_medic") == 0)
 				targ->owner = attacker;
@@ -152,10 +152,8 @@ dflags		these flags are used to control how T_Damage works
 	DAMAGE_NO_PROTECTION	kills godmode, armor, everything
 ============
 */
-int PowerArmorType (edict_t *ent);
 static int CheckPowerArmor (edict_t *ent, vec3_t point, vec3_t normal, int damage, int dflags)
 {
-	gclient_t	*client;
 	int			save;
 	int			power_armor_type;
 	int			index = FindItem("Cells")->GetIndex();
@@ -163,20 +161,23 @@ static int CheckPowerArmor (edict_t *ent, vec3_t point, vec3_t normal, int damag
 	int			pa_te_type;
 	int			power = 0;
 	int			power_used;
+	bool		IsClient = (ent->Entity && (ent->Entity->EntityFlags & ENT_PLAYER));
+	CPlayerEntity	*Player = NULL;
+
+	if (IsClient)
+		Player = dynamic_cast<CPlayerEntity*>(ent->Entity);
 
 	if (!damage)
 		return 0;
 
-	client = ent->client;
-
 	if (dflags & DAMAGE_NO_ARMOR)
 		return 0;
 
-	if (client)
+	if (IsClient)
 	{
-		power_armor_type = PowerArmorType (ent);
+		power_armor_type = Player->PowerArmorType ();
 		if (power_armor_type != POWER_ARMOR_NONE)
-			power = client->pers.Inventory.Has(FindItem("Cells"));
+			power = Player->Client.pers.Inventory.Has(FindItem("Cells"));
 	}
 	else if ((ent->svFlags & SVF_MONSTER) && ent->Monster)
 	{
@@ -229,8 +230,8 @@ static int CheckPowerArmor (edict_t *ent, vec3_t point, vec3_t normal, int damag
 	if (!power_used)
 		power_used = 1;
 
-	if (client)
-		client->pers.Inventory.Remove(index, power_used);
+	if (IsClient)
+		Player->Client.pers.Inventory.Remove(index, power_used);
 	else if (ent->Monster)
 		ent->Monster->PowerArmorPower -= power_used;
 	return save;
@@ -246,24 +247,25 @@ static int CheckArmor (edict_t *ent, vec3_t point, vec3_t normal, int damage, in
 	if (dflags & DAMAGE_NO_ARMOR)
 		return 0;
 
-	CArmor *armor = ent->client->pers.Armor;
+	CPlayerEntity	*Player = dynamic_cast<CPlayerEntity*>(ent->Entity);
+	CArmor *armor = Player->Client.pers.Armor;
 
 	if (!armor)
 		return 0;
 
 	int save = ceil ( ((dflags & DAMAGE_ENERGY) ? armor->energyProtection : armor->normalProtection) * damage);
-	if (save >= ent->client->pers.Inventory.Has(armor))
-		save = ent->client->pers.Inventory.Has(armor);
+	if (save >= Player->Client.pers.Inventory.Has(armor))
+		save = Player->Client.pers.Inventory.Has(armor);
 
 	if (!save)
 		return 0;
 
-	ent->client->pers.Inventory.Remove(armor, save);
+	Player->Client.pers.Inventory.Remove(armor, save);
 	CTempEnt_Splashes::Sparks (point, normal, (dflags & DAMAGE_BULLET) ? CTempEnt_Splashes::STBulletSparks : CTempEnt_Splashes::STSparks, CTempEnt_Splashes::SPTSparks);
 
 	// Ran out of armor?
-	if (!ent->client->pers.Inventory.Has(armor))
-		ent->client->pers.Armor = NULL;
+	if (!Player->Client.pers.Inventory.Has(armor))
+		Player->Client.pers.Armor = NULL;
 
 	return save;
 }
@@ -286,13 +288,51 @@ bool CheckTeamDamage (edict_t *targ, edict_t *attacker)
 	return false;
 }
 
+char *ClientTeam (CPlayerEntity *ent)
+{
+	char		*p;
+	static char	value[512];
+
+	value[0] = 0;
+
+	Q_strncpyz(value, Info_ValueForKey (ent->Client.pers.userinfo, "skin"), sizeof(value));
+	p = strchr(value, '/');
+	if (!p)
+		return value;
+
+	if (dmFlags.dfModelTeams)
+	{
+		*p = 0;
+		return value;
+	}
+
+	// if ((int)(dmflags->value) & DF_SKINTEAMS)
+	return ++p;
+}
+
+bool OnSameTeam (CPlayerEntity *ent1, CPlayerEntity *ent2)
+{
+	char	ent1Team [512];
+	char	ent2Team [512];
+
+	if (!(dmFlags.dfSkinTeams || dmFlags.dfModelTeams))
+		return false;
+
+	Q_strncpyz (ent1Team, ClientTeam (ent1), sizeof(ent1Team));
+	Q_strncpyz (ent2Team, ClientTeam (ent2), sizeof(ent2Team));
+
+	if (strcmp(ent1Team, ent2Team) == 0)
+		return true;
+	return false;
+}
+
 void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir, vec3_t point, vec3_t normal, int damage, int knockback, int dflags, int mod)
 {
 	gclient_t	*client;
 	int			take;
 	int			save;
-	int			asave;
-	int			psave;
+	int			asave = 0;
+	int			psave = 0;
 
 	if (!targ->takedamage)
 		return;
@@ -302,12 +342,15 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 	// knockback still occurs
 	if ((targ != attacker) && ((game.mode & GAME_DEATHMATCH) && (dmFlags.dfSkinTeams || dmFlags.dfModelTeams) || game.mode == GAME_COOPERATIVE))
 	{
-		if (OnSameTeam (targ, attacker))
+		if (targ->client && attacker->client)
 		{
-			if (dmFlags.dfNoFriendlyFire)
-				damage = 0;
-			else
-				mod |= MOD_FRIENDLY_FIRE;
+			if (OnSameTeam (dynamic_cast<CPlayerEntity*>(targ->Entity), dynamic_cast<CPlayerEntity*>(attacker->Entity)))
+			{
+				if (dmFlags.dfNoFriendlyFire)
+					damage = 0;
+				else
+					mod |= MOD_FRIENDLY_FIRE;
+			}
 		}
 	}
 	meansOfDeath = mod;
@@ -331,7 +374,8 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 #ifdef CLEANCTF_ENABLED
 //ZOID
 //strength tech
-	damage = CTFApplyStrength(attacker, damage);
+	if ((game.mode & GAME_CTF) && attacker->client)
+		damage = (dynamic_cast<CPlayerEntity*>(attacker->Entity))->CTFApplyStrength(damage);
 //ZOID
 #endif
 
@@ -372,7 +416,7 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 	}
 
 	// check for invincibility
-	if ((client && client->invincible_framenum > level.framenum ) && !(dflags & DAMAGE_NO_PROTECTION))
+	if ((client && (dynamic_cast<CPlayerEntity*>(targ->Entity))->Client.invincible_framenum > level.framenum ) && !(dflags & DAMAGE_NO_PROTECTION))
 	{
 		if (targ->pain_debounce_time < level.time)
 		{
@@ -386,10 +430,12 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 #ifdef CLEANCTF_ENABLED
 //ZOID
 //team armor protect
-	if ((game.mode & GAME_CTF) && targ->client && attacker->client &&
-		targ->client->resp.ctf_team == attacker->client->resp.ctf_team &&
+	if ((game.mode & GAME_CTF) && targ->client && attacker->client)
+	{
+		if ((dynamic_cast<CPlayerEntity*>(targ->Entity))->Client.resp.ctf_team == (dynamic_cast<CPlayerEntity*>(attacker->Entity))->Client.resp.ctf_team &&
 		targ != attacker && dmFlags.dfCtfArmorProtect)
 		psave = asave = 0;
+	}
 	else
 	{
 //ZOID
@@ -409,7 +455,8 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 #ifdef CLEANCTF_ENABLED
 //ZOID
 //resistance tech
-	take = CTFApplyResistance(targ, take);
+	if (client)
+		take = (dynamic_cast<CPlayerEntity*>(targ->Entity))->CTFApplyResistance(take);
 //ZOID
 #endif
 
@@ -419,7 +466,8 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 
 #ifdef CLEANCTF_ENABLED
 //ZOID
-	CTFCheckHurtCarrier(targ, attacker);
+	if (targ->client && attacker->client)
+		CTFCheckHurtCarrier((dynamic_cast<CPlayerEntity*>(targ->Entity)), (dynamic_cast<CPlayerEntity*>(attacker->Entity)));
 //ZOID
 #endif
 
@@ -473,11 +521,12 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 	// at the end of the frame
 	if (client)
 	{
-		client->damage_parmor += psave;
-		client->damage_armor += asave;
-		client->damage_blood += take;
-		client->damage_knockback += knockback;
-		Vec3Copy (point, client->damage_from);
+		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(targ->Entity);
+		Player->Client.damage_parmor += psave;
+		Player->Client.damage_armor += asave;
+		Player->Client.damage_blood += take;
+		Player->Client.damage_knockback += knockback;
+		Vec3Copy (point, Player->Client.damage_from);
 	}
 }
 

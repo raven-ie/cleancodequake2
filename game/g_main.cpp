@@ -488,7 +488,10 @@ __try
 			continue;
 		}*/
 		if (ent->Entity)
+		{
 			ent->Entity->Run ();
+			continue;
+		}
 
 		G_RunEntity (ent);
 	}

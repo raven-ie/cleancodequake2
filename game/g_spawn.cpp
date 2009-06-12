@@ -168,7 +168,6 @@ spawn_t	spawns[] = {
 	{"trigger_counter", SP_trigger_counter},
 	{"trigger_elevator", SP_trigger_elevator},
 	{"trigger_gravity", SP_trigger_gravity},
-	{"trigger_teleport", SP_trigger_teleport},
 	{"trigger_monsterjump", SP_trigger_monsterjump},
 #ifdef CLEANCTF_ENABLED
 //ZOID
@@ -520,6 +519,18 @@ parsing textual entity definitions out of an ent file.
 extern int entityNumber;
 #include "cc_exceptionhandler.h"
 
+void InitEntities ()
+{
+	// Set up the client entities
+	for (int i = 1; i <= game.maxclients; i++)
+	{
+		edict_t *ent = &g_edicts[i];
+
+		if (!ent->Entity)
+			ent->Entity = new CPlayerEntity(i);
+	}
+}
+
 void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 {
 #ifdef CC_USE_EXCEPTION_HANDLER
@@ -546,7 +557,7 @@ __try
 	if (skill->Integer() != skill_level)
 		skill->Set(Q_VarArgs("%i", skill_level), true);
 
-	SaveClientData ();
+	CPlayerEntity::SaveClientData ();
 
 	gi.FreeTags (TAG_LEVEL);
 
@@ -559,6 +570,8 @@ __try
 	// set client fields on player ents
 	for (i=0 ; i<game.maxclients ; i++)
 		g_edicts[i+1].client = game.clients + i;
+
+	InitEntities ();
 
 	ent = NULL;
 	inhibit = 0;
@@ -713,8 +726,8 @@ void SP_worldspawn (edict_t *ent)
 
 	// status bar program
 	if (game.mode & GAME_DEATHMATCH)
-#ifdef CLEANCTF_ENABLED
 	{
+#ifdef CLEANCTF_ENABLED
 //ZOID
 		if (game.mode & GAME_CTF)
 		{
@@ -731,9 +744,9 @@ void SP_worldspawn (edict_t *ent)
 		}
 		else
 //ZOID
+#endif
 		CreateDMStatusbar();
 	}
-#endif
 	else
 		CreateSPStatusbar();
 

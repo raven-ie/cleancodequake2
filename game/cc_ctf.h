@@ -54,7 +54,7 @@ typedef struct ghost_s
 	int code; // ghost code
 	int team; // team
 	int score; // frags at time of disconnect
-	edict_t *ent;
+	CPlayerEntity *ent;
 } ghost_t;
 
 enum match_t{
@@ -143,21 +143,21 @@ bool CTFDrop_Flag(edict_t *ent, CBaseItem *item);
 void CTFEffects(edict_t *player);
 void CTFCalcScores(void);
 void SetCTFStats(edict_t *ent);
-void CTFDeadDropFlag(edict_t *self);
+void CTFDeadDropFlag(CPlayerEntity *self);
 void CTFScoreboardMessage (edict_t *ent, edict_t *killer, bool reliable);
 void CTFTeam_f (CPlayerEntity *ent);
 void CTFID_f (CPlayerEntity *ent);
 void CTFSay_Team(CPlayerEntity *who, char *msg);
 void CTFFlagSetup (edict_t *ent);
 void CTFResetFlag(int ctf_team);
-void CTFFragBonuses(edict_t *targ, edict_t *inflictor, edict_t *attacker);
-void CTFCheckHurtCarrier(edict_t *targ, edict_t *attacker);
+void CTFFragBonuses(CPlayerEntity *targ, CPlayerEntity *attacker);
+void CTFCheckHurtCarrier(CPlayerEntity *targ, CPlayerEntity *attacker);
 
 //TECH
 CBaseItem *CTFWhat_Tech(edict_t *ent);
 bool CTFPickup_Tech (edict_t *ent, edict_t *other);
 void CTFDrop_Tech(edict_t *ent, CBaseItem *item);
-void CTFDeadDropTech(edict_t *ent);
+void CTFDeadDropTech(CPlayerEntity *ent);
 void CTFSetupTechSpawn(void);
 int CTFApplyResistance(CPlayerEntity *ent, int dmg);
 int CTFApplyStrength(CPlayerEntity *ent, int dmg);
@@ -192,9 +192,9 @@ void SP_misc_ctf_small_banner (edict_t *ent);
 
 void CreateCTFStatusbar ();
 
-void UpdateChaseCam(edict_t *ent);
-void ChaseNext(edict_t *ent);
-void ChasePrev(edict_t *ent);
+void UpdateChaseCam(CPlayerEntity *ent);
+void ChaseNext(CPlayerEntity *ent);
+void ChasePrev(CPlayerEntity *ent);
 
 void CTFObserver(CPlayerEntity *ent);
 

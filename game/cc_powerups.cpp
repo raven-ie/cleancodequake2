@@ -155,11 +155,10 @@ CBasePowerUp(Classname, WorldModel, EffectFlags, PickupSound, Icon, Name, Flags,
 
 void CMegaHealth::MegaHealthThink (edict_t *self)
 {
-	CPlayerEntity *Owner = dynamic_cast<CPlayerEntity*>(self->owner->Entity);
 	if (self->owner->health > self->owner->max_health
 #ifdef CLEANCTF_ENABLED
 //ZOID
-		&& !CTFHasRegeneration(Owner)
+		&& !dynamic_cast<CPlayerEntity*>(self->owner->Entity)->CTFHasRegeneration()
 //ZOID
 #endif
 		)
@@ -179,7 +178,7 @@ void CMegaHealth::MegaHealthThink (edict_t *self)
 void CMegaHealth::DoPickup (edict_t *ent, CPlayerEntity *other)
 {
 #ifdef CLEANCTF_ENABLED
-	if (!CTFHasRegeneration(other))
+	if (!other->CTFHasRegeneration())
 	{
 #endif
 		ent->think = &CMegaHealth::MegaHealthThink;

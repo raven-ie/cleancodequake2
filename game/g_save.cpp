@@ -286,13 +286,6 @@ void InitGame (void)
 	game.clients = (gclient_t*)gi.TagMalloc (game.maxclients * sizeof(game.clients[0]), TAG_GAME);
 	globals.numEdicts = game.maxclients+1;
 
-	// Set up the client entities
-	for (int i = 1; i <= game.maxclients; i++)
-	{
-		edict_t *ent = &g_edicts[i];
-		ent->Entity = new CPlayerEntity(i);
-	}
-
 	// Vars
 	game.maxspectators = maxspectators->Integer();
 	game.cheats = (sv_cheats->Integer()) ? true : false;
@@ -626,7 +619,7 @@ void WriteGame (char *filename, BOOL autosave)
 	char	str[16];
 
 	if (!autosave)
-		SaveClientData ();
+		CPlayerEntity::SaveClientData ();
 
 #ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
 	f = fopen (filename, "wb");

@@ -509,10 +509,6 @@
 				RelativePath=".\p_trail.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\p_view.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -820,13 +816,6 @@
 				<File
 					RelativePath=".\cc_baseentity.cpp"
 					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\cc_baseentity.h"
