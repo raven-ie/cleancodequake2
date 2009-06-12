@@ -328,13 +328,32 @@ public:
 	void			CTFSetIDView ();
 	void			CTFScoreboardMessage (bool reliable);
 	void			CTFAssignGhost ();
+
+	int				CTFApplyStrength(int dmg);
+	bool			CTFApplyStrengthSound();
+	bool			CTFApplyHaste();
+	void			CTFApplyHasteSound();
+	void			CTFApplyRegeneration();
+	bool			CTFHasRegeneration();
+	int				CTFApplyResistance (int dmg);
 #endif
 
+	void			TossClientWeapon ();
 	void			MoveToIntermission ();
+	void			ClientThink (userCmd_t *ucmd);
 
 	void			DeathmatchScoreboardMessage (bool reliable);
 	void			EndServerFrame ();
+	void			LookAtKiller (edict_t *inflictor, edict_t *attacker);
+
+	void			InitResp ();
+	static void		SaveClientData ();
+	void			SelectSpawnPoint (vec3_t origin, vec3_t angles);
+	edict_t			*SelectCoopSpawnPoint ();
 #ifdef CLEANCTF_ENABLED
+
+	edict_t			*SelectCTFSpawnPoint ();
+	void			CTFAssignTeam ();
 	void CTFAssignSkin (char *s);
 	bool CTFStart ();
 #endif

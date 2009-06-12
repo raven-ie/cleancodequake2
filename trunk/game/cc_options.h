@@ -46,7 +46,6 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #define FLYER_KNOWS_HOW_TO_DODGE
 #define INFANTRY_DOES_REVERSE_GUN_ATTACK
 
-
 // "Extended game imports" refers to:
 // gi.cprintf, gi.dprintf, gi.centerprintf, gi.bprintf, gi.sound, gi.positioned_sound, gi.pmove
 //#define USE_EXTENDED_GAME_IMPORTS

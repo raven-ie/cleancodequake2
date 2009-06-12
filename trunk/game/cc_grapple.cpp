@@ -88,7 +88,7 @@ void CGrapple::ResetGrapple(edict_t *self)
 		if (Player->Client.silencer_shots)
 			volume = 0.2f;
 
-		PlaySoundFrom (Player->gameEntity, CHAN_WEAPON, SoundIndex("weapons/grapple/grreset.wav"), volume, ATTN_NORM, 0);
+		//PlaySoundFrom (Player->gameEntity, CHAN_WEAPON, SoundIndex("weapons/grapple/grreset.wav"), volume, ATTN_NORM, 0);
 		Player->Client.ctf_grapple = NULL;
 		Player->Client.ctf_grapplereleasetime = level.time;
 		Player->Client.ctf_grapplestate = CTF_GRAPPLE_STATE_HANG+1; // we're firing, not on hook

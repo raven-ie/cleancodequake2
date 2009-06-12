@@ -186,232 +186,30 @@ void player_pain (edict_t *self, edict_t *other, float kick, int damage)
 }
 
 
-bool IsFemale (edict_t *ent)
+bool IsFemale (CPlayerEntity *ent)
 {
 	char		*info;
 
-	if (!ent->client)
-		return false;
-
-	info = Info_ValueForKey (ent->client->pers.userinfo, "gender");
+	info = Info_ValueForKey (ent->Client.pers.userinfo, "gender");
 	if (info[0] == 'f' || info[0] == 'F')
 		return true;
 	return false;
 }
 
-bool IsNeutral (edict_t *ent)
+bool IsNeutral (CPlayerEntity *ent)
 {
 	char		*info;
 
-	if (!ent->client)
-		return false;
-
-	info = Info_ValueForKey (ent->client->pers.userinfo, "gender");
+	info = Info_ValueForKey (ent->Client.pers.userinfo, "gender");
 	if (info[0] != 'f' && info[0] != 'F' && info[0] != 'm' && info[0] != 'M')
 		return true;
 	return false;
 }
 
-void _ClientObituary (edict_t *self, edict_t *inflictor, edict_t *attacker)
-{
-	int			mod;
-	char		*message;
-	char		*message2;
-	bool	ff;
-
-	if (game.mode == GAME_COOPERATIVE && attacker->client)
-		meansOfDeath |= MOD_FRIENDLY_FIRE;
-
-	if (game.mode != GAME_SINGLEPLAYER)
-	{
-		ff = (meansOfDeath & MOD_FRIENDLY_FIRE) ? true : false;
-		mod = meansOfDeath & ~MOD_FRIENDLY_FIRE;
-		message = NULL;
-		message2 = "";
-
-		switch (mod)
-		{
-		case MOD_SUICIDE:
-			message = "suicides";
-			break;
-		case MOD_FALLING:
-			message = "cratered";
-			break;
-		case MOD_CRUSH:
-			message = "was squished";
-			break;
-		case MOD_WATER:
-			message = "sank like a rock";
-			break;
-		case MOD_SLIME:
-			message = "melted";
-			break;
-		case MOD_LAVA:
-			message = "does a back flip into the lava";
-			break;
-		case MOD_EXPLOSIVE:
-		case MOD_BARREL:
-			message = "blew up";
-			break;
-		case MOD_EXIT:
-			message = "found a way out";
-			break;
-		case MOD_TARGET_LASER:
-			message = "saw the light";
-			break;
-		case MOD_TARGET_BLASTER:
-			message = "got blasted";
-			break;
-		case MOD_BOMB:
-		case MOD_SPLASH:
-		case MOD_TRIGGER_HURT:
-			message = "was in the wrong place";
-			break;
-		}
-		if (attacker == self)
-		{
-			switch (mod)
-			{
-			case MOD_HELD_GRENADE:
-				message = "tried to put the pin back in";
-				break;
-			case MOD_HG_SPLASH:
-			case MOD_G_SPLASH:
-				if (IsNeutral(self))
-					message = "tripped on its own grenade";
-				else if (IsFemale(self))
-					message = "tripped on her own grenade";
-				else
-					message = "tripped on his own grenade";
-				break;
-			case MOD_R_SPLASH:
-				if (IsNeutral(self))
-					message = "blew itself up";
-				else if (IsFemale(self))
-					message = "blew herself up";
-				else
-					message = "blew himself up";
-				break;
-			case MOD_BFG_BLAST:
-				message = "should have used a smaller gun";
-				break;
-			default:
-				if (IsNeutral(self))
-					message = "killed itself";
-				else if (IsFemale(self))
-					message = "killed herself";
-				else
-					message = "killed himself";
-				break;
-			}
-		}
-		if (message)
-		{
-			BroadcastPrintf (PRINT_MEDIUM, "%s %s.\n", self->client->pers.netname, message);
-			if (game.mode & GAME_DEATHMATCH)
-				self->client->resp.score--;
-			self->enemy = NULL;
-			return;
-		}
-
-		self->enemy = attacker;
-		if (attacker && attacker->client)
-		{
-			switch (mod)
-			{
-			case MOD_BLASTER:
-				message = "was blasted by";
-				break;
-			case MOD_SHOTGUN:
-				message = "was gunned down by";
-				break;
-			case MOD_SSHOTGUN:
-				message = "was blown away by";
-				message2 = "'s super shotgun";
-				break;
-			case MOD_MACHINEGUN:
-				message = "was machinegunned by";
-				break;
-			case MOD_CHAINGUN:
-				message = "was cut in half by";
-				message2 = "'s chaingun";
-				break;
-			case MOD_GRENADE:
-				message = "was popped by";
-				message2 = "'s grenade";
-				break;
-			case MOD_G_SPLASH:
-				message = "was shredded by";
-				message2 = "'s shrapnel";
-				break;
-			case MOD_ROCKET:
-				message = "ate";
-				message2 = "'s rocket";
-				break;
-			case MOD_R_SPLASH:
-				message = "almost dodged";
-				message2 = "'s rocket";
-				break;
-			case MOD_HYPERBLASTER:
-				message = "was melted by";
-				message2 = "'s hyperblaster";
-				break;
-			case MOD_RAILGUN:
-				message = "was railed by";
-				break;
-			case MOD_BFG_LASER:
-				message = "saw the pretty lights from";
-				message2 = "'s BFG";
-				break;
-			case MOD_BFG_BLAST:
-				message = "was disintegrated by";
-				message2 = "'s BFG blast";
-				break;
-			case MOD_BFG_EFFECT:
-				message = "couldn't hide from";
-				message2 = "'s BFG";
-				break;
-			case MOD_HANDGRENADE:
-				message = "caught";
-				message2 = "'s handgrenade";
-				break;
-			case MOD_HG_SPLASH:
-				message = "didn't see";
-				message2 = "'s handgrenade";
-				break;
-			case MOD_HELD_GRENADE:
-				message = "feels";
-				message2 = "'s pain";
-				break;
-			case MOD_TELEFRAG:
-				message = "tried to invade";
-				message2 = "'s personal space";
-				break;
-			}
-			if (message)
-			{
-				BroadcastPrintf (PRINT_MEDIUM,"%s %s %s%s\n", self->client->pers.netname, message, attacker->client->pers.netname, message2);
-				if (game.mode & GAME_DEATHMATCH)
-				{
-					if (ff)
-						attacker->client->resp.score--;
-					else
-						attacker->client->resp.score++;
-				}
-				return;
-			}
-		}
-	}
-
-	BroadcastPrintf (PRINT_MEDIUM,"%s died.\n", self->client->pers.netname);
-	if (game.mode & GAME_DEATHMATCH)
-		self->client->resp.score--;
-}
-
-void ClientObituary (edict_t *self, edict_t *attacker)
+void ClientObituary (CPlayerEntity *self, edict_t *attacker)
 {
 	char *message = "", *message2 = "";
-	if (attacker == self)
+	if (attacker == self->gameEntity)
 	{
 		switch (meansOfDeath)
 		{
@@ -420,7 +218,7 @@ void ClientObituary (edict_t *self, edict_t *attacker)
 			break;
 		case MOD_HG_SPLASH:
 		case MOD_G_SPLASH:
-			switch (self->client->resp.Gender)
+			switch (self->Client.resp.Gender)
 			{
 			case GenderMale:
 				message = "tripped on its his grenade";
@@ -434,7 +232,7 @@ void ClientObituary (edict_t *self, edict_t *attacker)
 			}
 			break;
 		case MOD_R_SPLASH:
-			switch (self->client->resp.Gender)
+			switch (self->Client.resp.Gender)
 			{
 			case GenderMale:
 				message = "blew himself up";
@@ -451,7 +249,7 @@ void ClientObituary (edict_t *self, edict_t *attacker)
 			message = "should have used a smaller gun";
 			break;
 		default:
-			switch (self->client->resp.Gender)
+			switch (self->Client.resp.Gender)
 			{
 			case GenderMale:
 				message = "killed himself";
@@ -466,8 +264,8 @@ void ClientObituary (edict_t *self, edict_t *attacker)
 			break;
 		}
 		if (game.mode & GAME_DEATHMATCH)
-			self->client->resp.score--;
-		BroadcastPrintf (PRINT_MEDIUM, "%s %s.\n", self->client->pers.netname, message);
+			self->Client.resp.score--;
+		BroadcastPrintf (PRINT_MEDIUM, "%s %s.\n", self->Client.pers.netname, message);
 	}
 	else if (attacker == world)
 	{
@@ -512,8 +310,8 @@ void ClientObituary (edict_t *self, edict_t *attacker)
 		}
 
 		if (game.mode & GAME_DEATHMATCH)
-			self->client->resp.score--;
-		BroadcastPrintf (PRINT_MEDIUM, "%s %s.\n", self->client->pers.netname, message);
+			self->Client.resp.score--;
+		BroadcastPrintf (PRINT_MEDIUM, "%s %s.\n", self->Client.pers.netname, message);
 	}
 	else if (attacker && attacker->client)
 	{
@@ -596,99 +394,17 @@ void ClientObituary (edict_t *self, edict_t *attacker)
 //ZOID
 #endif
 		}
-		BroadcastPrintf (PRINT_MEDIUM,"%s %s %s%s\n", self->client->pers.netname, message, attacker->client->pers.netname, message2);
+		CPlayerEntity *Attacker = dynamic_cast<CPlayerEntity*>(attacker->Entity);
+		BroadcastPrintf (PRINT_MEDIUM,"%s %s %s%s\n", self->Client.pers.netname, message, Attacker->Client.pers.netname, message2);
 		if (game.mode & GAME_DEATHMATCH)
-		{
-			if ((self->client && attacker->client) && OnSameTeam(self, attacker))
-				attacker->client->resp.score--;
-			else
-				attacker->client->resp.score++;
-		}
+			Attacker->Client.resp.score++;
 	}
 	else
 	{
-		BroadcastPrintf (PRINT_MEDIUM, "%s died.\n", self->client->pers.netname);
+		BroadcastPrintf (PRINT_MEDIUM, "%s died.\n", self->Client.pers.netname);
 		if (game.mode & GAME_DEATHMATCH)
-			self->client->resp.score--;
+			self->Client.resp.score--;
 	}
-}
-
-void TossClientWeapon (edict_t *self)
-{
-	if (!(game.mode & GAME_DEATHMATCH))
-		return;
-
-	CBaseItem *Item = ((self->client->pers.Weapon) ? ((self->client->pers.Weapon->WeaponItem) ? self->client->pers.Weapon->WeaponItem : self->client->pers.Weapon->Item) : NULL);
-	// Personally, this is dumb.
-	//if (! self->client->pers.Inventory.Has(Item->Ammo) )
-	//	item = NULL;
-	if (!Item->WorldModel)
-		Item = NULL;
-
-	bool quad = (!dmFlags.dfQuadDrop) ? false : (bool)(self->client->quad_framenum > (level.framenum + 10));
-	float spread = (Item && quad) ? 22.5f : 0.0f;
-
-	if (Item)
-	{
-		self->client->v_angle[YAW] -= spread;
-		edict_t *drop = Item->DropItem (self);
-		self->client->v_angle[YAW] += spread;
-		drop->spawnflags |= DROPPED_PLAYER_ITEM;
-		if (self->client->pers.Weapon->WeaponItem)
-			drop->count = self->client->pers.Inventory.Has(self->client->pers.Weapon->WeaponItem->Ammo);
-		else
-			drop->count = self->client->pers.Inventory.Has(self->client->pers.Weapon->Item);
-	}
-
-	if (quad)
-	{
-		self->client->v_angle[YAW] += spread;
-		edict_t *drop = FindItem("Quad Damage")->DropItem (self);
-		self->client->v_angle[YAW] -= spread;
-		drop->spawnflags |= DROPPED_PLAYER_ITEM;
-
-		drop->touch = TouchItem;
-		drop->nextthink = level.time + (self->client->quad_framenum - level.framenum) * FRAMETIME;
-		drop->think = G_FreeEdict;
-	}
-}
-
-/*
-==================
-LookAtKiller
-==================
-*/
-void LookAtKiller (edict_t *self, edict_t *inflictor, edict_t *attacker)
-{
-	vec3_t		dir;
-
-	if (attacker && attacker != world && attacker != self)
-	{
-		Vec3Subtract (attacker->state.origin, self->state.origin, dir);
-	}
-	else if (inflictor && inflictor != world && inflictor != self)
-	{
-		Vec3Subtract (inflictor->state.origin, self->state.origin, dir);
-	}
-	else
-	{
-		self->client->killer_yaw = self->state.angles[YAW];
-		return;
-	}
-
-	if (dir[0])
-		self->client->killer_yaw = 180/M_PI*atan2f(dir[1], dir[0]);
-	else {
-		self->client->killer_yaw = 0;
-		if (dir[1] > 0)
-			self->client->killer_yaw = 90;
-		else if (dir[1] < 0)
-			self->client->killer_yaw = -90;
-	}
-	if (self->client->killer_yaw < 0)
-		self->client->killer_yaw += 360;
-	
-
 }
 
 /*
@@ -699,190 +415,140 @@ player_die
 void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
 {
 	int		n;
+	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(self->Entity);
 
-	Vec3Clear (self->avelocity);
+	Vec3Clear (Player->gameEntity->avelocity);
 
-	self->takedamage = DAMAGE_YES;
-	self->movetype = MOVETYPE_TOSS;
+	Player->gameEntity->takedamage = DAMAGE_YES;
+	Player->gameEntity->movetype = MOVETYPE_TOSS;
 
-	self->state.modelIndex2 = 0;	// remove linked weapon model
-	self->state.modelIndex3 = 0;	// remove linked ctf flag
+	Player->gameEntity->state.modelIndex2 = 0;	// remove linked weapon model
+	Player->gameEntity->state.modelIndex3 = 0;	// remove linked ctf flag
 
-	self->state.angles[0] = 0;
-	self->state.angles[2] = 0;
+	Player->gameEntity->state.angles[0] = 0;
+	Player->gameEntity->state.angles[2] = 0;
 
-	self->state.sound = 0;
-	self->client->weapon_sound = 0;
+	Player->gameEntity->state.sound = 0;
+	Player->Client.weapon_sound = 0;
 
-	self->maxs[2] = -8;
+	vec3f maxs = Player->GetMaxs();
+	maxs[2] = -8;
+	Player->SetMaxs (maxs);
 
-//	self->solid = SOLID_NOT;
-	self->svFlags |= SVF_DEADMONSTER;
+	Player->SetSvFlags (Player->GetSvFlags() | SVF_DEADMONSTER);
 
-	if (!self->deadflag)
+	if (!Player->gameEntity->deadflag)
 	{
-		self->client->respawn_time = level.time + 1.0;
-		LookAtKiller (self, inflictor, attacker);
-		self->client->playerState.pMove.pmType = PMT_DEAD;
-		ClientObituary (self, attacker);
+		Player->Client.respawn_time = level.time + 1.0;
+		Player->LookAtKiller (inflictor, attacker);
+		Player->Client.PlayerState.GetPMove()->pmType = PMT_DEAD;
+		ClientObituary (Player, attacker);
 
 #ifdef CLEANCTF_ENABLED
-//ZOID
-		// if at start and same team, clear
-		if ((game.mode & GAME_CTF) && (meansOfDeath == MOD_TELEFRAG) &&
-			(self->client->resp.ctf_state < 2) &&
-			(self->client->resp.ctf_team == attacker->client->resp.ctf_team))
+		if (attacker->client)
 		{
-			attacker->client->resp.score--;
-			self->client->resp.ctf_state = 0;
+			CPlayerEntity *Attacker = dynamic_cast<CPlayerEntity*>(attacker->Entity);
+//ZOID
+			// if at start and same team, clear
+			if ((game.mode & GAME_CTF) && (meansOfDeath == MOD_TELEFRAG) &&
+				(Player->Client.resp.ctf_state < 2) &&
+				(Player->Client.resp.ctf_team == Attacker->Client.resp.ctf_team))
+			{
+				Attacker->Client.resp.score--;
+				Player->Client.resp.ctf_state = 0;
+			}
+
+			CTFFragBonuses(Player, Attacker);
 		}
 
-		CTFFragBonuses(self, inflictor, attacker);
 //ZOID
 #endif
 
-		TossClientWeapon (self);
+		Player->TossClientWeapon ();
 
 #ifdef CLEANCTF_ENABLED
 //ZOID
-		CGrapple::PlayerResetGrapple(self);
-		CTFDeadDropFlag(self);
-		CTFDeadDropTech(self);
+		CGrapple::PlayerResetGrapple(Player);
+		CTFDeadDropFlag(Player);
+		CTFDeadDropTech(Player);
 //ZOID
 #endif
 
 		if (game.mode & GAME_DEATHMATCH)
-			Cmd_Help_f (self);		// show scores
+			Cmd_Help_f (Player);		// show scores
 
 		// clear inventory
 		// this is kind of ugly, but it's how we want to handle keys in coop
 		for (n = 0; n < GetNumItems(); n++)
 		{
 			if ((game.mode == GAME_COOPERATIVE) && (GetItemByIndex(n)->Flags & ITEMFLAG_KEY))
-				self->client->resp.coop_respawn.Inventory.Set(n, self->client->pers.Inventory.Has(n));
-			self->client->pers.Inventory.Set(n, 0);
+				Player->Client.resp.coop_respawn.Inventory.Set(n, Player->Client.pers.Inventory.Has(n));
+			Player->Client.pers.Inventory.Set(n, 0);
 		}
 	}
 
 	// remove powerups
-	self->client->quad_framenum = 0;
-	self->client->invincible_framenum = 0;
-	self->client->breather_framenum = 0;
-	self->client->enviro_framenum = 0;
-	self->flags &= ~FL_POWER_ARMOR;
+	Player->Client.quad_framenum = 0;
+	Player->Client.invincible_framenum = 0;
+	Player->Client.breather_framenum = 0;
+	Player->Client.enviro_framenum = 0;
+	Player->gameEntity->flags &= ~FL_POWER_ARMOR;
 
-	if (self->health < -40)
+	if (Player->gameEntity->health < -40)
 	{	// gib
-		PlaySoundFrom (self, CHAN_BODY, SoundIndex ("misc/udeath.wav"));
+		PlaySoundFrom (Player->gameEntity, CHAN_BODY, SoundIndex ("misc/udeath.wav"));
 		for (n= 0; n < 4; n++)
-			ThrowGib (self, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		ThrowClientHead (self, damage);
+			ThrowGib (Player->gameEntity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		ThrowClientHead (Player->gameEntity, damage);
 
-		self->takedamage = DAMAGE_NO;
+		Player->gameEntity->takedamage = DAMAGE_NO;
 //ZOID
-		self->client->anim_priority = ANIM_DEATH;
-		self->client->anim_end = 0;
+		Player->Client.anim_priority = ANIM_DEATH;
+		Player->Client.anim_end = 0;
 //ZOID
 	}
 	else
 	{	// normal death
-		if (!self->deadflag)
+		if (!Player->gameEntity->deadflag)
 		{
 			static int i;
 
 			i = (i+1)%3;
 			// start a death animation
-			self->client->anim_priority = ANIM_DEATH;
-			if (self->client->playerState.pMove.pmFlags & PMF_DUCKED)
+			Player->Client.anim_priority = ANIM_DEATH;
+			if (Player->Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED)
 			{
-				self->state.frame = FRAME_crdeath1-1;
-				self->client->anim_end = FRAME_crdeath5;
+				Player->gameEntity->state.frame = FRAME_crdeath1-1;
+				Player->Client.anim_end = FRAME_crdeath5;
 			}
 			else
 			{
 				switch (i)
 				{
 				case 0:
-					self->state.frame = FRAME_death101-1;
-					self->client->anim_end = FRAME_death106;
+					Player->gameEntity->state.frame = FRAME_death101-1;
+					Player->Client.anim_end = FRAME_death106;
 					break;
 				case 1:
-					self->state.frame = FRAME_death201-1;
-					self->client->anim_end = FRAME_death206;
+					Player->gameEntity->state.frame = FRAME_death201-1;
+					Player->Client.anim_end = FRAME_death206;
 					break;
 				case 2:
-					self->state.frame = FRAME_death301-1;
-					self->client->anim_end = FRAME_death308;
+					Player->gameEntity->state.frame = FRAME_death301-1;
+					Player->Client.anim_end = FRAME_death308;
 					break;
 				}
 			}
-			PlaySoundFrom (self, CHAN_VOICE, gMedia.Player.Death[(rand()%4)]);
+			PlaySoundFrom (Player->gameEntity, CHAN_VOICE, gMedia.Player.Death[(rand()%4)]);
 		}
 	}
 
-	self->deadflag = DEAD_DEAD;
+	Player->gameEntity->deadflag = DEAD_DEAD;
 
-	gi.linkentity (self);
+	Player->Link ();
 }
 
 //=======================================================================
-
-void InitClientResp (gclient_t *client)
-{
-#ifdef CLEANCTF_ENABLED
-//ZOID
-	int ctf_team = client->resp.ctf_team;
-	bool id_state = client->resp.id_state;
-//ZOID
-#endif
-
-	memset (&client->resp, 0, sizeof(client->resp));
-
-#ifdef CLEANCTF_ENABLED
-//ZOID
-	client->resp.ctf_team = ctf_team;
-	client->resp.id_state = id_state;
-//ZOID
-#endif
-
-	client->resp.enterframe = level.framenum;
-	client->resp.coop_respawn = client->pers;
-
-#ifdef CLEANCTF_ENABLED
-//ZOID
-	if ((game.mode & GAME_CTF) && client->resp.ctf_team < CTF_TEAM1)
-		CTFAssignTeam(client);
-//ZOID
-#endif
-}
-
-/*
-==================
-SaveClientData
-
-Some information that should be persistant, like health, 
-is still stored in the edict structure, so it needs to
-be mirrored out to the client structure before all the
-edicts are wiped.
-==================
-*/
-void SaveClientData (void)
-{
-	int		i;
-	edict_t	*ent;
-
-	for (i=0 ; i<game.maxclients ; i++)
-	{
-		ent = &g_edicts[1+i];
-		if (!ent->inUse)
-			continue;
-		game.clients[i].pers.health = ent->health;
-		game.clients[i].pers.max_health = ent->max_health;
-		game.clients[i].pers.savedFlags = (ent->flags & (FL_GODMODE|FL_NOTARGET|FL_POWER_ARMOR));
-		if (game.mode == GAME_COOPERATIVE)
-			game.clients[i].pers.score = ent->client->resp.score;
-	}
-}
 
 /*
 =======================================================================
@@ -1034,96 +700,6 @@ edict_t *SelectDeathmatchSpawnPoint (void)
 		return SelectRandomDeathmatchSpawnPoint ();
 }
 
-
-edict_t *SelectCoopSpawnPoint (edict_t *ent)
-{
-	int		index;
-	edict_t	*spot = NULL;
-	char	*target;
-
-	index = ent->client - game.clients;
-
-	// player 0 starts in normal player spawn point
-	if (!index)
-		return NULL;
-
-	spot = NULL;
-
-	// assume there are four coop spots at each spawnpoint
-	while (1)
-	{
-		spot = G_Find (spot, FOFS(classname), "info_player_coop");
-		if (!spot)
-			return NULL;	// we didn't have enough...
-
-		target = spot->targetname;
-		if (!target)
-			target = "";
-		if ( Q_stricmp(game.spawnpoint, target) == 0 )
-		{	// this is a coop spawn point for one of the clients here
-			index--;
-			if (!index)
-				return spot;		// this is it
-		}
-	}
-
-	return spot;
-}
-
-/*
-===========
-SelectSpawnPoint
-
-Chooses a player start, deathmatch start, coop start, etc
-============
-*/
-void	SelectSpawnPoint (edict_t *ent, vec3_t origin, vec3_t angles)
-{
-	edict_t	*spot = NULL;
-
-	if (game.mode & GAME_DEATHMATCH)
-		spot = 
-#ifdef CLEANCTF_ENABLED
-		(game.mode & GAME_CTF) ? SelectCTFSpawnPoint(ent) :
-#endif
-		SelectDeathmatchSpawnPoint ();
-	else if (game.mode & GAME_COOPERATIVE)
-		spot = SelectCoopSpawnPoint (ent);
-
-	// find a single player start spot
-	if (!spot)
-	{
-		while ((spot = G_Find (spot, FOFS(classname), "info_player_start")) != NULL)
-		{
-			if (!game.spawnpoint[0] && !spot->targetname)
-				break;
-
-			if (!game.spawnpoint[0] || !spot->targetname)
-				continue;
-
-			if (Q_stricmp(game.spawnpoint, spot->targetname) == 0)
-				break;
-		}
-
-		if (!spot)
-		{
-			// There wasn't a spawnpoint without a target, so use any
-			if (!game.spawnpoint[0]) {
-				spot = G_Find (spot, FOFS(classname), "info_player_start");
-
-				if (!spot)
-					spot = G_Find (spot, FOFS(classname), "info_player_deathmatch");
-			}
-			if (!spot)
-				gi.error ("Couldn't find spawn point %s", game.spawnpoint);
-		}
-	}
-
-	Vec3Copy (spot->state.origin, origin);
-	origin[2] += 9;
-	Vec3Copy (spot->state.angles, angles);
-}
-
 //======================================================================
 
 
@@ -1198,27 +774,25 @@ A client has just connected to the server in
 deathmatch mode, so clear everything out before starting them.
 =====================
 */
-void ClientBeginDeathmatch (edict_t *ent)
+void ClientBeginDeathmatch (CPlayerEntity *Player)
 {
-	G_InitEdict (ent);
+	G_InitEdict (Player->gameEntity);
 
-	InitClientResp (ent->client);
+	Player->InitResp();
 
 	// locate ent at a spawn point
-	PutClientInServer (ent);
+	Player->PutInServer();
 
 	if (level.intermissiontime)
-	{
-		MoveClientToIntermission (ent);
-	}
+		Player->MoveToIntermission();
 	else
 		// send effect
-		CTempEnt::MuzzleFlash (ent->state.origin, ent-g_edicts, MZ_LOGIN);
+		CTempEnt::MuzzleFlash (Player->gameEntity->state.origin, Player->gameEntity-g_edicts, MZ_LOGIN);
 
-	BroadcastPrintf (PRINT_HIGH, "%s entered the game\n", ent->client->pers.netname);
+	BroadcastPrintf (PRINT_HIGH, "%s entered the game\n", Player->Client.pers.netname);
 
 	// make sure all view stuff is valid
-	ClientEndServerFrame (ent);
+	Player->EndServerFrame();
 }
 
 
@@ -1233,12 +807,13 @@ to be placed into the game.  This will happen every level load.
 void ClientBegin (edict_t *ent)
 {
 	int		i;
+	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(ent->Entity);
 
 	ent->client = game.clients + (ent - g_edicts - 1);
 
 	if (game.mode & GAME_DEATHMATCH)
 	{
-		ClientBeginDeathmatch (ent);
+		ClientBeginDeathmatch (Player);
 		return;
 	}
 
@@ -1250,8 +825,10 @@ void ClientBegin (edict_t *ent)
 		// connecting to the server, which is different than the
 		// state when the game is saved, so we need to compensate
 		// with deltaangles
+		vec3_t viewAngles;
+		Player->Client.PlayerState.GetViewAngles(viewAngles);
 		for (i=0 ; i<3 ; i++)
-			ent->client->playerState.pMove.deltaAngles[i] = ANGLE2SHORT(ent->client->playerState.viewAngles[i]);
+			Player->Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(viewAngles[i]);
 	}
 	else
 	{
@@ -1260,26 +837,24 @@ void ClientBegin (edict_t *ent)
 		// ClientConnect() time
 		G_InitEdict (ent);
 		ent->classname = "player";
-		InitClientResp (ent->client);
-		PutClientInServer (ent);
+		Player->InitResp ();
+		Player->PutInServer ();
 	}
 
 	if (level.intermissiontime)
-	{
-		MoveClientToIntermission (ent);
-	}
+		Player->MoveToIntermission ();
 	else
 	{
 		// send effect if in a multiplayer game
 		if (game.maxclients > 1)
 		{
 			CTempEnt::MuzzleFlash (ent->state.origin, ent-g_edicts, MZ_LOGIN);
-			BroadcastPrintf (PRINT_HIGH, "%s entered the game\n", ent->client->pers.netname);
+			BroadcastPrintf (PRINT_HIGH, "%s entered the game\n", Player->Client.pers.netname);
 		}
 	}
 
 	// make sure all view stuff is valid
-	ClientEndServerFrame (ent);
+	Player->EndServerFrame ();
 }
 
 /*
@@ -1312,6 +887,7 @@ loadgames will.
 */
 BOOL ClientConnect (edict_t *ent, char *userinfo)
 {
+	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(ent->Entity);
 	char	*value;
 
 	// check to see if they are on the banned IP list
@@ -1343,14 +919,20 @@ BOOL ClientConnect (edict_t *ent, char *userinfo)
 
 		// count spectators
 		for (i = numspec = 0; i < game.maxclients; i++)
-			if (g_edicts[i+1].inUse && g_edicts[i+1].client->pers.spectator)
+		{
+			CPlayerEntity *Ent = dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity);
+			if (Ent->IsInUse() && Ent->Client.pers.spectator)
 				numspec++;
+		}
 
-		if (numspec >= game.maxspectators) {
+		if (numspec >= game.maxspectators)
+		{
 			Info_SetValueForKey(userinfo, "rejmsg", "Server spectator limit is full.");
 			return false;
 		}
-	} else {
+	}
+	else
+	{
 		// check for a password
 		value = Info_ValueForKey (userinfo, "password");
 		if (*password->String() && strcmp(password->String(), "none") && 
@@ -1366,18 +948,18 @@ BOOL ClientConnect (edict_t *ent, char *userinfo)
 
 	// if there is already a body waiting for us (a loadgame), just
 	// take it, otherwise spawn one from scratch
-	if (ent->inUse == false)
+	if (!Player->IsInUse())
 	{
 		// clear the respawning variables
 #ifdef CLEANCTF_ENABLED
 //ZOID -- force team join
-		ent->client->resp.ctf_team = -1;
-		ent->client->resp.id_state = false; 
+		Player->Client.resp.ctf_team = -1;
+		Player->Client.resp.id_state = false; 
 //ZOID
 #endif
-		InitClientResp (ent->client);
-		if (!game.autosaved || !ent->client->pers.Weapon)
-			InitClientPersistant (ent);
+		Player->InitResp ();
+		if (!game.autosaved || !Player->Client.pers.Weapon)
+			Player->InitPersistent();
 	}
 
 	ClientUserinfoChanged (ent, userinfo);
@@ -1385,14 +967,14 @@ BOOL ClientConnect (edict_t *ent, char *userinfo)
 	if (game.maxclients > 1)
 	{
 		// Tell the entire game that someone connected
-		BroadcastPrintf (PRINT_MEDIUM, "%s connected\n", ent->client->pers.netname);
+		BroadcastPrintf (PRINT_MEDIUM, "%s connected\n", Player->Client.pers.netname);
 		
 		// But only tell the server the IP
-		DebugPrintf ("%s@%s connected\n", ent->client->pers.netname, Info_ValueForKey (userinfo, "ip"));
+		DebugPrintf ("%s@%s connected\n", Player->Client.pers.netname, Info_ValueForKey (userinfo, "ip"));
 	}
 
 	ent->svFlags = 0; // make sure we start with known default
-	ent->client->pers.state = SVCS_CONNECTED;
+	Player->Client.pers.state = SVCS_CONNECTED;
 	return true;
 }
 
@@ -1406,29 +988,30 @@ Will not be called between levels.
 */
 void ClientDisconnect (edict_t *ent)
 {
+	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(ent->Entity);
 	int		playernum;
 
 	if (!ent->client)
 		return;
 
-	BroadcastPrintf (PRINT_HIGH, "%s disconnected\n", ent->client->pers.netname);
+	BroadcastPrintf (PRINT_HIGH, "%s disconnected\n", Player->Client.pers.netname);
 
 #ifdef CLEANCTF_ENABLED
 //ZOID
-	CTFDeadDropFlag(ent);
-	CTFDeadDropTech(ent);
+	CTFDeadDropFlag(Player);
+	CTFDeadDropTech(Player);
 //ZOID
 #endif
 
 	// send effect
 	CTempEnt::MuzzleFlash (ent->state.origin, ent-g_edicts, MZ_LOGIN);
 
-	gi.unlinkentity (ent);
+	Player->Unlink ();
 	ent->state.modelIndex = 0;
-	ent->solid = SOLID_NOT;
-	ent->inUse = false;
+	Player->SetSolid (SOLID_NOT);
+	Player->SetInUse (false);
 	ent->classname = "disconnected";
-	ent->client->pers.state = SVCS_FREE;
+	Player->Client.pers.state = SVCS_FREE;
 
 	playernum = ent-g_edicts-1;
 	gi.configstring (CS_PLAYERSKINS+playernum, "");
@@ -1463,170 +1046,5 @@ usually be a couple times for each server frame.
 */
 void ClientThink (edict_t *ent, userCmd_t *ucmd)
 {
-	gclient_t	*client;
-	edict_t	*other;
-	int		i, j;
-#ifdef USE_EXTENDED_GAME_IMPORTS
-	pMove_t		pm;
-#else
-	pMoveNew_t	pm;
-#endif
-
-	level.current_entity = ent;
-	client = ent->client;
-
-	if (level.intermissiontime)
-	{
-		client->playerState.pMove.pmType = PMT_FREEZE;
-		// can exit intermission after five seconds
-		if (level.time > level.intermissiontime + 5.0 
-			&& (ucmd->buttons & BUTTON_ANY) )
-			level.exitintermission = true;
-		return;
-	}
-
-#ifdef USE_EXTENDED_GAME_IMPORTS
-	pm_passent = ent;
-#endif
-
-//ZOID
-	if (ent->client->chase_target)
-	{
-		client->resp.cmd_angles[0] = SHORT2ANGLE(ucmd->angles[0]);
-		client->resp.cmd_angles[1] = SHORT2ANGLE(ucmd->angles[1]);
-		client->resp.cmd_angles[2] = SHORT2ANGLE(ucmd->angles[2]);
-		return;
-	}
-//ZOID
-
-	// set up for pmove
-	memset (&pm, 0, sizeof(pm));
-
-	if (ent->movetype == MOVETYPE_NOCLIP)
-		client->playerState.pMove.pmType = PMT_SPECTATOR;
-	else if (ent->state.modelIndex != 255)
-		client->playerState.pMove.pmType = PMT_GIB;
-	else if (ent->deadflag)
-		client->playerState.pMove.pmType = PMT_DEAD;
-	else
-		client->playerState.pMove.pmType = PMT_NORMAL;
-
-	client->playerState.pMove.gravity = sv_gravity->Float();
-	pm.state = client->playerState.pMove;
-
-	for (i=0 ; i<3 ; i++)
-	{
-		pm.state.origin[i] = ent->state.origin[i]*8;
-		pm.state.velocity[i] = ent->velocity[i]*8;
-	}
-
-	if (memcmp (&client->old_pmove, &pm.state, sizeof(pm.state)))
-	{
-		pm.snapInitial = true;
-//		gi.dprintf ("pmove changed!\n");
-	}
-
-	pm.cmd = *ucmd;
-
-#ifdef USE_EXTENDED_GAME_IMPORTS
-	pm.trace = PM_trace;
-	pm.pointContents = gi.pointcontents;
-#endif
-
-	// perform a pmove
-#ifdef USE_EXTENDED_GAME_IMPORTS
-	gi.Pmove (&pm);
-#else
-	SV_Pmove (ent, &pm, 0);
-#endif
-
-	// save results of pmove
-	client->playerState.pMove = pm.state;
-	client->old_pmove = pm.state;
-
-	for (i=0 ; i<3 ; i++)
-	{
-		ent->state.origin[i] = pm.state.origin[i]*0.125;
-		ent->velocity[i] = pm.state.velocity[i]*0.125;
-	}
-
-	Vec3Copy (pm.mins, ent->mins);
-	Vec3Copy (pm.maxs, ent->maxs);
-
-	client->resp.cmd_angles[0] = SHORT2ANGLE(ucmd->angles[0]);
-	client->resp.cmd_angles[1] = SHORT2ANGLE(ucmd->angles[1]);
-	client->resp.cmd_angles[2] = SHORT2ANGLE(ucmd->angles[2]);
-
-	if (ent->groundentity && !pm.groundEntity && (pm.cmd.upMove >= 10) && (pm.waterLevel == 0))
-	{
-		PlaySoundFrom(ent, CHAN_VOICE, gMedia.Player.Jump);
-		PlayerNoise(ent, ent->state.origin, PNOISE_SELF);
-	}
-
-	ent->viewheight = pm.viewHeight;
-	ent->waterlevel = pm.waterLevel;
-	ent->watertype = pm.waterType;
-	ent->groundentity = pm.groundEntity;
-	if (pm.groundEntity)
-		ent->groundentity_linkcount = pm.groundEntity->linkCount;
-
-	if (ent->deadflag)
-	{
-		client->playerState.viewAngles[ROLL] = 40;
-		client->playerState.viewAngles[PITCH] = -15;
-		client->playerState.viewAngles[YAW] = client->killer_yaw;
-	}
-	else
-	{
-		Vec3Copy (pm.viewAngles, client->v_angle);
-		Vec3Copy (pm.viewAngles, client->playerState.viewAngles);
-	}
-
-#ifdef CLEANCTF_ENABLED
-//ZOID
-	if (client->ctf_grapple)
-		CGrapple::GrapplePull(client->ctf_grapple);
-//ZOID
-#endif
-
-	gi.linkentity (ent);
-
-	if (ent->movetype != MOVETYPE_NOCLIP)
-		G_TouchTriggers (ent);
-
-	// touch other objects
-	for (i=0 ; i<pm.numTouch ; i++)
-	{
-		other = pm.touchEnts[i];
-		for (j=0 ; j<i ; j++)
-			if (pm.touchEnts[j] == other)
-				break;
-		if (j != i)
-			continue;	// duplicated
-		if (!other->touch)
-			continue;
-		other->touch (other, ent, NULL, NULL);
-	}
-
-	int oldbuttons = client->buttons;
-	client->buttons = ucmd->buttons;
-	client->latched_buttons |= client->buttons & ~oldbuttons;
-
-	// save light level the player is standing on for
-	// monster sighting AI
-	ent->light_level = ucmd->lightLevel;
-
-#ifdef CLEANCTF_ENABLED
-//ZOID
-//regen tech
-	CTFApplyRegeneration(ent);
-//ZOID
-#endif
-
-	// update chase cam if being followed
-	for (i = 1; i <= game.maxclients; i++) {
-		other = g_edicts + i;
-		if (other->inUse && other->client->chase_target == ent)
-			UpdateChaseCam(other);
-	}
+	(dynamic_cast<CPlayerEntity*>(ent->Entity))->ClientThink (ucmd);
 }

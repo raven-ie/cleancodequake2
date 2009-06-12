@@ -57,44 +57,43 @@ CBaseItem (Classname, WorldModel, EffectFlags, PickupSound, Icon, Name, Flags,
 /* TECH																	  */
 /*------------------------------------------------------------------------*/
 
-void CTFHasTech(edict_t *who)
+void CTFHasTech(CPlayerEntity *who)
 {
-	if (level.time - who->client->ctf_lasttechmsg > 2)
+	if (level.time - who->Client.ctf_lasttechmsg > 2)
 	{
-		CenterPrintf(who, "You already have a TECH powerup.");
-		who->client->ctf_lasttechmsg = level.time;
+		CenterPrintf(who->gameEntity, "You already have a TECH powerup.");
+		who->Client.ctf_lasttechmsg = level.time;
 	}
 }
 
-bool CTech::Pickup (edict_t *ent, edict_t *other)
+bool CTech::Pickup (edict_t *ent, CPlayerEntity *other)
 {
-	if (other->client->pers.Tech)
+	if (other->Client.pers.Tech)
 	{
 		CTFHasTech(other);
 		return false; // has this one
 	}
 	
 	// client only gets one tech
-	other->client->pers.Inventory.Set(this, 1);
-	other->client->pers.Tech = this;
-	other->client->ctf_regentime = level.time;
+	other->Client.pers.Inventory.Set(this, 1);
+	other->Client.pers.Tech = this;
+	other->Client.ctf_regentime = level.time;
 	return true;
 }
 
 static void TechThink(edict_t *tech);
-void CTech::Drop (edict_t *ent)
+void CTech::Drop (CPlayerEntity *ent)
 {
-	edict_t *tech = DropItem(ent);
+	edict_t *tech = DropItem(ent->gameEntity);
 	tech->nextthink = level.time + CTF_TECH_TIMEOUT;
 	tech->think = TechThink;
-	ent->client->pers.Inventory.Set(this, 0);
-	ent->client->pers.Tech = NULL;
+	ent->Client.pers.Inventory.Set(this, 0);
+	ent->Client.pers.Tech = NULL;
 }
 
 void SpawnTech(CBaseItem *item, edict_t *spot);
 
 edict_t *SelectRandomDeathmatchSpawnPoint (void);
-
 static edict_t *FindTechSpawn(void)
 {
 	return SelectRandomDeathmatchSpawnPoint();
@@ -117,21 +116,21 @@ static void TechThink(edict_t *tech)
 }
 
 
-void CTFDeadDropTech(edict_t *ent)
+void CTFDeadDropTech(CPlayerEntity *ent)
 {
-	if (!ent->client->pers.Tech)
+	if (!ent->Client.pers.Tech)
 		return;
 
-	edict_t *dropped = ent->client->pers.Tech->DropItem(ent);
+	edict_t *dropped = ent->Client.pers.Tech->DropItem(ent->gameEntity);
 	// hack the velocity to make it bounce random
 	dropped->velocity[0] = (rand() % 600) - 300;
 	dropped->velocity[1] = (rand() % 600) - 300;
 	dropped->nextthink = level.time + CTF_TECH_TIMEOUT;
 	dropped->think = TechThink;
 	dropped->owner = NULL;
-	ent->client->pers.Inventory.Set(ent->client->pers.Tech, 0);
+	ent->Client.pers.Inventory.Set(ent->Client.pers.Tech, 0);
 
-	ent->client->pers.Tech = NULL;
+	ent->Client.pers.Tech = NULL;
 }
 
 void SpawnTech(CBaseItem *item, edict_t *spot)
@@ -214,7 +213,7 @@ void CTFResetTech(void)
 	SpawnTechs(NULL);
 }
 
-void	CTech::Use (edict_t *ent)
+void	CTech::Use (CPlayerEntity *ent)
 {
 }
 
@@ -241,31 +240,28 @@ team(team)
 {
 };
 
-void	CFlag::Drop (edict_t *ent)
+void	CFlag::Drop (CPlayerEntity *ent)
 {
 }
 
-void	CFlag::Use (edict_t *ent)
+void	CFlag::Use (CPlayerEntity *ent)
 {
 }
 
-bool CFlag::Pickup(edict_t *ent, edict_t *other)
+bool CFlag::Pickup(edict_t *ent, CPlayerEntity *other)
 {
-	int i;
-	edict_t *player;
-
-	if (team == other->client->resp.ctf_team)
+	if (team == other->Client.resp.ctf_team)
 	{
 		if (!(ent->spawnflags & DROPPED_ITEM))
 		{
 			// If we have the flag, but the flag isn't this, then we have another flag.
 			// FIXME this code here will break with > 2 teams (when we get there)!!
-			if (other->client->pers.Flag && (other->client->pers.Flag != this))
+			if (other->Client.pers.Flag && (other->Client.pers.Flag != this))
 			{
 				BroadcastPrintf(PRINT_HIGH, "%s captured the %s flag!\n",
-						other->client->pers.netname, CTFOtherTeamName(team));
-				other->client->pers.Inventory.Set(other->client->pers.Flag, 0);
-				other->client->pers.Flag = NULL;
+						other->Client.pers.netname, CTFOtherTeamName(team));
+				other->Client.pers.Inventory.Set(other->Client.pers.Flag, 0);
+				other->Client.pers.Flag = NULL;
 
 				ctfgame.last_flag_capture = level.time;
 				ctfgame.last_capture_team = team;
@@ -278,33 +274,33 @@ bool CFlag::Pickup(edict_t *ent, edict_t *other)
 				PlaySoundFrom (ent, CHAN_RELIABLE+CHAN_NO_PHS_ADD+CHAN_VOICE, SoundIndex("ctf/flagcap.wav"), 1, ATTN_NONE, 0);
 
 				// other gets another 10 frag bonus
-				other->client->resp.score += CTF_CAPTURE_BONUS;
-				if (other->client->resp.ghost)
-					other->client->resp.ghost->caps++;
+				other->Client.resp.score += CTF_CAPTURE_BONUS;
+				if (other->Client.resp.ghost)
+					other->Client.resp.ghost->caps++;
 
 				// Ok, let's do the player loop, hand out the bonuses
-				for (i = 1; i <= game.maxclients; i++)
+				for (int i = 1; i <= game.maxclients; i++)
 				{
-					player = &g_edicts[i];
-					if (!player->inUse)
+					CPlayerEntity *player = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+					if (!player->IsInUse())
 						continue;
 
-					if (player->client->resp.ctf_team != other->client->resp.ctf_team)
-						player->client->resp.ctf_lasthurtcarrier = -5;
-					else if (player->client->resp.ctf_team == other->client->resp.ctf_team)
+					if (player->Client.resp.ctf_team != other->Client.resp.ctf_team)
+						player->Client.resp.ctf_lasthurtcarrier = -5;
+					else if (player->Client.resp.ctf_team == other->Client.resp.ctf_team)
 					{
 						if (player != other)
-							player->client->resp.score += CTF_TEAM_BONUS;
+							player->Client.resp.score += CTF_TEAM_BONUS;
 						// award extra points for capture assists
-						if (player->client->resp.ctf_lastreturnedflag + CTF_RETURN_FLAG_ASSIST_TIMEOUT > level.time)
+						if (player->Client.resp.ctf_lastreturnedflag + CTF_RETURN_FLAG_ASSIST_TIMEOUT > level.time)
 						{
-							BroadcastPrintf(PRINT_HIGH, "%s gets an assist for returning the flag!\n", player->client->pers.netname);
-							player->client->resp.score += CTF_RETURN_FLAG_ASSIST_BONUS;
+							BroadcastPrintf(PRINT_HIGH, "%s gets an assist for returning the flag!\n", player->Client.pers.netname);
+							player->Client.resp.score += CTF_RETURN_FLAG_ASSIST_BONUS;
 						}
-						if (player->client->resp.ctf_lastfraggedcarrier + CTF_FRAG_CARRIER_ASSIST_TIMEOUT > level.time)
+						if (player->Client.resp.ctf_lastfraggedcarrier + CTF_FRAG_CARRIER_ASSIST_TIMEOUT > level.time)
 						{
-							BroadcastPrintf(PRINT_HIGH, "%s gets an assist for fragging the flag carrier!\n", player->client->pers.netname);
-							player->client->resp.score += CTF_FRAG_CARRIER_ASSIST_BONUS;
+							BroadcastPrintf(PRINT_HIGH, "%s gets an assist for fragging the flag carrier!\n", player->Client.pers.netname);
+							player->Client.resp.score += CTF_FRAG_CARRIER_ASSIST_BONUS;
 						}
 					}
 				}
@@ -316,9 +312,9 @@ bool CFlag::Pickup(edict_t *ent, edict_t *other)
 		}	
 		// hey, its not home.  return it by teleporting it back
 		BroadcastPrintf(PRINT_HIGH, "%s returned the %s flag!\n", 
-			other->client->pers.netname, CTFTeamName(team));
-		other->client->resp.score += CTF_RECOVERY_BONUS;
-		other->client->resp.ctf_lastreturnedflag = level.time;
+			other->Client.pers.netname, CTFTeamName(team));
+		other->Client.resp.score += CTF_RECOVERY_BONUS;
+		other->Client.resp.ctf_lastreturnedflag = level.time;
 		PlaySoundFrom (ent, CHAN_RELIABLE+CHAN_NO_PHS_ADD+CHAN_VOICE, SoundIndex("ctf/flagret.wav"), 1, ATTN_NONE, 0);
 		//CTFResetFlag will remove this entity!  We must return false
 		CTFResetFlag(team);
@@ -327,12 +323,12 @@ bool CFlag::Pickup(edict_t *ent, edict_t *other)
 
 	// hey, its not our flag, pick it up
 	BroadcastPrintf(PRINT_HIGH, "%s got the %s flag!\n",
-		other->client->pers.netname, CTFTeamName(team));
-	other->client->resp.score += CTF_FLAG_BONUS;
+		other->Client.pers.netname, CTFTeamName(team));
+	other->Client.resp.score += CTF_FLAG_BONUS;
 
-	other->client->pers.Inventory.Set(this, 1);
-	other->client->pers.Flag = this;
-	other->client->resp.ctf_flagsince = level.time;
+	other->Client.pers.Inventory.Set(this, 1);
+	other->Client.pers.Flag = this;
+	other->Client.resp.ctf_flagsince = level.time;
 
 	// pick up the flag
 	// if it's not a dropped flag, we just make is disappear

@@ -38,9 +38,9 @@ public:
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
 			   char *Precache);
 
-	bool	Pickup (edict_t *ent, edict_t *other);
-	void	Drop (edict_t *ent);
-	void	Use (edict_t *ent);
+	bool	Pickup (edict_t *ent, CPlayerEntity *other);
+	void	Drop (CPlayerEntity *ent);
+	void	Use (CPlayerEntity *ent);
 };
 
 class CFlag : public CBaseItem
@@ -52,9 +52,9 @@ public:
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
 			   char *Precache, int team);
 
-	bool	Pickup (edict_t *ent, edict_t *other);
-	void	Drop (edict_t *ent);
-	void	Use (edict_t *ent);
+	bool	Pickup (edict_t *ent, CPlayerEntity *other);
+	void	Drop (CPlayerEntity *ent);
+	void	Use (CPlayerEntity *ent);
 };
 
 void AddTechsToList ();

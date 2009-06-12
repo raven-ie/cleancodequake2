@@ -149,8 +149,10 @@ void InitItemlist ()
 	AddArmorToList();
 	AddPowerupsToList();
 	AddKeysToList();
+#ifdef CLEANCTF_ENABLED
 	AddFlagsToList();
 	AddTechsToList();
+#endif
 }
 
 void SetItemNames ()

@@ -66,6 +66,10 @@ void			CPlayerState::GetGunOffset (vec3_t in)
 {
 	Vec3Copy (playerState->gunOffset, in);
 }
+void			CPlayerState::GetKickAngles (vec3_t in)
+{
+	Vec3Copy (playerState->kickAngles, in);
+}
 
 // Unless, of course, you use the vec3f class :D
 vec3f			CPlayerState::GetViewAngles ()
@@ -85,6 +89,10 @@ vec3f			CPlayerState::GetGunOffset ()
 {
 	return vec3f(playerState->gunOffset);
 }
+vec3f			CPlayerState::GetKickAngles ()
+{
+	return vec3f(playerState->kickAngles);
+}
 
 void			CPlayerState::SetViewAngles (vec3_t in)
 {
@@ -102,6 +110,10 @@ void			CPlayerState::SetGunAngles (vec3_t in)
 void			CPlayerState::SetGunOffset (vec3_t in)
 {
 	Vec3Copy (in, playerState->gunOffset);
+}
+void			CPlayerState::SetKickAngles (vec3_t in)
+{
+	Vec3Copy (in, playerState->kickAngles);
 }
 
 MediaIndex		CPlayerState::GetGunIndex ()
@@ -148,6 +160,12 @@ void			CPlayerState::SetGunOffset (vec3f in)
 	playerState->gunOffset[0] = in.X;
 	playerState->gunOffset[1] = in.Y;
 	playerState->gunOffset[2] = in.Z;
+}
+void			CPlayerState::SetKickAngles (vec3f in)
+{
+	playerState->kickAngles[0] = in.X;
+	playerState->kickAngles[1] = in.Y;
+	playerState->kickAngles[2] = in.Z;
 }
 
 void			CPlayerState::GetViewBlend (vec4_t in)
@@ -262,6 +280,7 @@ CPlayerEntity::CPlayerEntity (int Index) :
 CBaseEntity(Index),
 Client(gameEntity->client)
 {
+	gameEntity->client = &game.clients[gameEntity-g_edicts-1];
 	EntityFlags |= ENT_PLAYER;
 };
 
@@ -461,7 +480,7 @@ void CPlayerEntity::PutInServer ()
 	// find a spawn point
 	// do it before setting health back up, so farthest
 	// ranging doesn't count this client
-	SelectSpawnPoint (gameEntity, spawn_origin, spawn_angles);
+	SelectSpawnPoint (spawn_origin, spawn_angles);
 
 	index = gameEntity-g_edicts-1;
 
@@ -506,7 +525,7 @@ void CPlayerEntity::PutInServer ()
 	// clear entity values
 	gameEntity->groundentity = NULL;
 	// FIXME: is this needed?!
-	Client = CClient(&game.clients[index]);
+	//Client = CClient(&game.clients[index]);
 	//ent->client = &game.clients[index];
 	gameEntity->takedamage = DAMAGE_AIM;
 	gameEntity->movetype = MOVETYPE_WALK;
@@ -919,9 +938,9 @@ inline void CPlayerEntity::DamageFeedback (vec3_t forward, vec3_t right, vec3_t 
 	// the color of the blend will vary based on how much was absorbed
 	// by different armors
 	Client.damage_blend.Set (
-							(BloodColor.R * (Client.damage_blood/realcount)) + (ArmorColor.R * (Client.damage_armor/realcount)) + (PowerColor.R * (Client.damage_parmor/realcount)),
-							(BloodColor.G * (Client.damage_blood/realcount)) + (ArmorColor.G * (Client.damage_armor/realcount)) + (PowerColor.G * (Client.damage_parmor/realcount)),
-							(BloodColor.B * (Client.damage_blood/realcount)) + (ArmorColor.B * (Client.damage_armor/realcount)) + (PowerColor.B * (Client.damage_parmor/realcount)),
+							(BloodColor.R * ((float)Client.damage_blood/(float)realcount)) + (ArmorColor.R * ((float)Client.damage_armor/(float)realcount)) + (PowerColor.R * ((float)Client.damage_parmor/(float)realcount)),
+							(BloodColor.G * ((float)Client.damage_blood/(float)realcount)) + (ArmorColor.G * ((float)Client.damage_armor/(float)realcount)) + (PowerColor.G * ((float)Client.damage_parmor/(float)realcount)),
+							(BloodColor.B * ((float)Client.damage_blood/(float)realcount)) + (ArmorColor.B * ((float)Client.damage_armor/(float)realcount)) + (PowerColor.B * ((float)Client.damage_parmor/(float)realcount)),
 							Alpha);
 
 	//
@@ -976,11 +995,14 @@ inline void CPlayerEntity::CalcViewOffset (vec3_t forward, vec3_t right, vec3_t 
 
 	// if dead, fix the angle and don't add any kick
 	if (gameEntity->deadflag)
-		Client.PlayerState.SetViewAngles (vec3f(40, -15, Client.killer_yaw));
+	{
+		Client.PlayerState.SetViewAngles (vec3f(-15, Client.killer_yaw, 40));
+		Client.PlayerState.SetKickAngles (vec3Origin);
+	}
 	else
 	{
 		// Base angles
-		Client.PlayerState.GetKickAngles(angles);
+		Vec3Copy (Client.kick_angles, angles);
 
 		// add angles based on damage kick
 		ratio = (Client.v_dmg_time - level.time) / DAMAGE_TIME;
@@ -1018,6 +1040,8 @@ inline void CPlayerEntity::CalcViewOffset (vec3_t forward, vec3_t right, vec3_t 
 		if (bobcycle & 1)
 			delta = -delta;
 		angles[ROLL] += delta;
+
+		Client.PlayerState.SetKickAngles(angles);
 	}
 
 //===================================
@@ -1604,81 +1628,95 @@ G_SetClientFrame
 */
 inline void CPlayerEntity::SetClientFrame (float xyspeed)
 {
-	bool	duck = (Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED);
-	bool	run = !(xyspeed == 0);
+	bool		duck = (Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED);
+	bool		run = !!(xyspeed);
 
 	if (gameEntity->state.modelIndex != 255)
 		return;		// not in the player model
 
 	// check for stand/duck and stop/go transitions
-	if ((duck != Client.anim_duck && Client.anim_priority < ANIM_DEATH) || 
-		(run != Client.anim_run && Client.anim_priority == ANIM_BASIC) ||
-		(!gameEntity->groundentity && Client.anim_priority <= ANIM_WAVE))
-	{
-		// return to either a running or standing frame
-		Client.anim_priority = ANIM_BASIC;
-		Client.anim_duck = duck;
-		Client.anim_run = run;
+	if (duck != Client.anim_duck && Client.anim_priority < ANIM_DEATH)
+		goto newanim;
+	if (run != Client.anim_run && Client.anim_priority == ANIM_BASIC)
+		goto newanim;
+	if (!gameEntity->groundentity && Client.anim_priority <= ANIM_WAVE)
+		goto newanim;
 
-		if (!gameEntity->groundentity && !duck)
+	if(Client.anim_priority == ANIM_REVERSE)
+	{
+		if(gameEntity->state.frame > Client.anim_end)
 		{
-#ifdef CLEANCTF_ENABLED
-	//ZOID: if on grapple, don't go into jump frame, go into standing frame
-			if (Client.ctf_grapple)
-			{
-				gameEntity->state.frame = FRAME_stand01;
-				Client.anim_end = FRAME_stand40;
-			}
-			else
-			{
-#endif
-				Client.anim_priority = ANIM_JUMP;
-				if (gameEntity->state.frame != FRAME_jump2)
-					gameEntity->state.frame = FRAME_jump1;
-				Client.anim_end = FRAME_jump2;
-#ifdef CLEANCTF_ENABLED
-			}
-#endif
+			gameEntity->state.frame--;
+			return;
 		}
-		else if (run)
+	}
+	else if (gameEntity->state.frame < Client.anim_end)
+	{	// continue an animation
+		gameEntity->state.frame++;
+		return;
+	}
+
+	if (Client.anim_priority == ANIM_DEATH)
+		return;		// stay there
+	if (Client.anim_priority == ANIM_JUMP)
+	{
+		if (!gameEntity->groundentity)
+			return;		// stay there
+		Client.anim_priority = ANIM_WAVE;
+		gameEntity->state.frame = FRAME_jump3;
+		Client.anim_end = FRAME_jump6;
+		return;
+	}
+
+newanim:
+	// return to either a running or standing frame
+	Client.anim_priority = ANIM_BASIC;
+	Client.anim_duck = duck;
+	Client.anim_run = run;
+
+	if (!gameEntity->groundentity)
+	{
+#ifdef CLEANCTF_ENABLED
+//ZOID: if on grapple, don't go into jump frame, go into standing
+//frame
+		if (Client.ctf_grapple) {
+			gameEntity->state.frame = FRAME_stand01;
+			Client.anim_end = FRAME_stand40;
+		} else {
+//ZOID
+#endif
+		Client.anim_priority = ANIM_JUMP;
+		if (gameEntity->state.frame != FRAME_jump2)
+			gameEntity->state.frame = FRAME_jump1;
+		Client.anim_end = FRAME_jump2;
+#ifdef CLEANCTF_ENABLED
+	}
+#endif
+	}
+	else if (run)
+	{	// running
+		if (duck)
 		{
-			// Running
-			gameEntity->state.frame = (duck) ? FRAME_crwalk1 : FRAME_run1;
-			Client.anim_end = (duck) ? FRAME_crwalk6 : FRAME_run6;
+			gameEntity->state.frame = FRAME_crwalk1;
+			Client.anim_end = FRAME_crwalk6;
 		}
 		else
 		{
-			// Standing
-			gameEntity->state.frame = (duck) ? FRAME_crstnd01 : FRAME_stand01;
-			Client.anim_end = (duck) ? FRAME_crstnd19 : FRAME_stand40;
+			gameEntity->state.frame = FRAME_run1;
+			Client.anim_end = FRAME_run6;
 		}
 	}
 	else
-	{
-		if(Client.anim_priority == ANIM_REVERSE)
+	{	// standing
+		if (duck)
 		{
-			if(gameEntity->state.frame > Client.anim_end)
-			{
-				gameEntity->state.frame--;
-				return;
-			}
+			gameEntity->state.frame = FRAME_crstnd01;
+			Client.anim_end = FRAME_crstnd19;
 		}
-		else if (gameEntity->state.frame < Client.anim_end)
-		{	// continue an animation
-			gameEntity->state.frame++;
-			return;
-		}
-
-		if (Client.anim_priority == ANIM_DEATH)
-			return;		// stay there
-		if (Client.anim_priority == ANIM_JUMP)
+		else
 		{
-			if (!gameEntity->groundentity)
-				return;		// stay there
-			Client.anim_priority = ANIM_WAVE;
-			gameEntity->state.frame = FRAME_jump3;
-			Client.anim_end = FRAME_jump6;
-			return;
+			gameEntity->state.frame = FRAME_stand01;
+			Client.anim_end = FRAME_stand40;
 		}
 	}
 }
@@ -2528,7 +2566,7 @@ void CPlayerEntity::CTFAssignGhost()
 		if (i == MAX_CS_CLIENTS)
 			break;
 	}
-	ctfgame.ghosts[ghost].ent = gameEntity;
+	ctfgame.ghosts[ghost].ent = this;
 	Q_strncpyz(ctfgame.ghosts[ghost].netname, Client.pers.netname, sizeof(ctfgame.ghosts[ghost].netname));
 	Client.resp.ghost = ctfgame.ghosts + ghost;
 	ClientPrintf(gameEntity, PRINT_CHAT, "Your ghost code is **** %d ****\n", ctfgame.ghosts[ghost].code);
@@ -2578,3 +2616,636 @@ void CPlayerEntity::MoveToIntermission ()
 	if (game.mode != GAME_SINGLEPLAYER)
 		DeathmatchScoreboardMessage (true);
 }
+
+#ifdef CLEANCTF_ENABLED
+
+extern CTech *Regeneration;
+extern CTech *Haste;
+extern CTech *Strength;
+extern CTech *Resistance;
+
+int CPlayerEntity::CTFApplyStrength(int dmg)
+{
+	if (dmg && (Client.pers.Tech == Strength))
+		return dmg * 2;
+	return dmg;
+}
+
+bool CPlayerEntity::CTFApplyStrengthSound()
+{
+	float volume = 1.0;
+
+	if (Client.silencer_shots)
+		volume = 0.2f;
+
+	if (Client.pers.Tech == Strength)
+	{
+		if (Client.ctf_techsndtime < level.time)
+		{
+			Client.ctf_techsndtime = level.time + 1;
+			if (Client.quad_framenum > level.framenum)
+				PlaySoundFrom(gameEntity, CHAN_ITEM, SoundIndex("ctf/tech2x.wav"), volume, ATTN_NORM, 0);
+			else
+				PlaySoundFrom(gameEntity, CHAN_ITEM, SoundIndex("ctf/tech2.wav"), volume, ATTN_NORM, 0);
+		}
+		return true;
+	}
+	return false;
+}
+
+
+bool CPlayerEntity::CTFApplyHaste()
+{
+	if (Client.pers.Tech == Haste)
+		return true;
+	return false;
+}
+
+void CPlayerEntity::CTFApplyHasteSound()
+{
+	float volume = 1.0;
+
+	if (Client.silencer_shots)
+		volume = 0.2f;
+
+	if (Client.pers.Tech == Haste &&
+		Client.ctf_techsndtime < level.time)
+	{
+		Client.ctf_techsndtime = level.time + 1;
+		PlaySoundFrom(gameEntity, CHAN_ITEM, SoundIndex("ctf/tech3.wav"), volume, ATTN_NORM, 0);
+	}
+}
+
+void CPlayerEntity::CTFApplyRegeneration()
+{
+	bool noise = false;
+	CBaseItem *index;
+	float volume = 1.0;
+
+	if (Client.silencer_shots)
+		volume = 0.2f;
+
+	if (Client.pers.Tech == Regeneration)
+	{
+		if (Client.ctf_regentime < level.time)
+		{
+			Client.ctf_regentime = level.time;
+			if (gameEntity->health < 150)
+			{
+				gameEntity->health += 5;
+				if (gameEntity->health > 150)
+					gameEntity->health = 150;
+				Client.ctf_regentime += 0.5;
+				noise = true;
+			}
+			index = Client.pers.Armor;
+			if (index && Client.pers.Inventory.Has(index) < 150)
+			{
+				Client.pers.Inventory.Add (index, 5);
+				if (Client.pers.Inventory.Has(index) > 150)
+					Client.pers.Inventory.Set(index, 150);
+				Client.ctf_regentime += 0.5;
+				noise = true;
+			}
+		}
+		if (noise && Client.ctf_techsndtime < level.time)
+		{
+			Client.ctf_techsndtime = level.time + 1;
+			PlaySoundFrom(gameEntity, CHAN_ITEM, SoundIndex("ctf/tech4.wav"), volume, ATTN_NORM, 0);
+		}
+	}
+}
+
+bool CPlayerEntity::CTFHasRegeneration()
+{
+	if (Client.pers.Tech == Regeneration)
+		return true;
+	return false;
+}
+
+int CPlayerEntity::CTFApplyResistance(int dmg)
+{
+	float volume = 1.0;
+
+	if (Client.silencer_shots)
+		volume = 0.2f;
+
+	if (dmg && (Client.pers.Tech == Resistance))
+	{
+		// make noise
+	   	PlaySoundFrom(gameEntity, CHAN_ITEM, SoundIndex("ctf/tech1.wav"), volume, ATTN_NORM, 0);
+		return dmg / 2;
+	}
+	return dmg;
+}
+#endif
+
+
+/*
+==================
+LookAtKiller
+==================
+*/
+void CPlayerEntity::LookAtKiller (edict_t *inflictor, edict_t *attacker)
+{
+	vec3_t		dir;
+
+	if (attacker && (attacker != world) && (attacker != gameEntity))
+		Vec3Subtract (attacker->state.origin, gameEntity->state.origin, dir);
+	else if (inflictor && (inflictor != world) && (inflictor != gameEntity))
+		Vec3Subtract (inflictor->state.origin, gameEntity->state.origin, dir);
+	else
+	{
+		Client.killer_yaw = gameEntity->state.angles[YAW];
+		return;
+	}
+
+	if (dir[0])
+		Client.killer_yaw = 180/M_PI*atan2f(dir[1], dir[0]);
+	else
+	{
+		Client.killer_yaw = 0;
+		if (dir[1] > 0)
+			Client.killer_yaw = 90;
+		else if (dir[1] < 0)
+			Client.killer_yaw = -90;
+	}
+	if (Client.killer_yaw < 0)
+		Client.killer_yaw += 360;
+}
+
+void CPlayerEntity::TossClientWeapon ()
+{
+	if (!(game.mode & GAME_DEATHMATCH))
+		return;
+
+	CBaseItem *Item = ((Client.pers.Weapon) ? ((Client.pers.Weapon->WeaponItem) ? Client.pers.Weapon->WeaponItem : Client.pers.Weapon->Item) : NULL);
+	// Personally, this is dumb.
+	//if (! self->client->pers.Inventory.Has(Item->Ammo) )
+	//	item = NULL;
+	if (!Item->WorldModel)
+		Item = NULL;
+
+	bool quad = (!dmFlags.dfQuadDrop) ? false : (bool)(Client.quad_framenum > (level.framenum + 10));
+	float spread = (Item && quad) ? 22.5f : 0.0f;
+
+	if (Item)
+	{
+		Client.v_angle[YAW] -= spread;
+		edict_t *drop = Item->DropItem (gameEntity);
+		Client.v_angle[YAW] += spread;
+		drop->spawnflags |= DROPPED_PLAYER_ITEM;
+		if (Client.pers.Weapon->WeaponItem)
+			drop->count = Client.pers.Inventory.Has(Client.pers.Weapon->WeaponItem->Ammo);
+		else
+			drop->count = Client.pers.Inventory.Has(Client.pers.Weapon->Item);
+	}
+
+	if (quad)
+	{
+		Client.v_angle[YAW] += spread;
+		edict_t *drop = FindItem("Quad Damage")->DropItem (gameEntity);
+		Client.v_angle[YAW] -= spread;
+		drop->spawnflags |= DROPPED_PLAYER_ITEM;
+
+		drop->touch = TouchItem;
+		drop->nextthink = level.time + (Client.quad_framenum - level.framenum) * FRAMETIME;
+		drop->think = G_FreeEdict;
+	}
+}
+
+void CPlayerEntity::ClientThink (userCmd_t *ucmd)
+{
+	int		i, j;
+#ifdef USE_EXTENDED_GAME_IMPORTS
+	pMove_t		pm;
+#else
+	pMoveNew_t	pm;
+#endif
+
+	level.current_entity = gameEntity;
+
+	if (level.intermissiontime)
+	{
+		Client.PlayerState.GetPMove()->pmType = PMT_FREEZE;
+		// can exit intermission after five seconds
+		if (level.time > level.intermissiontime + 5.0 
+			&& (ucmd->buttons & BUTTON_ANY) )
+			level.exitintermission = true;
+		return;
+	}
+
+#ifdef USE_EXTENDED_GAME_IMPORTS
+	pm_passent = ent;
+#endif
+
+//ZOID
+	if (Client.chase_target)
+	{
+		Client.resp.cmd_angles[0] = SHORT2ANGLE(ucmd->angles[0]);
+		Client.resp.cmd_angles[1] = SHORT2ANGLE(ucmd->angles[1]);
+		Client.resp.cmd_angles[2] = SHORT2ANGLE(ucmd->angles[2]);
+		return;
+	}
+//ZOID
+
+	// set up for pmove
+	memset (&pm, 0, sizeof(pm));
+
+	if (gameEntity->movetype == MOVETYPE_NOCLIP)
+		Client.PlayerState.GetPMove()->pmType = PMT_SPECTATOR;
+	else if (gameEntity->state.modelIndex != 255)
+		Client.PlayerState.GetPMove()->pmType = PMT_GIB;
+	else if (gameEntity->deadflag)
+		Client.PlayerState.GetPMove()->pmType = PMT_DEAD;
+	else
+		Client.PlayerState.GetPMove()->pmType = PMT_NORMAL;
+
+	Client.PlayerState.GetPMove()->gravity = sv_gravity->Float();
+	pm.state = *Client.PlayerState.GetPMove();
+
+	for (i=0 ; i<3 ; i++)
+	{
+		pm.state.origin[i] = gameEntity->state.origin[i]*8;
+		pm.state.velocity[i] = gameEntity->velocity[i]*8;
+	}
+
+	if (memcmp (&Client.old_pmove, &pm.state, sizeof(pm.state)))
+	{
+		pm.snapInitial = true;
+//		gi.dprintf ("pmove changed!\n");
+	}
+
+	pm.cmd = *ucmd;
+
+#ifdef USE_EXTENDED_GAME_IMPORTS
+	pm.trace = PM_trace;
+	pm.pointContents = gi.pointcontents;
+#endif
+
+	// perform a pmove
+#ifdef USE_EXTENDED_GAME_IMPORTS
+	gi.Pmove (&pm);
+#else
+	SV_Pmove (gameEntity, &pm, 0);
+#endif
+
+	// save results of pmove
+	Client.PlayerState.SetPMove (&pm.state);
+	Client.old_pmove = pm.state;
+
+	for (i=0 ; i<3 ; i++)
+	{
+		gameEntity->state.origin[i] = pm.state.origin[i]*0.125;
+		gameEntity->velocity[i] = pm.state.velocity[i]*0.125;
+	}
+
+	Vec3Copy (pm.mins, gameEntity->mins);
+	Vec3Copy (pm.maxs, gameEntity->maxs);
+
+	Client.resp.cmd_angles[0] = SHORT2ANGLE(ucmd->angles[0]);
+	Client.resp.cmd_angles[1] = SHORT2ANGLE(ucmd->angles[1]);
+	Client.resp.cmd_angles[2] = SHORT2ANGLE(ucmd->angles[2]);
+
+	if (gameEntity->groundentity && !pm.groundEntity && (pm.cmd.upMove >= 10) && (pm.waterLevel == 0))
+	{
+		PlaySoundFrom(gameEntity, CHAN_VOICE, gMedia.Player.Jump);
+		PlayerNoise(this, gameEntity->state.origin, PNOISE_SELF);
+	}
+
+	gameEntity->viewheight = pm.viewHeight;
+	gameEntity->waterlevel = pm.waterLevel;
+	gameEntity->watertype = pm.waterType;
+	gameEntity->groundentity = pm.groundEntity;
+	if (pm.groundEntity)
+		gameEntity->groundentity_linkcount = pm.groundEntity->linkCount;
+
+	if (gameEntity->deadflag)
+		Client.PlayerState.SetViewAngles (vec3f(40, -15, Client.killer_yaw));
+	else
+	{
+		Vec3Copy (pm.viewAngles, Client.v_angle);
+		Client.PlayerState.SetViewAngles (pm.viewAngles);
+	}
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	if (Client.ctf_grapple)
+		CGrapple::GrapplePull(Client.ctf_grapple);
+//ZOID
+#endif
+
+	Link ();
+
+	if (gameEntity->movetype != MOVETYPE_NOCLIP)
+		G_TouchTriggers (gameEntity);
+
+	// touch other objects
+	for (i=0 ; i<pm.numTouch ; i++)
+	{
+		edict_t *other = pm.touchEnts[i];
+		for (j=0 ; j<i ; j++)
+			if (pm.touchEnts[j] == other)
+				break;
+		if (j != i)
+			continue;	// duplicated
+		if (!other->touch)
+			continue;
+		other->touch (other, gameEntity, NULL, NULL);
+	}
+
+	int oldbuttons = Client.buttons;
+	Client.buttons = ucmd->buttons;
+	Client.latched_buttons |= Client.buttons & ~oldbuttons;
+
+	// save light level the player is standing on for
+	// monster sighting AI
+	gameEntity->light_level = ucmd->lightLevel;
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+//regen tech
+	CTFApplyRegeneration();
+//ZOID
+#endif
+
+	// update chase cam if being followed
+	for (i = 1; i <= game.maxclients; i++)
+	{
+		CPlayerEntity *other = dynamic_cast<CPlayerEntity*>((g_edicts + i)->Entity);
+		if (other->IsInUse() && other->Client.chase_target == this)
+			UpdateChaseCam(other);
+	}
+}
+
+#ifdef CLEANCTF_ENABLED
+void CPlayerEntity::CTFAssignTeam()
+{
+	int i;
+	int team1count = 0, team2count = 0;
+
+	Client.resp.ctf_state = 0;
+
+	if (!dmFlags.dfCtfForceJoin)
+	{
+		Client.resp.ctf_team = CTF_NOTEAM;
+		return;
+	}
+
+	for (i = 1; i <= game.maxclients; i++)
+	{
+		CPlayerEntity *player = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+
+		if (!player->IsInUse() || player == this)
+			continue;
+
+		switch (player->Client.resp.ctf_team)
+		{
+		case CTF_TEAM1:
+			team1count++;
+			break;
+		case CTF_TEAM2:
+			team2count++;
+		}
+	}
+	if (team1count < team2count)
+		Client.resp.ctf_team = CTF_TEAM1;
+	else if (team2count < team1count)
+		Client.resp.ctf_team = CTF_TEAM2;
+	else if (rand() & 1)
+		Client.resp.ctf_team = CTF_TEAM1;
+	else
+		Client.resp.ctf_team = CTF_TEAM2;
+}
+#endif
+
+void CPlayerEntity::InitResp ()
+{
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	int ctf_team = Client.resp.ctf_team;
+	bool id_state = Client.resp.id_state;
+//ZOID
+#endif
+
+	memset (&Client.resp, 0, sizeof(Client.resp));
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	Client.resp.ctf_team = ctf_team;
+	Client.resp.id_state = id_state;
+//ZOID
+#endif
+
+	Client.resp.enterframe = level.framenum;
+	Client.resp.coop_respawn = Client.pers;
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	if ((game.mode & GAME_CTF) && Client.resp.ctf_team < CTF_TEAM1)
+		CTFAssignTeam();
+//ZOID
+#endif
+}
+
+/*
+==================
+SaveClientData
+
+Some information that should be persistant, like health, 
+is still stored in the edict structure, so it needs to
+be mirrored out to the client structure before all the
+edicts are wiped.
+==================
+*/
+void CPlayerEntity::SaveClientData ()
+{
+	for (int i=0 ; i<game.maxclients ; i++)
+	{
+		if (!g_edicts[1+i].Entity)
+			return; // Not set up
+
+		CPlayerEntity *ent = dynamic_cast<CPlayerEntity*>(g_edicts[1+i].Entity);
+		if (!ent->IsInUse())
+			continue;
+		ent->Client.pers.health = ent->gameEntity->health;
+		ent->Client.pers.max_health = ent->gameEntity->max_health;
+		ent->Client.pers.savedFlags = (ent->gameEntity->flags & (FL_GODMODE|FL_NOTARGET|FL_POWER_ARMOR));
+		if (game.mode == GAME_COOPERATIVE)
+			ent->Client.pers.score = ent->Client.resp.score;
+	}
+}
+
+edict_t *CPlayerEntity::SelectCoopSpawnPoint ()
+{
+	int		index;
+	edict_t	*spot = NULL;
+	char	*target;
+
+	index = gameEntity - g_edicts - 1;
+
+	// player 0 starts in normal player spawn point
+	if (!index)
+		return NULL;
+
+	spot = NULL;
+
+	// assume there are four coop spots at each spawnpoint
+	while (1)
+	{
+		spot = G_Find (spot, FOFS(classname), "info_player_coop");
+		if (!spot)
+			return NULL;	// we didn't have enough...
+
+		target = spot->targetname;
+		if (!target)
+			target = "";
+		if ( Q_stricmp(game.spawnpoint, target) == 0 )
+		{	// this is a coop spawn point for one of the clients here
+			index--;
+			if (!index)
+				return spot;		// this is it
+		}
+	}
+
+	return spot;
+}
+
+/*
+===========
+SelectSpawnPoint
+
+Chooses a player start, deathmatch start, coop start, etc
+============
+*/
+edict_t *SelectDeathmatchSpawnPoint (void);
+void	CPlayerEntity::SelectSpawnPoint (vec3_t origin, vec3_t angles)
+{
+	edict_t	*spot = NULL;
+
+	if (game.mode & GAME_DEATHMATCH)
+		spot = 
+#ifdef CLEANCTF_ENABLED
+		(game.mode & GAME_CTF) ? SelectCTFSpawnPoint() :
+#endif
+		SelectDeathmatchSpawnPoint ();
+	else if (game.mode & GAME_COOPERATIVE)
+		spot = SelectCoopSpawnPoint ();
+
+	// find a single player start spot
+	if (!spot)
+	{
+		while ((spot = G_Find (spot, FOFS(classname), "info_player_start")) != NULL)
+		{
+			if (!game.spawnpoint[0] && !spot->targetname)
+				break;
+
+			if (!game.spawnpoint[0] || !spot->targetname)
+				continue;
+
+			if (Q_stricmp(game.spawnpoint, spot->targetname) == 0)
+				break;
+		}
+
+		if (!spot)
+		{
+			// There wasn't a spawnpoint without a target, so use any
+			if (!game.spawnpoint[0]) {
+				spot = G_Find (spot, FOFS(classname), "info_player_start");
+
+				if (!spot)
+					spot = G_Find (spot, FOFS(classname), "info_player_deathmatch");
+			}
+			if (!spot)
+				gi.error ("Couldn't find spawn point %s", game.spawnpoint);
+		}
+	}
+
+	Vec3Copy (spot->state.origin, origin);
+	origin[2] += 9;
+	Vec3Copy (spot->state.angles, angles);
+}
+
+#ifdef CLEANCTF_ENABLED
+/*
+================
+SelectCTFSpawnPoint
+
+go to a ctf point, but NOT the two points closest
+to other players
+================
+*/
+edict_t *SelectRandomDeathmatchSpawnPoint (void);
+edict_t *SelectFarthestDeathmatchSpawnPoint (void);
+float	PlayersRangeFromSpot (edict_t *spot);
+edict_t *CPlayerEntity::SelectCTFSpawnPoint ()
+{
+	edict_t	*spot, *spot1, *spot2;
+	int		count = 0;
+	int		selection;
+	float	range, range1, range2;
+	char	*cname;
+
+	if (Client.resp.ctf_state)
+	{
+		if ( dmFlags.dfSpawnFarthest)
+			return SelectFarthestDeathmatchSpawnPoint ();
+		else
+			return SelectRandomDeathmatchSpawnPoint ();
+	}
+
+	Client.resp.ctf_state++;
+
+	switch (Client.resp.ctf_team)
+	{
+	case CTF_TEAM1:
+		cname = "info_player_team1";
+		break;
+	case CTF_TEAM2:
+		cname = "info_player_team2";
+		break;
+	default:
+		return SelectRandomDeathmatchSpawnPoint();
+	}
+
+	spot = NULL;
+	range1 = range2 = 99999;
+	spot1 = spot2 = NULL;
+
+	while ((spot = G_Find (spot, FOFS(classname), cname)) != NULL)
+	{
+		count++;
+		range = PlayersRangeFromSpot(spot);
+		if (range < range1)
+		{
+			range1 = range;
+			spot1 = spot;
+		}
+		else if (range < range2)
+		{
+			range2 = range;
+			spot2 = spot;
+		}
+	}
+
+	if (!count)
+		return SelectRandomDeathmatchSpawnPoint();
+
+	if (count <= 2)
+		spot1 = spot2 = NULL;
+	else
+		count -= 2;
+
+	selection = rand() % count;
+
+	spot = NULL;
+	do
+	{
+		spot = G_Find (spot, FOFS(classname), cname);
+		if (spot == spot1 || spot == spot2)
+			selection++;
+	} while(selection--);
+
+	return spot;
+}
+#endif

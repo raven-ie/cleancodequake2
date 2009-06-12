@@ -183,7 +183,7 @@ void CMenu_Spin::Draw (CPlayerEntity *ent, CStatusBar *DrawState)
 
 void CMenu_Spin::Update (CPlayerEntity *ent)
 {
-	switch (ent->client->resp.MenuState.Key)
+	switch (ent->Client.resp.MenuState.Key)
 	{
 	case KEY_RIGHT:
 		if (Index == (NumIndices-1))
@@ -265,7 +265,7 @@ void CMenu_Slider::Draw (CPlayerEntity *ent, CStatusBar *DrawState)
 
 void CMenu_Slider::Update (CPlayerEntity *ent)
 {
-	switch (ent->client->resp.MenuState.Key)
+	switch (ent->Client.resp.MenuState.Key)
 	{
 	case KEY_RIGHT:
 		if (Value == Max)
