@@ -88,7 +88,7 @@ void CRocketLauncher::Fire (CPlayerEntity *ent)
 	ent->Client.kick_angles[0] = -1;
 
 	Vec3Set (offset, 8, 8, ent->gameEntity->viewheight-8);
-	P_ProjectSource (ent, ent->gameEntity->state.origin, offset, forward, right, start);
+	P_ProjectSource (ent, offset, forward, right, start);
 	fire_rocket (ent->gameEntity, start, forward, damage, 650, damage_radius, radius_damage);
 
 	// send muzzle flash

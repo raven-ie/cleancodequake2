@@ -99,7 +99,7 @@ void CHandGrenade::FireGrenade (CPlayerEntity *ent, bool inHand)
 
 	Vec3Set (offset, 8, 8, ent->gameEntity->viewheight-8);
 	Angles_Vectors (ent->Client.v_angle, forward, right, NULL);
-	P_ProjectSource (ent, ent->gameEntity->state.origin, offset, forward, right, start);
+	P_ProjectSource (ent, offset, forward, right, start);
 
 	float timer = ent->Client.grenade_time - level.time;
 	int speed = GRENADE_MINSPEED + (GRENADE_TIMER - timer) * ((GRENADE_MAXSPEED - GRENADE_MINSPEED) / GRENADE_TIMER);
@@ -113,7 +113,7 @@ void CHandGrenade::FireGrenade (CPlayerEntity *ent, bool inHand)
 	if (!dmFlags.dfInfiniteAmmo)
 		DepleteAmmo(ent, 1);
 
-	if(ent->gameEntity->health <= 0 || ent->gameEntity->deadflag || ent->gameEntity->state.modelIndex != 255) // VWep animations screw up corpses
+	if (ent->gameEntity->health <= 0 || ent->gameEntity->deadflag || ent->State.GetModelIndex() != 255) // VWep animations screw up corpses
 		return;
 
 	AttackSound (ent);
@@ -121,13 +121,13 @@ void CHandGrenade::FireGrenade (CPlayerEntity *ent, bool inHand)
 	if (ent->Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED)
 	{
 		ent->Client.anim_priority = ANIM_ATTACK;
-		ent->gameEntity->state.frame = FRAME_crattak1-1;
+		ent->State.SetFrame (FRAME_crattak1-1);
 		ent->Client.anim_end = FRAME_crattak3;
 	}
 	else
 	{
 		ent->Client.anim_priority = ANIM_REVERSE;
-		ent->gameEntity->state.frame = FRAME_wave08;
+		ent->State.SetFrame (FRAME_wave08);
 		ent->Client.anim_end = FRAME_wave01;
 	}
 	ent->Client.PlayerState.SetGunFrame (ent->Client.PlayerState.GetGunFrame()+1);

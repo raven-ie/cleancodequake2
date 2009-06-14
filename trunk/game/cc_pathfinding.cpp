@@ -622,6 +622,8 @@ CPathNode *GetClosestNodeTo (vec3_t origin)
 
 void Cmd_Node_f (CPlayerEntity *ent)
 {
+	vec3_t origin;
+	ent->State.GetOrigin(origin);
 	char *cmd = ArgGets(1);
 
 	if (Q_stricmp(cmd, "save") == 0)
@@ -629,7 +631,7 @@ void Cmd_Node_f (CPlayerEntity *ent)
 	else if (Q_stricmp(cmd, "load") == 0)
 		LoadNodes ();
 	else if (Q_stricmp(cmd, "drop") == 0)
-		AddNode (ent, ent->gameEntity->state.origin);
+		AddNode (ent, origin);
 	else if (Q_stricmp(cmd, "clearlastnode") == 0)
 		ent->Client.resp.LastNode = NULL;
 	else if (Q_stricmp(cmd, "connect") == 0)
@@ -681,9 +683,9 @@ void Cmd_Node_f (CPlayerEntity *ent)
 
 		vec3_t end, forward;
 		Angles_Vectors (ent->Client.v_angle, forward, NULL, NULL);
-		Vec3MA (ent->gameEntity->state.origin, 8192, forward, end);
+		Vec3MA (origin, 8192, forward, end);
 
-		CTrace trace = CTrace(ent->gameEntity->state.origin, end, ent->gameEntity, CONTENTS_MASK_ALL);
+		CTrace trace = CTrace(origin, end, ent->gameEntity, CONTENTS_MASK_ALL);
 
 		if (trace.ent && trace.ent->model && trace.ent->model[0] == '*')
 		{
@@ -695,9 +697,9 @@ void Cmd_Node_f (CPlayerEntity *ent)
 	{
 		vec3_t end, forward;
 		Angles_Vectors (ent->Client.v_angle, forward, NULL, NULL);
-		Vec3MA (ent->gameEntity->state.origin, 8192, forward, end);
+		Vec3MA (origin, 8192, forward, end);
 
-		CTrace trace = CTrace(ent->gameEntity->state.origin, end, ent->gameEntity, CONTENTS_MASK_ALL);
+		CTrace trace = CTrace(origin, end, ent->gameEntity, CONTENTS_MASK_ALL);
 
 		if (trace.ent && trace.ent->Monster)
 		{

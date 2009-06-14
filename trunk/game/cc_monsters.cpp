@@ -2914,8 +2914,7 @@ void CMonster::MonsterDeathUse ()
 
 	if (Entity->item)
 	{
-		// Paril FIXME!
-		//Entity->item->Drop (Entity);
+		Entity->item->DropItem (Entity);
 		Entity->item = NULL;
 	}
 
@@ -3366,6 +3365,7 @@ bool CMonster::FindTarget()
 				if (client->gameEntity->flags & FL_NOTARGET)
 					return false;
 
+				client->State.GetOrigin (temp);
 				if (Entity->spawnflags & 1)
 				{
 					if (!visible (Entity, client->gameEntity))
@@ -3373,11 +3373,11 @@ bool CMonster::FindTarget()
 				}
 				else
 				{
-					if (!gi.inPHS(Entity->state.origin, client->gameEntity->state.origin))
+					if (!gi.inPHS(Entity->state.origin, temp))
 						return false;
 				}
 
-				Vec3Subtract (client->gameEntity->state.origin, Entity->state.origin, temp);
+				Vec3Subtract (temp, Entity->state.origin, temp);
 
 				if (Vec3Length(temp) > 1000)	// too far to hear
 					return false;
@@ -3512,6 +3512,7 @@ bool CMonster::FindTarget()
 	{
 		vec3_t	temp;
 
+		client->State.GetOrigin (temp);
 		if (Entity->spawnflags & 1)
 		{
 			if (!visible (Entity, client->gameEntity))
@@ -3519,11 +3520,11 @@ bool CMonster::FindTarget()
 		}
 		else
 		{
-			if (!gi.inPHS(Entity->state.origin, client->gameEntity->state.origin))
+			if (!gi.inPHS(Entity->state.origin, temp))
 				return false;
 		}
 
-		Vec3Subtract (client->gameEntity->state.origin, Entity->state.origin, temp);
+		Vec3Subtract (temp, Entity->state.origin, temp);
 
 		if (Vec3Length(temp) > 1000)	// too far to hear
 			return false;

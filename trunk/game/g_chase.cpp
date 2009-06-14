@@ -44,8 +44,8 @@ void UpdateChaseCam(CPlayerEntity *ent)
 
 	CPlayerEntity *targ = ent->Client.chase_target;
 
-	Vec3Copy(targ->gameEntity->state.origin, ownerv);
-	Vec3Copy(ent->gameEntity->state.origin, oldgoal);
+	targ->State.GetOrigin (ownerv);
+	ent->State.GetOrigin (oldgoal);
 
 	ownerv[2] += targ->gameEntity->viewheight;
 
@@ -56,8 +56,10 @@ void UpdateChaseCam(CPlayerEntity *ent)
 	VectorNormalizef (forward, forward);
 	Vec3MA (ownerv, -30, forward, o);
 
-	if (o[2] < targ->gameEntity->state.origin[2] + 20)
-		o[2] = targ->gameEntity->state.origin[2] + 20;
+	vec3_t temp;
+	targ->State.GetOrigin (temp);
+	if (o[2] < temp[2] + 20)
+		o[2] = temp[2] + 20;
 
 	// jump animation lifts
 	if (!targ->gameEntity->groundentity)
@@ -93,7 +95,7 @@ void UpdateChaseCam(CPlayerEntity *ent)
 	else
 		ent->Client.PlayerState.GetPMove()->pmType = PMT_FREEZE;
 
-	Vec3Copy(goal, ent->gameEntity->state.origin);
+	ent->State.SetOrigin(goal);
 	for (i=0 ; i<3 ; i++)
 		ent->Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(targ->Client.v_angle[i] - ent->Client.resp.cmd_angles[i]);
 

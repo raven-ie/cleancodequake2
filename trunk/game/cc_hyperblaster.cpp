@@ -115,7 +115,7 @@ void CHyperBlaster::Fire (CPlayerEntity *ent)
 			Angles_Vectors (ent->Client.v_angle, forward, right, NULL);
 			Vec3Set (noffset, 24, 8, ent->gameEntity->viewheight-8);
 			Vec3Add (noffset, offset, noffset);
-			P_ProjectSource (ent, ent->gameEntity->state.origin, noffset, forward, right, start);
+			P_ProjectSource (ent, noffset, forward, right, start);
 
 			Vec3Scale (forward, -2, ent->Client.kick_origin);
 			ent->Client.kick_angles[0] = -1;

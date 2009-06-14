@@ -33,6 +33,193 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 
+CEntityState::CEntityState () :
+state(NULL)
+{
+};
+
+CEntityState::CEntityState (entityStateOld_t *state) :
+state(state)
+{
+};
+
+int		CEntityState::GetNumber		()
+{
+	return state->number;
+}
+
+void	CEntityState::GetOrigin		(vec3_t in)
+{
+	Vec3Copy (state->origin, in);
+}
+vec3f	CEntityState::GetOrigin		()
+{
+	return vec3f(state->origin);
+}
+
+void	CEntityState::GetAngles		(vec3_t in)
+{
+	Vec3Copy (state->angles, in);
+}
+vec3f	CEntityState::GetAngles		()
+{
+	return vec3f(state->angles);
+}
+
+void	CEntityState::GetOldOrigin	(vec3_t in)
+{
+	Vec3Copy (state->oldOrigin, in);
+}
+vec3f	CEntityState::GetOldOrigin	()
+{
+	return vec3f(state->oldOrigin);
+}
+
+void	CEntityState::SetOrigin		(vec3_t in)
+{
+	Vec3Copy (in, state->origin);
+}
+void	CEntityState::SetOrigin		(vec3f in)
+{
+	state->origin[0] = in.X;
+	state->origin[1] = in.Y;
+	state->origin[2] = in.Z;
+}
+
+void	CEntityState::SetAngles		(vec3_t in)
+{
+	Vec3Copy (in, state->angles);
+}
+void	CEntityState::SetAngles		(vec3f in)
+{
+	state->angles[0] = in.X;
+	state->angles[1] = in.Y;
+	state->angles[2] = in.Z;
+}
+
+void	CEntityState::SetOldOrigin	(vec3_t in)
+{
+	Vec3Copy (in, state->oldOrigin);
+}
+void	CEntityState::SetOldOrigin	(vec3f in)
+{
+	state->oldOrigin[0] = in.X;
+	state->oldOrigin[1] = in.Y;
+	state->oldOrigin[2] = in.Z;
+}
+
+// Can be 1, 2, 3, or 4
+int		CEntityState::GetModelIndex	(uint8 index)
+{
+	switch (index)
+	{
+	case 1:
+		return state->modelIndex;
+	case 2:
+		return state->modelIndex2;
+	case 3:
+		return state->modelIndex3;
+	case 4:
+		return state->modelIndex4;
+	default:
+		_CC_ASSERT_EXPR(0, "index for GetModelIndex is out of bounds");
+		return 0;
+		break;
+	}
+}
+void	CEntityState::SetModelIndex	(MediaIndex value, uint8 index)
+{
+	switch (index)
+	{
+	case 1:
+		state->modelIndex = value;
+		break;
+	case 2:
+		state->modelIndex2 = value;
+		break;
+	case 3:
+		state->modelIndex3 = value;
+		break;
+	case 4:
+		state->modelIndex4 = value;
+		break;
+	default:
+		_CC_ASSERT_EXPR(0, "index for SetModelIndex is out of bounds");
+		break;
+	}
+}
+
+int		CEntityState::GetFrame		()
+{
+	return state->frame;
+}
+void	CEntityState::SetFrame		(int value)
+{
+	_CC_ASSERT_EXPR((value >= 0 && value < 512), "value for SetFrame is out of bounds");
+	state->frame = value;
+}
+
+int	CEntityState::GetSkinNum		()
+{
+	return state->skinNum;
+}
+void	CEntityState::SetSkinNum		(int value)
+{
+	state->skinNum = value;
+}
+
+uint32	CEntityState::GetEffects		()
+{
+	return state->effects;
+}
+void	CEntityState::SetEffects		(uint32 value)
+{
+	state->effects = value;
+}
+void	CEntityState::AddEffects		(uint32 value)
+{
+	state->effects |= value;
+}
+void	CEntityState::RemoveEffects		(uint32 value)
+{
+	state->effects &= ~value;
+}
+
+int		CEntityState::GetRenderEffects	()
+{
+	return state->renderFx;
+}
+void	CEntityState::SetRenderEffects	(int value)
+{
+	state->renderFx = value;
+}
+void	CEntityState::AddRenderEffects	(int value)
+{
+	state->renderFx |= value;
+}
+void	CEntityState::RemoveRenderEffects	(int value)
+{
+	state->renderFx &= ~value;
+}
+
+MediaIndex	CEntityState::GetSound		()
+{
+	return state->sound;
+}
+void		CEntityState::SetSound		(MediaIndex value)
+{
+	state->sound = value;
+}
+
+int		CEntityState::GetEvent			()
+{
+	return state->event;
+}
+void	CEntityState::SetEvent			(int value)
+{
+	state->event = value;
+}
+
 // Creating a new entity via constructor.
 CBaseEntity::CBaseEntity ()
 {
@@ -40,6 +227,8 @@ CBaseEntity::CBaseEntity ()
 	gameEntity->Entity = this;
 
 	EntityFlags |= ENT_BASE;
+
+	State = CEntityState(&gameEntity->state);
 };
 
 CBaseEntity::CBaseEntity (int Index)
@@ -48,6 +237,7 @@ CBaseEntity::CBaseEntity (int Index)
 	gameEntity->Entity = this;
 
 	EntityFlags |= ENT_BASE;
+	State = CEntityState(&gameEntity->state);
 }
 
 CBaseEntity::~CBaseEntity ()

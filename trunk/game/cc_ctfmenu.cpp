@@ -493,7 +493,7 @@ public:
 
 			ent->PutInServer ();
 			// add a teleportation effect
-			ent->gameEntity->state.event = EV_PLAYER_TELEPORT;
+			ent->State.SetEvent (EV_PLAYER_TELEPORT);
 			// hold in place briefly
 			ent->Client.PlayerState.GetPMove()->pmFlags = PMF_TIME_TELEPORT;
 			ent->Client.PlayerState.GetPMove()->pmTime = 14;

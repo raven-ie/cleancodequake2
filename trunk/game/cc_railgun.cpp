@@ -93,7 +93,7 @@ void CRailgun::Fire (CPlayerEntity *ent)
 	ent->Client.kick_angles[0] = -3;
 
 	Vec3Set (offset, 0, 7,  ent->gameEntity->viewheight-8);
-	P_ProjectSource (ent, ent->gameEntity->state.origin, offset, forward, right, start);
+	P_ProjectSource (ent, offset, forward, right, start);
 	fire_rail (ent->gameEntity, start, forward, damage, kick);
 
 	// send muzzle flash
