@@ -31,18 +31,75 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Base entity class
 //
 
+class CEntityState
+{
+private:
+	entityStateOld_t	*state;
+
+protected:
+	void	SetNumber		(int value);
+public:
+	CEntityState			(entityStateOld_t *state);
+	CEntityState			();
+
+	int		GetNumber		();
+
+	void	GetOrigin		(vec3_t in);
+	vec3f	GetOrigin		();
+
+	void	GetAngles		(vec3_t in);
+	vec3f	GetAngles		();
+
+	void	GetOldOrigin	(vec3_t in);
+	vec3f	GetOldOrigin	();
+
+	void	SetOrigin		(vec3_t in);
+	void	SetOrigin		(vec3f in);
+
+	void	SetAngles		(vec3_t in);
+	void	SetAngles		(vec3f in);
+
+	void	SetOldOrigin	(vec3_t in);
+	void	SetOldOrigin	(vec3f in);
+
+	// Can be 1, 2, 3, or 4
+	int		GetModelIndex	(uint8 index = 1);
+	void	SetModelIndex	(MediaIndex value, uint8 index = 1);
+
+	int		GetFrame		();
+	void	SetFrame		(int value);
+
+	int		GetSkinNum		();
+	void	SetSkinNum		(int value);
+
+	uint32	GetEffects		();
+	void	SetEffects		(uint32 value);
+	void	AddEffects		(uint32 value);
+	void	RemoveEffects	(uint32 value);
+
+	int		GetRenderEffects	();
+	void	SetRenderEffects	(int value);
+	void	AddRenderEffects	(int value);
+	void	RemoveRenderEffects	(int value);
+
+	MediaIndex	GetSound		();
+	void		SetSound		(MediaIndex value);
+
+	int		GetEvent			();
+	void	SetEvent			(int value);
+};
+
 // CBaseEntity is abstract.
 // A base entity can't do anything
 class CBaseEntity abstract
 {
 //private:
-public:
-	edict_t		*gameEntity;	// The "game entity" this is linked with.
-								// Kept private to make sure no mistakes are made.
-
-	friend class	CPlayerEntity; // We are friends!
+public: // Kept public for now because there are lots of functions that require edict_t
+	edict_t			*gameEntity;	// The "game entity" this is linked with.
+									// Kept private to make sure no mistakes are made.
 public:
 	uint32			EntityFlags;
+	CEntityState	State;
 
 	CBaseEntity ();
 	CBaseEntity (int Index);
@@ -117,11 +174,16 @@ public:
 	void			Unlink ();
 };
 
-#include "cc_playerentity.h"
-
 // EntityFlags values
 enum
 {
 	ENT_BASE		=	1, // Can be casted to CBaseEntity
-	ENT_PLAYER		=	2, // Can be casted to CPlayerEntity
+	ENT_HURTABLE	=	2, // Can be casted to CHurtableEntity
+	ENT_PLAYER		=	4, // Can be casted to CPlayerEntity
 };
+
+// Base classes
+#include "cc_entitytypes.h"
+
+// Derivitives
+#include "cc_playerentity.h"

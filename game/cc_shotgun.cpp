@@ -78,7 +78,7 @@ void CShotgun::Fire (CPlayerEntity *ent)
 	ent->Client.kick_angles[0] = -2;
 
 	Vec3Set (offset, 0, 8,  ent->gameEntity->viewheight-8);
-	P_ProjectSource (ent, ent->gameEntity->state.origin, offset, forward, right, start);
+	P_ProjectSource (ent, offset, forward, right, start);
 
 	if (isQuad)
 	{

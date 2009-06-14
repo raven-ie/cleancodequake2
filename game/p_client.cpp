@@ -422,13 +422,14 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 	Player->gameEntity->takedamage = DAMAGE_YES;
 	Player->gameEntity->movetype = MOVETYPE_TOSS;
 
-	Player->gameEntity->state.modelIndex2 = 0;	// remove linked weapon model
-	Player->gameEntity->state.modelIndex3 = 0;	// remove linked ctf flag
+	Player->State.SetModelIndex (0, 2);	// remove linked weapon model
+	Player->State.SetModelIndex (0, 3);	// remove linked ctf flag
 
-	Player->gameEntity->state.angles[0] = 0;
-	Player->gameEntity->state.angles[2] = 0;
+	vec3_t oldAngles;
+	Player->State.GetAngles (oldAngles);
+	Player->State.SetAngles (vec3f(0, oldAngles[1], 0));
 
-	Player->gameEntity->state.sound = 0;
+	Player->State.SetSound (0);
 	Player->Client.weapon_sound = 0;
 
 	vec3f maxs = Player->GetMaxs();
@@ -518,7 +519,7 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 			Player->Client.anim_priority = ANIM_DEATH;
 			if (Player->Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED)
 			{
-				Player->gameEntity->state.frame = FRAME_crdeath1-1;
+				Player->State.SetFrame (FRAME_crdeath1-1);
 				Player->Client.anim_end = FRAME_crdeath5;
 			}
 			else
@@ -526,15 +527,15 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 				switch (i)
 				{
 				case 0:
-					Player->gameEntity->state.frame = FRAME_death101-1;
+					Player->State.SetFrame (FRAME_death101-1);
 					Player->Client.anim_end = FRAME_death106;
 					break;
 				case 1:
-					Player->gameEntity->state.frame = FRAME_death201-1;
+					Player->State.SetFrame (FRAME_death201-1);
 					Player->Client.anim_end = FRAME_death206;
 					break;
 				case 2:
-					Player->gameEntity->state.frame = FRAME_death301-1;
+					Player->State.SetFrame (FRAME_death301-1);
 					Player->Client.anim_end = FRAME_death308;
 					break;
 				}
@@ -776,6 +777,7 @@ deathmatch mode, so clear everything out before starting them.
 */
 void ClientBeginDeathmatch (CPlayerEntity *Player)
 {
+	vec3_t origin;
 	G_InitEdict (Player->gameEntity);
 
 	Player->InitResp();
@@ -783,11 +785,12 @@ void ClientBeginDeathmatch (CPlayerEntity *Player)
 	// locate ent at a spawn point
 	Player->PutInServer();
 
+	Player->State.GetOrigin (origin);
 	if (level.intermissiontime)
 		Player->MoveToIntermission();
 	else
 		// send effect
-		CTempEnt::MuzzleFlash (Player->gameEntity->state.origin, Player->gameEntity-g_edicts, MZ_LOGIN);
+		CTempEnt::MuzzleFlash (origin, Player->gameEntity-g_edicts, MZ_LOGIN);
 
 	BroadcastPrintf (PRINT_HIGH, "%s entered the game\n", Player->Client.pers.netname);
 
@@ -994,6 +997,7 @@ void ClientDisconnect (edict_t *ent)
 	if (!ent->client)
 		return;
 
+	Player->Client.pers.state = SVCS_FREE;
 	BroadcastPrintf (PRINT_HIGH, "%s disconnected\n", Player->Client.pers.netname);
 
 #ifdef CLEANCTF_ENABLED
@@ -1011,7 +1015,6 @@ void ClientDisconnect (edict_t *ent)
 	Player->SetSolid (SOLID_NOT);
 	Player->SetInUse (false);
 	ent->classname = "disconnected";
-	Player->Client.pers.state = SVCS_FREE;
 
 	playernum = ent-g_edicts-1;
 	gi.configstring (CS_PLAYERSKINS+playernum, "");

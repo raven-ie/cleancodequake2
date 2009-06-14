@@ -92,3 +92,17 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 // Define this if you intend to use 4x4 matrix'
 //#define SHARED_ALLOW_4x4_MATRIX
+
+// Define this to enable some custom asserts that we place in some places
+#define ALLOW_ASSERTS
+
+#ifdef ALLOW_ASSERTS
+#ifndef _DEBUG
+#define _CC_ASERT_EXPR(expr, msg)
+#else
+#define _CC_ASSERT_EXPR(expr, msg) \
+        (void) ((!!(expr)) || \
+                (1 != _CrtDbgReport(_CRT_ASSERT, __FILE__, __LINE__, NULL, msg)) || \
+                (_CrtDbgBreak(), 0))
+#endif
+#endif

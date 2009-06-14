@@ -340,7 +340,11 @@ void CPlayerEntity::BeginServerFrame ()
 	if (!(game.mode & GAME_DEATHMATCH))
 	{
 		if (!visible (gameEntity, PlayerTrail_LastSpot() ) )
-			PlayerTrail_Add (gameEntity->state.oldOrigin);
+		{
+			vec3_t oldOrigin;
+			State.GetOldOrigin (oldOrigin);
+			PlayerTrail_Add (oldOrigin);
+		}
 	}
 
 	Client.latched_buttons = 0;
@@ -358,7 +362,7 @@ void CPlayerEntity::Respawn ()
 		PutInServer ();
 
 		// add a teleportation effect
-		gameEntity->state.event = EV_PLAYER_TELEPORT;
+		State.SetEvent (EV_PLAYER_TELEPORT);
 
 		// hold in place briefly
 		Client.PlayerState.GetPMove()->pmFlags = PMF_TIME_TELEPORT;
@@ -443,8 +447,10 @@ void CPlayerEntity::SpectatorRespawn ()
 	// add a teleportation effect
 	if (!Client.pers.spectator)
 	{
+		vec3_t origin;
+		State.GetOrigin (origin);
 		// send effect
-		CTempEnt::MuzzleFlash (gameEntity->state.origin, gameEntity-g_edicts, MZ_LOGIN);
+		CTempEnt::MuzzleFlash (origin, gameEntity-g_edicts, MZ_LOGIN);
 
 		// hold in place briefly
 		Client.PlayerState.GetPMove()->pmFlags = PMF_TIME_TELEPORT;
@@ -577,27 +583,27 @@ void CPlayerEntity::PutInServer ()
 	//client->playerState.gunIndex = ModelIndex(client->pers.weapon->view_model);
 
 	// clear entity state values
-	gameEntity->state.effects = 0;
-	gameEntity->state.modelIndex = 255;		// will use the skin specified model
-	gameEntity->state.modelIndex2 = 255;		// custom gun model
+	State.SetEffects (0);
+	State.SetModelIndex (255);		// will use the skin specified model
+	State.SetModelIndex (255, 2);		// custom gun model
 	// sknum is player num and weapon number
 	// weapon number will be added in changeweapon
-	gameEntity->state.skinNum = gameEntity - g_edicts - 1;
+	State.SetSkinNum (gameEntity - g_edicts - 1);
 
-	gameEntity->state.frame = 0;
-	Vec3Copy (spawn_origin, gameEntity->state.origin);
-	gameEntity->state.origin[2] += 1;	// make sure off ground
-	Vec3Copy (gameEntity->state.origin, gameEntity->state.oldOrigin);
+	State.SetFrame (0);
+
+	vec3f tempOrigin(spawn_origin);
+	tempOrigin[2] += 1; // make sure we're off-ground
+	State.SetOrigin (tempOrigin);
+	State.SetOldOrigin (State.GetOrigin());
 
 	// set the delta angle
 	for (i=0 ; i<3 ; i++)
 		Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(spawn_angles[i] - Client.resp.cmd_angles[i]);
 
-	gameEntity->state.angles[PITCH] = 0;
-	gameEntity->state.angles[YAW] = spawn_angles[YAW];
-	gameEntity->state.angles[ROLL] = 0;
-	Client.PlayerState.SetViewAngles (gameEntity->state.angles);
-	Vec3Copy (gameEntity->state.angles, Client.v_angle);
+	State.SetAngles (vec3f(0, spawn_angles[YAW], 0));
+	Client.PlayerState.SetViewAngles (State.GetAngles());
+	Vec3Copy (State.GetAngles(), Client.v_angle);
 
 #ifdef CLEANCTF_ENABLED
 //ZOID
@@ -887,12 +893,12 @@ inline void CPlayerEntity::DamageFeedback (vec3_t forward, vec3_t right, vec3_t 
 		return;		// didn't take any damage
 
 	// start a pain animation if still in the player model
-	if (Client.anim_priority < ANIM_PAIN && gameEntity->state.modelIndex == 255)
+	if (Client.anim_priority < ANIM_PAIN && State.GetModelIndex() == 255)
 	{
 		Client.anim_priority = ANIM_PAIN;
 		if (Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED)
 		{
-			gameEntity->state.frame = FRAME_crpain1-1;
+			State.SetFrame (FRAME_crpain1-1);
 			Client.anim_end = FRAME_crpain4;
 		}
 		else
@@ -900,15 +906,15 @@ inline void CPlayerEntity::DamageFeedback (vec3_t forward, vec3_t right, vec3_t 
 			switch (rand()%3)
 			{
 			case 0:
-				gameEntity->state.frame = FRAME_pain101-1;
+				State.SetFrame (FRAME_pain101-1);
 				Client.anim_end = FRAME_pain104;
 				break;
 			case 1:
-				gameEntity->state.frame = FRAME_pain201-1;
+				State.SetFrame (FRAME_pain201-1);
 				Client.anim_end = FRAME_pain204;
 				break;
 			case 2:
-				gameEntity->state.frame = FRAME_pain301-1;
+				State.SetFrame (FRAME_pain301-1);
 				Client.anim_end = FRAME_pain304;
 				break;
 			}
@@ -959,7 +965,8 @@ inline void CPlayerEntity::DamageFeedback (vec3_t forward, vec3_t right, vec3_t 
 		if (kick > 50)
 			kick = 50;
 
-		Vec3Subtract (Client.damage_from, gameEntity->state.origin, v);
+		State.GetOrigin (v);
+		Vec3Subtract (Client.damage_from, v, v);
 		VectorNormalizef (v, v);
 		
 		side = DotProduct (v, right);
@@ -1180,7 +1187,8 @@ inline void CPlayerEntity::CalcBlend ()
 	// add for contents
 	vec3_t	vieworg, vOff;
 	Client.PlayerState.GetViewOffset(vOff);
-	Vec3Add (gameEntity->state.origin, vOff, vieworg);
+	State.GetOrigin (vieworg);
+	Vec3Add (vieworg, vOff, vieworg);
 
 	int contents = gi.pointcontents (vieworg);
 
@@ -1278,7 +1286,7 @@ inline void CPlayerEntity::FallingDamage ()
 	if (dmFlags.dfNoFallingDamage)
 		return;
 
-	if (gameEntity->state.modelIndex != 255)
+	if (State.GetModelIndex() != 255)
 		return;		// not in the player model
 
 	if (gameEntity->movetype == MOVETYPE_NOCLIP)
@@ -1320,7 +1328,7 @@ inline void CPlayerEntity::FallingDamage ()
 
 	if (delta < 15)
 	{
-		gameEntity->state.event = EV_FOOTSTEP;
+		State.SetEvent (EV_FOOTSTEP);
 		return;
 	}
 
@@ -1334,9 +1342,9 @@ inline void CPlayerEntity::FallingDamage ()
 		if (gameEntity->health > 0)
 		{
 			if (delta >= 55)
-				gameEntity->state.event = EV_FALLFAR;
+				State.SetEvent (EV_FALLFAR);
 			else
-				gameEntity->state.event = EV_FALL;
+				State.SetEvent (EV_FALL);
 		}
 		gameEntity->pain_debounce_time = level.time;	// no normal pain sound
 		damage = (delta-30)/2;
@@ -1345,11 +1353,15 @@ inline void CPlayerEntity::FallingDamage ()
 		Vec3Set (dir, 0, 0, 1);
 
 		if (!dmFlags.dfNoFallingDamage )
-			T_Damage (gameEntity, world, world, dir, gameEntity->state.origin, vec3Origin, damage, 0, 0, MOD_FALLING);
+		{
+			vec3_t origin;
+			State.GetOrigin(origin);
+			T_Damage (gameEntity, world, world, dir, origin, vec3Origin, damage, 0, 0, MOD_FALLING);
+		}
 	}
 	else
 	{
-		gameEntity->state.event = EV_FALLSHORT;
+		State.SetEvent (EV_FALLSHORT);
 		return;
 	}
 }
@@ -1364,6 +1376,8 @@ inline void CPlayerEntity::WorldEffects ()
 	bool	breather;
 	bool	envirosuit;
 	int		waterlevel, old_waterlevel;
+	vec3_t origin;
+	State.GetOrigin(origin);
 
 	if (gameEntity->movetype == MOVETYPE_NOCLIP)
 	{
@@ -1383,7 +1397,7 @@ inline void CPlayerEntity::WorldEffects ()
 	//
 	if (!old_waterlevel && waterlevel)
 	{
-		PlayerNoise(this, gameEntity->state.origin, PNOISE_SELF);
+		PlayerNoise(this, origin, PNOISE_SELF);
 		if (gameEntity->watertype & CONTENTS_LAVA)
 			PlaySoundFrom (gameEntity, CHAN_BODY, SoundIndex("player/lava_in.wav"));
 		else if (gameEntity->watertype & CONTENTS_SLIME)
@@ -1401,7 +1415,7 @@ inline void CPlayerEntity::WorldEffects ()
 	//
 	if (old_waterlevel && ! waterlevel)
 	{
-		PlayerNoise(this, gameEntity->state.origin, PNOISE_SELF);
+		PlayerNoise(this, origin, PNOISE_SELF);
 		PlaySoundFrom (gameEntity, CHAN_BODY, SoundIndex("player/watr_out.wav"));
 		gameEntity->flags &= ~FL_INWATER;
 	}
@@ -1420,7 +1434,7 @@ inline void CPlayerEntity::WorldEffects ()
 		if (gameEntity->air_finished < level.time)
 		{	// gasp for air
 			PlaySoundFrom (gameEntity, CHAN_VOICE, SoundIndex("player/gasp1.wav"));
-			PlayerNoise(this, gameEntity->state.origin, PNOISE_SELF);
+			PlayerNoise(this, origin, PNOISE_SELF);
 		}
 		else  if (gameEntity->air_finished < level.time + 11) // just break surface
 			PlaySoundFrom (gameEntity, CHAN_VOICE, SoundIndex("player/gasp2.wav"));
@@ -1440,7 +1454,7 @@ inline void CPlayerEntity::WorldEffects ()
 			{
 				PlaySoundFrom (gameEntity, CHAN_AUTO, SoundIndex((!Client.breather_sound) ? "player/u_breath1.wav" : "player/u_breath2.wav"));
 				Client.breather_sound = !Client.breather_sound;
-				PlayerNoise(this, gameEntity->state.origin, PNOISE_SELF);
+				PlayerNoise(this, origin, PNOISE_SELF);
 			}
 		}
 
@@ -1465,7 +1479,7 @@ inline void CPlayerEntity::WorldEffects ()
 
 				gameEntity->pain_debounce_time = level.time;
 
-				T_Damage (gameEntity, world, world, vec3Origin, gameEntity->state.origin, vec3Origin, gameEntity->dmg, 0, DAMAGE_NO_ARMOR, MOD_WATER);
+				T_Damage (gameEntity, world, world, vec3Origin, origin, vec3Origin, gameEntity->dmg, 0, DAMAGE_NO_ARMOR, MOD_WATER);
 			}
 		}
 	}
@@ -1491,13 +1505,13 @@ inline void CPlayerEntity::WorldEffects ()
 			}
 
 			// take 1/3 damage with envirosuit
-			T_Damage (gameEntity, world, world, vec3Origin, gameEntity->state.origin, vec3Origin, (envirosuit) ? 1*waterlevel : 3*waterlevel, 0, 0, MOD_LAVA);
+			T_Damage (gameEntity, world, world, vec3Origin, origin, vec3Origin, (envirosuit) ? 1*waterlevel : 3*waterlevel, 0, 0, MOD_LAVA);
 		}
 
 		if (gameEntity->watertype & CONTENTS_SLIME)
 		{
 			if (!envirosuit) // no damage from slime with envirosuit
-				T_Damage (gameEntity, world, world, vec3Origin, gameEntity->state.origin, vec3Origin, 1*waterlevel, 0, 0, MOD_SLIME);
+				T_Damage (gameEntity, world, world, vec3Origin, origin, vec3Origin, 1*waterlevel, 0, 0, MOD_SLIME);
 		}
 	}
 }
@@ -1521,8 +1535,8 @@ int CPlayerEntity::PowerArmorType ()
 
 inline void CPlayerEntity::SetClientEffects ()
 {
-	gameEntity->state.effects = 0;
-	gameEntity->state.renderFx = 0;
+	State.SetEffects (0);
+	State.SetRenderEffects (0);
 
 	if (gameEntity->health <= 0 || level.intermissiontime)
 		return;
@@ -1531,45 +1545,45 @@ inline void CPlayerEntity::SetClientEffects ()
 	{
 		int pa_type = PowerArmorType ();
 		if (pa_type == POWER_ARMOR_SCREEN)
-			gameEntity->state.effects |= EF_POWERSCREEN;
+			State.AddEffects (EF_POWERSCREEN);
 		else if (pa_type == POWER_ARMOR_SHIELD)
 		{
-			gameEntity->state.effects |= EF_COLOR_SHELL;
-			gameEntity->state.renderFx |= RF_SHELL_GREEN;
+			State.AddEffects (EF_COLOR_SHELL);
+			State.AddRenderEffects (RF_SHELL_GREEN);
 		}
 	}
 
 #ifdef CLEANCTF_ENABLED
-	gameEntity->state.effects &= ~(EF_FLAG1 | EF_FLAG2);
+	State.RemoveEffects (EF_FLAG1 | EF_FLAG2);
 	if (Client.pers.Flag)
 	{
 		if (gameEntity->health > 0)
-			gameEntity->state.effects |= Client.pers.Flag->EffectFlags;
-		gameEntity->state.modelIndex3 = ModelIndex(Client.pers.Flag->WorldModel);
+			State.AddEffects (Client.pers.Flag->EffectFlags);
+		State.SetModelIndex (ModelIndex(Client.pers.Flag->WorldModel), 3);
 	}
 	else
-		gameEntity->state.modelIndex3 = 0;
+		State.SetModelIndex (0, 3);
 #endif
 
 	if (Client.quad_framenum > level.framenum)
 	{
 		int remaining = Client.quad_framenum - level.framenum;
 		if (remaining > 30 || (remaining & 4) )
-			gameEntity->state.effects |= EF_QUAD;
+			State.AddEffects (EF_QUAD);
 	}
 
 	if (Client.invincible_framenum > level.framenum)
 	{
 		int remaining = Client.invincible_framenum - level.framenum;
 		if (remaining > 30 || (remaining & 4) )
-			gameEntity->state.effects |= EF_PENT;
+			State.AddEffects (EF_PENT);
 	}
 
 	// show cheaters!!!
 	if (gameEntity->flags & FL_GODMODE)
 	{
-		gameEntity->state.effects |= EF_COLOR_SHELL;
-		gameEntity->state.renderFx |= (RF_SHELL_RED|RF_SHELL_GREEN|RF_SHELL_BLUE);
+		State.AddEffects (EF_COLOR_SHELL);
+		State.AddRenderEffects (RF_SHELL_RED|RF_SHELL_GREEN|RF_SHELL_BLUE);
 	}
 }
 
@@ -1581,13 +1595,13 @@ G_SetClientEvent
 */
 inline void CPlayerEntity::SetClientEvent (float xyspeed)
 {
-	if (gameEntity->state.event)
+	if (State.GetEvent())
 		return;
 
 	if ( gameEntity->groundentity && xyspeed > 225)
 	{
 		if ( (int)(Client.bobtime+bobmove) != bobcycle )
-			gameEntity->state.event = EV_FOOTSTEP;
+			State.SetEvent (EV_FOOTSTEP);
 	}
 }
 
@@ -1612,13 +1626,13 @@ inline void CPlayerEntity::SetClientSound ()
 	}
 
 	if (gameEntity->waterlevel && (gameEntity->watertype & (CONTENTS_LAVA|CONTENTS_SLIME)))
-		gameEntity->state.sound = gMedia.FrySound;
+		State.SetSound (gMedia.FrySound);
 	else if (Client.pers.Weapon && Client.pers.Weapon->WeaponSoundIndex)
-		gameEntity->state.sound = Client.pers.Weapon->WeaponSoundIndex;
+		State.SetSound (Client.pers.Weapon->WeaponSoundIndex);
 	else if (Client.weapon_sound)
-		gameEntity->state.sound = Client.weapon_sound;
+		State.SetSound (Client.weapon_sound);
 	else
-		gameEntity->state.sound = 0;
+		State.SetSound (0);
 }
 
 /*
@@ -1631,7 +1645,7 @@ inline void CPlayerEntity::SetClientFrame (float xyspeed)
 	bool		duck = (Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED);
 	bool		run = !!(xyspeed);
 
-	if (gameEntity->state.modelIndex != 255)
+	if (State.GetModelIndex() != 255)
 		return;		// not in the player model
 
 	// check for stand/duck and stop/go transitions
@@ -1644,15 +1658,15 @@ inline void CPlayerEntity::SetClientFrame (float xyspeed)
 
 	if(Client.anim_priority == ANIM_REVERSE)
 	{
-		if(gameEntity->state.frame > Client.anim_end)
+		if(State.GetFrame() > Client.anim_end)
 		{
-			gameEntity->state.frame--;
+			State.SetFrame (State.GetFrame() - 1);
 			return;
 		}
 	}
-	else if (gameEntity->state.frame < Client.anim_end)
+	else if (State.GetFrame() < Client.anim_end)
 	{	// continue an animation
-		gameEntity->state.frame++;
+		State.SetFrame (State.GetFrame() + 1);
 		return;
 	}
 
@@ -1663,7 +1677,7 @@ inline void CPlayerEntity::SetClientFrame (float xyspeed)
 		if (!gameEntity->groundentity)
 			return;		// stay there
 		Client.anim_priority = ANIM_WAVE;
-		gameEntity->state.frame = FRAME_jump3;
+		State.SetFrame (FRAME_jump3);
 		Client.anim_end = FRAME_jump6;
 		return;
 	}
@@ -1679,15 +1693,18 @@ newanim:
 #ifdef CLEANCTF_ENABLED
 //ZOID: if on grapple, don't go into jump frame, go into standing
 //frame
-		if (Client.ctf_grapple) {
-			gameEntity->state.frame = FRAME_stand01;
+		if (Client.ctf_grapple)
+		{
+			State.SetFrame (FRAME_stand01);
 			Client.anim_end = FRAME_stand40;
-		} else {
+		}
+		else
+		{
 //ZOID
 #endif
 		Client.anim_priority = ANIM_JUMP;
-		if (gameEntity->state.frame != FRAME_jump2)
-			gameEntity->state.frame = FRAME_jump1;
+		if (State.GetFrame() != FRAME_jump2)
+			State.SetFrame (FRAME_jump1);
 		Client.anim_end = FRAME_jump2;
 #ifdef CLEANCTF_ENABLED
 	}
@@ -1697,12 +1714,12 @@ newanim:
 	{	// running
 		if (duck)
 		{
-			gameEntity->state.frame = FRAME_crwalk1;
+			State.SetFrame (FRAME_crwalk1);
 			Client.anim_end = FRAME_crwalk6;
 		}
 		else
 		{
-			gameEntity->state.frame = FRAME_run1;
+			State.SetFrame (FRAME_run1);
 			Client.anim_end = FRAME_run6;
 		}
 	}
@@ -1710,12 +1727,12 @@ newanim:
 	{	// standing
 		if (duck)
 		{
-			gameEntity->state.frame = FRAME_crstnd01;
+			State.SetFrame (FRAME_crstnd01);
 			Client.anim_end = FRAME_crstnd19;
 		}
 		else
 		{
-			gameEntity->state.frame = FRAME_stand01;
+			State.SetFrame (FRAME_stand01);
 			Client.anim_end = FRAME_stand40;
 		}
 	}
@@ -1742,9 +1759,11 @@ void CPlayerEntity::EndServerFrame ()
 	// If it wasn't updated here, the view position would lag a frame
 	// behind the body position when pushed -- "sinking into plats"
 	//
+	vec3_t origin;
+	State.GetOrigin(origin);
 	for (i=0 ; i<3 ; i++)
 	{
-		Client.PlayerState.GetPMove()->origin[i] = gameEntity->state.origin[i]*8.0;
+		Client.PlayerState.GetPMove()->origin[i] = origin[i]*8.0;
 		Client.PlayerState.GetPMove()->velocity[i] = gameEntity->velocity[i]*8.0;
 	}
 
@@ -1776,13 +1795,10 @@ void CPlayerEntity::EndServerFrame ()
 	// set model angles from view angles so other things in
 	// the world can tell which direction you are looking
 	//
-	if (Client.v_angle[PITCH] > 180)
-		gameEntity->state.angles[PITCH] = (-360 + Client.v_angle[PITCH])/3;
-	else
-		gameEntity->state.angles[PITCH] = Client.v_angle[PITCH]/3;
-	gameEntity->state.angles[YAW] = Client.v_angle[YAW];
-	gameEntity->state.angles[ROLL] = 0;
-	gameEntity->state.angles[ROLL] = CalcRoll (gameEntity->state.angles, gameEntity->velocity, right)*4;
+	State.SetAngles (vec3f(
+		(Client.v_angle[PITCH] > 180) ? (-360 + Client.v_angle[PITCH])/3 : Client.v_angle[PITCH]/3,
+		Client.v_angle[YAW],
+		CalcRoll (gameEntity->state.angles, gameEntity->velocity, right)*4));
 
 	//
 	// calculate speed and cycle to be used for
@@ -2361,7 +2377,7 @@ void CPlayerEntity::SetCTFStats()
 	{
 		Client.resp.ghost->score = Client.resp.score;
 		Q_strncpyz(Client.resp.ghost->netname, Client.pers.netname, sizeof(Client.resp.ghost->netname));
-		Client.resp.ghost->number = gameEntity->state.number;
+		Client.resp.ghost->number = State.GetNumber();
 	}
 
 	// logo headers for the frag display
@@ -2514,8 +2530,10 @@ void CPlayerEntity::CTFSetIDView()
 
 	Angles_Vectors(Client.v_angle, forward, NULL, NULL);
 	Vec3Scale(forward, 1024, forward);
-	Vec3Add(gameEntity->state.origin, forward, forward);
-	tr = CTrace(gameEntity->state.origin, forward, gameEntity, CONTENTS_MASK_SOLID);
+	vec3_t origin;
+	State.GetOrigin (origin);
+	Vec3Add(origin, forward, forward);
+	tr = CTrace(origin, forward, gameEntity, CONTENTS_MASK_SOLID);
 	if (tr.fraction < 1 && tr.ent && ((tr.ent - g_edicts) >= 1 && (tr.ent - g_edicts) <= game.maxclients))
 	{
 		Client.PlayerState.SetStat(STAT_CTF_ID_VIEW, CS_PLAYERSKINS + (gameEntity - g_edicts - 1));
@@ -2529,7 +2547,9 @@ void CPlayerEntity::CTFSetIDView()
 		who = dynamic_cast<CPlayerEntity*>((g_edicts + i)->Entity);
 		if (!who->IsInUse() || who->GetSolid() == SOLID_NOT)
 			continue;
-		Vec3Subtract(who->gameEntity->state.origin, gameEntity->state.origin, dir);
+		vec3_t whoOrigin;
+		who->State.GetOrigin (whoOrigin);
+		Vec3Subtract(whoOrigin, origin, dir);
 		VectorNormalizeFastf(dir);
 		d = DotProduct(forward, dir);
 		if (d > bd && loc_CanSee(gameEntity, who->gameEntity))
@@ -2577,9 +2597,11 @@ void CPlayerEntity::CTFAssignGhost()
 
 void CPlayerEntity::MoveToIntermission ()
 {
+	vec3_t origin;
+	State.GetOrigin (origin);
 	if (game.mode != GAME_SINGLEPLAYER)
 		Client.showscores = true;
-	Vec3Copy (level.intermission_origin, gameEntity->state.origin);
+	Vec3Copy (level.intermission_origin, origin);
 	Client.PlayerState.GetPMove()->origin[0] = level.intermission_origin[0]*8;
 	Client.PlayerState.GetPMove()->origin[1] = level.intermission_origin[1]*8;
 	Client.PlayerState.GetPMove()->origin[2] = level.intermission_origin[2]*8;
@@ -2604,11 +2626,11 @@ void CPlayerEntity::MoveToIntermission ()
 	Client.grenade_time = 0;
 
 	gameEntity->viewheight = 0;
-	gameEntity->state.modelIndex = 0;
-	gameEntity->state.modelIndex2 = 0;
-	gameEntity->state.modelIndex3 = 0;
-	gameEntity->state.effects = 0;
-	gameEntity->state.sound = 0;
+	State.SetModelIndex (0);
+	State.SetModelIndex (0, 2);
+	State.SetModelIndex (0, 3);
+	State.SetEffects (0);
+	State.SetSound (0);
 	SetSolid (SOLID_NOT);
 
 	// add the layout
@@ -2749,14 +2771,17 @@ LookAtKiller
 void CPlayerEntity::LookAtKiller (edict_t *inflictor, edict_t *attacker)
 {
 	vec3_t		dir;
+	vec3_t		origin, angles;
+	State.GetOrigin (origin);
+	State.GetAngles (angles);
 
 	if (attacker && (attacker != world) && (attacker != gameEntity))
-		Vec3Subtract (attacker->state.origin, gameEntity->state.origin, dir);
+		Vec3Subtract (attacker->state.origin, origin, dir);
 	else if (inflictor && (inflictor != world) && (inflictor != gameEntity))
-		Vec3Subtract (inflictor->state.origin, gameEntity->state.origin, dir);
+		Vec3Subtract (inflictor->state.origin, origin, dir);
 	else
 	{
-		Client.killer_yaw = gameEntity->state.angles[YAW];
+		Client.killer_yaw = angles[YAW];
 		return;
 	}
 
@@ -2854,7 +2879,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 
 	if (gameEntity->movetype == MOVETYPE_NOCLIP)
 		Client.PlayerState.GetPMove()->pmType = PMT_SPECTATOR;
-	else if (gameEntity->state.modelIndex != 255)
+	else if (State.GetModelIndex() != 255)
 		Client.PlayerState.GetPMove()->pmType = PMT_GIB;
 	else if (gameEntity->deadflag)
 		Client.PlayerState.GetPMove()->pmType = PMT_DEAD;
@@ -2864,9 +2889,11 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 	Client.PlayerState.GetPMove()->gravity = sv_gravity->Float();
 	pm.state = *Client.PlayerState.GetPMove();
 
+	vec3_t origin;
+	State.GetOrigin (origin);
 	for (i=0 ; i<3 ; i++)
 	{
-		pm.state.origin[i] = gameEntity->state.origin[i]*8;
+		pm.state.origin[i] = origin[i]*8;
 		pm.state.velocity[i] = gameEntity->velocity[i]*8;
 	}
 
@@ -2894,11 +2921,9 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 	Client.PlayerState.SetPMove (&pm.state);
 	Client.old_pmove = pm.state;
 
+	State.SetOrigin(vec3f(pm.state.origin[0]*0.125, pm.state.origin[1]*0.125, pm.state.origin[2]*0.125));
 	for (i=0 ; i<3 ; i++)
-	{
-		gameEntity->state.origin[i] = pm.state.origin[i]*0.125;
 		gameEntity->velocity[i] = pm.state.velocity[i]*0.125;
-	}
 
 	Vec3Copy (pm.mins, gameEntity->mins);
 	Vec3Copy (pm.maxs, gameEntity->maxs);
@@ -2907,10 +2932,11 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 	Client.resp.cmd_angles[1] = SHORT2ANGLE(ucmd->angles[1]);
 	Client.resp.cmd_angles[2] = SHORT2ANGLE(ucmd->angles[2]);
 
+	State.GetOrigin (origin);
 	if (gameEntity->groundentity && !pm.groundEntity && (pm.cmd.upMove >= 10) && (pm.waterLevel == 0))
 	{
 		PlaySoundFrom(gameEntity, CHAN_VOICE, gMedia.Player.Jump);
-		PlayerNoise(this, gameEntity->state.origin, PNOISE_SELF);
+		PlayerNoise(this, origin, PNOISE_SELF);
 	}
 
 	gameEntity->viewheight = pm.viewHeight;

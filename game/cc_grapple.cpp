@@ -149,16 +149,18 @@ void CGrapple::GrappleTouch (edict_t *self, edict_t *other, plane_t *plane, cmBs
 // draw beam between grapple and self
 void CGrapple::GrappleDrawCable(edict_t *self)
 {
-	vec3_t	offset, start, end, f, r;
+	vec3_t	offset, start, end, f, r, origin;
 	vec3_t	dir;
 	float	distance;
 	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(self->owner->Entity);
 
+	Player->State.GetOrigin (origin);
+
 	Angles_Vectors (Player->Client.v_angle, f, r, NULL);
 	Vec3Set(offset, 16, 16, Player->gameEntity->viewheight-8);
-	P_ProjectSource (Player, Player->gameEntity->state.origin, offset, f, r, start);
+	P_ProjectSource (Player, offset, f, r, start);
 
-	Vec3Subtract(start, Player->gameEntity->state.origin, offset);
+	Vec3Subtract(start, origin, offset);
 
 	Vec3Subtract (start, self->state.origin, dir);
 	distance = Vec3Length(dir);
@@ -169,7 +171,7 @@ void CGrapple::GrappleDrawCable(edict_t *self)
 	// adjust start for beam origin being in middle of a segment
 	Vec3Copy (self->state.origin, end);
 
-	CTempEnt_Trails::GrappleCable (Player->gameEntity->state.origin, end, Player->gameEntity - g_edicts, offset);
+	CTempEnt_Trails::GrappleCable (origin, end, Player->gameEntity - g_edicts, offset);
 }
 
 void SV_AddGravity (edict_t *ent);
@@ -236,7 +238,7 @@ void CGrapple::GrapplePull(edict_t *self)
 		vec3_t forward, up;
 
 		Angles_Vectors (Player->Client.v_angle, forward, NULL, up);
-		Vec3Copy(Player->gameEntity->state.origin, v);
+		Player->State.GetOrigin (v);
 		v[2] += Player->gameEntity->viewheight;
 		Vec3Subtract (self->state.origin, v, hookdir);
 
@@ -287,7 +289,9 @@ void CGrapple::FireGrapple (CPlayerEntity *Player, vec3_t start, vec3_t dir, int
 	Player->Client.ctf_grapplestate = CTF_GRAPPLE_STATE_FLY; // we're firing, not on hook
 	gi.linkentity (grapple);
 
-	CTrace tr = CTrace (Player->gameEntity->state.origin, grapple->state.origin, grapple, CONTENTS_MASK_SHOT);
+	vec3_t origin;
+	Player->State.GetOrigin (origin);
+	CTrace tr = CTrace (origin, grapple->state.origin, grapple, CONTENTS_MASK_SHOT);
 	if (tr.fraction < 1.0)
 	{
 		Vec3MA (grapple->state.origin, -10, dir, grapple->state.origin);
@@ -307,7 +311,7 @@ void CGrapple::Fire (CPlayerEntity *Player)
 
 	Angles_Vectors (Player->Client.v_angle, forward, right, NULL);
 	Vec3Set(offset, 24, 8, Player->gameEntity->viewheight-8+2);
-	P_ProjectSource (Player, Player->gameEntity->state.origin, offset, forward, right, start);
+	P_ProjectSource (Player, offset, forward, right, start);
 
 	Vec3Scale (forward, -2, Player->Client.kick_origin);
 	Player->Client.kick_angles[0] = -1;
@@ -340,10 +344,7 @@ void CGrapple::WeaponGeneric (CPlayerEntity *Player)
 			// if we just switched back to grapple, immediately go to fire frame
 			if (Player->Client.ctf_grapplestate > CTF_GRAPPLE_STATE_FLY)
 			{
-				if (!(Player->Client.buttons & BUTTON_ATTACK))
-					newFrame = 9;
-				else
-					newFrame = 5;
+				newFrame = 9;
 				newState = WS_FIRING;
 			}
 		}
@@ -416,7 +417,8 @@ void CGrapple::WeaponGeneric (CPlayerEntity *Player)
 		// Go right away if we aren't holding attack
 		else if (!(Player->Client.buttons & BUTTON_ATTACK))
 		{
-			ResetGrapple(Player->Client.ctf_grapple);
+			if (Player->Client.ctf_grapple)
+				ResetGrapple(Player->Client.ctf_grapple);
 			newFrame = IdleStart+1;
 			newState = WS_IDLE;
 		}

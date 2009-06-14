@@ -425,8 +425,11 @@ void CTFFragBonuses(CPlayerEntity *targ, CPlayerEntity *attacker)
 	// ok we have the attackers flag and a pointer to the carrier
 
 	// check to see if we are defending the base's flag
-	Vec3Subtract(targ->gameEntity->state.origin, flag->state.origin, v1);
-	Vec3Subtract(attacker->gameEntity->state.origin, flag->state.origin, v2);
+	vec3_t origin;
+	targ->State.GetOrigin (origin);
+	Vec3Subtract(origin, flag->state.origin, v1);
+	attacker->State.GetOrigin (origin);
+	Vec3Subtract(origin, flag->state.origin, v2);
 
 	if ((Vec3Length(v1) < CTF_TARGET_PROTECT_RADIUS ||
 		Vec3Length(v2) < CTF_TARGET_PROTECT_RADIUS ||
@@ -450,8 +453,12 @@ void CTFFragBonuses(CPlayerEntity *targ, CPlayerEntity *attacker)
 
 	if (carrier && carrier != attacker)
 	{
-		Vec3Subtract(targ->gameEntity->state.origin, carrier->gameEntity->state.origin, v1);
-		Vec3Subtract(attacker->gameEntity->state.origin, carrier->gameEntity->state.origin, v1);
+		targ->State.GetOrigin (origin);
+		carrier->State.GetOrigin (v1);
+		Vec3Subtract(origin, v1, v1);
+		attacker->State.GetOrigin (origin);
+		carrier->State.GetOrigin (v2);
+		Vec3Subtract(origin, v2, v2);
 
 		if (Vec3Length(v1) < CTF_ATTACKER_PROTECT_RADIUS ||
 			Vec3Length(v2) < CTF_ATTACKER_PROTECT_RADIUS ||
@@ -705,7 +712,7 @@ void CTFTeam_f (CPlayerEntity *ent)
 	{ // spectator
 		ent->PutInServer();
 		// add a teleportation effect
-		ent->gameEntity->state.event = EV_PLAYER_TELEPORT;
+		ent->State.SetEvent (EV_PLAYER_TELEPORT);
 		// hold in place briefly
 		ent->Client.PlayerState.GetPMove()->pmFlags = PMF_TIME_TELEPORT;
 		ent->Client.PlayerState.GetPMove()->pmTime = 14;
@@ -783,7 +790,9 @@ static void CTFSay_Team_Location(CPlayerEntity *who, char *buf)
 	bool hotsee = false;
 	bool cansee;
 
-	while ((what = loc_findradius(what, who->gameEntity->state.origin, 1024)) != NULL)
+	vec3_t origin;
+	who->State.GetOrigin(origin);
+	while ((what = loc_findradius(what, origin, 1024)) != NULL)
 	{
 		// find what in loc_classnames
 		for (i = 0; loc_names[i].classname; i++)
@@ -798,7 +807,7 @@ static void CTFSay_Team_Location(CPlayerEntity *who, char *buf)
 			hotsee = true;
 			hotindex = loc_names[i].priority;
 			hot = what;
-			Vec3Subtract(what->state.origin, who->gameEntity->state.origin, v);
+			Vec3Subtract(what->state.origin, origin, v);
 			hotdist = Vec3Length(v);
 			continue;
 		}
@@ -807,7 +816,7 @@ static void CTFSay_Team_Location(CPlayerEntity *who, char *buf)
 			continue;
 		if (hotsee && hotindex < loc_names[i].priority)
 			continue;
-		Vec3Subtract(what->state.origin, who->gameEntity->state.origin, v);
+		Vec3Subtract(what->state.origin, origin, v);
 		newdist = Vec3Length(v);
 		if (newdist < hotdist || 
 			(cansee && loc_names[i].priority < hotindex))
@@ -863,7 +872,7 @@ static void CTFSay_Team_Location(CPlayerEntity *who, char *buf)
 		*buf = 0;
 
 	// near or above
-	Vec3Subtract(who->gameEntity->state.origin, hot->state.origin, v);
+	Vec3Subtract(origin, hot->state.origin, v);
 	if (fabs(v[2]) > fabs(v[0]) && fabs(v[2]) > fabs(v[1]))
 		if (v[2] > 0)
 			Q_strcatz(buf, "above ", sizeof(buf));
@@ -1239,7 +1248,7 @@ void CTFStartMatch(void)
 			ent->Client.respawn_time = level.time + 1.0 + ((rand()%30)/10.0);
 			ent->Client.PlayerState.GetPMove()->pmType = PMT_DEAD;
 			ent->Client.anim_priority = ANIM_DEATH;
-			ent->gameEntity->state.frame = FRAME_death308-1;
+			ent->State.SetFrame (FRAME_death308-1);
 			ent->Client.anim_end = FRAME_death308;
 			ent->gameEntity->deadflag = DEAD_DEAD;
 			ent->gameEntity->movetype = MOVETYPE_NOCLIP;

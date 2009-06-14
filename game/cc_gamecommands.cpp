@@ -204,28 +204,28 @@ void Cmd_Wave_f (CPlayerEntity *ent)
 	{
 	case 0:
 		ClientPrintf (ent->gameEntity, PRINT_HIGH, "flipoff\n");
-		ent->gameEntity->state.frame = FRAME_flip01-1;
+		ent->State.SetFrame (FRAME_flip01-1);
 		ent->Client.anim_end = FRAME_flip12;
 		break;
 	case 1:
 		ClientPrintf (ent->gameEntity, PRINT_HIGH, "salute\n");
-		ent->gameEntity->state.frame = FRAME_salute01-1;
+		ent->State.SetFrame (FRAME_salute01-1);
 		ent->Client.anim_end = FRAME_salute11;
 		break;
 	case 2:
 		ClientPrintf (ent->gameEntity, PRINT_HIGH, "taunt\n");
-		ent->gameEntity->state.frame = FRAME_taunt01-1;
+		ent->State.SetFrame (FRAME_taunt01-1);
 		ent->Client.anim_end = FRAME_taunt17;
 		break;
 	case 3:
 		ClientPrintf (ent->gameEntity, PRINT_HIGH, "wave\n");
-		ent->gameEntity->state.frame = FRAME_wave01-1;
+		ent->State.SetFrame (FRAME_wave01-1);
 		ent->Client.anim_end = FRAME_wave11;
 		break;
 	case 4:
 	default:
 		ClientPrintf (ent->gameEntity, PRINT_HIGH, "point\n");
-		ent->gameEntity->state.frame = FRAME_point01-1;
+		ent->State.SetFrame (FRAME_point01-1);
 		ent->Client.anim_end = FRAME_point12;
 		break;
 	}

@@ -80,7 +80,7 @@ void CGrenadeLauncher::Fire (CPlayerEntity *ent)
 
 	Vec3Set (offset, 8, 8, ent->gameEntity->viewheight-8);
 	Angles_Vectors (ent->Client.v_angle, forward, right, NULL);
-	P_ProjectSource (ent, ent->gameEntity->state.origin, offset, forward, right, start);
+	P_ProjectSource (ent, offset, forward, right, start);
 
 	Vec3Scale (forward, -2, ent->Client.kick_origin);
 	ent->Client.kick_angles[0] = -1;

@@ -81,12 +81,14 @@ void CBFG::Fire (CPlayerEntity *ent)
 
 void CBFG::MuzzleEffect (CPlayerEntity *ent)
 {
+	vec3_t origin;
+	ent->State.GetOrigin (origin);
 	// send muzzle flash
 	Muzzle (ent, MZ_BFG);
 
 	ent->Client.PlayerState.SetGunFrame (ent->Client.PlayerState.GetGunFrame()+1);
 
-	PlayerNoise(ent, ent->gameEntity->state.origin, PNOISE_WEAPON);
+	PlayerNoise(ent, origin, PNOISE_WEAPON);
 }
 
 void CBFG::FireBFG (CPlayerEntity *ent)
@@ -119,7 +121,7 @@ void CBFG::FireBFG (CPlayerEntity *ent)
 	ent->Client.v_dmg_time = level.time + DAMAGE_TIME;
 
 	Vec3Set (offset, 8, 8, ent->gameEntity->viewheight-8);
-	P_ProjectSource (ent, ent->gameEntity->state.origin, offset, forward, right, start);
+	P_ProjectSource (ent, offset, forward, right, start);
 	fire_bfg (ent->gameEntity, start, forward, damage, 400, damage_radius);
 	AttackSound (ent);
 

@@ -67,12 +67,12 @@ void CChaingun::FireAnimation (CPlayerEntity *ent)
 	ent->Client.anim_priority = ANIM_ATTACK;
 	if (ent->Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED)
 	{
-		ent->gameEntity->state.frame = FRAME_crattak1 - (ent->Client.PlayerState.GetGunFrame() & 1);
+		ent->State.SetFrame (FRAME_crattak1 - (ent->Client.PlayerState.GetGunFrame() & 1));
 		ent->Client.anim_end = FRAME_crattak9;
 	}
 	else
 	{
-		ent->gameEntity->state.frame = FRAME_attack1 - (ent->Client.PlayerState.GetGunFrame() & 1);
+		ent->State.SetFrame (FRAME_attack1 - (ent->Client.PlayerState.GetGunFrame() & 1));
 		ent->Client.anim_end = FRAME_attack8;
 	}
 }
@@ -156,7 +156,7 @@ void CChaingun::Fire (CPlayerEntity *ent)
 		r = 7 + crandom()*4;
 		u = crandom()*4;
 		Vec3Set (offset, 0, r, u + ent->gameEntity->viewheight-8);
-		P_ProjectSource (ent, ent->gameEntity->state.origin, offset, forward, right, start);
+		P_ProjectSource (ent, offset, forward, right, start);
 
 		fire_bullet (ent->gameEntity, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_CHAINGUN);
 	}

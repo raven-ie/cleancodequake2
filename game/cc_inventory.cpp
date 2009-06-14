@@ -582,8 +582,6 @@ void Cmd_Give_f (CPlayerEntity *ent)
 		for (i=0 ; i<GetNumItems() ; i++)
 		{
 			it = GetItemByIndex(i);
-			if (!(it->Flags & ITEMFLAG_GRABBABLE))
-				continue;
 			if (!(it->Flags & ITEMFLAG_WEAPON))
 				continue;
 			ent->Client.pers.Inventory += it;
@@ -672,7 +670,7 @@ void Cmd_Give_f (CPlayerEntity *ent)
 
 	if (!(it->Flags & ITEMFLAG_GRABBABLE))
 	{
-		ClientPrintf (ent->gameEntity, PRINT_HIGH, "Non-Pickup Item\n");
+		ent->Client.pers.Inventory += it;
 		return;
 	}
 
@@ -712,12 +710,12 @@ void Cmd_Give (CPlayerEntity *ent)
 	// Calculate spawning direction
 	vec3_t Origin, Angles, forward;
 
-	Vec3Copy (ent->gameEntity->state.angles, Angles);
+	ent->State.GetAngles(Angles);
 	Angles[0] = 0; // No pitch
 	Angles[2] = 0; // No roll
 
 	Angles_Vectors (Angles, forward, NULL, NULL);
-	Vec3Copy (ent->gameEntity->state.origin, Origin);
+	ent->State.GetOrigin(Origin);
 	Vec3MA (Origin, 150, forward, Origin);
 
 	if (gi.pointcontents(Origin) & CONTENTS_SOLID)

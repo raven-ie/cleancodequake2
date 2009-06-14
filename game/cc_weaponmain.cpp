@@ -168,8 +168,8 @@ void CWeapon::ChangeWeapon (CPlayerEntity *Player)
 	Player->Client.machinegun_shots = 0;
 
 	// set visible model
-	if (Player->Client.pers.Weapon && Player->gameEntity->state.modelIndex == 255)
-		Player->gameEntity->state.skinNum = (Player->gameEntity - g_edicts - 1) | ((Player->Client.pers.Weapon->vwepIndex & 0xff) << 8);
+	if (Player->Client.pers.Weapon && Player->State.GetModelIndex() == 255)
+		Player->State.SetSkinNum ((Player->gameEntity - g_edicts - 1) | ((Player->Client.pers.Weapon->vwepIndex & 0xff) << 8));
 
 	if (!Player->Client.pers.Weapon)
 	{	// dead
@@ -187,12 +187,12 @@ void CWeapon::ChangeWeapon (CPlayerEntity *Player)
 	Player->Client.anim_priority = ANIM_PAIN;
 	if (Player->Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED)
 	{
-		Player->gameEntity->state.frame = FRAME_crpain1;
+		Player->State.SetFrame (FRAME_crpain1);
 		Player->Client.anim_end = FRAME_crpain4;
 	}
 	else
 	{
-		Player->gameEntity->state.frame = FRAME_pain301;
+		Player->State.SetFrame (FRAME_pain301);
 		Player->Client.anim_end = FRAME_pain304;
 	}
 }
@@ -253,10 +253,11 @@ void CWeapon::OutOfAmmo (CPlayerEntity *Player)
 }
 
 // Routines
-inline void P_ProjectSource (CPlayerEntity *Player, vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result)
+inline void P_ProjectSource (CPlayerEntity *Player, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result)
 {
-	vec3_t	_distance;
+	vec3_t	_distance, point;
 
+	Player->State.GetOrigin(point);
 	Vec3Copy (distance, _distance);
 	if (Player->Client.pers.hand == LEFT_HANDED)
 		_distance[1] *= -1;
@@ -341,7 +342,9 @@ void CWeapon::Muzzle (CPlayerEntity *Player, int muzzleNum)
 {
 	if (isSilenced)
 		muzzleNum |= MZ_SILENCED;
-	CTempEnt::MuzzleFlash(Player->gameEntity->state.origin, Player->gameEntity-g_edicts, muzzleNum);
+	vec3_t origin;
+	Player->State.GetOrigin (origin);
+	CTempEnt::MuzzleFlash(origin, Player->gameEntity-g_edicts, muzzleNum);
 }
 
 /*
@@ -497,12 +500,12 @@ void CWeapon::FireAnimation (CPlayerEntity *Player)
 	Player->Client.anim_priority = ANIM_ATTACK;
 	if (Player->Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED)
 	{
-		Player->gameEntity->state.frame = FRAME_crattak1-1;
+		Player->State.SetFrame (FRAME_crattak1-1);
 		Player->Client.anim_end = FRAME_crattak9;
 	}
 	else
 	{
-		Player->gameEntity->state.frame = FRAME_attack1-1;
+		Player->State.SetFrame (FRAME_attack1-1);
 		Player->Client.anim_end = FRAME_attack8;
 	}
 }
