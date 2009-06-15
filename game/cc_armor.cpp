@@ -122,6 +122,30 @@ void CArmor::Drop (CPlayerEntity *ent)
 {
 }
 
+int CArmor::CheckArmor (CPlayerEntity *Player, vec3_t point, vec3_t normal, int damage, int dflags)
+{
+	if (!damage)
+		return 0;
+	if (dflags & DAMAGE_NO_ARMOR)
+		return 0;
+
+	int save = ceil ( ((dflags & DAMAGE_ENERGY) ? energyProtection : normalProtection) * damage);
+	if (save >= Player->Client.pers.Inventory.Has(this))
+		save = Player->Client.pers.Inventory.Has(this);
+
+	if (!save)
+		return 0;
+
+	Player->Client.pers.Inventory.Remove(GetIndex(), save);
+	CTempEnt_Splashes::Sparks (point, normal, (dflags & DAMAGE_BULLET) ? CTempEnt_Splashes::STBulletSparks : CTempEnt_Splashes::STSparks, CTempEnt_Splashes::SPTSparks);
+
+	// Ran out of armor?
+	if (!Player->Client.pers.Inventory.Has(this))
+		Player->Client.pers.Armor = NULL;
+
+	return save;
+}
+
 void AddArmorToList ()
 {
 	CArmor *JacketArmor = new CArmor ("item_armor_jacket", "models/items/armor/jacket/tris.md2", EF_ROTATE, "misc/ar1_pkup.wav", "i_jacketarmor", "Jacket Armor", ITEMFLAG_GRABBABLE|ITEMFLAG_ARMOR, "", 25, 50, .30f, .00f);

@@ -105,7 +105,7 @@ public:
 	CBaseEntity (int Index);
 	virtual ~CBaseEntity ();
 
-	virtual		bool		Run () = 0; // Runs the entity
+	virtual		bool		Run () {return true;}; // Runs the entity
 
 	// Funtions below are to link the private gameEntity together
 	CBaseEntity		*GetOwner	();
@@ -179,7 +179,9 @@ enum
 {
 	ENT_BASE		=	1, // Can be casted to CBaseEntity
 	ENT_HURTABLE	=	2, // Can be casted to CHurtableEntity
-	ENT_PLAYER		=	4, // Can be casted to CPlayerEntity
+	ENT_THINKABLE	=	4, // Can be casted to CThinkableEntity
+	ENT_TOUCHABLE	=	8, // Can be casted to CTouchableEntity
+	ENT_PLAYER		=	16, // Can be casted to CPlayerEntity
 };
 
 // Base classes
@@ -187,3 +189,11 @@ enum
 
 // Derivitives
 #include "cc_playerentity.h"
+#include "cc_weaponentities.h"
+
+class CWorldEntity : public CBaseEntity
+{
+public:
+	CWorldEntity ();
+	CWorldEntity (int Index);
+};

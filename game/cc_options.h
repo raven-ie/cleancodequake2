@@ -98,7 +98,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #ifdef ALLOW_ASSERTS
 #ifndef _DEBUG
-#define _CC_ASERT_EXPR(expr, msg)
+#define _CC_ASSERT_EXPR(expr, msg)
 #else
 #define _CC_ASSERT_EXPR(expr, msg) \
         (void) ((!!(expr)) || \

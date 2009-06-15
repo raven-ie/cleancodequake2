@@ -416,7 +416,7 @@ public:
 		CMenu_Label *BottomWhite = new CMenu_Label(this, x, y);
 		BottomWhite->Enabled = false;
 		BottomWhite->Align = LA_CENTER;
-		Q_snprintfz (BottomWhite->LabelString, sizeof(BottomWhite->LabelString), "Paril\n\nDavid 'Zoid' Kirsch\n\nAdrian Carmack\nPaul Steed\nBrian Cozzens\n\nTom Klok\n\nReuben");
+		Q_snprintfz (BottomWhite->LabelString, sizeof(BottomWhite->LabelString), "Paril\n\nDavid 'Zoid' Kirsch\n\nAdrian Carmack\nPaul Steed\nBrian Cozzens\n\nTom Klok\n\nxRDVx");
 		AddItem(BottomWhite);
 
 		x = -93;

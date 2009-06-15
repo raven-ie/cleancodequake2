@@ -85,7 +85,8 @@ void CGrenadeLauncher::Fire (CPlayerEntity *ent)
 	Vec3Scale (forward, -2, ent->Client.kick_origin);
 	ent->Client.kick_angles[0] = -1;
 
-	fire_grenade (ent->gameEntity, start, forward, damage, 600, 2.5, radius);
+	//fire_grenade (ent->gameEntity, start, forward, damage, 600, 2.5, radius);
+	CGrenade::Spawn (ent, start, forward, damage, 600, 2.5f, radius);
 
 	Muzzle (ent, MZ_GRENADE);
 	AttackSound (ent);

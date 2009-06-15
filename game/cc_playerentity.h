@@ -290,7 +290,7 @@ public:
 };
 
 // Players don't think or have (game) controlled physics
-class CPlayerEntity : public CBaseEntity
+class CPlayerEntity : public CHurtableEntity
 {
 public:
 	CClient		Client;
@@ -357,4 +357,7 @@ public:
 	void CTFAssignSkin (char *s);
 	bool CTFStart ();
 #endif
+
+	void Pain (CBaseEntity *other, float kick, int damage);
+	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
 };
