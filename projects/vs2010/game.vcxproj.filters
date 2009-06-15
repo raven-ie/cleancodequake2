@@ -1,0 +1,688 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="CleanCode Files">
+      <UniqueIdentifier>{a030d296-79a4-4bca-8e10-ac7d903b4cc2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Banning">
+      <UniqueIdentifier>{5a72590b-8f69-4b0e-81de-8e1e87b9518c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Colors">
+      <UniqueIdentifier>{1b119e05-b37f-41b4-9d35-028093de590c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Commands">
+      <UniqueIdentifier>{aa9ed66a-28df-456e-9e3d-5c2e6492f673}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\CTF Addon">
+      <UniqueIdentifier>{db2bd65e-0c6c-40e1-b775-c16375d4d26f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Dmflags">
+      <UniqueIdentifier>{83b8f30b-0c4a-4e0a-8bf0-d9ebcc3e6f75}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Entities">
+      <UniqueIdentifier>{644dfa6b-117c-4a21-9088-7a0d6b14b571}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Exception Handling">
+      <UniqueIdentifier>{3ffe8ee6-e3c4-45c9-b01e-2afcba1a03b9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Extras">
+      <UniqueIdentifier>{c77317c8-f386-4e75-b852-c718f19acf34}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Font">
+      <UniqueIdentifier>{90a50694-73c2-4b02-9531-bd27220ff9b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Game API">
+      <UniqueIdentifier>{0a8cbcbe-9680-4718-8b2d-2172caa2d50d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Game API\Arg">
+      <UniqueIdentifier>{21b19d30-0493-46d2-aa90-f4ec7aaef6ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Game API\Cvar">
+      <UniqueIdentifier>{faf594cd-8e16-440e-bc95-3126c3c65fb1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Game API\FrontEnd">
+      <UniqueIdentifier>{ea4f5a6b-8712-465a-aee9-ad22ee952e6b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Game API\Indexing">
+      <UniqueIdentifier>{6af2db5b-87fc-4759-aab4-6aac9ab72937}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Game API\Messages">
+      <UniqueIdentifier>{135b7eb7-fc1b-43ac-9a94-b3bf6d6cf2e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Game API\Pmove">
+      <UniqueIdentifier>{46111932-0eb9-47c6-8463-4dea777e0e0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Game API\Replacements">
+      <UniqueIdentifier>{cb02d21e-5127-42ce-954a-94548dfee328}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Game API\Statusbar">
+      <UniqueIdentifier>{e7a18ec5-0348-4dfa-bb7d-9c9e3e2153bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Game API\Trace">
+      <UniqueIdentifier>{8fbb2beb-6c13-4355-bf3d-10323a76705e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Hashing">
+      <UniqueIdentifier>{67b92eaa-06d0-4606-83da-3e0333d98cfc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Items">
+      <UniqueIdentifier>{cb326b1c-300a-49bc-8bfd-e4356a8a76df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Items\Inventory">
+      <UniqueIdentifier>{33721cf1-5d68-4875-9063-e92bb8322ee6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Items\Weapon System">
+      <UniqueIdentifier>{62daf537-5ae6-44c6-954a-214aebbdd3fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Map">
+      <UniqueIdentifier>{02ede0da-e1d5-48f7-ba30-3146edaab57e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Media">
+      <UniqueIdentifier>{9efee64f-21c2-46ab-a2c3-f2ac3134a47d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Menu">
+      <UniqueIdentifier>{830a64f6-8f95-477d-9a21-ddf72b9b14ab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Monsters">
+      <UniqueIdentifier>{e9af8fc7-7286-4011-8b5a-27ed4872ba56}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Monsters\Monster Files">
+      <UniqueIdentifier>{a97344dd-98c2-4eba-a752-aa75d94583ab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Monsters\Monster Files\Bosses">
+      <UniqueIdentifier>{40df5e8b-d23d-4b5c-bf61-deb7712fcf7e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Monsters\Monster Files\Soldiers">
+      <UniqueIdentifier>{0e28f6bc-edab-4a31-ad71-99b722011f03}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CleanCode Files\Pathfinding">
+      <UniqueIdentifier>{0e9a612b-8212-4293-a6c8-2eb37d2806f2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{c74a022c-2c9f-4838-8993-cfc0f6f5dcb6}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;fi;fd</Extensions>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{4e94e4d2-0ca6-41df-a6aa-de5d6252ba8f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{331f80cf-11b3-4bb6-b804-3a076a1c7288}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;hpj;bat;for;f90</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\game\cc_arg.cpp">
+      <Filter>CleanCode Files\Game API\Arg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_armor.cpp">
+      <Filter>CleanCode Files\Items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_ban.cpp">
+      <Filter>CleanCode Files\Banning</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_barracuda.cpp">
+      <Filter>CleanCode Files\Monsters\Monster Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_baseentity.cpp">
+      <Filter>CleanCode Files\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_bfg.cpp">
+      <Filter>CleanCode Files\Items\Weapon System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_bitch.cpp">
+      <Filter>CleanCode Files\Monsters\Monster Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_blaster.cpp">
+      <Filter>CleanCode Files\Items\Weapon System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_chaingun.cpp">
+      <Filter>CleanCode Files\Items\Weapon System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_cmds.cpp">
+      <Filter>CleanCode Files\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_controls.cpp">
+      <Filter>CleanCode Files\Menu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_ctf.cpp">
+      <Filter>CleanCode Files\CTF Addon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_ctfadmin.cpp">
+      <Filter>CleanCode Files\CTF Addon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_ctfitems.cpp">
+      <Filter>CleanCode Files\CTF Addon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_ctfmenu.cpp">
+      <Filter>CleanCode Files\CTF Addon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_cvar.cpp">
+      <Filter>CleanCode Files\Game API\Cvar</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_dmflags.cpp">
+      <Filter>CleanCode Files\Dmflags</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_entitytypes.cpp">
+      <Filter>CleanCode Files\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_exceptionhandler.cpp">
+      <Filter>CleanCode Files\Exception Handling</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_floater.cpp">
+      <Filter>CleanCode Files\Monsters\Monster Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_flyer.cpp">
+      <Filter>CleanCode Files\Monsters\Monster Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_frontend.cpp">
+      <Filter>CleanCode Files\Game API\FrontEnd</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_gameapi.cpp">
+      <Filter>CleanCode Files\Game API</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_gamecommands.cpp">
+      <Filter>CleanCode Files\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_gladiator.cpp">
+      <Filter>CleanCode Files\Monsters\Monster Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_grapple.cpp">
+      <Filter>CleanCode Files\CTF Addon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_grenadelauncher.cpp">
+      <Filter>CleanCode Files\Items\Weapon System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_gunner.cpp">
+      <Filter>CleanCode Files\Monsters\Monster Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_handgrenade.cpp">
+      <Filter>CleanCode Files\Items\Weapon System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_hash.cpp">
+      <Filter>CleanCode Files\Hashing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_health.cpp">
+      <Filter>CleanCode Files\Items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_hyperblaster.cpp">
+      <Filter>CleanCode Files\Items\Weapon System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_icarus.cpp">
+      <Filter>CleanCode Files\Monsters\Monster Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_indexing.cpp">
+      <Filter>CleanCode Files\Game API\Indexing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_infantry.cpp">
+      <Filter>CleanCode Files\Monsters\Monster Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_insane.cpp">
+      <Filter>CleanCode Files\Monsters\Monster Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_inventory.cpp">
+      <Filter>CleanCode Files\Items\Inventory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_itemlist.cpp">
+      <Filter>CleanCode Files\Items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_items.cpp">
+      <Filter>CleanCode Files\Items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_keys.cpp">
+      <Filter>CleanCode Files\Items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_machinegun.cpp">
+      <Filter>CleanCode Files\Items\Weapon System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_mapprint.cpp">
+      <Filter>CleanCode Files\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_media.cpp">
+      <Filter>CleanCode Files\Media</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_menu.cpp">
+      <Filter>CleanCode Files\Menu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_monsterlist.cpp">
+      <Filter>CleanCode Files\Monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_monsters.cpp">
+      <Filter>CleanCode Files\Monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_mutant.cpp">
+      <Filter>CleanCode Files\Monsters\Monster Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_newton.cpp">
+      <Filter>CleanCode Files\Extras</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_pathfinding.cpp">
+      <Filter>CleanCode Files\Pathfinding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_playerentity.cpp">
+      <Filter>CleanCode Files\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_pmove.cpp">
+      <Filter>CleanCode Files\Game API\Pmove</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_powerups.cpp">
+      <Filter>CleanCode Files\Items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_print.cpp">
+      <Filter>CleanCode Files\Game API\Replacements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_railgun.cpp">
+      <Filter>CleanCode Files\Items\Weapon System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_rocketlauncher.cpp">
+      <Filter>CleanCode Files\Items\Weapon System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_sbar.cpp">
+      <Filter>CleanCode Files\Game API\Statusbar</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_servercommands.cpp">
+      <Filter>CleanCode Files\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_shotgun.cpp">
+      <Filter>CleanCode Files\Items\Weapon System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_soldier_base.cpp">
+      <Filter>CleanCode Files\Monsters\Monster Files\Soldiers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_soldier_light.cpp">
+      <Filter>CleanCode Files\Monsters\Monster Files\Soldiers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_soldier_machinegun.cpp">
+      <Filter>CleanCode Files\Monsters\Monster Files\Soldiers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_soldier_shotgun.cpp">
+      <Filter>CleanCode Files\Monsters\Monster Files\Soldiers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_sound.cpp">
+      <Filter>CleanCode Files\Game API\Replacements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_supershotgun.cpp">
+      <Filter>CleanCode Files\Items\Weapon System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_supertank.cpp">
+      <Filter>CleanCode Files\Monsters\Monster Files\Bosses</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_tank.cpp">
+      <Filter>CleanCode Files\Monsters\Monster Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_tent.cpp">
+      <Filter>CleanCode Files\Game API\Messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_trace.cpp">
+      <Filter>CleanCode Files\Game API\Trace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_weaponentities.cpp">
+      <Filter>CleanCode Files\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_weaponmain.cpp">
+      <Filter>CleanCode Files\Items\Weapon System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_weapons.cpp">
+      <Filter>CleanCode Files\Items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\cc_write.cpp">
+      <Filter>CleanCode Files\Game API\Messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\g_chase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\g_combat.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\g_func.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\g_main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\g_misc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\g_phys.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\g_save.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\g_spawn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\g_target.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\g_trigger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\g_turret.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\g_utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\g_weapon.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\m_flash.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\p_client.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\p_hud.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game\p_trail.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\game\cc_arg.h">
+      <Filter>CleanCode Files\Game API\Arg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_armor.h">
+      <Filter>CleanCode Files\Items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_ban.h">
+      <Filter>CleanCode Files\Banning</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_barracuda.h">
+      <Filter>CleanCode Files\Monsters\Monster Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_baseentity.h">
+      <Filter>CleanCode Files\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_bfg.h">
+      <Filter>CleanCode Files\Items\Weapon System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_bitch.h">
+      <Filter>CleanCode Files\Monsters\Monster Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_blaster.h">
+      <Filter>CleanCode Files\Items\Weapon System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_chaingun.h">
+      <Filter>CleanCode Files\Items\Weapon System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_cmds.h">
+      <Filter>CleanCode Files\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_cmds_local.h">
+      <Filter>CleanCode Files\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_colors.h">
+      <Filter>CleanCode Files\Colors</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_conchars.h">
+      <Filter>CleanCode Files\Font</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_controls.h">
+      <Filter>CleanCode Files\Menu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_ctf.h">
+      <Filter>CleanCode Files\CTF Addon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_ctfadmin.h">
+      <Filter>CleanCode Files\CTF Addon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_ctfitems.h">
+      <Filter>CleanCode Files\CTF Addon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_ctfmenu.h">
+      <Filter>CleanCode Files\CTF Addon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_cvar.h">
+      <Filter>CleanCode Files\Game API\Cvar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_dmflags.h">
+      <Filter>CleanCode Files\Dmflags</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_entitytypes.h">
+      <Filter>CleanCode Files\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_exceptionhandler.h">
+      <Filter>CleanCode Files\Exception Handling</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_floater.h">
+      <Filter>CleanCode Files\Monsters\Monster Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_flyer.h">
+      <Filter>CleanCode Files\Monsters\Monster Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_gameapi.h">
+      <Filter>CleanCode Files\Game API</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_gamecommands.h">
+      <Filter>CleanCode Files\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_gladiator.h">
+      <Filter>CleanCode Files\Monsters\Monster Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_grapple.h">
+      <Filter>CleanCode Files\CTF Addon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_grenadelauncher.h">
+      <Filter>CleanCode Files\Items\Weapon System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_gunner.h">
+      <Filter>CleanCode Files\Monsters\Monster Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_handgrenade.h">
+      <Filter>CleanCode Files\Items\Weapon System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_hash.h">
+      <Filter>CleanCode Files\Hashing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_health.h">
+      <Filter>CleanCode Files\Items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_hyperblaster.h">
+      <Filter>CleanCode Files\Items\Weapon System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_icarus.h">
+      <Filter>CleanCode Files\Monsters\Monster Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_indexing.h">
+      <Filter>CleanCode Files\Game API\Indexing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_infantry.h">
+      <Filter>CleanCode Files\Monsters\Monster Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_insane.h">
+      <Filter>CleanCode Files\Monsters\Monster Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_inventory.h">
+      <Filter>CleanCode Files\Items\Inventory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_itemlist.h">
+      <Filter>CleanCode Files\Items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_items.h">
+      <Filter>CleanCode Files\Items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_keys.h">
+      <Filter>CleanCode Files\Items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_local.h">
+      <Filter>CleanCode Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_machinegun.h">
+      <Filter>CleanCode Files\Items\Weapon System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_mapprint.h">
+      <Filter>CleanCode Files\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_media.h">
+      <Filter>CleanCode Files\Media</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_menu.h">
+      <Filter>CleanCode Files\Menu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_monsterlist.h">
+      <Filter>CleanCode Files\Monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_monsters.h">
+      <Filter>CleanCode Files\Monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_mutant.h">
+      <Filter>CleanCode Files\Monsters\Monster Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_options.h">
+      <Filter>CleanCode Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_pathfinding.h">
+      <Filter>CleanCode Files\Pathfinding</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_playerentity.h">
+      <Filter>CleanCode Files\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_pmove.h">
+      <Filter>CleanCode Files\Game API\Pmove</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_powerups.h">
+      <Filter>CleanCode Files\Items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_print.h">
+      <Filter>CleanCode Files\Game API\Replacements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_railgun.h">
+      <Filter>CleanCode Files\Items\Weapon System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_rocketlauncher.h">
+      <Filter>CleanCode Files\Items\Weapon System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_sbar.h">
+      <Filter>CleanCode Files\Game API\Statusbar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_servercommands.h">
+      <Filter>CleanCode Files\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_shared.h">
+      <Filter>CleanCode Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_shotgun.h">
+      <Filter>CleanCode Files\Items\Weapon System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_soldier_base.h">
+      <Filter>CleanCode Files\Monsters\Monster Files\Soldiers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_soldier_light.h">
+      <Filter>CleanCode Files\Monsters\Monster Files\Soldiers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_soldier_machinegun.h">
+      <Filter>CleanCode Files\Monsters\Monster Files\Soldiers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_soldier_shotgun.h">
+      <Filter>CleanCode Files\Monsters\Monster Files\Soldiers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_sound.h">
+      <Filter>CleanCode Files\Game API\Replacements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_supershotgun.h">
+      <Filter>CleanCode Files\Items\Weapon System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_supertank.h">
+      <Filter>CleanCode Files\Monsters\Monster Files\Bosses</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_tank.h">
+      <Filter>CleanCode Files\Monsters\Monster Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_tent.h">
+      <Filter>CleanCode Files\Game API\Messages</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_trace.h">
+      <Filter>CleanCode Files\Game API\Trace</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_weaponentities.h">
+      <Filter>CleanCode Files\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_weaponmain.h">
+      <Filter>CleanCode Files\Items\Weapon System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_weapons.h">
+      <Filter>CleanCode Files\Items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game\cc_write.h">
+      <Filter>CleanCode Files\Game API\Messages</Filter>
+    </ClInclude>
+    <ClInclude Include="game.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="g_local.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="m_actor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="m_berserk.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="m_boss2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="m_boss31.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="m_boss32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="m_brain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="m_chick.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="m_flipper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="m_float.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="m_flyer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="m_gladiator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="m_gunner.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="m_hover.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="m_infantry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="m_insane.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="m_medic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="m_mutant.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="m_parasite.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="m_player.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="m_soldier.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="m_supertank.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="m_tank.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="game.def">
+      <Filter>Resources</Filter>
+    </None>
+  </ItemGroup>
+</Project>

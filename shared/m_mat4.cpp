@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 #include "shared.h"
 
+#ifdef SHARED_ALLOW_4x4_MATRIX
 mat4x4_t	mat4x4Identity = { 
 	1, 0, 0, 0,
 	0, 1, 0, 0,
@@ -429,3 +430,4 @@ void Matrix4_Transpose(const mat4x4_t m, mat4x4_t ret)
 	ret[8 ] = m[2]; ret[9 ] = m[6]; ret[10] = m[10]; ret[11] = m[14];
 	ret[12] = m[3]; ret[13] = m[7]; ret[14] = m[11]; ret[15] = m[15];
 }
+#endif

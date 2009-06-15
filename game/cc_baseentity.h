@@ -172,6 +172,8 @@ public:
 
 	void			Link ();
 	void			Unlink ();
+
+	void			Free ();
 };
 
 // EntityFlags values

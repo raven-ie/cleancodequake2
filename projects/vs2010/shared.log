@@ -1,0 +1,31 @@
+﻿Build started 6/15/2009 5:02:50 PM.
+     1>Project "E:\cleancodeq2\trunk\projects\vs2010\shared.vcxproj" on node 1 (build target(s)).
+         Creating "../../Intermediate/Debug/shared\lastbuild.timestamp" because "AlwaysCreate" was specified.
+     1>MakeDirsForCl:
+         Creating directory "E:\cleancodeq2\trunk\projects\vs2010\.\debug".
+       ClCompile:
+         byteswap.cpp
+         ColorVec.cpp
+         infostrings.cpp
+         mathlib.cpp
+         Vector.cpp
+         mersennetwister.cpp
+         m_angles.cpp
+         m_bounds.cpp
+         m_mat3.cpp
+         m_mat4.cpp
+         m_plane.cpp
+         m_quat.cpp
+         shared.cpp
+         string.cpp
+         Templates.cpp
+         Generating Code...
+       Lib:
+         shared.vcxproj -> E:\cleancodeq2\trunk\projects\vs2010\../../Intermediate/Debug/shared\shared.lib
+       _AfterBuild:
+         Creating "../../Intermediate/Debug/shared\LastSuccessfulBuild.timestamp" because "AlwaysCreate" was specified.
+     1>Done Building Project "E:\cleancodeq2\trunk\projects\vs2010\shared.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:23.17
