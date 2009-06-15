@@ -82,15 +82,89 @@ void CTouchableEntity::Touch(CBaseEntity *other, plane_t *plane, cmBspSurface_t 
 {
 }
 
+CPhysicsEntity::CPhysicsEntity () :
+CBaseEntity()
+{
+};
+
+CPhysicsEntity::CPhysicsEntity (int Index) :
+CBaseEntity(Index)
+{
+};
+
+void CPhysicsEntity::AddGravity()
+{
+	gameEntity->velocity[2] -= gameEntity->gravity * sv_gravity->Float() * FRAMETIME;
+}
+
+CTrace CPhysicsEntity::PushEntity (vec3_t push)
+{
+	CTrace		trace;
+	vec3_t		start;
+	vec3_t		end;
+	int			mask;
+
+	State.GetOrigin (start);
+	Vec3Add (start, push, end);
+
+retry:
+	if (gameEntity->clipMask)
+		mask = gameEntity->clipMask;
+	else
+		mask = CONTENTS_MASK_SOLID;
+
+	trace = CTrace (start, gameEntity->mins, gameEntity->maxs, end, gameEntity, mask);
+	
+	State.SetOrigin (trace.endPos);
+	Link();
+
+	if (trace.fraction != 1.0)
+	{
+		Impact (&trace);
+
+		// if the pushed entity went away and the pusher is still there
+		if (!trace.ent->inUse && IsInUse())
+		{
+			// move the pusher back and try again
+			State.SetOrigin (start);
+			Link ();
+			goto retry;
+		}
+	}
+
+	if (IsInUse())
+		G_TouchTriggers (gameEntity);
+
+	return trace;
+}
+
+void CPhysicsEntity::Impact (CTrace *trace)
+{
+	CBaseEntity	*e2;
+
+	if (!trace->ent->Entity)
+		return;
+
+	e2 = dynamic_cast<CBaseEntity*>(trace->ent->Entity);
+
+	if (GetSolid() != SOLID_NOT)
+		Touch (e2, &trace->plane, trace->surface);
+	
+	if ((e2->EntityFlags & ENT_TOUCHABLE) && e2->GetSolid() != SOLID_NOT)
+		dynamic_cast<CTouchableEntity*>(e2)->Touch (this, NULL, NULL);
+}
+
 CBounceProjectile::CBounceProjectile () :
-CBaseEntity (),
+backOff(1.5f),
+CPhysicsEntity (),
 CTouchableEntity(),
 CThinkableEntity()
 {
 }
 
 CBounceProjectile::CBounceProjectile (int Index) :
-CBaseEntity (Index),
+backOff(1.5f),
+CPhysicsEntity (Index),
 CTouchableEntity(),
 CThinkableEntity()
 {
@@ -101,7 +175,6 @@ bool CBounceProjectile::Run ()
 {
 	CTrace	trace;
 	vec3_t		move;
-	float		backoff;
 	edict_t		*slave;
 	bool		wasinwater;
 	bool		isinwater;
@@ -141,8 +214,7 @@ bool CBounceProjectile::Run ()
 
 	if (trace.fraction < 1)
 	{
-		backoff = 1.5;
-		ClipVelocity (gameEntity->velocity, trace.plane.normal, gameEntity->velocity, backoff);
+		ClipVelocity (gameEntity->velocity, trace.plane.normal, gameEntity->velocity, backOff);
 
 		// stop if on ground
 		if (trace.plane.normal[2] > 0.9)
@@ -185,64 +257,108 @@ bool CBounceProjectile::Run ()
 	return true;
 }
 
-void CBounceProjectile::AddGravity()
+CTossProjectile::CTossProjectile () :
+CBounceProjectile ()
 {
-	gameEntity->velocity[2] -= gameEntity->gravity * sv_gravity->Float() * FRAMETIME;
+	backOff = 1.0f;
 }
 
-CTrace CBounceProjectile::PushEntity (vec3_t push)
+CTossProjectile::CTossProjectile (int Index) :
+CBounceProjectile (Index)
 {
-	CTrace		trace;
-	vec3_t		start;
-	vec3_t		end;
-	int			mask;
+	backOff = 1.0f;
+}
 
-	State.GetOrigin (start);
-	Vec3Add (start, push, end);
+CFlyMissileProjectile::CFlyMissileProjectile () :
+CPhysicsEntity (),
+CTouchableEntity (),
+CThinkableEntity ()
+{
+}
 
-retry:
-	if (gameEntity->clipMask)
-		mask = gameEntity->clipMask;
-	else
-		mask = CONTENTS_MASK_SOLID;
+CFlyMissileProjectile::CFlyMissileProjectile (int Index) :
+CPhysicsEntity (Index),
+CTouchableEntity (),
+CThinkableEntity ()
+{
+}
 
-	trace = CTrace (start, gameEntity->mins, gameEntity->maxs, end, gameEntity, mask);
-	
-	State.SetOrigin (trace.endPos);
-	Link();
+bool CFlyMissileProjectile::Run ()
+{
+	CTrace	trace;
+	vec3_t		move;
+	edict_t		*slave;
+	bool		wasinwater;
+	bool		isinwater;
+	vec3_t		old_origin;
 
-	if (trace.fraction != 1.0)
+	// if not a team captain, so movement will be handled elsewhere
+	if (gameEntity->flags & FL_TEAMSLAVE)
+		return false;
+
+	if (CBaseEntity::gameEntity->velocity[2] > 0)
+		CBaseEntity::gameEntity->groundentity = NULL;
+
+// check for the groundentity going away
+	if (CBaseEntity::gameEntity->groundentity && !CBaseEntity::gameEntity->groundentity->inUse)
+		CBaseEntity::gameEntity->groundentity = NULL;
+
+// if onground, return without moving
+	if ( CBaseEntity::gameEntity->groundentity )
+		return false;
+
+	CBaseEntity::State.GetOrigin(old_origin);
+
+// move angles
+	vec3_t angles;
+	CBaseEntity::State.GetAngles (angles);
+	Vec3MA (angles, FRAMETIME, CBaseEntity::gameEntity->avelocity, angles);
+	CBaseEntity::State.SetAngles (angles);
+
+// move origin
+	Vec3Scale (gameEntity->velocity, FRAMETIME, move);
+	trace = PushEntity (move);
+	if (!IsInUse())
+		return false;
+
+	if (trace.fraction < 1)
 	{
-		Impact (&trace);
+		ClipVelocity (gameEntity->velocity, trace.plane.normal, gameEntity->velocity, 1.0);
 
-		// if the pushed entity went away and the pusher is still there
-		if (!trace.ent->inUse && IsInUse())
-		{
-			// move the pusher back and try again
-			State.SetOrigin (start);
-			Link ();
-			goto retry;
+		// stop if on ground
+		if (trace.plane.normal[2] > 0.9)
+		{		
+			gameEntity->groundentity = trace.ent;
+			gameEntity->groundentity_linkcount = trace.ent->linkCount;
+			Vec3Copy (vec3Origin, gameEntity->velocity);
+			Vec3Copy (vec3Origin, gameEntity->avelocity);
 		}
 	}
-
-	if (IsInUse())
-		G_TouchTriggers (gameEntity);
-
-	return trace;
-}
-
-void CBounceProjectile::Impact (CTrace *trace)
-{
-	CBaseEntity	*e2;
-
-	if (!trace->ent->Entity)
-		return;
-
-	e2 = dynamic_cast<CBaseEntity*>(trace->ent->Entity);
-
-	if (GetSolid() != SOLID_NOT)
-		Touch (e2, &trace->plane, trace->surface);
 	
-	if ((e2->EntityFlags & ENT_TOUCHABLE) && e2->GetSolid() != SOLID_NOT)
-		dynamic_cast<CTouchableEntity*>(e2)->Touch (this, NULL, NULL);
+// check for water transition
+	vec3_t or;
+	State.GetOrigin (or);
+
+	wasinwater = (gameEntity->watertype & CONTENTS_MASK_WATER) ? true : false;
+	gameEntity->watertype = gi.pointcontents (or);
+	isinwater = (gameEntity->watertype & CONTENTS_MASK_WATER) ? true : false;
+
+	if (isinwater)
+		gameEntity->waterlevel = 1;
+	else
+		gameEntity->waterlevel = 0;
+
+	if (!wasinwater && isinwater)
+		PlaySoundAt (old_origin, g_edicts, CHAN_AUTO, SoundIndex("misc/h2ohit1.wav"));
+	else if (wasinwater && !isinwater)
+		PlaySoundAt (or, g_edicts, CHAN_AUTO, SoundIndex("misc/h2ohit1.wav"));
+
+// move teamslaves
+	for (slave = gameEntity->teamchain; slave; slave = slave->teamchain)
+	{
+		State.SetOrigin (slave->state.origin);
+		gi.linkentity (slave);
+	}
+
+	return true;
 }

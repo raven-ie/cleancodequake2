@@ -345,7 +345,10 @@ void G_FreeEdict (edict_t *ed)
 		return;
 	}
 
+	// Paril, hack
+	CBaseEntity *Entity = ed->Entity;
 	memset (ed, 0, sizeof(*ed));
+	ed->Entity = Entity;
 	ed->classname = "freed";
 	ed->freetime = level.time;
 	ed->inUse = false;

@@ -489,10 +489,16 @@ __try
 		}*/
 		if (ent->Entity)
 		{
-			ent->Entity->Run ();
-
 			if (ent->Entity->EntityFlags & ENT_THINKABLE)
 				dynamic_cast<CThinkableEntity*>(ent->Entity)->RunThink ();
+
+			ent->Entity->Run ();
+
+			// Were we freed?
+			// This has to be processed after thinking and running, because
+			// the entity still has to be intact after that
+			if (ent->freetime == level.time)
+				delete ent->Entity;
 			continue;
 		}
 

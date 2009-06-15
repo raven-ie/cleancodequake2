@@ -80,19 +80,58 @@ public:
 	virtual void	Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
 };
 
-// "Bouncy" projectile
-class CBounceProjectile abstract : public CTouchableEntity, public CThinkableEntity
+// Contains common code that projectiles will use
+class CPhysicsEntity abstract : public virtual CBaseEntity
 {
+public:
+	CPhysicsEntity ();
+	CPhysicsEntity (int index);
+
+	virtual void	Think () {};
+	virtual void	Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf) {};
+
+	virtual bool	Run () = 0;
+
+	class CTrace	PushEntity (vec3_t push);
+	inline void		AddGravity ();
+	void			Impact (CTrace *trace);
+};
+
+// "Bouncy" projectile
+class CBounceProjectile abstract : public CPhysicsEntity, public CTouchableEntity, public CThinkableEntity
+{
+protected:
+	float			backOff;
 public:
 	CBounceProjectile ();
 	CBounceProjectile (int index);
 
-	virtual void	Think () = 0;
-	virtual void	Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf) = 0;
+	virtual void	Think () {};
+	virtual void	Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf) {};
 
 	bool			Run ();
+};
 
-	class CTrace	PushEntity (vec3_t push);
-	void			AddGravity ();
-	void			Impact (CTrace *trace);
+// Same as bouncy, except doesn't bounce
+class CTossProjectile abstract : public CBounceProjectile
+{
+public:
+	CTossProjectile();
+	CTossProjectile (int index);
+
+	virtual void	Think () {};
+	virtual void	Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf) {};
+};
+
+// Doesn't add gravity
+class CFlyMissileProjectile abstract : public CPhysicsEntity, public CTouchableEntity, public CThinkableEntity
+{
+public:
+	CFlyMissileProjectile ();
+	CFlyMissileProjectile (int index);
+
+	virtual void	Think () {};
+	virtual void	Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf) {};
+
+	bool			Run ();
 };
