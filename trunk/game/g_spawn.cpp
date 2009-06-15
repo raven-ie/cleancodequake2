@@ -521,6 +521,11 @@ extern int entityNumber;
 
 void InitEntities ()
 {
+	// Set up the world
+	edict_t *theWorld = &g_edicts[0];
+	if (!theWorld->Entity)
+		theWorld->Entity = new CWorldEntity(0);
+
 	// Set up the client entities
 	for (int i = 1; i <= game.maxclients; i++)
 	{
@@ -687,12 +692,10 @@ void SP_worldspawn (edict_t *ent)
 	// Seed the random number generator
 	srand (time(NULL));
 
-	ent->movetype = MOVETYPE_PUSH;
-	ent->solid = SOLID_BSP;
-	ent->inUse = true;			// since the world doesn't use G_Spawn()
-	ent->state.modelIndex = 1;		// world model is always index 1
-
-	//---------------
+	ent->Entity->gameEntity->movetype = MOVETYPE_PUSH;
+	ent->Entity->SetSolid (SOLID_BSP);
+	ent->Entity->SetInUse (true);			// since the world doesn't use G_Spawn()
+	ent->Entity->State.SetModelIndex (1);		// world model is always index 1
 
 	// reserve some spots for dead player bodies for coop / deathmatch
 	InitBodyQue ();
@@ -701,7 +704,6 @@ void SP_worldspawn (edict_t *ent)
 		Q_strncpyz (level.nextmap, st.nextmap, sizeof(level.nextmap));
 
 	// make some data visible to the server
-
 	if (ent->message && ent->message[0])
 	{
 		gi.configstring (CS_NAME, ent->message);
@@ -767,7 +769,6 @@ void SP_worldspawn (edict_t *ent)
 
 	SoundIndex ("misc/udeath.wav");
 
-	// gibs
 	SoundIndex ("items/respawn1.wav");
 
 	DoWeaponVweps ();

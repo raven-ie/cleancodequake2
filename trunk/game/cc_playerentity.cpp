@@ -277,10 +277,9 @@ void CClient::Clear ()
 // Players have a special way of allocating the entity.
 // We won't automatically allocate it since it already exists
 CPlayerEntity::CPlayerEntity (int Index) :
-CBaseEntity(Index),
-Client(gameEntity->client)
+CHurtableEntity(Index),
+Client(&game.clients[gameEntity-g_edicts-1])
 {
-	gameEntity->client = &game.clients[gameEntity-g_edicts-1];
 	EntityFlags |= ENT_PLAYER;
 };
 
@@ -3275,3 +3274,143 @@ edict_t *CPlayerEntity::SelectCTFSpawnPoint ()
 	return spot;
 }
 #endif
+
+void CPlayerEntity::Pain (CBaseEntity *other, float kick, int damage)
+{
+	DebugPrintf ("CPlayerEntity::Pain\n");
+};
+
+void ClientObituary (CPlayerEntity *self, edict_t *attacker);
+void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+{
+	DebugPrintf ("CPlayerEntity::Die\n");
+
+	Vec3Clear (gameEntity->avelocity);
+
+	gameEntity->takedamage = DAMAGE_YES;
+	gameEntity->movetype = MOVETYPE_TOSS;
+
+	State.SetModelIndex (0, 2);	// remove linked weapon model
+	State.SetModelIndex (0, 3);	// remove linked ctf flag
+
+	vec3_t oldAngles;
+	State.GetAngles (oldAngles);
+	State.SetAngles (vec3f(0, oldAngles[1], 0));
+
+	State.SetSound (0);
+	Client.weapon_sound = 0;
+
+	vec3f maxs = GetMaxs();
+	maxs[2] = -8;
+	SetMaxs (maxs);
+
+	SetSvFlags (GetSvFlags() | SVF_DEADMONSTER);
+
+	if (!gameEntity->deadflag)
+	{
+		Client.respawn_time = level.time + 1.0;
+		LookAtKiller (inflictor->gameEntity, attacker->gameEntity);
+		Client.PlayerState.GetPMove()->pmType = PMT_DEAD;
+		ClientObituary (this, attacker->gameEntity);
+
+#ifdef CLEANCTF_ENABLED
+		if (attacker->EntityFlags & ENT_PLAYER)
+		{
+			CPlayerEntity *Attacker = dynamic_cast<CPlayerEntity*>(attacker);
+//ZOID
+			// if at start and same team, clear
+			if ((game.mode & GAME_CTF) && (meansOfDeath == MOD_TELEFRAG) &&
+				(Client.resp.ctf_state < 2) &&
+				(Client.resp.ctf_team == Attacker->Client.resp.ctf_team))
+			{
+				Attacker->Client.resp.score--;
+				Client.resp.ctf_state = 0;
+			}
+
+			CTFFragBonuses(this, Attacker);
+		}
+
+//ZOID
+#endif
+		TossClientWeapon ();
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+		CGrapple::PlayerResetGrapple(this);
+		CTFDeadDropFlag(this);
+		CTFDeadDropTech(this);
+//ZOID
+#endif
+		if (game.mode & GAME_DEATHMATCH)
+			Cmd_Help_f (this);		// show scores
+
+		// clear inventory
+		// this is kind of ugly, but it's how we want to handle keys in coop
+		for (int n = 0; n < GetNumItems(); n++)
+		{
+			if ((game.mode == GAME_COOPERATIVE) && (GetItemByIndex(n)->Flags & ITEMFLAG_KEY))
+				Client.resp.coop_respawn.Inventory.Set(n, Client.pers.Inventory.Has(n));
+			Client.pers.Inventory.Set(n, 0);
+		}
+	}
+
+	// remove powerups
+	Client.quad_framenum = 0;
+	Client.invincible_framenum = 0;
+	Client.breather_framenum = 0;
+	Client.enviro_framenum = 0;
+	gameEntity->flags &= ~FL_POWER_ARMOR;
+
+	if (gameEntity->health < -40)
+	{	// gib
+		PlaySoundFrom (gameEntity, CHAN_BODY, SoundIndex ("misc/udeath.wav"));
+		for (int n = 0; n < 4; n++)
+			ThrowGib (gameEntity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		ThrowClientHead (gameEntity, damage);
+
+		gameEntity->takedamage = DAMAGE_NO;
+//ZOID
+		Client.anim_priority = ANIM_DEATH;
+		Client.anim_end = 0;
+//ZOID
+	}
+	else
+	{	// normal death
+		if (!gameEntity->deadflag)
+		{
+			static int i;
+
+			i = (i+1)%3;
+			// start a death animation
+			Client.anim_priority = ANIM_DEATH;
+			if (Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED)
+			{
+				State.SetFrame (FRAME_crdeath1-1);
+				Client.anim_end = FRAME_crdeath5;
+			}
+			else
+			{
+				switch (i)
+				{
+				case 0:
+					State.SetFrame (FRAME_death101-1);
+					Client.anim_end = FRAME_death106;
+					break;
+				case 1:
+					State.SetFrame (FRAME_death201-1);
+					Client.anim_end = FRAME_death206;
+					break;
+				case 2:
+					State.SetFrame (FRAME_death301-1);
+					Client.anim_end = FRAME_death308;
+					break;
+				}
+			}
+			PlaySoundFrom (gameEntity, CHAN_VOICE, gMedia.Player.Death[(rand()%4)]);
+		}
+	}
+
+	gameEntity->deadflag = DEAD_DEAD;
+
+	Link ();
+};

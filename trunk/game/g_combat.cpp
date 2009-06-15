@@ -118,7 +118,10 @@ void Killed (edict_t *targ, edict_t *inflictor, edict_t *attacker, int damage, v
 			targ->Monster->MonsterDeathUse();
 	}
 
-	targ->die (targ, inflictor, attacker, damage, point);
+	if (targ->Entity && (targ->Entity->EntityFlags & ENT_HURTABLE) && inflictor->Entity && attacker->Entity)
+		(dynamic_cast<CHurtableEntity*>(targ->Entity))->Die (inflictor->Entity, attacker->Entity, damage, point);
+	else
+		targ->die (targ, inflictor, attacker, damage, point);
 }
 
 /*
@@ -227,39 +230,6 @@ static int CheckPowerArmor (edict_t *ent, vec3_t point, vec3_t normal, int damag
 		Player->Client.pers.Inventory.Remove(index, power_used);
 	else if (ent->Monster)
 		ent->Monster->PowerArmorPower -= power_used;
-	return save;
-}
-
-static int CheckArmor (edict_t *ent, vec3_t point, vec3_t normal, int damage, int dflags)
-{
-	if (!damage)
-		return 0;
-	if (!ent->client)
-		return 0;
-
-	if (dflags & DAMAGE_NO_ARMOR)
-		return 0;
-
-	CPlayerEntity	*Player = dynamic_cast<CPlayerEntity*>(ent->Entity);
-	CArmor *armor = Player->Client.pers.Armor;
-
-	if (!armor)
-		return 0;
-
-	int save = ceil ( ((dflags & DAMAGE_ENERGY) ? armor->energyProtection : armor->normalProtection) * damage);
-	if (save >= Player->Client.pers.Inventory.Has(armor))
-		save = Player->Client.pers.Inventory.Has(armor);
-
-	if (!save)
-		return 0;
-
-	Player->Client.pers.Inventory.Remove(armor, save);
-	CTempEnt_Splashes::Sparks (point, normal, (dflags & DAMAGE_BULLET) ? CTempEnt_Splashes::STBulletSparks : CTempEnt_Splashes::STSparks, CTempEnt_Splashes::SPTSparks);
-
-	// Ran out of armor?
-	if (!Player->Client.pers.Inventory.Has(armor))
-		Player->Client.pers.Armor = NULL;
-
 	return save;
 }
 
@@ -436,8 +406,16 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 		psave = CheckPowerArmor (targ, point, normal, take, dflags);
 		take -= psave;
 
-		asave = CheckArmor (targ, point, normal, take, dflags);
-		take -= asave;
+		if (targ->client)
+		{
+			CPlayerEntity *Targ = (dynamic_cast<CPlayerEntity*>(targ->Entity));
+
+			if (Targ->Client.pers.Armor)
+			{
+				asave = Targ->Client.pers.Armor->CheckArmor (Targ, point, normal, take, dflags);
+				take -= asave;
+			}
+		}
 #ifdef CLEANCTF_ENABLED
 	}
 #endif
@@ -483,12 +461,7 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 		}
 	}
 
-	if (targ->svFlags & SVF_MONSTER && !targ->Monster)
-	{
-		if (take)
-			targ->pain (targ, attacker, knockback, take);
-	}
-	else if (targ->Monster)
+	if (targ->Monster)
 	{
 		targ->Monster->ReactToDamage (attacker);
 		if (!(targ->Monster->AIFlags & AI_DUCKED) && take)
@@ -498,7 +471,7 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 				targ->pain_debounce_time = level.time + 5;
 		}
 	}
-	else if (client)
+	/*else if (client)
 	{
 		if (!(targ->flags & FL_GODMODE) && (take))
 			targ->pain (targ, attacker, knockback, take);
@@ -507,7 +480,11 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 	{
 		if (targ->pain)
 			targ->pain (targ, attacker, knockback, take);
-	}
+	}*/
+	else if (take && targ->Entity && (targ->Entity->EntityFlags & ENT_HURTABLE) && attacker->Entity)
+		(dynamic_cast<CHurtableEntity*>(targ->Entity))->Pain (attacker->Entity, knockback, take);
+	else if (targ->pain && take)
+		targ->pain (targ, attacker, knockback, take);
 
 	// add to the damage inflicted on a player this frame
 	// the total will be turned into screen blends and view angle kicks

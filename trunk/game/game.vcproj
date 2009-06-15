@@ -837,6 +837,14 @@
 					RelativePath=".\cc_playerentity.h"
 					>
 				</File>
+				<File
+					RelativePath=".\cc_weaponentities.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cc_weaponentities.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="Items"

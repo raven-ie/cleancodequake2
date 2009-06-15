@@ -50,6 +50,7 @@ public:
 	CBaseEntity	*Enemy;
 
 	CHurtableEntity ();
+	CHurtableEntity (int index);
 
 	virtual void Pain (CBaseEntity *other, float kick, int damage) = 0;
 	virtual void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point) = 0;
@@ -57,19 +58,41 @@ public:
 
 // Thinkable entity
 // Simple think function
-class CThinkableEntity abstract : public CBaseEntity
+class CThinkableEntity abstract : public virtual CBaseEntity
 {
 public:
 	float		NextThink;
 
 	CThinkableEntity ();
+	CThinkableEntity (int index);
 
+	void			RunThink ();
 	virtual void	Think () = 0;
 };
 
 // Touchable entity
-class CTouchableEntity abstract : public CBaseEntity
+class CTouchableEntity abstract : public virtual CBaseEntity
 {
 public:
+	CTouchableEntity ();
+	CTouchableEntity (int index);
+
 	virtual void	Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
+};
+
+// "Bouncy" projectile
+class CBounceProjectile abstract : public CTouchableEntity, public CThinkableEntity
+{
+public:
+	CBounceProjectile ();
+	CBounceProjectile (int index);
+
+	virtual void	Think () = 0;
+	virtual void	Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf) = 0;
+
+	bool			Run ();
+
+	class CTrace	PushEntity (vec3_t push);
+	void			AddGravity ();
+	void			Impact (CTrace *trace);
 };

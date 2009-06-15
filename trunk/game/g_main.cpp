@@ -490,6 +490,9 @@ __try
 		if (ent->Entity)
 		{
 			ent->Entity->Run ();
+
+			if (ent->Entity->EntityFlags & ENT_THINKABLE)
+				dynamic_cast<CThinkableEntity*>(ent->Entity)->RunThink ();
 			continue;
 		}
 

@@ -427,3 +427,13 @@ void			CBaseEntity::Unlink ()
 {
 	gi.unlinkentity (gameEntity);
 }
+
+CWorldEntity::CWorldEntity () : 
+CBaseEntity()
+{
+};
+
+CWorldEntity::CWorldEntity (int Index) : 
+CBaseEntity(Index)
+{
+};

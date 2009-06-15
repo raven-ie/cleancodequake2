@@ -27,28 +27,24 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_armor.h
-// New, improved, better, stable item system!
+// cc_weaponentities.h
+// Entities related to weaponry
 //
 
-class CArmor : public CBaseItem
+
+class CGrenade : public CBounceProjectile
 {
 public:
-	int		baseCount;			// (on normalProtection == -1) Amount to add
-	int		maxCount;			// (on normalProtection == -1) Amount to stop at (-1 = none)
-	float	normalProtection;	// -1 = Always add to current armor
-	float	energyProtection;	// -1 = Nothing
+	float		Damage, RadiusDamage;
 
-	CArmor (char *Classname, char *WorldModel, int EffectFlags,
-			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
-			   char *Precache, int baseCount, int maxCount, float normalProtection,
-			   float energyProtection);
+	CGrenade ();
+	CGrenade (int Index);
 
-	bool	Pickup (edict_t *ent, CPlayerEntity *other);
-	void	Use (CPlayerEntity *ent);
-	void	Drop (CPlayerEntity *ent);
+	void Think ();
+	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
 
-	virtual int		CheckArmor (CPlayerEntity *Player, vec3_t point, vec3_t normal, int damage, int dflags);
+	void Explode ();
+
+	static void Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t aimdir,
+						int damage, int speed, float timer, float damage_radius, bool handNade = false, bool held = false);
 };
-
-void AddArmorToList ();

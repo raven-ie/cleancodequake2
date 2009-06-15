@@ -776,7 +776,7 @@ struct {
 };
 
 
-static void CTFSay_Team_Location(CPlayerEntity *who, char *buf)
+static inline void CTFSay_Team_Location(CPlayerEntity *who, char *buf, size_t bufSize)
 {
 	edict_t *what = NULL;
 	edict_t *hot = NULL;
@@ -830,7 +830,7 @@ static void CTFSay_Team_Location(CPlayerEntity *who, char *buf)
 
 	if (!hot)
 	{
-		Q_strncpyz(buf, "nowhere", sizeof(buf));
+		Q_strncpyz(buf, "nowhere", bufSize);
 		return;
 	}
 
@@ -861,13 +861,13 @@ static void CTFSay_Team_Location(CPlayerEntity *who, char *buf)
 
 	if ((item = FindItemByClassname(hot->classname)) == NULL)
 	{
-		Q_strncpyz(buf, "nowhere", sizeof(buf));
+		Q_strncpyz(buf, "nowhere", bufSize);
 		return;
 	}
 
 	// in water?
 	if (who->gameEntity->waterlevel)
-		Q_strncpyz(buf, "in the water ", sizeof(buf));
+		Q_strncpyz(buf, "in the water ", bufSize);
 	else
 		*buf = 0;
 
@@ -875,23 +875,23 @@ static void CTFSay_Team_Location(CPlayerEntity *who, char *buf)
 	Vec3Subtract(origin, hot->state.origin, v);
 	if (fabs(v[2]) > fabs(v[0]) && fabs(v[2]) > fabs(v[1]))
 		if (v[2] > 0)
-			Q_strcatz(buf, "above ", sizeof(buf));
+			Q_strcatz(buf, "above ", bufSize);
 		else
-			Q_strcatz(buf, "below ", sizeof(buf));
+			Q_strcatz(buf, "below ", bufSize);
 	else
-		Q_strcatz(buf, "near ", sizeof(buf));
+		Q_strcatz(buf, "near ", bufSize);
 
 	if (nearteam == CTF_TEAM1)
-		Q_strcatz(buf, "the red ", sizeof(buf));
+		Q_strcatz(buf, "the red ", bufSize);
 	else if (nearteam == CTF_TEAM2)
-		Q_strcatz(buf, "the blue ", sizeof(buf));
+		Q_strcatz(buf, "the blue ", bufSize);
 	else
-		Q_strcatz(buf, "the ", sizeof(buf));
+		Q_strcatz(buf, "the ", bufSize);
 
-	Q_strcatz(buf, item->Name, sizeof(buf));
+	Q_strcatz(buf, item->Name, bufSize);
 }
 
-static void CTFSay_Team_Armor(CPlayerEntity *who, char *buf)
+static inline void CTFSay_Team_Armor(CPlayerEntity *who, char *buf, size_t bufSize)
 {
 	CBaseItem		*item;
 	int			cells;
@@ -904,7 +904,7 @@ static void CTFSay_Team_Armor(CPlayerEntity *who, char *buf)
 	{
 		cells = who->Client.pers.Inventory.Has(FindItem ("cells"));
 		if (cells)
-			Q_snprintfz(buf+strlen(buf), sizeof(buf), "%s with %i cells ",
+			Q_snprintfz(buf+strlen(buf), bufSize, "%s with %i cells ",
 				(power_armor_type == POWER_ARMOR_SCREEN) ?
 				"Power Screen" : "Power Shield", cells);
 	}
@@ -913,41 +913,41 @@ static void CTFSay_Team_Armor(CPlayerEntity *who, char *buf)
 	if (item)
 	{
 		if (*buf)
-			Q_strcatz(buf, "and ", sizeof(buf));
-			Q_snprintfz(buf+strlen(buf), sizeof(buf), "%i units of %s",
-				who->Client.pers.Inventory.Has(item), item->Name, sizeof(buf));
+			Q_strcatz(buf, "and ", bufSize);
+			Q_snprintfz(buf+strlen(buf), bufSize, "%i units of %s",
+				who->Client.pers.Inventory.Has(item), item->Name, bufSize);
 	}
 
 	if (!*buf)
-		Q_strncpyz(buf, "no armor", sizeof(buf));
+		Q_strncpyz(buf, "no armor", bufSize);
 }
 
-static void CTFSay_Team_Health(CPlayerEntity *who, char *buf)
+static inline void CTFSay_Team_Health(CPlayerEntity *who, char *buf, size_t bufSize)
 {
 	if (who->gameEntity->health <= 0)
-		Q_strncpyz(buf, "dead", sizeof(buf));
+		Q_strncpyz(buf, "dead", bufSize);
 	else
-		Q_snprintfz(buf, sizeof(buf), "%i health", who->gameEntity->health);
+		Q_snprintfz(buf, bufSize, "%i health", who->gameEntity->health);
 }
 
-static void CTFSay_Team_Tech(CPlayerEntity *who, char *buf)
+static inline void CTFSay_Team_Tech(CPlayerEntity *who, char *buf, size_t bufSize)
 {
 	// see if the player has a tech powerup
 	if (who->Client.pers.Tech)
-		Q_snprintfz(buf, sizeof(buf), "the %s", who->Client.pers.Tech->Name);
+		Q_snprintfz(buf, bufSize, "the %s", who->Client.pers.Tech->Name);
 	else
-		Q_strncpyz(buf, "no powerup", sizeof(buf));
+		Q_strncpyz(buf, "no powerup", bufSize);
 }
 
-static void CTFSay_Team_Weapon(CPlayerEntity *who, char *buf)
+static inline void CTFSay_Team_Weapon(CPlayerEntity *who, char *buf, size_t bufSize)
 {
 	if (who->Client.pers.Weapon)
-		Q_strncpyz(buf, who->Client.pers.Weapon->Item->Name, sizeof(buf));
+		Q_strncpyz(buf, who->Client.pers.Weapon->Item->Name, bufSize);
 	else
-		Q_strncpyz(buf, "none", sizeof(buf));
+		Q_strncpyz(buf, "none", bufSize);
 }
 
-static void CTFSay_Team_Sight(CPlayerEntity *who, char *buf)
+static inline void CTFSay_Team_Sight(CPlayerEntity *who, char *buf, size_t bufSize)
 {
 	int i;
 	int n = 0;
@@ -983,10 +983,10 @@ static void CTFSay_Team_Sight(CPlayerEntity *who, char *buf)
 				Q_strcatz(s, " and ", sizeof(s));
 			Q_strcatz(s, s2, sizeof(s));
 		}
-		Q_strncpyz(buf, s, sizeof(buf));
+		Q_strncpyz(buf, s, bufSize);
 	}
 	else
-		Q_strncpyz(buf, "no one", sizeof(buf));
+		Q_strncpyz(buf, "no one", bufSize);
 }
 
 bool CheckFlood(CPlayerEntity *ent);
@@ -1012,39 +1012,39 @@ void CTFSay_Team(CPlayerEntity *who, char *msg)
 			switch (*++msg) {
 				case 'l' :
 				case 'L' :
-					CTFSay_Team_Location(who, buf);
-					Q_strncpyz(p, buf, sizeof(p));
+					CTFSay_Team_Location(who, buf, sizeof(buf));
+					Q_strncpyz(p, buf, sizeof(buf));
 					p += strlen(buf);
 					break;
 				case 'a' :
 				case 'A' :
-					CTFSay_Team_Armor(who, buf);
-					Q_strncpyz(p, buf, sizeof(p));
+					CTFSay_Team_Armor(who, buf, sizeof(buf));
+					Q_strncpyz(p, buf, sizeof(buf));
 					p += strlen(buf);
 					break;
 				case 'h' :
 				case 'H' :
-					CTFSay_Team_Health(who, buf);
-					Q_strncpyz(p, buf, sizeof(p));
+					CTFSay_Team_Health(who, buf, sizeof(buf));
+					Q_strncpyz(p, buf, sizeof(buf));
 					p += strlen(buf);
 					break;
 				case 't' :
 				case 'T' :
-					CTFSay_Team_Tech(who, buf);
-					Q_strncpyz(p, buf, sizeof(p));
+					CTFSay_Team_Tech(who, buf, sizeof(buf));
+					Q_strncpyz(p, buf, sizeof(buf));
 					p += strlen(buf);
 					break;
 				case 'w' :
 				case 'W' :
-					CTFSay_Team_Weapon(who, buf);
-					Q_strncpyz(p, buf, sizeof(p));
+					CTFSay_Team_Weapon(who, buf, sizeof(buf));
+					Q_strncpyz(p, buf, sizeof(buf));
 					p += strlen(buf);
 					break;
 
 				case 'n' :
 				case 'N' :
-					CTFSay_Team_Sight(who, buf);
-					Q_strncpyz(p, buf, sizeof(p));
+					CTFSay_Team_Sight(who, buf, sizeof(buf));
+					Q_strncpyz(p, buf, sizeof(buf));
 					p += strlen(buf);
 					break;
 
@@ -1059,6 +1059,8 @@ void CTFSay_Team(CPlayerEntity *who, char *msg)
 	for (i = 0; i < game.maxclients; i++) {
 		CPlayerEntity *cl_ent = dynamic_cast<CPlayerEntity*>((g_edicts + 1 + i)->Entity);
 		if (!cl_ent->IsInUse())
+			continue;
+		if (cl_ent->Client.pers.state != SVCS_SPAWNED)
 			continue;
 		if (cl_ent->Client.resp.ctf_team == who->Client.resp.ctf_team)
 			ClientPrintf(cl_ent->gameEntity, PRINT_CHAT, "(%s): %s\n", 
