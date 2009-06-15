@@ -62,3 +62,19 @@ public:
 	static void Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t dir,
 						int damage, int speed, int effect, bool isHyper);
 };
+
+class CRocket : public CFlyMissileProjectile
+{
+public:
+	int		Damage, RadiusDamage;
+	float	DamageRadius;
+
+	CRocket ();
+	CRocket (int Index);
+
+	void Think ();
+	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
+
+	static void Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t dir,
+						int damage, int speed, float damage_radius, int radius_damage);
+};

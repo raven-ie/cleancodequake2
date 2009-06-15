@@ -428,6 +428,17 @@ void			CBaseEntity::Unlink ()
 	gi.unlinkentity (gameEntity);
 }
 
+void			CBaseEntity::Free ()
+{
+	Unlink ();
+
+	memset (gameEntity, 0, sizeof(*gameEntity));
+	gameEntity->Entity = this;
+	gameEntity->classname = "freed";
+	gameEntity->freetime = level.time;
+	SetInUse(false);
+}
+
 CWorldEntity::CWorldEntity () : 
 CBaseEntity()
 {

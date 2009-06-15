@@ -105,7 +105,7 @@ void CGrenade::Explode ()
 			CTempEnt_Explosions::RocketExplosion(origin, gameEntity);
 	}
 
-	G_FreeEdict (gameEntity); // "delete" the entity
+	Free (); // "delete" the entity
 }
 
 void CGrenade::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
@@ -115,7 +115,7 @@ void CGrenade::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 
 	if (surf && (surf->flags & SURF_TEXINFO_SKY))
 	{
-		G_FreeEdict (gameEntity); // "delete" the entity
+		Free (); // "delete" the entity
 		return;
 	}
 
@@ -183,6 +183,12 @@ void CGrenade::Spawn (CBaseEntity *Spawner, vec3_t start, vec3_t aimdir, int dam
 	}
 }
 
+/*
+================
+CBlasterProjectile
+================
+*/
+
 CBlasterProjectile::CBlasterProjectile () :
 CFlyMissileProjectile()
 {
@@ -195,7 +201,7 @@ CFlyMissileProjectile(Index)
 
 void CBlasterProjectile::Think ()
 {
-	G_FreeEdict (gameEntity); // "delete" the entity
+	Free (); // "delete" the entity
 }
 
 void CBlasterProjectile::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
@@ -205,7 +211,7 @@ void CBlasterProjectile::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface
 
 	if (surf && (surf->flags & SURF_TEXINFO_SKY))
 	{
-		G_FreeEdict (gameEntity); // "delete" the entity
+		Free (); // "delete" the entity
 		return;
 	}
 
@@ -219,7 +225,7 @@ void CBlasterProjectile::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface
 	else
 		CTempEnt_Splashes::Blaster(origin, plane ? plane->normal : vec3Origin);
 
-	G_FreeEdict (gameEntity); // "delete" the entity
+	Free (); // "delete" the entity
 }
 
 void check_dodge (edict_t *self, vec3_t start, vec3_t dir, int speed);
@@ -263,4 +269,93 @@ void CBlasterProjectile::Spawn (CBaseEntity *Spawner, vec3_t start, vec3_t dir,
 		if (tr.ent->Entity)
 			Bolt->Touch (tr.ent->Entity, &tr.plane, tr.surface);
 	}
+}
+
+CRocket::CRocket () :
+CFlyMissileProjectile()
+{
+};
+
+CRocket::CRocket (int Index) :
+CFlyMissileProjectile(Index)
+{
+};
+
+void CRocket::Think ()
+{
+	Free (); // "delete" the entity
+}
+
+void CRocket::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
+{
+	vec3_t		origin;
+	int			n;
+
+	if (other->gameEntity == gameEntity->owner)
+		return;
+
+	if (surf && (surf->flags & SURF_TEXINFO_SKY))
+	{
+		Free ();
+		return;
+	}
+
+	State.GetOrigin (origin);
+	if (gameEntity->owner->client)
+		PlayerNoise(dynamic_cast<CPlayerEntity*>(gameEntity->owner->Entity), origin, PNOISE_IMPACT);
+
+	if (other->gameEntity->takedamage)
+		T_Damage (other->gameEntity, gameEntity, gameEntity->owner, gameEntity->velocity, origin, plane->normal, Damage, 0, 0, MOD_ROCKET);
+	else
+	{
+		// don't throw any debris in net games
+		if (game.mode == GAME_SINGLEPLAYER)
+		{
+			if ((surf) && !(surf->flags & (SURF_TEXINFO_WARP|SURF_TEXINFO_TRANS33|SURF_TEXINFO_TRANS66|SURF_TEXINFO_FLOWING)))
+			{
+				n = rand() % 5;
+				while(n--)
+					ThrowDebris (gameEntity, "models/objects/debris2/tris.md2", 2, origin);
+			}
+		}
+	}
+
+	// calculate position for the explosion entity
+	Vec3MA (origin, -0.02, gameEntity->velocity, origin);
+	T_RadiusDamage(gameEntity, gameEntity->owner, RadiusDamage, other->gameEntity, DamageRadius, MOD_R_SPLASH);
+
+	if (gameEntity->waterlevel)
+		CTempEnt_Explosions::RocketExplosion(origin, gameEntity, true);
+	else
+		CTempEnt_Explosions::RocketExplosion(origin, gameEntity, false);
+
+	Free ();
+}
+
+void CRocket::Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t dir,
+						int damage, int speed, float damage_radius, int radius_damage)
+{
+	CRocket	*Rocket = new CRocket;
+
+	Rocket->State.SetOrigin (start);
+	Rocket->State.SetAngles (dir);
+	Vec3Scale (dir, speed, Rocket->gameEntity->velocity);
+	Rocket->SetClipmask (CONTENTS_MASK_SHOT);
+	Rocket->SetSolid (SOLID_BBOX);
+	Rocket->State.SetEffects (EF_ROCKET);
+	Rocket->SetMins(vec3Origin);
+	Rocket->SetMaxs(vec3Origin);
+	Rocket->State.SetModelIndex (ModelIndex ("models/objects/rocket/tris.md2"));
+	Rocket->SetOwner (Spawner);
+	Rocket->NextThink = level.time + 8000/speed;
+	Rocket->Damage = damage;
+	Rocket->RadiusDamage = radius_damage;
+	Rocket->DamageRadius = damage_radius;
+	Rocket->State.SetSound (SoundIndex ("weapons/rockfly.wav"));
+	Rocket->gameEntity->classname = "rocket";
+
+	if (Spawner->EntityFlags & ENT_PLAYER)
+		check_dodge (Spawner->gameEntity, start, dir, speed);
+
+	Rocket->Link ();
 }

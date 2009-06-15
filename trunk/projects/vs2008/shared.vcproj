@@ -350,15 +350,15 @@
 			Name="MathLib"
 			>
 			<File
-				RelativePath=".\MathLib\MathLib.h"
+				RelativePath=".\..\..\shared\MathLib\MathLib.h"
 				>
 			</File>
 			<File
-				RelativePath=".\MathLib\Vector.cpp"
+				RelativePath=".\..\..\shared\MathLib\Vector.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\MathLib\Vector.h"
+				RelativePath=".\..\..\shared\MathLib\Vector.h"
 				>
 			</File>
 		</Filter>
@@ -366,96 +366,96 @@
 			Name="Templates"
 			>
 			<File
-				RelativePath=".\Templates\TArray.h"
+				RelativePath=".\..\..\shared\Templates\TArray.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Templates\TAutoPtr.h"
+				RelativePath=".\..\..\shared\Templates\TAutoPtr.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Templates\Templates.cpp"
+				RelativePath=".\..\..\shared\Templates\Templates.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Templates\Templates.h"
+				RelativePath=".\..\..\shared\Templates\Templates.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Templates\TMap.h"
+				RelativePath=".\..\..\shared\Templates\TMap.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Templates\TString.h"
+				RelativePath=".\..\..\shared\Templates\TString.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Templates\TTypes.h"
+				RelativePath=".\..\..\shared\Templates\TTypes.h"
 				>
 			</File>
 		</Filter>
 		<File
-			RelativePath=".\byteswap.cpp"
+			RelativePath=".\..\..\shared\byteswap.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\ColorVec.cpp"
+			RelativePath=".\..\..\shared\ColorVec.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\ColorVec.h"
+			RelativePath=".\..\..\shared\ColorVec.h"
 			>
 		</File>
 		<File
-			RelativePath=".\infostrings.cpp"
+			RelativePath=".\..\..\shared\infostrings.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\m_angles.cpp"
+			RelativePath=".\..\..\shared\m_angles.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\m_bounds.cpp"
+			RelativePath=".\..\..\shared\m_bounds.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\m_mat3.cpp"
+			RelativePath=".\..\..\shared\m_mat3.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\m_mat4.cpp"
+			RelativePath=".\..\..\shared\m_mat4.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\m_plane.cpp"
+			RelativePath=".\..\..\shared\m_plane.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\m_quat.cpp"
+			RelativePath=".\..\..\shared\m_quat.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\mathlib.cpp"
+			RelativePath=".\..\..\shared\mathlib.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\mersennetwister.cpp"
+			RelativePath=".\..\..\shared\mersennetwister.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\Platform.h"
+			RelativePath=".\..\..\shared\Platform.h"
 			>
 		</File>
 		<File
-			RelativePath=".\shared.cpp"
+			RelativePath=".\..\..\shared\shared.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\shared.h"
+			RelativePath=".\..\..\shared\shared.h"
 			>
 		</File>
 		<File
-			RelativePath=".\string.cpp"
+			RelativePath=".\..\..\shared\string.cpp"
 			>
 		</File>
 	</Files>

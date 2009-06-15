@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type='text/xsl' href='_UpgradeReport_Files/UpgradeReport.xslt'?><UpgradeLog>
+<Properties><Property Name="Solution" Value="ccq2">
+</Property><Property Name="Solution File" Value="E:\cleancodeq2\trunk\projects\vs2010\ccq2.sln">
+</Property><Property Name="User Options File" Value="E:\cleancodeq2\trunk\projects\vs2010\ccq2.suo">
+</Property><Property Name="Date" Value="Monday, June 15, 2009">
+</Property><Property Name="Time" Value="16:58 PM">
+</Property></Properties><Event ErrorLevel="0" Project="" Source="ccq2.sln" Description="File successfully backed up as E:\cleancodeq2\trunk\projects\vs2010\ccq2.sln.old">
+</Event><Event ErrorLevel="0" Project="" Source="ccq2.suo" Description="File successfully backed up as E:\cleancodeq2\trunk\projects\vs2010\ccq2.suo.old">
+</Event><Event ErrorLevel="0" Project="game" Source="game.vcproj" Description="Converting project file 'E:\cleancodeq2\trunk\projects\vs2010\game.vcproj'.">
+</Event><Event ErrorLevel="0" Project="game" Source="K:\Program Files\Microsoft Visual Studio 10.0\VC\VCProjectDefaults\UpgradeFromVC71.vsprops" Description="Converting project file 'K:\Program Files\Microsoft Visual Studio 10.0\VC\VCProjectDefaults\UpgradeFromVC71.vsprops'.">
+</Event><Event ErrorLevel="0" Project="game" Source="K:\Program Files\Microsoft Visual Studio 10.0\VC\VCProjectDefaults\UpgradeFromVC71.vsprops" Description="Done converting to new project file 'K:\Program Files\Microsoft Visual Studio 10.0\VC\VCProjectDefaults\UpgradeFromVC71.props'.">
+</Event><Event ErrorLevel="3" Project="game" Source="K:\Program Files\Microsoft Visual Studio 10.0\VC\VCProjectDefaults\UpgradeFromVC71.vsprops" Description="Converted">
+</Event><Event ErrorLevel="1" Project="game" Source="game.vcproj" Description="VCWebServiceProxyGeneratorTool is no longer supported. The tool has been removed from your project settings.">
+</Event><Event ErrorLevel="0" Project="game" Source="game.vcproj" Description="Done converting to new project file 'E:\cleancodeq2\trunk\projects\vs2010\game.vcxproj'.">
+</Event><Event ErrorLevel="3" Project="game" Source="game.vcproj" Description="Converted">
+</Event><Event ErrorLevel="0" Project="shared" Source="shared.vcproj" Description="Converting project file 'E:\cleancodeq2\trunk\projects\vs2010\shared.vcproj'.">
+</Event><Event ErrorLevel="1" Project="shared" Source="shared.vcproj" Description="VCWebServiceProxyGeneratorTool is no longer supported. The tool has been removed from your project settings.">
+</Event><Event ErrorLevel="0" Project="shared" Source="shared.vcproj" Description="Done converting to new project file 'E:\cleancodeq2\trunk\projects\vs2010\shared.vcxproj'.">
+</Event><Event ErrorLevel="3" Project="shared" Source="shared.vcproj" Description="Converted">
+</Event><Event ErrorLevel="0" Project="" Source="ccq2.sln" Description="Solution converted successfully">
+</Event><Event ErrorLevel="3" Project="" Source="ccq2.sln" Description="Converted">
+</Event></UpgradeLog>
