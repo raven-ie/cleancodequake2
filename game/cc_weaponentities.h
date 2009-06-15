@@ -31,7 +31,6 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Entities related to weaponry
 //
 
-
 class CGrenade : public CBounceProjectile
 {
 public:
@@ -47,4 +46,19 @@ public:
 
 	static void Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t aimdir,
 						int damage, int speed, float timer, float damage_radius, bool handNade = false, bool held = false);
+};
+
+class CBlasterProjectile : public CFlyMissileProjectile
+{
+public:
+	float		Damage;
+
+	CBlasterProjectile ();
+	CBlasterProjectile (int Index);
+
+	void Think ();
+	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
+
+	static void Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t dir,
+						int damage, int speed, int effect, bool isHyper);
 };

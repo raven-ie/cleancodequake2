@@ -105,7 +105,7 @@ void CGrenade::Explode ()
 			CTempEnt_Explosions::RocketExplosion(origin, gameEntity);
 	}
 
-	delete this;
+	G_FreeEdict (gameEntity); // "delete" the entity
 }
 
 void CGrenade::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
@@ -115,7 +115,7 @@ void CGrenade::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 
 	if (surf && (surf->flags & SURF_TEXINFO_SKY))
 	{
-		delete this;
+		G_FreeEdict (gameEntity); // "delete" the entity
 		return;
 	}
 
@@ -156,7 +156,6 @@ void CGrenade::Spawn (CBaseEntity *Spawner, vec3_t start, vec3_t aimdir, int dam
 	Vec3MA (Grenade->gameEntity->velocity, 200 + crandom() * 10.0, up, Grenade->gameEntity->velocity);
 	Vec3MA (Grenade->gameEntity->velocity, crandom() * 10.0, right, Grenade->gameEntity->velocity);
 	Vec3Set (Grenade->gameEntity->avelocity, 300, 300, 300);
-	Grenade->gameEntity->movetype = MOVETYPE_BOUNCE;
 	Grenade->SetClipmask(CONTENTS_MASK_SHOT);
 	Grenade->SetSolid (SOLID_BBOX);
 	Grenade->State.SetEffects (EF_GRENADE);
@@ -181,5 +180,87 @@ void CGrenade::Spawn (CBaseEntity *Spawner, vec3_t start, vec3_t aimdir, int dam
 		if (handNade)
 			PlaySoundFrom (Spawner->gameEntity, CHAN_WEAPON, SoundIndex ("weapons/hgrent1a.wav"));
 		Grenade->Link();
+	}
+}
+
+CBlasterProjectile::CBlasterProjectile () :
+CFlyMissileProjectile()
+{
+};
+
+CBlasterProjectile::CBlasterProjectile (int Index) :
+CFlyMissileProjectile(Index)
+{
+};
+
+void CBlasterProjectile::Think ()
+{
+	G_FreeEdict (gameEntity); // "delete" the entity
+}
+
+void CBlasterProjectile::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
+{
+	if (other->gameEntity == gameEntity->owner)
+		return;
+
+	if (surf && (surf->flags & SURF_TEXINFO_SKY))
+	{
+		G_FreeEdict (gameEntity); // "delete" the entity
+		return;
+	}
+
+	vec3_t origin;
+	State.GetOrigin (origin);
+	if (gameEntity->owner->client)
+		PlayerNoise(dynamic_cast<CPlayerEntity*>(gameEntity->owner->Entity), origin, PNOISE_IMPACT);
+
+	if (other->gameEntity->takedamage)
+		T_Damage (other->gameEntity, gameEntity, gameEntity->owner, gameEntity->velocity, origin, plane ? plane->normal : vec3Origin, Damage, 1, DAMAGE_ENERGY, (gameEntity->spawnflags & 1) ? MOD_HYPERBLASTER : MOD_BLASTER);
+	else
+		CTempEnt_Splashes::Blaster(origin, plane ? plane->normal : vec3Origin);
+
+	G_FreeEdict (gameEntity); // "delete" the entity
+}
+
+void check_dodge (edict_t *self, vec3_t start, vec3_t dir, int speed);
+void CBlasterProjectile::Spawn (CBaseEntity *Spawner, vec3_t start, vec3_t dir,
+						int damage, int speed, int effect, bool isHyper)
+{
+	CBlasterProjectile		*Bolt = new CBlasterProjectile;
+
+	VectorNormalizef (dir, dir);
+
+	Bolt->SetSvFlags (SVF_PROJECTILE);
+	Bolt->State.SetOrigin (start);
+	Bolt->State.SetOldOrigin (start);
+	Bolt->State.SetAngles (dir);
+	Vec3Scale (dir, speed, Bolt->gameEntity->velocity);
+	Bolt->SetClipmask (CONTENTS_MASK_SHOT);
+	Bolt->SetSolid (SOLID_BBOX);
+	Bolt->State.SetEffects (effect);
+	Bolt->SetMins (vec3Origin);
+	Bolt->SetMaxs (vec3Origin);
+	Bolt->State.SetModelIndex (ModelIndex ("models/objects/laser/tris.md2"));
+	Bolt->State.SetSound (SoundIndex ("misc/lasfly.wav"));
+	Bolt->SetOwner (Spawner);
+	Bolt->NextThink = level.time + 2;
+	Bolt->Damage = damage;
+	Bolt->gameEntity->classname = "bolt";
+	if (isHyper)
+		Bolt->gameEntity->spawnflags = 1;
+	Bolt->Link ();
+
+	if (Spawner->EntityFlags & ENT_PLAYER)
+		check_dodge (Spawner->gameEntity, start, dir, speed);
+
+	vec3_t origin;
+	Spawner->State.GetOrigin (origin);
+	CTrace tr = CTrace (origin, start, Bolt->gameEntity, CONTENTS_MASK_SHOT);
+	if (tr.fraction < 1.0)
+	{
+		Vec3MA (start, -10, dir, start);
+
+		if (tr.ent->Entity)
+			Bolt->Touch (tr.ent->Entity, &tr.plane, tr.surface);
 	}
 }
