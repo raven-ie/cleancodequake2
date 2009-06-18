@@ -40,7 +40,14 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #define BroadcastPrintf gi.bprintf
 #else
 void ClientPrintf (edict_t *ent, EGamePrintLevel printLevel, char *fmt, ...);
+void DeveloperPrintf (char *fmt, ...);
+
+#ifdef _DEBUG
 void DebugPrintf (char *fmt, ...);
+#else
+#define DebugPrintf DeveloperPrintf
+#endif
+
 void CenterPrintf (edict_t *ent, char *fmt, ...);
 void BroadcastPrintf (EGamePrintLevel printLevel, char *fmt, ...);
 #endif
