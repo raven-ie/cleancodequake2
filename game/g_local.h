@@ -756,6 +756,8 @@ extern	CCvar	*bob_up;
 extern	CCvar	*bob_pitch;
 extern	CCvar	*bob_roll;
 
+extern	CCvar	*developer;
+
 extern	CCvar	*sv_cheats;
 extern	CCvar	*maxclients;
 extern	CCvar	*maxspectators;

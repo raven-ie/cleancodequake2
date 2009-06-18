@@ -93,9 +93,12 @@ void ClientPrintf (edict_t *ent, EGamePrintLevel printLevel, char *fmt, ...)
 #include <windows.h>
 #endif
 
-// Dprintf is the only command that has to be the same, because of Com_ConPrintf (we don't have it)
-void DebugPrintf (char *fmt, ...)
+
+void DeveloperPrintf (char *fmt, ...)
 {
+	if (!developer->Integer())
+		return;
+
 	va_list		argptr;
 	char		text[MAX_COMPRINT];
 
@@ -113,6 +116,29 @@ _CC_DISABLE_DEPRECATION
 	OutputDebugString(text);
 #endif
 }
+
+// Dprintf is the only command that has to be the same, because of Com_ConPrintf (we don't have it)
+#ifdef _DEBUG
+void DebugPrintf (char *fmt, ...)
+{
+	va_list		argptr;
+	char		text[MAX_COMPRINT];
+
+	va_start (argptr, fmt);
+	vsnprintf_s (text, sizeof(text), MAX_COMPRINT, fmt, argptr);
+	va_end (argptr);
+
+_CC_DISABLE_DEPRECATION
+(
+	gi.dprintf ("%s", text);
+)
+
+#if defined(WIN32)
+	// Pipe to visual studio
+	OutputDebugString(text);
+#endif
+}
+#endif
 
 void CenterPrintf (edict_t *ent, char *fmt, ...)
 {

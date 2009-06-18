@@ -272,6 +272,11 @@ void CClient::SetPing (int ping)
 void CClient::Clear ()
 {
 	memset (client, 0, sizeof(*client));
+
+	gclient_t *client = this->client;
+	memset (this, 0, sizeof(*this));
+	this->client = client;
+	PlayerState = CPlayerState(&client->playerState);
 }
 
 // Players have a special way of allocating the entity.
@@ -606,7 +611,7 @@ void CPlayerEntity::PutInServer ()
 
 #ifdef CLEANCTF_ENABLED
 //ZOID
-	if (CTFStart())
+	if ((game.mode & GAME_CTF) && CTFStart())
 		return;
 //ZOID
 #endif

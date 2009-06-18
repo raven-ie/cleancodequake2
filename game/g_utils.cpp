@@ -314,7 +314,7 @@ edict_t *G_Spawn (void)
 		if (!e->inUse && ( e->freetime < 2 || level.time - e->freetime > 0.5 ) )
 		{
 			G_InitEdict (e);
-			DebugPrintf ("Entity %i reused\n", i);
+			//DebugPrintf ("Entity %i reused\n", i);
 			return e;
 		}
 	}
@@ -322,7 +322,7 @@ edict_t *G_Spawn (void)
 	if (i == game.maxentities)
 		gi.error ("ED_Alloc: no free edicts");
 		
-	DebugPrintf ("Entity %i allocated\n", i);
+	//DebugPrintf ("Entity %i allocated\n", i);
 	globals.numEdicts++;
 	G_InitEdict (e);
 	return e;

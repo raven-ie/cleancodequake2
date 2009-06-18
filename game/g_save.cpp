@@ -201,6 +201,8 @@ void G_Register ()
 	// noset vars
 	dedicated = new CCvar ("dedicated", "0", CVAR_READONLY);
 
+	developer = new CCvar ("developer", "0", 0);
+
 	// latched vars
 	sv_cheats = new CCvar ("cheats", "0", CVAR_SERVERINFO|CVAR_LATCH_SERVER);
 	CCvar ("gamename", GAMEVERSION , CVAR_SERVERINFO|CVAR_LATCH_SERVER);
@@ -290,7 +292,7 @@ void InitGame (void)
 	game.maxspectators = maxspectators->Integer();
 	game.cheats = (sv_cheats->Integer()) ? true : false;
 
-	DebugPrintf ("Running CleanCode Quake2, built on %s (%s %s)\n", __DATE__, BUILDSTRING, CPUSTRING);
+	DebugPrintf ("Running CleanCode Quake2, built on %s (%s %s)\n", __TIMESTAMP__, BUILDSTRING, CPUSTRING);
 
 	Bans.LoadFromFile ();
 

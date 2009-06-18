@@ -45,6 +45,7 @@ CCvar	*maxspectators;
 CCvar	*maxentities;
 CCvar	*g_select_empty;
 CCvar	*dedicated;
+CCvar	*developer;
 
 CCvar	*filterban;
 
