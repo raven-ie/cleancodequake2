@@ -89,7 +89,8 @@ void CRocketLauncher::Fire (CPlayerEntity *ent)
 
 	Vec3Set (offset, 8, 8, ent->gameEntity->viewheight-8);
 	P_ProjectSource (ent, offset, forward, right, start);
-	fire_rocket (ent->gameEntity, start, forward, damage, 650, damage_radius, radius_damage);
+	//fire_rocket (ent->gameEntity, start, forward, damage, 650, damage_radius, radius_damage);
+	CRocket::Spawn (ent, start, forward, damage, 650, damage_radius, radius_damage);
 
 	// send muzzle flash
 	Muzzle (ent, MZ_ROCKET);

@@ -160,6 +160,13 @@ CPhysicsEntity (),
 CTouchableEntity(),
 CThinkableEntity()
 {
+	State.SetOrigin (vec3Origin);
+	State.SetAngles (vec3Origin);
+	Vec3Copy (vec3Origin, gameEntity->velocity); 
+	SetClipmask (CONTENTS_MASK_SHOT);
+	SetSolid (SOLID_BBOX);
+	SetMins(vec3Origin);
+	SetMaxs(vec3Origin);
 }
 
 CBounceProjectile::CBounceProjectile (int Index) :
@@ -168,6 +175,13 @@ CPhysicsEntity (Index),
 CTouchableEntity(),
 CThinkableEntity()
 {
+	State.SetOrigin (vec3Origin);
+	State.SetAngles (vec3Origin);
+	Vec3Copy (vec3Origin, gameEntity->velocity); 
+	SetClipmask (CONTENTS_MASK_SHOT);
+	SetSolid (SOLID_BBOX);
+	SetMins(vec3Origin);
+	SetMaxs(vec3Origin);
 }
 
 int ClipVelocity (vec3_t in, vec3_t normal, vec3_t out, float overbounce);
@@ -274,6 +288,13 @@ CPhysicsEntity (),
 CTouchableEntity (),
 CThinkableEntity ()
 {
+	State.SetOrigin (vec3Origin);
+	State.SetAngles (vec3Origin);
+	Vec3Copy (vec3Origin, gameEntity->velocity); 
+	SetClipmask (CONTENTS_MASK_SHOT);
+	SetSolid (SOLID_BBOX);
+	SetMins(vec3Origin);
+	SetMaxs(vec3Origin);
 }
 
 CFlyMissileProjectile::CFlyMissileProjectile (int Index) :
@@ -281,6 +302,13 @@ CPhysicsEntity (Index),
 CTouchableEntity (),
 CThinkableEntity ()
 {
+	State.SetOrigin (vec3Origin);
+	State.SetAngles (vec3Origin);
+	Vec3Copy (vec3Origin, gameEntity->velocity); 
+	SetClipmask (CONTENTS_MASK_SHOT);
+	SetSolid (SOLID_BBOX);
+	SetMins(vec3Origin);
+	SetMaxs(vec3Origin);
 }
 
 bool CFlyMissileProjectile::Run ()
