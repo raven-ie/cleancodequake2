@@ -90,20 +90,10 @@ void CGrenade::Explode ()
 	T_RadiusDamage(gameEntity, gameEntity->owner, Damage, gameEntity->enemy, RadiusDamage, mod);
 
 	Vec3MA (origin, -0.02, gameEntity->velocity, origin);
-	if (gameEntity->waterlevel)
-	{
-		if (gameEntity->groundentity)
-			CTempEnt_Explosions::GrenadeExplosion(origin, gameEntity, true);
-		else
-			CTempEnt_Explosions::RocketExplosion(origin, gameEntity, true);
-	}
+	if (gameEntity->groundentity)
+		CTempEnt_Explosions::GrenadeExplosion(origin, gameEntity, !!gameEntity->waterlevel);
 	else
-	{
-		if (gameEntity->groundentity)
-			CTempEnt_Explosions::GrenadeExplosion(origin, gameEntity);
-		else
-			CTempEnt_Explosions::RocketExplosion(origin, gameEntity);
-	}
+		CTempEnt_Explosions::RocketExplosion(origin, gameEntity, !!gameEntity->waterlevel);
 
 	Free (); // "delete" the entity
 }
@@ -156,11 +146,7 @@ void CGrenade::Spawn (CBaseEntity *Spawner, vec3_t start, vec3_t aimdir, int dam
 	Vec3MA (Grenade->gameEntity->velocity, 200 + crandom() * 10.0, up, Grenade->gameEntity->velocity);
 	Vec3MA (Grenade->gameEntity->velocity, crandom() * 10.0, right, Grenade->gameEntity->velocity);
 	Vec3Set (Grenade->gameEntity->avelocity, 300, 300, 300);
-	Grenade->SetClipmask(CONTENTS_MASK_SHOT);
-	Grenade->SetSolid (SOLID_BBOX);
 	Grenade->State.SetEffects (EF_GRENADE);
-	Grenade->SetMins (vec3Origin);
-	Grenade->SetMaxs (vec3Origin);
 	Grenade->State.SetModelIndex((!handNade) ? ModelIndex ("models/objects/grenade/tris.md2") : ModelIndex ("models/objects/grenade2/tris.md2"));
 	Grenade->SetOwner(Spawner);
 	Grenade->NextThink = level.time + timer;
@@ -239,13 +225,11 @@ void CBlasterProjectile::Spawn (CBaseEntity *Spawner, vec3_t start, vec3_t dir,
 	Bolt->SetSvFlags (SVF_PROJECTILE);
 	Bolt->State.SetOrigin (start);
 	Bolt->State.SetOldOrigin (start);
-	Bolt->State.SetAngles (dir);
+	vec3_t dirAngles;
+	VecToAngles (dir, dirAngles);
+	Bolt->State.SetAngles (dirAngles);
 	Vec3Scale (dir, speed, Bolt->gameEntity->velocity);
-	Bolt->SetClipmask (CONTENTS_MASK_SHOT);
-	Bolt->SetSolid (SOLID_BBOX);
 	Bolt->State.SetEffects (effect);
-	Bolt->SetMins (vec3Origin);
-	Bolt->SetMaxs (vec3Origin);
 	Bolt->State.SetModelIndex (ModelIndex ("models/objects/laser/tris.md2"));
 	Bolt->State.SetSound (SoundIndex ("misc/lasfly.wav"));
 	Bolt->SetOwner (Spawner);
@@ -323,11 +307,7 @@ void CRocket::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	// calculate position for the explosion entity
 	Vec3MA (origin, -0.02, gameEntity->velocity, origin);
 	T_RadiusDamage(gameEntity, gameEntity->owner, RadiusDamage, other->gameEntity, DamageRadius, MOD_R_SPLASH);
-
-	if (gameEntity->waterlevel)
-		CTempEnt_Explosions::RocketExplosion(origin, gameEntity, true);
-	else
-		CTempEnt_Explosions::RocketExplosion(origin, gameEntity, false);
+	CTempEnt_Explosions::RocketExplosion(origin, gameEntity, !!gameEntity->waterlevel);
 
 	Free ();
 }
@@ -338,13 +318,12 @@ void CRocket::Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t dir,
 	CRocket	*Rocket = new CRocket;
 
 	Rocket->State.SetOrigin (start);
-	Rocket->State.SetAngles (dir);
+
+	vec3_t dirAngles;
+	VecToAngles (dir, dirAngles);
+	Rocket->State.SetAngles (dirAngles);
 	Vec3Scale (dir, speed, Rocket->gameEntity->velocity);
-	Rocket->SetClipmask (CONTENTS_MASK_SHOT);
-	Rocket->SetSolid (SOLID_BBOX);
 	Rocket->State.SetEffects (EF_ROCKET);
-	Rocket->SetMins(vec3Origin);
-	Rocket->SetMaxs(vec3Origin);
 	Rocket->State.SetModelIndex (ModelIndex ("models/objects/rocket/tris.md2"));
 	Rocket->SetOwner (Spawner);
 	Rocket->NextThink = level.time + 8000/speed;
