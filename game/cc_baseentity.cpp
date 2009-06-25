@@ -226,6 +226,7 @@ CBaseEntity::CBaseEntity ()
 	gameEntity = G_Spawn ();
 	gameEntity->Entity = this;
 
+	Freed = false;
 	EntityFlags |= ENT_BASE;
 
 	State = CEntityState(&gameEntity->state);
@@ -235,7 +236,9 @@ CBaseEntity::CBaseEntity (int Index)
 {
 	gameEntity = &g_edicts[Index];
 	gameEntity->Entity = this;
+	gameEntity->state.number = Index;
 
+	Freed = false;
 	EntityFlags |= ENT_BASE;
 	State = CEntityState(&gameEntity->state);
 }
@@ -411,7 +414,7 @@ int				CBaseEntity::GetLinkCount ()
 
 bool			CBaseEntity::IsInUse ()
 {
-	return !!(gameEntity->inUse);
+	return gameEntity->inUse;
 }
 void			CBaseEntity::SetInUse (bool inuse)
 {
@@ -437,6 +440,8 @@ void			CBaseEntity::Free ()
 	gameEntity->classname = "freed";
 	gameEntity->freetime = level.time;
 	SetInUse(false);
+
+	Freed = true;
 }
 
 CWorldEntity::CWorldEntity () : 

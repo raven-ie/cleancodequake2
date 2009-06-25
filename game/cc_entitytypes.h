@@ -39,7 +39,7 @@ enum EDeadFlags
 	DF_DEAD
 };
 
-class CHurtableEntity abstract : public CBaseEntity
+class CHurtableEntity abstract : public virtual CBaseEntity
 {
 public:
 	int			Health;

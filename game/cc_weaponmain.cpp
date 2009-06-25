@@ -169,7 +169,7 @@ void CWeapon::ChangeWeapon (CPlayerEntity *Player)
 
 	// set visible model
 	if (Player->Client.pers.Weapon && Player->State.GetModelIndex() == 255)
-		Player->State.SetSkinNum ((Player->gameEntity - g_edicts - 1) | ((Player->Client.pers.Weapon->vwepIndex & 0xff) << 8));
+		Player->State.SetSkinNum ((Player->State.GetNumber()-1) | ((Player->Client.pers.Weapon->vwepIndex & 0xff) << 8));
 
 	if (!Player->Client.pers.Weapon)
 	{	// dead
@@ -344,7 +344,7 @@ void CWeapon::Muzzle (CPlayerEntity *Player, int muzzleNum)
 		muzzleNum |= MZ_SILENCED;
 	vec3_t origin;
 	Player->State.GetOrigin (origin);
-	CTempEnt::MuzzleFlash(origin, Player->gameEntity-g_edicts, muzzleNum);
+	CTempEnt::MuzzleFlash(origin, Player->State.GetNumber(), muzzleNum);
 }
 
 /*

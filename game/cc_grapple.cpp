@@ -171,7 +171,7 @@ void CGrapple::GrappleDrawCable(edict_t *self)
 	// adjust start for beam origin being in middle of a segment
 	Vec3Copy (self->state.origin, end);
 
-	CTempEnt_Trails::GrappleCable (origin, end, Player->gameEntity - g_edicts, offset);
+	CTempEnt_Trails::GrappleCable (origin, end, Player->State.GetNumber(), offset);
 }
 
 void SV_AddGravity (edict_t *ent);

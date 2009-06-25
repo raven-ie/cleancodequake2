@@ -282,8 +282,9 @@ void CClient::Clear ()
 // Players have a special way of allocating the entity.
 // We won't automatically allocate it since it already exists
 CPlayerEntity::CPlayerEntity (int Index) :
+CBaseEntity(Index),
 CHurtableEntity(Index),
-Client(&game.clients[gameEntity-g_edicts-1])
+Client(&game.clients[State.GetNumber()-1])
 {
 	EntityFlags |= ENT_PLAYER;
 };
@@ -454,7 +455,7 @@ void CPlayerEntity::SpectatorRespawn ()
 		vec3_t origin;
 		State.GetOrigin (origin);
 		// send effect
-		CTempEnt::MuzzleFlash (origin, gameEntity-g_edicts, MZ_LOGIN);
+		CTempEnt::MuzzleFlash (origin, State.GetNumber(), MZ_LOGIN);
 
 		// hold in place briefly
 		Client.PlayerState.GetPMove()->pmFlags = PMF_TIME_TELEPORT;
@@ -492,7 +493,7 @@ void CPlayerEntity::PutInServer ()
 	// ranging doesn't count this client
 	SelectSpawnPoint (spawn_origin, spawn_angles);
 
-	index = gameEntity-g_edicts-1;
+	index = State.GetNumber()-1;
 
 	char		userinfo[MAX_INFO_STRING];
 	switch (game.mode)
@@ -592,7 +593,7 @@ void CPlayerEntity::PutInServer ()
 	State.SetModelIndex (255, 2);		// custom gun model
 	// sknum is player num and weapon number
 	// weapon number will be added in changeweapon
-	State.SetSkinNum (gameEntity - g_edicts - 1);
+	State.SetSkinNum (State.GetNumber()-1);
 
 	State.SetFrame (0);
 
@@ -719,7 +720,7 @@ void CPlayerEntity::UserinfoChanged (char *userinfo)
 
 	// set skin
 	s = Info_ValueForKey (userinfo, "skin");
-	playernum = gameEntity-g_edicts-1;
+	playernum = State.GetNumber()-1;
 
 	// combine name and skin into a configstring
 #ifdef CLEANCTF_ENABLED
@@ -789,7 +790,7 @@ void CPlayerEntity::UserinfoChanged (char *userinfo)
 #ifdef CLEANCTF_ENABLED
 void CPlayerEntity::CTFAssignSkin(char *s)
 {
-	int playernum = gameEntity-g_edicts-1;
+	int playernum = State.GetNumber()-1;
 	char *p;
 	char t[64];
 
@@ -2359,7 +2360,7 @@ void CPlayerEntity::SetSpectatorStats ()
 
 	if (Client.chase_target && Client.chase_target->IsInUse())
 		Client.PlayerState.SetStat(STAT_CHASE, (CS_PLAYERSKINS + 
-			(Client.chase_target->gameEntity - g_edicts) - 1));
+			(Client.chase_target->State.GetNumber()- 1)));
 	else
 		Client.PlayerState.SetStat(STAT_CHASE, 0);
 }
@@ -2540,7 +2541,7 @@ void CPlayerEntity::CTFSetIDView()
 	tr = CTrace(origin, forward, gameEntity, CONTENTS_MASK_SOLID);
 	if (tr.fraction < 1 && tr.ent && ((tr.ent - g_edicts) >= 1 && (tr.ent - g_edicts) <= game.maxclients))
 	{
-		Client.PlayerState.SetStat(STAT_CTF_ID_VIEW, CS_PLAYERSKINS + (gameEntity - g_edicts - 1));
+		Client.PlayerState.SetStat(STAT_CTF_ID_VIEW, CS_PLAYERSKINS + (State.GetNumber()-1));
 		return;
 	}
 
@@ -2563,7 +2564,7 @@ void CPlayerEntity::CTFSetIDView()
 		}
 	}
 	if (bd > 0.90)
-		Client.PlayerState.SetStat(STAT_CTF_ID_VIEW, CS_PLAYERSKINS + (best->gameEntity - g_edicts - 1));
+		Client.PlayerState.SetStat(STAT_CTF_ID_VIEW, CS_PLAYERSKINS + (best->State.GetNumber()-1));
 }
 
 void CPlayerEntity::CTFAssignGhost()
@@ -3112,7 +3113,7 @@ edict_t *CPlayerEntity::SelectCoopSpawnPoint ()
 	edict_t	*spot = NULL;
 	char	*target;
 
-	index = gameEntity - g_edicts - 1;
+	index = State.GetNumber()-1;
 
 	// player 0 starts in normal player spawn point
 	if (!index)
