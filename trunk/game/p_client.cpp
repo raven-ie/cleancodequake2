@@ -790,7 +790,7 @@ void ClientBeginDeathmatch (CPlayerEntity *Player)
 		Player->MoveToIntermission();
 	else
 		// send effect
-		CTempEnt::MuzzleFlash (origin, Player->gameEntity-g_edicts, MZ_LOGIN);
+		CTempEnt::MuzzleFlash (origin, Player->State.GetNumber(), MZ_LOGIN);
 
 	BroadcastPrintf (PRINT_HIGH, "%s entered the game\n", Player->Client.pers.netname);
 
@@ -812,7 +812,7 @@ void ClientBegin (edict_t *ent)
 	int		i;
 	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(ent->Entity);
 
-	ent->client = game.clients + (ent - g_edicts - 1);
+	ent->client = game.clients + (Player->State.GetNumber()-1);
 
 	if (game.mode & GAME_DEATHMATCH)
 	{
@@ -851,7 +851,7 @@ void ClientBegin (edict_t *ent)
 		// send effect if in a multiplayer game
 		if (game.maxclients > 1)
 		{
-			CTempEnt::MuzzleFlash (ent->state.origin, ent-g_edicts, MZ_LOGIN);
+			CTempEnt::MuzzleFlash (ent->state.origin, Player->State.GetNumber(), MZ_LOGIN);
 			BroadcastPrintf (PRINT_HIGH, "%s entered the game\n", Player->Client.pers.netname);
 		}
 	}
@@ -947,7 +947,7 @@ BOOL ClientConnect (edict_t *ent, char *userinfo)
 
 
 	// they can connect
-	ent->client = game.clients + (ent - g_edicts - 1);
+	ent->client = game.clients + (Player->State.GetNumber()-1);
 
 	// if there is already a body waiting for us (a loadgame), just
 	// take it, otherwise spawn one from scratch
@@ -992,7 +992,6 @@ Will not be called between levels.
 void ClientDisconnect (edict_t *ent)
 {
 	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(ent->Entity);
-	int		playernum;
 
 	if (!ent->client)
 		return;
@@ -1008,7 +1007,7 @@ void ClientDisconnect (edict_t *ent)
 #endif
 
 	// send effect
-	CTempEnt::MuzzleFlash (ent->state.origin, ent-g_edicts, MZ_LOGIN);
+	CTempEnt::MuzzleFlash (ent->state.origin, Player->State.GetNumber(), MZ_LOGIN);
 
 	Player->Unlink ();
 	ent->state.modelIndex = 0;
@@ -1016,8 +1015,7 @@ void ClientDisconnect (edict_t *ent)
 	Player->SetInUse (false);
 	ent->classname = "disconnected";
 
-	playernum = ent-g_edicts-1;
-	gi.configstring (CS_PLAYERSKINS+playernum, "");
+	gi.configstring (CS_PLAYERSKINS+(Player->State.GetNumber()-1), "");
 }
 
 

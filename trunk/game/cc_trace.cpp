@@ -47,14 +47,6 @@ void CTrace::Copy (cmTrace_t tr)
 
 CTrace::CTrace ()
 {
-	fraction = 0;
-	ent = NULL;
-	memset (&plane, 0, sizeof(plane));
-	allSolid = false;
-	startSolid = false;
-	Vec3Copy (vec3Origin, endPos);
-	surface = NULL;
-	contents = -1;
 }
 
 _CC_DISABLE_DEPRECATION

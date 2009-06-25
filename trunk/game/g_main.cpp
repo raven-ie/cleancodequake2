@@ -498,7 +498,7 @@ __try
 			// Were we freed?
 			// This has to be processed after thinking and running, because
 			// the entity still has to be intact after that
-			if (ent->freetime == level.time)
+			if (ent->Entity->Freed)
 				delete ent->Entity;
 			continue;
 		}

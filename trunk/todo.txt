@@ -1,16 +1,7 @@
-=Goals
-CleanCode Quake2 aims to provide a modular and object-oriented experience to writing, changing and manipulating the Quake2 game source base. CCQ2 will include macros for features so you can easily take out features you don't want (such as Quad Damage or invulnerability), plus a bunch of new and exciting features never before seen in Quake 2 that have been easily created because of object-orientated code.
+Just a place to write down some things planned.
 
-=C/C++ 
-
-- Entity system needs a complete re-write. I'm thinking splitting it into some sort of inheretence system or something. The server needs the first few arguments of edict_s to be exactly the same in the same order, so that should stay a structure, and from there is where linkentity/unlinkentity/spawn would be handled, but from there other classes can inherit edict_s (have different types of entities, like Player entity has all the air_finished crap and stuff, monsters have monsterinfo, projectiles have different physics and stuff). Also, there should be a class for an entity that does not get passed to the server, as there are many cases where that would be useful.
-- A bunch of the combat handlers need to be re-written as well. T_Damage and it's linked functions can be cut down
-- The spawn fields and SpawnEntity should also be handled differently, as it's probably the slowest portion of the entire game.
-- Physics system should be re-written too so that it can have a bunch of handlers in the future
-- Instead of Vector* functions, use the Vector class. Only problem is the state structure, server requires vectors to be in float[3], so we need to do an entity finalize or something.
-
-=Features
-
-- Physic improvements! Goddamn Quake2 contains worse physics than the original Quake. As always, physics improvements will be modular with macros to enable/disable (just in case people want to keep original feels for compatibility reasons) them. Grenades will no longer be able to get stuck on inclines, for a start. Eventually things such as grenades going through elevators that are moving and trains getting "blocked" on moving multiple players at the same time will be fixed.
-- Many many modular examples. One that I will do personally is implement QuakeMatt's "Gyro" engine into Quake 2.
-- Bug-free environment and hopefully every original bug imaginable will be fixed, plus ones you never thought of, such as removing non-looping speakers and replacing them with positional sounds to save on entity space (they still pass and can even cause an overflow, so doing that would help huge SP maps big time)
+(Paril)
+- Remove usage of GetModelIndex() == 255. This is stupid.
+- Look into using a sin/cos table, for Q_SinCosf
+- Remove usage of level.current_entity
+- 

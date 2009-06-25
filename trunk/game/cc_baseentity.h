@@ -98,6 +98,7 @@ public: // Kept public for now because there are lots of functions that require 
 	edict_t			*gameEntity;	// The "game entity" this is linked with.
 									// Kept private to make sure no mistakes are made.
 public:
+	bool			Freed;
 	uint32			EntityFlags;
 	CEntityState	State;
 

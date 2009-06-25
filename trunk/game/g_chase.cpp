@@ -136,7 +136,7 @@ void ChaseNext(CPlayerEntity *ent)
 	if (!ent->Client.chase_target)
 		return;
 
-	i = ent->Client.chase_target->gameEntity - g_edicts;
+	i = ent->Client.chase_target->State.GetNumber();
 	do {
 		i++;
 		if (i > game.maxclients)
@@ -160,7 +160,7 @@ void ChasePrev(CPlayerEntity *ent)
 	if (!ent->Client.chase_target)
 		return;
 
-	i = ent->Client.chase_target->gameEntity - g_edicts;
+	i = ent->Client.chase_target->State.GetNumber();
 	do {
 		i--;
 		if (i < 1)

@@ -345,7 +345,7 @@ void AI_SetSightClient (void)
 	if (level.sight_client == NULL)
 		start = 1;
 	else
-		start = level.sight_client->gameEntity - g_edicts;
+		start = level.sight_client->State.GetNumber();
 
 	check = start;
 	while (1)
