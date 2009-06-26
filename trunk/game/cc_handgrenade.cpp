@@ -137,6 +137,9 @@ void CHandGrenade::FireGrenade (CPlayerEntity *ent, bool inHand)
 void CHandGrenade::Wait (CPlayerEntity *ent)
 {
 	ent->Client.grenade_blew_up = false;
+	// if we aren't dead...
+	if (!ent->gameEntity->deadflag)
+		ent->Client.grenade_thrown = false;
 	if (level.time < ent->Client.grenade_time)
 		return;
 	ent->Client.PlayerState.SetGunFrame (ent->Client.PlayerState.GetGunFrame()+1);
