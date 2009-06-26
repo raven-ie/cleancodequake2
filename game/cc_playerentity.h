@@ -177,10 +177,10 @@ typedef struct
 //ZOID
 	int			ctf_team;			// CTF team
 	int			ctf_state;
-	float		ctf_lasthurtcarrier;
-	float		ctf_lastreturnedflag;
-	float		ctf_flagsince;
-	float		ctf_lastfraggedcarrier;
+	int32		ctf_lasthurtcarrier;
+	int32		ctf_lastreturnedflag;
+	int32		ctf_flagsince;
+	int32		ctf_lastfraggedcarrier;
 	bool		id_state;
 	bool		voted; // for elections
 	bool		ready;
@@ -233,8 +233,10 @@ public:
 	EWeaponState weaponstate;
 	vec3_t		kick_angles;	// weapon kicks
 	vec3_t		kick_origin;
-	float		v_dmg_roll, v_dmg_pitch, v_dmg_time;	// damage kicks
-	float		fall_time, fall_value;		// for view drop on fall
+	float		v_dmg_roll, v_dmg_pitch;	// damage kicks
+	int32		v_dmg_time;
+	int32		fall_time;
+	float		fall_value;		// for view drop on fall
 	byte		bonus_alpha;
 	colorb		damage_blend;
 	vec3_t		v_angle;			// aiming direction
@@ -255,24 +257,24 @@ public:
 	bool		anim_run;
 
 	// powerup timers
-	int			quad_framenum;
-	int			invincible_framenum;
-	int			breather_framenum;
-	int			enviro_framenum;
+	int32		quad_framenum;
+	int32		invincible_framenum;
+	int32		breather_framenum;
+	int32		enviro_framenum;
 
 	bool		grenade_blew_up;
 	bool		grenade_thrown;
-	float		grenade_time;
+	int32		grenade_time;
 	int			silencer_shots;
 	MediaIndex	weapon_sound;
 
-	float		pickup_msg_time;
+	int32		pickup_msg_time;
 
-	float		flood_locktill;		// locked from talking
-	float		flood_when[10];		// when messages were said
+	int32		flood_locktill;		// locked from talking
+	int32		flood_when[10];		// when messages were said
 	int			flood_whenhead;		// head pointer for when said
 
-	float		respawn_time;		// can respawn when time > this
+	int32		respawn_time;		// can respawn when time > this
 
 	CPlayerEntity		*chase_target;		// player we are chasing
 	bool				update_chase;		// need to update chase info?
@@ -281,10 +283,10 @@ public:
 //ZOID
 	edict_t		*ctf_grapple;		// entity of grapple
 	int			ctf_grapplestate;		// true if pulling
-	float		ctf_grapplereleasetime;	// time of grapple release
-	float		ctf_regentime;		// regen tech
-	float		ctf_techsndtime;
-	float		ctf_lasttechmsg;
+	int32		ctf_grapplereleasetime;	// time of grapple release
+	int32		ctf_regentime;		// regen tech
+	int32		ctf_techsndtime;
+	int32		ctf_lasttechmsg;
 //ZOID
 #endif
 };

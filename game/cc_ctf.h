@@ -76,7 +76,7 @@ typedef struct ctfgame_s
 {
 	int team1, team2;
 	int total1, total2; // these are only set when going into intermission!
-	float last_flag_capture;
+	int32 last_flag_capture;
 	int last_capture_team;
 
 	match_t match;		// match state
@@ -88,7 +88,7 @@ typedef struct ctfgame_s
 	char elevel[32];	// for map election, target level
 	int evotes;			// votes so far
 	int needvotes;		// votes needed
-	float electtime;	// remaining time until election times out
+	int32 electtime;	// remaining time until election times out
 	char emsg[256];		// election name
 
 
@@ -105,7 +105,7 @@ extern CCvar *ctf;
 #define CTF_RECOVERY_BONUS		1	// what you get for recovery
 #define CTF_FLAG_BONUS			0	// what you get for picking up enemy flag
 #define CTF_FRAG_CARRIER_BONUS	2	// what you get for fragging enemy flag carrier
-#define CTF_FLAG_RETURN_TIME	40	// seconds until auto return
+#define CTF_FLAG_RETURN_TIME	400	// seconds until auto return
 
 #define CTF_CARRIER_DANGER_PROTECT_BONUS	2	// bonus for fraggin someone who has recently hurt your flag carrier
 #define CTF_CARRIER_PROTECT_BONUS			1	// bonus for fraggin someone while either you or your target are near your flag carrier
@@ -116,13 +116,13 @@ extern CCvar *ctf;
 #define CTF_TARGET_PROTECT_RADIUS			400	// the radius around an object being defended where a target will be worth extra frags
 #define CTF_ATTACKER_PROTECT_RADIUS			400	// the radius around an object being defended where an attacker will get extra frags when making kills
 
-#define CTF_CARRIER_DANGER_PROTECT_TIMEOUT	8
-#define CTF_FRAG_CARRIER_ASSIST_TIMEOUT		10
-#define CTF_RETURN_FLAG_ASSIST_TIMEOUT		10
+#define CTF_CARRIER_DANGER_PROTECT_TIMEOUT	80
+#define CTF_FRAG_CARRIER_ASSIST_TIMEOUT		100
+#define CTF_RETURN_FLAG_ASSIST_TIMEOUT		100
 
-#define CTF_AUTO_FLAG_RETURN_TIMEOUT		30	// number of seconds before dropped flag auto-returns
+#define CTF_AUTO_FLAG_RETURN_TIMEOUT		300	// number of seconds before dropped flag auto-returns
 
-#define CTF_TECH_TIMEOUT					60  // seconds before techs spawn again
+#define CTF_TECH_TIMEOUT					600  // seconds before techs spawn again
 
 #define CTF_GRAPPLE_SPEED					650 // speed of grapple in flight
 #define CTF_GRAPPLE_PULL_SPEED				650	// speed player is pulled at

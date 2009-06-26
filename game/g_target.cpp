@@ -251,7 +251,9 @@ void use_target_explosion (edict_t *self, edict_t *other, edict_t *activator)
 	}
 
 	self->think = target_explosion_explode;
-	self->nextthink = level.time + self->delay;
+
+	// Backwards compatibility
+	self->nextthink = level.framenum + (self->delay * 10);
 }
 
 void SP_target_explosion (edict_t *ent)
@@ -479,7 +481,9 @@ void SP_target_crosslevel_target (edict_t *self)
 	self->svFlags = SVF_NOCLIENT;
 
 	self->think = target_crosslevel_target_think;
-	self->nextthink = level.time + self->delay;
+	
+	// Paril: backwards compatibility
+	self->nextthink = level.framenum + (self->delay * 10);
 }
 
 //==========================================================
@@ -553,7 +557,7 @@ void target_laser_think (edict_t *self)
 
 	Vec3Copy (tr.endPos, self->state.oldOrigin);
 
-	self->nextthink = level.time + FRAMETIME;
+	self->nextthink = level.framenum + FRAMETIME;
 }
 
 void target_laser_on (edict_t *self)
@@ -649,7 +653,7 @@ void SP_target_laser (edict_t *self)
 {
 	// let everything else get spawned before we start firing
 	self->think = target_laser_start;
-	self->nextthink = level.time + 1;
+	self->nextthink = level.framenum + 10;
 }
 
 //==========================================================
@@ -677,14 +681,12 @@ void target_lightramp_think (edict_t *self)
 {
 	char	style[2];
 
-	style[0] = 'a' + self->movedir[0] + (level.time - self->timestamp) / FRAMETIME * self->movedir[2];
+	style[0] = 'a' + self->movedir[0] + (level.framenum - self->timestamp) / 0.1f * self->movedir[2];
 	style[1] = 0;
 	gi.configstring (CS_LIGHTS+self->enemy->style, style);
 
-	if ((level.time - self->timestamp) < self->speed)
-	{
-		self->nextthink = level.time + FRAMETIME;
-	}
+	if ((level.framenum - self->timestamp) < self->speed)
+		self->nextthink = level.framenum + FRAMETIME;
 	else if (self->spawnflags & 1)
 	{
 		char	temp;
@@ -729,7 +731,7 @@ void target_lightramp_use (edict_t *self, edict_t *other, edict_t *activator)
 		}
 	}
 
-	self->timestamp = level.time;
+	self->timestamp = level.framenum;
 	target_lightramp_think (self);
 }
 
@@ -763,7 +765,7 @@ void SP_target_lightramp (edict_t *self)
 
 	self->movedir[0] = self->message[0] - 'a';
 	self->movedir[1] = self->message[1] - 'a';
-	self->movedir[2] = (self->movedir[1] - self->movedir[0]) / (self->speed / FRAMETIME);
+	self->movedir[2] = (self->movedir[1] - self->movedir[0]) / (self->speed / 0.1f);
 }
 
 //==========================================================
@@ -780,10 +782,10 @@ void target_earthquake_think (edict_t *self)
 	int		i;
 	edict_t	*e;
 
-	if (self->last_move_time < level.time)
+	if (self->last_move_time < level.framenum)
 	{
 		PlaySoundAt (self->state.origin, self, CHAN_AUTO, self->noise_index, 1.0, ATTN_NONE);
-		self->last_move_time = level.time + 0.5;
+		self->last_move_time = level.framenum + 5;
 	}
 
 	for (i=1, e=g_edicts+i; i < globals.numEdicts; i++,e++)
@@ -801,14 +803,15 @@ void target_earthquake_think (edict_t *self)
 		e->velocity[2] = self->speed * (100.0 / e->mass);
 	}
 
-	if (level.time < self->timestamp)
-		self->nextthink = level.time + FRAMETIME;
+	if (level.framenum < self->timestamp)
+		self->nextthink = level.framenum + FRAMETIME;
 }
 
 void target_earthquake_use (edict_t *self, edict_t *other, edict_t *activator)
 {
-	self->timestamp = level.time + self->count;
-	self->nextthink = level.time + FRAMETIME;
+	// Paril, Backwards compatibility
+	self->timestamp = level.framenum + (self->count * 10);
+	self->nextthink = level.framenum + FRAMETIME;
 	self->activator = activator;
 	self->last_move_time = 0;
 }

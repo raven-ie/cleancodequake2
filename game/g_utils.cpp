@@ -181,7 +181,9 @@ void G_UseTargets (edict_t *ent, edict_t *activator)
 	// create a temp object to fire at a later time
 		t = G_Spawn();
 		t->classname = "DelayedUse";
-		t->nextthink = level.time + ent->delay;
+
+		// Paril: for compatibility
+		t->nextthink = level.framenum + (ent->delay * 10);
 		t->think = Think_Delay;
 		t->activator = activator;
 		if (!activator)
@@ -311,7 +313,7 @@ edict_t *G_Spawn (void)
 	{
 		// the first couple seconds of server time can involve a lot of
 		// freeing and allocating, so relax the replacement policy
-		if (!e->inUse && ( e->freetime < 2 || level.time - e->freetime > 0.5 ) )
+		if (!e->inUse && ( e->freetime < 20 || level.framenum - e->freetime > 5 ) )
 		{
 			G_InitEdict (e);
 			DebugPrintf ("Entity %i reused\n", i);
@@ -350,7 +352,7 @@ void G_FreeEdict (edict_t *ed)
 	memset (ed, 0, sizeof(*ed));
 	ed->Entity = Entity;
 	ed->classname = "freed";
-	ed->freetime = level.time;
+	ed->freetime = level.framenum;
 	ed->inUse = false;
 }
 

@@ -91,7 +91,7 @@ void Cmd_Kill_f (CPlayerEntity *ent)
 		return;
 //ZOID
 
-	if((level.time - ent->Client.respawn_time) < 5)
+	if((level.framenum - ent->Client.respawn_time) < 50)
 		return;
 
 	ent->gameEntity->flags &= ~FL_GODMODE;
@@ -244,26 +244,26 @@ bool CheckFlood(CPlayerEntity *ent)
 
 	if (flood_msgs->Integer())
 	{
-        if (level.time < ent->Client.flood_locktill)
+        if (level.framenum < ent->Client.flood_locktill)
 		{
 			ClientPrintf(ent->gameEntity, PRINT_HIGH, "You can't talk for %d more seconds\n",
-				(int)(ent->Client.flood_locktill - level.time));
+				(int)((ent->Client.flood_locktill - level.framenum)/10));
             return true;
         }
         i = ent->Client.flood_whenhead - flood_msgs->Integer() + 1;
         if (i < 0)
             i = (sizeof(ent->Client.flood_when)/sizeof(ent->Client.flood_when[0])) + i;
 		if (ent->Client.flood_when[i] && 
-			level.time - ent->Client.flood_when[i] < flood_persecond->Integer())
+			((level.framenum - ent->Client.flood_when[i])/10) < flood_persecond->Integer())
 		{
-			ent->Client.flood_locktill = level.time + flood_waitdelay->Float();
+			ent->Client.flood_locktill = level.framenum + (flood_waitdelay->Float() * 10);
 			ClientPrintf(ent->gameEntity, PRINT_CHAT, "Flood protection:  You can't talk for %d seconds.\n",
 				flood_waitdelay->Integer());
             return true;
         }
 		ent->Client.flood_whenhead = (ent->Client.flood_whenhead + 1) %
 			(sizeof(ent->Client.flood_when)/sizeof(ent->Client.flood_when[0]));
-		ent->Client.flood_when[ent->Client.flood_whenhead] = level.time;
+		ent->Client.flood_when[ent->Client.flood_whenhead] = level.framenum;
 	}
 	return false;
 }

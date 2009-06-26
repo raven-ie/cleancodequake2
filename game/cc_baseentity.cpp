@@ -438,7 +438,7 @@ void			CBaseEntity::Free ()
 	memset (gameEntity, 0, sizeof(*gameEntity));
 	gameEntity->Entity = this;
 	gameEntity->classname = "freed";
-	gameEntity->freetime = level.time;
+	gameEntity->freetime = level.framenum;
 	SetInUse(false);
 
 	Freed = true;

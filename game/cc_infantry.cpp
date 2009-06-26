@@ -222,10 +222,10 @@ void CInfantry::Pain (edict_t *other, float kick, int damage)
 	DoneDodge();
 #endif
 
-	if (level.time < Entity->pain_debounce_time)
+	if (level.framenum < Entity->pain_debounce_time)
 		return;
 
-	Entity->pain_debounce_time = level.time + 3;
+	Entity->pain_debounce_time = level.framenum + 30;
 	
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
@@ -433,13 +433,13 @@ void CInfantry::Duck_Down ()
 	AIFlags |= AI_DUCKED;
 	Entity->maxs[2] -= 32;
 	Entity->takedamage = DAMAGE_YES;
-	PauseTime = level.time + 1;
+	PauseTime = level.framenum + 10;
 	gi.linkentity (Entity);
 }
 
 void CInfantry::Duck_Hold ()
 {
-	if (level.time >= PauseTime)
+	if (level.framenum >= PauseTime)
 		AIFlags &= ~AI_HOLD_FRAME;
 	else
 		AIFlags |= AI_HOLD_FRAME;
@@ -494,7 +494,7 @@ void CInfantry::Fire ()
 {
 	MachineGun ();
 
-	if (level.time >= PauseTime)
+	if (level.framenum >= PauseTime)
 		AIFlags &= ~AI_HOLD_FRAME;
 	else
 		AIFlags |= AI_HOLD_FRAME;
@@ -570,7 +570,7 @@ CAnim InfantryMoveAttack2 (FRAME_attak201, FRAME_attak208, InfantryFramesAttack2
 
 void CInfantry::Attack ()
 {
-	PauseTime = level.time + ((rand() & 15) + 11) * FRAMETIME;
+	PauseTime = level.framenum + ((rand() & 15) + 11);
 	CurrentMove = &InfantryMoveAttack1;
 }
 
@@ -595,9 +595,9 @@ void CInfantry::Duck (float eta)
 
 	if (skill->Integer() == 0)
 		// PMM - stupid dodge
-		DuckWaitTime = level.time + eta + 1;
+		DuckWaitTime = level.framenum + ((eta + 1) * 10);
 	else
-		DuckWaitTime = level.time + eta + (0.1 * (3 - skill->Integer()));
+		DuckWaitTime = level.framenum + ((eta + (0.1 * (3 - skill->Integer()))) * 10);
 
 	// has to be done immediately otherwise he can get stuck
 	DuckDown();

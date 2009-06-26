@@ -55,7 +55,7 @@ void BeginIntermission (edict_t *targ)
 			client->Respawn();
 	}
 
-	level.intermissiontime = level.time;
+	level.intermissiontime = level.framenum;
 	level.changemap = targ->map;
 
 	if (strstr(level.changemap, "*"))

@@ -91,11 +91,11 @@ void CSoldierMachinegun::FireGun (int FlashNumber)
 	}
 
 	if (!(AIFlags & AI_HOLD_FRAME))
-		Entity->wait = level.time + (3 + rand() % 8) * FRAMETIME;
+		Entity->wait = level.framenum + (3 + rand() % 8);
 
 	MonsterFireBullet (start, aim, 2, 4, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, flashIndex);
 
-	if (level.time >= Entity->wait)
+	if (level.framenum >= Entity->wait)
 		AIFlags &= ~AI_HOLD_FRAME;
 	else
 		AIFlags |= AI_HOLD_FRAME;

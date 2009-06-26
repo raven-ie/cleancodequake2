@@ -177,9 +177,9 @@ public:
 	//  not really worth it.  sidestep is an implied abort_duck
 //	void		(*abort_duck)(edict_t *self);
 	float		BaseHeight;
-	float		NextDuckTime;
-	float		DuckWaitTime;
-	float		BlindFireDelay;
+	int32		NextDuckTime;
+	int32		DuckWaitTime;
+	int32		BlindFireDelay;
 	edict_t		*LastPlayerEnemy;
 	edict_t		*BadMedic1, *BadMedic2;	// these medics have declared this monster "unhealable"
 	edict_t		*Healer;	// this is who is healing this monster
@@ -189,15 +189,15 @@ public:
 #endif
 
 	void				RunThink ();
-	float				NextThink;
+	int32				NextThink;
 	int					NextFrame;
 	float				Scale;
-	float				PauseTime;
-	float				AttackFinished;
+	int32				PauseTime;
+	int32				AttackFinished;
 	
 	vec3_t				SavedGoal;
-	float				SearchTime;
-	float				TrailTime;
+	int32				SearchTime;
+	int32				TrailTime;
 	vec3_t				LastSighting;
 	int					AttackState;
 	bool				Lefty;
@@ -221,8 +221,8 @@ public:
 	CPathNode			*P_CurrentGoalNode;
 	CPathNode			*P_CurrentNode; // Always the current path node
 	int32				P_CurrentNodeIndex;
-	float				P_NodePathTimeout;
-	float				P_NodeFollowTimeout;
+	int32				P_NodePathTimeout;
+	int32				P_NodeFollowTimeout;
 	bool				FollowingPath;
 
 	// Pathfinding functions

@@ -366,7 +366,7 @@ void CheckDMRules (void)
 
 	if (timelimit->Float())
 	{
-		if (level.time >= timelimit->Float()*60)
+		if (level.framenum >= ((timelimit->Float()*60)*10))
 		{
 			BroadcastPrintf (PRINT_HIGH, "Timelimit hit.\n");
 			EndDMLevel ();
@@ -444,7 +444,6 @@ __try
 	edict_t	*ent;
 
 	level.framenum++;
-	level.time = level.framenum*FRAMETIME;
 
 	if (level.framenum == 2)
 		EndMapCounter();

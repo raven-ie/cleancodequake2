@@ -82,25 +82,33 @@ void Move_Final (edict_t *ent)
 		return;
 	}
 
-	Vec3Scale (ent->moveinfo.dir, ent->moveinfo.remaining_distance / FRAMETIME, ent->velocity);
+	Vec3Scale (ent->moveinfo.dir, ent->moveinfo.remaining_distance / 0.1f, ent->velocity);
 
 	ent->think = Move_Done;
-	ent->nextthink = level.time + FRAMETIME;
+	ent->nextthink = level.framenum + FRAMETIME;
 }
 
 void Move_Begin (edict_t *ent)
 {
-	float	frames;
-
+/*	if (ent->moveinfo.speed >= ent->moveinfo.remaining_distance)
+	{
+		Move_Final (ent);
+		return;
+	}
+	Vec3Scale (ent->moveinfo.dir, ent->moveinfo.speed, ent->velocity);
+	int32 frames = (ent->moveinfo.remaining_distance / ent->moveinfo.speed) / 0.1f;
+	ent->moveinfo.remaining_distance -= frames * ent->moveinfo.speed;
+	ent->nextthink = level.framenum + frames;
+	ent->think = Move_Final;*/
 	if ((ent->moveinfo.speed * FRAMETIME) >= ent->moveinfo.remaining_distance)
 	{
 		Move_Final (ent);
 		return;
 	}
 	Vec3Scale (ent->moveinfo.dir, ent->moveinfo.speed, ent->velocity);
-	frames = floor((ent->moveinfo.remaining_distance / ent->moveinfo.speed) / FRAMETIME);
-	ent->moveinfo.remaining_distance -= frames * ent->moveinfo.speed * FRAMETIME;
-	ent->nextthink = level.time + (frames * FRAMETIME);
+	float frames = floor((ent->moveinfo.remaining_distance / ent->moveinfo.speed) / 0.1f);
+	ent->moveinfo.remaining_distance -= frames * ent->moveinfo.speed * 0.1f;
+	ent->nextthink = level.framenum + (frames * FRAMETIME);
 	ent->think = Move_Final;
 }
 
@@ -121,7 +129,7 @@ void Move_Calc (edict_t *ent, vec3_t dest, void(*func)(edict_t*))
 		}
 		else
 		{
-			ent->nextthink = level.time + FRAMETIME;
+			ent->nextthink = level.framenum + FRAMETIME;
 			ent->think = Move_Begin;
 		}
 	}
@@ -130,7 +138,7 @@ void Move_Calc (edict_t *ent, vec3_t dest, void(*func)(edict_t*))
 		// accelerative
 		ent->moveinfo.current_speed = 0;
 		ent->think = Think_AccelMove;
-		ent->nextthink = level.time + FRAMETIME;
+		ent->nextthink = level.framenum + FRAMETIME;
 	}
 }
 
@@ -160,10 +168,10 @@ void AngleMove_Final (edict_t *ent)
 		return;
 	}
 
-	Vec3Scale (move, 1.0/FRAMETIME, ent->avelocity);
+	Vec3Scale (move, 0.1f, ent->avelocity);
 
 	ent->think = AngleMove_Done;
-	ent->nextthink = level.time + FRAMETIME;
+	ent->nextthink = level.framenum + FRAMETIME;
 }
 
 void AngleMove_Begin (edict_t *ent)
@@ -171,7 +179,6 @@ void AngleMove_Begin (edict_t *ent)
 	vec3_t	destdelta;
 	float	len;
 	float	traveltime;
-	float	frames;
 
 	// set destdelta to the vector needed to move
 	if (ent->moveinfo.state == STATE_UP)
@@ -191,13 +198,13 @@ void AngleMove_Begin (edict_t *ent)
 		return;
 	}
 
-	frames = floor(traveltime / FRAMETIME);
+	int32 frames = (traveltime / 0.1f);
 
 	// scale the destdelta vector by the time spent traveling to get velocity
 	Vec3Scale (destdelta, 1.0 / traveltime, ent->avelocity);
 
 	// set nextthink to trigger a think when dest is reached
-	ent->nextthink = level.time + frames * FRAMETIME;
+	ent->nextthink = level.framenum + (frames * 10);
 	ent->think = AngleMove_Final;
 }
 
@@ -211,7 +218,7 @@ void AngleMove_Calc (edict_t *ent, void(*func)(edict_t*))
 	}
 	else
 	{
-		ent->nextthink = level.time + FRAMETIME;
+		ent->nextthink = level.framenum + FRAMETIME;
 		ent->think = AngleMove_Begin;
 	}
 }
@@ -343,7 +350,7 @@ void Think_AccelMove (edict_t *ent)
 	}
 
 	Vec3Scale (ent->moveinfo.dir, ent->moveinfo.current_speed*10, ent->velocity);
-	ent->nextthink = level.time + FRAMETIME;
+	ent->nextthink = level.framenum + FRAMETIME;
 	ent->think = Think_AccelMove;
 }
 
@@ -361,7 +368,7 @@ void plat_hit_top (edict_t *ent)
 	ent->moveinfo.state = STATE_TOP;
 
 	ent->think = plat_go_down;
-	ent->nextthink = level.time + 3;
+	ent->nextthink = level.framenum + 30;
 }
 
 void plat_hit_bottom (edict_t *ent)
@@ -439,7 +446,7 @@ void Touch_Plat_Center (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurfa
 	if (ent->moveinfo.state == STATE_BOTTOM)
 		plat_go_up (ent);
 	else if (ent->moveinfo.state == STATE_TOP)
-		ent->nextthink = level.time + 1;	// the player is still on the plat, so delay going down
+		ent->nextthink = level.framenum + 10;	// the player is still on the plat, so delay going down
 }
 
 void plat_spawn_inside_trigger (edict_t *ent)
@@ -712,7 +719,7 @@ void button_wait (edict_t *self)
 	self->state.frame = 1;
 	if (self->moveinfo.wait >= 0)
 	{
-		self->nextthink = level.time + self->moveinfo.wait;
+		self->nextthink = level.framenum + (self->moveinfo.wait * 10);
 		self->think = button_return;
 	}
 }
@@ -875,7 +882,7 @@ void door_hit_top (edict_t *self)
 	if (self->moveinfo.wait >= 0)
 	{
 		self->think = door_go_down;
-		self->nextthink = level.time + self->moveinfo.wait;
+		self->nextthink = level.framenum + (self->moveinfo.wait * 10);
 	}
 }
 
@@ -920,7 +927,7 @@ void door_go_up (edict_t *self, edict_t *activator)
 	if (self->moveinfo.state == STATE_TOP)
 	{	// reset top wait time
 		if (self->moveinfo.wait >= 0)
-			self->nextthink = level.time + self->moveinfo.wait;
+			self->nextthink = level.framenum + (self->moveinfo.wait * 10);
 		return;
 	}
 	
@@ -982,9 +989,9 @@ void Touch_DoorTrigger (edict_t *self, edict_t *other, plane_t *plane, cmBspSurf
 	if ((self->owner->spawnflags & DOOR_NOMONSTER) && (other->svFlags & SVF_MONSTER))
 		return;
 
-	if (level.time < self->touch_debounce_time)
+	if (level.framenum < self->touch_debounce_time)
 		return;
-	self->touch_debounce_time = level.time + 1.0;
+	self->touch_debounce_time = level.framenum + 10;
 
 	door_use (self->owner, other, other);
 }
@@ -1121,9 +1128,9 @@ void door_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *
 	if (!other->client)
 		return;
 
-	if (level.time < self->touch_debounce_time)
+	if (level.framenum < self->touch_debounce_time)
 		return;
-	self->touch_debounce_time = level.time + 5.0;
+	self->touch_debounce_time = level.framenum + 50;
 
 	CenterPrintf (other, "%s", self->message);
 	PlaySoundFrom (other, CHAN_AUTO, SoundIndex ("misc/talk1.wav"));
@@ -1215,7 +1222,7 @@ void SP_func_door (edict_t *ent)
 
 	gi.linkentity (ent);
 
-	ent->nextthink = level.time + FRAMETIME;
+	ent->nextthink = level.framenum + FRAMETIME;
 	if (ent->health || ent->targetname)
 		ent->think = Think_CalcMoveSpeed;
 	else
@@ -1347,7 +1354,7 @@ void SP_func_door_rotating (edict_t *ent)
 
 	gi.linkentity (ent);
 
-	ent->nextthink = level.time + FRAMETIME;
+	ent->nextthink = level.framenum + FRAMETIME;
 	if (ent->health || ent->targetname)
 		ent->think = Think_CalcMoveSpeed;
 	else
@@ -1465,12 +1472,12 @@ void train_blocked (edict_t *self, edict_t *other)
 		return;
 	}
 
-	if (level.time < self->touch_debounce_time)
+	if (level.framenum < self->touch_debounce_time)
 		return;
 
 	if (!self->dmg)
 		return;
-	self->touch_debounce_time = level.time + 0.5;
+	self->touch_debounce_time = level.framenum + 5;
 	T_Damage (other, self, self, vec3Origin, other->state.origin, vec3Origin, self->dmg, 1, 0, MOD_CRUSH);
 }
 
@@ -1496,7 +1503,7 @@ void train_wait (edict_t *self)
 	{
 		if (self->moveinfo.wait > 0)
 		{
-			self->nextthink = level.time + self->moveinfo.wait;
+			self->nextthink = level.framenum + self->moveinfo.wait;
 			self->think = train_next;
 		}
 		else if (self->spawnflags & TRAIN_TOGGLE)  // && wait < 0
@@ -1619,7 +1626,7 @@ void func_train_find (edict_t *self)
 
 	if (self->spawnflags & TRAIN_START_ON)
 	{
-		self->nextthink = level.time + FRAMETIME;
+		self->nextthink = level.framenum + FRAMETIME;
 		self->think = train_next;
 		self->activator = self;
 	}
@@ -1679,7 +1686,7 @@ void SP_func_train (edict_t *self)
 	{
 		// start trains on the second frame, to make sure their targets have had
 		// a chance to spawn
-		self->nextthink = level.time + FRAMETIME;
+		self->nextthink = level.framenum + FRAMETIME;
 		self->think = func_train_find;
 	}
 	else
@@ -1749,7 +1756,7 @@ void trigger_elevator_init (edict_t *self)
 void SP_trigger_elevator (edict_t *self)
 {
 	self->think = trigger_elevator_init;
-	self->nextthink = level.time + FRAMETIME;
+	self->nextthink = level.framenum + FRAMETIME;
 }
 
 
@@ -1770,7 +1777,7 @@ These can used but not touched.
 void func_timer_think (edict_t *self)
 {
 	G_UseTargets (self, self->activator);
-	self->nextthink = level.time + self->wait + crandom() * self->random;
+	self->nextthink = level.framenum + ((self->wait + crandom() * self->random) * 10);
 }
 
 void func_timer_use (edict_t *self, edict_t *other, edict_t *activator)
@@ -1786,7 +1793,7 @@ void func_timer_use (edict_t *self, edict_t *other, edict_t *activator)
 
 	// turn it on
 	if (self->delay)
-		self->nextthink = level.time + self->delay;
+		self->nextthink = level.framenum + (self->delay * 10);
 	else
 		func_timer_think (self);
 }
@@ -1810,7 +1817,8 @@ void SP_func_timer (edict_t *self)
 
 	if (self->spawnflags & 1)
 	{
-		self->nextthink = level.time + 1.0 + st.pausetime + self->delay + self->wait + crandom() * self->random;
+		// lots of backwards compatibility
+		self->nextthink = level.framenum + 10 + (st.pausetime + self->delay + self->wait + (crandom() * self->random) * 10);
 		self->activator = self;
 	}
 
@@ -1897,7 +1905,7 @@ void door_secret_use (edict_t *self, edict_t *other, edict_t *activator)
 
 void door_secret_move1 (edict_t *self)
 {
-	self->nextthink = level.time + 1.0;
+	self->nextthink = level.framenum + 10;
 	self->think = door_secret_move2;
 }
 
@@ -1910,7 +1918,9 @@ void door_secret_move3 (edict_t *self)
 {
 	if (self->wait == -1)
 		return;
-	self->nextthink = level.time + self->wait;
+
+	// Backcompat
+	self->nextthink = level.framenum + (self->wait * 10);
 	self->think = door_secret_move4;
 }
 
@@ -1921,7 +1931,7 @@ void door_secret_move4 (edict_t *self)
 
 void door_secret_move5 (edict_t *self)
 {
-	self->nextthink = level.time + 1.0;
+	self->nextthink = level.framenum + 10;
 	self->think = door_secret_move6;
 }
 
@@ -1952,9 +1962,9 @@ void door_secret_blocked  (edict_t *self, edict_t *other)
 		return;
 	}
 
-	if (level.time < self->touch_debounce_time)
+	if (level.framenum < self->touch_debounce_time)
 		return;
-	self->touch_debounce_time = level.time + 0.5;
+	self->touch_debounce_time = level.framenum + 5;
 
 	T_Damage (other, self, self, vec3Origin, other->state.origin, vec3Origin, self->dmg, 1, 0, MOD_CRUSH);
 }

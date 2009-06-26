@@ -90,7 +90,7 @@ void CGrapple::ResetGrapple(edict_t *self)
 
 		//PlaySoundFrom (Player->gameEntity, CHAN_WEAPON, SoundIndex("weapons/grapple/grreset.wav"), volume, ATTN_NORM, 0);
 		Player->Client.ctf_grapple = NULL;
-		Player->Client.ctf_grapplereleasetime = level.time;
+		Player->Client.ctf_grapplereleasetime = level.framenum;
 		Player->Client.ctf_grapplestate = CTF_GRAPPLE_STATE_HANG+1; // we're firing, not on hook
 		Player->Client.PlayerState.GetPMove()->pmFlags &= ~PMF_NO_PREDICTION;
 		G_FreeEdict(self);

@@ -358,7 +358,7 @@ void fire_blaster (edict_t *self, vec3_t start, vec3_t dir, int damage, int spee
 	bolt->state.sound = SoundIndex ("misc/lasfly.wav");
 	bolt->owner = self;
 	bolt->touch = blaster_touch;
-	bolt->nextthink = level.time + 2;
+	bolt->nextthink = level.framenum + 20;
 	bolt->think = G_FreeEdict;
 	bolt->dmg = damage;
 	bolt->classname = "bolt";
@@ -494,7 +494,7 @@ void fire_grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int s
 	grenade->state.modelIndex = ModelIndex ("models/objects/grenade/tris.md2");
 	grenade->owner = self;
 	grenade->touch = Grenade_Touch;
-	grenade->nextthink = level.time + timer;
+	grenade->nextthink = level.framenum + timer;
 	grenade->think = Grenade_Explode;
 	grenade->dmg = damage;
 	grenade->dmg_radius = damage_radius;
@@ -527,7 +527,7 @@ void fire_grenade2 (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int 
 	grenade->state.modelIndex = ModelIndex ("models/objects/grenade2/tris.md2");
 	grenade->owner = self;
 	grenade->touch = Grenade_Touch;
-	grenade->nextthink = level.time + timer;
+	grenade->nextthink = level.framenum + timer;
 	grenade->think = Grenade_Explode;
 	grenade->dmg = damage;
 	grenade->dmg_radius = damage_radius;
@@ -619,7 +619,7 @@ void fire_rocket (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed
 	rocket->state.modelIndex = ModelIndex ("models/objects/rocket/tris.md2");
 	rocket->owner = self;
 	rocket->touch = rocket_touch;
-	rocket->nextthink = level.time + 8000/speed;
+	rocket->nextthink = level.framenum + 80000/speed;
 	rocket->think = G_FreeEdict;
 	rocket->dmg = damage;
 	rocket->radius_dmg = radius_damage;
@@ -737,7 +737,7 @@ void bfg_explode (edict_t *self)
 		}
 	}
 
-	self->nextthink = level.time + FRAMETIME;
+	self->nextthink = level.framenum + FRAMETIME;
 	self->state.frame++;
 	if (self->state.frame == 5)
 		self->think = G_FreeEdict;
@@ -765,14 +765,14 @@ void bfg_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *s
 	PlaySoundFrom (self, CHAN_VOICE, SoundIndex ("weapons/bfg__x1b.wav"));
 	self->solid = SOLID_NOT;
 	self->touch = NULL;
-	Vec3MA (self->state.origin, -1 * FRAMETIME, self->velocity, self->state.origin);
+	Vec3MA (self->state.origin, -0.1, self->velocity, self->state.origin);
 	Vec3Clear (self->velocity);
 	self->state.modelIndex = ModelIndex ("sprites/s_bfg3.sp2");
 	self->state.frame = 0;
 	self->state.sound = 0;
 	self->state.effects &= ~EF_ANIM_ALLFAST;
 	self->think = bfg_explode;
-	self->nextthink = level.time + FRAMETIME;
+	self->nextthink = level.framenum + FRAMETIME;
 	self->enemy = other;
 
 	CTempEnt_Explosions::BFGExplosion (self->state.origin, true);
@@ -855,7 +855,7 @@ void bfg_think (edict_t *self)
 		CTempEnt_Trails::BFGLaser(self->state.origin, tr.endPos);
 	}
 
-	self->nextthink = level.time + FRAMETIME;
+	self->nextthink = level.framenum + FRAMETIME;
 }
 
 
@@ -877,7 +877,7 @@ void fire_bfg (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, f
 	bfg->state.modelIndex = ModelIndex ("sprites/s_bfg1.sp2");
 	bfg->owner = self;
 	bfg->touch = bfg_touch;
-	bfg->nextthink = level.time + 8000/speed;
+	bfg->nextthink = level.framenum + 80000/speed;
 	bfg->think = G_FreeEdict;
 	bfg->radius_dmg = damage;
 	bfg->dmg_radius = damage_radius;
@@ -885,7 +885,7 @@ void fire_bfg (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, f
 	bfg->state.sound = SoundIndex ("weapons/bfg__l1a.wav");
 
 	bfg->think = bfg_think;
-	bfg->nextthink = level.time + FRAMETIME;
+	bfg->nextthink = level.framenum + FRAMETIME;
 	bfg->teammaster = bfg;
 	bfg->teamchain = NULL;
 

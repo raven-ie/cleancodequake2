@@ -126,7 +126,7 @@ void CBaseItem::SetRespawn (edict_t *ent, float delay)
 	ent->flags |= FL_RESPAWN;
 	ent->svFlags |= SVF_NOCLIENT;
 	ent->solid = SOLID_NOT;
-	ent->nextthink = level.time + delay;
+	ent->nextthink = level.framenum + (delay * 10);
 	ent->think = &DoRespawn;
 	gi.linkentity (ent);
 }
@@ -144,7 +144,7 @@ static void DropMakeTouchable (edict_t *ent)
 	ent->touch = TouchItem;
 	if (game.mode & GAME_DEATHMATCH)
 	{
-		ent->nextthink = level.time + 29;
+		ent->nextthink = level.framenum + 290;
 		ent->think = G_FreeEdict;
 	}
 }
@@ -204,7 +204,7 @@ edict_t *CBaseItem::DropItem (edict_t *ent)
 	dropped->velocity[2] = 300;
 
 	dropped->think = DropMakeTouchable;
-	dropped->nextthink = level.time + 1;
+	dropped->nextthink = level.framenum + 10;
 
 	gi.linkentity (dropped);
 
@@ -250,7 +250,7 @@ void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *su
 	// show icon and name on status bar
 	Player->Client.PlayerState.SetStat(STAT_PICKUP_ICON, ent->item->IconIndex);
 	Player->Client.PlayerState.SetStat(STAT_PICKUP_STRING, ent->item->GetConfigStringNumber());
-	Player->Client.pickup_msg_time = level.time + 3.0;
+	Player->Client.pickup_msg_time = level.framenum + 30;
 
 	// change selected item
 	if (ent->item->Flags & ITEMFLAG_USABLE)
@@ -377,7 +377,7 @@ void DropItemToFloor (edict_t *ent)
 		ent->solid = SOLID_NOT;
 		if (ent == ent->teammaster)
 		{
-			ent->nextthink = level.time + FRAMETIME;
+			ent->nextthink = level.framenum + FRAMETIME;
 			ent->think = DoRespawn;
 		}
 	}
@@ -481,7 +481,7 @@ void SpawnItem (edict_t *ent, CBaseItem *item)
 #endif
 
 	ent->item = item;
-	ent->nextthink = level.time + 2 * FRAMETIME;    // items start after other solids
+	ent->nextthink = level.framenum + 2;    // items start after other solids
 	ent->think = DropItemToFloor;
 	ent->state.effects = item->EffectFlags;
 	ent->state.renderFx = RF_GLOW;

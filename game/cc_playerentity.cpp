@@ -309,7 +309,7 @@ void CPlayerEntity::BeginServerFrame ()
 
 	if ((game.mode & GAME_DEATHMATCH) &&
 		Client.pers.spectator != Client.resp.spectator &&
-		(level.time - Client.respawn_time) >= 5)
+		(level.framenum - Client.respawn_time) >= 50)
 	{
 		SpectatorRespawn();
 		return;
@@ -322,7 +322,7 @@ void CPlayerEntity::BeginServerFrame ()
 	if (gameEntity->deadflag)
 	{
 		// wait for any button just going down
-		if ( level.time > Client.respawn_time)
+		if ( level.framenum > Client.respawn_time)
 		{
 			int buttonMask;
 			// in deathmatch, only wait for attack button
@@ -373,7 +373,7 @@ void CPlayerEntity::Respawn ()
 		Client.PlayerState.GetPMove()->pmFlags = PMF_TIME_TELEPORT;
 		Client.PlayerState.GetPMove()->pmTime = 14;
 
-		Client.respawn_time = level.time;
+		Client.respawn_time = level.framenum;
 		return;
 	}
 
@@ -462,7 +462,7 @@ void CPlayerEntity::SpectatorRespawn ()
 		Client.PlayerState.GetPMove()->pmTime = 14;
 	}
 
-	Client.respawn_time = level.time;
+	Client.respawn_time = level.framenum;
 
 	if (Client.pers.spectator) 
 		BroadcastPrintf (PRINT_HIGH, "%s has moved to the sidelines\n", Client.pers.netname);
@@ -546,7 +546,7 @@ void CPlayerEntity::PutInServer ()
 	gameEntity->mass = 200;
 	SetSolid (SOLID_BBOX);
 	gameEntity->deadflag = DEAD_NO;
-	gameEntity->air_finished = level.time + 12;
+	gameEntity->air_finished = level.framenum + 120;
 	SetClipmask (CONTENTS_MASK_PLAYERSOLID);
 	gameEntity->model = "players/male/tris.md2";
 	gameEntity->pain = player_pain;
@@ -931,9 +931,9 @@ inline void CPlayerEntity::DamageFeedback (vec3_t forward, vec3_t right, vec3_t 
 		count = 10;	// always make a visible effect
 
 	// play an apropriate pain sound
-	if ((level.time > gameEntity->pain_debounce_time) && !(gameEntity->flags & FL_GODMODE) && (Client.invincible_framenum <= level.framenum))
+	if ((level.framenum > gameEntity->pain_debounce_time) && !(gameEntity->flags & FL_GODMODE) && (Client.invincible_framenum <= level.framenum))
 	{
-		gameEntity->pain_debounce_time = level.time + 0.7;
+		gameEntity->pain_debounce_time = level.framenum + 7;
 
 		int l = clamp(((floorf((max(0, gameEntity->health-1)) / 25))), 0, 3);
 		PlaySoundFrom (gameEntity, CHAN_VOICE, gMedia.Player.Pain[l][(rand()&1)]);
@@ -980,7 +980,7 @@ inline void CPlayerEntity::DamageFeedback (vec3_t forward, vec3_t right, vec3_t 
 		side = -DotProduct (v, forward);
 		Client.v_dmg_pitch = kick*side*0.3;
 
-		Client.v_dmg_time = level.time + DAMAGE_TIME;
+		Client.v_dmg_time = level.framenum + DAMAGE_TIME;
 	}
 
 	//
@@ -1017,7 +1017,7 @@ inline void CPlayerEntity::CalcViewOffset (vec3_t forward, vec3_t right, vec3_t 
 		Vec3Copy (Client.kick_angles, angles);
 
 		// add angles based on damage kick
-		ratio = (Client.v_dmg_time - level.time) / DAMAGE_TIME;
+		ratio = (Client.v_dmg_time - level.framenum) / DAMAGE_TIME;
 		if (ratio < 0)
 		{
 			ratio = 0;
@@ -1028,7 +1028,7 @@ inline void CPlayerEntity::CalcViewOffset (vec3_t forward, vec3_t right, vec3_t 
 		angles[ROLL] += ratio * Client.v_dmg_roll;
 
 		// add pitch based on fall kick
-		ratio = (Client.fall_time - level.time) / FALL_TIME;
+		ratio = (float)(Client.fall_time - level.framenum) / FALL_TIME;
 		if (ratio < 0)
 			ratio = 0;
 		angles[PITCH] += ratio * Client.fall_value;
@@ -1062,7 +1062,7 @@ inline void CPlayerEntity::CalcViewOffset (vec3_t forward, vec3_t right, vec3_t 
 	v[2] += gameEntity->viewheight;
 
 	// add fall height
-	ratio = (Client.fall_time - level.time) / FALL_TIME;
+	ratio = (float)(Client.fall_time - level.framenum) / FALL_TIME;
 	if (ratio < 0)
 		ratio = 0;
 	v[2] -= ratio * Client.fall_value * 0.4;
@@ -1300,7 +1300,7 @@ inline void CPlayerEntity::FallingDamage ()
 #ifdef CLEANCTF_ENABLED
 //ZOID
 	// never take damage if just release grapple or on grapple
-	if (level.time - Client.ctf_grapplereleasetime <= FRAMETIME * 2 ||
+	if (level.framenum - Client.ctf_grapplereleasetime <= 2 ||
 		(Client.ctf_grapple && 
 		Client.ctf_grapplestate > CTF_GRAPPLE_STATE_FLY))
 		return;
@@ -1340,7 +1340,7 @@ inline void CPlayerEntity::FallingDamage ()
 	Client.fall_value = delta*0.5;
 	if (Client.fall_value > 40)
 		Client.fall_value = 40;
-	Client.fall_time = level.time + FALL_TIME;
+	Client.fall_time = level.framenum + FALL_TIME;
 
 	if (delta > 30)
 	{
@@ -1351,7 +1351,7 @@ inline void CPlayerEntity::FallingDamage ()
 			else
 				State.SetEvent (EV_FALL);
 		}
-		gameEntity->pain_debounce_time = level.time;	// no normal pain sound
+		gameEntity->pain_debounce_time = level.framenum;	// no normal pain sound
 		damage = (delta-30)/2;
 		if (damage < 1)
 			damage = 1;
@@ -1386,7 +1386,7 @@ inline void CPlayerEntity::WorldEffects ()
 
 	if (gameEntity->movetype == MOVETYPE_NOCLIP)
 	{
-		gameEntity->air_finished = level.time + 12;	// don't need air
+		gameEntity->air_finished = level.framenum + 120;	// don't need air
 		return;
 	}
 
@@ -1412,7 +1412,7 @@ inline void CPlayerEntity::WorldEffects ()
 		gameEntity->flags |= FL_INWATER;
 
 		// clear damage_debounce, so the pain sound will play immediately
-		gameEntity->pain_debounce_time = level.time - 1;
+		gameEntity->pain_debounce_time = level.framenum - 1;
 	}
 
 	//
@@ -1436,12 +1436,12 @@ inline void CPlayerEntity::WorldEffects ()
 	//
 	if (old_waterlevel == 3 && waterlevel != 3)
 	{
-		if (gameEntity->air_finished < level.time)
+		if (gameEntity->air_finished < level.framenum)
 		{	// gasp for air
 			PlaySoundFrom (gameEntity, CHAN_VOICE, SoundIndex("player/gasp1.wav"));
 			PlayerNoise(this, origin, PNOISE_SELF);
 		}
-		else  if (gameEntity->air_finished < level.time + 11) // just break surface
+		else  if (gameEntity->air_finished < level.framenum + 110) // just break surface
 			PlaySoundFrom (gameEntity, CHAN_VOICE, SoundIndex("player/gasp2.wav"));
 	}
 
@@ -1453,7 +1453,7 @@ inline void CPlayerEntity::WorldEffects ()
 		// breather or envirosuit give air
 		if (breather || envirosuit)
 		{
-			gameEntity->air_finished = level.time + 10;
+			gameEntity->air_finished = level.framenum + 100;
 
 			if (((int)(Client.breather_framenum - level.framenum) % 25) == 0)
 			{
@@ -1464,12 +1464,12 @@ inline void CPlayerEntity::WorldEffects ()
 		}
 
 		// if out of air, start drowning
-		if (gameEntity->air_finished < level.time)
+		if (gameEntity->air_finished < level.framenum)
 		{	// drown!
-			if (Client.next_drown_time < level.time 
+			if (Client.next_drown_time < level.framenum 
 				&& gameEntity->health > 0)
 			{
-				Client.next_drown_time = level.time + 1;
+				Client.next_drown_time = level.framenum + 10;
 
 				// take more damage the longer underwater
 				gameEntity->dmg += 2;
@@ -1482,7 +1482,7 @@ inline void CPlayerEntity::WorldEffects ()
 				else
 					PlaySoundFrom (gameEntity, CHAN_VOICE, gMedia.Player.Gurp[(rand()&1)]);
 
-				gameEntity->pain_debounce_time = level.time;
+				gameEntity->pain_debounce_time = level.framenum;
 
 				T_Damage (gameEntity, world, world, vec3Origin, origin, vec3Origin, gameEntity->dmg, 0, DAMAGE_NO_ARMOR, MOD_WATER);
 			}
@@ -1490,7 +1490,7 @@ inline void CPlayerEntity::WorldEffects ()
 	}
 	else
 	{
-		gameEntity->air_finished = level.time + 12;
+		gameEntity->air_finished = level.framenum + 120;
 		gameEntity->dmg = 2;
 	}
 
@@ -1502,11 +1502,11 @@ inline void CPlayerEntity::WorldEffects ()
 		if (gameEntity->watertype & CONTENTS_LAVA)
 		{
 			if (gameEntity->health > 0
-				&& gameEntity->pain_debounce_time <= level.time
+				&& gameEntity->pain_debounce_time <= level.framenum
 				&& Client.invincible_framenum < level.framenum)
 			{
 				PlaySoundFrom (gameEntity, CHAN_VOICE, SoundIndex((rand()&1) ? "player/burn1.wav" : "player/burn2.wav"));
-				gameEntity->pain_debounce_time = level.time + 1;
+				gameEntity->pain_debounce_time = level.framenum + 10;
 			}
 
 			// take 1/3 damage with envirosuit
@@ -1546,7 +1546,7 @@ inline void CPlayerEntity::SetClientEffects ()
 	if (gameEntity->health <= 0 || level.intermissiontime)
 		return;
 
-	if (gameEntity->powerarmor_time > level.time)
+	if (gameEntity->powerarmor_time > level.framenum)
 	{
 		int pa_type = PowerArmorType ();
 		if (pa_type == POWER_ARMOR_SCREEN)
@@ -2249,7 +2249,7 @@ void CPlayerEntity::SetStats ()
 	//
 	// pickup message
 	//
-	if (level.time > Client.pickup_msg_time)
+	if (level.framenum > Client.pickup_msg_time)
 	{
 		Client.PlayerState.SetStat(STAT_PICKUP_ICON, 0);
 		Client.PlayerState.SetStat(STAT_PICKUP_STRING, 0);
@@ -2478,7 +2478,7 @@ void CPlayerEntity::SetCTFStats()
 	Client.PlayerState.SetStat(STAT_CTF_TEAM1_PIC, p1);
 	Client.PlayerState.SetStat(STAT_CTF_TEAM2_PIC, p2);
 
-	if (ctfgame.last_flag_capture && level.time - ctfgame.last_flag_capture < 5)
+	if (ctfgame.last_flag_capture && level.framenum - ctfgame.last_flag_capture < 50)
 	{
 		if (ctfgame.last_capture_team == CTF_TEAM1)
 		{
@@ -2667,9 +2667,9 @@ bool CPlayerEntity::CTFApplyStrengthSound()
 
 	if (Client.pers.Tech == Strength)
 	{
-		if (Client.ctf_techsndtime < level.time)
+		if (Client.ctf_techsndtime < level.framenum)
 		{
-			Client.ctf_techsndtime = level.time + 1;
+			Client.ctf_techsndtime = level.framenum + 10;
 			if (Client.quad_framenum > level.framenum)
 				PlaySoundFrom(gameEntity, CHAN_ITEM, SoundIndex("ctf/tech2x.wav"), volume, ATTN_NORM, 0);
 			else
@@ -2696,9 +2696,9 @@ void CPlayerEntity::CTFApplyHasteSound()
 		volume = 0.2f;
 
 	if (Client.pers.Tech == Haste &&
-		Client.ctf_techsndtime < level.time)
+		Client.ctf_techsndtime < level.framenum)
 	{
-		Client.ctf_techsndtime = level.time + 1;
+		Client.ctf_techsndtime = level.framenum + 10;
 		PlaySoundFrom(gameEntity, CHAN_ITEM, SoundIndex("ctf/tech3.wav"), volume, ATTN_NORM, 0);
 	}
 }
@@ -2714,15 +2714,15 @@ void CPlayerEntity::CTFApplyRegeneration()
 
 	if (Client.pers.Tech == Regeneration)
 	{
-		if (Client.ctf_regentime < level.time)
+		if (Client.ctf_regentime < level.framenum)
 		{
-			Client.ctf_regentime = level.time;
+			Client.ctf_regentime = level.framenum;
 			if (gameEntity->health < 150)
 			{
 				gameEntity->health += 5;
 				if (gameEntity->health > 150)
 					gameEntity->health = 150;
-				Client.ctf_regentime += 0.5;
+				Client.ctf_regentime += 5;
 				noise = true;
 			}
 			index = Client.pers.Armor;
@@ -2731,13 +2731,13 @@ void CPlayerEntity::CTFApplyRegeneration()
 				Client.pers.Inventory.Add (index, 5);
 				if (Client.pers.Inventory.Has(index) > 150)
 					Client.pers.Inventory.Set(index, 150);
-				Client.ctf_regentime += 0.5;
+				Client.ctf_regentime += 5;
 				noise = true;
 			}
 		}
-		if (noise && Client.ctf_techsndtime < level.time)
+		if (noise && Client.ctf_techsndtime < level.framenum)
 		{
-			Client.ctf_techsndtime = level.time + 1;
+			Client.ctf_techsndtime = level.framenum + 10;
 			PlaySoundFrom(gameEntity, CHAN_ITEM, SoundIndex("ctf/tech4.wav"), volume, ATTN_NORM, 0);
 		}
 	}
@@ -2839,7 +2839,7 @@ void CPlayerEntity::TossClientWeapon ()
 		drop->spawnflags |= DROPPED_PLAYER_ITEM;
 
 		drop->touch = TouchItem;
-		drop->nextthink = level.time + (Client.quad_framenum - level.framenum) * FRAMETIME;
+		drop->nextthink = level.framenum + (Client.quad_framenum - level.framenum);
 		drop->think = G_FreeEdict;
 	}
 }
@@ -2859,7 +2859,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 	{
 		Client.PlayerState.GetPMove()->pmType = PMT_FREEZE;
 		// can exit intermission after five seconds
-		if (level.time > level.intermissiontime + 5.0 
+		if (level.framenum > level.intermissiontime + 50 
 			&& (ucmd->buttons & BUTTON_ANY) )
 			level.exitintermission = true;
 		return;
@@ -3283,13 +3283,13 @@ edict_t *CPlayerEntity::SelectCTFSpawnPoint ()
 
 void CPlayerEntity::Pain (CBaseEntity *other, float kick, int damage)
 {
-	DebugPrintf ("CPlayerEntity::Pain\n");
+	//DebugPrintf ("CPlayerEntity::Pain\n");
 };
 
 void ClientObituary (CPlayerEntity *self, edict_t *attacker);
 void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
-	DebugPrintf ("CPlayerEntity::Die\n");
+	//DebugPrintf ("CPlayerEntity::Die\n");
 
 	Vec3Clear (gameEntity->avelocity);
 
@@ -3314,7 +3314,7 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 
 	if (!gameEntity->deadflag)
 	{
-		Client.respawn_time = level.time + 1.0;
+		Client.respawn_time = level.framenum + 10;
 		LookAtKiller (inflictor->gameEntity, attacker->gameEntity);
 		Client.PlayerState.GetPMove()->pmType = PMT_DEAD;
 		ClientObituary (this, attacker->gameEntity);

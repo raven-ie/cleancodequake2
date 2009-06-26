@@ -149,7 +149,7 @@ void CGrenade::Spawn (CBaseEntity *Spawner, vec3_t start, vec3_t aimdir, int dam
 	Grenade->State.SetEffects (EF_GRENADE);
 	Grenade->State.SetModelIndex((!handNade) ? ModelIndex ("models/objects/grenade/tris.md2") : ModelIndex ("models/objects/grenade2/tris.md2"));
 	Grenade->SetOwner(Spawner);
-	Grenade->NextThink = level.time + timer;
+	Grenade->NextThink = level.framenum + (timer * 10);
 	Grenade->Damage = damage;
 	Grenade->RadiusDamage = damage_radius;
 	Grenade->gameEntity->classname = (!handNade) ? "grenade" : "hgrenade";
@@ -233,7 +233,7 @@ void CBlasterProjectile::Think ()
 {
 	//int amount = CL_CalcParticleLOD (40, State.GetOrigin());
 	//DebugPrintf ("%i\n", amount);
-	//NextThink = level.time + .1;
+	//NextThink = level.framenum + FRAMETIME;
 	Free();
 }
 
@@ -280,7 +280,7 @@ void CBlasterProjectile::Spawn (CBaseEntity *Spawner, vec3_t start, vec3_t dir,
 	Bolt->State.SetModelIndex (ModelIndex ("models/objects/laser/tris.md2"));
 	Bolt->State.SetSound (SoundIndex ("misc/lasfly.wav"));
 	Bolt->SetOwner (Spawner);
-	Bolt->NextThink = level.time + 2;
+	Bolt->NextThink = level.framenum + 20;
 	Bolt->Damage = damage;
 	Bolt->gameEntity->classname = "bolt";
 	if (isHyper)
@@ -373,7 +373,7 @@ void CRocket::Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t dir,
 	Rocket->State.SetEffects (EF_ROCKET);
 	Rocket->State.SetModelIndex (ModelIndex ("models/objects/rocket/tris.md2"));
 	Rocket->SetOwner (Spawner);
-	Rocket->NextThink = level.time + 8000/speed;
+	Rocket->NextThink = level.framenum + 80000/speed;
 	Rocket->Damage = damage;
 	Rocket->RadiusDamage = radius_damage;
 	Rocket->DamageRadius = damage_radius;

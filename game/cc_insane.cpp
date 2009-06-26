@@ -473,10 +473,10 @@ void CInsane::Pain (edict_t *other, float kick, int damage)
 //	if (self->health < (self->max_health / 2))
 //		self->state.skinnum = 1;
 
-	if (level.time < Entity->pain_debounce_time)
+	if (level.framenum < Entity->pain_debounce_time)
 		return;
 
-	Entity->pain_debounce_time = level.time + 3;
+	Entity->pain_debounce_time = level.framenum + 30;
 
 	// Paril
 	// As much as I hate this, this needs to stay
