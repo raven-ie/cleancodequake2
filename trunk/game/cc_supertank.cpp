@@ -468,7 +468,7 @@ void CSuperTank::Pain (edict_t *other, float kick, int damage)
 	if (Entity->health < (Entity->max_health / 2))
 			Entity->state.skinNum = 1;
 
-	if (level.time < Entity->pain_debounce_time)
+	if (level.framenum < Entity->pain_debounce_time)
 			return;
 
 	// Lessen the chance of him going into his pain frames
@@ -479,7 +479,7 @@ void CSuperTank::Pain (edict_t *other, float kick, int damage)
 	if (skill->Integer() >= 2 && (Entity->state.frame >= FRAME_attak2_1) && (Entity->state.frame <= FRAME_attak2_14) )
 		return;
 
-	Entity->pain_debounce_time = level.time + 3;
+	Entity->pain_debounce_time = level.framenum + 30;
 
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
@@ -696,7 +696,7 @@ void CSuperTank::Attack ()
 		// turn on manual steering to signal both manual steering and blindfire
 		AIFlags |= AI_MANUAL_STEERING;
 		CurrentMove = &SuperTankMoveAttack2;
-		AttackFinished = level.time + 3.0 + 2*random();
+		AttackFinished = level.framenum + 30 + 20*random();
 		return;
 	}
 	// pmm
@@ -791,7 +791,7 @@ void CSuperTank::Explode ()
 
 	CTempEnt_Explosions::RocketExplosion (org, Entity);
 
-	NextThink = level.time + 0.1;
+	NextThink = level.framenum + FRAMETIME;
 }
 
 

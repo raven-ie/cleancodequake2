@@ -220,7 +220,7 @@ static int CheckPowerArmor (edict_t *ent, vec3_t point, vec3_t normal, int damag
 		save = damage;
 
 	CTempEnt_Splashes::ShieldSparks (point, normal, (pa_te_type == TE_SCREEN_SPARKS) ? true : false);
-	ent->powerarmor_time = level.time + 0.2;
+	ent->powerarmor_time = level.framenum + 2;
 
 	power_used = save / damagePerCell;
 	if (!power_used)
@@ -381,10 +381,10 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 	// check for invincibility
 	if ((client && (dynamic_cast<CPlayerEntity*>(targ->Entity))->Client.invincible_framenum > level.framenum ) && !(dflags & DAMAGE_NO_PROTECTION))
 	{
-		if (targ->pain_debounce_time < level.time)
+		if (targ->pain_debounce_time < level.framenum)
 		{
 			PlaySoundFrom (targ, CHAN_ITEM, SoundIndex("items/protect4.wav"), 1, ATTN_NORM);
-			targ->pain_debounce_time = level.time + 2;
+			targ->pain_debounce_time = level.framenum + 20;
 		}
 		take = 0;
 		save = damage;
@@ -468,7 +468,7 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 		{
 			targ->Monster->Pain (attacker, knockback, take);
 			if (skill->Integer() == 3)
-				targ->pain_debounce_time = level.time + 5;
+				targ->pain_debounce_time = level.framenum + 50;
 		}
 	}
 	/*else if (client)

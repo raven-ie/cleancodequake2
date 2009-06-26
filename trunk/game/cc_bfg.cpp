@@ -118,7 +118,7 @@ void CBFG::FireBFG (CPlayerEntity *ent)
 	// make a big pitch kick with an inverse fall
 	ent->Client.v_dmg_pitch = -40;
 	ent->Client.v_dmg_roll = crandom()*8;
-	ent->Client.v_dmg_time = level.time + DAMAGE_TIME;
+	ent->Client.v_dmg_time = level.framenum + DAMAGE_TIME;
 
 	Vec3Set (offset, 8, 8, ent->gameEntity->viewheight-8);
 	P_ProjectSource (ent, offset, forward, right, start);

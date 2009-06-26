@@ -61,7 +61,7 @@ public:
 class CThinkableEntity abstract : public virtual CBaseEntity
 {
 public:
-	float		NextThink;
+	int32		NextThink;
 
 	CThinkableEntity ();
 	CThinkableEntity (int index);

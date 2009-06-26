@@ -239,14 +239,14 @@ void CGladiator::Pain (edict_t *other, float kick, int damage)
 	if (Entity->health < (Entity->max_health / 2))
 		Entity->state.skinNum = 1;
 
-	if (level.time < Entity->pain_debounce_time)
+	if (level.framenum < Entity->pain_debounce_time)
 	{
 		if ((Entity->velocity[2] > 100) && (CurrentMove == &GladiatorMovePain))
 			CurrentMove = &GladiatorMovePainAir;
 		return;
 	}
 
-	Entity->pain_debounce_time = level.time + 3;
+	Entity->pain_debounce_time = level.framenum + 30;
 
 	PlaySoundFrom (Entity, CHAN_VOICE, (random() < 0.5) ? SoundPain1 : SoundPain2);
 	if (skill->Integer() == 3)

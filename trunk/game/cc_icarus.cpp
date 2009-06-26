@@ -530,10 +530,10 @@ void CIcarus::Pain (edict_t *other, float kick, int damage)
 	if (Entity->health < (Entity->max_health / 2))
 		Entity->state.skinNum = 1;
 
-	if (level.time < Entity->pain_debounce_time)
+	if (level.framenum < Entity->pain_debounce_time)
 		return;
 
-	Entity->pain_debounce_time = level.time + 3;
+	Entity->pain_debounce_time = level.framenum + 30;
 
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
@@ -574,9 +574,9 @@ void CIcarus::Pain (edict_t *other, float kick, int damage)
 
 void CIcarus::DeadThink ()
 {
-	if (!Entity->groundentity && level.time < Entity->timestamp)
+	if (!Entity->groundentity && level.framenum < Entity->timestamp)
 	{
-		NextThink = level.time + FRAMETIME;
+		NextThink = level.framenum + FRAMETIME;
 		return;
 	}
 	BecomeExplosion1(Entity);
@@ -588,8 +588,8 @@ void CIcarus::Dead ()
 	Vec3Set (Entity->maxs, 16, 16, -8);
 	Entity->movetype = MOVETYPE_TOSS;
 	Think = ConvertDerivedFunction(&CIcarus::DeadThink);
-	NextThink = level.time + FRAMETIME;
-	Entity->timestamp = level.time + 15;
+	NextThink = level.framenum + FRAMETIME;
+	Entity->timestamp = level.framenum + 150;
 	gi.linkentity (Entity);
 }
 

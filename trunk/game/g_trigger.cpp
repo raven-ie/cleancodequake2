@@ -51,13 +51,15 @@ void multi_trigger (edict_t *ent)
 	if (ent->wait > 0)	
 	{
 		ent->think = multi_wait;
-		ent->nextthink = level.time + ent->wait;
+
+		// Paril: backwards compatibility
+		ent->nextthink = level.framenum + (ent->wait * 10);
 	}
 	else
 	{	// we can't just remove (self) here, because this is a touch function
 		// called while looping through area links...
 		ent->touch = NULL;
-		ent->nextthink = level.time + FRAMETIME;
+		ent->nextthink = level.framenum + FRAMETIME;
 		ent->think = G_FreeEdict;
 	}
 }
@@ -223,9 +225,9 @@ void trigger_key_use (edict_t *self, edict_t *other, edict_t *activator)
 	index = self->item->GetIndex();
 	if (!Player->Client.pers.Inventory.Has(index))
 	{
-		if (level.time < self->touch_debounce_time)
+		if (level.framenum < self->touch_debounce_time)
 			return;
-		self->touch_debounce_time = level.time + 5.0;
+		self->touch_debounce_time = level.framenum + 50;
 		CenterPrintf (activator, "You need the %s", self->item->Name);
 		PlaySoundFrom (activator, CHAN_AUTO, SoundIndex ("misc/keytry.wav"));
 		return;
@@ -402,9 +404,9 @@ void trigger_push_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSur
 			CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(other->Entity);
 			// don't take falling damage immediately from this
 			Vec3Copy (other->velocity, Player->Client.oldvelocity);
-			if (other->fly_sound_debounce_time < level.time)
+			if (other->fly_sound_debounce_time < level.framenum)
 			{
-				other->fly_sound_debounce_time = level.time + 1.5;
+				other->fly_sound_debounce_time = level.framenum + 15;
 				PlaySoundFrom (other, CHAN_AUTO, windsound);
 			}
 		}
@@ -498,13 +500,13 @@ void hurt_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *
 	if (!other->takedamage)
 		return;
 
-	if (self->timestamp > level.time)
+	if (self->timestamp > level.framenum)
 		return;
 
 	if (self->spawnflags & 16)
-		self->timestamp = level.time + 1;
+		self->timestamp = level.framenum + 10;
 	else
-		self->timestamp = level.time + FRAMETIME;
+		self->timestamp = level.framenum + FRAMETIME;
 
 	if (!(self->spawnflags & 4))
 	{

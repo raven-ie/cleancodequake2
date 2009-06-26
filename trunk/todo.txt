@@ -4,4 +4,3 @@ Just a place to write down some things planned.
 - Remove usage of GetModelIndex() == 255. This is stupid.
 - Look into using a sin/cos table, for Q_SinCosf
 - Remove usage of level.current_entity
-- 

@@ -259,10 +259,10 @@ void CMaiden::Pain (edict_t *other, float kick, int damage)
 	if (Entity->health < (Entity->max_health / 2))
 		Entity->state.skinNum = 1;
 
-	if (level.time < Entity->pain_debounce_time)
+	if (level.framenum < Entity->pain_debounce_time)
 		return;
 
-	Entity->pain_debounce_time = level.time + 3;
+	Entity->pain_debounce_time = level.framenum + 30;
 
 	int r = rand()%3;
 	switch (r)
@@ -391,13 +391,13 @@ void CMaiden::DuckDown ()
 	AIFlags |= AI_DUCKED;
 	Entity->maxs[2] -= 32;
 	Entity->takedamage = DAMAGE_YES;
-	PauseTime = level.time + 1;
+	PauseTime = level.framenum + 10;
 	gi.linkentity (Entity);
 }
 
 void CMaiden::DuckHold ()
 {
-	if (level.time >= PauseTime)
+	if (level.framenum >= PauseTime)
 		AIFlags &= ~AI_HOLD_FRAME;
 	else
 		AIFlags |= AI_HOLD_FRAME;
@@ -500,9 +500,9 @@ void CMaiden::Duck (float eta)
 
 	if (!skill->Integer())
 		// PMM - stupid dodge
-		DuckWaitTime = level.time + eta + 1;
+		DuckWaitTime = level.framenum + ((eta + 1 * 10));
 	else
-		DuckWaitTime = level.time + eta + (0.1 * (3 - skill->Integer()));
+		DuckWaitTime = level.framenum + ((eta + (0.1 * (3 - skill->Integer())) * 10));
 
 	// has to be done immediately otherwise she can get stuck
 	DuckDown();
@@ -774,7 +774,7 @@ void CMaiden::Attack()
 		// turn on manual steering to signal both manual steering and blindfire
 		AIFlags |= AI_MANUAL_STEERING;
 		CurrentMove = &ChickMoveStartAttack1;
-		AttackFinished = level.time + 2*random();
+		AttackFinished = level.framenum + ((2*random())*10);
 		return;
 	}
 	// pmm

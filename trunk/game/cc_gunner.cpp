@@ -285,10 +285,10 @@ void CGunner::Pain (edict_t *other, float kick, int damage)
 	DoneDodge();
 #endif
 
-	if (level.time < Entity->pain_debounce_time)
+	if (level.framenum < Entity->pain_debounce_time)
 		return;
 
-	Entity->pain_debounce_time = level.time + 3;
+	Entity->pain_debounce_time = level.framenum + 30;
 	PlaySoundFrom (Entity, CHAN_VOICE, (rand()&1) ? SoundPain : SoundPain2);
 
 	if (skill->Integer() == 3)
@@ -370,7 +370,7 @@ void CGunner::DuckDown ()
 
 	Entity->maxs[2] -= 32;
 	Entity->takedamage = DAMAGE_YES;
-	PauseTime = level.time + 1;
+	PauseTime = level.framenum + 10;
 	gi.linkentity (Entity);
 #else
 //	if (self->monsterinfo.aiflags & AI_DUCKED)
@@ -385,8 +385,8 @@ void CGunner::DuckDown ()
 //	self->maxs[2] -= 32;
 	Entity->maxs[2] = BaseHeight - 32;
 	Entity->takedamage = DAMAGE_YES;
-	if (DuckWaitTime < level.time)
-		DuckWaitTime = level.time + 1;
+	if (DuckWaitTime < level.framenum)
+		DuckWaitTime = level.framenum + 10;
 	gi.linkentity (Entity);
 #endif
 }
@@ -394,7 +394,7 @@ void CGunner::DuckDown ()
 #ifndef MONSTER_USE_ROGUE_AI
 void CGunner::DuckHold ()
 {
-	if (level.time >= PauseTime)
+	if (level.framenum >= PauseTime)
 		AIFlags &= ~AI_HOLD_FRAME;
 	else
 		AIFlags |= AI_HOLD_FRAME;
@@ -760,7 +760,7 @@ void CGunner::Attack()
 		{
 			// if the check passes, go for the attack
 			CurrentMove = &GunnerMoveAttackGrenade;
-			AttackFinished = level.time + 2*random();
+			AttackFinished = level.framenum + ((2*random())*10);
 		}
 		// turn off blindfire flag
 		AIFlags &= ~AI_MANUAL_STEERING;
@@ -808,9 +808,9 @@ void CGunner::Duck (float eta)
 
 	if (skill->Integer() == 0)
 		// PMM - stupid dodge
-		DuckWaitTime = level.time + eta + 1;
+		DuckWaitTime = level.framenum + ((eta + 1) * 10);
 	else
-		DuckWaitTime = level.time + eta + (0.1 * (3 - skill->Integer()));
+		DuckWaitTime = level.framenum + ((eta + (0.1 * (3 - skill->Integer()))) * 10);
 
 	// has to be done immediately otherwise he can get stuck
 	DuckDown();

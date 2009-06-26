@@ -72,18 +72,15 @@ Runs thinking code for this frame if necessary
 */
 bool SV_RunThink (edict_t *ent)
 {
-	float	thinktime;
-
-	thinktime = ent->nextthink;
+	int32	thinktime = ent->nextthink;
 	if (thinktime <= 0)
 		return true;
-	if (thinktime > level.time+0.001)
+	if (thinktime > level.framenum)
 		return true;
 	
 	ent->nextthink = 0;
-	if (!ent->think)
-		gi.error ("NULL ent->think");
-	ent->think (ent);
+	if (ent->think)
+		ent->think (ent);
 
 	return false;
 }
@@ -299,7 +296,7 @@ SV_AddGravity
 */
 void SV_AddGravity (edict_t *ent)
 {
-	ent->velocity[2] -= ent->gravity * sv_gravity->Float() * FRAMETIME;
+	ent->velocity[2] -= ent->gravity * sv_gravity->Float() * 0.1f;
 }
 
 /*
@@ -557,8 +554,8 @@ void SV_Physics_Pusher (edict_t *ent)
 			part->avelocity[0] || part->avelocity[1] || part->avelocity[2]
 			)
 		{	// object is moving
-			Vec3Scale (part->velocity, FRAMETIME, move);
-			Vec3Scale (part->avelocity, FRAMETIME, amove);
+			Vec3Scale (part->velocity, 0.1f, move);
+			Vec3Scale (part->avelocity, 0.1f, amove);
 
 			if (!SV_Push (part, move, amove))
 				break;	// move was blocked
@@ -624,8 +621,8 @@ void SV_Physics_Noclip (edict_t *ent)
 	if (!SV_RunThink (ent))
 		return;
 	
-	Vec3MA (ent->state.angles, FRAMETIME, ent->avelocity, ent->state.angles);
-	Vec3MA (ent->state.origin, FRAMETIME, ent->velocity, ent->state.origin);
+	Vec3MA (ent->state.angles, 0.1f, ent->avelocity, ent->state.angles);
+	Vec3MA (ent->state.origin, 0.1f, ent->velocity, ent->state.origin);
 
 	gi.linkentity (ent);
 }
@@ -682,10 +679,10 @@ void SV_Physics_Toss (edict_t *ent)
 		SV_AddGravity (ent);
 
 // move angles
-	Vec3MA (ent->state.angles, FRAMETIME, ent->avelocity, ent->state.angles);
+	Vec3MA (ent->state.angles, 0.1f, ent->avelocity, ent->state.angles);
 
 // move origin
-	Vec3Scale (ent->velocity, FRAMETIME, move);
+	Vec3Scale (ent->velocity, 0.1f, move);
 	trace = SV_PushEntity (ent, move);
 	if (!ent->inUse)
 		return;
@@ -769,8 +766,8 @@ void SV_AddRotationalFriction (edict_t *ent)
 	int		n;
 	float	adjustment;
 
-	Vec3MA (ent->state.angles, FRAMETIME, ent->avelocity, ent->state.angles);
-	adjustment = FRAMETIME * sv_stopspeed * sv_friction;
+	Vec3MA (ent->state.angles, 0.1f, ent->avelocity, ent->state.angles);
+	adjustment = 0.1f * sv_stopspeed * sv_friction;
 	for (n = 0; n < 3; n++)
 	{
 		if (ent->avelocity[n] > 0)
@@ -831,7 +828,7 @@ void SV_Physics_Step (edict_t *ent)
 		speed = fabs(ent->velocity[2]);
 		control = speed < sv_stopspeed ? sv_stopspeed : speed;
 		friction = sv_friction/3;
-		newspeed = speed - (FRAMETIME * control * friction);
+		newspeed = speed - (0.1f * control * friction);
 		if (newspeed < 0)
 			newspeed = 0;
 		newspeed /= speed;
@@ -843,7 +840,7 @@ void SV_Physics_Step (edict_t *ent)
 	{
 		speed = fabs(ent->velocity[2]);
 		control = speed < sv_stopspeed ? sv_stopspeed : speed;
-		newspeed = speed - (FRAMETIME * control * sv_waterfriction * ent->waterlevel);
+		newspeed = speed - (0.1f * control * sv_waterfriction * ent->waterlevel);
 		if (newspeed < 0)
 			newspeed = 0;
 		newspeed /= speed;
@@ -863,7 +860,7 @@ void SV_Physics_Step (edict_t *ent)
 				friction = sv_friction;
 
 				control = speed < sv_stopspeed ? sv_stopspeed : speed;
-				newspeed = speed - FRAMETIME*control*friction;
+				newspeed = speed - 0.1f*control*friction;
 
 				if (newspeed < 0)
 					newspeed = 0;
@@ -878,7 +875,7 @@ void SV_Physics_Step (edict_t *ent)
 			mask = CONTENTS_MASK_MONSTERSOLID;
 		else
 			mask = CONTENTS_MASK_SOLID;
-		SV_FlyMove (ent, FRAMETIME, mask);
+		SV_FlyMove (ent, 0.1f, mask);
 
 		gi.linkentity (ent);
 		G_TouchTriggers (ent);

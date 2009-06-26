@@ -384,7 +384,7 @@ void CMutant::JumpTakeOff ()
 	Entity->state.origin[2] += 1;
 	Entity->groundentity = NULL;
 	AIFlags |= AI_DUCKED;
-	AttackFinished = level.time + 3;
+	AttackFinished = level.framenum + 30;
 	Entity->touch = &CMutant::JumpTouch;
 }
 
@@ -398,7 +398,7 @@ void CMutant::CheckLanding ()
 		return;
 	}
 
-	if (level.time > AttackFinished)
+	if (level.framenum > AttackFinished)
 		NextFrame = FRAME_attack02;
 	else
 		NextFrame = FRAME_attack05;
@@ -603,10 +603,10 @@ void CMutant::Pain (edict_t *other, float kick, int damage)
 	if (Entity->health < (Entity->max_health / 2))
 		Entity->state.skinNum = 1;
 
-	if (level.time < Entity->pain_debounce_time)
+	if (level.framenum < Entity->pain_debounce_time)
 		return;
 
-	Entity->pain_debounce_time = level.time + 3;
+	Entity->pain_debounce_time = level.framenum + 30;
 
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare

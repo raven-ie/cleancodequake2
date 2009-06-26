@@ -163,7 +163,7 @@ void CMegaHealth::MegaHealthThink (edict_t *self)
 #endif
 		)
 	{
-		self->nextthink = level.time + 1;
+		self->nextthink = level.framenum + 10;
 		self->owner->health -= 1;
 		return;
 	}
@@ -182,7 +182,7 @@ void CMegaHealth::DoPickup (edict_t *ent, CPlayerEntity *other)
 	{
 #endif
 		ent->think = &CMegaHealth::MegaHealthThink;
-		ent->nextthink = level.time + 5;
+		ent->nextthink = level.framenum + 50;
 		ent->owner = other->gameEntity;
 		ent->flags |= FL_RESPAWN;
 		ent->svFlags |= SVF_NOCLIENT;
@@ -237,7 +237,7 @@ void CQuadDamage::DoPickup (edict_t *ent, CPlayerEntity *other)
 		if (!(ent->spawnflags & DROPPED_ITEM) )
 			SetRespawn (ent, 60);
 		if (ent->spawnflags & DROPPED_PLAYER_ITEM)
-			quad_drop_timeout_hack = (ent->nextthink - level.time) / FRAMETIME;
+			quad_drop_timeout_hack = (ent->nextthink - level.framenum);
 
 		if (dmFlags.dfInstantItems)
 			Use (other);

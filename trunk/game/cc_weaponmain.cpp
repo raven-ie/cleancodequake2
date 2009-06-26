@@ -174,7 +174,7 @@ void CWeapon::ChangeWeapon (CPlayerEntity *Player)
 	if (!Player->Client.pers.Weapon)
 	{	// dead
 		Player->Client.PlayerState.SetGunIndex(0);
-		if (!Player->Client.grenade_thrown && !Player->Client.grenade_blew_up && Player->Client.grenade_time >= level.time) // We had a grenade cocked
+		if (!Player->Client.grenade_thrown && !Player->Client.grenade_blew_up && Player->Client.grenade_time >= level.framenum) // We had a grenade cocked
 		{
 			WeaponGrenades.FireGrenade(Player, false);
 			Player->Client.grenade_time = 0;
@@ -245,10 +245,10 @@ bool CWeapon::AttemptToFire (CPlayerEntity *Player)
 void CWeapon::OutOfAmmo (CPlayerEntity *Player)
 {
 	// Doesn't affect pain anymore!
-	if (level.time >= Player->gameEntity->damage_debounce_time)
+	if (level.framenum >= Player->gameEntity->damage_debounce_time)
 	{
 		PlaySoundFrom(Player->gameEntity, CHAN_AUTO, SoundIndex("weapons/noammo.wav"));
-		Player->gameEntity->damage_debounce_time = level.time + 1;
+		Player->gameEntity->damage_debounce_time = level.framenum + 10;
 	}
 }
 
@@ -329,7 +329,7 @@ void PlayerNoise(CPlayerEntity *Player, vec3_t where, int type)
 	Vec3Copy (where, noise->state.origin);
 	Vec3Subtract (where, noise->maxs, noise->absMin);
 	Vec3Add (where, noise->maxs, noise->absMax);
-	noise->teleport_time = level.time;
+	noise->teleport_time = level.framenum;
 	gi.linkentity (noise);
 #else
 	level.NoiseNode = GetClosestNodeTo(where);

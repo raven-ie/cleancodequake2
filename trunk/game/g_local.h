@@ -42,8 +42,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //==================================================================
 
 // view pitching times
-#define DAMAGE_TIME		0.5
-#define FALL_TIME		0.3
+#define DAMAGE_TIME		5
+#define FALL_TIME		3
 
 
 // edict->spawnflags
@@ -71,7 +71,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define FL_RESPAWN				0x80000000	// used for item respawning
 
 
-#define FRAMETIME		0.1f
+#define FRAMETIME		1
 
 // memory tags to allow dynamic memory to be cleaned up
 #define TAG_GAME	765		// clear when unloading the dll
@@ -199,8 +199,7 @@ typedef struct
 //
 typedef struct
 {
-	int			framenum;
-	float		time;
+	int32		framenum;
 
 	char		level_name[MAX_QPATH];	// the descriptive name (Outer Base, etc)
 	char		mapname[MAX_QPATH];		// the server name (base1, etc)
@@ -208,7 +207,7 @@ typedef struct
 	char		forcemap[MAX_QPATH];	// go here
 
 	// intermission state
-	float		intermissiontime;		// time the intermission was started
+	int32		intermissiontime;		// time the intermission was started
 	char		*changemap;
 	int			exitintermission;
 	vec3_t		intermission_origin;
@@ -613,7 +612,7 @@ struct edict_s
 	int			flags;
 
 	char		*model;
-	float		freetime;			// sv.time when the object was freed
+	int32		freetime;			// sv.time when the object was freed
 	
 	//
 	// only used locally in game, not by server
@@ -622,7 +621,7 @@ struct edict_s
 	char		*classname;
 	int			spawnflags;
 
-	float		timestamp;
+	int32		timestamp;
 
 	float		angle;			// set in qe3, -1 = up, -2 = down
 	char		*target;
@@ -641,7 +640,7 @@ struct edict_s
 	vec3_t		velocity;
 	vec3_t		avelocity;
 	int			mass;
-	float		air_finished;
+	int32		air_finished;
 	float		gravity;		// per entity gravity multiplier (1.0 is normal)
 								// use for lowgrav artifact, flares
 
@@ -650,7 +649,7 @@ struct edict_s
 	float		yaw_speed;
 	float		ideal_yaw;
 
-	float		nextthink;
+	int32		nextthink;
 	void		(*prethink) (edict_t *ent);
 	void		(*think)(edict_t *self);
 	void		(*blocked)(edict_t *self, edict_t *other);	//move to moveinfo?
@@ -659,11 +658,11 @@ struct edict_s
 	void		(*pain)(edict_t *self, edict_t *other, float kick, int damage);
 	void		(*die)(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
 
-	float		touch_debounce_time;		// are all these legit?  do we need more/less of them?
-	float		pain_debounce_time;
-	float		damage_debounce_time;
-	float		fly_sound_debounce_time;	//move to clientinfo
-	float		last_move_time;
+	int32		touch_debounce_time;		// are all these legit?  do we need more/less of them?
+	int32		pain_debounce_time;
+	int32		damage_debounce_time;
+	int32		fly_sound_debounce_time;	//move to clientinfo
+	int32		last_move_time;
 
 	int			health;
 	int			max_health;
@@ -671,7 +670,7 @@ struct edict_s
 	int			deadflag;
 	int			show_hostile;
 
-	float		powerarmor_time;
+	int32		powerarmor_time;
 
 	char		*map;			// target_changelevel
 
@@ -705,7 +704,7 @@ struct edict_s
 	float		delay;			// before firing targets
 	float		random;
 
-	float		teleport_time;
+	int32		teleport_time;
 
 	int			watertype;
 	int			waterlevel;

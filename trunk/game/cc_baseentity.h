@@ -99,7 +99,7 @@ public: // Kept public for now because there are lots of functions that require 
 									// Kept private to make sure no mistakes are made.
 public:
 	bool			Freed;
-	uint32			EntityFlags;
+	int32			EntityFlags;
 	CEntityState	State;
 
 	CBaseEntity ();

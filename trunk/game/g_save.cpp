@@ -945,6 +945,7 @@ void ReadLevel (char *filename)
 		// fire any cross-level triggers
 		if (ent->classname)
 			if (strcmp(ent->classname, "target_crosslevel_target") == 0)
-				ent->nextthink = level.time + ent->delay;
+				// backwards compatoh you get the picture
+				ent->nextthink = level.framenum + (ent->delay * 10);
 	}
 }

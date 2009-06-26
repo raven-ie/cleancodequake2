@@ -634,6 +634,10 @@
 				RelativePath=".\..\..\game\cc_shared.h"
 				>
 			</File>
+			<File
+				RelativePath="..\..\todo.txt"
+				>
+			</File>
 			<Filter
 				Name="Dmflags"
 				>

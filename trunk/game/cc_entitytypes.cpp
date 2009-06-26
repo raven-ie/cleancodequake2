@@ -59,7 +59,7 @@ CBaseEntity(Index)
 
 void CThinkableEntity::RunThink ()
 {
-	if (NextThink <= 0 || NextThink > level.time+0.001)
+	if (NextThink <= 0 || NextThink > level.framenum)
 		return;
 	
 	NextThink = 0;
@@ -94,7 +94,7 @@ CBaseEntity(Index)
 
 void CPhysicsEntity::AddGravity()
 {
-	gameEntity->velocity[2] -= gameEntity->gravity * sv_gravity->Float() * FRAMETIME;
+	gameEntity->velocity[2] -= gameEntity->gravity * sv_gravity->Float() * 0.1f;
 }
 
 CTrace CPhysicsEntity::PushEntity (vec3_t push)
@@ -217,11 +217,11 @@ bool CBounceProjectile::Run ()
 // move angles
 	vec3_t angles;
 	CBaseEntity::State.GetAngles (angles);
-	Vec3MA (angles, FRAMETIME, CBaseEntity::gameEntity->avelocity, angles);
+	Vec3MA (angles, 0.1f, CBaseEntity::gameEntity->avelocity, angles);
 	CBaseEntity::State.SetAngles (angles);
 
 // move origin
-	Vec3Scale (gameEntity->velocity, FRAMETIME, move);
+	Vec3Scale (gameEntity->velocity, 0.1f, move);
 	trace = PushEntity (move);
 	if (!IsInUse())
 		return false;
@@ -340,11 +340,11 @@ bool CFlyMissileProjectile::Run ()
 // move angles
 	vec3_t angles;
 	CBaseEntity::State.GetAngles (angles);
-	Vec3MA (angles, FRAMETIME, CBaseEntity::gameEntity->avelocity, angles);
+	Vec3MA (angles, 0.1f, CBaseEntity::gameEntity->avelocity, angles);
 	CBaseEntity::State.SetAngles (angles);
 
 // move origin
-	Vec3Scale (gameEntity->velocity, FRAMETIME, move);
+	Vec3Scale (gameEntity->velocity, 0.1f, move);
 	trace = PushEntity (move);
 	if (!IsInUse())
 		return false;

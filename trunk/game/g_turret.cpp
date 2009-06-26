@@ -142,18 +142,18 @@ void turret_breach_think (edict_t *self)
 		delta[1] -= 360;
 	delta[2] = 0;
 
-	if (delta[0] > self->speed * FRAMETIME)
-		delta[0] = self->speed * FRAMETIME;
-	if (delta[0] < -1 * self->speed * FRAMETIME)
-		delta[0] = -1 * self->speed * FRAMETIME;
-	if (delta[1] > self->speed * FRAMETIME)
-		delta[1] = self->speed * FRAMETIME;
-	if (delta[1] < -1 * self->speed * FRAMETIME)
-		delta[1] = -1 * self->speed * FRAMETIME;
+	if (delta[0] > self->speed * 0.1f)
+		delta[0] = self->speed * 0.1f;
+	if (delta[0] < -1 * self->speed * 0.1f)
+		delta[0] = -1 * self->speed * 0.1f;
+	if (delta[1] > self->speed * 0.1f)
+		delta[1] = self->speed * 0.1f;
+	if (delta[1] < -1 * self->speed * 0.1f)
+		delta[1] = -1 * self->speed * 0.1f;
 
-	Vec3Scale (delta, 1.0/FRAMETIME, self->avelocity);
+	Vec3Scale (delta, 0.1f, self->avelocity);
 
-	self->nextthink = level.time + FRAMETIME;
+	self->nextthink = level.framenum + FRAMETIME;
 
 	for (ent = self->teammaster; ent; ent = ent->teamchain)
 		ent->avelocity[1] = self->avelocity[1];
@@ -179,8 +179,8 @@ void turret_breach_think (edict_t *self)
 		target[2] = self->owner->state.origin[2];
 
 		Vec3Subtract (target, self->owner->state.origin, dir);
-		self->owner->velocity[0] = dir[0] * 1.0 / FRAMETIME;
-		self->owner->velocity[1] = dir[1] * 1.0 / FRAMETIME;
+		self->owner->velocity[0] = dir[0] * 1.0 / 0.1f;
+		self->owner->velocity[1] = dir[1] * 1.0 / 0.1f;
 
 		// z
 		angle = self->state.angles[PITCH] * (M_PI*2 / 360);
@@ -246,7 +246,7 @@ void SP_turret_breach (edict_t *self)
 	self->blocked = turret_blocked;
 
 	self->think = turret_breach_finish_init;
-	self->nextthink = level.time + FRAMETIME;
+	self->nextthink = level.framenum + FRAMETIME;
 	gi.linkentity (self);
 }
 
@@ -265,169 +265,3 @@ void SP_turret_base (edict_t *self)
 	gi.linkentity (self);
 }
 
-
-/*QUAKED turret_driver (1 .5 0) (-16 -16 -24) (16 16 32)
-Must NOT be on the team with the rest of the turret parts.
-Instead it must target the turret_breach.
-*/
-
-/*void infantry_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
-void infantry_stand (edict_t *self);
-void monster_use (edict_t *self, edict_t *other, edict_t *activator);
-
-void turret_driver_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
-{
-	edict_t	*ent;
-
-	// level the gun
-	self->target_ent->move_angles[0] = 0;
-
-	// remove the driver from the end of them team chain
-	for (ent = self->target_ent->teammaster; ent->teamchain != self; ent = ent->teamchain)
-		;
-	ent->teamchain = NULL;
-	self->teammaster = NULL;
-	self->flags &= ~FL_TEAMSLAVE;
-
-	self->target_ent->owner = NULL;
-	self->target_ent->teammaster->owner = NULL;
-
-	infantry_die (self, inflictor, attacker, damage, point);
-}
-
-bool FindTarget (edict_t *self);
-
-void turret_driver_think (edict_t *self)
-{
-	vec3_t	target;
-	vec3_t	dir;
-	float	reaction_time;
-
-	self->nextthink = level.time + FRAMETIME;
-
-	if (self->enemy && (!self->enemy->inUse || self->enemy->health <= 0))
-		self->enemy = NULL;
-
-	if (!self->enemy)
-	{
-		if (!FindTarget (self))
-			return;
-		self->monsterinfo.trail_time = level.time;
-		self->monsterinfo.aiflags &= ~AI_LOST_SIGHT;
-	}
-	else
-	{
-		if (visible (self, self->enemy))
-		{
-			if (self->monsterinfo.aiflags & AI_LOST_SIGHT)
-			{
-				self->monsterinfo.trail_time = level.time;
-				self->monsterinfo.aiflags &= ~AI_LOST_SIGHT;
-			}
-		}
-		else
-		{
-			self->monsterinfo.aiflags |= AI_LOST_SIGHT;
-			return;
-		}
-	}
-
-	// let the turret know where we want it to aim
-	Vec3Copy (self->enemy->state.origin, target);
-	target[2] += self->enemy->viewheight;
-	Vec3Subtract (target, self->target_ent->state.origin, dir);
-	VecToAngles (dir, self->target_ent->move_angles);
-
-	// decide if we should shoot
-	if (level.time < self->monsterinfo.attack_finished)
-		return;
-
-	reaction_time = (3 - skill->Integer()) * 1.0;
-	if ((level.time - self->monsterinfo.trail_time) < reaction_time)
-		return;
-
-	self->monsterinfo.attack_finished = level.time + reaction_time + 1.0;
-	//FIXME how do we really want to pass this along?
-	self->target_ent->spawnflags |= 65536;
-}
-
-void turret_driver_link (edict_t *self)
-{
-	vec3_t	vec;
-	edict_t	*ent;
-
-	self->think = turret_driver_think;
-	self->nextthink = level.time + FRAMETIME;
-
-	self->target_ent = G_PickTarget (self->target);
-	self->target_ent->owner = self;
-	self->target_ent->teammaster->owner = self;
-	Vec3Copy (self->target_ent->state.angles, self->state.angles);
-
-	vec[0] = self->target_ent->state.origin[0] - self->state.origin[0];
-	vec[1] = self->target_ent->state.origin[1] - self->state.origin[1];
-	vec[2] = 0;
-	self->move_origin[0] = Vec3Length(vec);
-
-	Vec3Subtract (self->state.origin, self->target_ent->state.origin, vec);
-	VecToAngles (vec, vec);
-	AnglesNormalize(vec);
-	self->move_origin[1] = vec[1];
-
-	self->move_origin[2] = self->state.origin[2] - self->target_ent->state.origin[2];
-
-	// add the driver to the end of them team chain
-	for (ent = self->target_ent->teammaster; ent->teamchain; ent = ent->teamchain)
-		;
-	ent->teamchain = self;
-	self->teammaster = self->target_ent->teammaster;
-	self->flags |= FL_TEAMSLAVE;
-}
-
-void SP_turret_driver (edict_t *self)
-{
-	if (game.mode & GAME_DEATHMATCH)
-	{
-		G_FreeEdict (self);
-		return;
-	}
-
-	self->movetype = MOVETYPE_PUSH;
-	self->solid = SOLID_BBOX;
-	self->state.modelIndex = ModelIndex("models/monsters/infantry/tris.md2");
-	Vec3Set (self->mins, -16, -16, -24);
-	Vec3Set (self->maxs, 16, 16, 32);
-
-	self->health = 100;
-	self->gib_health = 0;
-	self->mass = 200;
-	self->viewheight = 24;
-
-	self->die = turret_driver_die;
-	self->monsterinfo.stand = infantry_stand;
-
-	self->flags |= FL_NO_KNOCKBACK;
-
-	level.total_monsters++;
-
-	self->svFlags |= SVF_MONSTER;
-	self->state.renderFx |= RF_FRAMELERP;
-	self->takedamage = DAMAGE_AIM;
-	self->use = monster_use;
-	self->clipMask = CONTENTS_MASK_MONSTERSOLID;
-	Vec3Copy (self->state.origin, self->state.oldOrigin);
-	self->monsterinfo.aiflags |= AI_STAND_GROUND|AI_DUCKED;
-
-	if (st.item)
-	{
-		self->item = FindItemByClassname (st.item);
-		if (!self->item)
-			MapPrint (MAPPRINT_WARNING, self, self->state.origin, "Has bad item: \"%s\"\n", st.item);
-			//gi.dprintf("%s at (%f %f %f) has bad item: %s\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2], st.item);
-	}
-
-	self->think = turret_driver_link;
-	self->nextthink = level.time + FRAMETIME;
-
-	gi.linkentity (self);
-}*/

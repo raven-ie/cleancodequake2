@@ -55,7 +55,7 @@ bool CHandGrenade::CanStopFidgetting (CPlayerEntity *ent)
 	return false;
 }
 
-#define GRENADE_TIMER		3.0
+#define GRENADE_TIMER		30
 #define GRENADE_MINSPEED	400
 #define GRENADE_MAXSPEED	800
 
@@ -63,12 +63,12 @@ void CHandGrenade::Hold (CPlayerEntity *ent)
 {
 	if (!ent->Client.grenade_time)
 	{
-		ent->Client.grenade_time = level.time + GRENADE_TIMER + 0.2;
+		ent->Client.grenade_time = level.framenum + GRENADE_TIMER + 2;
 		ent->Client.weapon_sound = SoundIndex("weapons/hgrenc1b.wav");
 	}
 
 	// they waited too long, detonate it in their hand
-	if (!ent->Client.grenade_blew_up && (level.time >= ent->Client.grenade_time))
+	if (!ent->Client.grenade_blew_up && (level.framenum >= ent->Client.grenade_time))
 	{
 		ent->Client.weapon_sound = 0;
 		FireGrenade (ent, true);
@@ -101,15 +101,15 @@ void CHandGrenade::FireGrenade (CPlayerEntity *ent, bool inHand)
 	Angles_Vectors (ent->Client.v_angle, forward, right, NULL);
 	P_ProjectSource (ent, offset, forward, right, start);
 
-	float timer = ent->Client.grenade_time - level.time;
-	int speed = GRENADE_MINSPEED + (GRENADE_TIMER - timer) * ((GRENADE_MAXSPEED - GRENADE_MINSPEED) / GRENADE_TIMER);
+	float timer = (float)(ent->Client.grenade_time - level.framenum) / 10;
+	int speed = (GRENADE_MINSPEED + ((GRENADE_TIMER/10) - timer) * ((GRENADE_MAXSPEED - GRENADE_MINSPEED) / (GRENADE_TIMER/10)));
 	//fire_grenade2 (ent->gameEntity, start, forward, damage, speed, timer, radius, inHand);
 	CGrenade::Spawn (ent, start, forward, damage, speed, timer, radius, true, inHand);
 
 #ifdef CLEANCTF_ENABLED
-	ent->Client.grenade_time = level.time + (ent->CTFApplyHaste() ? 0.5f : 1.0f);
+	ent->Client.grenade_time = level.framenum + (ent->CTFApplyHaste() ? 5 : 10);
 #else
-	ent->Client.grenade_time = level.time + 1.0f;
+	ent->Client.grenade_time = level.framenum + 10;
 #endif
 	if (!dmFlags.dfInfiniteAmmo)
 		DepleteAmmo(ent, 1);
@@ -140,7 +140,7 @@ void CHandGrenade::Wait (CPlayerEntity *ent)
 	// if we aren't dead...
 	if (!ent->gameEntity->deadflag)
 		ent->Client.grenade_thrown = false;
-	if (level.time < ent->Client.grenade_time)
+	if (level.framenum < ent->Client.grenade_time)
 		return;
 	ent->Client.PlayerState.SetGunFrame (ent->Client.PlayerState.GetGunFrame()+1);
 }

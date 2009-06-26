@@ -113,7 +113,7 @@ void SP_info_player_start(edict_t *self)
 	{
 		// invoke one of our gross, ugly, disgusting hacks
 		self->think = SP_CreateCoopSpots;
-		self->nextthink = level.time + FRAMETIME;
+		self->nextthink = level.framenum + FRAMETIME;
 	}
 }
 
@@ -163,7 +163,7 @@ void SP_info_player_coop(edict_t *self)
 	{
 		// invoke one of our gross, ugly, disgusting hacks
 		self->think = SP_FixCoopSpots;
-		self->nextthink = level.time + FRAMETIME;
+		self->nextthink = level.framenum + FRAMETIME;
 	}
 }
 
@@ -315,6 +315,8 @@ void ClientObituary (CPlayerEntity *self, edict_t *attacker)
 	}
 	else if (attacker && attacker->client)
 	{
+		CPlayerEntity *Attacker = dynamic_cast<CPlayerEntity*>(attacker->Entity);
+		bool endsInS = (Attacker->Client.pers.netname[strlen(Attacker->Client.pers.netname)] == 's');
 		switch (meansOfDeath)
 		{
 		case MOD_BLASTER:
@@ -325,65 +327,65 @@ void ClientObituary (CPlayerEntity *self, edict_t *attacker)
 			break;
 		case MOD_SSHOTGUN:
 			message = "was blown away by";
-			message2 = "'s super shotgun";
+			message2 = (endsInS) ? "' super shotgun" : "'s super shotgun";
 			break;
 		case MOD_MACHINEGUN:
 			message = "was machinegunned by";
 			break;
 		case MOD_CHAINGUN:
 			message = "was cut in half by";
-			message2 = "'s chaingun";
+			message2 = (endsInS) ? "' chaingun" : "'s chaingun";
 			break;
 		case MOD_GRENADE:
 			message = "was popped by";
-			message2 = "'s grenade";
+			message2 = (endsInS) ? "' grenade" : "'s grenade";
 			break;
 		case MOD_G_SPLASH:
 			message = "was shredded by";
-			message2 = "'s shrapnel";
+			message2 = (endsInS) ? "' shrapnel" : "'s shrapnel";
 			break;
 		case MOD_ROCKET:
 			message = "ate";
-			message2 = "'s rocket";
+			message2 = (endsInS) ? "' rocket" : "'s rocket";
 			break;
 		case MOD_R_SPLASH:
 			message = "almost dodged";
-			message2 = "'s rocket";
+			message2 = (endsInS) ? "' rocket" : "'s rocket";
 			break;
 		case MOD_HYPERBLASTER:
 			message = "was melted by";
-			message2 = "'s hyperblaster";
+			message2 = (endsInS) ? "' hyperblaster" : "'s hyperblaster";
 			break;
 		case MOD_RAILGUN:
 			message = "was railed by";
 			break;
 		case MOD_BFG_LASER:
 			message = "saw the pretty lights from";
-			message2 = "'s BFG";
+			message2 = (endsInS) ? "' BFG" : "'s BFG";
 			break;
 		case MOD_BFG_BLAST:
 			message = "was disintegrated by";
-			message2 = "'s BFG blast";
+			message2 = (endsInS) ? "' BFG blast" : "'s BFG blast";
 			break;
 		case MOD_BFG_EFFECT:
 			message = "couldn't hide from";
-			message2 = "'s BFG";
+			message2 = (endsInS) ? "' BFG" : "'s BFG";
 			break;
 		case MOD_HANDGRENADE:
 			message = "caught";
-			message2 = "'s handgrenade";
+			message2 = (endsInS) ? "' handgrenade" : "'s handgrenade";
 			break;
 		case MOD_HG_SPLASH:
 			message = "didn't see";
-			message2 = "'s handgrenade";
+			message2 = (endsInS) ? "' handgrenade" : "'s handgrenade";
 			break;
 		case MOD_HELD_GRENADE:
 			message = "feels";
-			message2 = "'s pain";
+			message2 = (endsInS) ? "' pain" : "'s pain";
 			break;
 		case MOD_TELEFRAG:
 			message = "tried to invade";
-			message2 = "'s personal space";
+			message2 = (endsInS) ? "' personal space" : "'s personal space";
 			break;
 #ifdef CLEANCTF_ENABLED
 //ZOID
@@ -394,7 +396,6 @@ void ClientObituary (CPlayerEntity *self, edict_t *attacker)
 //ZOID
 #endif
 		}
-		CPlayerEntity *Attacker = dynamic_cast<CPlayerEntity*>(attacker->Entity);
 		BroadcastPrintf (PRINT_MEDIUM,"%s %s %s%s\n", self->Client.pers.netname, message, Attacker->Client.pers.netname, message2);
 		if (game.mode & GAME_DEATHMATCH)
 			Attacker->Client.resp.score++;
@@ -440,7 +441,7 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 
 	if (!Player->gameEntity->deadflag)
 	{
-		Player->Client.respawn_time = level.time + 1.0;
+		Player->Client.respawn_time = level.framenum + 10;
 		Player->LookAtKiller (inflictor, attacker);
 		Player->Client.PlayerState.GetPMove()->pmType = PMT_DEAD;
 		ClientObituary (Player, attacker);

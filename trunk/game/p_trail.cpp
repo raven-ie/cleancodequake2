@@ -72,7 +72,7 @@ void PlayerTrail_Add (vec3_t spot)
 
 	Vec3Copy (spot, trail[trail_head]->state.origin);
 
-	trail[trail_head]->timestamp = level.time;
+	trail[trail_head]->timestamp = level.framenum;
 
 	Vec3Subtract (spot, trail[PREV(trail_head)]->state.origin, temp);
 	trail[trail_head]->state.angles[1] = VecToYaw (temp);
