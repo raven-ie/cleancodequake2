@@ -40,7 +40,7 @@ void CCmd::Run (CPlayerEntity *ent)
 		ClientPrintf (ent->gameEntity, PRINT_HIGH, "Cheats must be enabled to use this command.\n");
 		return;
 	}
-	if (ent->Client.resp.spectator && !(CmdFlags & CMD_SPECTATOR))	
+	if (!(CmdFlags & CMD_SPECTATOR) && ent->Client.resp.spectator)	
 		return;
 
 	RunFunction (ent);

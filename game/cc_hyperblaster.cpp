@@ -120,7 +120,8 @@ void CHyperBlaster::Fire (CPlayerEntity *ent)
 			Vec3Scale (forward, -2, ent->Client.kick_origin);
 			ent->Client.kick_angles[0] = -1;
 
-			fire_blaster (ent->gameEntity, start, forward, damage, 1000, effect, true);
+			//fire_blaster (ent->gameEntity, start, forward, damage, 1000, effect, true);
+			CBlasterProjectile::Spawn (ent, start, forward, damage, 1000, effect, true);
 
 			// send muzzle flash
 			Muzzle (ent, MZ_HYPERBLASTER);

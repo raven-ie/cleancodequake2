@@ -185,9 +185,56 @@ CFlyMissileProjectile(Index)
 {
 };
 
+// Remove this line
+#define DEFINITELY_NOT_KEVIN
+#define VectorLength Vec3Length
+
+// CL_CalcParticleLOD
+// Used for particles that have a constant particle number:
+// ie:		while (i < 40)
+//				i--
+
+#ifdef DEFINITELY_NOT_KEVIN
+#define VIEWORG g_edicts[1].state.origin
+#else
+#define VIEWORG cl.refdef.vieworg
+#endif
+
+// Set to the cvar if you want
+#define LOD_DISTANCE	2000
+
+int CL_CalcParticleLOD (int amount, 
+#ifdef DEFINITELY_NOT_KEVIN
+						vec3f origin
+#else
+						vec3_t origin
+#endif
+						)
+{
+	vec3_t subt;
+	float len;
+
+	Vec3Subtract (origin, VIEWORG, subt);
+	len = VectorLength (subt);
+
+	len = (len - 750) / 100;
+
+	if (len < 0)
+		len = 0;
+	else if (len > LOD_DISTANCE)
+		len = LOD_DISTANCE;
+
+	amount -= len;
+
+	return amount;
+}
+
 void CBlasterProjectile::Think ()
 {
-	Free (); // "delete" the entity
+	//int amount = CL_CalcParticleLOD (40, State.GetOrigin());
+	//DebugPrintf ("%i\n", amount);
+	//NextThink = level.time + .1;
+	Free();
 }
 
 void CBlasterProjectile::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
