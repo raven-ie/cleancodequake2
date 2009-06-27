@@ -31,6 +31,10 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Pathfinding algorithm for monsters
 //
 
+#ifdef HAS_PRAGMA_ONCE
+#pragma once
+#endif
+
 #ifdef MONSTERS_USE_PATHFINDING
 #include <vector>
 

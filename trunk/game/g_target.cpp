@@ -608,15 +608,15 @@ void target_laser_start (edict_t *self)
 
 	// set the color
 	if (self->spawnflags & RED)
-		self->state.skinNum = ConvertColorsToBeamColor (CColors::PatriotRed, CColors::PatriotRed, CColors::Red, CColors::Red);
+		self->state.skinNum = ConvertColorsToBeamColor (NSColor::PatriotRed, NSColor::PatriotRed, NSColor::Red, NSColor::Red);
 	else if (self->spawnflags & GREEN)
-		self->state.skinNum = ConvertColorsToBeamColor (CColors::Green, CColors::Lime, CColors::FireSpeechGreen, CColors::Harlequin);
+		self->state.skinNum = ConvertColorsToBeamColor (NSColor::Green, NSColor::Lime, NSColor::FireSpeechGreen, NSColor::Harlequin);
 	else if (self->spawnflags & BLUE)
-		self->state.skinNum = ConvertColorsToBeamColor (CColors::PatriotBlue, CColors::PatriotBlue, CColors::NeonBlue, CColors::NeonBlue);
+		self->state.skinNum = ConvertColorsToBeamColor (NSColor::PatriotBlue, NSColor::PatriotBlue, NSColor::NeonBlue, NSColor::NeonBlue);
 	else if (self->spawnflags & YELLOW)
-		self->state.skinNum = ConvertColorsToBeamColor (CColors::ParisDaisy, CColors::Gorse, CColors::Lemon, CColors::Gold);
+		self->state.skinNum = ConvertColorsToBeamColor (NSColor::ParisDaisy, NSColor::Gorse, NSColor::Lemon, NSColor::Gold);
 	else if (self->spawnflags & ORANGE)
-		self->state.skinNum = ConvertColorsToBeamColor (CColors::HarvestGold, CColors::RobRoy, CColors::TulipTree, CColors::FireBush);
+		self->state.skinNum = ConvertColorsToBeamColor (NSColor::HarvestGold, NSColor::RobRoy, NSColor::TulipTree, NSColor::FireBush);
 
 	if (!self->enemy)
 	{

@@ -21,6 +21,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "cc_options.h"
 
+#ifdef HAS_PRAGMA_ONCE
+#pragma once
+#endif
+
 #include "../shared/shared.h"
 
 #if 0
