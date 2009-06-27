@@ -28,13 +28,12 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 //
 // cc_colors.h
-// A container with enumerations for colors
+// A container with enumerations for colors and classes
 //
 
-class CColors
+namespace NSColor
 {
-public:
-	enum
+	enum EColors
 	{
 		Black,
 		BlackGray,
@@ -323,5 +322,35 @@ public:
 		Mongoose,
 		DonkeyBrown,
 		TransparentPink
+	};
+
+	typedef colorb ColorPalette[256];
+
+	// This is a color palette class
+	class CColorPalette
+	{
+		int			numColors;
+		colorb		*palette;
+
+		// These are lists of colors sorted by their closest values
+		byte		*redSortedValues, *greenSortedValues, *blueSortedValues;
+
+	public:
+		CColorPalette (colorb *palette, int numColors);
+
+		// Values is a pointer to an allocated list of values (numColors num)
+		// index is the index of the palette array to sort by (0 = red, etc)
+		void SortPaletteColorIndexes (byte *values, byte index);
+
+		// mainColor = color you're looking for (ie, r 253)
+		// newColor = color you're checking
+		inline byte GetColorWeight (byte mainColor, byte newColor);
+
+		inline colorb GetColorFromIndex (byte index);
+
+		// These should never be called "continuously".
+		// The value should be saved and that one used then-on.
+		inline byte GetClosestColorFromRGB (colorb color);
+		inline byte GetClosestColorFromRGB (byte r, byte g, byte b);
 	};
 };

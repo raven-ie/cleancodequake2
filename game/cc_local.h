@@ -31,6 +31,10 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Local header. Contains definitions local to CleanCode files and not necessarily used by the Quake2 base.
 //
 
+#ifdef HAS_PRAGMA_ONCE
+#pragma once
+#endif
+
 #include "g_local.h"
 #include "cc_cmds_local.h"
 

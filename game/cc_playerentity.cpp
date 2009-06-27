@@ -1157,17 +1157,15 @@ SV_AddBlend
 // Not a part of CPlayerEntity
 static inline void SV_AddBlend (colorb color, colorb &v_blend)
 {
-	byte	a2, a3;
-
 	if (color.A <= 0)
 		return;
 
-	a2 = v_blend.A + color.A;	// new total alpha
-	a3 = v_blend.A/a2;		// fraction of color from old
+	byte a2 = v_blend.A  + color.A;	// new total alpha
+	float a3 = (float)(v_blend.A) / (float)(a2);		// fraction of color from old
 
-	v_blend.R = v_blend.R*a3 + color.R;
-	v_blend.G = v_blend.G*a3 + color.G;
-	v_blend.B = v_blend.B*a3 + color.B;
+	v_blend.R = (float)(v_blend.R)*a3 + color.R*(1-a3);
+	v_blend.G = (float)(v_blend.G)*a3 + color.G*(1-a3);
+	v_blend.B = (float)(v_blend.B)*a3 + color.B*(1-a3);
 	v_blend.A = a2;
 }
 

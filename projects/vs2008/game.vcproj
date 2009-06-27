@@ -81,10 +81,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Winmm.lib ../../lib/zlibd.lib"
+				AdditionalDependencies="Winmm.lib ../../lib/zlibr.lib"
 				OutputFile="..\..\baseq2\gamex86.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
+				IgnoreDefaultLibraryNames="msvcrt.lib"
 				ModuleDefinitionFile="game.def"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="c:\quake2\baseq2\gamex86.pdb"
@@ -1225,6 +1226,10 @@
 			<Filter
 				Name="Colors"
 				>
+				<File
+					RelativePath="..\..\game\cc_colors.cpp"
+					>
+				</File>
 				<File
 					RelativePath=".\..\..\game\cc_colors.h"
 					>

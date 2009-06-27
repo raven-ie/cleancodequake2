@@ -147,7 +147,7 @@ public:
 
 	static void ForceWall	(vec3_t Start,
 					vec3_t End,
-					byte color = CColors::Lime);
+					byte color = NSColor::Lime);
 
 	static void DebugTrail	(vec3_t Start,
 					vec3_t End);

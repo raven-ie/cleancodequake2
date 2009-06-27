@@ -96,6 +96,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Define this to enable some custom asserts that we place in some places
 #define ALLOW_ASSERTS
 
+// Define this if you have "pragma once"
+#define HAS_PRAGMA_ONCE
+
 #ifdef ALLOW_ASSERTS
 #ifndef _DEBUG
 #define _CC_ASSERT_EXPR(expr, msg)
