@@ -87,8 +87,6 @@ void CBFG::MuzzleEffect (CPlayerEntity *ent)
 	Muzzle (ent, MZ_BFG);
 
 	ent->Client.PlayerState.SetGunFrame (ent->Client.PlayerState.GetGunFrame()+1);
-
-	PlayerNoise(ent, origin, PNOISE_WEAPON);
 }
 
 void CBFG::FireBFG (CPlayerEntity *ent)

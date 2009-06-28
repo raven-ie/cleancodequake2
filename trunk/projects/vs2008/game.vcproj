@@ -835,6 +835,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\game\cc_misc_entities.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\game\cc_misc_entities.h"
+					>
+				</File>
+				<File
 					RelativePath=".\..\..\game\cc_playerentity.cpp"
 					>
 				</File>

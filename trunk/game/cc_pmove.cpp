@@ -155,9 +155,22 @@ static void SV_PM_StepSlideMove_ (void) {
 			 break;		// moved the entire distance
 
 		// save entity for contact
-		if ((pm->numTouch < MAXTOUCH) && trace.ent) {
-			pm->touchEnts[pm->numTouch] = trace.ent;
-			pm->numTouch++;
+		if ((pm->numTouch < MAXTOUCH) && trace.ent)
+		{
+			bool dup = false;
+			for (int z = 0; z < pm->numTouch; z++)
+			{
+				if (pm->touchEnts[z] == trace.ent)
+				{
+					dup = true;
+					break;
+				}
+			}
+			if (!dup)
+			{
+				pm->touchEnts[pm->numTouch] = trace.ent;
+				pm->numTouch++;
+			}
 		}
 		
 		time_left -= time_left * trace.fraction;

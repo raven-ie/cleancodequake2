@@ -1017,7 +1017,7 @@ inline void CPlayerEntity::CalcViewOffset (vec3_t forward, vec3_t right, vec3_t 
 		Vec3Copy (Client.kick_angles, angles);
 
 		// add angles based on damage kick
-		ratio = (Client.v_dmg_time - level.framenum) / DAMAGE_TIME;
+		ratio = (float)(Client.v_dmg_time - level.framenum) / DAMAGE_TIME;
 		if (ratio < 0)
 		{
 			ratio = 0;
@@ -2844,7 +2844,6 @@ void CPlayerEntity::TossClientWeapon ()
 
 void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 {
-	int		i, j;
 #ifdef USE_EXTENDED_GAME_IMPORTS
 	pMove_t		pm;
 #else
@@ -2894,7 +2893,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 
 	vec3_t origin;
 	State.GetOrigin (origin);
-	for (i=0 ; i<3 ; i++)
+	for (int i = 0; i < 3; i++)
 	{
 		pm.state.origin[i] = origin[i]*8;
 		pm.state.velocity[i] = gameEntity->velocity[i]*8;
@@ -2925,7 +2924,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 	Client.old_pmove = pm.state;
 
 	State.SetOrigin(vec3f(pm.state.origin[0]*0.125, pm.state.origin[1]*0.125, pm.state.origin[2]*0.125));
-	for (i=0 ; i<3 ; i++)
+	for (int i = 0; i < 3; i++)
 		gameEntity->velocity[i] = pm.state.velocity[i]*0.125;
 
 	Vec3Copy (pm.mins, gameEntity->mins);
@@ -2970,14 +2969,15 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 		G_TouchTriggers (gameEntity);
 
 	// touch other objects
-	for (i=0 ; i<pm.numTouch ; i++)
+	for (int i = 0; i < pm.numTouch; i++)
 	{
 		edict_t *other = pm.touchEnts[i];
-		for (j=0 ; j<i ; j++)
-			if (pm.touchEnts[j] == other)
-				break;
-		if (j != i)
-			continue;	// duplicated
+		if (other->Entity)
+		{
+			if (other->Entity->EntityFlags & ENT_TOUCHABLE)
+				dynamic_cast<CTouchableEntity*>(other->Entity)->Touch (this, NULL, NULL);
+			continue;
+		}
 		if (!other->touch)
 			continue;
 		other->touch (other, gameEntity, NULL, NULL);
@@ -2999,7 +2999,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 #endif
 
 	// update chase cam if being followed
-	for (i = 1; i <= game.maxclients; i++)
+	for (int i = 1; i <= game.maxclients; i++)
 	{
 		CPlayerEntity *other = dynamic_cast<CPlayerEntity*>((g_edicts + i)->Entity);
 		if (other->IsInUse() && other->Client.chase_target == this)
