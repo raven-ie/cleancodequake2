@@ -68,7 +68,7 @@ _CC_DISABLE_DEPRECATION
 	for (int i = 0; i < numArgv; i++)
 	{
 		size_t size = strlen(gi.argv(i))+1;
-		argvStringArray[i] = new char[size];
+		argvStringArray[i] = QNew (com_genericPool, 0) char[size];
 		Q_snprintfz (argvStringArray[i], size, "%s", gi.argv(i));
 
 		argvFloatArray[i] = atof (argvStringArray[i]);

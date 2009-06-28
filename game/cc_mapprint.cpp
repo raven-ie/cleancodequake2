@@ -240,7 +240,7 @@ char *CC_LoadEntFile (char *mapname, char *entities)
 		len = ftell (fp);
 		fseek (fp, 0, SEEK_SET);
 
-		char *newEntities = new char[len];
+		char *newEntities = QNew (com_levelPool, 0) char[len];
 		fread (newEntities, sizeof(char), len, fp);
 		newEntities[len] = '\0';
 
@@ -292,7 +292,7 @@ char *CC_ParseSpawnEntities (char *mapname, char *entities)
 			break;
 	}
 
-	char *finalEntString = new char[finalString.length()];
+	char *finalEntString = QNew (com_levelPool, 0) char[finalString.length()];
 	Q_snprintfz (finalEntString, finalString.length(), "%s", finalString.c_str());
 
 	return finalEntString;

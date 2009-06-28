@@ -404,7 +404,7 @@ public:
 	{
 		int x = 0, y = -76; // Top
 
-		CMenu_Label *TopGreen = new CMenu_Label(this, x, y);
+		CMenu_Label *TopGreen = QNew (com_levelPool, 0) CMenu_Label(this, x, y);
 		TopGreen->Enabled = false;
 		TopGreen->Align = LA_CENTER;
 		TopGreen->Flags = LF_GREEN;
@@ -413,7 +413,7 @@ public:
 
 		y += 32;
 
-		CMenu_Label *BottomWhite = new CMenu_Label(this, x, y);
+		CMenu_Label *BottomWhite = QNew (com_levelPool, 0) CMenu_Label(this, x, y);
 		BottomWhite->Enabled = false;
 		BottomWhite->Align = LA_CENTER;
 		Q_snprintfz (BottomWhite->LabelString, sizeof(BottomWhite->LabelString), "Paril\n\nDavid 'Zoid' Kirsch\n\nAdrian Carmack\nPaul Steed\nBrian Cozzens\n\nTom Klok\n\nxRDVx");
@@ -422,7 +422,7 @@ public:
 		x = -93;
 		y += (8 * 12);
 
-		CCloseLabel *Back = new CCloseLabel (this, x, y);
+		CCloseLabel *Back = QNew (com_levelPool, 0) CCloseLabel (this, x, y);
 		Back->Enabled = true;
 		Q_snprintfz (Back->LabelString, sizeof(Back->LabelString), "Back");
 		AddItem(Back);
@@ -448,7 +448,7 @@ void CTFOpenCreditsMenu(CPlayerEntity *ent)
 	if (ent->Client.resp.MenuState.InMenu)
 		return;
 
-	ent->Client.resp.MenuState.CurrentMenu = new CCTFCreditsMenu(ent);
+	ent->Client.resp.MenuState.CurrentMenu = QNew (com_levelPool, 0) CCTFCreditsMenu(ent);
 	ent->Client.resp.MenuState.OpenMenu ();
 
 	ent->Client.resp.MenuState.CurrentMenu->Draw (true);
@@ -577,7 +577,7 @@ public:
 
 		int x = 0, y = 0;
 
-		CMenu_Image *Background = new CMenu_Image (this, x, y);
+		CMenu_Image *Background = QNew (com_levelPool, 0) CMenu_Image (this, x, y);
 		Q_snprintfz (Background->ImageString, sizeof(Background->ImageString), "inventory");
 		Background->Width = 256;
 		Background->Height = 192;
@@ -585,7 +585,7 @@ public:
 		AddItem (Background);
 
 		y = -76; // Top
-		CMenu_Label *TopName = new CMenu_Label(this, x, y);
+		CMenu_Label *TopName = QNew (com_levelPool, 0) CMenu_Label(this, x, y);
 		TopName->Enabled = false;
 		TopName->Align = LA_CENTER;
 		TopName->Flags = LF_GREEN;
@@ -593,7 +593,7 @@ public:
 		AddItem(TopName);
 
 		y += (8 * 2);
-		CMenu_Label *LevelName = new CMenu_Label(this, x, y);
+		CMenu_Label *LevelName = QNew (com_levelPool, 0) CMenu_Label(this, x, y);
 		LevelName->Enabled = false;
 		LevelName->Align = LA_CENTER;
 		LevelName->Flags = LF_GREEN;
@@ -608,7 +608,7 @@ public:
 			break;
 
 		case MATCH_SETUP :
-			MatchProgress = new CMenu_Label(this, x, y);
+			MatchProgress = QNew (com_levelPool, 0) CMenu_Label(this, x, y);
 			MatchProgress->Enabled = false;
 			MatchProgress->Align = LA_CENTER;
 			MatchProgress->Flags = LF_GREEN;
@@ -617,7 +617,7 @@ public:
 			break;
 
 		case MATCH_PREGAME :
-			MatchProgress = new CMenu_Label(this, x, y);
+			MatchProgress = QNew (com_levelPool, 0) CMenu_Label(this, x, y);
 			MatchProgress->Enabled = false;
 			MatchProgress->Align = LA_CENTER;
 			MatchProgress->Flags = LF_GREEN;
@@ -626,7 +626,7 @@ public:
 			break;
 
 		case MATCH_GAME :
-			MatchProgress = new CMenu_Label(this, x, y);
+			MatchProgress = QNew (com_levelPool, 0) CMenu_Label(this, x, y);
 			MatchProgress->Enabled = false;
 			MatchProgress->Align = LA_CENTER;
 			MatchProgress->Flags = LF_GREEN;
@@ -640,7 +640,7 @@ public:
 
 		if (ctfgame.match >= MATCH_PREGAME && matchlock->Integer())
 		{
-			CMenu_Label *LockedMsg = new CMenu_Label(this, x, y);
+			CMenu_Label *LockedMsg = QNew (com_levelPool, 0) CMenu_Label(this, x, y);
 			LockedMsg->Enabled = false;
 			LockedMsg->Align = LA_LEFT;
 			Q_snprintfz (LockedMsg->LabelString, sizeof(LockedMsg->LabelString), "MATCH IS LOCKED\n(entry is not permitted)");
@@ -651,7 +651,7 @@ public:
 			if (Q_stricmp(ctf_forcejoin->String(), "red") == 0)
 			{
 				// Only add red
-				CJoinGameLabel *JoinRed = new CJoinGameLabel(this, x, y, CTF_TEAM1);
+				CJoinGameLabel *JoinRed = QNew (com_levelPool, 0) CJoinGameLabel(this, x, y, CTF_TEAM1);
 				JoinRed->Enabled = true;
 				JoinRed->Align = LA_LEFT;
 				Q_snprintfz (JoinRed->LabelString, sizeof(JoinRed->LabelString), "Join %s Team    (%d players)", (ctfgame.match >= MATCH_PREGAME) ? "Red MATCH" : "Red", num1);
@@ -660,7 +660,7 @@ public:
 			else if (Q_stricmp(ctf_forcejoin->String(), "blue") == 0)
 			{
 				// Only add blue
-				CJoinGameLabel *JoinBlue = new CJoinGameLabel(this, x, y + 8, CTF_TEAM2);
+				CJoinGameLabel *JoinBlue = QNew (com_levelPool, 0) CJoinGameLabel(this, x, y + 8, CTF_TEAM2);
 				JoinBlue->Enabled = true;
 				JoinBlue->Align = LA_LEFT;
 				Q_snprintfz (JoinBlue->LabelString, sizeof(JoinBlue->LabelString), "Join %s Team    (%d players)", (ctfgame.match >= MATCH_PREGAME) ? "Blue MATCH" : "Blue", num2);
@@ -668,13 +668,13 @@ public:
 			}
 			else
 			{
-				CJoinGameLabel *JoinRed = new CJoinGameLabel(this, x, y, CTF_TEAM1);
+				CJoinGameLabel *JoinRed = QNew (com_levelPool, 0) CJoinGameLabel(this, x, y, CTF_TEAM1);
 				JoinRed->Enabled = true;
 				JoinRed->Align = LA_LEFT;
 				Q_snprintfz (JoinRed->LabelString, sizeof(JoinRed->LabelString), "Join %s Team     (%d players)", (ctfgame.match >= MATCH_PREGAME) ? "Red MATCH" : "Red", num1);
 				AddItem(JoinRed);
 
-				CJoinGameLabel *JoinBlue = new CJoinGameLabel(this, x, y + 8, CTF_TEAM2);
+				CJoinGameLabel *JoinBlue = QNew (com_levelPool, 0) CJoinGameLabel(this, x, y + 8, CTF_TEAM2);
 				JoinBlue->Enabled = true;
 				JoinBlue->Align = LA_LEFT;
 				Q_snprintfz (JoinBlue->LabelString, sizeof(JoinBlue->LabelString), "Join %s Team   (%d players)", (ctfgame.match >= MATCH_PREGAME) ? "Blue MATCH" : "Blue", num2);
@@ -683,13 +683,13 @@ public:
 		}
 		else
 		{
-			CJoinGameLabel *JoinRed = new CJoinGameLabel(this, x, y, CTF_TEAM1);
+			CJoinGameLabel *JoinRed = QNew (com_levelPool, 0) CJoinGameLabel(this, x, y, CTF_TEAM1);
 			JoinRed->Enabled = true;
 			JoinRed->Align = LA_LEFT;
 			Q_snprintfz (JoinRed->LabelString, sizeof(JoinRed->LabelString), "Join %s Team    (%d players)", (ctfgame.match >= MATCH_PREGAME) ? "Red MATCH" : "Red", num1);
 			AddItem(JoinRed);
 
-			CJoinGameLabel *JoinBlue = new CJoinGameLabel(this, x, y + 8, CTF_TEAM2);
+			CJoinGameLabel *JoinBlue = QNew (com_levelPool, 0) CJoinGameLabel(this, x, y + 8, CTF_TEAM2);
 			JoinBlue->Enabled = true;
 			JoinBlue->Align = LA_LEFT;
 			Q_snprintfz (JoinBlue->LabelString, sizeof(JoinBlue->LabelString), "Join %s Team   (%d players)", (ctfgame.match >= MATCH_PREGAME) ? "Blue MATCH" : "Blue", num2);
@@ -697,7 +697,7 @@ public:
 		}
 
 		y += 24;
-		CObserverLabel *ChaseCam = new CObserverLabel(this, x, y);
+		CObserverLabel *ChaseCam = QNew (com_levelPool, 0) CObserverLabel(this, x, y);
 		ChaseCam->Enabled = true;
 		ChaseCam->Align = LA_LEFT;
 		if (ent->Client.chase_target)
@@ -707,7 +707,7 @@ public:
 		AddItem(ChaseCam);
 
 		y += 8;
-		CCreditsLabel *Credits = new CCreditsLabel(this, x, y);
+		CCreditsLabel *Credits = QNew (com_levelPool, 0) CCreditsLabel(this, x, y);
 		Credits->Enabled = true;
 		Credits->Align = LA_LEFT;
 		Q_snprintfz (Credits->LabelString, sizeof(Credits->LabelString), "Credits");
@@ -734,7 +734,7 @@ void CTFOpenJoinMenu(CPlayerEntity *ent)
 	if (ent->Client.resp.MenuState.InMenu)
 		return;
 
-	ent->Client.resp.MenuState.CurrentMenu = new CCTFMainMenu(ent);
+	ent->Client.resp.MenuState.CurrentMenu = QNew (com_levelPool, 0) CCTFMainMenu(ent);
 	ent->Client.resp.MenuState.OpenMenu ();
 
 	ent->Client.resp.MenuState.CurrentMenu->Draw (true);

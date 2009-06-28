@@ -219,10 +219,10 @@ void	CTech::Use (CPlayerEntity *ent)
 
 void AddTechsToList ()
 {
-	Regeneration = new CTech ("item_tech4", "models/ctf/regeneration/tris.md2", EF_ROTATE, "items/pkup.wav", "tech4", "AutoDoc", ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_TECH, NULL);
-	Haste = new CTech ("item_tech3", "models/ctf/haste/tris.md2", EF_ROTATE, "items/pkup.wav", "tech3", "Time Accel", ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_TECH, NULL);
-	Strength = new CTech ("item_tech2", "models/ctf/strength/tris.md2", EF_ROTATE, "items/pkup.wav", "tech2", "Power Amplifier", ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_TECH, NULL);
-	Resistance = new CTech ("item_tech1", "models/ctf/resistance/tris.md2", EF_ROTATE, "items/pkup.wav", "tech1", "Disruptor Shield", ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_TECH, NULL);
+	Regeneration = QNew (com_gamePool, 0) CTech ("item_tech4", "models/ctf/regeneration/tris.md2", EF_ROTATE, "items/pkup.wav", "tech4", "AutoDoc", ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_TECH, NULL);
+	Haste = QNew (com_gamePool, 0) CTech ("item_tech3", "models/ctf/haste/tris.md2", EF_ROTATE, "items/pkup.wav", "tech3", "Time Accel", ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_TECH, NULL);
+	Strength = QNew (com_gamePool, 0) CTech ("item_tech2", "models/ctf/strength/tris.md2", EF_ROTATE, "items/pkup.wav", "tech2", "Power Amplifier", ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_TECH, NULL);
+	Resistance = QNew (com_gamePool, 0) CTech ("item_tech1", "models/ctf/resistance/tris.md2", EF_ROTATE, "items/pkup.wav", "tech1", "Disruptor Shield", ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_TECH, NULL);
 
 	ItemList->AddItemToList (Regeneration);
 	ItemList->AddItemToList (Haste);
@@ -344,8 +344,8 @@ bool CFlag::Pickup(edict_t *ent, CPlayerEntity *other)
 
 void AddFlagsToList ()
 {
-	RedFlag = new CFlag ("item_flag_team1", "players/male/flag1.md2", EF_FLAG1, "ctf/flagtk.wav", "i_ctf1", "Red Flag", ITEMFLAG_GRABBABLE, NULL, CTF_TEAM1);
-	BlueFlag = new CFlag ("item_flag_team2", "players/male/flag2.md2", EF_FLAG2, "ctf/flagtk.wav", "i_ctf2", "Blue Flag", ITEMFLAG_GRABBABLE, NULL, CTF_TEAM2);
+	RedFlag = QNew (com_gamePool, 0) CFlag ("item_flag_team1", "players/male/flag1.md2", EF_FLAG1, "ctf/flagtk.wav", "i_ctf1", "Red Flag", ITEMFLAG_GRABBABLE, NULL, CTF_TEAM1);
+	BlueFlag = QNew (com_gamePool, 0) CFlag ("item_flag_team2", "players/male/flag2.md2", EF_FLAG2, "ctf/flagtk.wav", "i_ctf2", "Blue Flag", ITEMFLAG_GRABBABLE, NULL, CTF_TEAM2);
 
 	ItemList->AddItemToList (RedFlag);
 	ItemList->AddItemToList (BlueFlag);

@@ -67,7 +67,7 @@ CMenu::~CMenu ()
 	for (uint32 i = 0; i < Items.size(); i++)
 	{
 		CMenuItem *Item = Items[i];
-		delete Item;
+		QDelete Item;
 	}
 };
 
@@ -106,7 +106,7 @@ void CMenuState::OpenMenu ()
 	if (!CurrentMenu->Open ())
 	{
 		// No dice
-		delete CurrentMenu;
+		QDelete CurrentMenu;
 		return;
 	}
 
@@ -126,7 +126,7 @@ void CMenuState::CloseMenu ()
 	}
 
 	CurrentMenu->Close (); // Shut all of it down
-	delete CurrentMenu; // Delete it
+	QDelete CurrentMenu; // Delete it
 
 	Cursor = -1;
 	InMenu = false;

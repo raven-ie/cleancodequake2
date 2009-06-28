@@ -40,7 +40,7 @@ void CServerCmd::Run ()
 
 CServerCmd::CServerCmd (char *name, void (*Func)())
 {
-	cmdName = (char*)gi.TagMalloc(strlen(name)+1, TAG_GAME);
+	cmdName = QNew (com_gamePool, 0) char[strlen(name)+1];//(char*)gi.TagMalloc(strlen(name)+1, TAG_GAME);
 	Q_snprintfz (cmdName, strlen(name)+1, "%s", name);
 	hashValue = Com_HashGeneric(name, MAX_CMD_HASH);
 	RunFunction = Func;
@@ -48,7 +48,7 @@ CServerCmd::CServerCmd (char *name, void (*Func)())
 
 CServerCmd::~CServerCmd ()
 {
-	gi.TagFree(cmdName);
+	QDelete cmdName;//gi.TagFree(cmdName);
 };
 
 CServerCmd *ServerCommandList[MAX_COMMANDS];
@@ -78,7 +78,7 @@ void SvCmd_AddCommand (char *commandName, void (*Func) ())
 	}
 
 	// We can add it!
-	ServerCommandList[numServerCommands] = new CServerCmd (commandName, Func);
+	ServerCommandList[numServerCommands] = QNew (com_gamePool, 0) CServerCmd (commandName, Func);
 	// Link it in the hash tree
 	ServerCommandList[numServerCommands]->hashNext = ServerCommandHashList[ServerCommandList[numServerCommands]->hashValue];
 	ServerCommandHashList[ServerCommandList[numServerCommands]->hashValue] = ServerCommandList[numServerCommands];
@@ -90,7 +90,7 @@ void SvCmd_RemoveCommands ()
 	// Remove all commands
 	for (int i = 0; i < numServerCommands; i++)
 	{
-		delete ServerCommandList[numServerCommands];
+		QDelete ServerCommandList[numServerCommands];
 		numServerCommands--;
 	}
 }

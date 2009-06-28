@@ -1810,7 +1810,7 @@ void SP_func_clock (edict_t *self)
 
 	func_clock_reset (self);
 
-	self->message = (char*)gi.TagMalloc (CLOCK_MESSAGE_SIZE, TAG_LEVEL);
+	self->message = QNew (com_levelPool, 0) char[CLOCK_MESSAGE_SIZE];//(char*)gi.TagMalloc (CLOCK_MESSAGE_SIZE, TAG_LEVEL);
 
 	self->think = func_clock_think;
 

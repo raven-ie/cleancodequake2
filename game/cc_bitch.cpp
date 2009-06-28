@@ -44,7 +44,7 @@ CMaiden::CMaiden ()
 
 void CMaiden::Allocate (edict_t *ent)
 {
-	ent->Monster = new CMaiden(Monster_Bitch);
+	ent->Monster = QNew (com_levelPool, 0) CMaiden(Monster_Bitch);
 }
 
 void CMaiden::Moan ()

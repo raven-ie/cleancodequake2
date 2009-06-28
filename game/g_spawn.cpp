@@ -324,7 +324,7 @@ char *ED_NewString (char *string)
 	
 	l = strlen(string) + 1;
 
-	newb = (char*)gi.TagMalloc (l, TAG_LEVEL);
+	newb = QNew (com_levelPool, 0) char[l];
 
 	new_p = newb;
 
@@ -524,7 +524,7 @@ void InitEntities ()
 	// Set up the world
 	edict_t *theWorld = &g_edicts[0];
 	if (!theWorld->Entity)
-		theWorld->Entity = new CWorldEntity(0);
+		theWorld->Entity = QNew (com_levelPool, 0) CWorldEntity(0);
 
 	// Set up the client entities
 	for (int i = 1; i <= game.maxclients; i++)
@@ -532,7 +532,7 @@ void InitEntities ()
 		edict_t *ent = &g_edicts[i];
 
 		if (!ent->Entity)
-			ent->Entity = new CPlayerEntity(i);
+			ent->Entity = QNew (com_gamePool, 0) CPlayerEntity(i);
 	}
 }
 
@@ -564,7 +564,11 @@ __try
 
 	CPlayerEntity::SaveClientData ();
 
-	gi.FreeTags (TAG_LEVEL);
+	Mem_FreePool (com_levelPool);
+
+#ifdef MONSTERS_USE_PATHFINDING
+	InitNodes ();
+#endif
 
 	memset (&level, 0, sizeof(level));
 	memset (g_edicts, 0, game.maxentities * sizeof(g_edicts[0]));
@@ -755,7 +759,7 @@ void SP_worldspawn (edict_t *ent)
 	//---------------
 	SetItemNames();
 
-	CCvar *gravity = new CCvar ("gravity", "800", 0);
+	CCvar *gravity = QNew (com_levelPool, 0) CCvar ("gravity", "800", 0);
 	if (!st.gravity)
 		gravity->Set("800");
 	else

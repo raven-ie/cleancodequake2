@@ -44,7 +44,7 @@ CFlyer::CFlyer ()
 
 void CFlyer::Allocate (edict_t *ent)
 {
-	ent->Monster = new CFlyer(Monster_Flyer);
+	ent->Monster = QNew (com_levelPool, 0) CFlyer(Monster_Flyer);
 }
 
 void CFlyer::Sight ()

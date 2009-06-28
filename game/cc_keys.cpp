@@ -87,15 +87,15 @@ bool CPowerCube::Pickup (edict_t *ent, CPlayerEntity *other)
 
 void AddKeysToList ()
 {
-	CKey *DataCD = new CKey("key_data_cd", "models/items/keys/data_cd/tris.md2", EF_ROTATE, "items/pkup.wav", "k_datacd", "Data CD", ITEMFLAG_GRABBABLE|ITEMFLAG_KEY|ITEMFLAG_STAY_COOP, "");
-	CPowerCube *PowerCube = new CPowerCube("key_power_cube", "models/items/keys/power/tris.md2", EF_ROTATE, "items/pkup.wav", "k_powercube", "Power Cube", ITEMFLAG_GRABBABLE|ITEMFLAG_KEY|ITEMFLAG_STAY_COOP, "");
-	CKey *PyramidKey = new CKey("key_pyramid", "models/items/keys/pyramid/tris.md2", EF_ROTATE, "items/pkup.wav", "k_pyramid", "Pyramid Key", ITEMFLAG_GRABBABLE|ITEMFLAG_KEY|ITEMFLAG_STAY_COOP, "");
-	CKey *DataSpinner = new CKey("key_data_spinner", "models/items/keys/spinner/tris.md2", EF_ROTATE, "items/pkup.wav", "k_dataspin", "Data Spinner", ITEMFLAG_GRABBABLE|ITEMFLAG_KEY|ITEMFLAG_STAY_COOP, "");
-	CKey *SecurityPass = new CKey("key_pass", "models/items/keys/pass/tris.md2", EF_ROTATE, "items/pkup.wav", "k_security", "Security Pass", ITEMFLAG_GRABBABLE|ITEMFLAG_KEY|ITEMFLAG_STAY_COOP, "");
-	CKey *BlueKey = new CKey("key_blue_key", "models/items/keys/key/tris.md2", EF_ROTATE, "items/pkup.wav", "k_bluekey", "Blue Key", ITEMFLAG_GRABBABLE|ITEMFLAG_KEY|ITEMFLAG_STAY_COOP, "");
-	CKey *RedKey = new CKey("key_red_key", "models/items/keys/red_key/tris.md2", EF_ROTATE, "items/pkup.wav", "k_redkey", "Red Key", ITEMFLAG_GRABBABLE|ITEMFLAG_KEY|ITEMFLAG_STAY_COOP, "");
-	CKey *CommandersHead = new CKey("key_commander_head", "models/monsters/commandr/head/tris.md2", EF_ROTATE, "items/pkup.wav", "k_comhead", "Commander's Head", ITEMFLAG_GRABBABLE|ITEMFLAG_KEY|ITEMFLAG_STAY_COOP, "");
-	CKey *AirstrikeTarget = new CKey("key_airstrike_target", "models/items/keys/target/tris.md2", EF_ROTATE, "items/pkup.wav", "i_airstrike", "Airstrike Marker", ITEMFLAG_GRABBABLE|ITEMFLAG_KEY|ITEMFLAG_STAY_COOP, "");
+	CKey *DataCD = QNew (com_gamePool, 0) CKey("key_data_cd", "models/items/keys/data_cd/tris.md2", EF_ROTATE, "items/pkup.wav", "k_datacd", "Data CD", ITEMFLAG_GRABBABLE|ITEMFLAG_KEY|ITEMFLAG_STAY_COOP, "");
+	CPowerCube *PowerCube = QNew (com_gamePool, 0) CPowerCube("key_power_cube", "models/items/keys/power/tris.md2", EF_ROTATE, "items/pkup.wav", "k_powercube", "Power Cube", ITEMFLAG_GRABBABLE|ITEMFLAG_KEY|ITEMFLAG_STAY_COOP, "");
+	CKey *PyramidKey = QNew (com_gamePool, 0) CKey("key_pyramid", "models/items/keys/pyramid/tris.md2", EF_ROTATE, "items/pkup.wav", "k_pyramid", "Pyramid Key", ITEMFLAG_GRABBABLE|ITEMFLAG_KEY|ITEMFLAG_STAY_COOP, "");
+	CKey *DataSpinner = QNew (com_gamePool, 0) CKey("key_data_spinner", "models/items/keys/spinner/tris.md2", EF_ROTATE, "items/pkup.wav", "k_dataspin", "Data Spinner", ITEMFLAG_GRABBABLE|ITEMFLAG_KEY|ITEMFLAG_STAY_COOP, "");
+	CKey *SecurityPass = QNew (com_gamePool, 0) CKey("key_pass", "models/items/keys/pass/tris.md2", EF_ROTATE, "items/pkup.wav", "k_security", "Security Pass", ITEMFLAG_GRABBABLE|ITEMFLAG_KEY|ITEMFLAG_STAY_COOP, "");
+	CKey *BlueKey = QNew (com_gamePool, 0) CKey("key_blue_key", "models/items/keys/key/tris.md2", EF_ROTATE, "items/pkup.wav", "k_bluekey", "Blue Key", ITEMFLAG_GRABBABLE|ITEMFLAG_KEY|ITEMFLAG_STAY_COOP, "");
+	CKey *RedKey = QNew (com_gamePool, 0) CKey("key_red_key", "models/items/keys/red_key/tris.md2", EF_ROTATE, "items/pkup.wav", "k_redkey", "Red Key", ITEMFLAG_GRABBABLE|ITEMFLAG_KEY|ITEMFLAG_STAY_COOP, "");
+	CKey *CommandersHead = QNew (com_gamePool, 0) CKey("key_commander_head", "models/monsters/commandr/head/tris.md2", EF_ROTATE, "items/pkup.wav", "k_comhead", "Commander's Head", ITEMFLAG_GRABBABLE|ITEMFLAG_KEY|ITEMFLAG_STAY_COOP, "");
+	CKey *AirstrikeTarget = QNew (com_gamePool, 0) CKey("key_airstrike_target", "models/items/keys/target/tris.md2", EF_ROTATE, "items/pkup.wav", "i_airstrike", "Airstrike Marker", ITEMFLAG_GRABBABLE|ITEMFLAG_KEY|ITEMFLAG_STAY_COOP, "");
 
 	ItemList->AddItemToList (DataCD);
 	ItemList->AddItemToList (PowerCube);

@@ -61,6 +61,7 @@ class CPlayerEntity;
 #include "cc_trace.h"
 #include "cc_cmds.h"
 #include "cc_monsters.h"
+#include "cc_memory.h"
 
 // Classes that require classes from the above includes
 #include "cc_servercommands.h"

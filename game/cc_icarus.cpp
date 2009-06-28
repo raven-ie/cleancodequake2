@@ -44,7 +44,7 @@ CIcarus::CIcarus ()
 
 void CIcarus::Allocate (edict_t *ent)
 {
-	ent->Monster = new CIcarus(Monster_Icarus);
+	ent->Monster = QNew (com_levelPool, 0) CIcarus(Monster_Icarus);
 }
 
 void CIcarus::Sight ()

@@ -44,7 +44,7 @@ CFloater::CFloater ()
 
 void CFloater::Allocate (edict_t *ent)
 {
-	ent->Monster = new CFloater(Monster_Floater);
+	ent->Monster = QNew (com_levelPool, 0) CFloater(Monster_Floater);
 }
 
 void CFloater::Sight ()

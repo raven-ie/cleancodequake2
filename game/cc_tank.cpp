@@ -51,12 +51,12 @@ CTankCommander::CTankCommander ()
 
 void CTank::Allocate (edict_t *ent)
 {
-	ent->Monster = new CTank(Monster_Tank);
+	ent->Monster = QNew (com_levelPool, 0) CTank(Monster_Tank);
 }
 
 void CTankCommander::Allocate (edict_t *ent)
 {
-	ent->Monster = new CTankCommander(Monster_Tank_Commander);
+	ent->Monster = QNew (com_levelPool, 0) CTankCommander(Monster_Tank_Commander);
 }
 
 //

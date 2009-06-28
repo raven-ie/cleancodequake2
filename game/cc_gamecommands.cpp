@@ -146,7 +146,7 @@ void Cmd_Players_f (CPlayerEntity *ent)
 	int		count;
 	char	small[MAX_INFO_KEY];
 	char	large[MAX_INFO_STRING];
-	int		*index = new int[game.maxclients];
+	int		*index = QNew (com_genericPool, 0) int[game.maxclients];
 
 	count = 0;
 	for (i = 0 ; i < game.maxclients ; i++)

@@ -44,7 +44,7 @@ CInfantry::CInfantry ()
 
 void CInfantry::Allocate (edict_t *ent)
 {
-	ent->Monster = new CInfantry(Monster_Infantry);
+	ent->Monster = QNew (com_levelPool, 0) CInfantry(Monster_Infantry);
 }
 
 CFrame InfantryFramesStand [] =

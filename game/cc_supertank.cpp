@@ -44,7 +44,7 @@ CSuperTank::CSuperTank ()
 
 void CSuperTank::Allocate (edict_t *ent)
 {
-	ent->Monster = new CSuperTank(Monster_SuperTank);
+	ent->Monster = QNew (com_levelPool, 0) CSuperTank(Monster_SuperTank);
 }
 
 void CSuperTank::PlayTreadSound ()

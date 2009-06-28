@@ -134,7 +134,7 @@ void CGrenade::Think ()
 
 void CGrenade::Spawn (CBaseEntity *Spawner, vec3_t start, vec3_t aimdir, int damage, int speed, float timer, float damage_radius, bool handNade, bool held)
 {
-	CGrenade	*Grenade = new CGrenade();
+	CGrenade	*Grenade = QNew (com_levelPool, 0) CGrenade();
 	vec3_t		dir;
 	vec3_t		forward, right, up;
 
@@ -265,7 +265,7 @@ void check_dodge (edict_t *self, vec3_t start, vec3_t dir, int speed);
 void CBlasterProjectile::Spawn (CBaseEntity *Spawner, vec3_t start, vec3_t dir,
 						int damage, int speed, int effect, bool isHyper)
 {
-	CBlasterProjectile		*Bolt = new CBlasterProjectile;
+	CBlasterProjectile		*Bolt = QNew (com_levelPool, 0) CBlasterProjectile;
 
 	VectorNormalizef (dir, dir);
 
@@ -362,7 +362,7 @@ void CRocket::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 void CRocket::Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t dir,
 						int damage, int speed, float damage_radius, int radius_damage)
 {
-	CRocket	*Rocket = new CRocket;
+	CRocket	*Rocket = QNew (com_levelPool, 0) CRocket;
 
 	Rocket->State.SetOrigin (start);
 

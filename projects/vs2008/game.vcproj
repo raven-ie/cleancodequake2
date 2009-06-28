@@ -1363,6 +1363,18 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="Memory"
+				>
+				<File
+					RelativePath="..\..\game\cc_memory.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\game\cc_memory.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 	</Files>
 	<Globals>

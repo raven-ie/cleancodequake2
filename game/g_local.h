@@ -80,8 +80,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // memory tags to allow dynamic memory to be cleaned up
 #define TAG_GAME	765		// clear when unloading the dll
 #define TAG_LEVEL	766		// clear when loading a new level
-#define TAG_CLEAN_GAME	767		// "Clean" memory
-#define TAG_CLEAN_LEVEL	768		// "Clean" memory
+#define TAG_CLEAN_GAME	TAG_GAME		// "Clean" memory
+#define TAG_CLEAN_LEVEL	TAG_LEVEL		// "Clean" memory
 
 #define MELEE_DISTANCE	80
 
@@ -440,8 +440,6 @@ void	G_FreeEdict (edict_t *e);
 
 void	G_TouchTriggers (edict_t *ent);
 void	G_TouchSolids (edict_t *ent);
-
-char	*G_CopyString (char *in);
 
 //
 // g_combat.c
