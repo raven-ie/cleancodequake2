@@ -44,7 +44,7 @@ CBarracudaShark::CBarracudaShark ()
 
 void CBarracudaShark::Allocate (edict_t *ent)
 {
-	ent->Monster = new CBarracudaShark(Monster_Shark);
+	ent->Monster = QNew (com_levelPool, 0) CBarracudaShark(Monster_Shark);
 }
 
 CFrame FlipperFramesStand [] =

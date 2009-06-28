@@ -149,7 +149,7 @@ void CBanList::LoadFromFile ()
 	size_t length = ftell(fp);
 	fseek (fp, 0, SEEK_SET);
 
-	char *temp = new char[length+1];
+	char *temp = QNew (com_genericPool, 0) char[length+1];
 	fread (temp, length, sizeof(char), fp);
 	temp[length] = 0;
 
@@ -184,9 +184,10 @@ void CBanList::LoadFromFile ()
 				token = line.substr (c, oc-c);
 				c = oc;
 
-				BanIndex *NewIndex = new BanIndex;
+				BanIndex *NewIndex = QNew (com_gamePool, 0) BanIndex;
 				NewIndex->IP = false;
-				NewIndex->Name = new char[token.length()];
+
+				NewIndex->Name = QNew (com_gamePool, 0) char[token.length()];
 				Q_strncpyz (NewIndex->Name, token.c_str(), token.length());
 				NewIndex->Name[token.length()] = 0;
 
@@ -206,9 +207,10 @@ void CBanList::LoadFromFile ()
 				token = line.substr (c, oc-c);
 				c = oc;
 
-				BanIndex *NewIndex = new BanIndex;
+				BanIndex *NewIndex = QNew (com_gamePool, 0) BanIndex;
 				NewIndex->IP = true;
-				NewIndex->IPAddress = new IPAddress(IPStringToArrays(token.c_str()));
+
+				NewIndex->IPAddress = QNew (com_gamePool, 0) IPAddress(IPStringToArrays(token.c_str()));
 
 				oc = line.find_first_of(" \n\0", ++c);
 				token = line.substr (c, oc-c);
@@ -241,7 +243,7 @@ void CBanList::LoadFromFile ()
 	}
 
 	// Free everything
-	delete[] temp;
+	QDelete temp;
 }
 
 void CBanList::SaveList ()
@@ -278,9 +280,10 @@ void CBanList::SaveList ()
 
 void CBanList::AddToList (IPAddress Adr, EBanTypeFlags Flags)
 {
-	BanIndex *NewIndex = new BanIndex;
+	BanIndex *NewIndex = QNew (com_gamePool, 0) BanIndex;
 	NewIndex->IP = true;
-	NewIndex->IPAddress = new IPAddress(Adr);
+
+	NewIndex->IPAddress = QNew (com_gamePool, 0) IPAddress(Adr);
 	NewIndex->Flags = Flags;
 
 	BanList.push_back (NewIndex);
@@ -288,9 +291,9 @@ void CBanList::AddToList (IPAddress Adr, EBanTypeFlags Flags)
 
 void CBanList::AddToList (char *Name, EBanTypeFlags Flags)
 {
-	BanIndex *NewIndex = new BanIndex;
+	BanIndex *NewIndex = QNew (com_gamePool, 0) BanIndex;
 	NewIndex->IP = false;
-	NewIndex->Name = new char[strlen(Name)];
+	NewIndex->Name = QNew (com_gamePool, 0) char[strlen(Name)];
 	Q_strncpyz (NewIndex->Name, Name, sizeof(NewIndex->Name));
 	NewIndex->Name[strlen(Name)] = 0;
 	NewIndex->Flags = Flags;

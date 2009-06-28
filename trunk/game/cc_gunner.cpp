@@ -44,7 +44,7 @@ CGunner::CGunner ()
 
 void CGunner::Allocate (edict_t *ent)
 {
-	ent->Monster = new CGunner(Monster_Gunner);
+	ent->Monster = QNew (com_levelPool, 0) CGunner(Monster_Gunner);
 }
 
 void CGunner::Idle ()

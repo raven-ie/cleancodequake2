@@ -44,26 +44,6 @@ _CC_DISABLE_DEPRECATION
 )
 }
 
-void *::operator new (size_t size)
-{
-	return gi.TagMalloc (size, TAG_CLEAN_LEVEL);
-}
-
-void *::operator new[] (size_t size)
-{
-	return gi.TagMalloc (size, TAG_CLEAN_LEVEL);
-}
-
-void ::operator delete (void *ptr)
-{
-	gi.TagFree (ptr);
-}
-
-void ::operator delete[] (void *ptr)
-{
-	gi.TagFree (ptr);
-}
-
 /*
 ================
 Sys_Milliseconds

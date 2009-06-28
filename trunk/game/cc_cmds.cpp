@@ -48,7 +48,7 @@ void CCmd::Run (CPlayerEntity *ent)
 
 CCmd::CCmd (char *name, void (*Func)(CPlayerEntity *ent), ECmdTypeFlags Flags)
 {
-	cmdName = (char*)gi.TagMalloc(strlen(name)+1, TAG_GAME);
+	cmdName = QNew (com_gamePool, 0) char[strlen(name)+1];//(char*)gi.TagMalloc(strlen(name)+1, TAG_GAME);
 	Q_snprintfz (cmdName, strlen(name)+1, "%s", name);
 	hashValue = Com_HashGeneric(name, MAX_CMD_HASH);
 	CmdFlags = Flags;
@@ -57,7 +57,7 @@ CCmd::CCmd (char *name, void (*Func)(CPlayerEntity *ent), ECmdTypeFlags Flags)
 
 CCmd::~CCmd ()
 {
-	gi.TagFree(cmdName);
+	QDelete cmdName;//gi.TagFree(cmdName);
 };
 
 CCmd *CommandList[MAX_COMMANDS];
@@ -87,7 +87,8 @@ void Cmd_AddCommand (char *commandName, void (*Func) (CPlayerEntity *ent), ECmdT
 	}
 
 	// We can add it!
-	CommandList[numCommands] = new CCmd (commandName, Func, Flags);
+	CommandList[numCommands] = QNew (com_gamePool, 0) CCmd (commandName, Func, Flags);
+
 	// Link it in the hash tree
 	CommandList[numCommands]->hashNext = CommandHashList[CommandList[numCommands]->hashValue];
 	CommandHashList[CommandList[numCommands]->hashValue] = CommandList[numCommands];
@@ -99,7 +100,7 @@ void Cmd_RemoveCommands ()
 	// Remove all commands
 	for (int i = 0; i < numCommands; i++)
 	{
-		delete CommandList[numCommands];
+		QDelete CommandList[numCommands];
 		numCommands--;
 	}
 }

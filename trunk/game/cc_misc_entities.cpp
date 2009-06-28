@@ -208,5 +208,5 @@ void SP_misc_explobox (edict_t *self)
 		return;
 	}
 
-	self->Entity = new CMiscExploBox(self->state.number);
+	self->Entity = QNew (com_levelPool, 0) CMiscExploBox(self->state.number);
 }

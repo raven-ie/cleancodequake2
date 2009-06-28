@@ -44,7 +44,7 @@ CGladiator::CGladiator ()
 
 void CGladiator::Allocate (edict_t *ent)
 {
-	ent->Monster = new CGladiator(Monster_Gladiator);
+	ent->Monster = QNew (com_levelPool, 0) CGladiator(Monster_Gladiator);
 }
 
 void CGladiator::Idle ()

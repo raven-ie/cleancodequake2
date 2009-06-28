@@ -42,7 +42,7 @@ CSoldierLight::CSoldierLight ()
 
 void CSoldierLight::Allocate (edict_t *ent)
 {
-	ent->Monster = new CSoldierLight(Monster_Soldier_Light);
+	ent->Monster = QNew (com_levelPool, 0) CSoldierLight(Monster_Soldier_Light);
 }
 
 extern CAnim SoldierMoveAttack1;

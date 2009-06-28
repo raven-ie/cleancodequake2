@@ -253,7 +253,7 @@ CCvar *DebugNodes;
 void InitNodes ()
 {
 	Cmd_AddCommand ("node",				Cmd_Node_f);
-	DebugNodes = new CCvar("node_debug", "0", CVAR_LATCH_SERVER);
+	DebugNodes = QNew (com_gamePool, 0) CCvar("node_debug", "0", CVAR_LATCH_SERVER);
 
 	NodeList.clear();
 	memset (SavedPaths, 0, sizeof(SavedPaths));
@@ -284,7 +284,7 @@ void PrintVerboseNodes (vec3_t origin, uint32 numNode)
 
 CPathNode *DropNode (edict_t *ent)
 {
-	NodeList.push_back(new CPathNode(ent->state.origin, NODE_REGULAR));
+	NodeList.push_back(QNew (com_levelPool, 0) CPathNode(ent->state.origin, NODE_REGULAR));
 
 	SpawnNodeEntity (NodeList.at(NodeList.size() - 1));
 	ClientPrintf (ent, PRINT_HIGH, "Node %i added\n", NodeList.size());
@@ -352,7 +352,7 @@ void CheckNodeFlags (CPathNode *Node)
 void ConnectNode (CPathNode *Node1, CPathNode *Node2);
 void AddNode (CPlayerEntity *ent, vec3_t origin)
 {
-	NodeList.push_back(new CPathNode(origin, NODE_REGULAR));
+	NodeList.push_back(QNew (com_levelPool, 0) CPathNode(origin, NODE_REGULAR));
 
 	SpawnNodeEntity (NodeList.at(NodeList.size() - 1));
 	ClientPrintf (ent->gameEntity, PRINT_HIGH, "Node %i added\n", NodeList.size());
@@ -513,7 +513,7 @@ void LoadNodes ()
 	}
 
 	int **tempChildren;
-	tempChildren = new int*[lastId];
+	tempChildren = QNew (com_genericPool, 0) int*[lastId];
 
 	// Read each node
 	for (uint32 i = 0; i < lastId; i++)
@@ -528,7 +528,7 @@ void LoadNodes ()
 		fread (Origin, sizeof(NodeList[i]->Origin), 1, fp);
 		fread (&Type, sizeof(NodeList[i]->Type), 1, fp);
 
-		NodeList.push_back(new CPathNode(Origin, Type));
+		NodeList.push_back(QNew (com_levelPool, 0) CPathNode(Origin, Type));
 
 		SpawnNodeEntity (NodeList[i]);
 
@@ -545,7 +545,7 @@ void LoadNodes ()
 		uint32 num;
 		fread (&num, sizeof(uint32), 1, fp);
 
-		tempChildren[i] = new int[num+1];
+		tempChildren[i] = QNew (com_genericPool, 0) int[num+1];
 		tempChildren[i][0] = num;
 		/*for (size_t s = 0; s < num; s++)
 		{
@@ -563,10 +563,10 @@ void LoadNodes ()
 	{
 		for (int z = 0; z < tempChildren[i][0]; z++)
 			NodeList[i]->Children.push_back (NodeList[tempChildren[i][z+1]]);
-		delete tempChildren[i];
+		QDelete tempChildren[i];
 	}
 
-	delete tempChildren;
+	QDelete tempChildren;
 	DebugPrintf ("Loaded %u (%u special) nodes\n", numNodes, numSpecialNodes);
 }
 
@@ -736,7 +736,7 @@ void Cmd_Node_f (CPlayerEntity *ent)
 
 		// Delete node
 		G_FreeEdict(Node->Ent);
-		delete Node;
+		QDelete Node;
 		NodeList.erase(NodeList.begin() + node);
 	}
 	else if (Q_stricmp (cmd, "move") == 0)
@@ -763,11 +763,11 @@ void Cmd_Node_f (CPlayerEntity *ent)
 
 CPath *CreatePath (CPathNode *Start, CPathNode *End)
 {
-	CPath *New = new CPath(Start, End);
+	CPath *New = QNew (com_levelPool, 0) CPath(Start, End);
 
 	if (New->Incomplete)
 	{
-		delete New;
+		QDelete New;
 		return NULL;
 	}
 	else
@@ -855,7 +855,7 @@ void LoadPathTable ()
 		fread (&indexI, sizeof(int), 1, fp);
 		fread (&indexZ, sizeof(int), 1, fp);
 
-		SavedPaths[indexI].ToEnd[indexZ] = new CPath();
+		SavedPaths[indexI].ToEnd[indexZ] = QNew (com_levelPool, 0) CPath();
 		SavedPaths[indexI].ToEnd[indexZ]->Load (fp);
 	}
 

@@ -244,8 +244,17 @@ typedef struct gameImport_s
 	void	(*WriteAngle) (float f);
 
 	// managed memory allocation
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (operator new or Mem_Alloc)
+#endif
 	void	*(*TagMalloc) (int size, int tag);
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (operator delete or Mem_Free)
+#endif
 	void	(*TagFree) (void *block);
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (Mem_FreePool)
+#endif
 	void	(*FreeTags) (int tag);
 
 	// console variable interaction

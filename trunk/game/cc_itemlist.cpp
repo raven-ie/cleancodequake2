@@ -142,7 +142,7 @@ inline int GetNumItems ()
 
 void InitItemlist ()
 {
-	ItemList = new CItemList;
+	ItemList = QNew (com_gamePool, 0) CItemList;
 
 	AddAmmoToList();
 	AddHealthToList();

@@ -42,7 +42,7 @@ CSoldierMachinegun::CSoldierMachinegun ()
 
 void CSoldierMachinegun::Allocate (edict_t *ent)
 {
-	ent->Monster = new CSoldierMachinegun(Monster_Soldier_Machinegun);
+	ent->Monster = QNew (com_levelPool, 0) CSoldierMachinegun(Monster_Soldier_Machinegun);
 }
 
 extern CAnim SoldierMoveAttack4;

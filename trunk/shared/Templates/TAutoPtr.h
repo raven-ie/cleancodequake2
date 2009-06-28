@@ -78,7 +78,7 @@ public:
 	 */
 	~autoPtr()
 	{
-		delete Pointer;
+		QDelete Pointer;
 	}
 
 	/**
@@ -103,7 +103,7 @@ public:
 	{
 		if (Other.Pointer != Pointer)
 		{
-			delete Pointer;
+			QDelete Pointer;
 			Pointer = Other.Pointer;
 		}
 		return *this;
@@ -133,7 +133,7 @@ public:
 	{
 		if (Pointer != NewPointer)
 		{
-			delete Pointer;
+			QDelete Pointer;
 			Pointer = NewPointer;
 		}
 	}

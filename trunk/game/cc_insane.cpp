@@ -44,7 +44,7 @@ CInsane::CInsane ()
 
 void CInsane::Allocate (edict_t *ent)
 {
-	ent->Monster = new CInsane(Monster_Insane);
+	ent->Monster = QNew (com_levelPool, 0) CInsane(Monster_Insane);
 }
 
 void CInsane::Fist ()

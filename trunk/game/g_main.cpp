@@ -103,10 +103,10 @@ void ShutdownGame (void)
 	Cmd_RemoveCommands ();
 	SvCmd_RemoveCommands ();
 
-	gi.FreeTags (TAG_LEVEL);
-	gi.FreeTags (TAG_GAME);
-	//gi.FreeTags (TAG_CLEAN_GAME);
-	//gi.FreeTags (TAG_CLEAN_LEVEL);
+	size_t freedGame = Mem_FreePool (com_gamePool);
+	size_t freedLevel = Mem_FreePool (com_levelPool);
+
+	DebugPrintf ("Freed %u bytes of game memory and %u bytes of level memory.\n", freedGame, freedLevel);
 }
 
 
@@ -263,8 +263,9 @@ void EndDMLevel (void)
 	}
 
 	// see if it's in the map list
-	if (*sv_maplist->String()) {
-		s = G_CopyString(sv_maplist->String());
+	if (*sv_maplist->String())
+	{
+		s = Mem_StrDup(sv_maplist->String());
 		f = NULL;
 #ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
 		t = strtok(s, seps);
@@ -286,7 +287,7 @@ void EndDMLevel (void)
 						BeginIntermission (CreateTargetChangeLevel (f) );
 				} else
 					BeginIntermission (CreateTargetChangeLevel (t) );
-				gi.TagFree(s);
+				QDelete s;
 				return;
 			}
 			if (!f)
@@ -449,7 +450,8 @@ __try
 		EndMapCounter();
 
 	// choose a client for monsters to target this frame
-	if (!(game.mode & GAME_DEATHMATCH)) // Paril, lol
+	// Only do it when we have spawned everything
+	if (!(game.mode & GAME_DEATHMATCH) && level.framenum > 20) // Paril, lol
 		AI_SetSightClient ();
 
 	// exit intermissions
@@ -498,7 +500,7 @@ __try
 			// This has to be processed after thinking and running, because
 			// the entity still has to be intact after that
 			if (ent->Entity->Freed)
-				delete ent->Entity;
+				QDelete ent->Entity;
 			continue;
 		}
 

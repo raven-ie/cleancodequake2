@@ -109,7 +109,7 @@ field_t		levelfields[] =
 {
 	{"changemap", LLOFS(changemap), F_LSTRING},
                    
-	{"sight_client", LLOFS(sight_client), F_EDICT},
+//	{"sight_client", LLOFS(sight_client), F_EDICT},
 //	{"sight_entity", LLOFS(sight_entity), F_EDICT},
 //	{"sound_entity", LLOFS(sound_entity), F_EDICT},
 //	{"sound2_entity", LLOFS(sound2_entity), F_EDICT},
@@ -189,77 +189,74 @@ is loaded.
 // Registers all cvars and commands
 void G_Register ()
 {
-	gun_x = new CCvar ("gun_x", "0", 0);
-	gun_y = new CCvar ("gun_y", "0", 0);
-	gun_z = new CCvar ("gun_z", "0", 0);
+	gun_x = QNew (com_gamePool, 0) CCvar ("gun_x", "0", 0);
+	gun_y = QNew (com_gamePool, 0) CCvar ("gun_y", "0", 0);
+	gun_z = QNew (com_gamePool, 0) CCvar ("gun_z", "0", 0);
 
 	//FIXME: sv_ prefix is wrong for these
-	sv_rollspeed = new CCvar ("sv_rollspeed", "200", 0);
-	sv_rollangle = new CCvar ("sv_rollangle", "2", 0);
-	sv_gravity = new CCvar ("sv_gravity", "800", 0);
+	sv_rollspeed = QNew (com_gamePool, 0) CCvar ("sv_rollspeed", "200", 0);
+	sv_rollangle = QNew (com_gamePool, 0) CCvar ("sv_rollangle", "2", 0);
+	sv_gravity = QNew (com_gamePool, 0) CCvar ("sv_gravity", "800", 0);
 
 	// noset vars
-	dedicated = new CCvar ("dedicated", "0", CVAR_READONLY);
+	dedicated = QNew (com_gamePool, 0) CCvar ("dedicated", "0", CVAR_READONLY);
 
-	developer = new CCvar ("developer", "0", 0);
+	developer = QNew (com_gamePool, 0) CCvar ("developer", "0", 0);
 
 	// latched vars
-	sv_cheats = new CCvar ("cheats", "0", CVAR_SERVERINFO|CVAR_LATCH_SERVER);
+	sv_cheats = QNew (com_gamePool, 0) CCvar ("cheats", "0", CVAR_SERVERINFO|CVAR_LATCH_SERVER);
 	CCvar ("gamename", GAMEVERSION , CVAR_SERVERINFO|CVAR_LATCH_SERVER);
 	CCvar ("gamedate", __DATE__ , CVAR_SERVERINFO|CVAR_LATCH_SERVER);
 
-	maxclients = new CCvar ("maxclients", "4", CVAR_SERVERINFO | CVAR_LATCH_SERVER);
-	maxspectators = new CCvar ("maxspectators", "4", CVAR_SERVERINFO);
-	skill = new CCvar ("skill", "1", CVAR_LATCH_SERVER);
-	maxentities = new CCvar ("maxentities", 1024, CVAR_LATCH_SERVER);
+	maxclients = QNew (com_gamePool, 0) CCvar ("maxclients", "4", CVAR_SERVERINFO | CVAR_LATCH_SERVER);
+	maxspectators = QNew (com_gamePool, 0) CCvar ("maxspectators", "4", CVAR_SERVERINFO);
+	skill = QNew (com_gamePool, 0) CCvar ("skill", "1", CVAR_LATCH_SERVER);
+	maxentities = QNew (com_gamePool, 0) CCvar ("maxentities", 1024, CVAR_LATCH_SERVER);
 
 	// change anytime vars
-	dmflags = new CCvar ("dmflags", "0", CVAR_SERVERINFO);
-	fraglimit = new CCvar ("fraglimit", "0", CVAR_SERVERINFO);
-	timelimit = new CCvar ("timelimit", "0", CVAR_SERVERINFO);
-	password = new CCvar ("password", "", CVAR_USERINFO);
-	spectator_password = new CCvar ("spectator_password", "", CVAR_USERINFO);
-	needpass = new CCvar ("needpass", "0", CVAR_SERVERINFO);
-	filterban = new CCvar ("filterban", "1", 0);
+	dmflags = QNew (com_gamePool, 0) CCvar ("dmflags", "0", CVAR_SERVERINFO);
+	fraglimit = QNew (com_gamePool, 0) CCvar ("fraglimit", "0", CVAR_SERVERINFO);
+	timelimit = QNew (com_gamePool, 0) CCvar ("timelimit", "0", CVAR_SERVERINFO);
+	password = QNew (com_gamePool, 0) CCvar ("password", "", CVAR_USERINFO);
+	spectator_password = QNew (com_gamePool, 0) CCvar ("spectator_password", "", CVAR_USERINFO);
+	needpass = QNew (com_gamePool, 0) CCvar ("needpass", "0", CVAR_SERVERINFO);
+	filterban = QNew (com_gamePool, 0) CCvar ("filterban", "1", 0);
 
-	g_select_empty = new CCvar ("g_select_empty", "0", CVAR_ARCHIVE);
+	g_select_empty = QNew (com_gamePool, 0) CCvar ("g_select_empty", "0", CVAR_ARCHIVE);
 
-	run_pitch = new CCvar ("run_pitch", "0.002", 0);
-	run_roll = new CCvar ("run_roll", "0.005", 0);
-	bob_up  = new CCvar ("bob_up", "0.005", 0);
-	bob_pitch = new CCvar ("bob_pitch", "0.002", 0);
-	bob_roll = new CCvar ("bob_roll", "0.002", 0);
+	run_pitch = QNew (com_gamePool, 0) CCvar ("run_pitch", "0.002", 0);
+	run_roll = QNew (com_gamePool, 0) CCvar ("run_roll", "0.005", 0);
+	bob_up  = QNew (com_gamePool, 0) CCvar ("bob_up", "0.005", 0);
+	bob_pitch = QNew (com_gamePool, 0) CCvar ("bob_pitch", "0.002", 0);
+	bob_roll = QNew (com_gamePool, 0) CCvar ("bob_roll", "0.002", 0);
 
 	// flood control
-	flood_msgs = new CCvar ("flood_msgs", "4", 0);
-	flood_persecond = new CCvar ("flood_persecond", "4", 0);
-	flood_waitdelay = new CCvar ("flood_waitdelay", "10", 0);
+	flood_msgs = QNew (com_gamePool, 0) CCvar ("flood_msgs", "4", 0);
+	flood_persecond = QNew (com_gamePool, 0) CCvar ("flood_persecond", "4", 0);
+	flood_waitdelay = QNew (com_gamePool, 0) CCvar ("flood_waitdelay", "10", 0);
 
 	// dm map list
-	sv_maplist = new CCvar ("sv_maplist", "", 0);
+	sv_maplist = QNew (com_gamePool, 0) CCvar ("sv_maplist", "", 0);
 
 	SetupArg ();
 	Cmd_Register ();
 	SvCmd_Register ();
 
-#ifdef MONSTERS_USE_PATHFINDING
-	InitNodes ();
-#endif
-
 	// Gamemodes
-	deathmatch = new CCvar ("deathmatch", "0", CVAR_SERVERINFO|CVAR_LATCH_SERVER);
-	coop = new CCvar ("coop", "0", CVAR_LATCH_SERVER);
+	deathmatch = QNew (com_gamePool, 0) CCvar ("deathmatch", "0", CVAR_SERVERINFO|CVAR_LATCH_SERVER);
+	coop = QNew (com_gamePool, 0) CCvar ("coop", "0", CVAR_LATCH_SERVER);
 
 #ifdef CLEANCTF_ENABLED
 //ZOID
-	capturelimit = new CCvar ("capturelimit", "0", CVAR_SERVERINFO);
-	instantweap = new CCvar ("instantweap", "0", CVAR_SERVERINFO);
+	capturelimit = QNew (com_gamePool, 0) CCvar ("capturelimit", "0", CVAR_SERVERINFO);
+	instantweap = QNew (com_gamePool, 0) CCvar ("instantweap", "0", CVAR_SERVERINFO);
 //ZOID
 #endif
 }
 
 void InitGame (void)
 {
+	Mem_Init ();
 	DebugPrintf ("==== InitGame ====\n");
 
 	seedMT (time(NULL));
@@ -279,13 +276,13 @@ void InitGame (void)
 
 	// initialize all entities for this game
 	game.maxentities = maxentities->Integer();
-	g_edicts = (edict_t*)gi.TagMalloc (game.maxentities * sizeof(g_edicts[0]), TAG_GAME);
+	g_edicts = QNew (com_gamePool, 0) edict_t[game.maxentities];//(edict_t*)gi.TagMalloc (game.maxentities * sizeof(g_edicts[0]), TAG_GAME);
 	globals.edicts = g_edicts;
 	globals.maxEdicts = game.maxentities;
 
 	// initialize all clients for this game
 	game.maxclients = maxclients->Integer();
-	game.clients = (gclient_t*)gi.TagMalloc (game.maxclients * sizeof(game.clients[0]), TAG_GAME);
+	game.clients = QNew (com_gamePool, 0) gclient_t[game.maxclients];//(gclient_t*)gi.TagMalloc (game.maxclients * sizeof(game.clients[0]), TAG_GAME);
 	globals.numEdicts = game.maxclients+1;
 
 	// Vars
@@ -303,6 +300,7 @@ void InitGame (void)
 
 	// Setup the gamemode
 	SetupGamemode ();
+	Mem_Register ();
 }
 
 //=========================================================
@@ -428,7 +426,7 @@ void ReadField (FILE *f, field_t *field, byte *base)
 			*(char **)p = NULL;
 		else
 		{
-			*(char **)p = (char*)gi.TagMalloc (len, TAG_LEVEL);
+			*(char **)p = QNew (com_levelPool, 0) char[len];//(char*)gi.TagMalloc (len, TAG_LEVEL);
 			fread (*(char **)p, len, 1, f);
 		}
 		break;
@@ -652,8 +650,7 @@ void ReadGame (char *filename)
 	int		i;
 	char	str[16];
 
-	gi.FreeTags (TAG_GAME);
-	gi.FreeTags (TAG_CLEAN_GAME);
+	Mem_FreePool (com_gamePool);
 
 #ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
 	f = fopen (filename, "rb");
@@ -671,11 +668,11 @@ void ReadGame (char *filename)
 		gi.error ("Savegame from an older version.\n");
 	}
 
-	g_edicts = (edict_t*)gi.TagMalloc (game.maxentities * sizeof(g_edicts[0]), TAG_GAME);
+	g_edicts = QNew (com_gamePool, 0) edict_t[game.maxentities];//(edict_t*)gi.TagMalloc (game.maxentities * sizeof(g_edicts[0]), TAG_GAME);
 	globals.edicts = g_edicts;
 
 	fread (&game, sizeof(game), 1, f);
-	game.clients = (gclient_t*)gi.TagMalloc (game.maxclients * sizeof(game.clients[0]), TAG_GAME);
+	game.clients = QNew (com_gamePool, 0) gclient_t[game.maxclients];//(gclient_t*)gi.TagMalloc (game.maxclients * sizeof(game.clients[0]), TAG_GAME);
 	for (i=0 ; i<game.maxclients ; i++)
 		ReadClient (f, dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity));
 
@@ -715,6 +712,15 @@ void WriteEdict (FILE *f, edict_t *ent)
 		WriteField2 (f, field, (byte *)ent);
 	}
 
+	// Write the entity, if one
+	bool hasEntity = false;
+	if (ent->Entity)
+		hasEntity = true;
+
+	fwrite (&hasEntity, sizeof(bool), 1, f);
+
+	if (hasEntity)
+		fwrite (ent->Entity, sizeof(ent->Entity), 1, f);
 }
 
 /*
@@ -766,6 +772,13 @@ void ReadEdict (FILE *f, edict_t *ent)
 	{
 		ReadField (f, field, (byte *)ent);
 	}
+
+	bool hasEntity = false;
+
+	fread (&hasEntity, sizeof(bool), 1, f);
+
+	if (hasEntity)
+		fread (ent->Entity, sizeof(ent->Entity), 1, f);
 }
 
 /*
@@ -871,7 +884,7 @@ void ReadLevel (char *filename)
 
 	// free any dynamic memory allocated by loading the level
 	// base state
-	gi.FreeTags (TAG_LEVEL);
+	Mem_FreePool (com_levelPool);
 
 	// wipe all the entities
 	memset (g_edicts, 0, game.maxentities*sizeof(g_edicts[0]));
@@ -928,7 +941,7 @@ void ReadLevel (char *filename)
 	{
 		ent = &g_edicts[i+1];
 		ent->client = game.clients + i;
-		ent->Entity = new CPlayerEntity(i+1);
+		ent->Entity = QNew (com_levelPool, 0) CPlayerEntity(i+1);
 
 		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(ent->Entity);
 		Player->Client.pers.state = SVCS_FREE;

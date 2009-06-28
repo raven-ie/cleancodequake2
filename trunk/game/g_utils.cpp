@@ -273,17 +273,6 @@ void G_SetMovedir (vec3_t angles, vec3_t movedir)
 	Vec3Clear (angles);
 }
 
-
-char *G_CopyString (char *in)
-{
-	char	*out;
-	
-	out = (char*)gi.TagMalloc (strlen(in)+1, TAG_LEVEL);
-	Q_strncpyz (out, in, strlen(in)+1);
-	return out;
-}
-
-
 void G_InitEdict (edict_t *e)
 {
 	e->inUse = true;
