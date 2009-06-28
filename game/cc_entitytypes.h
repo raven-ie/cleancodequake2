@@ -90,8 +90,6 @@ public:
 	virtual void	Think () {};
 	virtual void	Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf) {};
 
-	virtual bool	Run () = 0;
-
 	class CTrace	PushEntity (vec3_t push);
 	inline void		AddGravity ();
 	void			Impact (CTrace *trace);

@@ -868,6 +868,7 @@ void SP_func_explosive (edict_t *self)
 }
 
 
+#if 0
 /*QUAKED misc_explobox (0 .5 .8) (-16 -16 0) (16 16 40)
 Large exploding box.  You can override its mass (100),
 health (80), and dmg (150).
@@ -1019,7 +1020,7 @@ void barrel_delay (edict_t *self, edict_t *inflictor, edict_t *attacker, int dam
 	self->activator = attacker;
 }
 
-void SP_misc_explobox (edict_t *self)
+void SP_misc_explobox_ (edict_t *self)
 {
 	if (game.mode & GAME_DEATHMATCH)
 	{	// auto-remove for deathmatch
@@ -1053,7 +1054,7 @@ void SP_misc_explobox (edict_t *self)
 
 	gi.linkentity (self);
 }
-
+#endif
 
 //
 // miscellaneous specialty items
