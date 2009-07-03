@@ -435,6 +435,27 @@ public:
 
 		return Len;
 	}
+	float ToYaw ()
+	{
+		float	yaw;
+
+		if (X == 0)
+		{
+			yaw = 0;
+			if (Y > 0)
+				yaw = 90;
+			else if (Y < 0)
+				yaw = -90;
+		}
+		else
+		{
+			yaw = atan2f(Y, X) * 180 / M_PI;
+			if (yaw < 0)
+				yaw += 360;
+		}
+
+		return yaw;
+	}
 	float NormalizeFast()
 	{
 		float Len = LengthSq();

@@ -50,7 +50,7 @@ CTrace::CTrace ()
 }
 
 _CC_DISABLE_DEPRECATION
-(
+
 // Constructor easyness
 CTrace::CTrace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *ignore, int contentMask)
 {
@@ -68,5 +68,35 @@ CTrace::CTrace (vec3_t start, vec3_t end, int contentMask)
 {
 	cmTrace_t temp = gi.trace(start, vec3Origin, vec3Origin, end, NULL, contentMask);
 	Copy(temp);
+};
+
+CTrace::CTrace (vec3f start, vec3f mins, vec3f maxs, vec3f end, edict_t *ignore, int contentMask)
+{
+	vec3_t stVec = {start.X, start.Y, start.Z};
+	vec3_t minVec = {mins.X, mins.Y, mins.Z};
+	vec3_t maxVec = {maxs.X, maxs.Y, maxs.Z};
+	vec3_t endVec = {end.X, end.Y, end.Z};
+
+	cmTrace_t temp = gi.trace(stVec, minVec, maxVec, endVec, ignore, contentMask);
+	Copy(temp);
+};
+
+CTrace::CTrace (vec3f start, vec3f end, edict_t *ignore, int contentMask)
+{
+	vec3_t stVec = {start.X, start.Y, start.Z};
+	vec3_t endVec = {end.X, end.Y, end.Z};
+
+	cmTrace_t temp = gi.trace(stVec, vec3Origin, vec3Origin, endVec, ignore, contentMask);
+	Copy(temp);
+};
+
+CTrace::CTrace (vec3f start, vec3f end, int contentMask)
+{
+	vec3_t stVec = {start.X, start.Y, start.Z};
+	vec3_t endVec = {end.X, end.Y, end.Z};
+
+	cmTrace_t temp = gi.trace(stVec, vec3Origin, vec3Origin, endVec, NULL, contentMask);
+	Copy(temp);
 }
-)
+
+_CC_ENABLE_DEPRECATION

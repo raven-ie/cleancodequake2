@@ -39,9 +39,8 @@ void SetModel (edict_t *ent, char *model)
 		DebugPrintf ("SetModel on a non-brush model!\n");
 
 _CC_DISABLE_DEPRECATION
-(
 	gi.setmodel (ent, model);
-)
+_CC_ENABLE_DEPRECATION
 }
 
 /*

@@ -107,9 +107,8 @@ void DeveloperPrintf (char *fmt, ...)
 	va_end (argptr);
 
 _CC_DISABLE_DEPRECATION
-(
 	gi.dprintf ("%s", text);
-)
+_CC_ENABLE_DEPRECATION
 
 #if defined(WIN32) && defined(_DEBUG)
 	// Pipe to visual studio
@@ -129,9 +128,8 @@ void DebugPrintf (char *fmt, ...)
 	va_end (argptr);
 
 _CC_DISABLE_DEPRECATION
-(
 	gi.dprintf ("%s", text);
-)
+_CC_ENABLE_DEPRECATION
 
 #if defined(WIN32)
 	// Pipe to visual studio

@@ -37,7 +37,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include <float.h>
 
 _CC_DISABLE_DEPRECATION
-(
+
 // Origin or Ent has to exist.
 void Cast (ECastType castType, ECastFlags castFlags, vec3_t Origin = NULL, edict_t *Ent = NULL)
 {
@@ -198,4 +198,5 @@ void WriteDirection (vec3_t val)
 		gi.WriteDir (val);
 	}
 }
-)
+
+_CC_ENABLE_DEPRECATION

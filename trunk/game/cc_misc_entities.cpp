@@ -86,52 +86,37 @@ public:
 		Link ();
 	};
 
+#define BARREL_STEPSIZE 8
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
-		float	ratio;
-		vec3_t	v;
-
 		if ((!other->gameEntity->groundentity) || (other->gameEntity->groundentity == gameEntity))
 			return;
 
-		ratio = (float)other->gameEntity->mass / (float)gameEntity->mass;
+		float ratio = (float)other->gameEntity->mass / (float)gameEntity->mass;
+		vec3f v = State.GetOrigin() - other->State.GetOrigin();
+		float Yaw = (v.ToYaw ()*M_PI*2 / 360);
+		vec3f move = vec3f( cosf(Yaw)*(20 * ratio),
+							sinf(Yaw)*(20 * ratio),
+							0);
 
-		State.GetOrigin (v);
-		vec3_t enemyV;
-		other->State.GetOrigin (enemyV);
-		Vec3Subtract (v, enemyV, v);
+		vec3f	oldOrigin = State.GetOrigin(),
+				newOrigin = (oldOrigin + move);
 
-		float Yaw = VecToYaw(v);
-		Yaw = Yaw*M_PI*2 / 360;
-		
-		vec3_t move;
-		move[0] = cosf(Yaw)*(20 * ratio);
-		move[1] = sinf(Yaw)*(20 * ratio);
-		move[2] = 0;
+		newOrigin.Z += BARREL_STEPSIZE;
+		vec3f end = vec3f(newOrigin);
 
-		vec3_t oldorg, neworg, end;
-		State.GetOrigin (oldorg);
-		Vec3Add (oldorg, move, neworg);
-
-		int stepsize = 8;
-
-		neworg[2] += stepsize;
-		Vec3Copy (neworg, end);
-		end[2] -= stepsize*2;
+		end.Z -= BARREL_STEPSIZE*2;
 
 		CTrace trace;
-		vec3_t mins, maxs;
-		GetMins (mins);
-		GetMaxs (maxs);
-		trace = CTrace (neworg, mins, maxs, end, gameEntity, CONTENTS_MASK_MONSTERSOLID);
+		trace = CTrace (newOrigin, GetMins(), GetMaxs(), end, gameEntity, CONTENTS_MASK_MONSTERSOLID);
 
 		if (trace.allSolid)
 			return;
 
 		if (trace.startSolid)
 		{
-			neworg[2] -= stepsize;
-			trace = CTrace (neworg, mins, maxs, end, gameEntity, CONTENTS_MASK_MONSTERSOLID);
+			newOrigin[2] -= BARREL_STEPSIZE;
+			trace = CTrace (newOrigin, GetMins(), GetMaxs(), end, gameEntity, CONTENTS_MASK_MONSTERSOLID);
 			if (trace.allSolid || trace.startSolid)
 				return;
 		}
@@ -156,24 +141,19 @@ public:
 		{
 			Dropped = true;
 
-			vec3_t		end;
 			CTrace		trace;
-			vec3_t origin, mins, maxs;
-			State.GetOrigin (origin);
-			GetMins (mins);
-			GetMaxs (maxs);
+			vec3f		origin = State.GetOrigin();
 
-			origin[2] += 1;
-			Vec3Copy (origin, end);
-			end[2] -= 256;
+			origin.Z += 1;
+			vec3f end = vec3f(origin);
+			end.Z -= 256;
 			
-			trace = CTrace (origin, mins, maxs, end, gameEntity, CONTENTS_MASK_MONSTERSOLID);
+			trace = CTrace (origin, GetMins(), GetMaxs(), end, gameEntity, CONTENTS_MASK_MONSTERSOLID);
 
 			if (trace.fraction == 1 || trace.allSolid)
 				return;
 
 			State.SetOrigin (trace.endPos);
-
 			return;
 		}
 		T_RadiusDamage (gameEntity, gameEntity->activator, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_BARREL);
