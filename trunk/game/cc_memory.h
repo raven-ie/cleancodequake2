@@ -25,6 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 extern struct memPool_s	*com_genericPool; // Generic memory; memory that will be freed on level change, but not necessarily needed for anything
 extern struct memPool_s	*com_levelPool; // Flushed per level
 extern struct memPool_s	*com_gamePool; // Flushed per entire game
+extern struct memPool_s	*com_fileSysPool; // Flushed per entire game
 
 #define Mem_AllocA(size)								_alloca((size))
 
@@ -75,10 +76,22 @@ void		Mem_Register();
 void		Mem_Init();
 
 // These operators are for vectors and the like
-inline void *operator new(size_t Size) { return Mem_Alloc (Size);/*assert(0); return NULL;*/ }
-inline void operator delete(void *Pointer) { _Mem_Free (Pointer, "null", 0); }
-inline void *operator new[](size_t Size) { return Mem_Alloc (Size); }
-inline void operator delete[](void *Pointer) { _Mem_Free (Pointer, "null", 0); }
+inline void *operator new(size_t Size)
+{
+	return Mem_Alloc (Size);
+}
+inline void operator delete(void *Pointer)
+{
+	_Mem_Free (Pointer, "null", 0);
+}
+inline void *operator new[](size_t Size)
+{
+	return Mem_Alloc (Size);
+}
+inline void operator delete[](void *Pointer)
+{
+	_Mem_Free (Pointer, "null", 0);
+}
 
 // But allow these!
 inline void *operator new(size_t Size, struct memPool_s *Pool, const int TagNum, const char *FileName, const int FileLine)

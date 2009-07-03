@@ -264,6 +264,9 @@ void InitGame (void)
 	// Register cvars/commands
 	G_Register();
 
+	// File-system
+	FS_Init ();
+
 	// items
 	InitItemlist ();
 
@@ -887,6 +890,11 @@ void ReadLevel (char *filename)
 	Mem_FreePool (com_levelPool);
 
 	// wipe all the entities
+	// Save client pointers
+	CPlayerEntity **EntityPointers = QNew (com_genericPool, 0) CPlayerEntity*[game.maxclients];
+
+	for (i = 0; i < game.maxclients; i++)
+		EntityPointers[i] = dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity);
 	memset (g_edicts, 0, game.maxentities*sizeof(g_edicts[0]));
 	globals.numEdicts = game.maxclients+1;
 
@@ -941,7 +949,9 @@ void ReadLevel (char *filename)
 	{
 		ent = &g_edicts[i+1];
 		ent->client = game.clients + i;
-		ent->Entity = QNew (com_levelPool, 0) CPlayerEntity(i+1);
+		//if (!ent->Entity)
+		//	ent->Entity = QNew (com_gamePool, 0) CPlayerEntity(i);
+		ent->Entity = EntityPointers[i];
 
 		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(ent->Entity);
 		Player->Client.pers.state = SVCS_FREE;

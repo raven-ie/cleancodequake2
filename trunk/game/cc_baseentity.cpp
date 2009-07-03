@@ -444,6 +444,17 @@ void			CBaseEntity::Free ()
 	Freed = true;
 }
 
+void	CBaseEntity::PlaySound (EEntSndChannel channel, MediaIndex soundIndex, float volume, int attenuation, float timeOfs)
+{
+	PlaySoundFrom (gameEntity, channel, soundIndex, volume, attenuation, timeOfs);
+};
+
+void	CBaseEntity::PlaySound (vec3_t origin, EEntSndChannel channel, MediaIndex soundIndex, float volume, int attenuation, float timeOfs)
+{
+	PlaySoundAt (origin, gameEntity, channel, soundIndex, volume, attenuation, timeOfs);
+};
+
+
 CWorldEntity::CWorldEntity () : 
 CBaseEntity()
 {

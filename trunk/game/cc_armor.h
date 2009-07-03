@@ -36,8 +36,9 @@ class CArmor : public CBaseItem
 public:
 	int		baseCount;			// (on normalProtection == -1) Amount to add
 	int		maxCount;			// (on normalProtection == -1) Amount to stop at (-1 = none)
-	float	normalProtection;	// -1 = Always add to current armor
-	float	energyProtection;	// -1 = Nothing
+
+	signed char	normalProtection;	// -1 = Always add to current armor
+	signed char	energyProtection;	// -1 = Nothing
 
 	CArmor (char *Classname, char *WorldModel, int EffectFlags,
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,

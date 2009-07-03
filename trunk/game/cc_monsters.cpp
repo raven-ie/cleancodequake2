@@ -340,20 +340,10 @@ In coop games, sight_client will cycle between the clients.
 void AI_SetSightClient (void)
 {
 	edict_t	*ent;
-	int		start, check;
 
-	if (level.sight_client == NULL)
-		start = 1;
-	else
-		start = level.sight_client->State.GetNumber();
-
-	check = start;
-	while (1)
+	for (int i = 0; i < game.maxclients; i++)
 	{
-		check++;
-		if (check > game.maxclients)
-			check = 1;
-		ent = &g_edicts[check];
+		ent = &g_edicts[i];
 		if (ent->inUse
 			&& ent->health > 0
 			&& !(ent->flags & FL_NOTARGET) )
@@ -361,12 +351,8 @@ void AI_SetSightClient (void)
 			level.sight_client = dynamic_cast<CPlayerEntity*>(ent->Entity);
 			return;		// got one
 		}
-		if (check == start)
-		{
-			level.sight_client = NULL;
-			return;		// nobody to see
-		}
 	}
+	level.sight_client = NULL;
 }
 
 /*

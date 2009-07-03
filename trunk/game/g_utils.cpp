@@ -257,18 +257,12 @@ vec3_t MOVEDIR_DOWN	= {0, 0, -1};
 
 void G_SetMovedir (vec3_t angles, vec3_t movedir)
 {
-	if (Vec3Compare (angles, VEC_UP))
-	{
+	if (angles[1] == VEC_UP[1])
 		Vec3Copy (MOVEDIR_UP, movedir);
-	}
-	else if (Vec3Compare (angles, VEC_DOWN))
-	{
+	else if (angles[1] == VEC_DOWN[1])
 		Vec3Copy (MOVEDIR_DOWN, movedir);
-	}
 	else
-	{
 		Angles_Vectors (angles, movedir, NULL, NULL);
-	}
 
 	Vec3Clear (angles);
 }
@@ -305,7 +299,7 @@ edict_t *G_Spawn (void)
 		if (!e->inUse && ( e->freetime < 20 || level.framenum - e->freetime > 5 ) )
 		{
 			G_InitEdict (e);
-			DebugPrintf ("Entity %i reused\n", i);
+			//DebugPrintf ("Entity %i reused\n", i);
 			return e;
 		}
 	}
@@ -313,7 +307,7 @@ edict_t *G_Spawn (void)
 	if (i == game.maxentities)
 		gi.error ("ED_Alloc: no free edicts");
 		
-	DebugPrintf ("Entity %i allocated\n", i);
+	//DebugPrintf ("Entity %i allocated\n", i);
 	globals.numEdicts++;
 	G_InitEdict (e);
 	return e;

@@ -2332,7 +2332,8 @@ void CPlayerEntity::SetStats ()
 
 #ifdef CLEANCTF_ENABLED
 //ZOID
-	SetCTFStats();
+	if (game.mode & GAME_CTF)
+		SetCTFStats();
 //ZOID
 #endif
 }
@@ -2974,7 +2975,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 		edict_t *other = pm.touchEnts[i];
 		if (other->Entity)
 		{
-			if (other->Entity->EntityFlags & ENT_TOUCHABLE)
+			if ((other->Entity->EntityFlags & ENT_TOUCHABLE) && other->Entity->IsInUse())
 				dynamic_cast<CTouchableEntity*>(other->Entity)->Touch (this, NULL, NULL);
 			continue;
 		}
@@ -3087,10 +3088,13 @@ be mirrored out to the client structure before all the
 edicts are wiped.
 ==================
 */
+CPlayerEntity **SavedClients;
 void CPlayerEntity::SaveClientData ()
 {
+	SavedClients = QNew (com_gamePool, 0) CPlayerEntity*[game.maxclients];
 	for (int i=0 ; i<game.maxclients ; i++)
 	{
+		SavedClients[i] = NULL;
 		if (!g_edicts[1+i].Entity)
 			return; // Not set up
 
@@ -3102,6 +3106,8 @@ void CPlayerEntity::SaveClientData ()
 		ent->Client.pers.savedFlags = (ent->gameEntity->flags & (FL_GODMODE|FL_NOTARGET|FL_POWER_ARMOR));
 		if (game.mode == GAME_COOPERATIVE)
 			ent->Client.pers.score = ent->Client.resp.score;
+
+		SavedClients[i] = ent;
 	}
 }
 

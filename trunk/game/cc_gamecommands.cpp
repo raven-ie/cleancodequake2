@@ -395,13 +395,18 @@ void GCmd_SayTeam_f (CPlayerEntity *ent)
 
 void Cmd_Test_f (CPlayerEntity *ent)
 {
-	char *sound = ArgGets(1);
+	/*char *sound = ArgGets(1);
 
 	if (!sound || !sound[0])
 		return;
 
 	gi.configstring (CS_SOUNDS+70, sound);
-	PlaySoundFrom (ent->gameEntity, CHAN_AUTO, 70, 1, ATTN_NONE);
+	PlaySoundFrom (ent->gameEntity, CHAN_AUTO, 70, 1, ATTN_NONE);*/
+	char *buffer;
+
+	FS_LoadFile ("config.cfg", (void**)&buffer, true);
+
+	FS_FreeFile (buffer);
 }
 
 void GCTFSay_Team (CPlayerEntity *ent);
