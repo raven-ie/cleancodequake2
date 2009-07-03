@@ -536,6 +536,7 @@ void InitEntities ()
 	}
 }
 
+extern CPlayerEntity **SavedClients;
 void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 {
 #ifdef CC_USE_EXCEPTION_HANDLER
@@ -564,6 +565,8 @@ __try
 
 	CPlayerEntity::SaveClientData ();
 
+	int *test = QNew (com_gamePool, 0) int;
+	*test = 5;
 	Mem_FreePool (com_levelPool);
 
 #ifdef MONSTERS_USE_PATHFINDING
@@ -578,7 +581,13 @@ __try
 
 	// set client fields on player ents
 	for (i=0 ; i<game.maxclients ; i++)
+	{
+		// Reset the entity states
+		g_edicts[i+1].Entity = SavedClients[i];
 		g_edicts[i+1].client = game.clients + i;
+	}
+
+	QDelete[] SavedClients;
 
 	InitEntities ();
 

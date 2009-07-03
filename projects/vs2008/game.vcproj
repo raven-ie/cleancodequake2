@@ -1375,6 +1375,22 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="File system"
+				>
+				<File
+					RelativePath="..\..\game\cc_filesystem.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\game\cc_filesystem.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\game\cc_filesystem_local.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 	</Files>
 	<Globals>

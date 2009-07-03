@@ -58,9 +58,9 @@ int CIndexList::GetIndex (char *String)
 
 int CIndexList::AddToList (char *String, MediaIndex Index)
 {
-	CIndex *NewIndex = QNew (com_levelPool, 0) CIndex;
+	CIndex *NewIndex = QNew (com_gamePool, 0) CIndex;
 	NewIndex->Index = Index;
-	NewIndex->Name = QNew (com_levelPool, 0) char[strlen(String)+1];
+	NewIndex->Name = QNew (com_gamePool, 0) char[strlen(String)+1];
 	NewIndex->HashValue = Com_HashGeneric (String, MAX_INDEXES);
 
 	Q_snprintfz(NewIndex->Name, strlen(String)+1, "%s", String);

@@ -201,15 +201,12 @@ void		Swap_Init (void);
 ==============================================================================
 */
 
-#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 typedef uint32				fileHandle_t;
-#endif
 
 #define MAX_QEXT			16		// max length of a quake game pathname extension
 #define MAX_QPATH			64		// max length of a quake game pathname
 #define MAX_OSPATH			128		// max length of a filesystem pathname
 
-#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 // directory searching
 #define SFF_ARCH	0x01
 #define SFF_HIDDEN	0x02
@@ -238,7 +235,6 @@ enum EFSSeekOrigin
 
 // for FS_FindFiles
 #define FS_MAX_FINDFILES	65536
-#endif
 
 //
 // this is only here so the functions in shared/ can link

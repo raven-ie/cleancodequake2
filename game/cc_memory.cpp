@@ -69,6 +69,7 @@ static uint32			m_numPools;
 memPool_t	*com_genericPool; // Generic memory; memory that will be freed on level change, but not necessarily needed for anything
 memPool_t	*com_levelPool; // Flushed per level
 memPool_t	*com_gamePool; // Flushed per entire game
+memPool_t	*com_fileSysPool; // File system (same as game, just here for easy pointer access)
 
 #define MEM_MAX_PUDDLES			42
 #define MEM_MAX_PUDDLE_SIZE		(32768+1)
@@ -936,4 +937,5 @@ void Mem_Init (void)
 	com_genericPool = Mem_CreatePool ("Generic memory pool");
 	com_levelPool = Mem_CreatePool ("Level memory pool");
 	com_gamePool = Mem_CreatePool ("Game memory pool");
+	com_fileSysPool = com_gamePool;
 }
