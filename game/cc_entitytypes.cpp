@@ -99,13 +99,10 @@ void CPhysicsEntity::AddGravity()
 
 CTrace CPhysicsEntity::PushEntity (vec3_t push)
 {
-	CTrace		trace;
-	vec3_t		start;
-	vec3_t		end;
+	CTrace		Trace;
 	int			mask;
-
-	State.GetOrigin (start);
-	Vec3Add (start, push, end);
+	vec3f		Start = State.GetOrigin();
+	vec3f		End = Start + vec3f(push);
 
 retry:
 	if (gameEntity->clipMask)
@@ -113,20 +110,20 @@ retry:
 	else
 		mask = CONTENTS_MASK_SOLID;
 
-	trace = CTrace (start, gameEntity->mins, gameEntity->maxs, end, gameEntity, mask);
+	Trace = CTrace (State.GetOrigin(), GetMins(), GetMaxs(), End, gameEntity, mask);
 	
-	State.SetOrigin (trace.endPos);
+	State.SetOrigin (Trace.endPos);
 	Link();
 
-	if (trace.fraction != 1.0)
+	if (Trace.fraction != 1.0)
 	{
-		Impact (&trace);
+		Impact (&Trace);
 
 		// if the pushed entity went away and the pusher is still there
-		if (!trace.ent->inUse && IsInUse())
+		if (!Trace.ent->inUse && IsInUse())
 		{
 			// move the pusher back and try again
-			State.SetOrigin (start);
+			State.SetOrigin (Start);
 			Link ();
 			goto retry;
 		}
@@ -135,7 +132,7 @@ retry:
 	if (IsInUse())
 		G_TouchTriggers (gameEntity);
 
-	return trace;
+	return Trace;
 }
 
 void CPhysicsEntity::Impact (CTrace *trace)

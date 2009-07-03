@@ -74,7 +74,7 @@ int CIndexList::AddToList (char *String, MediaIndex Index)
 }
 
 _CC_DISABLE_DEPRECATION
-(
+
 MediaIndex ModelIndex (char *String)
 {
 	// Do we exist?
@@ -113,7 +113,8 @@ MediaIndex ImageIndex (char *String)
 	//DebugPrintf ("ImageIndex: Using existing index %s\n", String);
 	return Index;
 }
-)
+
+_CC_ENABLE_DEPRECATION
 
 void CIndexList::Clear ()
 {

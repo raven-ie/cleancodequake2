@@ -1029,12 +1029,11 @@ edict_t	*pm_passent;
 cmTrace_t	PM_trace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end)
 {
 _CC_DISABLE_DEPRECATION
-(
 	if (pm_passent->health > 0)
 		return gi.trace(start, mins, maxs, end, pm_passent, CONTENTS_MASK_PLAYERSOLID);
 	else
 		return gi.trace(start, mins, maxs, end, pm_passent, CONTENTS_MASK_DEADSOLID);
-)
+_CC_ENABLE_DEPRECATION
 }
 #endif
 

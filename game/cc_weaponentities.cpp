@@ -296,6 +296,8 @@ void CBlasterProjectile::Spawn (CBaseEntity *Spawner, vec3_t start, vec3_t dir,
 	if (tr.fraction < 1.0)
 	{
 		Vec3MA (start, -10, dir, start);
+		Bolt->State.SetOrigin (start);
+		Bolt->State.SetOldOrigin (start);
 
 		if (tr.ent->Entity)
 			Bolt->Touch (tr.ent->Entity, &tr.plane, tr.surface);

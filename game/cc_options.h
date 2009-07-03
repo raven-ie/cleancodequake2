@@ -64,10 +64,15 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 // This is a simple macro to disable deprecation for everything inside the macro.
 // This is only used internally; using this in your code could cause big problems.
-#define _CC_DISABLE_DEPRECATION(x)	__pragma(warning(push)) \
-									__pragma(warning(disable:4996)) \
-									x \
-									__pragma(warning(pop))
+#ifndef _NO_DEPRECATING_OLD_FUNCTIONS
+#define _CC_DISABLE_DEPRECATION		__pragma(warning(push)) \
+									__pragma(warning(disable:4996))
+
+#define _CC_ENABLE_DEPRECATION		__pragma(warning(pop))
+#else
+#define _CC_DISABLE_DEPRECATION
+#define _CC_ENABLE_DEPRECATION
+#endif
 
 // Define this if you want to use Microsoft Visual Studio 7.0+ safe functions
 #define CRT_USE_UNDEPRECATED_FUNCTIONS

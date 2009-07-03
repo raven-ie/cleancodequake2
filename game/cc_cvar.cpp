@@ -34,7 +34,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_local.h"
 
 _CC_DISABLE_DEPRECATION
-(
+
 void CCvar::Update()
 {
 	mainValue = cVar->string;
@@ -132,4 +132,5 @@ bool CCvar::Modified ()
 
 	return modified;
 }
-)
+
+_CC_ENABLE_DEPRECATION
