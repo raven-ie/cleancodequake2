@@ -100,15 +100,15 @@ void Move_Begin (edict_t *ent)
 	ent->moveinfo.remaining_distance -= frames * ent->moveinfo.speed;
 	ent->nextthink = level.framenum + frames;
 	ent->think = Move_Final;*/
-	if ((ent->moveinfo.speed * FRAMETIME) >= ent->moveinfo.remaining_distance)
+	if (ent->moveinfo.speed >= (ent->moveinfo.remaining_distance * 10))
 	{
 		Move_Final (ent);
 		return;
 	}
 	Vec3Scale (ent->moveinfo.dir, ent->moveinfo.speed, ent->velocity);
 	float frames = floor((ent->moveinfo.remaining_distance / ent->moveinfo.speed) / 0.1f);
-	ent->moveinfo.remaining_distance -= frames * ent->moveinfo.speed * 0.1f;
-	ent->nextthink = level.framenum + (frames * FRAMETIME);
+	ent->moveinfo.remaining_distance -= ((frames * ent->moveinfo.speed) / 10);
+	ent->nextthink = level.framenum + frames;
 	ent->think = Move_Final;
 }
 
@@ -204,7 +204,7 @@ void AngleMove_Begin (edict_t *ent)
 	Vec3Scale (destdelta, 1.0 / traveltime, ent->avelocity);
 
 	// set nextthink to trigger a think when dest is reached
-	ent->nextthink = level.framenum + (frames * 10);
+	ent->nextthink = level.framenum + frames;
 	ent->think = AngleMove_Final;
 }
 
