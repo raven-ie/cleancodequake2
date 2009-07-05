@@ -109,12 +109,12 @@ Indices(Indices)
 	Index = 0;
 	//NumIndices = (sizeof(Indices) / sizeof(SSpinControlIndex
 
-	while (this->Indices->Text && *(this->Indices)->Text)
+	while (Indices->Text && *(Indices)->Text)
 	{
 		NumIndices++;
-		this->Indices++;
+		Indices++;
 	}
-	this->Indices = Indices;
+	Indices = Indices;
 };
 
 void CMenu_Spin::Draw (CPlayerEntity *ent, CStatusBar *DrawState)

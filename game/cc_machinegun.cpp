@@ -136,7 +136,8 @@ void CMachinegun::Fire (CPlayerEntity *ent)
 	Angles_Vectors (angles, forward, right, NULL);
 	Vec3Set (offset, 0, 8, ent->gameEntity->viewheight-8);
 	P_ProjectSource (ent, offset, forward, right, start);
-	fire_bullet (ent->gameEntity, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN);
+	//fire_bullet (ent->gameEntity, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN);
+	CBullet::Fire (ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN);
 
 	Muzzle (ent, MZ_MACHINEGUN);
 	AttackSound (ent);

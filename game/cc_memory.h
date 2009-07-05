@@ -75,19 +75,24 @@ void		_Mem_TouchGlobal(const char *fileName, const int fileLine);
 void		Mem_Register();
 void		Mem_Init();
 
-// These operators are for vectors and the like
+// These operators are for vectors and the like.
+// Deprecated; use QNew/QDelete
+
 inline void *operator new(size_t Size)
 {
 	return Mem_Alloc (Size);
 }
+
 inline void operator delete(void *Pointer)
 {
 	_Mem_Free (Pointer, "null", 0);
 }
+
 inline void *operator new[](size_t Size)
 {
 	return Mem_Alloc (Size);
 }
+
 inline void operator delete[](void *Pointer)
 {
 	_Mem_Free (Pointer, "null", 0);
@@ -98,11 +103,12 @@ inline void *operator new(size_t Size, struct memPool_s *Pool, const int TagNum,
 {
 	return _Mem_Alloc(Size, Pool, TagNum, FileName, FileLine);
 }
-#define QNew(Pool,TagNum) new((Pool),(TagNum),__FILE__,__LINE__)
+
+#define QNew(Pool,TagNum)	new((Pool),(TagNum),__FILE__,__LINE__)
 
 inline void operator delete(void *Pointer, struct memPool_s *Pool, const int TagNum, const char *FileName, const int FileLine)
 {
 	_Mem_Free(Pointer, FileName, FileLine);
 }
 
-#define QDelete delete
+#define QDelete	delete

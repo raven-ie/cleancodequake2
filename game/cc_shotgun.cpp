@@ -86,10 +86,12 @@ void CShotgun::Fire (CPlayerEntity *ent)
 		kick *= 4;
 	}
 
-	if (game.mode & GAME_DEATHMATCH)
+	/*if (game.mode & GAME_DEATHMATCH)
 		fire_shotgun (ent->gameEntity, start, forward, damage, kick, 500, 500, DEFAULT_DEATHMATCH_SHOTGUN_COUNT, MOD_SHOTGUN);
 	else
-		fire_shotgun (ent->gameEntity, start, forward, damage, kick, 500, 500, DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);
+		fire_shotgun (ent->gameEntity, start, forward, damage, kick, 500, 500, DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);*/
+	CShotgunPellets::Fire (ent, start, forward, damage, kick, DEFAULT_SHOTGUN_HSPREAD, DEFAULT_SHOTGUN_VSPREAD, 
+		(game.mode & GAME_DEATHMATCH) ? DEFAULT_DEATHMATCH_SHOTGUN_COUNT : DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);
 
 	// send muzzle flash
 	Muzzle (ent, MZ_SHOTGUN);

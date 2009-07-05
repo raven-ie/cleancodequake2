@@ -36,7 +36,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #endif
 
 #ifdef MONSTERS_USE_PATHFINDING
+_CC_DISABLE_DEPRECATION
 #include <vector>
+_CC_ENABLE_DEPRECATION
 
 enum ENodeType
 {

@@ -158,7 +158,8 @@ void CChaingun::Fire (CPlayerEntity *ent)
 		Vec3Set (offset, 0, r, u + ent->gameEntity->viewheight-8);
 		P_ProjectSource (ent, offset, forward, right, start);
 
-		fire_bullet (ent->gameEntity, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_CHAINGUN);
+		//fire_bullet (ent->gameEntity, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_CHAINGUN);
+		CBullet::Fire (ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_CHAINGUN);
 	}
 
 	// send muzzle flash

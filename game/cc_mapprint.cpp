@@ -86,8 +86,10 @@ void MapPrint (EMapPrintType printType, edict_t *ent, vec3_t origin, char *fmt, 
 	DebugPrintf ("%s", text);
 }
 
+_CC_DISABLE_DEPRECATION
 #include <string>
 #include <vector>
+_CC_ENABLE_DEPRECATION
 using namespace std;
 
 #define POUNDENTITIES_VERSION "1"

@@ -199,15 +199,15 @@ void CWeapon::ChangeWeapon (CPlayerEntity *Player)
 
 void CWeapon::DepleteAmmo (CPlayerEntity *Player, int Amount = 1)
 {
-	if (this->WeaponItem)
+	if (WeaponItem)
 	{
-		CAmmo *Ammo = this->WeaponItem->Ammo;
+		CAmmo *Ammo = WeaponItem->Ammo;
 
 		if (Ammo)
 			Player->Client.pers.Inventory.Remove (Ammo, Amount);
 	}
-	else if (this->Item && (this->Item->Flags & ITEMFLAG_AMMO))
-		Player->Client.pers.Inventory.Remove (this->Item, Amount);
+	else if (Item && (Item->Flags & ITEMFLAG_AMMO))
+		Player->Client.pers.Inventory.Remove (Item, Amount);
 }
 
 bool CWeapon::AttemptToFire (CPlayerEntity *Player)
@@ -216,19 +216,19 @@ bool CWeapon::AttemptToFire (CPlayerEntity *Player)
 	CAmmo *Ammo;
 	int quantity = 0;
 
-	if (this->Item && (this->Item->Flags & ITEMFLAG_AMMO))
+	if (Item && (Item->Flags & ITEMFLAG_AMMO))
 	{
-		numAmmo = Player->Client.pers.Inventory.Has(this->Item);
-		Ammo = dynamic_cast<CAmmo*>(this->Item);
+		numAmmo = Player->Client.pers.Inventory.Has(Item);
+		Ammo = dynamic_cast<CAmmo*>(Item);
 		quantity = Ammo->Amount;
 	}
 	// Revision: Always going to be true here.
 	else
 	{
-		if (this->WeaponItem->Ammo)
+		if (WeaponItem->Ammo)
 		{
-			Ammo = this->WeaponItem->Ammo;
-			quantity = this->WeaponItem->Quantity;
+			Ammo = WeaponItem->Ammo;
+			quantity = WeaponItem->Quantity;
 			if (Ammo)
 				numAmmo = Player->Client.pers.Inventory.Has(Ammo);
 		}

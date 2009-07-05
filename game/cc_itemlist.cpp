@@ -63,8 +63,8 @@ void CItemList::AddItemToList (CBaseItem *Item)
 
 void CItemList::SendItemNames ()
 {
-	for (int i = 0 ; i < this->numItems ; i++)
-		gi.configstring (this->Items[i]->GetConfigStringNumber(), this->Items[i]->Name);
+	for (int i = 0 ; i < numItems ; i++)
+		gi.configstring (Items[i]->GetConfigStringNumber(), this->Items[i]->Name);
 }
 
 bool ItemExists (edict_t *ent)

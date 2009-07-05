@@ -2173,7 +2173,7 @@ void CPlayerEntity::DeathmatchScoreboardMessage (bool reliable)
 		Scoreboard.AddClientBlock (x, y, sorted[i], cl_ent->Client.resp.score, cl_ent->Client.GetPing(), (level.framenum - cl_ent->Client.resp.enterframe)/600);
 	}
 
-	Scoreboard.SendMsg (this->gameEntity, reliable);
+	Scoreboard.SendMsg (gameEntity, reliable);
 }
 
 void CPlayerEntity::SetStats ()

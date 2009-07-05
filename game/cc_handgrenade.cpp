@@ -247,7 +247,7 @@ void CHandGrenade::WeaponGeneric (CPlayerEntity *ent)
 		// because we might want to keep firing beyond this point
 		if (newFrame == -1 && ent->Client.PlayerState.GetGunFrame() == FireEnd)
 		{
-			if (!ent->Client.pers.Inventory.Has(this->Item))
+			if (!ent->Client.pers.Inventory.Has(Item))
 			{
 				NoAmmoWeaponChange (ent);
 				newState = WS_DEACTIVATING;
