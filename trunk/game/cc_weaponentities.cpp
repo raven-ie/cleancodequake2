@@ -59,7 +59,7 @@ void CGrenade::Explode ()
 	int			mod;
 
 	State.GetOrigin (origin);
-	if (gameEntity->owner->client)
+	if (gameEntity->owner && gameEntity->owner->client)
 		PlayerNoise(dynamic_cast<CPlayerEntity*>(gameEntity->owner->Entity), origin, PNOISE_IMPACT);
 
 	//FIXME: if we are onground then raise our Z just a bit since we are a point?
@@ -386,4 +386,669 @@ void CRocket::Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t dir,
 		check_dodge (Spawner->gameEntity, start, dir, speed);
 
 	Rocket->Link ();
+}
+
+CTrace CHitScan::DoTrace(vec3_t start, vec3_t end, CBaseEntity *ignore, int mask)
+{
+	return CTrace (start, end, (ignore) ? ignore->gameEntity : NULL, mask);
+}
+
+bool CHitScan::DoDamage (CBaseEntity *Attacker, CBaseEntity *Target, vec3_t dir, vec3_t point, vec3_t normal)
+{
+	return true;
+}
+
+void CHitScan::DoEffect	(vec3_t start, vec3_t end, bool water)
+{
+};
+
+void CHitScan::DoSolidHit	(CTrace *Trace)
+{
+};
+
+bool CHitScan::ModifyEnd(vec3_t aimDir, vec3_t start, vec3_t end)
+{
+	return false;
+};
+
+void CHitScan::DoWaterHit (CTrace *Trace)
+{
+}
+
+#define HITSCANSTEP 100
+void CHitScan::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
+{
+	vec3_t end, from;
+	vec3_t lastWaterStart, lastWaterEnd;
+
+	// Calculate end
+	if (!ModifyEnd(aimdir, start, end))
+		Vec3MA (start, 8192, aimdir, end);
+
+	Vec3Copy (start, from);
+
+	int Mask = CONTENTS_MASK_SHOT|CONTENTS_MASK_WATER;
+	bool Water = false;
+	CBaseEntity *Ignore = Entity;
+
+	Vec3Copy (start, lastWaterStart);
+
+	bool hitOutOfWater = false;
+	if (gi.pointcontents(start) & CONTENTS_MASK_WATER)
+	{
+		// Copy up our point for the effect
+		Vec3Copy (start, lastWaterEnd);
+	
+		// Special case if we started in water
+		Water = true;
+
+		Mask = CONTENTS_MASK_SHOT;
+
+		// Find the exit point
+		int tries = 20; // Cover about 2000 units
+		vec3_t	stWater;
+
+		Vec3Copy (from, stWater);
+		Vec3Clear (lastWaterStart);
+		
+		while (tries > 0)
+		{
+			Vec3MA (stWater, HITSCANSTEP, aimdir, stWater);
+
+			int contents = gi.pointcontents(stWater);
+			if (contents == 0) // "Clear" or solid
+				break; // Got it
+			else if (contents & CONTENTS_MASK_SOLID)
+			{
+				// This is a special case in case we run into a solid.
+				// This basically means that the trace is done, so we can skip ahead right to the solid (act like
+				// we're not in water)
+				tries = 0;
+				break;
+			}
+			tries --;
+		}
+
+		if (tries != 0)
+		{
+			// We reached air
+			// Trace backwards and grab the water brush
+			vec3_t tempOrigin;
+			Vec3MA (stWater, -(HITSCANSTEP + 5), aimdir, tempOrigin);
+			CTrace tempTrace = DoTrace (stWater, tempOrigin, NULL, CONTENTS_MASK_WATER);
+
+			if (tempTrace.contents & CONTENTS_MASK_WATER)// All is good
+			{
+				// This is our end
+				Vec3Copy (tempTrace.endPos, lastWaterStart);
+				hitOutOfWater = true;
+			}
+		}
+		// We didn't reach air if we got here.
+		// Let water handle it, it will act as solid.
+	}
+
+	// Main loop
+	while (1)
+	{
+		// Trace from start to our end
+		CTrace Trace = DoTrace (from, end, Ignore, Mask);
+
+		// Did we hit an entity?
+		if (Trace.ent && Trace.ent->Entity && Trace.ent->takedamage)
+		{
+			// Convert to base entity
+			CBaseEntity *Target = dynamic_cast<CBaseEntity*>(Trace.ent->Entity);
+
+			// Hurt it
+			if (!DoDamage (Entity, Target, aimdir, Trace.endPos, Trace.plane.normal))
+				break; // We wanted to stop
+
+			// Set up the start from where we are now
+			vec3_t oldFrom;
+			Vec3Copy (from, oldFrom);
+			Vec3Copy (Trace.endPos, from);
+
+			DoEffect (from, oldFrom, Water);
+
+			// and ignore the bastard
+			Ignore = Target;
+
+			// Continue our loop
+			continue;
+		}
+		// If we hit something in water...
+		else if (Water)
+		{
+			Water = false;
+			// Assume solid
+			//if (Trace.contents & CONTENTS_MASK_SOLID)
+			{
+				// If we didn't grab water last time...
+				if (Vec3Compare(lastWaterStart, vec3Origin))
+				{
+					// We hit the ground!
+					// Swap start and end points
+					Vec3Copy (lastWaterEnd, lastWaterStart);
+					Vec3MA (lastWaterStart, 5, aimdir, lastWaterStart);
+
+					// Set end point
+					Vec3Copy (Trace.endPos, lastWaterEnd);
+
+					// Draw the effect
+					DoEffect (lastWaterStart, lastWaterEnd, true);
+
+					DoSolidHit (&Trace);
+
+					break; // We're done
+				}
+				// Otherwise we had found an exit point
+				else
+				{
+					// Draw from water surface to water end
+					DoEffect (lastWaterEnd, lastWaterStart, true);
+	
+					// We hit the ground!
+					// Swap start and end points
+					if (!hitOutOfWater)
+						Vec3Copy (lastWaterEnd, lastWaterStart);
+					else
+						hitOutOfWater = false;
+
+					// Set end point
+					Vec3Copy (Trace.endPos, lastWaterEnd);
+
+					// Draw the effect
+					DoEffect (lastWaterStart, lastWaterEnd, false);
+
+					DoSolidHit (&Trace);
+
+					break; // We're done
+				}
+			}
+			continue;
+		}
+		// If we hit non-transparent water
+		else if ((Trace.contents & CONTENTS_MASK_WATER) &&
+			(Trace.surface && !(Trace.surface->flags & (SURF_TEXINFO_TRANS33|SURF_TEXINFO_TRANS66))))
+		{
+			// Copy up our point for the effect
+			Vec3Copy (Trace.endPos, lastWaterEnd);
+
+			// Tell the system we're in water
+			Water = true;
+
+			// Draw the effect
+			DoEffect (lastWaterStart, lastWaterEnd, false);
+
+			DoWaterHit (&Trace);
+
+			// Set up the start from where we are now
+			Vec3Copy (Trace.endPos, from);
+
+			Mask = CONTENTS_MASK_SHOT;
+
+			// Find the exit point
+			int tries = 20; // Cover about 2000 units
+			vec3_t	stWater;
+
+			Vec3Copy (from, stWater);
+			Vec3Clear (lastWaterStart);
+			
+			while (tries > 0)
+			{
+				Vec3MA (stWater, HITSCANSTEP, aimdir, stWater);
+
+				int contents = gi.pointcontents(stWater);
+				if (contents == 0) // "Clear" or solid
+					break; // Got it
+				else if (contents & CONTENTS_MASK_SOLID)
+				{
+					// This is a special case in case we run into a solid.
+					// This basically means that the trace is done, so we can skip ahead right to the solid (act like
+					// we're not in water)
+					tries = 0;
+					break;
+				}
+				tries --;
+			}
+
+			if (tries != 0)
+			{
+				// We reached air
+				// Trace backwards and grab the water brush
+				vec3_t tempOrigin;
+				Vec3MA (stWater, -(HITSCANSTEP + 5), aimdir, tempOrigin);
+				CTrace tempTrace = DoTrace (stWater, tempOrigin, NULL, CONTENTS_MASK_WATER);
+
+				if (tempTrace.contents & CONTENTS_MASK_WATER) // All is good
+				{
+					// This is our end
+					Vec3Copy (tempTrace.endPos, lastWaterStart);
+					continue; // Head to the next area
+				}
+			}
+			// We didn't reach air if we got here.
+			// Let water handle it, it will act as solid.
+
+			// Continue the loop
+			continue;
+		}
+		// Transparent water
+		else if ((Trace.contents & CONTENTS_MASK_WATER) &&
+			(Trace.surface && (Trace.surface->flags & (SURF_TEXINFO_TRANS33|SURF_TEXINFO_TRANS66))))
+		{
+			// This won't count as "water" since we can see through it.
+			// It has the same PVS, meaning we don't need to
+			// do complex tracing.
+
+			// Draw the effect we have so far
+			/*DoEffect (from, Trace.endPos, false);
+
+			// Keep going
+			Vec3MA (Trace.endPos, 0.1f, aimdir, from);
+
+			// Water hit effect
+			DoWaterHit (&Trace);*/
+
+			// FIXME: This is the easiest fix currently.
+			Mask = CONTENTS_MASK_SHOT;
+
+			// There's a problem with the code above in that
+			// the trace isn't fully connected with something like
+			// a railgun. For now, this should work, since
+			// I don't know any maps with real water underneath
+			// transparent water.
+			continue;
+		}
+		// Assume solid
+		else
+		{
+			// Draw the effect
+			DoEffect (from, Trace.endPos, false);
+			DoSolidHit (&Trace);
+			break; // We're done
+		}
+	}
+}
+
+bool CRailGunShot::DoDamage (CBaseEntity *Attacker, CBaseEntity *Target, vec3_t dir, vec3_t point, vec3_t normal)
+{
+	T_Damage (Target->gameEntity, Attacker->gameEntity, Attacker->gameEntity, dir, point, normal, Damage, Kick, 0, MOD_RAILGUN);
+	return ThroughAndThrough;
+}
+
+void CRailGunShot::DoEffect	(vec3_t start, vec3_t end, bool water)
+{
+	CTempEnt_Trails::RailTrail (start, end);
+}
+
+void CRailGunShot::Fire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir, int damage, int kick)
+{
+	CRailGunShot(damage, kick).DoFire (Entity, start, aimdir);
+}
+
+bool CBullet::DoDamage (CBaseEntity *Attacker, CBaseEntity *Target, vec3_t dir, vec3_t point, vec3_t normal)
+{
+	T_Damage (Target->gameEntity, Attacker->gameEntity, Attacker->gameEntity, dir, point, normal, Damage, Kick, DAMAGE_BULLET, MeansOfDeath);
+	return ThroughAndThrough;
+}
+
+void CBullet::DoSolidHit	(CTrace *Trace)
+{
+	if (strncmp (Trace->surface->name, "sky", 3) != 0)
+		CTempEnt_Splashes::Gunshot (Trace->endPos, Trace->plane.normal);
+}
+
+bool CBullet::ModifyEnd (vec3_t aimDir, vec3_t start, vec3_t end)
+{
+	vec3_t dir, forward, right, up;
+	VecToAngles (aimDir, dir);
+	Angles_Vectors (dir, forward, right, up);
+
+	float r = crandom()*hSpread;
+	float u = crandom()*vSpread;
+	Vec3MA (start, 8192, forward, end);
+	Vec3MA (end, r, right, end);
+	Vec3MA (end, u, up, end);
+	return true;
+}
+
+void CBullet::DoEffect	(vec3_t start, vec3_t end, bool water)
+{
+	if (water)
+		CTempEnt_Trails::BubbleTrail(start, end);
+}
+
+void CBullet::DoWaterHit	(CTrace *Trace)
+{
+	CTempEnt_Splashes::ESplashType color;
+	if (Trace->contents & CONTENTS_WATER)
+	{
+		if (strcmp(Trace->surface->name, "*brwater") == 0)
+			color = CTempEnt_Splashes::SPTMud;
+		else
+			color = CTempEnt_Splashes::SPTWater;
+	}
+	else if (Trace->contents & CONTENTS_SLIME)
+		color = CTempEnt_Splashes::SPTSlime;
+	else if (Trace->contents & CONTENTS_LAVA)
+		color = CTempEnt_Splashes::SPTLava;
+	else
+		return;
+
+	CTempEnt_Splashes::Splash (Trace->endPos, Trace->plane.normal, color);
+}
+
+void CBullet::Fire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir, int damage, int kick, int hSpread, int vSpread, int mod)
+{
+	CBullet(damage, kick, hSpread, vSpread, mod).DoFire (Entity, start, aimdir);
+}
+
+// An overload to handle transparent water
+void CBullet::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
+{
+	vec3_t end, from;
+	vec3_t lastWaterStart, lastWaterEnd;
+
+	// Calculate end
+	if (!ModifyEnd(aimdir, start, end))
+		Vec3MA (start, 8192, aimdir, end);
+
+	Vec3Copy (start, from);
+
+	int Mask = CONTENTS_MASK_SHOT|CONTENTS_MASK_WATER;
+	bool Water = false;
+	CBaseEntity *Ignore = Entity;
+
+	Vec3Copy (start, lastWaterStart);
+
+	bool hitOutOfWater = false;
+	if (gi.pointcontents(start) & CONTENTS_MASK_WATER)
+	{
+		// Copy up our point for the effect
+		Vec3Copy (start, lastWaterEnd);
+	
+		// Special case if we started in water
+		Water = true;
+
+		Mask = CONTENTS_MASK_SHOT;
+
+		// Find the exit point
+		int tries = 20; // Cover about 2000 units
+		vec3_t	stWater;
+
+		Vec3Copy (from, stWater);
+		Vec3Clear (lastWaterStart);
+		
+		while (tries > 0)
+		{
+			Vec3MA (stWater, HITSCANSTEP, aimdir, stWater);
+
+			int contents = gi.pointcontents(stWater);
+			if (contents == 0) // "Clear" or solid
+				break; // Got it
+			else if (contents & CONTENTS_MASK_SOLID)
+			{
+				// This is a special case in case we run into a solid.
+				// This basically means that the trace is done, so we can skip ahead right to the solid (act like
+				// we're not in water)
+				tries = 0;
+				break;
+			}
+			tries --;
+		}
+
+		if (tries != 0)
+		{
+			// We reached air
+			// Trace backwards and grab the water brush
+			vec3_t tempOrigin;
+			Vec3MA (stWater, -(HITSCANSTEP + 5), aimdir, tempOrigin);
+			CTrace tempTrace = DoTrace (stWater, tempOrigin, NULL, CONTENTS_MASK_WATER);
+
+			if (tempTrace.contents & CONTENTS_MASK_WATER)// All is good
+			{
+				// This is our end
+				Vec3Copy (tempTrace.endPos, lastWaterStart);
+				hitOutOfWater = true;
+			}
+		}
+		// We didn't reach air if we got here.
+		// Let water handle it, it will act as solid.
+	}
+
+	// Main loop
+	while (1)
+	{
+		// Trace from start to our end
+		CTrace Trace = DoTrace (from, end, Ignore, Mask);
+
+		// Did we hit an entity?
+		if (Trace.ent && Trace.ent->Entity && Trace.ent->takedamage)
+		{
+			// Convert to base entity
+			CBaseEntity *Target = dynamic_cast<CBaseEntity*>(Trace.ent->Entity);
+
+			// Hurt it
+			if (!DoDamage (Entity, Target, aimdir, Trace.endPos, Trace.plane.normal))
+				break; // We wanted to stop
+
+			// Set up the start from where we are now
+			vec3_t oldFrom;
+			Vec3Copy (from, oldFrom);
+			Vec3Copy (Trace.endPos, from);
+
+			DoEffect (from, oldFrom, Water);
+
+			// and ignore the bastard
+			Ignore = Target;
+
+			// Continue our loop
+			continue;
+		}
+		// If we hit something in water...
+		else if (Water)
+		{
+			Water = false;
+			// Assume solid
+			//if (Trace.contents & CONTENTS_MASK_SOLID)
+			{
+				// If we didn't grab water last time...
+				if (Vec3Compare(lastWaterStart, vec3Origin))
+				{
+					// We hit the ground!
+					// Swap start and end points
+					Vec3Copy (lastWaterEnd, lastWaterStart);
+					Vec3MA (lastWaterStart, 5, aimdir, lastWaterStart);
+
+					// Set end point
+					Vec3Copy (Trace.endPos, lastWaterEnd);
+
+					// Draw the effect
+					DoEffect (lastWaterStart, lastWaterEnd, true);
+
+					DoSolidHit (&Trace);
+
+					break; // We're done
+				}
+				// Otherwise we had found an exit point
+				else
+				{
+					// Draw from water surface to water end
+					DoEffect (lastWaterEnd, lastWaterStart, true);
+	
+					// We hit the ground!
+					// Swap start and end points
+					if (!hitOutOfWater)
+						Vec3Copy (lastWaterEnd, lastWaterStart);
+					else
+						hitOutOfWater = false;
+
+					// Set end point
+					Vec3Copy (Trace.endPos, lastWaterEnd);
+
+					// Draw the effect
+					DoEffect (lastWaterStart, lastWaterEnd, false);
+
+					DoSolidHit (&Trace);
+
+					break; // We're done
+				}
+			}
+			continue;
+		}
+		// If we hit non-transparent water
+		else if ((Trace.contents & CONTENTS_MASK_WATER) &&
+			(Trace.surface && !(Trace.surface->flags & (SURF_TEXINFO_TRANS33|SURF_TEXINFO_TRANS66))))
+		{
+			// Copy up our point for the effect
+			Vec3Copy (Trace.endPos, lastWaterEnd);
+
+			// Tell the system we're in water
+			Water = true;
+
+			// Draw the effect
+			DoEffect (lastWaterStart, lastWaterEnd, false);
+
+			DoWaterHit (&Trace);
+
+			// Set up the start from where we are now
+			Vec3Copy (Trace.endPos, from);
+
+			Mask = CONTENTS_MASK_SHOT;
+
+			// Find the exit point
+			int tries = 20; // Cover about 2000 units
+			vec3_t	stWater;
+
+			Vec3Copy (from, stWater);
+			Vec3Clear (lastWaterStart);
+			
+			while (tries > 0)
+			{
+				Vec3MA (stWater, HITSCANSTEP, aimdir, stWater);
+
+				int contents = gi.pointcontents(stWater);
+				if (contents == 0) // "Clear" or solid
+					break; // Got it
+				else if (contents & CONTENTS_MASK_SOLID)
+				{
+					// This is a special case in case we run into a solid.
+					// This basically means that the trace is done, so we can skip ahead right to the solid (act like
+					// we're not in water)
+					tries = 0;
+					break;
+				}
+				tries --;
+			}
+
+			if (tries != 0)
+			{
+				// We reached air
+				// Trace backwards and grab the water brush
+				vec3_t tempOrigin;
+				Vec3MA (stWater, -(HITSCANSTEP + 5), aimdir, tempOrigin);
+				CTrace tempTrace = DoTrace (stWater, tempOrigin, NULL, CONTENTS_MASK_WATER);
+
+				if (tempTrace.contents & CONTENTS_MASK_WATER) // All is good
+				{
+					// This is our end
+					Vec3Copy (tempTrace.endPos, lastWaterStart);
+					continue; // Head to the next area
+				}
+			}
+			// We didn't reach air if we got here.
+			// Let water handle it, it will act as solid.
+
+			// Continue the loop
+			continue;
+		}
+		// Transparent water
+		else if ((Trace.contents & CONTENTS_MASK_WATER) &&
+			(Trace.surface && (Trace.surface->flags & (SURF_TEXINFO_TRANS33|SURF_TEXINFO_TRANS66))))
+		{
+			// This won't count as "water" since we can see through it.
+			// It has the same PVS, meaning we don't need to
+			// do complex tracing.
+			// Copy up our point for the effect
+			Vec3Copy (Trace.endPos, lastWaterEnd);
+
+			// Draw the effect we have so far
+			DoEffect (from, Trace.endPos, false);
+
+			// Water hit effect
+			DoWaterHit (&Trace);
+
+			// Set up water drawing
+			Water = true;
+			Mask = CONTENTS_MASK_SHOT;
+
+			// Find the exit point
+			int tries = 20; // Cover about 2000 units
+			vec3_t	stWater;
+
+			Vec3Copy (from, stWater);
+			Vec3Clear (lastWaterStart);
+			
+			while (tries > 0)
+			{
+				Vec3MA (stWater, HITSCANSTEP, aimdir, stWater);
+
+				int contents = gi.pointcontents(stWater);
+				if (contents == 0) // "Clear" or solid
+					break; // Got it
+				else if (contents & CONTENTS_MASK_SOLID)
+				{
+					// This is a special case in case we run into a solid.
+					// This basically means that the trace is done, so we can skip ahead right to the solid (act like
+					// we're not in water)
+					tries = 0;
+					break;
+				}
+				tries --;
+			}
+
+			if (tries != 0)
+			{
+				// We reached air
+				// Trace backwards and grab the water brush
+				vec3_t tempOrigin;
+				Vec3MA (stWater, -(HITSCANSTEP + 5), aimdir, tempOrigin);
+				CTrace tempTrace = DoTrace (stWater, tempOrigin, NULL, CONTENTS_MASK_WATER);
+
+				if (tempTrace.contents & CONTENTS_MASK_WATER) // All is good
+				{
+					// This is our end
+					Vec3Copy (tempTrace.endPos, lastWaterStart);
+					continue; // Head to the next area
+				}
+			}
+			// We didn't reach air if we got here.
+			// Let water handle it, it will act as solid.
+
+			// Continue the loop
+			continue;
+		}
+		// Assume solid
+		else
+		{
+			// Draw the effect
+			DoEffect (from, Trace.endPos, false);
+			DoSolidHit (&Trace);
+			break; // We're done
+		}
+	}
+}
+
+void CShotgunPellets::DoSolidHit	(CTrace *Trace)
+{
+	if (strncmp (Trace->surface->name, "sky", 3) != 0)
+		CTempEnt_Splashes::Shotgun (Trace->endPos, Trace->plane.normal);
+}
+
+void CShotgunPellets::Fire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir, int damage, int kick, int hSpread, int vSpread, int Count, int mod)
+{
+	for (int i = 0; i < Count; i++)
+		CShotgunPellets(damage, kick, hSpread, vSpread, mod).DoFire (Entity, start, aimdir);
 }

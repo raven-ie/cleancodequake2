@@ -45,7 +45,7 @@ HealthFlags(HealthFlags)
 
 bool CHealth::Pickup (edict_t *ent, CPlayerEntity *other)
 {
-	if (!(this->HealthFlags & HEALTHFLAG_IGNOREMAX) && (other->gameEntity->health >= other->gameEntity->max_health))
+	if (!(HealthFlags & HEALTHFLAG_IGNOREMAX) && (other->gameEntity->health >= other->gameEntity->max_health))
 		return false;
 
 #ifdef CLEANCTF_ENABLED
@@ -55,7 +55,7 @@ bool CHealth::Pickup (edict_t *ent, CPlayerEntity *other)
 //ZOID
 #endif
 
-	other->gameEntity->health += this->Amount;
+	other->gameEntity->health += Amount;
 
 #ifdef CLEANCTF_ENABLED
 //ZOID
@@ -64,7 +64,7 @@ bool CHealth::Pickup (edict_t *ent, CPlayerEntity *other)
 //ZOID
 #endif
 
-	if (!(this->HealthFlags & HEALTHFLAG_IGNOREMAX))
+	if (!(HealthFlags & HEALTHFLAG_IGNOREMAX))
 	{
 		if (other->gameEntity->health > other->gameEntity->max_health)
 			other->gameEntity->health = other->gameEntity->max_health;

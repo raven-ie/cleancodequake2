@@ -169,14 +169,14 @@ edict_t *CBaseItem::DropItem (edict_t *ent)
 
 	dropped = G_Spawn();
 
-	dropped->classname = this->Classname;
+	dropped->classname = Classname;
 	dropped->item = this;
 	dropped->spawnflags = DROPPED_ITEM;
-	dropped->state.effects = this->EffectFlags;
+	dropped->state.effects = EffectFlags;
 	dropped->state.renderFx = RF_GLOW;
 	Vec3Set (dropped->mins, -15, -15, -15);
 	Vec3Set (dropped->maxs, 15, 15, 15);
-	dropped->state.modelIndex = ModelIndex(this->WorldModel);
+	dropped->state.modelIndex = ModelIndex(WorldModel);
 	dropped->solid = SOLID_TRIGGER;
 	dropped->movetype = MOVETYPE_TOSS;  
 	dropped->touch = DropTempTouch;

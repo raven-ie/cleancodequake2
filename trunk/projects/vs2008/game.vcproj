@@ -1364,18 +1364,6 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="Memory"
-				>
-				<File
-					RelativePath="..\..\game\cc_memory.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\game\cc_memory.h"
-					>
-				</File>
-			</Filter>
-			<Filter
 				Name="File system"
 				>
 				<File
@@ -1388,6 +1376,18 @@
 				</File>
 				<File
 					RelativePath="..\..\game\cc_filesystem_local.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Memory"
+				>
+				<File
+					RelativePath="..\..\game\cc_memory.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\game\cc_memory.h"
 					>
 				</File>
 			</Filter>

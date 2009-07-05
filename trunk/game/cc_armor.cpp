@@ -48,7 +48,7 @@ energyProtection(energyProtection)
 
 bool CArmor::Pickup (edict_t *ent, CPlayerEntity *other)
 {
-	if (this->normalProtection == -1)
+	if (normalProtection == -1)
 	{
 		if (other->Client.pers.Armor == NULL)
 		{
@@ -57,12 +57,12 @@ bool CArmor::Pickup (edict_t *ent, CPlayerEntity *other)
 		}
 		else
 		{
-			if (this->maxCount != -1 && (other->Client.pers.Inventory.Has(other->Client.pers.Armor) >= this->maxCount))
+			if (maxCount != -1 && (other->Client.pers.Inventory.Has(other->Client.pers.Armor) >= maxCount))
 				return false;
 
 			other->Client.pers.Inventory.Add (other->Client.pers.Armor, 2);
-			if (this->maxCount != -1 && (other->Client.pers.Inventory.Has(other->Client.pers.Armor) > this->maxCount))
-				other->Client.pers.Inventory.Set(other->Client.pers.Armor, this->maxCount);
+			if (maxCount != -1 && (other->Client.pers.Inventory.Has(other->Client.pers.Armor) > maxCount))
+				other->Client.pers.Inventory.Set(other->Client.pers.Armor, maxCount);
 		}
 		if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
 			SetRespawn (ent, 20);
@@ -71,12 +71,12 @@ bool CArmor::Pickup (edict_t *ent, CPlayerEntity *other)
 
 	if (other->Client.pers.Armor != NULL)
 	{
-		if (this->normalProtection > other->Client.pers.Armor->normalProtection)
+		if (normalProtection > other->Client.pers.Armor->normalProtection)
 		{
 			// calc new armor values
-			int newCount = this->baseCount + ((other->Client.pers.Armor->normalProtection / this->normalProtection) * other->Client.pers.Inventory.Has(other->Client.pers.Armor));
-			if (newCount > this->maxCount)
-				newCount = this->maxCount;
+			int newCount = baseCount + (((float)other->Client.pers.Armor->normalProtection / (float)normalProtection) * other->Client.pers.Inventory.Has(other->Client.pers.Armor));
+			if (newCount > maxCount)
+				newCount = maxCount;
 
 			// zero count of old armor so it goes away
 			other->Client.pers.Inventory.Set(other->Client.pers.Armor, 0);
@@ -88,7 +88,7 @@ bool CArmor::Pickup (edict_t *ent, CPlayerEntity *other)
 		else
 		{
 			// calc new armor values
-			int newCount = other->Client.pers.Inventory.Has(other->Client.pers.Armor) + ((this->normalProtection / other->Client.pers.Armor->normalProtection) * this->baseCount);
+			int newCount = other->Client.pers.Inventory.Has(other->Client.pers.Armor) + (((float)normalProtection / (float)other->Client.pers.Armor->normalProtection) * this->baseCount);
 			if (newCount > other->Client.pers.Armor->maxCount)
 				newCount = other->Client.pers.Armor->maxCount;
 
@@ -104,7 +104,7 @@ bool CArmor::Pickup (edict_t *ent, CPlayerEntity *other)
 	else
 	{
 		other->Client.pers.Armor = this;
-		other->Client.pers.Inventory.Set(this, this->baseCount);
+		other->Client.pers.Inventory.Set(this, baseCount);
 	}
 
 	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))

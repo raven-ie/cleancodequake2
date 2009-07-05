@@ -49,7 +49,7 @@ bool CBasePowerUp::Pickup (edict_t *ent, CPlayerEntity *other)
 		if (other->Client.pers.Inventory.Has(this) > 0 &&
 			(!(PowerupFlags & POWERFLAG_STACK) ||
 			(PowerupFlags & (POWERFLAG_STACK|POWERFLAG_BUTNOTINCOOP) && (game.mode == GAME_COOPERATIVE)) ||
-			(game.mode == GAME_COOPERATIVE) && (this->Flags & ITEMFLAG_STAY_COOP)))
+			(game.mode == GAME_COOPERATIVE) && (Flags & ITEMFLAG_STAY_COOP)))
 			return false;
 
 		other->Client.pers.Inventory += this;

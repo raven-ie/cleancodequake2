@@ -1158,14 +1158,11 @@ void FS_Init()
 	fsPath_t	*next;
 	int			i;
 
-	uint32 startCycles = Sys_Milliseconds();
-	Com_Printf (0, "\n------- CleanCode Filesystem Initialization ------\n");
-
-	fs_basedir		= new CCvar ("basedir",			".", 0);
-	fs_cddir		= new CCvar ("cddir",			"",		0);
-	fs_game			= new CCvar ("game",			"",		0);
-	fs_gamedircvar	= new CCvar ("gamedir",			"",		0);
-	fs_developer	= new CCvar ("fs_developer",	"",		0);
+	fs_basedir		= QNew (com_gamePool, 0) CCvar ("basedir",			".", 0);
+	fs_cddir		= QNew (com_gamePool, 0) CCvar ("cddir",			"",		0);
+	fs_game			= QNew (com_gamePool, 0) CCvar ("game",			"",		0);
+	fs_gamedircvar	= QNew (com_gamePool, 0) CCvar ("gamedir",			"",		0);
+	fs_developer	= QNew (com_gamePool, 0) CCvar ("fs_developer",	"",		0);
 
 	if (fs_cddir->String()[0])
 		FS_AddGameDirectory(Q_VarArgs("%s/"BASE_MODDIRNAME, fs_cddir->String()), BASE_MODDIRNAME);
@@ -1187,11 +1184,6 @@ void FS_Init()
 			fs_invSearchPaths[i] = next;
 	}
 
-	Com_Printf (0, "----------------------------------------\n");
-
 	// Check memory integrity
 	Mem_CheckPoolIntegrity (com_fileSysPool);
-
-	Com_Printf (0, "(CC) init time: %6.2fms\n", (Sys_Milliseconds()-startCycles));
-	Com_Printf (0, "----------------------------------------\n");
 }

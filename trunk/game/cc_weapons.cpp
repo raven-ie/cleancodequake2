@@ -70,9 +70,7 @@ VWepModel(VWepModel)
 
 bool CWeaponItem::Pickup (edict_t *ent, CPlayerEntity *other)
 {
-	int			index;
-
-	index = this->GetIndex();
+	int			index = GetIndex();
 
 	if ( (dmFlags.dfWeaponsStay || game.mode == GAME_COOPERATIVE) 
 		&& other->Client.pers.Inventory.Has(index))
@@ -86,12 +84,12 @@ bool CWeaponItem::Pickup (edict_t *ent, CPlayerEntity *other)
 	if (!(ent->spawnflags & DROPPED_ITEM) )
 	{
 		// give them some ammo with it
-		if (this->Ammo)
+		if (Ammo)
 		{
 			if (dmFlags.dfInfiniteAmmo)
-				this->Ammo->AddAmmo (other, 1000);
+				Ammo->AddAmmo (other, 1000);
 			else
-				this->Ammo->AddAmmo (other, this->Ammo->Quantity);
+				Ammo->AddAmmo (other, this->Ammo->Quantity);
 		}
 
 		if (! (ent->spawnflags & DROPPED_PLAYER_ITEM) )
@@ -108,14 +106,14 @@ bool CWeaponItem::Pickup (edict_t *ent, CPlayerEntity *other)
 		}
 	}
 	else if (ent->count)
-		this->Ammo->AddAmmo (other, ent->count);
+		Ammo->AddAmmo (other, ent->count);
 
-	if (this->Weapon)
+	if (Weapon)
 	{
-		if (other->Client.pers.Weapon != this->Weapon && 
+		if (other->Client.pers.Weapon != Weapon && 
 			(other->Client.pers.Inventory.Has(this) == 1) &&
 			( !(game.mode & GAME_DEATHMATCH) || (other->Client.pers.Weapon && other->Client.pers.Weapon->WeaponItem == FindItem("blaster")) ) )
-			other->Client.NewWeapon = this->Weapon;
+			other->Client.NewWeapon = Weapon;
 	}
 
 	return true;
@@ -124,26 +122,26 @@ bool CWeaponItem::Pickup (edict_t *ent, CPlayerEntity *other)
 void CWeaponItem::Use (CPlayerEntity *ent)
 {
 	// see if we're already using it
-	if (this->Weapon == ent->Client.pers.Weapon)
+	if (Weapon == ent->Client.pers.Weapon)
 		return;
 
-	if (this->Ammo && !g_select_empty->Integer() && !(this->Flags & ITEMFLAG_AMMO))
+	if (Ammo && !g_select_empty->Integer() && !(Flags & ITEMFLAG_AMMO))
 	{
-		if (!ent->Client.pers.Inventory.Has(this->Ammo->GetIndex()))
+		if (!ent->Client.pers.Inventory.Has(Ammo->GetIndex()))
 		{
-			ClientPrintf (ent->gameEntity, PRINT_HIGH, "No %s for %s.\n", this->Ammo->Name, this->Name);
+			ClientPrintf (ent->gameEntity, PRINT_HIGH, "No %s for %s.\n", Ammo->Name, Name);
 			return;
 		}
 
-		if (ent->Client.pers.Inventory.Has(this->Ammo->GetIndex()) < this->Quantity)
+		if (ent->Client.pers.Inventory.Has(Ammo->GetIndex()) < Quantity)
 		{
-			ClientPrintf (ent->gameEntity, PRINT_HIGH, "Not enough %s for %s.\n", this->Ammo->Name, this->Name);
+			ClientPrintf (ent->gameEntity, PRINT_HIGH, "Not enough %s for %s.\n", Ammo->Name, Name);
 			return;
 		}
 	}
 
 	// change to this weapon when down
-	ent->Client.NewWeapon = this->Weapon;
+	ent->Client.NewWeapon = Weapon;
 }
 
 void CWeaponItem::Drop (CPlayerEntity *ent)
@@ -154,7 +152,7 @@ void CWeaponItem::Drop (CPlayerEntity *ent)
 	//{
 		ent->Client.pers.Inventory -= this;
 
-		if (this->Weapon == ent->Client.pers.Weapon)
+		if (Weapon == ent->Client.pers.Weapon)
 			ent->Client.pers.Weapon->NoAmmoWeaponChange(ent);
 	//}
 }
@@ -180,40 +178,40 @@ int maxBandolierAmmoValues[AMMOTAG_MAX] =
 
 int CAmmo::GetMax (CPlayerEntity *ent)
 {
-	return ent->Client.pers.maxAmmoValues[this->Tag];
+	return ent->Client.pers.maxAmmoValues[Tag];
 }
 
 void CAmmo::Use (CPlayerEntity *ent)
 {
-	if (!(this->Flags & ITEMFLAG_WEAPON))
+	if (!(Flags & ITEMFLAG_WEAPON))
 		return;
 
 	// see if we're already using it
-	if (this->Weapon == ent->Client.pers.Weapon)
+	if (Weapon == ent->Client.pers.Weapon)
 		return;
 
 	if (!g_select_empty->Integer())
 	{
-		if (!ent->Client.pers.Inventory.Has(this->GetIndex()))
+		if (!ent->Client.pers.Inventory.Has(GetIndex()))
 		{
-			ClientPrintf (ent->gameEntity, PRINT_HIGH, "No %s for %s.\n", this->Name, this->Name);
+			ClientPrintf (ent->gameEntity, PRINT_HIGH, "No %s for %s.\n", Name, Name);
 			return;
 		}
 
-		if (ent->Client.pers.Inventory.Has(this->GetIndex()) < this->Amount)
+		if (ent->Client.pers.Inventory.Has(GetIndex()) < Amount)
 		{
-			ClientPrintf (ent->gameEntity, PRINT_HIGH, "Not enough %s.\n", this->Name);
+			ClientPrintf (ent->gameEntity, PRINT_HIGH, "Not enough %s.\n", Name);
 			return;
 		}
 	}
 
 	// change to this weapon when down
-	ent->Client.NewWeapon = this->Weapon;
+	ent->Client.NewWeapon = Weapon;
 }
 
 void CAmmo::Drop (CPlayerEntity *ent)
 {
-	int count = this->Quantity;
+	int count = Quantity;
 	edict_t *dropped = DropItem(ent->gameEntity);
 
 	if (count > ent->Client.pers.Inventory.Has(this))
@@ -223,7 +221,7 @@ void CAmmo::Drop (CPlayerEntity *ent)
 
 	ent->Client.pers.Inventory.Remove (this, count);
 
-	if (this->Weapon && ent->Client.pers.Weapon && (ent->Client.pers.Weapon == this->Weapon) &&
+	if (Weapon && ent->Client.pers.Weapon && (ent->Client.pers.Weapon == Weapon) &&
 		!ent->Client.pers.Inventory.Has(this))
 		ent->Client.pers.Weapon->NoAmmoWeaponChange(ent);
 }
@@ -254,7 +252,7 @@ bool CAmmo::Pickup (edict_t *ent, CPlayerEntity *other)
 	int			count;
 	bool		weapon;
 
-	weapon = (this->Flags & ITEMFLAG_WEAPON);
+	weapon = (Flags & ITEMFLAG_WEAPON);
 
 	if ( weapon && dmFlags.dfInfiniteAmmo )
 		count = 1000;
@@ -265,7 +263,7 @@ bool CAmmo::Pickup (edict_t *ent, CPlayerEntity *other)
 
 	oldcount = other->Client.pers.Inventory.Has(this);
 
-	if (!this->AddAmmo (other, count))
+	if (!AddAmmo (other, count))
 		return false;
 
 	if (weapon && !oldcount)

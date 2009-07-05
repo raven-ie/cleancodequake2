@@ -94,7 +94,8 @@ void CRailgun::Fire (CPlayerEntity *ent)
 
 	Vec3Set (offset, 0, 7,  ent->gameEntity->viewheight-8);
 	P_ProjectSource (ent, offset, forward, right, start);
-	fire_rail (ent->gameEntity, start, forward, damage, kick);
+	//fire_rail (ent->gameEntity, start, forward, damage, kick);
+	CRailGunShot::Fire (ent, start, forward, damage, kick);
 
 	// send muzzle flash
 	Muzzle (ent, MZ_RAILGUN);

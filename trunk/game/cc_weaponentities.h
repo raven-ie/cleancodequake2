@@ -78,3 +78,72 @@ public:
 	static void Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t dir,
 						int damage, int speed, float damage_radius, int radius_damage);
 };
+
+class CHitScan
+{
+public:
+	bool ThroughAndThrough;
+	int Damage;
+	int Kick;
+
+	CHitScan (int damage, int kick, bool throughAndThrough) :
+	Damage(damage),
+	Kick(kick),
+	ThroughAndThrough(throughAndThrough) {};
+
+	virtual inline CTrace	DoTrace		(vec3_t start, vec3_t end, CBaseEntity *ignore, int mask);
+	virtual inline bool		DoDamage	(CBaseEntity *Attacker, CBaseEntity *Target, vec3_t dir, vec3_t point, vec3_t normal);
+	virtual inline void		DoEffect	(vec3_t start, vec3_t end, bool water);
+	virtual inline void		DoSolidHit	(CTrace *Trace);
+	virtual inline void		DoWaterHit	(CTrace *Trace);
+	virtual bool			ModifyEnd	(vec3_t aimDir, vec3_t start, vec3_t end);
+
+	virtual void			DoFire		(CBaseEntity *Entity, vec3_t start, vec3_t aimdir);
+};
+
+class CRailGunShot : public CHitScan
+{
+public:
+	CRailGunShot (int damage, int kick) :
+	CHitScan (damage, kick, true) {};
+
+	inline bool		DoDamage (CBaseEntity *Attacker, CBaseEntity *Target, vec3_t dir, vec3_t point, vec3_t normal);
+	inline void		DoEffect (vec3_t start, vec3_t end, bool water);
+
+	static void		Fire		(CBaseEntity *Entity, vec3_t start, vec3_t aimdir, int damage, int kick);
+};
+
+class CBullet : public CHitScan
+{
+public:
+	int MeansOfDeath;
+	int vSpread, hSpread;
+
+	CBullet (int damage, int kick, int hSpread, int vSpread, int mod) :
+	CHitScan (damage, kick, false),
+	vSpread(vSpread),
+	hSpread(hSpread),
+	MeansOfDeath(mod) {};
+
+	inline bool				DoDamage (CBaseEntity *Attacker, CBaseEntity *Target, vec3_t dir, vec3_t point, vec3_t normal);
+	virtual inline void		DoSolidHit	(CTrace *Trace);
+	inline void				DoWaterHit	(CTrace *Trace);
+	bool					ModifyEnd (vec3_t aimDir, vec3_t start, vec3_t end);
+	void					DoEffect (vec3_t start, vec3_t end, bool water);
+	virtual void			DoFire		(CBaseEntity *Entity, vec3_t start, vec3_t aimdir);
+
+	static void				Fire		(CBaseEntity *Entity, vec3_t start, vec3_t aimdir, int damage, int kick, int hSpread, int vSpread, int mod);
+};
+
+class CShotgunPellets : public CBullet
+{
+public:
+	CShotgunPellets (int damage, int kick, int hSpread, int vSpread, int mod) :
+	CBullet (damage, kick, hSpread, vSpread, mod)
+	{
+	};
+
+	inline void				DoSolidHit (CTrace *Trace);
+
+	static void				Fire		(CBaseEntity *Entity, vec3_t start, vec3_t aimdir, int damage, int kick, int hSpread, int vSpread, int Count, int mod);
+};
