@@ -388,6 +388,219 @@ void CRocket::Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t dir,
 	Rocket->Link ();
 }
 
+CBFGBolt::CBFGBolt () :
+CFlyMissileProjectile()
+{
+	Exploded = false;
+};
+
+CBFGBolt::CBFGBolt (int Index) :
+CFlyMissileProjectile(Index)
+{
+	Exploded = false;
+};
+
+void CBFGBolt::Think ()
+{
+	// bfg_explode
+	if (Exploded)
+	{
+		edict_t	*ent;
+		float	points;
+		vec3_t	v;
+		float	dist;
+		vec3_t	origin;
+
+		State.GetOrigin (origin);
+
+		if (State.GetFrame() == 0)
+		{
+			// the BFG effect
+			ent = NULL;
+			while ((ent = findradius(ent, origin, DamageRadius)) != NULL)
+			{
+				if (!ent->takedamage)
+					continue;
+				if (ent == gameEntity->owner)
+					continue;
+				if (!CanDamage (ent, gameEntity))
+					continue;
+				if (!CanDamage (ent, gameEntity->owner))
+					continue;
+
+				Vec3Add (ent->mins, ent->maxs, v);
+				Vec3MA (ent->state.origin, 0.5, v, v);
+				Vec3Subtract (origin, v, v);
+				dist = Vec3Length(v);
+				points = Damage * (1.0f - sqrtf(dist/DamageRadius));
+				if (ent == gameEntity->owner)
+					points = points * 0.5;
+
+				CTempEnt_Explosions::BFGExplosion (ent->state.origin);
+				T_Damage (ent, gameEntity, gameEntity->owner, gameEntity->velocity, ent->state.origin, vec3Origin, (int)points, 0, DAMAGE_ENERGY, MOD_BFG_EFFECT);
+			}
+		}
+
+		NextThink = level.framenum + FRAMETIME;
+		State.SetFrame (State.GetFrame() + 1);
+		if (State.GetFrame() == 5)
+			Free ();
+
+		return;
+	}
+	else // bfg_think
+	{
+		if (FreeTime < level.framenum)
+		{
+			Free();
+			return;
+		}
+
+		edict_t	*ent;
+		edict_t	*ignore;
+		vec3_t	point;
+		vec3_t	dir;
+		vec3_t	start;
+		vec3_t	end;
+		int		dmg;
+		CTrace	tr;
+		vec3_t	origin;
+
+		State.GetOrigin (origin);
+
+		if (game.mode & GAME_DEATHMATCH)
+			dmg = 5;
+		else
+			dmg = 10;
+
+		ent = NULL;
+		while ((ent = findradius(ent, origin, 256)) != NULL)
+		{
+			if (ent == gameEntity)
+				continue;
+
+			if (ent == gameEntity->owner)
+				continue;
+
+			if (!ent->takedamage)
+				continue;
+
+			if (!(ent->svFlags & SVF_MONSTER) && (!ent->client))
+				continue;
+
+	#ifdef CLEANCTF_ENABLED
+	//ZOID
+			//don't target players in CTF
+			if ((game.mode & GAME_CTF) && ent->Entity && (ent->Entity->EntityFlags & ENT_PLAYER) &&
+				gameEntity->owner->client)
+			{
+				if ((dynamic_cast<CPlayerEntity*>(ent->Entity))->Client.resp.ctf_team == (dynamic_cast<CPlayerEntity*>(gameEntity->owner->Entity))->Client.resp.ctf_team)
+				continue;
+			}
+	//ZOID
+	#endif
+
+			Vec3MA (ent->absMin, 0.5, ent->size, point);
+
+			Vec3Subtract (point, origin, dir);
+			VectorNormalizef (dir, dir);
+
+			ignore = gameEntity;
+			Vec3Copy (origin, start);
+			Vec3MA (start, 2048, dir, end);
+			while(1)
+			{
+				tr = CTrace (start, end, ignore, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_DEADMONSTER);
+
+				if (!tr.ent)
+					break;
+
+				// hurt it if we can
+				if ((tr.ent->takedamage) && !(tr.ent->flags & FL_IMMUNE_LASER) && (tr.ent != gameEntity->owner))
+					T_Damage (tr.ent, gameEntity, gameEntity->owner, dir, tr.endPos, vec3Origin, dmg, 1, DAMAGE_ENERGY, MOD_BFG_LASER);
+
+				// if we hit something that's not a monster or player we're done
+				if (!(tr.ent->svFlags & SVF_MONSTER) && (!tr.ent->client))
+				{
+					CTempEnt_Splashes::Sparks (tr.endPos, tr.plane.normal, CTempEnt_Splashes::STLaserSparks, (CTempEnt_Splashes::ESplashType)gameEntity->state.skinNum, 4);
+					break;
+				}
+
+				ignore = tr.ent;
+				Vec3Copy (tr.endPos, start);
+			}
+
+			CTempEnt_Trails::BFGLaser(origin, tr.endPos);
+		}
+
+		NextThink = level.framenum + FRAMETIME;
+	}
+}
+
+void CBFGBolt::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
+{
+	if (Exploded)
+		return;
+
+	if (other->gameEntity == gameEntity->owner)
+		return;
+
+	if (surf && (surf->flags & SURF_TEXINFO_SKY))
+	{
+		Free();
+		return;
+	}
+
+	vec3_t boltOrigin;
+	State.GetOrigin(boltOrigin);
+	if (gameEntity->owner->client)
+		PlayerNoise(dynamic_cast<CPlayerEntity*>(gameEntity->owner->Entity), boltOrigin, PNOISE_IMPACT);
+
+	// core explosion - prevents firing it into the wall/floor
+	if (other->gameEntity->takedamage)
+		T_Damage (other->gameEntity, gameEntity, gameEntity->owner, gameEntity->velocity, boltOrigin, plane->normal, 200, 0, 0, MOD_BFG_BLAST);
+	T_RadiusDamage(gameEntity, gameEntity->owner, 200, other->gameEntity, 100, MOD_BFG_BLAST);
+
+	PlaySoundFrom (gameEntity, CHAN_VOICE, SoundIndex ("weapons/bfg__x1b.wav"));
+	gameEntity->solid = SOLID_NOT;
+	Exploded = true;
+	Vec3MA (boltOrigin, -0.1, gameEntity->velocity, boltOrigin);
+	State.SetOrigin (boltOrigin);
+	Vec3Clear (gameEntity->velocity);
+	State.SetModelIndex(ModelIndex ("sprites/s_bfg3.sp2"));
+	State.SetFrame(0);
+	State.SetSound(0);
+	State.SetEffects (EF_BFG);
+	NextThink = level.framenum + FRAMETIME;
+	gameEntity->enemy = other->gameEntity;
+
+	CTempEnt_Explosions::BFGExplosion (boltOrigin, true);
+}
+
+void CBFGBolt::Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t dir,
+						int damage, int speed, float damage_radius)
+{
+	CBFGBolt	*BFG = QNew (com_levelPool, 0) CBFGBolt;
+
+	BFG->State.SetOrigin (start);
+
+	vec3_t dirAngles;
+	VecToAngles (dir, dirAngles);
+	BFG->State.SetAngles (dirAngles);
+	Vec3Scale (dir, speed, BFG->gameEntity->velocity);
+	BFG->State.SetEffects (EF_BFG | EF_ANIM_ALLFAST);
+	BFG->State.SetModelIndex (ModelIndex ("sprites/s_bfg1.sp2"));
+	BFG->SetOwner (Spawner);
+	BFG->NextThink = level.framenum + FRAMETIME;
+	BFG->Damage = damage;
+	BFG->DamageRadius = damage_radius;
+	BFG->State.SetSound (SoundIndex ("weapons/bfg__l1a.wav"));
+	BFG->gameEntity->classname = "bfg blast";
+	BFG->FreeTime = level.framenum + 80000/speed;
+
+	BFG->Link ();
+}
+
 CTrace CHitScan::DoTrace(vec3_t start, vec3_t end, CBaseEntity *ignore, int mask)
 {
 	return CTrace (start, end, (ignore) ? ignore->gameEntity : NULL, mask);
