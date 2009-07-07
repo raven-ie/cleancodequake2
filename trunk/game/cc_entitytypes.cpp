@@ -157,8 +157,6 @@ CPhysicsEntity (),
 CTouchableEntity(),
 CThinkableEntity()
 {
-	State.SetOrigin (vec3Origin);
-	State.SetAngles (vec3Origin);
 	Vec3Copy (vec3Origin, gameEntity->velocity); 
 	SetClipmask (CONTENTS_MASK_SHOT);
 	SetSolid (SOLID_BBOX);
@@ -172,8 +170,6 @@ CPhysicsEntity (Index),
 CTouchableEntity(),
 CThinkableEntity()
 {
-	State.SetOrigin (vec3Origin);
-	State.SetAngles (vec3Origin);
 	Vec3Copy (vec3Origin, gameEntity->velocity); 
 	SetClipmask (CONTENTS_MASK_SHOT);
 	SetSolid (SOLID_BBOX);
@@ -195,27 +191,27 @@ bool CBounceProjectile::Run ()
 	if (gameEntity->flags & FL_TEAMSLAVE)
 		return false;
 
-	if (CBaseEntity::gameEntity->velocity[2] > 0)
-		CBaseEntity::gameEntity->groundentity = NULL;
+	if (gameEntity->velocity[2] > 0)
+		gameEntity->groundentity = NULL;
 
 // check for the groundentity going away
-	if (CBaseEntity::gameEntity->groundentity && !CBaseEntity::gameEntity->groundentity->inUse)
-		CBaseEntity::gameEntity->groundentity = NULL;
+	if (gameEntity->groundentity && !gameEntity->groundentity->inUse)
+		gameEntity->groundentity = NULL;
 
 // if onground, return without moving
-	if ( CBaseEntity::gameEntity->groundentity )
+	if ( gameEntity->groundentity )
 		return false;
 
-	CBaseEntity::State.GetOrigin(old_origin);
+	State.GetOrigin(old_origin);
 
 // add gravity
 	AddGravity ();
 
 // move angles
 	vec3_t angles;
-	CBaseEntity::State.GetAngles (angles);
-	Vec3MA (angles, 0.1f, CBaseEntity::gameEntity->avelocity, angles);
-	CBaseEntity::State.SetAngles (angles);
+	State.GetAngles (angles);
+	Vec3MA (angles, 0.1f, gameEntity->avelocity, angles);
+	State.SetAngles (angles);
 
 // move origin
 	Vec3Scale (gameEntity->velocity, 0.1f, move);
@@ -285,8 +281,6 @@ CPhysicsEntity (),
 CTouchableEntity (),
 CThinkableEntity ()
 {
-	State.SetOrigin (vec3Origin);
-	State.SetAngles (vec3Origin);
 	Vec3Copy (vec3Origin, gameEntity->velocity); 
 	SetClipmask (CONTENTS_MASK_SHOT);
 	SetSolid (SOLID_BBOX);
@@ -299,8 +293,6 @@ CPhysicsEntity (Index),
 CTouchableEntity (),
 CThinkableEntity ()
 {
-	State.SetOrigin (vec3Origin);
-	State.SetAngles (vec3Origin);
 	Vec3Copy (vec3Origin, gameEntity->velocity); 
 	SetClipmask (CONTENTS_MASK_SHOT);
 	SetSolid (SOLID_BBOX);
@@ -321,24 +313,24 @@ bool CFlyMissileProjectile::Run ()
 	if (gameEntity->flags & FL_TEAMSLAVE)
 		return false;
 
-	if (CBaseEntity::gameEntity->velocity[2] > 0)
-		CBaseEntity::gameEntity->groundentity = NULL;
+	if (gameEntity->velocity[2] > 0)
+		gameEntity->groundentity = NULL;
 
 // check for the groundentity going away
-	if (CBaseEntity::gameEntity->groundentity && !CBaseEntity::gameEntity->groundentity->inUse)
-		CBaseEntity::gameEntity->groundentity = NULL;
+	if (gameEntity->groundentity && !gameEntity->groundentity->inUse)
+		gameEntity->groundentity = NULL;
 
 // if onground, return without moving
-	if ( CBaseEntity::gameEntity->groundentity )
+	if ( gameEntity->groundentity )
 		return false;
 
-	CBaseEntity::State.GetOrigin(old_origin);
+	State.GetOrigin(old_origin);
 
 // move angles
 	vec3_t angles;
-	CBaseEntity::State.GetAngles (angles);
-	Vec3MA (angles, 0.1f, CBaseEntity::gameEntity->avelocity, angles);
-	CBaseEntity::State.SetAngles (angles);
+	State.GetAngles (angles);
+	Vec3MA (angles, 0.1f, gameEntity->avelocity, angles);
+	State.SetAngles (angles);
 
 // move origin
 	Vec3Scale (gameEntity->velocity, 0.1f, move);
@@ -385,5 +377,327 @@ bool CFlyMissileProjectile::Run ()
 		gi.linkentity (slave);
 	}
 
+	return true;
+}
+
+CStepPhysics::CStepPhysics () :
+CPhysicsEntity (),
+CTouchableEntity (),
+CThinkableEntity ()
+{
+	Vec3Copy (vec3Origin, gameEntity->velocity); 
+	SetClipmask (CONTENTS_MASK_SHOT);
+	SetSolid (SOLID_BBOX);
+	SetMins(vec3Origin);
+	SetMaxs(vec3Origin);
+}
+
+CStepPhysics::CStepPhysics (int Index) :
+CPhysicsEntity (Index),
+CTouchableEntity (),
+CThinkableEntity ()
+{
+	Vec3Copy (vec3Origin, gameEntity->velocity); 
+	SetClipmask (CONTENTS_MASK_SHOT);
+	SetSolid (SOLID_BBOX);
+	SetMins(vec3Origin);
+	SetMaxs(vec3Origin);
+}
+
+void CStepPhysics::CheckGround ()
+{
+	CTrace		trace;
+
+	if (gameEntity->velocity[2] > 100)
+	{
+		gameEntity->groundentity = NULL;
+		return;
+	}
+
+// if the hull point one-quarter unit down is solid the entity is on ground
+	vec3f point = State.GetOrigin();
+	point.Z -= 0.25f;
+
+	trace = CTrace (State.GetOrigin(), GetMins(), GetMaxs(), point, gameEntity, CONTENTS_MASK_MONSTERSOLID);
+
+	// check steepness
+	if ( trace.plane.normal[2] < 0.7 && !trace.startSolid)
+	{
+		gameEntity->groundentity = NULL;
+		return;
+	}
+
+	if (!trace.startSolid && !trace.allSolid)
+	{
+		State.SetOrigin (trace.endPos);
+		gameEntity->groundentity = trace.ent;
+		gameEntity->groundentity_linkcount = trace.ent->linkCount;
+		gameEntity->velocity[2] = 0;
+	}
+}
+
+#define SV_STOPSPEED		100
+#define SV_FRICTION			6
+#define SV_WATERFRICTION	1
+
+void CStepPhysics::AddRotationalFriction ()
+{
+	vec3_t angles;
+	State.GetAngles (angles);
+	Vec3MA (angles, 0.1f, gameEntity->avelocity, angles);
+	State.SetAngles (angles);
+
+	float adjustment = 0.1f * SV_STOPSPEED * SV_FRICTION;
+	for (int n = 0; n < 3; n++)
+	{
+		if (gameEntity->avelocity[n] > 0)
+		{
+			gameEntity->avelocity[n] -= adjustment;
+			if (gameEntity->avelocity[n] < 0)
+				gameEntity->avelocity[n] = 0;
+		}
+		else
+		{
+			gameEntity->avelocity[n] += adjustment;
+			if (gameEntity->avelocity[n] > 0)
+				gameEntity->avelocity[n] = 0;
+		}
+	}
+}
+
+#define MAX_CLIP_PLANES	5
+int CStepPhysics::FlyMove (float time, int mask)
+{
+	edict_t		*hit;
+	int			bumpcount, numbumps;
+	vec3_t		dir;
+	float		d;
+	int			numplanes;
+	vec3_t		planes[MAX_CLIP_PLANES];
+	vec3_t		primal_velocity, original_velocity, new_velocity;
+	int			i, j;
+	CTrace		trace;
+	vec3_t		end;
+	float		time_left;
+	int			blocked;
+	
+	numbumps = 4;
+	
+	blocked = 0;
+	Vec3Copy (gameEntity->velocity, original_velocity);
+	Vec3Copy (gameEntity->velocity, primal_velocity);
+	numplanes = 0;
+	
+	time_left = time;
+
+	gameEntity->groundentity = NULL;
+	for (bumpcount=0 ; bumpcount<numbumps ; bumpcount++)
+	{
+		vec3_t origin;
+		State.GetOrigin (origin);
+		for (i=0 ; i<3 ; i++)
+			end[i] = origin[i] + time_left * gameEntity->velocity[i];
+
+		trace = CTrace (origin, gameEntity->mins, gameEntity->maxs, end, gameEntity, mask);
+
+		if (trace.allSolid)
+		{	// entity is trapped in another solid
+			Vec3Copy (vec3Origin, gameEntity->velocity);
+			return 3;
+		}
+
+		if (trace.fraction > 0)
+		{	// actually covered some distance
+			State.SetOrigin (trace.endPos);
+			Vec3Copy (gameEntity->velocity, original_velocity);
+			numplanes = 0;
+		}
+
+		if (trace.fraction == 1)
+			 break;		// moved the entire distance
+
+		hit = trace.ent;
+
+		if (trace.plane.normal[2] > 0.7)
+		{
+			blocked |= 1;		// floor
+			if ( hit->solid == SOLID_BSP)
+			{
+				gameEntity->groundentity = hit;
+				gameEntity->groundentity_linkcount = hit->linkCount;
+			}
+		}
+		if (!trace.plane.normal[2])
+			blocked |= 2;		// step
+
+//
+// run the impact function
+//
+		Impact (&trace);
+		if (!IsInUse())
+			break;		// removed by the impact function
+
+		
+		time_left -= time_left * trace.fraction;
+		
+	// cliped to another plane
+		if (numplanes >= MAX_CLIP_PLANES)
+		{	// this shouldn't really happen
+			Vec3Copy (vec3Origin, gameEntity->velocity);
+			return 3;
+		}
+
+		Vec3Copy (trace.plane.normal, planes[numplanes]);
+		numplanes++;
+
+//
+// modify original_velocity so it parallels all of the clip planes
+//
+		for (i=0 ; i<numplanes ; i++)
+		{
+			ClipVelocity (original_velocity, planes[i], new_velocity, 1);
+
+			for (j=0 ; j<numplanes ; j++)
+				if ((j != i) && !Vec3Compare (planes[i], planes[j]))
+				{
+					if (DotProduct (new_velocity, planes[j]) < 0)
+						break;	// not ok
+				}
+			if (j == numplanes)
+				break;
+		}
+		
+		if (i != numplanes)
+		{	// go along this plane
+			Vec3Copy (new_velocity, gameEntity->velocity);
+		}
+		else
+		{	// go along the crease
+			if (numplanes != 2)
+			{
+//				gi.dprintf ("clip velocity, numplanes == %i\n",numplanes);
+				Vec3Copy (vec3Origin, gameEntity->velocity);
+				return 7;
+			}
+			CrossProduct (planes[0], planes[1], dir);
+			d = DotProduct (dir, gameEntity->velocity);
+			Vec3Scale (dir, d, gameEntity->velocity);
+		}
+
+//
+// if original velocity is against the original velocity, stop dead
+// to avoid tiny occilations in sloping corners
+//
+		if (DotProduct (gameEntity->velocity, primal_velocity) <= 0)
+		{
+			Vec3Copy (vec3Origin, gameEntity->velocity);
+			return blocked;
+		}
+	}
+
+	return blocked;
+}
+
+bool CStepPhysics::Run ()
+{
+	bool		hitsound = false;
+	float		*vel;
+	float		speed, newspeed, control;
+	float		friction;
+	int			mask;
+
+	// airborn monsters should always check for ground
+	if (!gameEntity->groundentity && gameEntity->Monster)
+		gameEntity->Monster->CheckGround ();
+	else
+		CheckGround (); // Specific non-monster checkground
+
+	edict_t *groundentity = gameEntity->groundentity;
+
+	bool wasonground = (groundentity) ? true : false;
+		
+	if (gameEntity->avelocity[0] || gameEntity->avelocity[1] || gameEntity->avelocity[2])
+		AddRotationalFriction ();
+
+	// add gravity except:
+	//   flying monsters
+	//   swimming monsters who are in the water
+	if (!wasonground)
+	{
+		if (!(gameEntity->flags & FL_FLY))
+		{
+			if (!((gameEntity->flags & FL_SWIM) && (gameEntity->waterlevel > 2)))
+			{
+				if (gameEntity->velocity[2] < sv_gravity->Float()*-0.1)
+					hitsound = true;
+				if (gameEntity->waterlevel == 0)
+					AddGravity ();
+			}
+		}
+	}
+
+	// friction for flying monsters that have been given vertical velocity
+	if ((gameEntity->flags & FL_FLY) && (gameEntity->velocity[2] != 0))
+	{
+		speed = fabs(gameEntity->velocity[2]);
+		control = (speed < SV_STOPSPEED) ? SV_STOPSPEED : speed;
+		friction = SV_FRICTION/3;
+		newspeed = speed - (0.1f * control * friction);
+		if (newspeed < 0)
+			newspeed = 0;
+		newspeed /= speed;
+		gameEntity->velocity[2] *= newspeed;
+	}
+
+	// friction for flying monsters that have been given vertical velocity
+	if ((gameEntity->flags & FL_SWIM) && (gameEntity->velocity[2] != 0))
+	{
+		speed = fabs(gameEntity->velocity[2]);
+		control = (speed < SV_STOPSPEED) ? SV_STOPSPEED : speed;
+		newspeed = speed - (0.1f * control * SV_WATERFRICTION * gameEntity->waterlevel);
+		if (newspeed < 0)
+			newspeed = 0;
+		newspeed /= speed;
+		gameEntity->velocity[2] *= newspeed;
+	}
+
+	if (gameEntity->velocity[2] || gameEntity->velocity[1] || gameEntity->velocity[0])
+	{
+		// apply friction
+		// let dead monsters who aren't completely onground slide
+		if ((wasonground) || (gameEntity->flags & (FL_SWIM|FL_FLY)) && !(gameEntity->health <= 0.0 && (gameEntity->Monster && !gameEntity->Monster->CheckBottom())))
+		{
+			vel = gameEntity->velocity;
+			speed = sqrtf(vel[0]*vel[0] +vel[1]*vel[1]);
+			if (speed)
+			{
+				friction = SV_FRICTION;
+
+				control = (speed < SV_STOPSPEED) ? SV_STOPSPEED : speed;
+				newspeed = speed - 0.1f*control*friction;
+
+				if (newspeed < 0)
+					newspeed = 0;
+				newspeed /= speed;
+
+				vel[0] *= newspeed;
+				vel[1] *= newspeed;
+			}
+		}
+
+		if (gameEntity->Monster)
+			mask = CONTENTS_MASK_MONSTERSOLID;
+		else
+			mask = CONTENTS_MASK_SOLID;
+		FlyMove (0.1f, mask);
+
+		Link();
+		G_TouchTriggers (gameEntity);
+		if (!IsInUse())
+			return false;
+
+		if (gameEntity->groundentity && !wasonground && hitsound)
+			PlaySoundFrom (gameEntity, CHAN_AUTO, SoundIndex("world/land.wav"));
+	}
 	return true;
 }

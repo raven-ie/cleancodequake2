@@ -33,13 +33,13 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 
-class CMiscExploBox : public CTossProjectile, public CHurtableEntity
+class CMiscExploBox : public CStepPhysics, public CHurtableEntity
 {
 	bool Dropped;
 public:
 	CMiscExploBox () :
 	CHurtableEntity (),
-	CTossProjectile()
+	CStepPhysics()
 	{
 		SetSolid (SOLID_BBOX);
 
@@ -64,7 +64,7 @@ public:
 	CMiscExploBox (int Index) : 
 	CBaseEntity(Index),
 	CHurtableEntity(Index),
-	CTossProjectile(Index)
+	CStepPhysics(Index)
 	{
 		SetSolid (SOLID_BBOX);
 
@@ -154,6 +154,7 @@ public:
 				return;
 
 			State.SetOrigin (trace.endPos);
+			Link();
 			return;
 		}
 		T_RadiusDamage (gameEntity, gameEntity->activator, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_BARREL);
@@ -176,7 +177,7 @@ public:
 
 	bool Run ()
 	{
-		return CBounceProjectile::Run ();
+		return CStepPhysics::Run ();
 	};
 };
 

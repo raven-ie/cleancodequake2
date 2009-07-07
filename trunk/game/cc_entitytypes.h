@@ -133,3 +133,20 @@ public:
 
 	bool			Run ();
 };
+
+// Gravity, special edge handling
+class CStepPhysics abstract : public CPhysicsEntity, public CTouchableEntity, public CThinkableEntity
+{
+public:
+	CStepPhysics ();
+	CStepPhysics (int index);
+
+	virtual void	Think () {};
+	virtual void	Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf) {};
+
+	virtual void	CheckGround ();
+
+	int				FlyMove (float time, int mask);
+	void			AddRotationalFriction ();
+	bool			Run ();
+};

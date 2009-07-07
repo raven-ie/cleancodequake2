@@ -98,7 +98,6 @@ void Killed (edict_t *targ, edict_t *inflictor, edict_t *attacker, int damage, v
 
 	if ((targ->svFlags & SVF_MONSTER) && (targ->deadflag != DEAD_DEAD) && targ->Monster)
 	{
-//		targ->svFlags |= SVF_DEADMONSTER;	// now treat as a different content type
 		if (!(targ->Monster->AIFlags & AI_GOOD_GUY))
 		{
 			level.killed_monsters++;
@@ -120,7 +119,7 @@ void Killed (edict_t *targ, edict_t *inflictor, edict_t *attacker, int damage, v
 
 	if (targ->Entity && (targ->Entity->EntityFlags & ENT_HURTABLE) && inflictor->Entity && attacker->Entity)
 		(dynamic_cast<CHurtableEntity*>(targ->Entity))->Die (inflictor->Entity, attacker->Entity, damage, point);
-	else
+	else if (targ->die)
 		targ->die (targ, inflictor, attacker, damage, point);
 }
 
