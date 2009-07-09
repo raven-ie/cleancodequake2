@@ -1,0 +1,39 @@
+#summary FAQs for CleanCode
+#labels faqs
+
+===What is CleanCode?====
+CleanCode is, in summary, a cleaner and stable base for Quake II mods. It provides a fast, C++ interface and remains the cleanest source base to date, even in it's current stage.
+
+===Why move?===
+Moving to CleanCode will offer a plethora of improvements over regular Quake II source bases.
+CleanCode promises that your game DLL will perform faster than ever before; with hashing functions and optimized systems, we can guarantee that you won't want to go back!
+
+===But CleanCode is in C++.. doesn't this mean it doesn't work with Quake II engines?===
+Not at all.
+C++ and C code can communicate with each other no problem. The game API is left as plain C code for backwards compatibility with any and every Quake II engine.
+
+===So do you have any new particle effects or more max entities?===
+This, among many other things, is still left up to the engine. CleanCode only deals with the game DLL: this includes entities, and things like that that make the game what the game is.
+
+However, if you have an engine that has improved effects and new temporary entities, you can easily change up the macros and make new functions to use these.
+
+===I'm trying to convert/write some code similar to original Quake II and I get all of these 4996 warnings.. should I be worried?===
+That depends. If the 4996 warnings are related to CleanCode, follow the advice. This means that I have replaced a specific function and you should, and I repeat, should, use the new, cleaner, more stable function.
+
+I cannot offer support if you intend to use outdated code, however I can help you port older code to CleanCode's new base.
+
+===Why C++?===
+Simple: I wanted the base to be object oriented. There are so many neat features that object oriented programming brings to gaming that would be too much to write in C.
+
+For example, entities have several bases: hurtable entity, thinkable entity, physics entity.. all of these are inherited to make a new entity. Instead of the old method of shoving everything into edict_s, edict_s merely stores a pointer to a new, CBaseEntity, which, in object-oriented programming, can be a CBaseEntity or anything that inherits CBaseEntity.
+
+===Why abstract classes?===
+Some classes we didn't intend to be standalone. For example, a CBaseEntity class cannot stand on it's own: it is abstract, and must be inherited and virtual functions filled to make any use of it. You cannot make a new CBaseEntity, however you can make a new class that inherits CBaseEntity.
+
+===I want to port my code over to CleanCode for all these awesome features.. but I've already started working on regular Quake II or I have a mod that I want to port, but it's too hard to do!===
+Sadly, with new features like object orientation, porting becomes harder and harder with each revision. However, if you really want your source ported and are willing to work with a CleanCode team member to port the source code, you can make a deal with us; we'll help you port to CleanCode if you intend to use CleanCode.
+
+===Who made all of this happen?===
+The main programmer, [mailto:jonno.5000@gmail.com Paril], designed and came up with the idea of a clean, object oriented source base. The idea has been passed around in the past, such as with ioquake2, but this time it is becoming a reality.. very quickly!
+
+Several people also aided in testing and porting projects. Everyone that belongs to this project as an owner or member helped out in some way; whether or not they programmed it, they deserve to be remembered as being a part of CleanCode's reality!
