@@ -147,7 +147,7 @@ enum EAttackState
 #endif
 };
 
-class CMonsterEntity : public CStepPhysics, public CTossProjectile, public CHurtableEntity, public CThinkableEntity
+class CMonsterEntity : public CStepPhysics, public CTossProjectile, public CHurtableEntity, public CThinkableEntity, public CTouchableEntity
 {
 public:
 	bool			TossPhysics;
@@ -163,6 +163,8 @@ public:
 
 	void Pain (CBaseEntity *other, float kick, int damage);
 	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
+
+	virtual void	Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf); // Empty
 
 	bool			Run ();
 
@@ -251,6 +253,8 @@ public:
 #endif
 
 	CMonster();
+
+	virtual void	Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf) {}; // Empty
 
 #ifdef MONSTER_USE_ROGUE_AI
 	void DuckDown ();

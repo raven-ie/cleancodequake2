@@ -1391,6 +1391,18 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="Body Queue"
+				>
+				<File
+					RelativePath="..\..\game\cc_bodyqueue.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\game\cc_bodyqueue.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 	</Files>
 	<Globals>

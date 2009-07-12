@@ -43,6 +43,11 @@ state(state)
 {
 };
 
+void	CEntityState::SetNumber(int value)
+{
+	state->number = value;
+}
+
 int		CEntityState::GetNumber		()
 {
 	return state->number;
@@ -256,6 +261,9 @@ CBaseEntity		*CBaseEntity::GetOwner	()
 }
 void			CBaseEntity::SetOwner	(CBaseEntity *ent)
 {
+	if (!ent || !ent->gameEntity)
+		return;
+
 	gameEntity->owner = ent->gameEntity;
 }
 

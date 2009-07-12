@@ -96,9 +96,9 @@ public:
 // "Bouncy" projectile
 class CBounceProjectile abstract : public virtual CPhysicsEntity
 {
-protected:
-	float			backOff;
 public:
+	float			backOff;
+
 	CBounceProjectile ();
 	CBounceProjectile (int index);
 

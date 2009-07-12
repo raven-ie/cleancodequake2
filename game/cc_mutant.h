@@ -36,6 +36,8 @@ class CMutant : public CMonster
 	bool			AttemptJumpToLastSight;
 
 public:
+	bool		Jumping;
+
 	MediaIndex	SoundSwing;
 	MediaIndex	SoundHit;
 	MediaIndex	SoundHit2;
@@ -64,7 +66,8 @@ public:
 	void CheckLanding ();
 	bool CheckMelee ();
 	bool CheckJump ();
-	static void JumpTouch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
+	
+	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
 
 	void Attack ();
 	void Melee ();

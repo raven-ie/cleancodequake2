@@ -102,7 +102,9 @@ void CHandGrenade::FireGrenade (CPlayerEntity *ent, bool inHand)
 	P_ProjectSource (ent, offset, forward, right, start);
 
 	float timer = (float)(ent->Client.grenade_time - level.framenum) / 10;
-	int speed = (GRENADE_MINSPEED + ((GRENADE_TIMER/10) - timer) * ((GRENADE_MAXSPEED - GRENADE_MINSPEED) / (GRENADE_TIMER/10)));
+	int speed = (ent->Client.pers.Weapon) ? 
+		(GRENADE_MINSPEED + ((GRENADE_TIMER/10) - timer) * ((GRENADE_MAXSPEED - GRENADE_MINSPEED) / (GRENADE_TIMER/10)))
+		: 25; // If we're dead, don't toss it 5 yards.
 	//fire_grenade2 (ent->gameEntity, start, forward, damage, speed, timer, radius, inHand);
 	CGrenade::Spawn (ent, start, forward, damage, speed, timer, radius, true, inHand);
 
@@ -137,11 +139,11 @@ void CHandGrenade::FireGrenade (CPlayerEntity *ent, bool inHand)
 void CHandGrenade::Wait (CPlayerEntity *ent)
 {
 	ent->Client.grenade_blew_up = false;
-	// if we aren't dead...
-	if (!ent->gameEntity->deadflag)
-		ent->Client.grenade_thrown = false;
 	if (level.framenum < ent->Client.grenade_time)
 		return;
+
+	if (!ent->gameEntity->deadflag)
+		ent->Client.grenade_thrown = false;
 	ent->Client.PlayerState.SetGunFrame (ent->Client.PlayerState.GetGunFrame()+1);
 }
 

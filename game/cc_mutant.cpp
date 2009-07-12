@@ -311,42 +311,47 @@ void CMutant::Melee ()
 // ATTACK
 //
 
-void CMutant::JumpTouch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *surf)
+void CMutant::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 {
-	if (self->health <= 0)
+	if (!Jumping)
+		return;
+
+	if (Entity->gameEntity->health <= 0)
 	{
-		self->touch = NULL;
+		Jumping = false;
 		return;
 	}
-	CMonster *Monster = self->Monster;
 
-	if (other->takedamage)
+	if (other->gameEntity->takedamage)
 	{
-		if (Vec3Length(Monster->Entity->gameEntity->velocity) > 400)
+		if (Vec3Length(Entity->gameEntity->velocity) > 400)
 		{
 			vec3_t	point;
 			vec3_t	normal;
-			int		damage;
 
-			Vec3Copy (self->velocity, normal);
+			Vec3Copy (Entity->gameEntity->velocity, normal);
 			VectorNormalizeFastf(normal);
-			Vec3MA (self->state.origin, self->maxs[0], normal, point);
-			damage = 40 + 10 * random();
-			T_Damage (other, self, self, self->velocity, point, normal, damage, damage, 0, MOD_UNKNOWN);
+
+			vec3_t origin;
+			Entity->State.GetOrigin ();
+			Vec3MA (origin, Entity->GetMaxs().X, normal, point);
+
+			int damage = 40 + 10 * random();
+			T_Damage (other->gameEntity, Entity->gameEntity, Entity->gameEntity, Entity->gameEntity->velocity, point, normal, damage, damage, 0, MOD_UNKNOWN);
 		}
 	}
 
-	if (!Monster->CheckBottom ())
+	if (!CheckBottom ())
 	{
-		if (self->groundentity)
+		if (Entity->gameEntity->groundentity)
 		{
-			Monster->NextFrame = FRAME_attack02;
-			self->touch = NULL;
+			NextFrame = FRAME_attack02;
+			Jumping = false;
 		}
 		return;
 	}
 
-	self->touch = NULL;
+	Jumping = false;
 }
 
 #define MUTANT_JUMPS_UNSTUPIDLY
@@ -390,7 +395,7 @@ void CMutant::JumpTakeOff ()
 	Entity->gameEntity->groundentity = NULL;
 	AIFlags |= AI_DUCKED;
 	AttackFinished = level.framenum + 30;
-	Entity->gameEntity->touch = &CMutant::JumpTouch;
+	Jumping = true;
 }
 
 void CMutant::CheckLanding ()
@@ -455,7 +460,7 @@ bool CMutant::CheckJump ()
 		Vec3Subtract (origin, LastSighting, temp);
 		if (Vec3Length(temp) > 400)
 		{
-			DebugPrintf ("Not attempting.\n");
+			//DebugPrintf ("Not attempting.\n");
 			return false; // Too far
 		}
 
@@ -463,7 +468,7 @@ bool CMutant::CheckJump ()
 		// Can we jump to the last spot we saw him?
 		CTrace trace = CTrace(origin, LastSighting, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
 
-		CTempEnt_Trails::DebugTrail (origin, LastSighting);
+		//CTempEnt_Trails::DebugTrail (origin, LastSighting);
 
 		// Clear shot
 		if (trace.fraction == 1.0)
@@ -472,7 +477,7 @@ bool CMutant::CheckJump ()
 			vec3_t below = {LastSighting[0], LastSighting[1], LastSighting[2] - 64};
 
 			trace = CTrace (LastSighting, below, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
-			CTempEnt_Trails::DebugTrail (LastSighting, below);
+			//CTempEnt_Trails::DebugTrail (LastSighting, below);
 			if (trace.fraction < 1.0)
 			{
 				// Hit floor, we're solid and can do this jump
@@ -501,7 +506,7 @@ bool CMutant::CheckJump ()
 			
 				Vec3MA (temp, -15, forward, temp);
 				trace = CTrace(origin, temp, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
-				CTempEnt_Trails::DebugTrail (origin, temp);
+				//CTempEnt_Trails::DebugTrail (origin, temp);
 			}
 
 			// Push it up a bit
@@ -510,7 +515,7 @@ bool CMutant::CheckJump ()
 			if (escape != 100)
 			{
 				// Assume our last trace passed
-				CTempEnt::TeleportEffect (temp);
+				//CTempEnt::TeleportEffect (temp);
 				AttemptJumpToLastSight = true;
 				Vec3Copy (temp, LastSighting);
 				return true;

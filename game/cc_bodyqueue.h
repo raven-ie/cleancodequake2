@@ -27,61 +27,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_shared.h
-// Shared header, included by g_local.
+// cc_bodyqueue.h
+// Bodyqueue class
 //
 
-#ifdef HAS_PRAGMA_ONCE
-#pragma once
-#endif
-
-// Pre-defined classes
-class CBaseEntity;
-class CPlayerEntity;
-
-// Stand-alone classes
-#include "cc_conchars.h"
-#include "cc_colors.h"
-#include "cc_indexing.h"
-#include "cc_media.h"
-#include "cc_dmflags.h"
-#include "cc_arg.h"
-#include "cc_write.h"
-#include "cc_cvar.h"
-#include "cc_ban.h"
-#include "cc_filesystem.h"
-
-// Main class files
-#include "cc_items.h"
-#include "cc_inventory.h"
-#include "cc_pathfinding.h"
-#include "cc_sbar.h"
-#include "cc_menu.h"
-#include "cc_weaponmain.h"
-#include "cc_baseentity.h"
-#include "cc_trace.h"
-#include "cc_cmds.h"
-#include "cc_monsters.h"
-#include "cc_memory.h"
-
-// Classes that require classes from the above includes
-#include "cc_bodyqueue.h"
-#include "cc_servercommands.h"
-#include "cc_gamecommands.h"
-#include "cc_print.h"
-#include "cc_sound.h"
-#include "cc_tent.h"
-#include "cc_monsterlist.h"
-#include "cc_pmove.h"
-#include "cc_gameapi.h"
-#include "cc_mapprint.h"
-#ifdef CLEANCTF_ENABLED
-#include "cc_ctfadmin.h"
-#include "cc_ctfmenu.h"
-#endif
-
-extern dmFlagsConfig dmFlags;
-
-#if 0
-void DrawNewton ();
-#endif
+void BodyQueue_Init ();
+void CopyToBodyQueue (CPlayerEntity *Player);

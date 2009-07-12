@@ -36,12 +36,11 @@ class CEntityState
 private:
 	entityStateOld_t	*state;
 
-protected:
-	void	SetNumber		(int value);
 public:
 	CEntityState			(entityStateOld_t *state);
 	CEntityState			();
 
+	void	SetNumber		(int value);
 	int		GetNumber		();
 
 	void	GetOrigin		(vec3_t in);
