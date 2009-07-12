@@ -52,8 +52,8 @@ bool CArmor::Pickup (edict_t *ent, CPlayerEntity *other)
 	{
 		if (other->Client.pers.Armor == NULL)
 		{
-			other->Client.pers.Inventory.Set (FindItem("Jacket Armor"), 2);
-			other->Client.pers.Armor = dynamic_cast<CArmor*>(FindItem("Jacket Armor"));
+			other->Client.pers.Inventory.Set (NItems::JacketArmor, 2);
+			other->Client.pers.Armor = dynamic_cast<CArmor*>(NItems::JacketArmor);
 		}
 		else
 		{
@@ -64,12 +64,8 @@ bool CArmor::Pickup (edict_t *ent, CPlayerEntity *other)
 			if (maxCount != -1 && (other->Client.pers.Inventory.Has(other->Client.pers.Armor) > maxCount))
 				other->Client.pers.Inventory.Set(other->Client.pers.Armor, maxCount);
 		}
-		if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
-			SetRespawn (ent, 20);
-		return true;
 	}
-
-	if (other->Client.pers.Armor != NULL)
+	else if (other->Client.pers.Armor != NULL)
 	{
 		if (normalProtection > other->Client.pers.Armor->normalProtection)
 		{
@@ -148,13 +144,13 @@ int CArmor::CheckArmor (CPlayerEntity *Player, vec3_t point, vec3_t normal, int 
 
 void AddArmorToList ()
 {
-	CArmor *JacketArmor = QNew (com_gamePool, 0) CArmor ("item_armor_jacket", "models/items/armor/jacket/tris.md2", EF_ROTATE, "misc/ar1_pkup.wav", "i_jacketarmor", "Jacket Armor", ITEMFLAG_GRABBABLE|ITEMFLAG_ARMOR, "", 25, 50, 30, 00);
-	CArmor *CombatArmor = QNew (com_gamePool, 0) CArmor ("item_armor_combat", "models/items/armor/combat/tris.md2", EF_ROTATE, "misc/ar1_pkup.wav", "i_combatarmor", "Combat Armor", ITEMFLAG_GRABBABLE|ITEMFLAG_ARMOR, "", 50, 100, 60, 30);
-	CArmor *BodyArmor = QNew (com_gamePool, 0) CArmor ("item_armor_body", "models/items/armor/body/tris.md2", EF_ROTATE, "misc/ar1_pkup.wav", "i_bodyarmor", "Body Armor", ITEMFLAG_GRABBABLE|ITEMFLAG_ARMOR, "", 100, 200, 80, 60);
-	CArmor *ArmorShard = QNew (com_gamePool, 0) CArmor ("item_armor_shard", "models/items/armor/shard/tris.md2", EF_ROTATE, "misc/ar2_pkup.wav", "i_jacketarmor", "Armor Shard", ITEMFLAG_GRABBABLE|ITEMFLAG_ARMOR, "", 2, -1, -1, -1);
+	NItems::JacketArmor = QNew (com_gamePool, 0) CArmor ("item_armor_jacket", "models/items/armor/jacket/tris.md2", EF_ROTATE, "misc/ar1_pkup.wav", "i_jacketarmor", "Jacket Armor", ITEMFLAG_GRABBABLE|ITEMFLAG_ARMOR, "", 25, 50, 30, 0);
+	NItems::CombatArmor = QNew (com_gamePool, 0) CArmor ("item_armor_combat", "models/items/armor/combat/tris.md2", EF_ROTATE, "misc/ar1_pkup.wav", "i_combatarmor", "Combat Armor", ITEMFLAG_GRABBABLE|ITEMFLAG_ARMOR, "", 50, 100, 60, 30);
+	NItems::BodyArmor = QNew (com_gamePool, 0) CArmor ("item_armor_body", "models/items/armor/body/tris.md2", EF_ROTATE, "misc/ar1_pkup.wav", "i_bodyarmor", "Body Armor", ITEMFLAG_GRABBABLE|ITEMFLAG_ARMOR, "", 100, 200, 80, 60);
+	NItems::ArmorShard = QNew (com_gamePool, 0) CArmor ("item_armor_shard", "models/items/armor/shard/tris.md2", EF_ROTATE, "misc/ar2_pkup.wav", "i_jacketarmor", "Armor Shard", ITEMFLAG_GRABBABLE|ITEMFLAG_ARMOR, "", 2, -1, -1, -1);
 
-	ItemList->AddItemToList (JacketArmor);
-	ItemList->AddItemToList (CombatArmor);
-	ItemList->AddItemToList (BodyArmor);
-	ItemList->AddItemToList (ArmorShard);
+	ItemList->AddItemToList (NItems::JacketArmor);
+	ItemList->AddItemToList (NItems::CombatArmor);
+	ItemList->AddItemToList (NItems::BodyArmor);
+	ItemList->AddItemToList (NItems::ArmorShard);
 }

@@ -33,15 +33,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 
 #include "cc_local.h"
+
 #ifdef CLEANCTF_ENABLED
-
-CTech *Regeneration;
-CTech *Haste;
-CTech *Strength;
-CTech *Resistance;
-
-CFlag *RedFlag;
-CFlag *BlueFlag;
 
 void CTFResetFlags(void);
 
@@ -61,7 +54,7 @@ void CTFHasTech(CPlayerEntity *who)
 {
 	if (level.framenum - who->Client.ctf_lasttechmsg > 20)
 	{
-		CenterPrintf(who->gameEntity, "You already have a TECH powerup.");
+		who->PrintToClient(PRINT_CENTER, "You already have a TECH powerup.");
 		who->Client.ctf_lasttechmsg = level.framenum;
 	}
 }
@@ -172,10 +165,10 @@ void SpawnTech(CBaseItem *item, edict_t *spot)
 
 static void SpawnTechs(edict_t *ent)
 {
-	SpawnTech (Regeneration, FindTechSpawn());
-	SpawnTech (Haste, FindTechSpawn());
-	SpawnTech (Strength, FindTechSpawn());
-	SpawnTech (Resistance, FindTechSpawn());
+	SpawnTech (NItems::Regeneration, FindTechSpawn());
+	SpawnTech (NItems::Haste, FindTechSpawn());
+	SpawnTech (NItems::Strength, FindTechSpawn());
+	SpawnTech (NItems::Resistance, FindTechSpawn());
 
 	if (ent)
 		G_FreeEdict(ent);
@@ -219,15 +212,15 @@ void	CTech::Use (CPlayerEntity *ent)
 
 void AddTechsToList ()
 {
-	Regeneration = QNew (com_gamePool, 0) CTech ("item_tech4", "models/ctf/regeneration/tris.md2", EF_ROTATE, "items/pkup.wav", "tech4", "AutoDoc", ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_TECH, NULL);
-	Haste = QNew (com_gamePool, 0) CTech ("item_tech3", "models/ctf/haste/tris.md2", EF_ROTATE, "items/pkup.wav", "tech3", "Time Accel", ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_TECH, NULL);
-	Strength = QNew (com_gamePool, 0) CTech ("item_tech2", "models/ctf/strength/tris.md2", EF_ROTATE, "items/pkup.wav", "tech2", "Power Amplifier", ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_TECH, NULL);
-	Resistance = QNew (com_gamePool, 0) CTech ("item_tech1", "models/ctf/resistance/tris.md2", EF_ROTATE, "items/pkup.wav", "tech1", "Disruptor Shield", ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_TECH, NULL);
+	NItems::Regeneration = QNew (com_gamePool, 0) CTech ("item_tech4", "models/ctf/regeneration/tris.md2", EF_ROTATE, "items/pkup.wav", "tech4", "AutoDoc", ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_TECH, NULL);
+	NItems::Haste = QNew (com_gamePool, 0) CTech ("item_tech3", "models/ctf/haste/tris.md2", EF_ROTATE, "items/pkup.wav", "tech3", "Time Accel", ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_TECH, NULL);
+	NItems::Strength = QNew (com_gamePool, 0) CTech ("item_tech2", "models/ctf/strength/tris.md2", EF_ROTATE, "items/pkup.wav", "tech2", "Power Amplifier", ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_TECH, NULL);
+	NItems::Resistance = QNew (com_gamePool, 0) CTech ("item_tech1", "models/ctf/resistance/tris.md2", EF_ROTATE, "items/pkup.wav", "tech1", "Disruptor Shield", ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_TECH, NULL);
 
-	ItemList->AddItemToList (Regeneration);
-	ItemList->AddItemToList (Haste);
-	ItemList->AddItemToList (Strength);
-	ItemList->AddItemToList (Resistance);
+	ItemList->AddItemToList (NItems::Regeneration);
+	ItemList->AddItemToList (NItems::Haste);
+	ItemList->AddItemToList (NItems::Strength);
+	ItemList->AddItemToList (NItems::Resistance);
 }
 
 
@@ -344,11 +337,11 @@ bool CFlag::Pickup(edict_t *ent, CPlayerEntity *other)
 
 void AddFlagsToList ()
 {
-	RedFlag = QNew (com_gamePool, 0) CFlag ("item_flag_team1", "players/male/flag1.md2", EF_FLAG1, "ctf/flagtk.wav", "i_ctf1", "Red Flag", ITEMFLAG_GRABBABLE, NULL, CTF_TEAM1);
-	BlueFlag = QNew (com_gamePool, 0) CFlag ("item_flag_team2", "players/male/flag2.md2", EF_FLAG2, "ctf/flagtk.wav", "i_ctf2", "Blue Flag", ITEMFLAG_GRABBABLE, NULL, CTF_TEAM2);
+	NItems::RedFlag = QNew (com_gamePool, 0) CFlag ("item_flag_team1", "players/male/flag1.md2", EF_FLAG1, "ctf/flagtk.wav", "i_ctf1", "Red Flag", ITEMFLAG_GRABBABLE, NULL, CTF_TEAM1);
+	NItems::BlueFlag = QNew (com_gamePool, 0) CFlag ("item_flag_team2", "players/male/flag2.md2", EF_FLAG2, "ctf/flagtk.wav", "i_ctf2", "Blue Flag", ITEMFLAG_GRABBABLE, NULL, CTF_TEAM2);
 
-	ItemList->AddItemToList (RedFlag);
-	ItemList->AddItemToList (BlueFlag);
+	ItemList->AddItemToList (NItems::RedFlag);
+	ItemList->AddItemToList (NItems::BlueFlag);
 }
 
 #endif

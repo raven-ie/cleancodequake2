@@ -168,6 +168,8 @@ public:
 ==============================================================================
 */
 
+#define NUM_COLOR_TABLE_COLORS 9
+
 extern const colorf	Q_FColorBlack;
 extern const colorf	Q_FColorRed;
 extern const colorf	Q_FColorGreen;
@@ -181,7 +183,7 @@ extern const colorf	Q_FColorLtGrey;
 extern const colorf	Q_FColorMdGrey;
 extern const colorf	Q_FColorDkGrey;
 
-extern const colorf	Q_FStrColorTable[9];
+extern const colorf	Q_FStrColorTable[NUM_COLOR_TABLE_COLORS];
 
 extern const colorb	Q_BColorBlack;
 extern const colorb	Q_BColorRed;
@@ -196,7 +198,7 @@ extern const colorb	Q_BColorLtGrey;
 extern const colorb	Q_BColorMdGrey;
 extern const colorb	Q_BColorDkGrey;
 
-extern const colorb	Q_BStrColorTable[9];
+extern const colorb	Q_BStrColorTable[NUM_COLOR_TABLE_COLORS];
 
 #define COLOR_ESCAPE	'^'
 
@@ -230,7 +232,10 @@ extern const colorb	Q_BStrColorTable[9];
 #define S_STYLE_RETURN	"^R"
 #define S_STYLE_SHADOW	"^S"
 
-#define Q_StrColorIndex(c)	(((c & 127) - '0') % 9)
+inline int Q_StrColorIndex (char c)
+{
+	return (((c & 127) - '0') % NUM_COLOR_TABLE_COLORS);
+}
 
 bool		Q_IsColorString (const char *p);
 int			Q_ColorCharCount (const char *s, int endPos);
@@ -238,9 +243,33 @@ int			Q_ColorCharOffset (const char *s, int charCount);
 int			Q_ColorStrLastColor (char *s, int byteOfs);
 int			Q_ColorStrLastStyle (char *s, int byteOfs);
 
-#define COLOR_R(rgba)		((rgba) & 0xFF)
-#define COLOR_G(rgba)		(((rgba) >> 8) & 0xFF)
-#define COLOR_B(rgba)		(((rgba) >> 16) & 0xFF)
-#define COLOR_A(rgba)		(((rgba) >> 24) & 0xFF)
-#define COLOR_RGB(r,g,b)	(((r) << 0)|((g) << 8)|((b) << 16))
-#define COLOR_RGBA(r,g,b,a) (((r) << 0)|((g) << 8)|((b) << 16)|((a) << 24))
+inline byte HexColor_GetR (int rgba)
+{
+	return (rgba & 0xFF);
+}
+
+inline byte HexColor_GetG (int rgba)
+{
+	return ((rgba >> 8) & 0xFF);
+}
+
+inline byte HexColor_GetB (int rgba)
+{
+	return ((rgba >> 16) & 0xFF);
+}
+
+inline byte HexColor_GetA (int rgba)
+{
+	return ((rgba >> 24) & 0xFF);
+}
+
+inline int Color_RGBToHex (byte r, byte g, byte b)
+{
+	return ((r << 0) | (g << 8) | (b << 16));
+}
+
+inline int Color_RGBAToHex (byte r, byte g, byte b, byte a)
+{
+	return (r | (g << 8) | (b << 16) | (a << 24));
+}
+

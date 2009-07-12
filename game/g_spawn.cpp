@@ -537,6 +537,8 @@ void InitEntities ()
 }
 
 extern CPlayerEntity **SavedClients;
+
+char *gEntString;
 void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 {
 #ifdef CC_USE_EXCEPTION_HANDLER
@@ -549,8 +551,6 @@ __try
 	int			i;
 	int		skill_level;
 	uint32 startTime = Sys_Milliseconds();
-
-	entities = CC_ParseSpawnEntities (mapname, entities);
 
 	entityNumber = 0;
 	InitMapCounter();
@@ -568,6 +568,9 @@ __try
 	int *test = QNew (com_gamePool, 0) int;
 	*test = 5;
 	Mem_FreePool (com_levelPool);
+	gEntString = Mem_PoolStrDup(entities, com_levelPool, 0);
+
+	entities = CC_ParseSpawnEntities (mapname, entities);
 
 #ifdef MONSTERS_USE_PATHFINDING
 	InitNodes ();

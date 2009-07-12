@@ -33,6 +33,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 #include "m_gunner.h"
+#include "cc_gunner.h"
 
 CGunner Monster_Gunner;
 
@@ -49,17 +50,17 @@ void CGunner::Allocate (edict_t *ent)
 
 void CGunner::Idle ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
+	Entity->PlaySound (CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
 }
 
 void CGunner::Sight ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundSight);
+	Entity->PlaySound (CHAN_VOICE, SoundSight);
 }
 
 void CGunner::Search ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundSearch);
+	Entity->PlaySound (CHAN_VOICE, SoundSearch);
 }
 
 CFrame GunnerFramesFidget [] =
@@ -276,20 +277,20 @@ CFrame GunnerFramesPain1 [] =
 };
 CAnim GunnerMovePain1 (FRAME_pain101, FRAME_pain118, GunnerFramesPain1, ConvertDerivedFunction(&CGunner::Run));
 
-void CGunner::Pain (edict_t *other, float kick, int damage)
+void CGunner::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->health < (Entity->max_health / 2))
-		Entity->state.skinNum = 1;
+	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+		Entity->State.SetSkinNum(1);
 
 #ifdef MONSTER_USE_ROGUE_AI
 	DoneDodge();
 #endif
 
-	if (level.framenum < Entity->pain_debounce_time)
+	if (level.framenum < Entity->gameEntity->pain_debounce_time)
 		return;
 
-	Entity->pain_debounce_time = level.framenum + 30;
-	PlaySoundFrom (Entity, CHAN_VOICE, (rand()&1) ? SoundPain : SoundPain2);
+	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
+	Entity->PlaySound (CHAN_VOICE, (rand()&1) ? SoundPain : SoundPain2);
 
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
@@ -307,12 +308,12 @@ void CGunner::Pain (edict_t *other, float kick, int damage)
 
 void CGunner::Dead ()
 {
-	Vec3Set (Entity->mins, -16, -16, -24);
-	Vec3Set (Entity->maxs, 16, 16, -8);
-	Entity->movetype = MOVETYPE_TOSS;
-	Entity->svFlags |= SVF_DEADMONSTER;
-	Entity->nextthink = 0;
-	gi.linkentity (Entity);
+	Entity->SetMins (vec3f(-16, -16, -24));
+	Entity->SetMaxs (vec3f(16, 16, -8));
+	Entity->TossPhysics = true;
+	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
+	Entity->NextThink = 0;
+	Entity->Link ();
 }
 
 CFrame GunnerFramesDeath [] =
@@ -331,28 +332,28 @@ CFrame GunnerFramesDeath [] =
 };
 CAnim GunnerMoveDeath (FRAME_death01, FRAME_death11, GunnerFramesDeath, ConvertDerivedFunction(&CGunner::Dead));
 
-void CGunner::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
+void CGunner::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
 // check for gib
-	if (Entity->health <= Entity->gib_health)
+	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
 	{
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
+		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
-			ThrowGib (Entity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
+			ThrowGib (Entity->gameEntity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
 		for (int n= 0; n < 4; n++)
-			ThrowGib (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		ThrowHead (Entity, gMedia.Gib_Head[1], damage, GIB_ORGANIC);
-		Entity->deadflag = DEAD_DEAD;
+			ThrowGib (Entity->gameEntity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		Entity->ThrowHead (gMedia.Gib_Head[1], damage, GIB_ORGANIC);
+		Entity->gameEntity->deadflag = DEAD_DEAD;
 		return;
 	}
 
-	if (Entity->deadflag == DEAD_DEAD)
+	if (Entity->gameEntity->deadflag == DEAD_DEAD)
 		return;
 
 // regular death
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundDeath);
-	Entity->deadflag = DEAD_DEAD;
-	Entity->takedamage = DAMAGE_YES;
+	Entity->PlaySound (CHAN_VOICE, SoundDeath);
+	Entity->gameEntity->deadflag = DEAD_DEAD;
+	Entity->gameEntity->takedamage = DAMAGE_YES;
 	CurrentMove = &GunnerMoveDeath;
 }
 
@@ -369,9 +370,9 @@ void CGunner::DuckDown ()
 	}
 
 	Entity->maxs[2] -= 32;
-	Entity->takedamage = DAMAGE_YES;
+	Entity->gameEntity->takedamage = DAMAGE_YES;
 	PauseTime = level.framenum + 10;
-	gi.linkentity (Entity);
+	Entity->Link ();
 #else
 //	if (self->monsterinfo.aiflags & AI_DUCKED)
 //		return;
@@ -383,11 +384,13 @@ void CGunner::DuckDown ()
 	}
 
 //	self->maxs[2] -= 32;
-	Entity->maxs[2] = BaseHeight - 32;
-	Entity->takedamage = DAMAGE_YES;
+	vec3f maxs = Entity->GetMaxs();
+	maxs.Z = BaseHeight - 32;
+	Entity->SetMaxs(maxs);
+	Entity->gameEntity->takedamage = DAMAGE_YES;
 	if (DuckWaitTime < level.framenum)
 		DuckWaitTime = level.framenum + 10;
-	gi.linkentity (Entity);
+	Entity->Link ();
 #endif
 }
 
@@ -404,8 +407,8 @@ void CGunner::DuckUp ()
 {
 	AIFlags &= ~AI_DUCKED;
 	Entity->maxs[2] += 32;
-	Entity->takedamage = DAMAGE_AIM;
-	gi.linkentity (Entity);
+	Entity->gameEntity->takedamage = DAMAGE_AIM;
+	Entity->Link ();
 }
 #endif
 
@@ -430,7 +433,7 @@ CFrame GunnerFramesDuck [] =
 };
 CAnim GunnerMoveDuck (FRAME_duck01, FRAME_duck08, GunnerFramesDuck, ConvertDerivedFunction(&CGunner::Run));
 
-void CGunner::Dodge (edict_t *attacker, float eta
+void CGunner::Dodge (CBaseEntity *attacker, float eta
 #ifdef MONSTER_USE_ROGUE_AI
 					 , CTrace *tr
 #endif
@@ -439,21 +442,21 @@ void CGunner::Dodge (edict_t *attacker, float eta
 	if (random() > 0.25)
 		return;
 
-	if (!Entity->enemy)
-		Entity->enemy = attacker;
+	if (!Entity->gameEntity->enemy)
+		Entity->gameEntity->enemy = attacker->gameEntity;
 
 	CurrentMove = &GunnerMoveDuck;
 }
 
 void CGunner::OpenGun ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundOpen, 1, ATTN_IDLE, 0);
+	Entity->PlaySound (CHAN_VOICE, SoundOpen, 1, ATTN_IDLE, 0);
 }
 
 #ifdef MONSTER_USE_ROGUE_AI
 bool CGunner::GrenadeCheck()
 {
-	if(!Entity->enemy)
+	if(!Entity->gameEntity->enemy)
 		return false;
 
 	vec3_t		start;
@@ -465,31 +468,34 @@ bool CGunner::GrenadeCheck()
 	// check for flag telling us that we're blindfiring
 	if (AIFlags & AI_MANUAL_STEERING)
 	{
-		if (Entity->state.origin[2]+Entity->viewheight < BlindFireTarget[2])
+		if (Entity->State.GetOrigin().Z+Entity->gameEntity->viewheight < BlindFireTarget[2])
 			return false;
 	}
-	else if(Entity->absMax[2] <= Entity->enemy->absMin[2])
+	else if(Entity->GetAbsMax().Z <= Entity->gameEntity->enemy->absMin[2])
 		return false;
 
 	// check to see that we can trace to the player before we start
 	// tossing grenades around.
-	Angles_Vectors (Entity->state.angles, forward, right, NULL);
-	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_GUNNER_GRENADE_1], forward, right, start);
+	vec3_t angles, origin;
+	Entity->State.GetAngles(angles);
+	Entity->State.GetOrigin(origin);
+	Angles_Vectors (angles, forward, right, NULL);
+	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_GUNNER_GRENADE_1], forward, right, start);
 
 	// pmm - check for blindfire flag
 	if (AIFlags & AI_MANUAL_STEERING)
 		Vec3Copy (BlindFireTarget, target);
 	else
-		Vec3Copy (Entity->enemy->state.origin, target);
+		Vec3Copy (Entity->gameEntity->enemy->state.origin, target);
 
 	// see if we're too close
-	Vec3Subtract (Entity->state.origin, target, dir);
+	Vec3Subtract (origin, target, dir);
 
 	if (Vec3Length(dir) < 100)
 		return false;
 
-	CTrace tr = CTrace(start, target, Entity, CONTENTS_MASK_SHOT);
-	if(tr.ent == Entity->enemy || tr.fraction == 1)
+	CTrace tr = CTrace(start, target, Entity->gameEntity, CONTENTS_MASK_SHOT);
+	if(tr.ent == Entity->gameEntity->enemy || tr.fraction == 1)
 		return true;
 
 	return false;
@@ -502,15 +508,18 @@ void CGunner::Fire ()
 	vec3_t	forward, right;
 	vec3_t	target;
 	vec3_t	aim;
-	int		flash_number = MZ2_GUNNER_MACHINEGUN_1 + (Entity->state.frame - FRAME_attak216);
+	int		flash_number = MZ2_GUNNER_MACHINEGUN_1 + (Entity->State.GetFrame() - FRAME_attak216);
 
-	Angles_Vectors (Entity->state.angles, forward, right, NULL);
-	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
+	vec3_t angles, origin;
+	Entity->State.GetAngles(angles);
+	Entity->State.GetOrigin(origin);
+	Angles_Vectors (angles, forward, right, NULL);
+	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
 	// project enemy back a bit and target there
-	Vec3Copy (Entity->enemy->state.origin, target);
-	Vec3MA (target, -0.2, Entity->enemy->velocity, target);
-	target[2] += Entity->enemy->viewheight;
+	Vec3Copy (Entity->gameEntity->enemy->state.origin, target);
+	Vec3MA (target, -0.2f, Entity->gameEntity->enemy->velocity, target);
+	target[2] += Entity->gameEntity->enemy->viewheight;
 
 	Vec3Subtract (target, start, aim);
 	VectorNormalizef (aim, aim);
@@ -525,7 +534,7 @@ void CGunner::Grenade ()
 	vec3_t	aim;
 	int		flash_number;
 
-	switch (Entity->state.frame)
+	switch (Entity->State.GetFrame())
 	{
 	case FRAME_attak105:
 		flash_number = MZ2_GUNNER_GRENADE_1;
@@ -557,10 +566,13 @@ void CGunner::Grenade ()
 	// PMM
 	vec3_t	target;	
 
-	if(!Entity->enemy || !Entity->enemy->inUse)		//PGM
+	if(!Entity->gameEntity->enemy || !Entity->gameEntity->enemy->inUse)		//PGM
 		return;									//PGM
 
-	switch (Entity->state.frame)
+	vec3_t angles, origin;
+	Entity->State.GetAngles(angles);
+	Entity->State.GetOrigin(origin);
+	switch (Entity->State.GetFrame())
 	{
 	case FRAME_attak105:
 		flash_number = MZ2_GUNNER_GRENADE_1;
@@ -583,7 +595,7 @@ void CGunner::Grenade ()
 
 	//	pmm
 	// if we're shooting blind and we still can't see our enemy
-	if ((AIFlags & AI_MANUAL_STEERING) && (!visible(Entity, Entity->enemy)))
+	if ((AIFlags & AI_MANUAL_STEERING) && (!visible(Entity->gameEntity, Entity->gameEntity->enemy)))
 	{
 		// and we have a valid blind_fire_target
 		if (Vec3Compare (BlindFireTarget, vec3Origin))
@@ -592,18 +604,18 @@ void CGunner::Grenade ()
 		Vec3Copy (BlindFireTarget, target);
 	}
 	else
-		Vec3Copy (Entity->state.origin, target);
+		Vec3Copy (origin, target);
 	// pmm
 
-	Angles_Vectors (Entity->state.angles, forward, right, up);	//PGM
-	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
+	Angles_Vectors (angles, forward, right, up);	//PGM
+	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
 //PGM
-	if(Entity->enemy)
+	if(Entity->gameEntity->enemy)
 	{
 		float	dist;
 
-		Vec3Subtract(target, Entity->state.origin, aim);
+		Vec3Subtract(target, origin, aim);
 		dist = Vec3Length(aim);
 
 		// aim up if they're on the same level as me and far away.
@@ -682,7 +694,9 @@ void CGunner::BlindCheck ()
 
 	if (AIFlags & AI_MANUAL_STEERING)
 	{
-		Vec3Subtract(BlindFireTarget, Entity->state.origin, aim);
+		vec3_t origin;
+		Entity->State.GetOrigin(origin);
+		Vec3Subtract(BlindFireTarget, origin, aim);
 		IdealYaw = VecToYaw(aim);
 	}
 }
@@ -721,7 +735,7 @@ CAnim GunnerMoveAttackGrenade (FRAME_attak101, FRAME_attak121, GunnerFramesAttac
 void CGunner::Attack()
 {
 #ifndef MONSTER_USE_ROGUE_AI
-	if (range (Entity, Entity->enemy) == RANGE_MELEE)
+	if (range (Entity->gameEntity, Entity->gameEntity->enemy) == RANGE_MELEE)
 		CurrentMove = &GunnerMoveAttackChain;
 	else
 		CurrentMove = (random() <= 0.5) ? &GunnerMoveAttackGrenade : &GunnerMoveAttackChain;
@@ -769,7 +783,7 @@ void CGunner::Attack()
 	// pmm
 
 	// PGM - gunner needs to use his chaingun if he's being attacked by a tesla.
-	if (range (Entity, Entity->enemy) == RANGE_MELEE)
+	if (range (Entity->gameEntity, Entity->gameEntity->enemy) == RANGE_MELEE)
 		CurrentMove = &GunnerMoveAttackChain;
 	else
 		CurrentMove = (random() <= 0.5 && GrenadeCheck()) ? &GunnerMoveAttackGrenade : &GunnerMoveAttackChain;
@@ -783,7 +797,7 @@ void CGunner::FireChain ()
 
 void CGunner::ReFireChain ()
 {
-	if (Entity->enemy->health > 0 && visible (Entity, Entity->enemy) && random() <= 0.5)
+	if (Entity->gameEntity->enemy->health > 0 && visible (Entity->gameEntity, Entity->gameEntity->enemy) && random() <= 0.5)
 	{
 		CurrentMove = &GunnerMoveFireChain;
 		return;
@@ -852,22 +866,22 @@ void CGunner::Spawn ()
 	SoundIndex ("gunner/gunatck2.wav");
 	SoundIndex ("gunner/gunatck3.wav");
 
-	Entity->movetype = MOVETYPE_STEP;
-	Entity->solid = SOLID_BBOX;
-	Entity->state.modelIndex = ModelIndex ("models/monsters/gunner/tris.md2");
-	Vec3Set (Entity->mins, -16, -16, -24);
-	Vec3Set (Entity->maxs, 16, 16, 32);
+	Entity->TossPhysics = false;
+	Entity->SetSolid (SOLID_BBOX);
+	Entity->State.SetModelIndex (ModelIndex ("models/monsters/gunner/tris.md2"));
+	Entity->SetMins (vec3f(-16, -16, -24));
+	Entity->SetMaxs (vec3f(16, 16, 32));
 
-	Entity->health = 175;
-	Entity->gib_health = -70;
-	Entity->mass = 200;
+	Entity->gameEntity->health = 175;
+	Entity->gameEntity->gib_health = -70;
+	Entity->gameEntity->mass = 200;
 
 	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_SIGHT
 #ifdef MONSTER_USE_ROGUE_AI
 		| MF_HAS_DODGE | MF_HAS_DUCK | MF_HAS_UNDUCK | MF_HAS_SIDESTEP
 #endif
 		);
-	gi.linkentity (Entity);
+	Entity->Link ();
 
 #ifdef MONSTER_USE_ROGUE_AI
 	BlindFire = true;

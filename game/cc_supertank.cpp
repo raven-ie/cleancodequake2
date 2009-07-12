@@ -33,6 +33,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 #include "m_supertank.h"
+#include "cc_supertank.h"
 
 CSuperTank Monster_SuperTank;
 
@@ -49,12 +50,12 @@ void CSuperTank::Allocate (edict_t *ent)
 
 void CSuperTank::PlayTreadSound ()
 {
-	PlaySoundFrom (Entity, CHAN_BODY, TreadSound);
+	Entity->PlaySound (CHAN_BODY, TreadSound);
 }
 
 void CSuperTank::Search ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, (random() < 0.5) ? SoundSearch1 : SoundSearch2);
+	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundSearch1 : SoundSearch2);
 }
 
 //
@@ -340,22 +341,25 @@ void CSuperTank::Grenade ()
 	vec3_t	forward, right;
 	vec3_t	offset = {32.0f, 37.0f, 50.0f};
 
-	if (Entity->state.frame == FRAME_attak4_4)
+	if (Entity->State.GetFrame() == FRAME_attak4_4)
 		offset[1] = -offset[1];
 
-	Angles_Vectors (Entity->state.angles, forward, right, NULL);
-	G_ProjectSource (Entity->state.origin, offset, forward, right, start);
+	vec3_t angles, origin;
+	Entity->State.GetAngles(angles);
+	Entity->State.GetOrigin(origin);
+	Angles_Vectors (angles, forward, right, NULL);
+	G_ProjectSource (origin, offset, forward, right, start);
 
-	if (Entity->enemy)
+	if (Entity->gameEntity->enemy)
 	{
-		Vec3Copy (Entity->enemy->state.origin, vec);
-		Vec3MA (vec, 0, Entity->enemy->velocity, vec);
-		vec[2] += Entity->enemy->viewheight;
+		Vec3Copy (Entity->gameEntity->enemy->state.origin, vec);
+		Vec3MA (vec, 0, Entity->gameEntity->enemy->velocity, vec);
+		vec[2] += Entity->gameEntity->enemy->viewheight;
 		Vec3Subtract (vec, start, forward);
 		VectorNormalizef (forward, forward);
 	}
 
-	PlaySoundFrom (Entity, CHAN_WEAPON, SoundIndex("gunner/Gunatck3.wav"));
+	Entity->PlaySound (CHAN_WEAPON, SoundIndex("gunner/Gunatck3.wav"));
 
 	MonsterFireGrenade (start, forward, 25, 600, -1);
 }
@@ -457,18 +461,18 @@ CAnim SuperTankMoveEndAttack1 (FRAME_attak1_7, FRAME_attak1_20, SuperTankFramesE
 
 void CSuperTank::ReAttack1 ()
 {
-	if (visible(Entity, Entity->enemy))
+	if (visible(Entity->gameEntity, Entity->gameEntity->enemy))
 		CurrentMove = (random() < 0.9) ? &SuperTankMoveAttack1 : &SuperTankMoveEndAttack1;
 	else
 		CurrentMove = &SuperTankMoveEndAttack1;
 }
 
-void CSuperTank::Pain (edict_t *other, float kick, int damage)
+void CSuperTank::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->health < (Entity->max_health / 2))
-			Entity->state.skinNum = 1;
+	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+			Entity->State.SetSkinNum(1);
 
-	if (level.framenum < Entity->pain_debounce_time)
+	if (level.framenum < Entity->gameEntity->pain_debounce_time)
 			return;
 
 	// Lessen the chance of him going into his pain frames
@@ -476,27 +480,27 @@ void CSuperTank::Pain (edict_t *other, float kick, int damage)
 		return;
 
 	// Don't go into pain if he's firing his rockets
-	if (skill->Integer() >= 2 && (Entity->state.frame >= FRAME_attak2_1) && (Entity->state.frame <= FRAME_attak2_14) )
+	if (skill->Integer() >= 2 && (Entity->State.GetFrame() >= FRAME_attak2_1) && (Entity->State.GetFrame() <= FRAME_attak2_14) )
 		return;
 
-	Entity->pain_debounce_time = level.framenum + 30;
+	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
 
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
 
 	if (damage <= 10)
 	{
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain1);
+		Entity->PlaySound (CHAN_VOICE, SoundPain1);
 		CurrentMove = &SuperTankMovePain1;
 	}
 	else if (damage <= 25)
 	{
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain3);
+		Entity->PlaySound (CHAN_VOICE, SoundPain3);
 		CurrentMove = &SuperTankMovePain2;
 	}
 	else
 	{
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain2);
+		Entity->PlaySound (CHAN_VOICE, SoundPain2);
 		CurrentMove = &SuperTankMovePain3;
 	}
 
@@ -526,7 +530,7 @@ void CSuperTank::Rocket ()
 		blindfire = true;
 #endif
 
-	switch (Entity->state.frame)
+	switch (Entity->State.GetFrame())
 	{
 	case FRAME_attak2_8:
 		FlashNumber = MZ2_SUPERTANK_ROCKET_1;
@@ -546,8 +550,11 @@ void CSuperTank::Rocket ()
 		break;
 	}
 
-	Angles_Vectors (Entity->state.angles, forward, right, NULL);
-	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[FlashNumber], forward, right, start);
+	vec3_t angles, origin;
+	Entity->State.GetAngles(angles);
+	Entity->State.GetOrigin(origin);
+	Angles_Vectors (angles, forward, right, NULL);
+	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[FlashNumber], forward, right, start);
 
 		// PMM
 #ifdef MONSTER_USE_ROGUE_AI
@@ -555,7 +562,7 @@ void CSuperTank::Rocket ()
 		Vec3Copy (BlindFireTarget, target);
 	else
 #endif
-		Vec3Copy (Entity->enemy->state.origin, target);
+		Vec3Copy (Entity->gameEntity->enemy->state.origin, target);
 	// pmm
 
 //	VectorCopy (self->enemy->state.origin, vec);
@@ -574,18 +581,18 @@ void CSuperTank::Rocket ()
 	// don't shoot at feet if they're above me.
 	else
 #endif
-	if(random() < 0.66 || (start[2] < Entity->enemy->absMin[2]))
+	if(random() < 0.66 || (start[2] < Entity->gameEntity->enemy->absMin[2]))
 	{
 //		gi.dprintf("normal shot\n");
-		Vec3Copy (Entity->enemy->state.origin, vec);
-		vec[2] += Entity->enemy->viewheight;
+		Vec3Copy (Entity->gameEntity->enemy->state.origin, vec);
+		vec[2] += Entity->gameEntity->enemy->viewheight;
 		Vec3Subtract (vec, start, dir);
 	}
 	else
 	{
 //		gi.dprintf("shooting at feet!\n");
-		Vec3Copy (Entity->enemy->state.origin, vec);
-		vec[2] = Entity->enemy->absMin[2];
+		Vec3Copy (Entity->gameEntity->enemy->state.origin, vec);
+		vec[2] = Entity->gameEntity->enemy->absMin[2];
 		Vec3Subtract (vec, start, dir);
 	}
 //PGM
@@ -595,7 +602,7 @@ void CSuperTank::Rocket ()
 
 	// pmm blindfire doesn't check target (done in checkattack)
 	// paranoia, make sure we're not shooting a target right next to us
-	CTrace trace = CTrace(start, vec, Entity, CONTENTS_MASK_SHOT);
+	CTrace trace = CTrace(start, vec, Entity->gameEntity, CONTENTS_MASK_SHOT);
 	#ifdef MONSTER_USE_ROGUE_AI
 	if (blindfire)
 	{
@@ -609,7 +616,7 @@ void CSuperTank::Rocket ()
 			Vec3MA (vec, -20, right, vec);
 			Vec3Subtract(vec, start, dir);
 			VectorNormalizeFastf (dir);
-			trace = CTrace(start, vec, Entity, CONTENTS_MASK_SHOT);
+			trace = CTrace(start, vec, Entity->gameEntity, CONTENTS_MASK_SHOT);
 			if (!(trace.startSolid || trace.allSolid || (trace.fraction < 0.5)))
 				MonsterFireRocket (start, dir, 50, 500, FlashNumber);
 			else 
@@ -619,7 +626,7 @@ void CSuperTank::Rocket ()
 				Vec3MA (vec, 20, right, vec);
 				Vec3Subtract(vec, start, dir);
 				VectorNormalizeFastf (dir);
-				trace = CTrace(start, vec, Entity, CONTENTS_MASK_SHOT);
+				trace = CTrace(start, vec, Entity->gameEntity, CONTENTS_MASK_SHOT);
 				if (!(trace.startSolid || trace.allSolid || (trace.fraction < 0.5)))
 					MonsterFireRocket (start, dir, 50, 500, FlashNumber);
 			}
@@ -628,8 +635,8 @@ void CSuperTank::Rocket ()
 	else
 #endif
 	{
-		trace = CTrace(start, vec, Entity, CONTENTS_MASK_SHOT);
-		if(trace.ent == Entity->enemy || trace.ent == world)
+		trace = CTrace(start, vec, Entity->gameEntity, CONTENTS_MASK_SHOT);
+		if(trace.ent == Entity->gameEntity->enemy || trace.ent == world)
 		{
 			if(trace.fraction > 0.5 || (trace.ent && trace.ent->client))
 				MonsterFireRocket (start, dir, 50, 500, FlashNumber);
@@ -644,17 +651,20 @@ void CSuperTank::MachineGun ()
 	vec3_t	vec;
 	vec3_t	start;
 	vec3_t	forward, right;
-	int		FlashNumber = MZ2_SUPERTANK_MACHINEGUN_1 + (Entity->state.frame - FRAME_attak1_1);
-	vec3_t dir = {0, Entity->state.angles[1], 0};
+	int		FlashNumber = MZ2_SUPERTANK_MACHINEGUN_1 + (Entity->State.GetFrame() - FRAME_attak1_1);
+	vec3_t dir = {0, Entity->State.GetAngles().Y, 0};
+
+	vec3_t origin;
+	Entity->State.GetOrigin(origin);
 
 	Angles_Vectors (dir, forward, right, NULL);
-	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[FlashNumber], forward, right, start);
+	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[FlashNumber], forward, right, start);
 
-	if (Entity->enemy)
+	if (Entity->gameEntity->enemy)
 	{
-		Vec3Copy (Entity->enemy->state.origin, vec);
-		Vec3MA (vec, 0, Entity->enemy->velocity, vec);
-		vec[2] += Entity->enemy->viewheight;
+		Vec3Copy (Entity->gameEntity->enemy->state.origin, vec);
+		Vec3MA (vec, 0, Entity->gameEntity->enemy->velocity, vec);
+		vec[2] += Entity->gameEntity->enemy->viewheight;
 		Vec3Subtract (vec, start, forward);
 		VectorNormalizef (forward, forward);
 	}
@@ -702,7 +712,9 @@ void CSuperTank::Attack ()
 	// pmm
 #endif
 
-	Vec3Subtract (Entity->enemy->state.origin, Entity->state.origin, vec);
+	vec3_t origin;
+	Entity->State.GetOrigin(origin);
+	Vec3Subtract (Entity->gameEntity->enemy->state.origin, origin, vec);
 	range = Vec3Length (vec);
 
 #ifndef SUPERTANK_USES_GRENADE_LAUNCHER
@@ -727,12 +739,12 @@ void CSuperTank::Attack ()
 
 void CSuperTank::Dead ()
 {
-	Vec3Set (Entity->mins, -60, -60, 0);
-	Vec3Set (Entity->maxs, 60, 60, 72);
-	Entity->movetype = MOVETYPE_TOSS;
-	Entity->svFlags |= SVF_DEADMONSTER;
-	Entity->nextthink = 0;
-	gi.linkentity (Entity);
+	Entity->SetMins (vec3f(-60, -60, 0));
+	Entity->SetMaxs (vec3f(60, 60, 72));
+	Entity->TossPhysics = true;
+	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
+	Entity->NextThink = 0;
+	Entity->Link ();
 }
 
 void CSuperTank::Explode ()
@@ -741,9 +753,9 @@ void CSuperTank::Explode ()
 	int		n;
 
 	Think = ConvertDerivedFunction(&CSuperTank::Explode);
-	Vec3Copy (Entity->state.origin, org);
+	Entity->State.GetOrigin(org);
 	org[2] += 24 + (rand()&15);
-	switch (Entity->count++)
+	switch (Entity->gameEntity->count++)
 	{
 	case 0:
 		org[0] -= 24;
@@ -778,29 +790,29 @@ void CSuperTank::Explode ()
 		org[1] -= 48;
 		break;
 	case 8:
-		Entity->state.sound = 0;
+		Entity->State.SetSound (0);
 		for (n= 0; n < 4; n++)
-			ThrowGib (Entity, gMedia.Gib_SmallMeat, 500, GIB_ORGANIC);
+			ThrowGib (Entity->gameEntity, gMedia.Gib_SmallMeat, 500, GIB_ORGANIC);
 		for (n= 0; n < 8; n++)
-			ThrowGib (Entity, gMedia.Gib_SmallMetal, 500, GIB_METALLIC);
-		ThrowGib (Entity, gMedia.Gib_Chest, 500, GIB_ORGANIC);
-		ThrowHead (Entity, gMedia.Gib_Gear, 500, GIB_METALLIC);
-		Entity->deadflag = DEAD_DEAD;
+			ThrowGib (Entity->gameEntity, gMedia.Gib_SmallMetal, 500, GIB_METALLIC);
+		ThrowGib (Entity->gameEntity, gMedia.Gib_Chest, 500, GIB_ORGANIC);
+		Entity->ThrowHead (gMedia.Gib_Gear, 500, GIB_METALLIC);
+		Entity->gameEntity->deadflag = DEAD_DEAD;
 		return;
 	}
 
-	CTempEnt_Explosions::RocketExplosion (org, Entity);
+	CTempEnt_Explosions::RocketExplosion (org, Entity->gameEntity);
 
-	NextThink = level.framenum + FRAMETIME;
+	Entity->NextThink = level.framenum + FRAMETIME;
 }
 
 
-void CSuperTank::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
+void CSuperTank::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundDeath);
-	Entity->deadflag = DEAD_DEAD;
-	Entity->takedamage = DAMAGE_NO;
-	Entity->count = 0;
+	Entity->PlaySound (CHAN_VOICE, SoundDeath);
+	Entity->gameEntity->deadflag = DEAD_DEAD;
+	Entity->gameEntity->takedamage = DAMAGE_NO;
+	Entity->gameEntity->count = 0;
 	CurrentMove = &SuperTankMoveDeath;
 }
 
@@ -821,15 +833,15 @@ void CSuperTank::Spawn ()
 
 	TreadSound = SoundIndex ("bosstank/btkengn1.wav");
 
-	Entity->movetype = MOVETYPE_STEP;
-	Entity->solid = SOLID_BBOX;
-	Entity->state.modelIndex = ModelIndex ("models/monsters/boss1/tris.md2");
-	Vec3Set (Entity->mins, -64, -64, 0);
-	Vec3Set (Entity->maxs, 64, 64, 112);
+	Entity->TossPhysics = false;
+	Entity->SetSolid (SOLID_BBOX);
+	Entity->State.SetModelIndex (ModelIndex ("models/monsters/boss1/tris.md2"));
+	Entity->SetMins (vec3f(-64, -64, 0));
+	Entity->SetMaxs (vec3f(64, 64, 112));
 
-	Entity->health = 1500;
-	Entity->gib_health = -500;
-	Entity->mass = 800;
+	Entity->gameEntity->health = 1500;
+	Entity->gameEntity->gib_health = -500;
+	Entity->gameEntity->mass = 800;
 
 #ifdef MONSTER_USE_ROGUE_AI
 	// PMM
@@ -840,7 +852,7 @@ void CSuperTank::Spawn ()
 
 	MonsterFlags = (MF_HAS_ATTACK | MF_HAS_SEARCH);
 
-	gi.linkentity (Entity);
+	Entity->Link ();
 	
 	Stand();
 

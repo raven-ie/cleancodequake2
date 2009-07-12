@@ -374,7 +374,7 @@ void CTFAdmin(CPlayerEntity *ent)
 	{
 		ent->Client.resp.admin = true;
 		BroadcastPrintf(PRINT_HIGH, "%s has become an admin.\n", ent->Client.pers.netname);
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "Type 'admin' to access the adminstration menu.\n");
+		ent->PrintToClient (PRINT_HIGH, "Type 'admin' to access the adminstration menu.\n");
 	}
 
 	if (!ent->Client.resp.admin) {

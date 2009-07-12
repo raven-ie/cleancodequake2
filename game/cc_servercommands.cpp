@@ -102,17 +102,34 @@ void SvCmd_RunCommand (char *commandName)
 	if (Command)
 		Command->Run();
 	else
-		ClientPrintf (NULL, PRINT_HIGH, "Unknown server command \"%s\"\n", commandName);
+		Com_Printf (0, "Unknown server command \"%s\"\n", commandName);
 }
 
 void SvCmd_Test_f ()
 {
-	ClientPrintf (NULL, PRINT_HIGH, "D:\n");
+	Com_Printf (0, "D:\n");
+}
+
+extern char *gEntString;
+void SvCmd_Dump_f ()
+{
+	std::string FileName = "/maps/ents/" + std::string(level.mapname) + ".ccent";
+	fileHandle_t f;
+
+	FS_OpenFile (FileName.c_str(), &f, FS_MODE_WRITE_BINARY);
+
+	if (!f)
+		return;
+
+	FS_Write (gEntString, strlen(gEntString), f);
+
+	FS_CloseFile (f);
 }
 
 void SvCmd_Register ()
 {
 	SvCmd_AddCommand ("test", SvCmd_Test_f);
+	SvCmd_AddCommand ("dump", SvCmd_Dump_f);
 }
 
 /*

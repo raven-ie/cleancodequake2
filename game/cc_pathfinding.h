@@ -36,9 +36,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #endif
 
 #ifdef MONSTERS_USE_PATHFINDING
-_CC_DISABLE_DEPRECATION
 #include <vector>
-_CC_ENABLE_DEPRECATION
 
 enum ENodeType
 {
@@ -97,8 +95,8 @@ public:
 	CPath ();
 	CPath (CPathNode *Start, CPathNode *End);
 
-	void Save (FILE *fp);
-	void Load (FILE *fp);
+	void Save (fileHandle_t f);
+	void Load (fileHandle_t f);
 
 	bool NodeIsClosed (CPathNode *Node);
 	void RemoveFromClosed (CPathNode *Node);
@@ -125,4 +123,7 @@ void LoadNodes();
 
 void SavePathTable ();
 void LoadPathTable ();
+
+void Nodes_Register ();
+
 #endif

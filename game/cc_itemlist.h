@@ -66,3 +66,68 @@ CBaseItem *GetItemByIndex (int Index);
 extern int GetNumItems ();
 
 void InitItemMedia ();
+
+// A non-yuck way to my yuck in Weapons!
+namespace NItems
+{
+	extern CArmor *JacketArmor;
+	extern CArmor *CombatArmor;
+	extern CArmor *BodyArmor;
+	extern CArmor *ArmorShard;
+
+	extern CHealth *StimPack;
+	extern CHealth *SmallHealth;
+	extern CHealth *LargeHealth;
+
+	extern CKey *DataCD;
+	extern CPowerCube *PowerCube;
+	extern CKey *PyramidKey;
+	extern CKey *DataSpinner;
+	extern CKey *SecurityPass;
+	extern CKey *BlueKey;
+	extern CKey *RedKey;
+	extern CKey *CommandersHead;
+	extern CKey *AirstrikeTarget;
+
+	extern CWeaponItem *Blaster;
+	extern CWeaponItem *Shotgun;
+	extern CWeaponItem *SuperShotgun;
+	extern CWeaponItem *Machinegun;
+	extern CWeaponItem *Chaingun;
+	extern CWeaponItem *GrenadeLauncher;
+	extern CWeaponItem *RocketLauncher;
+	extern CWeaponItem *HyperBlaster;
+	extern CWeaponItem *Railgun;
+	extern CWeaponItem *BFG;
+	#ifdef CLEANCTF_ENABLED
+	extern CWeaponItem	*Grapple;
+
+	extern CTech *Regeneration;
+	extern CTech *Haste;
+	extern CTech *Strength;
+	extern CTech *Resistance;
+
+	extern CFlag *RedFlag;
+	extern CFlag *BlueFlag;
+	#endif
+
+	extern CAmmo *Shells;
+	extern CAmmo *Bullets;
+	extern CAmmo *Slugs;
+	extern CAmmo *Rockets;
+	extern CAmmo *Cells;
+	extern CAmmo *Grenades;
+
+	extern CMegaHealth *MegaHealth;
+	extern CBackPack *BackPack;
+	extern CQuadDamage *Quad;
+	extern CInvulnerability *Invul;
+	extern CSilencer *Silencer;
+	extern CRebreather *Rebreather;
+	extern CEnvironmentSuit *EnvironmentSuit;
+	extern CBandolier *Bandolier;
+	extern CAdrenaline *Adrenaline;
+	extern CAncientHead *AncientHead;
+	extern CPowerShield *PowerShield;
+	extern CPowerShield *PowerScreen;
+};

@@ -31,22 +31,5 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Monster list (for maps)
 //
 
-#define		MAX_MONSTERS			256
-#define		MAX_MONSTERS_HASHED		128
-
-class CMonsterList
-{
-public:
-	int numMonsters;
-
-	CMonster		*List[MAX_MONSTERS];
-	CMonster		*HashedList[MAX_MONSTERS_HASHED];
-
-	CMonsterList();
-
-	void AddMonsterToList (CMonster *Monster);
-	CMonster	*MonsterExists (char *Classname);
-};
-
 CMonster *FindMonster (char *Classname);
 void InitMonsterList ();

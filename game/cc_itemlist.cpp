@@ -34,6 +34,70 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 
+namespace NItems
+{
+	CArmor *JacketArmor;
+	CArmor *CombatArmor;
+	CArmor *BodyArmor;
+	CArmor *ArmorShard;
+
+	CHealth *StimPack;
+	CHealth *SmallHealth;
+	CHealth *LargeHealth;
+
+	CKey *DataCD;
+	CPowerCube *PowerCube;
+	CKey *PyramidKey;
+	CKey *DataSpinner;
+	CKey *SecurityPass;
+	CKey *BlueKey;
+	CKey *RedKey;
+	CKey *CommandersHead;
+	CKey *AirstrikeTarget;
+
+	CWeaponItem *Blaster;
+	CWeaponItem *Shotgun;
+	CWeaponItem *SuperShotgun;
+	CWeaponItem *Machinegun;
+	CWeaponItem *Chaingun;
+	CWeaponItem *GrenadeLauncher;
+	CWeaponItem *RocketLauncher;
+	CWeaponItem *HyperBlaster;
+	CWeaponItem *Railgun;
+	CWeaponItem *BFG;
+	#ifdef CLEANCTF_ENABLED
+	CWeaponItem	*Grapple;
+
+	CTech *Regeneration;
+	CTech *Haste;
+	CTech *Strength;
+	CTech *Resistance;
+
+	CFlag *RedFlag;
+	CFlag *BlueFlag;
+	#endif
+
+	CAmmo *Shells;
+	CAmmo *Bullets;
+	CAmmo *Slugs;
+	CAmmo *Rockets;
+	CAmmo *Cells;
+	CAmmo *Grenades;
+
+	CMegaHealth *MegaHealth;
+	CBackPack *BackPack;
+	CQuadDamage *Quad;
+	CInvulnerability *Invul;
+	CSilencer *Silencer;
+	CRebreather *Rebreather;
+	CEnvironmentSuit *EnvironmentSuit;
+	CBandolier *Bandolier;
+	CAdrenaline *Adrenaline;
+	CAncientHead *AncientHead;
+	CPowerShield *PowerShield;
+	CPowerShield *PowerScreen;
+};
+
 CItemList *ItemList;
 
 CItemList::CItemList() :
@@ -150,8 +214,11 @@ void InitItemlist ()
 	AddPowerupsToList();
 	AddKeysToList();
 #ifdef CLEANCTF_ENABLED
-	AddFlagsToList();
-	AddTechsToList();
+	if (game.mode & GAME_CTF)
+	{
+		AddFlagsToList();
+		AddTechsToList();
+	}
 #endif
 }
 

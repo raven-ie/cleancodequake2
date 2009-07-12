@@ -119,7 +119,7 @@ byte DirToByte(const vec3_t dirVec)
 	float bestDot = 0;
 	for (byte i=0 ; i<NUMVERTEXNORMALS ; i++)
 	{
-		float dot = DotProduct(dirVec, m_byteDirs[i]);
+		float dot = Dot3Product(dirVec, m_byteDirs[i]);
 		if (dot > bestDot)
 		{
 			bestDot = dot;
@@ -167,7 +167,7 @@ byte FloatToByte(float x)
 	f2i.i &= 0x7FFFFF;
 
 	// Then read as integer and kill float bits...
-	return (byte)min(f2i.i, 255);
+	return (byte)Min<int>(f2i.i, 255);
 }
 
 
@@ -178,7 +178,7 @@ ColorNormalizef
 */
 float ColorNormalizef(const float *in, float *out)
 {
-	float f = max(max(in[0], in[1]), in[2]);
+	float f = Max<>(Max<>(in[0], in[1]), in[2]);
 
 	if (f > 1.0f)
 	{
@@ -205,7 +205,7 @@ ColorNormalizeb
 */
 float ColorNormalizeb(const float *in, byte *out)
 {
-	float f = max(max(in[0], in[1]), in[2]);
+	float f = Max<>(Max<>(in[0], in[1]), in[2]);
 
 	if (f > 1.0f)
 	{
@@ -463,7 +463,7 @@ void MakeNormalVectorsf(const vec3_t forward, vec3_t right, vec3_t up)
 	// This rotate and negate guarantees a vector not colinear with the original
 	Vec3Set(right, forward[2], -forward[0], forward[1]);
 
-	float d = DotProduct(right, forward);
+	float d = Dot3Product(right, forward);
 	Vec3MA(right, -d, forward, right);
 	VectorNormalizef(right, right);
 	CrossProduct(right, forward, up);
@@ -576,7 +576,7 @@ VectorNormalizeFastf
 */
 float VectorNormalizeFastf(vec3_t v)
 {
-	float invLength = Q_RSqrtf(DotProduct(v,v));
+	float invLength = Q_RSqrtf(Dot3Product(v,v));
 
 	v[0] *= invLength;
 	v[1] *= invLength;

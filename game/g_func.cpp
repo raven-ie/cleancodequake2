@@ -232,7 +232,10 @@ The team has completed a frame of movement, so
 change the speed for the next frame
 ==============
 */
-#define AccelerationDistance(target, rate)	(target * ((target / rate) + 1) / 2)
+inline float AccelerationDistance (const float target, const float rate)
+{
+	return (target * ((target / rate) + 1) / 2);
+}
 
 void plat_CalcAcceleratedMove(moveinfo_t *moveinfo)
 {
@@ -2015,10 +2018,10 @@ void SP_func_door_secret (edict_t *ent)
 	Vec3Clear (ent->state.angles);
 	side = 1.0 - (ent->spawnflags & SECRET_1ST_LEFT);
 	if (ent->spawnflags & SECRET_1ST_DOWN)
-		width = fabs(DotProduct(up, ent->size));
+		width = fabs(Dot3Product(up, ent->size));
 	else
-		width = fabs(DotProduct(right, ent->size));
-	length = fabs(DotProduct(forward, ent->size));
+		width = fabs(Dot3Product(right, ent->size));
+	length = fabs(Dot3Product(forward, ent->size));
 	if (ent->spawnflags & SECRET_1ST_DOWN)
 		Vec3MA (ent->state.origin, -1 * width, up, ent->pos1);
 	else

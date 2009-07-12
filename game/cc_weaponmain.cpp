@@ -374,8 +374,11 @@ void CWeapon::Think (CPlayerEntity *Player)
 	isSilenced = (Player->Client.silencer_shots) ? true : false;
 	WeaponGeneric (Player);
 #ifdef CLEANCTF_ENABLED
-	if (this != &WeaponGrapple && Player->CTFApplyHaste())
-		WeaponGeneric(Player);
+	if (game.mode & GAME_CTF)
+	{
+		if (this != &WeaponGrapple && Player->CTFApplyHaste())
+			WeaponGeneric(Player);
+	}
 #endif
 }
 
@@ -383,14 +386,15 @@ void CWeapon::AttackSound(CPlayerEntity *Player)
 {
 #ifdef CLEANCTF_ENABLED
 //ZOID
-	if (!Player->CTFApplyStrengthSound())
-//ZOID
-#endif
-	if (isQuad)
+	if (game.mode & GAME_CTF)
+	{
+		Player->CTFApplyHasteSound();
+
+		if (!Player->CTFApplyStrengthSound() && isQuad)
+			PlaySoundFrom(Player->gameEntity, CHAN_ITEM, SoundIndex("items/damage3.wav"));
+	}
+	else if (isQuad)
 		PlaySoundFrom(Player->gameEntity, CHAN_ITEM, SoundIndex("items/damage3.wav"));
-#ifdef CLEANCTF_ENABLED
-//ZOID
-	Player->CTFApplyHasteSound();
 //ZOID
 #endif
 }
@@ -404,25 +408,25 @@ void CWeapon::NoAmmoWeaponChange (CPlayerEntity *Player)
 		return;
 
 	// Collect info on our current state
-	bool HasShotgun = (Player->Client.pers.Inventory.Has(FindItem("Shotgun")) != 0);
-	bool HasSuperShotgun = (Player->Client.pers.Inventory.Has(FindItem("Super Shotgun")) != 0);
-	bool HasMachinegun = (Player->Client.pers.Inventory.Has(FindItem("Machinegun")) != 0);
-	bool HasChaingun = (Player->Client.pers.Inventory.Has(FindItem("Chaingun")) != 0);
-	bool HasGrenadeLauncher = (Player->Client.pers.Inventory.Has(FindItem("Grenade Launcher")) != 0);
-	bool HasRocketLauncher = (Player->Client.pers.Inventory.Has(FindItem("Rocket Launcher")) != 0);
-	bool HasHyperblaster = (Player->Client.pers.Inventory.Has(FindItem("Hyperblaster")) != 0);
-	bool HasRailgun = (Player->Client.pers.Inventory.Has(FindItem("Railgun")) != 0);
-	bool HasBFG = (Player->Client.pers.Inventory.Has(FindItem("BFG10k")) != 0);
+	bool HasShotgun = (Player->Client.pers.Inventory.Has(NItems::Shotgun) != 0);
+	bool HasSuperShotgun = (Player->Client.pers.Inventory.Has(NItems::SuperShotgun) != 0);
+	bool HasMachinegun = (Player->Client.pers.Inventory.Has(NItems::Machinegun) != 0);
+	bool HasChaingun = (Player->Client.pers.Inventory.Has(NItems::Chaingun) != 0);
+	bool HasGrenadeLauncher = (Player->Client.pers.Inventory.Has(NItems::GrenadeLauncher) != 0);
+	bool HasRocketLauncher = (Player->Client.pers.Inventory.Has(NItems::RocketLauncher) != 0);
+	bool HasHyperblaster = (Player->Client.pers.Inventory.Has(NItems::HyperBlaster) != 0);
+	bool HasRailgun = (Player->Client.pers.Inventory.Has(NItems::Railgun) != 0);
+	bool HasBFG = (Player->Client.pers.Inventory.Has(NItems::BFG) != 0);
 
-	bool HasShells = (Player->Client.pers.Inventory.Has(FindItem("Shells")) != 0);
-	bool HasShells_ForSuperShotty = (Player->Client.pers.Inventory.Has(FindItem("Shells")) > 5);
-	bool HasBullets = (Player->Client.pers.Inventory.Has(FindItem("Bullets")) != 0);
-	bool HasBullets_ForChaingun = (Player->Client.pers.Inventory.Has(FindItem("Bullets")) >= 50);
-	bool HasGrenades = (Player->Client.pers.Inventory.Has(FindItem("Grenades")) != 0);
-	bool HasRockets = (Player->Client.pers.Inventory.Has (FindItem("Rockets")) != 0);
-	bool HasCells = (Player->Client.pers.Inventory.Has (FindItem("Cells")) != 0);
-	bool HasCells_ForBFG = (Player->Client.pers.Inventory.Has (FindItem("Cells")) >= 50);
-	bool HasSlugs = (Player->Client.pers.Inventory.Has(FindItem("Slugs")) != 0);
+	bool HasShells = (Player->Client.pers.Inventory.Has(NItems::Shells) != 0);
+	bool HasShells_ForSuperShotty = (Player->Client.pers.Inventory.Has(NItems::Shells) > 5);
+	bool HasBullets = (Player->Client.pers.Inventory.Has(NItems::Bullets) != 0);
+	bool HasBullets_ForChaingun = (Player->Client.pers.Inventory.Has(NItems::Bullets) >= 50);
+	bool HasGrenades = (Player->Client.pers.Inventory.Has(NItems::Grenades) != 0);
+	bool HasRockets = (Player->Client.pers.Inventory.Has (NItems::Rockets) != 0);
+	bool HasCells = (Player->Client.pers.Inventory.Has (NItems::Cells) != 0);
+	bool HasCells_ForBFG = (Player->Client.pers.Inventory.Has (NItems::Cells) >= 50);
+	bool HasSlugs = (Player->Client.pers.Inventory.Has(NItems::Slugs) != 0);
 
 	bool AlmostDead = (Player->gameEntity->health <= 20);
 
@@ -433,56 +437,56 @@ void CWeapon::NoAmmoWeaponChange (CPlayerEntity *Player)
 	if (AlmostDead)
 	{
 		if (HasCells && HasHyperblaster)
-			Chosen_Weapon = dynamic_cast<CWeaponItem*>(FindItem("Hyperblaster"));
+			Chosen_Weapon = NItems::HyperBlaster;
 		else if (HasSlugs && HasRailgun)
-			Chosen_Weapon = dynamic_cast<CWeaponItem*>(FindItem("Railgun"));
+			Chosen_Weapon = NItems::Railgun;
 		else if (HasBullets_ForChaingun && HasChaingun)
-			Chosen_Weapon = dynamic_cast<CWeaponItem*>(FindItem("Chaingun"));
+			Chosen_Weapon = NItems::Chaingun;
 		else if (HasBullets_ForChaingun && HasMachinegun)
-			Chosen_Weapon = dynamic_cast<CWeaponItem*>(FindItem("Machinegun"));
+			Chosen_Weapon = NItems::Machinegun;
 		else if (HasShells_ForSuperShotty && HasSuperShotgun)
-			Chosen_Weapon = dynamic_cast<CWeaponItem*>(FindItem("Super Shotgun"));
-		else if (HasShells && HasSuperShotgun)
-			Chosen_Weapon = dynamic_cast<CWeaponItem*>(FindItem("Super Shotgun"));
+			Chosen_Weapon = NItems::SuperShotgun;
 		else if (HasShells_ForSuperShotty && HasShotgun)
-			Chosen_Weapon = dynamic_cast<CWeaponItem*>(FindItem("Shotgun"));
+			Chosen_Weapon = NItems::Shotgun;
 		else if (HasShells && HasShotgun)
-			Chosen_Weapon = dynamic_cast<CWeaponItem*>(FindItem("Shotgun"));
+			Chosen_Weapon = NItems::Shotgun;
+		else if (HasShells && HasSuperShotgun)
+			Chosen_Weapon = NItems::SuperShotgun;
 	}
 
 	// Still nothing
 	if (!Chosen_Weapon || !Chosen_Ammo)
 	{
 		if (HasCells_ForBFG && HasBFG)
-			Chosen_Weapon = dynamic_cast<CWeaponItem*>(FindItem("BFG10k"));
+			Chosen_Weapon = NItems::BFG;
 		else if (HasCells && HasHyperblaster)
-			Chosen_Weapon = dynamic_cast<CWeaponItem*>(FindItem("Hyperblaster"));
+			Chosen_Weapon = NItems::HyperBlaster;
 		else if (HasSlugs && HasRailgun)
-			Chosen_Weapon = dynamic_cast<CWeaponItem*>(FindItem("Railgun"));
+			Chosen_Weapon = NItems::Railgun;
 		else if (HasRockets && HasRocketLauncher)
-			Chosen_Weapon = dynamic_cast<CWeaponItem*>(FindItem("Rocket Launcher"));
+			Chosen_Weapon = NItems::RocketLauncher;
 		else if (HasGrenades && HasGrenadeLauncher)
-			Chosen_Weapon = dynamic_cast<CWeaponItem*>(FindItem("Grenade Launcher"));
+			Chosen_Weapon = NItems::GrenadeLauncher;
 		else if (HasBullets_ForChaingun && HasChaingun)
-			Chosen_Weapon = dynamic_cast<CWeaponItem*>(FindItem("Chaingun"));
+			Chosen_Weapon = NItems::Chaingun;
 		else if (HasBullets && HasMachinegun)
-			Chosen_Weapon = dynamic_cast<CWeaponItem*>(FindItem("Machinegun"));
+			Chosen_Weapon = NItems::Machinegun;
 		else if (HasBullets && HasChaingun)
-			Chosen_Weapon = dynamic_cast<CWeaponItem*>(FindItem("Chaingun"));
+			Chosen_Weapon = NItems::Chaingun;
 		else if (HasShells_ForSuperShotty && HasSuperShotgun)
-			Chosen_Weapon = dynamic_cast<CWeaponItem*>(FindItem("Super Shotgun"));
-		else if (HasShells && HasSuperShotgun)
-			Chosen_Weapon = dynamic_cast<CWeaponItem*>(FindItem("Super Shotgun"));
+			Chosen_Weapon = NItems::SuperShotgun;
 		else if (HasShells_ForSuperShotty && HasShotgun)
-			Chosen_Weapon = dynamic_cast<CWeaponItem*>(FindItem("Shotgun"));
+			Chosen_Weapon = NItems::Shotgun;
 		else if (HasShells && HasShotgun)
-			Chosen_Weapon = dynamic_cast<CWeaponItem*>(FindItem("Shotgun"));
+			Chosen_Weapon = NItems::Shotgun;
+		else if (HasShells && HasSuperShotgun)
+			Chosen_Weapon = NItems::SuperShotgun;
 		else if (HasGrenades)
-			Chosen_Ammo = dynamic_cast<CAmmo*>(FindItem("Grenades"));
+			Chosen_Ammo = NItems::Grenades;
 	}
 
 	if (!Chosen_Weapon && !Chosen_Ammo)
-		Chosen_Weapon = dynamic_cast<CWeaponItem*>(FindItem("Blaster"));
+		Chosen_Weapon = NItems::Blaster;
 
 	bool HasCurrentWeapon = true;
 	// Do a quick check to see if we still even have the weapon we're holding.

@@ -33,6 +33,40 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 
+#define		MAX_MONSTERS			256
+#define		MAX_MONSTERS_HASHED		128
+
+class CMonsterList
+{
+public:
+	int numMonsters;
+
+	CMonster		*List[MAX_MONSTERS];
+	CMonster		*HashedList[MAX_MONSTERS_HASHED];
+
+	CMonsterList();
+
+	void AddMonsterToList (CMonster *Monster);
+	CMonster	*MonsterExists (char *Classname);
+};
+
+#include "cc_soldier_base.h"
+#include "cc_soldier_shotgun.h"
+#include "cc_soldier_light.h"
+#include "cc_soldier_machinegun.h"
+#include "cc_infantry.h"
+#include "cc_bitch.h"
+#include "cc_tank.h"
+#include "cc_flyer.h"
+#include "cc_gunner.h"
+#include "cc_floater.h"
+#include "cc_supertank.h"
+#include "cc_barracuda.h"
+#include "cc_icarus.h"
+#include "cc_mutant.h"
+#include "cc_insane.h"
+#include "cc_gladiator.h"
+
 CMonsterList MonsterList;
 
 CMonsterList::CMonsterList () :

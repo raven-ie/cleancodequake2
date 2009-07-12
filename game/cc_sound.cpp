@@ -235,7 +235,7 @@ static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channe
 		dist *= distanceMult;	// different attenuation levels
 
 		Angles_Vectors (client->state.angles, NULL, listenerRight, NULL);
-		dot = DotProduct (listenerRight, sourceVec);
+		dot = Dot3Product (listenerRight, sourceVec);
 
 		if (!distanceMult)
 		{

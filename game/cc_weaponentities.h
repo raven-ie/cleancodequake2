@@ -31,7 +31,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Entities related to weaponry
 //
 
-class CGrenade : public CBounceProjectile
+class CGrenade : public CBounceProjectile, public CThinkableEntity, public CTouchableEntity
 {
 public:
 	float		Damage, RadiusDamage;
@@ -46,9 +46,11 @@ public:
 
 	static void Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t aimdir,
 						int damage, int speed, float timer, float damage_radius, bool handNade = false, bool held = false);
+
+	bool Run ();
 };
 
-class CBlasterProjectile : public CFlyMissileProjectile
+class CBlasterProjectile : public CFlyMissileProjectile, public CThinkableEntity, public CTouchableEntity
 {
 public:
 	float		Damage;
@@ -61,9 +63,11 @@ public:
 
 	static void Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t dir,
 						int damage, int speed, int effect, bool isHyper);
+
+	bool Run ();
 };
 
-class CRocket : public CFlyMissileProjectile
+class CRocket : public CFlyMissileProjectile, public CThinkableEntity, public CTouchableEntity
 {
 public:
 	int		Damage, RadiusDamage;
@@ -77,9 +81,11 @@ public:
 
 	static void Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t dir,
 						int damage, int speed, float damage_radius, int radius_damage);
+
+	bool Run ();
 };
 
-class CBFGBolt : public CFlyMissileProjectile
+class CBFGBolt : public CFlyMissileProjectile, public CThinkableEntity, public CTouchableEntity
 {
 public:
 	bool	Exploded;
@@ -94,6 +100,8 @@ public:
 
 	static void Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t dir,
 						int damage, int speed, float damage_radius);
+
+	bool Run ();
 };
 
 class CHitScan
@@ -163,4 +171,12 @@ public:
 	inline void				DoSolidHit (CTrace *Trace);
 
 	static void				Fire		(CBaseEntity *Entity, vec3_t start, vec3_t aimdir, int damage, int kick, int hSpread, int vSpread, int Count, int mod);
+};
+
+class CMeleeWeapon
+{
+public:
+	CMeleeWeapon();
+
+	static bool		Fire (CBaseEntity *Entity, vec3_t aim, int damage, int kick);
 };

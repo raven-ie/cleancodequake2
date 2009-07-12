@@ -435,6 +435,7 @@ Advances the world by 0.1 seconds
 */
 #include "cc_exceptionhandler.h"
 
+void PlayEntitySounds (CBaseEntity *Entity);
 void G_RunFrame (void)
 {
 #ifdef CC_USE_EXCEPTION_HANDLER

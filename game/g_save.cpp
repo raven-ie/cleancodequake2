@@ -252,6 +252,8 @@ void G_Register ()
 	instantweap = QNew (com_gamePool, 0) CCvar ("instantweap", "0", CVAR_SERVERINFO);
 //ZOID
 #endif
+
+	Nodes_Register ();
 }
 
 void InitGame (void)
@@ -484,7 +486,7 @@ WriteClient
 All pointer variables (except function pointers) must be handled specially.
 ==============
 */
-void WriteClient (FILE *f, CPlayerEntity *Player)
+void WriteClient (fileHandle_t f, CPlayerEntity *Player)
 {
 	// Write pers.weapon and pers.newweapon
 	int pwIndex = -1, nwIndex = -1, lwIndex = -1;
@@ -506,16 +508,16 @@ void WriteClient (FILE *f, CPlayerEntity *Player)
 	}
 
 	// write the block
-	fwrite (&Player->Client, sizeof(CClient), 1, f);
+	FS_Write (&Player->Client, sizeof(CClient), f);
 
 	// now write any allocated data following the edict
 	/*for (field=clientfields ; field->name ; field++)
 	{
 		WriteField2 (f, field, (byte *)client);
 	}*/
-	fwrite (&pwIndex, sizeof(int), 1, f);
-	fwrite (&lwIndex, sizeof(int), 1, f);
-	fwrite (&nwIndex, sizeof(int), 1, f);
+	FS_Write (&pwIndex, sizeof(int), f);
+	FS_Write (&lwIndex, sizeof(int), f);
+	FS_Write (&nwIndex, sizeof(int), f);
 }
 
 /*
@@ -617,34 +619,33 @@ last save position.
 */
 void WriteGame (char *filename, BOOL autosave)
 {
-	FILE	*f;
+	fileHandle_t f;
 	int		i;
 	char	str[16];
 
 	if (!autosave)
 		CPlayerEntity::SaveClientData ();
 
-#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
-	f = fopen (filename, "wb");
-#else
-	int errorVal = fopen_s(&f, filename, "wb");
-#endif
+	FS_OpenFile (filename, &f, FS_MODE_WRITE_BINARY);
 
-	if (!f || errorVal)
+	if (!f)
+	{
 		gi.error ("Couldn't open %s", filename);
+		return; // Fix to engines who don't shutdown on gi.error
+	}
 
 	memset (str, 0, sizeof(str));
 	Q_strncpyz (str, __DATE__, sizeof(str));
-	fwrite (str, sizeof(str), 1, f);
+	FS_Write (str, sizeof(str), f);
 
 	game.autosaved = autosave ? true : false;
-	fwrite (&game, sizeof(game), 1, f);
+	FS_Write (&game, sizeof(game), f);
 	game.autosaved = false;
 
 	for (i=0 ; i<game.maxclients ; i++)
 		WriteClient (f, dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity));
 
-	fclose (f);
+	FS_CloseFile (f);
 }
 
 void ReadGame (char *filename)

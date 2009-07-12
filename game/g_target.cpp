@@ -585,12 +585,6 @@ void target_laser_use (edict_t *self, edict_t *other, edict_t *activator)
 		target_laser_on (self);
 }
 
-// Beam colors are basically four encoded colors.
-inline int ConvertColorsToBeamColor (byte colorOne, byte colorTwo, byte colorThree, byte colorFour)
-{
-	return (colorOne) | ((colorTwo) << 8) | ((colorThree) << 16) | ((colorFour) << 24);
-}
-
 void target_laser_start (edict_t *self)
 {
 	edict_t *ent;
@@ -608,15 +602,15 @@ void target_laser_start (edict_t *self)
 
 	// set the color
 	if (self->spawnflags & RED)
-		self->state.skinNum = ConvertColorsToBeamColor (NSColor::PatriotRed, NSColor::PatriotRed, NSColor::Red, NSColor::Red);
+		self->state.skinNum = Color_RGBAToHex (NSColor::PatriotRed, NSColor::PatriotRed, NSColor::Red, NSColor::Red);
 	else if (self->spawnflags & GREEN)
-		self->state.skinNum = ConvertColorsToBeamColor (NSColor::Green, NSColor::Lime, NSColor::FireSpeechGreen, NSColor::Harlequin);
+		self->state.skinNum = Color_RGBAToHex (NSColor::Green, NSColor::Lime, NSColor::FireSpeechGreen, NSColor::Harlequin);
 	else if (self->spawnflags & BLUE)
-		self->state.skinNum = ConvertColorsToBeamColor (NSColor::PatriotBlue, NSColor::PatriotBlue, NSColor::NeonBlue, NSColor::NeonBlue);
+		self->state.skinNum = Color_RGBAToHex (NSColor::PatriotBlue, NSColor::PatriotBlue, NSColor::NeonBlue, NSColor::NeonBlue);
 	else if (self->spawnflags & YELLOW)
-		self->state.skinNum = ConvertColorsToBeamColor (NSColor::ParisDaisy, NSColor::Gorse, NSColor::Lemon, NSColor::Gold);
+		self->state.skinNum = Color_RGBAToHex (NSColor::ParisDaisy, NSColor::Gorse, NSColor::Lemon, NSColor::Gold);
 	else if (self->spawnflags & ORANGE)
-		self->state.skinNum = ConvertColorsToBeamColor (NSColor::HarvestGold, NSColor::RobRoy, NSColor::TulipTree, NSColor::FireBush);
+		self->state.skinNum = Color_RGBAToHex (NSColor::HarvestGold, NSColor::RobRoy, NSColor::TulipTree, NSColor::FireBush);
 
 	if (!self->enemy)
 	{

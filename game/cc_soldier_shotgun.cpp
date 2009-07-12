@@ -32,6 +32,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 //
 
 #include "cc_local.h"
+#include "cc_soldier_base.h"
+#include "cc_soldier_shotgun.h"
 
 CSoldierShotgun Monster_Soldier_Shotgun;
 
@@ -56,7 +58,7 @@ void CSoldierShotgun::Attack ()
 
 	float r = random();
 	if ((!(AIFlags & (AI_BLOCKED|AI_STAND_GROUND))) &&
-		(range(Entity, Entity->enemy) >= RANGE_NEAR) && 
+		(range(Entity->gameEntity, Entity->gameEntity->enemy) >= RANGE_NEAR) && 
 		(r < (skill->Integer()*0.25)))
 		CurrentMove = &SoldierMoveAttack6;
 	else
@@ -80,15 +82,18 @@ void CSoldierShotgun::FireGun (int FlashNumber)
 	float	r, u;
 	int		flashIndex = ShotgunFlash[FlashNumber];
 
-	Angles_Vectors (Entity->state.angles, forward, right, NULL);
-	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[flashIndex], forward, right, start);
+	vec3_t angles, origin;
+	Entity->State.GetAngles(angles);
+	Entity->State.GetOrigin(origin);
+	Angles_Vectors (angles, forward, right, NULL);
+	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[flashIndex], forward, right, start);
 
 	if (FlashNumber == 5 || FlashNumber == 6)
 		Vec3Copy (forward, aim);
 	else
 	{
-		Vec3Copy (Entity->enemy->state.origin, end);
-		end[2] += Entity->enemy->viewheight;
+		Vec3Copy (Entity->gameEntity->enemy->state.origin, end);
+		end[2] += Entity->gameEntity->enemy->viewheight;
 		Vec3Subtract (end, start, aim);
 		VecToAngles (aim, dir);
 		Angles_Vectors (dir, forward, right, up);
@@ -111,7 +116,7 @@ void CSoldierShotgun::SpawnSoldier ()
 	SoundPain = SoundIndex ("soldier/solpain1.wav");
 	SoundDeath = SoundIndex ("soldier/soldeth1.wav");
 
-	Entity->state.skinNum = 2;
-	Entity->health = 30;
-	Entity->gib_health = -30;
+	Entity->State.SetSkinNum (2);
+	Entity->gameEntity->health = 30;
+	Entity->gameEntity->gib_health = -30;
 }

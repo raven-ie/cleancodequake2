@@ -399,7 +399,7 @@ void CPlayerEntity::SpectatorRespawn ()
 			strcmp(spectator_password->String(), "none") && 
 			strcmp(spectator_password->String(), value))
 		{
-			ClientPrintf(gameEntity, PRINT_HIGH, "Spectator password incorrect.\n");
+			PrintToClient (PRINT_HIGH, "Spectator password incorrect.\n");
 			Client.pers.spectator = false;
 			WriteByte (SVC_STUFFTEXT);
 			WriteString ("spectator 0\n");
@@ -417,7 +417,7 @@ void CPlayerEntity::SpectatorRespawn ()
 
 		if (numspec >= game.maxspectators)
 		{
-			ClientPrintf(gameEntity, PRINT_HIGH, "Server spectator limit is full.");
+			PrintToClient (PRINT_HIGH, "Server spectator limit is full.");
 			Client.pers.spectator = false;
 			// reset his spectator var
 			WriteByte (SVC_STUFFTEXT);
@@ -434,7 +434,7 @@ void CPlayerEntity::SpectatorRespawn ()
 		if (*password->String() && strcmp(password->String(), "none") && 
 			strcmp(password->String(), value))
 		{
-			ClientPrintf(gameEntity, PRINT_HIGH, "Password incorrect.\n");
+			PrintToClient (PRINT_HIGH, "Password incorrect.\n");
 			Client.pers.spectator = true;
 			WriteByte (SVC_STUFFTEXT);
 			WriteString ("spectator 1\n");
@@ -657,14 +657,14 @@ void CPlayerEntity::InitPersistent ()
 {
 	memset (&Client.pers, 0, sizeof(Client.pers));
 
-	FindItem("Blaster")->Add(this, 1);
+	NItems::Blaster->Add(this, 1);
 	Client.pers.Weapon = &WeaponBlaster;
 	Client.pers.LastWeapon = Client.pers.Weapon;
 	Client.pers.Inventory.SelectedItem =Client.pers.Weapon->Item->GetIndex();
 
 #ifdef CLEANCTF_ENABLED
 	if (game.mode & GAME_CTF)
-		FindItem("Grapple")->Add(this, 1);
+		NItems::Grapple->Add(this, 1);
 	Client.pers.Flag = NULL;
 	Client.pers.Tech = NULL;
 #endif
@@ -863,7 +863,7 @@ CalcRoll
 */
 inline float CPlayerEntity::CalcRoll (vec3_t angles, vec3_t velocity, vec3_t right)
 {
-	float	side = fabs(DotProduct (velocity, right));
+	float	side = fabs(Dot3Product (velocity, right));
 	float	sign = side < 0 ? -1 : 1;
 
 	if (side < sv_rollspeed->Float())
@@ -935,7 +935,7 @@ inline void CPlayerEntity::DamageFeedback (vec3_t forward, vec3_t right, vec3_t 
 	{
 		gameEntity->pain_debounce_time = level.framenum + 7;
 
-		int l = clamp(((floorf((max(0, gameEntity->health-1)) / 25))), 0, 3);
+		int l = Clamp<int>(((floorf((Max<>(0, gameEntity->health-1)) / 25))), 0, 3);
 		PlaySoundFrom (gameEntity, CHAN_VOICE, gMedia.Player.Pain[l][(rand()&1)]);
 	}
 
@@ -974,10 +974,10 @@ inline void CPlayerEntity::DamageFeedback (vec3_t forward, vec3_t right, vec3_t 
 		Vec3Subtract (Client.damage_from, v, v);
 		VectorNormalizef (v, v);
 		
-		side = DotProduct (v, right);
+		side = Dot3Product (v, right);
 		Client.v_dmg_roll = kick*side*0.3;
 		
-		side = -DotProduct (v, forward);
+		side = -Dot3Product (v, forward);
 		Client.v_dmg_pitch = kick*side*0.3;
 
 		Client.v_dmg_time = level.framenum + DAMAGE_TIME;
@@ -1034,10 +1034,10 @@ inline void CPlayerEntity::CalcViewOffset (vec3_t forward, vec3_t right, vec3_t 
 		angles[PITCH] += ratio * Client.fall_value;
 
 		// add angles based on velocity
-		delta = DotProduct (gameEntity->velocity, forward);
+		delta = Dot3Product (gameEntity->velocity, forward);
 		angles[PITCH] += delta*run_pitch->Float();
 		
-		delta = DotProduct (gameEntity->velocity, right);
+		delta = Dot3Product (gameEntity->velocity, right);
 		angles[ROLL] += delta*run_roll->Float();
 
 		// add angles based on bob
@@ -1528,9 +1528,9 @@ int CPlayerEntity::PowerArmorType ()
 {
 	if (!(gameEntity->flags & FL_POWER_ARMOR))
 		return POWER_ARMOR_NONE;
-	else if (Client.pers.Inventory.Has(FindItem("Power Shield")) > 0)
+	else if (Client.pers.Inventory.Has(NItems::PowerShield) > 0)
 		return POWER_ARMOR_SHIELD;
-	else if (Client.pers.Inventory.Has(FindItem("Power Screen")) > 0)
+	else if (Client.pers.Inventory.Has(NItems::PowerScreen) > 0)
 		return POWER_ARMOR_SCREEN;
 
 	return POWER_ARMOR_NONE;
@@ -1557,15 +1557,18 @@ inline void CPlayerEntity::SetClientEffects ()
 	}
 
 #ifdef CLEANCTF_ENABLED
-	State.RemoveEffects (EF_FLAG1 | EF_FLAG2);
-	if (Client.pers.Flag)
+	if (game.mode & GAME_CTF)
 	{
-		if (gameEntity->health > 0)
-			State.AddEffects (Client.pers.Flag->EffectFlags);
-		State.SetModelIndex (ModelIndex(Client.pers.Flag->WorldModel), 3);
+		State.RemoveEffects (EF_FLAG1 | EF_FLAG2);
+		if (Client.pers.Flag)
+		{
+			if (gameEntity->health > 0)
+				State.AddEffects (Client.pers.Flag->EffectFlags);
+			State.SetModelIndex (ModelIndex(Client.pers.Flag->WorldModel), 3);
+		}
+		else
+			State.SetModelIndex (0, 3);
 	}
-	else
-		State.SetModelIndex (0, 3);
 #endif
 
 	if (Client.quad_framenum > level.framenum)
@@ -2003,9 +2006,9 @@ void CPlayerEntity::CTFScoreboardMessage (bool reliable)
 		{
 			CPlayerEntity *cl_ent = dynamic_cast<CPlayerEntity*>((g_edicts + 1 + sorted[0][i])->Entity);
 
-			Bar.AddClientBlock (0, 42 + i * 8, sorted[0][i], cl_ent->Client.resp.score, clamp(cl_ent->Client.GetPing(), 0, 999));
+			Bar.AddClientBlock (0, 42 + i * 8, sorted[0][i], cl_ent->Client.resp.score, Clamp<int>(cl_ent->Client.GetPing(), 0, 999));
 
-			if (cl_ent->Client.pers.Flag == BlueFlag)
+			if (cl_ent->Client.pers.Flag == NItems::BlueFlag)
 			{
 				Bar.AddVirtualPoint_X (56);
 				Bar.AddVirtualPoint_Y (42 + i * 8);
@@ -2021,9 +2024,9 @@ void CPlayerEntity::CTFScoreboardMessage (bool reliable)
 		{
 			CPlayerEntity *cl_ent = dynamic_cast<CPlayerEntity*>((g_edicts + 1 + sorted[1][i])->Entity);
 
-			Bar.AddClientBlock (160, 42 + i * 8, sorted[1][i], cl_ent->Client.resp.score, clamp(cl_ent->Client.GetPing(), 0, 999));
+			Bar.AddClientBlock (160, 42 + i * 8, sorted[1][i], cl_ent->Client.resp.score, Clamp<int>(cl_ent->Client.GetPing(), 0, 999));
 
-			if (cl_ent->Client.pers.Flag == RedFlag)
+			if (cl_ent->Client.pers.Flag == NItems::RedFlag)
 			{
 				Bar.AddVirtualPoint_X (216);
 				Bar.AddVirtualPoint_Y (42 + i * 8);
@@ -2063,7 +2066,7 @@ void CPlayerEntity::CTFScoreboardMessage (bool reliable)
 				j += 8;
 			}
 
-			Bar.AddClientBlock ((n & 1) ? 160 : 0, j, i, cl_ent->Client.resp.score, clamp(cl_ent->Client.GetPing(), 0, 999));
+			Bar.AddClientBlock ((n & 1) ? 160 : 0, j, i, cl_ent->Client.resp.score, Clamp<int>(cl_ent->Client.GetPing(), 0, 999));
 			len = Bar.Length();
 			
 			if (n & 1)
@@ -2218,7 +2221,7 @@ void CPlayerEntity::SetStats ()
 	int			power_armor_type = PowerArmorType ();
 	if (power_armor_type)
 	{
-		cells = Client.pers.Inventory.Has(FindItem("Cells")->GetIndex());
+		cells = Client.pers.Inventory.Has(NItems::Cells);
 		if (cells == 0)
 		{	// ran out of cells for power armor
 			gameEntity->flags &= ~FL_POWER_ARMOR;
@@ -2434,7 +2437,7 @@ void CPlayerEntity::SetCTFStats()
 				CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
 
 				if (Player->IsInUse() &&
-					(Player->Client.pers.Flag == RedFlag))
+					(Player->Client.pers.Flag == NItems::RedFlag))
 				{
 					// enemy has it
 					p1 = ImageIndex ("i_ctf1t");
@@ -2461,7 +2464,7 @@ void CPlayerEntity::SetCTFStats()
 				CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
 
 				if (Player->IsInUse() &&
-					(Player->Client.pers.Flag == BlueFlag))
+					(Player->Client.pers.Flag == NItems::BlueFlag))
 				{
 					// enemy has it
 					p2 = ImageIndex ("i_ctf2t");
@@ -2500,12 +2503,12 @@ void CPlayerEntity::SetCTFStats()
 
 	Client.PlayerState.SetStat(STAT_CTF_FLAG_PIC, 0);
 	if (Client.resp.ctf_team == CTF_TEAM1 &&
-		(Client.pers.Flag == BlueFlag) &&
+		(Client.pers.Flag == NItems::BlueFlag) &&
 		(level.framenum & 8))
 		Client.PlayerState.SetStat(STAT_CTF_FLAG_PIC, ImageIndex ("i_ctf2"));
 
 	else if (Client.resp.ctf_team == CTF_TEAM2 &&
-		(Client.pers.Flag == RedFlag) &&
+		(Client.pers.Flag == NItems::RedFlag) &&
 		(level.framenum & 8))
 		Client.PlayerState.SetStat(STAT_CTF_FLAG_PIC, ImageIndex ("i_ctf1"));
 
@@ -2555,7 +2558,7 @@ void CPlayerEntity::CTFSetIDView()
 		who->State.GetOrigin (whoOrigin);
 		Vec3Subtract(whoOrigin, origin, dir);
 		VectorNormalizeFastf(dir);
-		d = DotProduct(forward, dir);
+		d = Dot3Product(forward, dir);
 		if (d > bd && loc_CanSee(gameEntity, who->gameEntity))
 		{
 			bd = d;
@@ -2593,8 +2596,8 @@ void CPlayerEntity::CTFAssignGhost()
 	ctfgame.ghosts[ghost].ent = this;
 	Q_strncpyz(ctfgame.ghosts[ghost].netname, Client.pers.netname, sizeof(ctfgame.ghosts[ghost].netname));
 	Client.resp.ghost = ctfgame.ghosts + ghost;
-	ClientPrintf(gameEntity, PRINT_CHAT, "Your ghost code is **** %d ****\n", ctfgame.ghosts[ghost].code);
-	ClientPrintf(gameEntity, PRINT_HIGH, "If you lose connection, you can rejoin with your score "
+	PrintToClient (PRINT_CHAT, "Your ghost code is **** %d ****\n", ctfgame.ghosts[ghost].code);
+	PrintToClient (PRINT_HIGH, "If you lose connection, you can rejoin with your score "
 		"intact by typing \"ghost %d\".\n", ctfgame.ghosts[ghost].code);
 }
 #endif
@@ -2645,14 +2648,9 @@ void CPlayerEntity::MoveToIntermission ()
 
 #ifdef CLEANCTF_ENABLED
 
-extern CTech *Regeneration;
-extern CTech *Haste;
-extern CTech *Strength;
-extern CTech *Resistance;
-
 int CPlayerEntity::CTFApplyStrength(int dmg)
 {
-	if (dmg && (Client.pers.Tech == Strength))
+	if (dmg && (Client.pers.Tech == NItems::Strength))
 		return dmg * 2;
 	return dmg;
 }
@@ -2664,7 +2662,7 @@ bool CPlayerEntity::CTFApplyStrengthSound()
 	if (Client.silencer_shots)
 		volume = 0.2f;
 
-	if (Client.pers.Tech == Strength)
+	if (Client.pers.Tech == NItems::Strength)
 	{
 		if (Client.ctf_techsndtime < level.framenum)
 		{
@@ -2682,7 +2680,7 @@ bool CPlayerEntity::CTFApplyStrengthSound()
 
 bool CPlayerEntity::CTFApplyHaste()
 {
-	if (Client.pers.Tech == Haste)
+	if (Client.pers.Tech == NItems::Haste)
 		return true;
 	return false;
 }
@@ -2694,7 +2692,7 @@ void CPlayerEntity::CTFApplyHasteSound()
 	if (Client.silencer_shots)
 		volume = 0.2f;
 
-	if (Client.pers.Tech == Haste &&
+	if (Client.pers.Tech == NItems::Haste &&
 		Client.ctf_techsndtime < level.framenum)
 	{
 		Client.ctf_techsndtime = level.framenum + 10;
@@ -2711,7 +2709,7 @@ void CPlayerEntity::CTFApplyRegeneration()
 	if (Client.silencer_shots)
 		volume = 0.2f;
 
-	if (Client.pers.Tech == Regeneration)
+	if (Client.pers.Tech == NItems::Regeneration)
 	{
 		if (Client.ctf_regentime < level.framenum)
 		{
@@ -2744,7 +2742,7 @@ void CPlayerEntity::CTFApplyRegeneration()
 
 bool CPlayerEntity::CTFHasRegeneration()
 {
-	if (Client.pers.Tech == Regeneration)
+	if (Client.pers.Tech == NItems::Regeneration)
 		return true;
 	return false;
 }
@@ -2756,7 +2754,7 @@ int CPlayerEntity::CTFApplyResistance(int dmg)
 	if (Client.silencer_shots)
 		volume = 0.2f;
 
-	if (dmg && (Client.pers.Tech == Resistance))
+	if (dmg && (Client.pers.Tech == NItems::Resistance))
 	{
 		// make noise
 	   	PlaySoundFrom(gameEntity, CHAN_ITEM, SoundIndex("ctf/tech1.wav"), volume, ATTN_NORM, 0);
@@ -2833,7 +2831,7 @@ void CPlayerEntity::TossClientWeapon ()
 	if (quad)
 	{
 		Client.v_angle[YAW] += spread;
-		edict_t *drop = FindItem("Quad Damage")->DropItem (gameEntity);
+		edict_t *drop = NItems::Quad->DropItem (gameEntity);
 		Client.v_angle[YAW] -= spread;
 		drop->spawnflags |= DROPPED_PLAYER_ITEM;
 
@@ -2995,7 +2993,8 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 #ifdef CLEANCTF_ENABLED
 //ZOID
 //regen tech
-	CTFApplyRegeneration();
+	if (game.mode & GAME_CTF)
+		CTFApplyRegeneration();
 //ZOID
 #endif
 
@@ -3346,9 +3345,12 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 
 #ifdef CLEANCTF_ENABLED
 //ZOID
-		CGrapple::PlayerResetGrapple(this);
-		CTFDeadDropFlag(this);
-		CTFDeadDropTech(this);
+		if (game.mode & GAME_CTF)
+		{
+			CGrapple::PlayerResetGrapple(this);
+			CTFDeadDropFlag(this);
+			CTFDeadDropTech(this);
+		}
 //ZOID
 #endif
 		if (game.mode & GAME_DEATHMATCH)
@@ -3423,4 +3425,19 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 	gameEntity->deadflag = DEAD_DEAD;
 
 	Link ();
+};
+
+void CPlayerEntity::PrintToClient (EGamePrintLevel printLevel, char *fmt, ...)
+{
+	va_list		argptr;
+	char		text[MAX_COMPRINT];
+
+	va_start (argptr, fmt);
+	vsnprintf_s (text, sizeof(text), MAX_COMPRINT, fmt, argptr);
+	va_end (argptr);
+
+	if (printLevel == PRINT_CENTER)
+		CenterPrintf (gameEntity, "%s", text);
+	else
+		ClientPrintf (gameEntity, printLevel, "%s", text);
 };

@@ -214,6 +214,3 @@ extern	CCvar *matchsetuptime;
 extern	CCvar *matchstarttime;
 extern	CCvar *admin_password;
 extern	CCvar *warp_list;
-
-extern CFlag *RedFlag;
-extern CFlag *BlueFlag;

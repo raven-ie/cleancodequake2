@@ -191,7 +191,7 @@ void GetChaseTarget(CPlayerEntity *ent)
 			return;
 		}
 	}
-	CenterPrintf(ent->gameEntity, "No other players to chase.");
+	ent->PrintToClient(PRINT_CENTER, "No other players to chase.");
 }
 
 

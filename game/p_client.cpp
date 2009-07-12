@@ -452,15 +452,18 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 			CPlayerEntity *Attacker = dynamic_cast<CPlayerEntity*>(attacker->Entity);
 //ZOID
 			// if at start and same team, clear
-			if ((game.mode & GAME_CTF) && (meansOfDeath == MOD_TELEFRAG) &&
+			if (game.mode & GAME_CTF)
+			{
+				if ((meansOfDeath == MOD_TELEFRAG) &&
 				(Player->Client.resp.ctf_state < 2) &&
 				(Player->Client.resp.ctf_team == Attacker->Client.resp.ctf_team))
-			{
-				Attacker->Client.resp.score--;
-				Player->Client.resp.ctf_state = 0;
-			}
+				{
+					Attacker->Client.resp.score--;
+					Player->Client.resp.ctf_state = 0;
+				}
 
-			CTFFragBonuses(Player, Attacker);
+				CTFFragBonuses(Player, Attacker);
+			}
 		}
 
 //ZOID
@@ -470,9 +473,12 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 
 #ifdef CLEANCTF_ENABLED
 //ZOID
-		CGrapple::PlayerResetGrapple(Player);
-		CTFDeadDropFlag(Player);
-		CTFDeadDropTech(Player);
+		if (game.mode & GAME_CTF)
+		{
+			CGrapple::PlayerResetGrapple(Player);
+			CTFDeadDropFlag(Player);
+			CTFDeadDropTech(Player);
+		}
 //ZOID
 #endif
 
@@ -1002,8 +1008,11 @@ void ClientDisconnect (edict_t *ent)
 
 #ifdef CLEANCTF_ENABLED
 //ZOID
-	CTFDeadDropFlag(Player);
-	CTFDeadDropTech(Player);
+	if (game.mode & GAME_CTF)
+	{
+		CTFDeadDropFlag(Player);
+		CTFDeadDropTech(Player);
+	}
 //ZOID
 #endif
 

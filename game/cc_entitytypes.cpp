@@ -144,8 +144,8 @@ void CPhysicsEntity::Impact (CTrace *trace)
 
 	e2 = dynamic_cast<CBaseEntity*>(trace->ent->Entity);
 
-	if (GetSolid() != SOLID_NOT)
-		Touch (e2, &trace->plane, trace->surface);
+	if (GetSolid() != SOLID_NOT && (EntityFlags & ENT_TOUCHABLE))
+		dynamic_cast<CTouchableEntity*>(this)->Touch (e2, &trace->plane, trace->surface);
 	
 	if ((e2->EntityFlags & ENT_TOUCHABLE) && e2->GetSolid() != SOLID_NOT)
 		dynamic_cast<CTouchableEntity*>(e2)->Touch (this, NULL, NULL);
@@ -153,9 +153,7 @@ void CPhysicsEntity::Impact (CTrace *trace)
 
 CBounceProjectile::CBounceProjectile () :
 backOff(1.5f),
-CPhysicsEntity (),
-CTouchableEntity(),
-CThinkableEntity()
+CPhysicsEntity ()
 {
 	Vec3Copy (vec3Origin, gameEntity->velocity); 
 	SetClipmask (CONTENTS_MASK_SHOT);
@@ -166,9 +164,7 @@ CThinkableEntity()
 
 CBounceProjectile::CBounceProjectile (int Index) :
 backOff(1.5f),
-CPhysicsEntity (Index),
-CTouchableEntity(),
-CThinkableEntity()
+CPhysicsEntity (Index)
 {
 	Vec3Copy (vec3Origin, gameEntity->velocity); 
 	SetClipmask (CONTENTS_MASK_SHOT);
@@ -277,9 +273,7 @@ CBounceProjectile (Index)
 }
 
 CFlyMissileProjectile::CFlyMissileProjectile () :
-CPhysicsEntity (),
-CTouchableEntity (),
-CThinkableEntity ()
+CPhysicsEntity ()
 {
 	Vec3Copy (vec3Origin, gameEntity->velocity); 
 	SetClipmask (CONTENTS_MASK_SHOT);
@@ -289,9 +283,7 @@ CThinkableEntity ()
 }
 
 CFlyMissileProjectile::CFlyMissileProjectile (int Index) :
-CPhysicsEntity (Index),
-CTouchableEntity (),
-CThinkableEntity ()
+CPhysicsEntity (Index)
 {
 	Vec3Copy (vec3Origin, gameEntity->velocity); 
 	SetClipmask (CONTENTS_MASK_SHOT);
@@ -381,9 +373,7 @@ bool CFlyMissileProjectile::Run ()
 }
 
 CStepPhysics::CStepPhysics () :
-CPhysicsEntity (),
-CTouchableEntity (),
-CThinkableEntity ()
+CPhysicsEntity ()
 {
 	Vec3Copy (vec3Origin, gameEntity->velocity); 
 	SetClipmask (CONTENTS_MASK_SHOT);
@@ -393,9 +383,7 @@ CThinkableEntity ()
 }
 
 CStepPhysics::CStepPhysics (int Index) :
-CPhysicsEntity (Index),
-CTouchableEntity (),
-CThinkableEntity ()
+CPhysicsEntity (Index)
 {
 	Vec3Copy (vec3Origin, gameEntity->velocity); 
 	SetClipmask (CONTENTS_MASK_SHOT);
@@ -560,7 +548,7 @@ int CStepPhysics::FlyMove (float time, int mask)
 			for (j=0 ; j<numplanes ; j++)
 				if ((j != i) && !Vec3Compare (planes[i], planes[j]))
 				{
-					if (DotProduct (new_velocity, planes[j]) < 0)
+					if (Dot3Product (new_velocity, planes[j]) < 0)
 						break;	// not ok
 				}
 			if (j == numplanes)
@@ -580,7 +568,7 @@ int CStepPhysics::FlyMove (float time, int mask)
 				return 7;
 			}
 			CrossProduct (planes[0], planes[1], dir);
-			d = DotProduct (dir, gameEntity->velocity);
+			d = Dot3Product (dir, gameEntity->velocity);
 			Vec3Scale (dir, d, gameEntity->velocity);
 		}
 
@@ -588,7 +576,7 @@ int CStepPhysics::FlyMove (float time, int mask)
 // if original velocity is against the original velocity, stop dead
 // to avoid tiny occilations in sloping corners
 //
-		if (DotProduct (gameEntity->velocity, primal_velocity) <= 0)
+		if (Dot3Product (gameEntity->velocity, primal_velocity) <= 0)
 		{
 			Vec3Copy (vec3Origin, gameEntity->velocity);
 			return blocked;
@@ -605,6 +593,9 @@ bool CStepPhysics::Run ()
 	float		speed, newspeed, control;
 	float		friction;
 	int			mask;
+
+	if (PhysicsDisabled)
+		return false;
 
 	// airborn monsters should always check for ground
 	if (!gameEntity->groundentity && gameEntity->Monster)

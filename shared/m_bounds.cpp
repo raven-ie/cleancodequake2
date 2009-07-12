@@ -170,9 +170,9 @@ MinMins
 */
 void MinMins (vec3_t a, vec3_t b, vec3_t out)
 {
-	out[0] = min (a[0], b[0]);
-	out[1] = min (a[1], b[1]);
-	out[2] = min (a[2], b[2]);
+	out[0] = Min<> (a[0], b[0]);
+	out[1] = Min<> (a[1], b[1]);
+	out[2] = Min<> (a[2], b[2]);
 }
 
 
@@ -183,9 +183,9 @@ MaxMaxs
 */
 void MaxMaxs (vec3_t a, vec3_t b, vec3_t out)
 {
-	out[0] = max (a[0], b[0]);
-	out[1] = max (a[1], b[1]);
-	out[2] = max (a[2], b[2]);
+	out[0] = Max<> (a[0], b[0]);
+	out[1] = Max<> (a[1], b[1]);
+	out[2] = Max<> (a[2], b[2]);
 }
 
 

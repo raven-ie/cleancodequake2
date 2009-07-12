@@ -147,6 +147,28 @@ enum EAttackState
 #endif
 };
 
+class CMonsterEntity : public CStepPhysics, public CTossProjectile, public CHurtableEntity, public CThinkableEntity
+{
+public:
+	bool			TossPhysics;
+	bool			BouncePhysics;
+	bool			IsHead;
+
+	class CMonster	*Monster;
+
+	CMonsterEntity	();
+	CMonsterEntity	(int Index);
+
+	void			Think ();
+
+	void Pain (CBaseEntity *other, float kick, int damage);
+	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
+
+	bool			Run ();
+
+	void			ThrowHead (MediaIndex gibIndex, int damage, int type);
+};
+
 class CMonster
 {
 protected:
@@ -157,10 +179,10 @@ public:
 
 	// Hash
 	uint32				HashValue;
-	CMonster		*HashNext;
+	CMonster			*HashNext;
 
 	char				*Classname;
-	edict_t				*Entity; // Entity linked to the monster
+	CMonsterEntity		*Entity; // Entity linked to the monster
 
 	float				IdealYaw;
 	edict_t				*GoalEntity;
@@ -170,7 +192,7 @@ public:
 
 #ifdef MONSTER_USE_ROGUE_AI
 //ROGUE
-	bool	BlindFire;		// will the monster blindfire?
+	bool		BlindFire;		// will the monster blindfire?
 	int			MedicTries;
 
 	//  while abort_duck would be nice, only monsters which duck but don't sidestep would use it .. only the brain
@@ -188,8 +210,6 @@ public:
 	// (set in the monster) of the next shot
 #endif
 
-	void				RunThink ();
-	int32				NextThink;
 	int					NextFrame;
 	float				Scale;
 	int32				PauseTime;
@@ -333,8 +353,8 @@ public:
 	// Called on a spawn
 	void Init (edict_t *ent);
 	virtual void	Spawn () = 0;
-	virtual void	Die(edict_t *inflictor, edict_t *attacker, int damage, vec3_t point) = 0;
-	virtual void	Pain(edict_t *other, float kick, int damage) = 0;
+	virtual void	Die(CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point) = 0;
+	virtual void	Pain(CBaseEntity *other, float kick, int damage) = 0;
 };
 
 #define DI_NODIR	-1
@@ -343,20 +363,3 @@ void Monster_Think (edict_t *ent);
 
 #define ConvertDerivedFunction(x) static_cast<void (__thiscall CMonster::* )(void)>(x)
 #define ConvertDerivedAIMove(x) static_cast<void (__thiscall CMonster::* )(float)>(x)
-
-#include "cc_soldier_base.h"
-#include "cc_soldier_shotgun.h"
-#include "cc_soldier_light.h"
-#include "cc_soldier_machinegun.h"
-#include "cc_infantry.h"
-#include "cc_bitch.h"
-#include "cc_tank.h"
-#include "cc_flyer.h"
-#include "cc_gunner.h"
-#include "cc_floater.h"
-#include "cc_supertank.h"
-#include "cc_barracuda.h"
-#include "cc_icarus.h"
-#include "cc_mutant.h"
-#include "cc_insane.h"
-#include "cc_gladiator.h"

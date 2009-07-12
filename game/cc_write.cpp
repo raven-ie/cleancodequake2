@@ -106,7 +106,7 @@ void WriteChar (char val)
 	if (val < CHAR_MIN || val > CHAR_MAX)
 	{
 		Com_Printf (0, "Malformed char written!\n");
-		val = clamp (val, CHAR_MIN, CHAR_MAX);
+		val = Clamp<char> (val, CHAR_MIN, CHAR_MAX);
 	}
 
 	gi.WriteChar (val);
@@ -117,7 +117,7 @@ void WriteByte (byte val)
 	if (val < 0 || val > UCHAR_MAX)
 	{
 		Com_Printf (0, "Malformed byte written!\n");
-		val = clamp (val, 0, UCHAR_MAX);
+		val = Clamp<byte> (val, 0, UCHAR_MAX);
 	}
 
 	gi.WriteByte (val);
@@ -128,7 +128,7 @@ void WriteShort (short val)
 	if (val < SHRT_MIN || val > SHRT_MAX)
 	{
 		Com_Printf (0, "Malformed short written!\n");
-		val = clamp (val, SHRT_MIN, SHRT_MAX);
+		val = Clamp<short> (val, SHRT_MIN, SHRT_MAX);
 	}
 
 	gi.WriteShort (val);
@@ -139,7 +139,7 @@ void WriteLong (long val)
 	if (val < LONG_MIN || val > LONG_MAX)
 	{
 		Com_Printf (0, "Malformed long written!\n");
-		val = clamp (val, LONG_MIN, LONG_MAX);
+		val = Clamp<long> (val, LONG_MIN, LONG_MAX);
 	}
 
 	gi.WriteLong (val);
@@ -150,7 +150,7 @@ void WriteFloat (float val)
 	if (val < FLT_MIN || val > FLT_MAX)
 	{
 		Com_Printf (0, "Malformed float written!\n");
-		val = clamp (val, FLT_MIN, FLT_MAX);
+		val = Clamp<float> (val, FLT_MIN, FLT_MAX);
 	}
 
 	gi.WriteFloat (val);

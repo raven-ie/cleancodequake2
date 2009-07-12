@@ -162,7 +162,9 @@ void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *su
 #include "cc_armor.h"
 #include "cc_keys.h"
 #include "cc_powerups.h"
-#include "cc_itemlist.h"
+
 #ifdef CLEANCTF_ENABLED
 #include "cc_ctfitems.h"
 #endif
+
+#include "cc_itemlist.h"

@@ -112,7 +112,7 @@ bool CWeaponItem::Pickup (edict_t *ent, CPlayerEntity *other)
 	{
 		if (other->Client.pers.Weapon != Weapon && 
 			(other->Client.pers.Inventory.Has(this) == 1) &&
-			( !(game.mode & GAME_DEATHMATCH) || (other->Client.pers.Weapon && other->Client.pers.Weapon->WeaponItem == FindItem("blaster")) ) )
+			( !(game.mode & GAME_DEATHMATCH) || (other->Client.pers.Weapon && other->Client.pers.Weapon->WeaponItem == NItems::Blaster) ) )
 			other->Client.NewWeapon = Weapon;
 	}
 
@@ -129,13 +129,13 @@ void CWeaponItem::Use (CPlayerEntity *ent)
 	{
 		if (!ent->Client.pers.Inventory.Has(Ammo->GetIndex()))
 		{
-			ClientPrintf (ent->gameEntity, PRINT_HIGH, "No %s for %s.\n", Ammo->Name, Name);
+			ent->PrintToClient (PRINT_HIGH, "No %s for %s.\n", Ammo->Name, Name);
 			return;
 		}
 
 		if (ent->Client.pers.Inventory.Has(Ammo->GetIndex()) < Quantity)
 		{
-			ClientPrintf (ent->gameEntity, PRINT_HIGH, "Not enough %s for %s.\n", Ammo->Name, Name);
+			ent->PrintToClient (PRINT_HIGH, "Not enough %s for %s.\n", Ammo->Name, Name);
 			return;
 		}
 	}
@@ -194,13 +194,13 @@ void CAmmo::Use (CPlayerEntity *ent)
 	{
 		if (!ent->Client.pers.Inventory.Has(GetIndex()))
 		{
-			ClientPrintf (ent->gameEntity, PRINT_HIGH, "No %s for %s.\n", Name, Name);
+			ent->PrintToClient (PRINT_HIGH, "No %s for %s.\n", Name, Name);
 			return;
 		}
 
 		if (ent->Client.pers.Inventory.Has(GetIndex()) < Amount)
 		{
-			ClientPrintf (ent->gameEntity, PRINT_HIGH, "Not enough %s.\n", Name);
+			ent->PrintToClient (PRINT_HIGH, "Not enough %s.\n", Name);
 			return;
 		}
 	}
@@ -269,7 +269,7 @@ bool CAmmo::Pickup (edict_t *ent, CPlayerEntity *other)
 	if (weapon && !oldcount)
 	{
 		if (other->Client.pers.Weapon != Weapon && (!(game.mode & GAME_DEATHMATCH) ||
-			(other->Client.pers.Weapon && other->Client.pers.Weapon->WeaponItem == FindItem("Blaster"))))
+			(other->Client.pers.Weapon && other->Client.pers.Weapon->WeaponItem == NItems::Blaster)))
 			other->Client.NewWeapon = Weapon;
 	}
 
@@ -278,67 +278,51 @@ bool CAmmo::Pickup (edict_t *ent, CPlayerEntity *other)
 	return true;
 }
 
-// Really didn't want to do this...
-static CWeaponItem *Blaster;
-static CWeaponItem *Shotgun;
-static CWeaponItem *SuperShotgun;
-static CWeaponItem *Machinegun;
-static CWeaponItem *Chaingun;
-static CWeaponItem *GrenadeLauncher;
-static CWeaponItem *RocketLauncher;
-static CWeaponItem *HyperBlaster;
-static CWeaponItem *Railgun;
-static CWeaponItem *BFG;
-static CAmmo *Grenades;
-#ifdef CLEANCTF_ENABLED
-static CWeaponItem	*Grapple;
-#endif
-
 void AddAmmoToList ()
 {
-	CAmmo *Shells = QNew (com_gamePool, 0) CAmmo("ammo_shells", "models/items/ammo/shells/medium/tris.md2", 0, "misc/am_pkup.wav", "a_shells", "Shells", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 10, AMMOTAG_SHELLS, NULL, -1, NULL);
-	CAmmo *Bullets = QNew (com_gamePool, 0) CAmmo("ammo_bullets", "models/items/ammo/bullets/medium/tris.md2", 0, "misc/am_pkup.wav", "a_bullets", "Bullets", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 50, AMMOTAG_BULLETS, NULL, -1, NULL);
-	CAmmo *Slugs = QNew (com_gamePool, 0) CAmmo("ammo_slugs", "models/items/ammo/slugs/medium/tris.md2", 0, "misc/am_pkup.wav", "a_slugs", "Slugs", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 10, AMMOTAG_SLUGS, NULL, -1, NULL);
-	Grenades = QNew (com_gamePool, 0) CAmmo("ammo_grenades", "models/items/ammo/grenades/medium/tris.md2", 0, "misc/am_pkup.wav", "a_grenades", "Grenades", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_USABLE|ITEMFLAG_GRABBABLE|ITEMFLAG_WEAPON, "", 5, AMMOTAG_GRENADES, &WeaponGrenades, 1, "#a_grenades.md2");
-	CAmmo *Rockets = QNew (com_gamePool, 0) CAmmo("ammo_rockets", "models/items/ammo/rockets/medium/tris.md2", 0, "misc/am_pkup.wav", "a_rockets", "Rockets", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 5, AMMOTAG_ROCKETS, NULL, -1, NULL);
-	CAmmo *Cells = QNew (com_gamePool, 0) CAmmo("ammo_cells", "models/items/ammo/cells/medium/tris.md2", 0, "misc/am_pkup.wav", "a_cells", "Cells", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 50, AMMOTAG_CELLS, NULL, -1, NULL);
+	NItems::Shells = QNew (com_gamePool, 0) CAmmo("ammo_shells", "models/items/ammo/shells/medium/tris.md2", 0, "misc/am_pkup.wav", "a_shells", "Shells", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 10, AMMOTAG_SHELLS, NULL, -1, NULL);
+	NItems::Bullets = QNew (com_gamePool, 0) CAmmo("ammo_bullets", "models/items/ammo/bullets/medium/tris.md2", 0, "misc/am_pkup.wav", "a_bullets", "Bullets", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 50, AMMOTAG_BULLETS, NULL, -1, NULL);
+	NItems::Slugs = QNew (com_gamePool, 0) CAmmo("ammo_slugs", "models/items/ammo/slugs/medium/tris.md2", 0, "misc/am_pkup.wav", "a_slugs", "Slugs", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 10, AMMOTAG_SLUGS, NULL, -1, NULL);
+	NItems::Grenades = QNew (com_gamePool, 0) CAmmo("ammo_grenades", "models/items/ammo/grenades/medium/tris.md2", 0, "misc/am_pkup.wav", "a_grenades", "Grenades", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_USABLE|ITEMFLAG_GRABBABLE|ITEMFLAG_WEAPON, "", 5, AMMOTAG_GRENADES, &WeaponGrenades, 1, "#a_grenades.md2");
+	NItems::Rockets = QNew (com_gamePool, 0) CAmmo("ammo_rockets", "models/items/ammo/rockets/medium/tris.md2", 0, "misc/am_pkup.wav", "a_rockets", "Rockets", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 5, AMMOTAG_ROCKETS, NULL, -1, NULL);
+	NItems::Cells = QNew (com_gamePool, 0) CAmmo("ammo_cells", "models/items/ammo/cells/medium/tris.md2", 0, "misc/am_pkup.wav", "a_cells", "Cells", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 50, AMMOTAG_CELLS, NULL, -1, NULL);
 
-	ItemList->AddItemToList (Shells);
-	ItemList->AddItemToList (Bullets);
-	ItemList->AddItemToList (Slugs);
-	ItemList->AddItemToList (Grenades);
-	ItemList->AddItemToList (Rockets);
-	ItemList->AddItemToList (Cells);
+	ItemList->AddItemToList (NItems::Shells);
+	ItemList->AddItemToList (NItems::Bullets);
+	ItemList->AddItemToList (NItems::Slugs);
+	ItemList->AddItemToList (NItems::Grenades);
+	ItemList->AddItemToList (NItems::Rockets);
+	ItemList->AddItemToList (NItems::Cells);
 
 	// Weapons
-	Blaster = QNew (com_gamePool, 0) CWeaponItem(NULL, NULL, 0, NULL, "w_blaster", "Blaster", ITEMFLAG_WEAPON|ITEMFLAG_USABLE, "", &WeaponBlaster, NULL, 0, "#w_blaster.md2");
-	Shotgun = QNew (com_gamePool, 0) CWeaponItem("weapon_shotgun", "models/weapons/g_shotg/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_shotgun", "Shotgun", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponShotgun, Shells, 1, "#w_shotgun.md2");
-	SuperShotgun = QNew (com_gamePool, 0) CWeaponItem("weapon_supershotgun", "models/weapons/g_shotg2/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_sshotgun", "Super Shotgun", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponSuperShotgun, Shells, 2, "#w_sshotgun.md2");
-	Machinegun = QNew (com_gamePool, 0) CWeaponItem("weapon_machinegun", "models/weapons/g_machn/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_machinegun", "Machinegun", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponMachinegun, Bullets, 1, "#w_machinegun.md2");
-	Chaingun = QNew (com_gamePool, 0) CWeaponItem("weapon_chaingun", "models/weapons/g_chain/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_chaingun", "Chaingun", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponChaingun, Bullets, 1, "#w_chaingun.md2");
-	GrenadeLauncher = QNew (com_gamePool, 0) CWeaponItem("weapon_grenadelauncher", "models/weapons/g_launch/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_glauncher", "Grenade Launcher", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponGrenadeLauncher, Grenades, 1, "#w_glauncher.md2");
-	RocketLauncher = QNew (com_gamePool, 0) CWeaponItem("weapon_rocketlauncher", "models/weapons/g_rocket/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_rlauncher", "Rocket Launcher", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponRocketLauncher, Rockets, 1, "#w_rlauncher.md2");
-	HyperBlaster = QNew (com_gamePool, 0) CWeaponItem("weapon_hyperblaster", "models/weapons/g_hyperb/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_hyperblaster", "HyperBlaster", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponHyperBlaster, Cells, 1, "#w_hyperblaster.md2");
-	Railgun = QNew (com_gamePool, 0) CWeaponItem("weapon_railgun", "models/weapons/g_rail/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_railgun", "Railgun", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponRailgun, Slugs, 1, "#w_railgun.md2");
-	BFG = QNew (com_gamePool, 0) CWeaponItem("weapon_bfg", "models/weapons/g_bfg/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_bfg", "BFG10k", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponBFG, Cells, 50, "#w_bfg.md2");
+	NItems::Blaster = QNew (com_gamePool, 0) CWeaponItem(NULL, NULL, 0, NULL, "w_blaster", "Blaster", ITEMFLAG_WEAPON|ITEMFLAG_USABLE, "", &WeaponBlaster, NULL, 0, "#w_blaster.md2");
+	NItems::Shotgun = QNew (com_gamePool, 0) CWeaponItem("weapon_shotgun", "models/weapons/g_shotg/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_shotgun", "Shotgun", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponShotgun, NItems::Shells, 1, "#w_shotgun.md2");
+	NItems::SuperShotgun = QNew (com_gamePool, 0) CWeaponItem("weapon_supershotgun", "models/weapons/g_shotg2/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_sshotgun", "Super Shotgun", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponSuperShotgun, NItems::Shells, 2, "#w_sshotgun.md2");
+	NItems::Machinegun = QNew (com_gamePool, 0) CWeaponItem("weapon_machinegun", "models/weapons/g_machn/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_machinegun", "Machinegun", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponMachinegun, NItems::Bullets, 1, "#w_machinegun.md2");
+	NItems::Chaingun = QNew (com_gamePool, 0) CWeaponItem("weapon_chaingun", "models/weapons/g_chain/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_chaingun", "Chaingun", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponChaingun, NItems::Bullets, 1, "#w_chaingun.md2");
+	NItems::GrenadeLauncher = QNew (com_gamePool, 0) CWeaponItem("weapon_grenadelauncher", "models/weapons/g_launch/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_glauncher", "Grenade Launcher", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponGrenadeLauncher, NItems::Grenades, 1, "#w_glauncher.md2");
+	NItems::RocketLauncher = QNew (com_gamePool, 0) CWeaponItem("weapon_rocketlauncher", "models/weapons/g_rocket/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_rlauncher", "Rocket Launcher", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponRocketLauncher, NItems::Rockets, 1, "#w_rlauncher.md2");
+	NItems::HyperBlaster = QNew (com_gamePool, 0) CWeaponItem("weapon_hyperblaster", "models/weapons/g_hyperb/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_hyperblaster", "HyperBlaster", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponHyperBlaster, NItems::Cells, 1, "#w_hyperblaster.md2");
+	NItems::Railgun = QNew (com_gamePool, 0) CWeaponItem("weapon_railgun", "models/weapons/g_rail/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_railgun", "Railgun", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponRailgun, NItems::Slugs, 1, "#w_railgun.md2");
+	NItems::BFG = QNew (com_gamePool, 0) CWeaponItem("weapon_bfg", "models/weapons/g_bfg/tris.md2", EF_ROTATE, "misc/w_pkup.wav", "w_bfg", "BFG10k", ITEMFLAG_DROPPABLE|ITEMFLAG_WEAPON|ITEMFLAG_GRABBABLE|ITEMFLAG_STAY_COOP|ITEMFLAG_USABLE, "", &WeaponBFG, NItems::Cells, 50, "#w_bfg.md2");
 
 #ifdef CLEANCTF_ENABLED
-	Grapple = QNew (com_gamePool, 0) CWeaponItem (NULL, NULL, 0, NULL, "w_grapple", "Grapple", ITEMFLAG_WEAPON|ITEMFLAG_USABLE, "", &WeaponGrapple, NULL, 0, "#w_grapple.md2");
+	NItems::Grapple = QNew (com_gamePool, 0) CWeaponItem (NULL, NULL, 0, NULL, "w_grapple", "Grapple", ITEMFLAG_WEAPON|ITEMFLAG_USABLE, "", &WeaponGrapple, NULL, 0, "#w_grapple.md2");
 #endif
 
-	ItemList->AddItemToList (Blaster);
-	ItemList->AddItemToList (Shotgun);
-	ItemList->AddItemToList (SuperShotgun);
-	ItemList->AddItemToList (Machinegun);
-	ItemList->AddItemToList (Chaingun);
-	ItemList->AddItemToList (GrenadeLauncher);
-	ItemList->AddItemToList (RocketLauncher);
-	ItemList->AddItemToList (HyperBlaster);
-	ItemList->AddItemToList (Railgun);
-	ItemList->AddItemToList (BFG);
+	ItemList->AddItemToList (NItems::Blaster);
+	ItemList->AddItemToList (NItems::Shotgun);
+	ItemList->AddItemToList (NItems::SuperShotgun);
+	ItemList->AddItemToList (NItems::Machinegun);
+	ItemList->AddItemToList (NItems::Chaingun);
+	ItemList->AddItemToList (NItems::GrenadeLauncher);
+	ItemList->AddItemToList (NItems::RocketLauncher);
+	ItemList->AddItemToList (NItems::HyperBlaster);
+	ItemList->AddItemToList (NItems::Railgun);
+	ItemList->AddItemToList (NItems::BFG);
 
 #ifdef CLEANCTF_ENABLED
-	ItemList->AddItemToList (Grapple);
+	ItemList->AddItemToList (NItems::Grapple);
 #endif
 }
 
@@ -359,20 +343,20 @@ void AddAmmoToList ()
 
 void DoWeaponVweps ()
 {
-	int takeAway = ModelIndex(Blaster->VWepModel) - 1;
+	int takeAway = ModelIndex(NItems::Blaster->VWepModel) - 1;
 
-	Blaster->Weapon->vwepIndex = ModelIndex(Blaster->VWepModel) - takeAway;
-	Shotgun->Weapon->vwepIndex = ModelIndex(Shotgun->VWepModel) - takeAway;
-	SuperShotgun->Weapon->vwepIndex = ModelIndex(SuperShotgun->VWepModel) - takeAway;
-	Machinegun->Weapon->vwepIndex = ModelIndex(Machinegun->VWepModel) - takeAway;
-	Chaingun->Weapon->vwepIndex = ModelIndex(Chaingun->VWepModel) - takeAway;
-	GrenadeLauncher->Weapon->vwepIndex = ModelIndex(GrenadeLauncher->VWepModel) - takeAway;
-	Grenades->Weapon->vwepIndex = ModelIndex(Grenades->VWepModel) - takeAway;
-	RocketLauncher->Weapon->vwepIndex = ModelIndex(RocketLauncher->VWepModel) - takeAway;
-	HyperBlaster->Weapon->vwepIndex = ModelIndex(HyperBlaster->VWepModel) - takeAway;
-	Railgun->Weapon->vwepIndex = ModelIndex(Railgun->VWepModel) - takeAway;
-	BFG->Weapon->vwepIndex = ModelIndex(BFG->VWepModel) - takeAway;
+	NItems::Blaster->Weapon->vwepIndex = ModelIndex(NItems::Blaster->VWepModel) - takeAway;
+	NItems::Shotgun->Weapon->vwepIndex = ModelIndex(NItems::Shotgun->VWepModel) - takeAway;
+	NItems::SuperShotgun->Weapon->vwepIndex = ModelIndex(NItems::SuperShotgun->VWepModel) - takeAway;
+	NItems::Machinegun->Weapon->vwepIndex = ModelIndex(NItems::Machinegun->VWepModel) - takeAway;
+	NItems::Chaingun->Weapon->vwepIndex = ModelIndex(NItems::Chaingun->VWepModel) - takeAway;
+	NItems::GrenadeLauncher->Weapon->vwepIndex = ModelIndex(NItems::GrenadeLauncher->VWepModel) - takeAway;
+	NItems::Grenades->Weapon->vwepIndex = ModelIndex(NItems::Grenades->VWepModel) - takeAway;
+	NItems::RocketLauncher->Weapon->vwepIndex = ModelIndex(NItems::RocketLauncher->VWepModel) - takeAway;
+	NItems::HyperBlaster->Weapon->vwepIndex = ModelIndex(NItems::HyperBlaster->VWepModel) - takeAway;
+	NItems::Railgun->Weapon->vwepIndex = ModelIndex(NItems::Railgun->VWepModel) - takeAway;
+	NItems::BFG->Weapon->vwepIndex = ModelIndex(NItems::BFG->VWepModel) - takeAway;
 #ifdef CLEANCTF_ENABLED
-	Grapple->Weapon->vwepIndex = ModelIndex(Grapple->VWepModel) - takeAway;
+	NItems::Grapple->Weapon->vwepIndex = ModelIndex(NItems::Grapple->VWepModel) - takeAway;
 #endif
 }

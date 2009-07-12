@@ -538,7 +538,7 @@ public:
 				}
 			}
 
-			CenterPrintf (ent->gameEntity, "No one to chase\n");
+			ent->PrintToClient(PRINT_CENTER, "No one to chase\n");
 			return true;
 		};
 	};

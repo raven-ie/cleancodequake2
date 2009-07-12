@@ -449,7 +449,7 @@ void	CBaseEntity::PlaySound (EEntSndChannel channel, MediaIndex soundIndex, floa
 	PlaySoundFrom (gameEntity, channel, soundIndex, volume, attenuation, timeOfs);
 };
 
-void	CBaseEntity::PlaySound (vec3_t origin, EEntSndChannel channel, MediaIndex soundIndex, float volume, int attenuation, float timeOfs)
+void	CBaseEntity::PlayPositionedSound (vec3_t origin, EEntSndChannel channel, MediaIndex soundIndex, float volume, int attenuation, float timeOfs)
 {
 	PlaySoundAt (origin, gameEntity, channel, soundIndex, volume, attenuation, timeOfs);
 };

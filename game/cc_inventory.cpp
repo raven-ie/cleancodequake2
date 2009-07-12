@@ -191,18 +191,18 @@ void Cmd_Use_f (CPlayerEntity *ent)
 
 		if (!Item)
 		{
-			ClientPrintf (ent->gameEntity, PRINT_HIGH, "Unknown item: %s\n", s);
+			ent->PrintToClient (PRINT_HIGH, "Unknown item: %s\n", s);
 			return;
 		}
 	}
 	if (!(Item->Flags & ITEMFLAG_USABLE))
 	{
-		ClientPrintf (ent->gameEntity, PRINT_HIGH, "Item is not usable.\n");
+		ent->PrintToClient (PRINT_HIGH, "Item is not usable.\n");
 		return;
 	}
 	if (!ent->Client.pers.Inventory.Has(Item))
 	{
-		ClientPrintf (ent->gameEntity, PRINT_HIGH, "Out of item: %s\n", s);
+		ent->PrintToClient (PRINT_HIGH, "Out of item: %s\n", s);
 		return;
 	}
 
@@ -232,13 +232,13 @@ void Cmd_UseList_f (CPlayerEntity *ent)
 
 			if (!Item)
 			{
-				ClientPrintf (ent->gameEntity, PRINT_HIGH, "Unknown item: %s\n", s);
+				ent->PrintToClient (PRINT_HIGH, "Unknown item: %s\n", s);
 				continue;
 			}
 		}
 		if (!(Item->Flags & ITEMFLAG_USABLE))
 		{
-			ClientPrintf (ent->gameEntity, PRINT_HIGH, "Item is not usable.\n");
+			ent->PrintToClient (PRINT_HIGH, "Item is not usable.\n");
 			continue;
 		}
 		// Only warn us if it's unknown or not usable; not if we don't have it
@@ -257,7 +257,7 @@ void Cmd_UseList_f (CPlayerEntity *ent)
 		ent->Client.pers.Inventory.ValidateSelectedItem();
 		return;
 	}
-	ClientPrintf (ent->gameEntity, PRINT_HIGH, "No item in list found!\n");
+	ent->PrintToClient (PRINT_HIGH, "No item in list found!\n");
 }
 
 /*
@@ -291,18 +291,18 @@ void Cmd_Drop_f (CPlayerEntity *ent)
 
 		if (!Item)
 		{
-			ClientPrintf (ent->gameEntity, PRINT_HIGH, "Unknown item: %s\n", s);
+			ent->PrintToClient (PRINT_HIGH, "Unknown item: %s\n", s);
 			return;
 		}
 	}
 	if (!(Item->Flags & ITEMFLAG_DROPPABLE))
 	{
-		ClientPrintf (ent->gameEntity, PRINT_HIGH, "Item is not dropable.\n");
+		ent->PrintToClient (PRINT_HIGH, "Item is not dropable.\n");
 		return;
 	}
 	if (!ent->Client.pers.Inventory.Has(Item))
 	{
-		ClientPrintf (ent->gameEntity, PRINT_HIGH, "Out of item: %s\n", s);
+		ent->PrintToClient (PRINT_HIGH, "Out of item: %s\n", s);
 		return;
 	}
 
@@ -356,14 +356,14 @@ void Cmd_InvUse_f (CPlayerEntity *ent)
 
 	if (ent->Client.pers.Inventory.SelectedItem == -1)
 	{
-		ClientPrintf (ent->gameEntity, PRINT_HIGH, "No item to use.\n");
+		ent->PrintToClient (PRINT_HIGH, "No item to use.\n");
 		return;
 	}
 
 	CBaseItem *it = GetItemByIndex(ent->Client.pers.Inventory.SelectedItem);
 	if (!(it->Flags & ITEMFLAG_USABLE))
 	{
-		ClientPrintf (ent->gameEntity, PRINT_HIGH, "Item is not usable.\n");
+		ent->PrintToClient (PRINT_HIGH, "Item is not usable.\n");
 		return;
 	}
 	it->Use (ent);
@@ -464,14 +464,14 @@ void Cmd_InvDrop_f (CPlayerEntity *ent)
 
 	if (ent->Client.pers.Inventory.SelectedItem == -1)
 	{
-		ClientPrintf (ent->gameEntity, PRINT_HIGH, "No item to drop.\n");
+		ent->PrintToClient (PRINT_HIGH, "No item to drop.\n");
 		return;
 	}
 
 	CBaseItem *Item = GetItemByIndex(ent->Client.pers.Inventory.SelectedItem);
 	if (!(Item->Flags & ITEMFLAG_DROPPABLE))
 	{
-		ClientPrintf (ent->gameEntity, PRINT_HIGH, "Item is not dropable.\n");
+		ent->PrintToClient (PRINT_HIGH, "Item is not dropable.\n");
 		return;
 	}
 	Item->Drop (ent);
@@ -609,10 +609,10 @@ void Cmd_Give_f (CPlayerEntity *ent)
 
 	if (give_all || Q_stricmp(name, "armor") == 0)
 	{
-		ent->Client.pers.Inventory.Set(FindItem("Jacket Armor")->GetIndex(), 0);
-		ent->Client.pers.Inventory.Set(FindItem("Combat Armor")->GetIndex(), 0);
+		ent->Client.pers.Inventory.Set(NItems::JacketArmor->GetIndex(), 0);
+		ent->Client.pers.Inventory.Set(NItems::CombatArmor->GetIndex(), 0);
 
-		CArmor *Armor = dynamic_cast<CArmor*>(FindItem("Body Armor"));
+		CArmor *Armor = dynamic_cast<CArmor*>(NItems::BodyArmor);
 		ent->Client.pers.Inventory.Set(Armor->GetIndex(), Armor->maxCount);
 		ent->Client.pers.Armor = Armor;
 
@@ -625,7 +625,7 @@ void Cmd_Give_f (CPlayerEntity *ent)
 
 	if (give_all || Q_stricmp(name, "Power Shield") == 0)
 	{
-		it = FindItem("Power Shield");
+		it = NItems::PowerShield;
 		edict_t *it_ent = G_Spawn();
 		it_ent->classname = it->Classname;
 		SpawnItem (it_ent, it);
@@ -662,7 +662,7 @@ void Cmd_Give_f (CPlayerEntity *ent)
 			it = FindItemByClassname (name);
 			if (!it)
 			{
-				ClientPrintf (ent->gameEntity, PRINT_HIGH, "Unknown Item\n");
+				ent->PrintToClient (PRINT_HIGH, "Unknown Item\n");
 				return;
 			}
 		}

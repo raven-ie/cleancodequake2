@@ -107,7 +107,7 @@ void CHandGrenade::FireGrenade (CPlayerEntity *ent, bool inHand)
 	CGrenade::Spawn (ent, start, forward, damage, speed, timer, radius, true, inHand);
 
 #ifdef CLEANCTF_ENABLED
-	ent->Client.grenade_time = level.framenum + (ent->CTFApplyHaste() ? 5 : 10);
+	ent->Client.grenade_time = level.framenum + (((game.mode & GAME_CTF) && ent->CTFApplyHaste()) ? 5 : 10);
 #else
 	ent->Client.grenade_time = level.framenum + 10;
 #endif
