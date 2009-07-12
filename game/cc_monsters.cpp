@@ -342,7 +342,7 @@ void AI_SetSightClient (void)
 {
 	edict_t	*ent;
 
-	for (int i = 0; i < game.maxclients; i++)
+	for (int i = 1; i <= game.maxclients; i++)
 	{
 		ent = &g_edicts[i];
 		if (ent->inUse

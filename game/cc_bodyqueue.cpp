@@ -138,6 +138,10 @@ void CBody::Think ()
 
 	// Add us to the open list
 	BodyQueueList->OpenList.push_back (this);
+
+	// Disappear us
+	State.SetModelIndex(0);
+	State.SetEffects(0);
 }
 
 void CBody::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
@@ -213,7 +217,9 @@ void CBodyQueue::CopyBodyToQueue (CPlayerEntity *Player)
 	Body->Unlink();
 
 	Body->State.SetSound (Player->State.GetSound());
-	Body->State.SetAngles (Player->State.GetAngles());
+	vec3f angles = Player->State.GetAngles();
+	angles[0] = 0;
+	Body->State.SetAngles (angles);
 	Body->State.SetEffects (Player->State.GetEffects());
 	Body->State.SetFrame (Player->State.GetFrame());
 	Body->State.SetModelIndex (Player->State.GetModelIndex());
