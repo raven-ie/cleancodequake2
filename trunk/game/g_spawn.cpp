@@ -714,7 +714,7 @@ void SP_worldspawn (edict_t *ent)
 	ent->Entity->State.SetModelIndex (1);		// world model is always index 1
 
 	// reserve some spots for dead player bodies for coop / deathmatch
-	InitBodyQue ();
+	BodyQueue_Init ();
 
 	if (st.nextmap)
 		Q_strncpyz (level.nextmap, st.nextmap, sizeof(level.nextmap));

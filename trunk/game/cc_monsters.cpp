@@ -484,6 +484,11 @@ void CMonsterEntity::Pain (CBaseEntity *other, float kick, int damage)
 	Monster->Pain (other, kick, damage);
 }
 
+void CMonsterEntity::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
+{
+	Monster->Touch (other, plane, surf);
+}
+
 void VelocityForDamage (int damage, vec3_t v);
 void CMonsterEntity::ThrowHead (MediaIndex gibIndex, int damage, int type)
 {

@@ -324,12 +324,6 @@ void G_FreeEdict (edict_t *ed)
 {
 	gi.unlinkentity (ed);		// unlink from world
 
-	if ((ed - g_edicts) <= (game.maxclients + BODY_QUEUE_SIZE))
-	{
-//		gi.dprintf("tried to free special edict\n");
-		return;
-	}
-
 	// Paril, hack
 	CBaseEntity *Entity = ed->Entity;
 	memset (ed, 0, sizeof(*ed));

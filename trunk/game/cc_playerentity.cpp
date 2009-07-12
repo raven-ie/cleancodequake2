@@ -355,14 +355,13 @@ void CPlayerEntity::BeginServerFrame ()
 	Client.latched_buttons = 0;
 };
 
-void CopyToBodyQue (edict_t *ent);
 void CPlayerEntity::Respawn ()
 {
 	if (game.mode != GAME_SINGLEPLAYER)
 	{
 		// spectator's don't leave bodies
 		if (gameEntity->movetype != MOVETYPE_NOCLIP)
-			CopyToBodyQue (gameEntity);
+			CopyToBodyQueue (this);
 		SetSvFlags (GetSvFlags() & ~SVF_NOCLIENT);
 		PutInServer ();
 

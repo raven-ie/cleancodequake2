@@ -710,68 +710,6 @@ edict_t *SelectDeathmatchSpawnPoint (void)
 
 //======================================================================
 
-
-void InitBodyQue (void)
-{
-	int		i;
-	edict_t	*ent;
-
-	level.body_que = 0;
-	for (i=0; i<BODY_QUEUE_SIZE ; i++)
-	{
-		ent = G_Spawn();
-		ent->classname = "bodyque";
-	}
-}
-
-void body_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
-{
-	int	n;
-
-	if (self->health < -40)
-	{
-		PlaySoundFrom (self, CHAN_BODY, SoundIndex ("misc/udeath.wav"));
-		for (n= 0; n < 4; n++)
-			ThrowGib (self, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		self->state.origin[2] -= 48;
-		ThrowClientHead (self, damage);
-		self->takedamage = DAMAGE_NO;
-	}
-}
-
-void CopyToBodyQue (edict_t *ent)
-{
-	edict_t		*body;
-
-	// grab a body que and cycle to the next one
-	body = &g_edicts[game.maxclients + level.body_que + 1];
-	level.body_que = (level.body_que + 1) % BODY_QUEUE_SIZE;
-
-	// FIXME: send an effect on the removed body
-
-	gi.unlinkentity (ent);
-
-	gi.unlinkentity (body);
-	body->state = ent->state;
-	body->state.number = body - g_edicts;
-
-	body->svFlags = ent->svFlags;
-	Vec3Copy (ent->mins, body->mins);
-	Vec3Copy (ent->maxs, body->maxs);
-	Vec3Copy (ent->absMin, body->absMin);
-	Vec3Copy (ent->absMax, body->absMax);
-	Vec3Copy (ent->size, body->size);
-	body->solid = ent->solid;
-	body->clipMask = ent->clipMask;
-	body->owner = ent->owner;
-	body->movetype = ent->movetype;
-
-	body->die = body_die;
-	body->takedamage = DAMAGE_YES;
-
-	gi.linkentity (body);
-}
-
 //==============================================================
 
 /*
