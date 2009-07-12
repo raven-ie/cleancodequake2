@@ -37,7 +37,7 @@ void CCmd::Run (CPlayerEntity *ent)
 {
 	if ((CmdFlags & CMD_CHEAT) && !game.cheats && (game.mode != GAME_SINGLEPLAYER))
 	{
-		ClientPrintf (ent->gameEntity, PRINT_HIGH, "Cheats must be enabled to use this command.\n");
+		ent->PrintToClient (PRINT_HIGH, "Cheats must be enabled to use this command.\n");
 		return;
 	}
 	if (!(CmdFlags & CMD_SPECTATOR) && ent->Client.resp.spectator)	
@@ -112,5 +112,5 @@ void Cmd_RunCommand (char *commandName, CPlayerEntity *ent)
 	if (Command)
 		Command->Run(ent);
 	else
-		ClientPrintf (ent->gameEntity, PRINT_HIGH, "Unknown command \"%s\"\n", commandName);
+		ent->PrintToClient (PRINT_HIGH, "Unknown command \"%s\"\n", commandName);
 }

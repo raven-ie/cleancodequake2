@@ -69,7 +69,7 @@ public:
 #ifndef MONSTER_USE_ROGUE_AI
 	void Dodge (edict_t *attacker, float eta);
 #else
-	void Dodge (edict_t *attacker, float eta, CTrace *trace);
+	void Dodge (CBaseEntity *attacker, float eta, CTrace *trace);
 #endif
 	void Idle ();
 	void Search ();
@@ -79,8 +79,8 @@ public:
 	void Walk ();
 
 	void Dead ();
-	void Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
-	void Pain (edict_t *other, float kick, int damage);
+	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
+	void Pain (CBaseEntity *other, float kick, int damage);
 
 	void Spawn ();
 };

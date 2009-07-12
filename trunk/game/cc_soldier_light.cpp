@@ -32,6 +32,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 //
 
 #include "cc_local.h"
+#include "cc_soldier_base.h"
+#include "cc_soldier_light.h"
 
 CSoldierLight Monster_Soldier_Light;
 
@@ -89,7 +91,7 @@ void CSoldierLight::Attack ()
 
 	float r = random();
 	if ((!(AIFlags & (AI_BLOCKED|AI_STAND_GROUND))) &&
-		(range(Entity, Entity->enemy) >= RANGE_NEAR) && 
+		(range(Entity->gameEntity, Entity->gameEntity->enemy) >= RANGE_NEAR) && 
 		(r < (skill->Integer()*0.25)))
 		CurrentMove = &SoldierMoveAttack6;
 	else
@@ -113,15 +115,18 @@ void CSoldierLight::FireGun (int FlashNumber)
 	float	r, u;
 	int		flashIndex = BlasterFlash[FlashNumber];
 
-	Angles_Vectors (Entity->state.angles, forward, right, NULL);
-	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[flashIndex], forward, right, start);
+	vec3_t angles, origin;
+	Entity->State.GetAngles(angles);
+	Entity->State.GetOrigin(origin);
+	Angles_Vectors (angles, forward, right, NULL);
+	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[flashIndex], forward, right, start);
 
 	if (FlashNumber == 5 || FlashNumber == 6)
 		Vec3Copy (forward, aim);
 	else
 	{
-		Vec3Copy (Entity->enemy->state.origin, end);
-		end[2] += Entity->enemy->viewheight;
+		Vec3Copy (Entity->gameEntity->enemy->state.origin, end);
+		end[2] += Entity->gameEntity->enemy->viewheight;
 		Vec3Subtract (end, start, aim);
 		VecToAngles (aim, dir);
 		Angles_Vectors (dir, forward, right, up);
@@ -147,9 +152,9 @@ void CSoldierLight::SpawnSoldier ()
 	SoundIndex ("misc/lasfly.wav");
 	SoundIndex ("soldier/solatck2.wav");
 
-	Entity->state.skinNum = 0;
-	Entity->health = 20;
-	Entity->gib_health = -30;
+	Entity->State.SetSkinNum (0);
+	Entity->gameEntity->health = 20;
+	Entity->gameEntity->gib_health = -30;
 
 #ifdef MONSTER_USE_ROGUE_AI
 	BlindFire = true;

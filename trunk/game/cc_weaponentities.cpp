@@ -44,12 +44,16 @@ enum // EGrenadeFlags
 	GRENADE_HELD = 2,
 };
 CGrenade::CGrenade () :
-CBounceProjectile()
+CBounceProjectile(),
+CTouchableEntity(),
+CThinkableEntity()
 {
 };
 
 CGrenade::CGrenade (int Index) :
-CBounceProjectile(Index)
+CBounceProjectile(Index),
+CTouchableEntity(Index),
+CThinkableEntity(Index)
 {
 };
 
@@ -89,7 +93,7 @@ void CGrenade::Explode ()
 		mod = MOD_G_SPLASH;
 	T_RadiusDamage(gameEntity, gameEntity->owner, Damage, gameEntity->enemy, RadiusDamage, mod);
 
-	Vec3MA (origin, -0.02, gameEntity->velocity, origin);
+	Vec3MA (origin, -0.02f, gameEntity->velocity, origin);
 	if (gameEntity->groundentity)
 		CTempEnt_Explosions::GrenadeExplosion(origin, gameEntity, !!gameEntity->waterlevel);
 	else
@@ -169,6 +173,11 @@ void CGrenade::Spawn (CBaseEntity *Spawner, vec3_t start, vec3_t aimdir, int dam
 	}
 }
 
+bool CGrenade::Run ()
+{
+	return CBounceProjectile::Run();
+}
+
 /*
 ================
 CBlasterProjectile
@@ -176,12 +185,16 @@ CBlasterProjectile
 */
 
 CBlasterProjectile::CBlasterProjectile () :
-CFlyMissileProjectile()
+CFlyMissileProjectile(),
+CTouchableEntity(),
+CThinkableEntity()
 {
 };
 
 CBlasterProjectile::CBlasterProjectile (int Index) :
-CFlyMissileProjectile(Index)
+CFlyMissileProjectile(Index),
+CTouchableEntity(Index),
+CThinkableEntity(Index)
 {
 };
 
@@ -304,13 +317,22 @@ void CBlasterProjectile::Spawn (CBaseEntity *Spawner, vec3_t start, vec3_t dir,
 	}
 }
 
+bool CBlasterProjectile::Run ()
+{
+	return CFlyMissileProjectile::Run();
+}
+
 CRocket::CRocket () :
-CFlyMissileProjectile()
+CFlyMissileProjectile(),
+CTouchableEntity(),
+CThinkableEntity()
 {
 };
 
 CRocket::CRocket (int Index) :
-CFlyMissileProjectile(Index)
+CFlyMissileProjectile(Index),
+CTouchableEntity(Index),
+CThinkableEntity(Index)
 {
 };
 
@@ -354,7 +376,7 @@ void CRocket::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	}
 
 	// calculate position for the explosion entity
-	Vec3MA (origin, -0.02, gameEntity->velocity, origin);
+	Vec3MA (origin, -0.02f, gameEntity->velocity, origin);
 	T_RadiusDamage(gameEntity, gameEntity->owner, RadiusDamage, other->gameEntity, DamageRadius, MOD_R_SPLASH);
 	CTempEnt_Explosions::RocketExplosion(origin, gameEntity, !!gameEntity->waterlevel);
 
@@ -388,14 +410,23 @@ void CRocket::Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t dir,
 	Rocket->Link ();
 }
 
+bool CRocket::Run ()
+{
+	return CFlyMissileProjectile::Run();
+}
+
 CBFGBolt::CBFGBolt () :
-CFlyMissileProjectile()
+CFlyMissileProjectile(),
+CTouchableEntity(),
+CThinkableEntity()
 {
 	Exploded = false;
 };
 
 CBFGBolt::CBFGBolt (int Index) :
-CFlyMissileProjectile(Index)
+CFlyMissileProjectile(Index),
+CTouchableEntity(Index),
+CThinkableEntity(Index)
 {
 	Exploded = false;
 };
@@ -564,7 +595,7 @@ void CBFGBolt::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	PlaySoundFrom (gameEntity, CHAN_VOICE, SoundIndex ("weapons/bfg__x1b.wav"));
 	gameEntity->solid = SOLID_NOT;
 	Exploded = true;
-	Vec3MA (boltOrigin, -0.1, gameEntity->velocity, boltOrigin);
+	Vec3MA (boltOrigin, -0.1f, gameEntity->velocity, boltOrigin);
 	State.SetOrigin (boltOrigin);
 	Vec3Clear (gameEntity->velocity);
 	State.SetModelIndex(ModelIndex ("sprites/s_bfg3.sp2"));
@@ -599,6 +630,11 @@ void CBFGBolt::Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t dir,
 	BFG->FreeTime = level.framenum + 80000/speed;
 
 	BFG->Link ();
+}
+
+bool CBFGBolt::Run ()
+{
+	return CFlyMissileProjectile::Run();
 }
 
 CTrace CHitScan::DoTrace(vec3_t start, vec3_t end, CBaseEntity *ignore, int mask)
@@ -1264,4 +1300,73 @@ void CShotgunPellets::Fire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir, int
 {
 	for (int i = 0; i < Count; i++)
 		CShotgunPellets(damage, kick, hSpread, vSpread, mod).DoFire (Entity, start, aimdir);
+}
+
+bool CMeleeWeapon::Fire(CBaseEntity *Entity, vec3_t aim, int damage, int kick)
+{
+	CTrace		tr;
+	vec3_t		forward, right, up;
+	vec3_t		v;
+	vec3_t		point;
+	float		range;
+	vec3_t		dir;
+
+	Entity->State.GetOrigin(dir);
+	//see if enemy is in range
+	Vec3Subtract (Entity->gameEntity->enemy->state.origin, dir, dir);
+	range = Vec3Length(dir);
+	if (range > aim[0])
+		return false;
+
+	if (aim[1] > Entity->GetMins().X && aim[1] < Entity->GetMaxs().X)
+	{
+		// the hit is straight on so back the range up to the edge of their bbox
+		range -= Entity->gameEntity->enemy->maxs[0];
+	}
+	else
+	{
+		// this is a side hit so adjust the "right" value out to the edge of their bbox
+		if (aim[1] < 0)
+			aim[1] = Entity->gameEntity->enemy->mins[0];
+		else
+			aim[1] = Entity->gameEntity->enemy->maxs[0];
+	}
+
+	vec3_t origin;
+	Entity->State.GetOrigin(origin);
+	Vec3MA (origin, range, dir, point);
+
+	tr = CTrace (origin, point, Entity->gameEntity, CONTENTS_MASK_SHOT);
+	if (tr.fraction < 1)
+	{
+		if (!tr.ent->takedamage)
+			return false;
+		// if it will hit any client/monster then hit the one we wanted to hit
+		if ((tr.ent->svFlags & SVF_MONSTER) || (tr.ent->client))
+			tr.ent = Entity->gameEntity->enemy;
+	}
+
+	vec3_t angles;
+	Entity->State.GetAngles(angles);
+
+	Angles_Vectors(angles, forward, right, up);
+	Vec3MA (origin, range, forward, point);
+	Vec3MA (point, aim[1], right, point);
+	Vec3MA (point, aim[2], up, point);
+	Vec3Subtract (point, origin, dir);
+
+	// do the damage
+	T_Damage (tr.ent, Entity->gameEntity, Entity->gameEntity, dir, point, vec3Origin, damage, kick/2, DAMAGE_NO_KNOCKBACK, MOD_HIT);
+
+	if (!(tr.ent->svFlags & SVF_MONSTER) && (!tr.ent->client))
+		return false;
+
+	// do our special form of knockback here
+	Vec3MA (Entity->gameEntity->enemy->absMin, 0.5, Entity->gameEntity->enemy->size, v);
+	Vec3Subtract (v, point, v);
+	VectorNormalizef (v, v);
+	Vec3MA (Entity->gameEntity->enemy->velocity, kick, v, Entity->gameEntity->enemy->velocity);
+	if (Entity->gameEntity->enemy->velocity[2] > 0)
+		Entity->gameEntity->enemy->groundentity = NULL;
+	return true;
 }

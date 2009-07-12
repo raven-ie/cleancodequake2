@@ -183,7 +183,7 @@ void CGrapple::GrapplePull(edict_t *self)
 	float vlen;
 	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(self->owner->Entity);
 
-	if (Player->Client.pers.Weapon->Item == FindItem("Grapple") &&
+	if (Player->Client.pers.Weapon->Item == NItems::Grapple &&
 		!Player->Client.NewWeapon &&
 		Player->Client.weaponstate != WS_FIRING &&
 		Player->Client.weaponstate != WS_ACTIVATING)

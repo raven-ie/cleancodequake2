@@ -136,7 +136,7 @@ void Matrix3_FromPoints (vec3_t v1, vec3_t v2, vec3_t v3, mat3x3_t m)
 
 	// This rotate and negate guarantees a vector not colinear with the original
 	Vec3Set (m[1], m[2][2], -m[2][0], m[2][1]);
-	d = -DotProduct (m[1], m[2]);
+	d = -Dot3Product (m[1], m[2]);
 	Vec3MA (m[1], d, m[2], m[1]);
 	VectorNormalizef (m[1], m[1]);
 	CrossProduct (m[1], m[2], m[0]);

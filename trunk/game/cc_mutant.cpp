@@ -33,6 +33,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 #include "m_mutant.h"
+#include "cc_mutant.h"
 
 CMutant Monster_Mutant;
 
@@ -57,30 +58,30 @@ void CMutant::Step ()
 	{
 	case 0:
 	default:
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundStep1);
+		Entity->PlaySound (CHAN_VOICE, SoundStep1);
 		break;
 	case 1:
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundStep2);
+		Entity->PlaySound (CHAN_VOICE, SoundStep2);
 		break;
 	case 2:
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundStep3);
+		Entity->PlaySound (CHAN_VOICE, SoundStep3);
 		break;
 	}
 }
 
 void CMutant::Sight ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundSight);
+	Entity->PlaySound (CHAN_VOICE, SoundSight);
 }
 
 void CMutant::Search ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundSearch);
+	Entity->PlaySound (CHAN_VOICE, SoundSearch);
 }
 
 void CMutant::Swing ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundSwing);
+	Entity->PlaySound (CHAN_VOICE, SoundSwing);
 }
 
 
@@ -186,7 +187,7 @@ CAnim MutantMoveIdle (FRAME_stand152, FRAME_stand164, MutantFramesIdle, &CMonste
 void CMutant::Idle ()
 {
 	CurrentMove = &MutantMoveIdle;
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundIdle, 1, ATTN_IDLE);
+	Entity->PlaySound (CHAN_VOICE, SoundIdle, 1, ATTN_IDLE);
 }
 
 //
@@ -257,27 +258,27 @@ void CMutant::Run ()
 
 void CMutant::HitLeft ()
 {
-	static vec3_t	aim = {MELEE_DISTANCE, Entity->mins[0], 8};
+	static vec3_t	aim = {MELEE_DISTANCE, Entity->GetMins().X, 8};
 
-	if (fire_hit (Entity, aim, (10 + (rand() %5)), 100))
-		PlaySoundFrom (Entity, CHAN_WEAPON, SoundHit);
+	if (CMeleeWeapon::Fire (Entity, aim, (10 + (rand() %5)), 100))
+		Entity->PlaySound (CHAN_WEAPON, SoundHit);
 	else
-		PlaySoundFrom (Entity, CHAN_WEAPON, SoundSwing);
+		Entity->PlaySound (CHAN_WEAPON, SoundSwing);
 }
 
 void CMutant::HitRight ()
 {
-	static vec3_t	aim = {MELEE_DISTANCE, Entity->mins[0], 8};
+	static vec3_t	aim = {MELEE_DISTANCE, Entity->GetMins().X, 8};
 
-	if (fire_hit (Entity, aim, (10 + (rand() %5)), 100))
-		PlaySoundFrom (Entity, CHAN_WEAPON, SoundHit2);
+	if (CMeleeWeapon::Fire (Entity, aim, (10 + (rand() %5)), 100))
+		Entity->PlaySound (CHAN_WEAPON, SoundHit2);
 	else
-		PlaySoundFrom (Entity, CHAN_WEAPON, SoundSwing);
+		Entity->PlaySound (CHAN_WEAPON, SoundSwing);
 }
 
 void CMutant::CheckRefire ()
 {
-	if (!Entity->enemy || !Entity->enemy->inUse || Entity->enemy->health <= 0)
+	if (!Entity->gameEntity->enemy || !Entity->gameEntity->enemy->inUse || Entity->gameEntity->enemy->health <= 0)
 		return;
 
 	// Paril, this was kinda dumb because he would keep refiring on nightmare
@@ -285,7 +286,7 @@ void CMutant::CheckRefire ()
 	if ((skill->Integer() == 3) && (random() < 0.5))
 		return;
 
-	if (range(Entity, Entity->enemy) == RANGE_MELEE)
+	if (range(Entity->gameEntity, Entity->gameEntity->enemy) == RANGE_MELEE)
 		NextFrame = FRAME_attack09;
 }
 
@@ -321,7 +322,7 @@ void CMutant::JumpTouch (edict_t *self, edict_t *other, plane_t *plane, cmBspSur
 
 	if (other->takedamage)
 	{
-		if (Vec3Length(Monster->Entity->velocity) > 400)
+		if (Vec3Length(Monster->Entity->gameEntity->velocity) > 400)
 		{
 			vec3_t	point;
 			vec3_t	normal;
@@ -354,45 +355,49 @@ void CMutant::JumpTakeOff ()
 #ifndef MUTANT_JUMPS_UNSTUPIDLY
 	vec3_t	forward;
 
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundSight);
+	Entity->PlaySound (CHAN_VOICE, SoundSight);
 
 	Angles_Vectors (Entity->state.angles, forward, NULL, NULL);
-	Vec3Scale (forward, 600, Entity->velocity);
-	Entity->velocity[2] = 250;
+	Vec3Scale (forward, 600, Entity->gameEntity->velocity);
+	Entity->gameEntity->velocity[2] = 250;
 #else
 	vec3_t	forward, up, angles, temp;
 
+	vec3_t origin;
+	Entity->State.GetOrigin(origin);
+
 	if (AttemptJumpToLastSight)
 	{
-		Vec3Subtract (LastSighting, Entity->state.origin, angles);
+		Vec3Subtract (LastSighting, origin, angles);
 		AttemptJumpToLastSight = false;
 	}
 	else
-		Vec3Subtract (Entity->enemy->state.origin, Entity->state.origin, angles);
+		Vec3Subtract (Entity->gameEntity->enemy->state.origin, origin, angles);
 	//Angles_Vectors (angles, forward, NULL, NULL);
 	//VectorNormalizef (forward, forward);
 	VecToAngles (angles, temp);
 
 	Angles_Vectors (temp, forward, NULL, up);
 
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundSight);
-	Vec3MA (Entity->velocity, 550, forward, Entity->velocity);
-	Vec3MA (Entity->velocity, 60 + Vec3Length(angles), up, Entity->velocity);
-	//Entity->velocity[2] = 250;
+	Entity->PlaySound (CHAN_VOICE, SoundSight);
+	Vec3MA (Entity->gameEntity->velocity, 550, forward, Entity->gameEntity->velocity);
+	Vec3MA (Entity->gameEntity->velocity, 60 + Vec3Length(angles), up, Entity->gameEntity->velocity);
+	//Entity->gameEntity->velocity[2] = 250;
 #endif
 
-	Entity->state.origin[2] += 1;
-	Entity->groundentity = NULL;
+	origin[2] += 1;
+	Entity->State.SetOrigin(origin);
+	Entity->gameEntity->groundentity = NULL;
 	AIFlags |= AI_DUCKED;
 	AttackFinished = level.framenum + 30;
-	Entity->touch = &CMutant::JumpTouch;
+	Entity->gameEntity->touch = &CMutant::JumpTouch;
 }
 
 void CMutant::CheckLanding ()
 {
-	if (Entity->groundentity)
+	if (Entity->gameEntity->groundentity)
 	{
-		PlaySoundFrom (Entity, CHAN_WEAPON, SoundThud);
+		Entity->PlaySound (CHAN_WEAPON, SoundThud);
 		AttackFinished = 0;
 		AIFlags &= ~AI_DUCKED;
 		return;
@@ -429,13 +434,15 @@ void CMutant::Attack ()
 
 bool CMutant::CheckMelee ()
 {
-	if (range (Entity, Entity->enemy) == RANGE_MELEE)
+	if (range (Entity->gameEntity, Entity->gameEntity->enemy) == RANGE_MELEE)
 		return true;
 	return false;
 }
 
 bool CMutant::CheckJump ()
 {
+	vec3_t origin;
+	Entity->State.GetOrigin(origin);
 	// Did we lose sight of them?
 	if (AIFlags & AI_LOST_SIGHT)
 	{
@@ -445,7 +452,7 @@ bool CMutant::CheckJump ()
 		if (AttemptJumpToLastSight)
 			return false;
 
-		Vec3Subtract (Entity->state.origin, LastSighting, temp);
+		Vec3Subtract (origin, LastSighting, temp);
 		if (Vec3Length(temp) > 400)
 		{
 			DebugPrintf ("Not attempting.\n");
@@ -454,9 +461,9 @@ bool CMutant::CheckJump ()
 
 		// So we lost sight of the player.
 		// Can we jump to the last spot we saw him?
-		CTrace trace = CTrace(Entity->state.origin, LastSighting, Entity, CONTENTS_MASK_MONSTERSOLID);
+		CTrace trace = CTrace(origin, LastSighting, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
 
-		CTempEnt_Trails::DebugTrail (Entity->state.origin, LastSighting);
+		CTempEnt_Trails::DebugTrail (origin, LastSighting);
 
 		// Clear shot
 		if (trace.fraction == 1.0)
@@ -464,7 +471,7 @@ bool CMutant::CheckJump ()
 			// Now we need to check if the last sighting is on ground.
 			vec3_t below = {LastSighting[0], LastSighting[1], LastSighting[2] - 64};
 
-			trace = CTrace (LastSighting, below, Entity, CONTENTS_MASK_MONSTERSOLID);
+			trace = CTrace (LastSighting, below, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
 			CTempEnt_Trails::DebugTrail (LastSighting, below);
 			if (trace.fraction < 1.0)
 			{
@@ -481,7 +488,7 @@ bool CMutant::CheckJump ()
 			vec3_t temp, angles, forward;
 
 			// Keep going back about 15 units until we're clear
-			Vec3Subtract (LastSighting, Entity->state.origin, angles);
+			Vec3Subtract (LastSighting, origin, angles);
 			VecToAngles (angles, temp);
 			angles[0] = angles[2] = 0; // Only move the yaw
 			Angles_Vectors (temp, forward, NULL, NULL);
@@ -493,8 +500,8 @@ bool CMutant::CheckJump ()
 				escape++;
 			
 				Vec3MA (temp, -15, forward, temp);
-				trace = CTrace(Entity->state.origin, temp, Entity, CONTENTS_MASK_MONSTERSOLID);
-				CTempEnt_Trails::DebugTrail (Entity->state.origin, temp);
+				trace = CTrace(origin, temp, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
+				CTempEnt_Trails::DebugTrail (origin, temp);
 			}
 
 			// Push it up a bit
@@ -512,14 +519,14 @@ bool CMutant::CheckJump ()
 		return false;
 	}
 	AttemptJumpToLastSight = false;
-	//if (Entity->absMin[2] > (Entity->enemy->absMin[2] + 0.75 * Entity->enemy->size[2]))
+	//if (Entity->absMin[2] > (Entity->gameEntity->enemy->absMin[2] + 0.75 * Entity->gameEntity->enemy->size[2]))
 	//	return false;
 
-	//if (Entity->absMax[2] < (Entity->enemy->absMin[2] + 0.25 * Entity->enemy->size[2]))
+	//if (Entity->absMax[2] < (Entity->gameEntity->enemy->absMin[2] + 0.25 * Entity->gameEntity->enemy->size[2]))
 	//	return false;
 
-	vec3_t v = {Entity->state.origin[0] - Entity->enemy->state.origin[0],
-				Entity->state.origin[1] - Entity->enemy->state.origin[1],
+	vec3_t v = {origin[0] - Entity->gameEntity->enemy->state.origin[0],
+				origin[1] - Entity->gameEntity->enemy->state.origin[1],
 				0};
 	float distance = Vec3Length(v);
 
@@ -538,7 +545,7 @@ bool CMutant::CheckJump ()
 
 bool CMutant::CheckAttack ()
 {
-	if (!Entity->enemy || Entity->enemy->health <= 0)
+	if (!Entity->gameEntity->enemy || Entity->gameEntity->enemy->health <= 0)
 		return false;
 
 	if (CheckMelee())
@@ -598,15 +605,15 @@ CFrame MutantFramesPain3 [] =
 };
 CAnim MutantMovePain3 (FRAME_pain301, FRAME_pain311, MutantFramesPain3, &CMonster::Run);
 
-void CMutant::Pain (edict_t *other, float kick, int damage)
+void CMutant::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->health < (Entity->max_health / 2))
-		Entity->state.skinNum = 1;
+	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+		Entity->State.SetSkinNum(1);
 
-	if (level.framenum < Entity->pain_debounce_time)
+	if (level.framenum < Entity->gameEntity->pain_debounce_time)
 		return;
 
-	Entity->pain_debounce_time = level.framenum + 30;
+	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
 
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
@@ -614,15 +621,15 @@ void CMutant::Pain (edict_t *other, float kick, int damage)
 	switch (rand()%3)
 	{
 	case 0:
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain1);
+		Entity->PlaySound (CHAN_VOICE, SoundPain1);
 		CurrentMove = &MutantMovePain1;
 		break;
 	case 1:
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain2);
+		Entity->PlaySound (CHAN_VOICE, SoundPain2);
 		CurrentMove = &MutantMovePain2;
 		break;
 	case 2:
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain1);
+		Entity->PlaySound (CHAN_VOICE, SoundPain1);
 		CurrentMove = &MutantMovePain3;
 		break;
 	}
@@ -635,11 +642,11 @@ void CMutant::Pain (edict_t *other, float kick, int damage)
 
 void CMutant::Dead ()
 {
-	Vec3Set (Entity->mins, -16, -16, -24);
-	Vec3Set (Entity->maxs, 16, 16, -8);
-	Entity->movetype = MOVETYPE_TOSS;
-	Entity->svFlags |= SVF_DEADMONSTER;
-	gi.linkentity (Entity);
+	Entity->SetMins (vec3f(-16, -16, -24));
+	Entity->SetMaxs (vec3f(16, 16, -8));
+	Entity->TossPhysics = true;
+	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
+	Entity->Link ();
 
 	CheckFlies ();
 }
@@ -673,27 +680,27 @@ CFrame MutantFramesDeath2 [] =
 };
 CAnim MutantMoveDeath2 (FRAME_death201, FRAME_death210, MutantFramesDeath2, ConvertDerivedFunction(&CMutant::Dead));
 
-void CMutant::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
+void CMutant::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
-	if (Entity->health <= Entity->gib_health)
+	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
 	{
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
+		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
-			ThrowGib (Entity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
+			ThrowGib (Entity->gameEntity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
 		for (int n= 0; n < 4; n++)
-			ThrowGib (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		ThrowHead (Entity, gMedia.Gib_Head[1], damage, GIB_ORGANIC);
-		Entity->deadflag = DEAD_DEAD;
+			ThrowGib (Entity->gameEntity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		Entity->ThrowHead (gMedia.Gib_Head[1], damage, GIB_ORGANIC);
+		Entity->gameEntity->deadflag = DEAD_DEAD;
 		return;
 	}
 
-	if (Entity->deadflag == DEAD_DEAD)
+	if (Entity->gameEntity->deadflag == DEAD_DEAD)
 		return;
 
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundDeath);
-	Entity->deadflag = DEAD_DEAD;
-	Entity->takedamage = DAMAGE_YES;
-	Entity->state.skinNum = 1;
+	Entity->PlaySound (CHAN_VOICE, SoundDeath);
+	Entity->gameEntity->deadflag = DEAD_DEAD;
+	Entity->gameEntity->takedamage = DAMAGE_YES;
+	Entity->State.SetSkinNum(1);
 
 	CurrentMove = (random() < 0.5) ? &MutantMoveDeath1 : &MutantMoveDeath2;
 }
@@ -721,19 +728,19 @@ void CMutant::Spawn ()
 	SoundStep3 = SoundIndex ("mutant/step3.wav");
 	SoundThud = SoundIndex ("mutant/thud1.wav");
 	
-	Entity->movetype = MOVETYPE_STEP;
-	Entity->solid = SOLID_BBOX;
-	Entity->state.modelIndex = ModelIndex ("models/monsters/mutant/tris.md2");
-	Vec3Set (Entity->mins, -32, -32, -24);
-	Vec3Set (Entity->maxs, 32, 32, 48);
+	Entity->TossPhysics = false;
+	Entity->SetSolid (SOLID_BBOX);
+	Entity->State.SetModelIndex (ModelIndex ("models/monsters/mutant/tris.md2"));
+	Entity->SetMins (vec3f(-32, -32, -24));
+	Entity->SetMaxs (vec3f(32, 32, 48));
 
-	Entity->health = 300;
-	Entity->gib_health = -120;
-	Entity->mass = 300;
+	Entity->gameEntity->health = 300;
+	Entity->gameEntity->gib_health = -120;
+	Entity->gameEntity->mass = 300;
 
 	MonsterFlags = (MF_HAS_ATTACK | MF_HAS_MELEE | MF_HAS_SIGHT | MF_HAS_SEARCH | MF_HAS_IDLE);
 
-	gi.linkentity (Entity);
+	Entity->Link ();
 	CurrentMove = &MutantMoveStand;
 	WalkMonsterStart ();
 }

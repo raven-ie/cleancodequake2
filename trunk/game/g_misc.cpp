@@ -61,9 +61,9 @@ void VelocityForDamage (int damage, vec3_t v)
 	v[2] = 200.0 + 100.0 * random();
 
 	if (damage < 50)
-		Vec3Scale (v, 0.7, v);
+		Vec3Scale (v, 0.7f, v);
 	else 
-		Vec3Scale (v, 1.2, v);
+		Vec3Scale (v, 1.2f, v);
 }
 
 void ClipGibVelocity (edict_t *ent)
@@ -196,7 +196,6 @@ void ThrowHead (edict_t *self, MediaIndex gibIndex, int damage, int type)
 
 	gi.linkentity (self);
 }
-
 
 void ThrowClientHead (edict_t *self, int damage)
 {

@@ -33,6 +33,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 #include "m_infantry.h"
+#include "cc_infantry.h"
 
 CInfantry Monster_Infantry;
 
@@ -136,7 +137,7 @@ CAnim InfantryMoveFidget (FRAME_stand01, FRAME_stand49, InfantryFramesFidget, &C
 void CInfantry::Idle ()
 {
 	CurrentMove = &InfantryMoveFidget;
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
+	Entity->PlaySound (CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
 }
 
 CFrame InfantryFramesWalk [] =
@@ -213,25 +214,25 @@ CFrame InfantryFramesPain2 [] =
 };
 CAnim InfantryMovePain2 (FRAME_pain201, FRAME_pain210, InfantryFramesPain2, ConvertDerivedFunction(&CInfantry::Run));
 
-void CInfantry::Pain (edict_t *other, float kick, int damage)
+void CInfantry::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->health < (Entity->max_health / 2))
-		Entity->state.skinNum = 1;
+	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+		Entity->State.SetSkinNum(1);
 
 #ifdef MONSTER_USE_ROGUE_AI
 	DoneDodge();
 #endif
 
-	if (level.framenum < Entity->pain_debounce_time)
+	if (level.framenum < Entity->gameEntity->pain_debounce_time)
 		return;
 
-	Entity->pain_debounce_time = level.framenum + 30;
+	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
 	
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
 
 	CurrentMove = (rand() % 2 == 0) ? &InfantryMovePain1 : &InfantryMovePain2;
-	PlaySoundFrom (Entity, CHAN_VOICE, (rand() % 2 == 0) ? SoundPain1 : SoundPain2);
+	Entity->PlaySound (CHAN_VOICE, (rand() % 2 == 0) ? SoundPain1 : SoundPain2);
 
 #ifdef MONSTER_USE_ROGUE_AI
 	// PMM - clear duck flag
@@ -263,30 +264,33 @@ void CInfantry::MachineGun ()
 	vec3_t	vec;
 	int		flash_number;
 
-	if (Entity->state.frame == FRAME_attak111)
+	vec3_t angles, origin;
+	Entity->State.GetAngles (angles);
+	Entity->State.GetOrigin (origin);
+	if (Entity->State.GetFrame() == FRAME_attak111)
 	{
 		flash_number = MZ2_INFANTRY_MACHINEGUN_1;
-		Angles_Vectors (Entity->state.angles, forward, right, NULL);
-		G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
+		Angles_Vectors (angles, forward, right, NULL);
+		G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
-		if (Entity->enemy)
+		if (Entity->gameEntity->enemy)
 		{
-			Vec3MA (Entity->enemy->state.origin, -0.2, Entity->enemy->velocity, target);
-			target[2] += Entity->enemy->viewheight;
+			Vec3MA (Entity->gameEntity->enemy->state.origin, -0.2f, Entity->gameEntity->enemy->velocity, target);
+			target[2] += Entity->gameEntity->enemy->viewheight;
 			Vec3Subtract (target, start, forward);
 			VectorNormalizef (forward, forward);
 		}
 		else
-			Angles_Vectors (Entity->state.angles, forward, right, NULL);
+			Angles_Vectors (angles, forward, right, NULL);
 	}
 	else
 	{
-		flash_number = MZ2_INFANTRY_MACHINEGUN_2 + (Entity->state.frame - FRAME_death211);
+		flash_number = MZ2_INFANTRY_MACHINEGUN_2 + (Entity->State.GetFrame() - FRAME_death211);
 
-		Angles_Vectors (Entity->state.angles, forward, right, NULL);
-		G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
+		Angles_Vectors (angles, forward, right, NULL);
+		G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
-		Vec3Subtract (Entity->state.angles, DeathAimAngles[flash_number-MZ2_INFANTRY_MACHINEGUN_2], vec);
+		Vec3Subtract (angles, DeathAimAngles[flash_number-MZ2_INFANTRY_MACHINEGUN_2], vec);
 		Angles_Vectors (vec, forward, NULL, NULL);
 	}
 
@@ -295,16 +299,16 @@ void CInfantry::MachineGun ()
 
 void CInfantry::Sight ()
 {
-	PlaySoundFrom (Entity, CHAN_BODY, SoundSight);
+	Entity->PlaySound (CHAN_BODY, SoundSight);
 }
 
 void CInfantry::Dead ()
 {
-	Vec3Set (Entity->mins, -16, -16, -24);
-	Vec3Set (Entity->maxs, 16, 16, -8);
-	Entity->movetype = MOVETYPE_TOSS;
-	Entity->svFlags |= SVF_DEADMONSTER;
-	gi.linkentity (Entity);
+	Entity->SetMins (vec3f(-16, -16, -24));
+	Entity->SetMaxs (vec3f(16, 16, -8));
+	Entity->TossPhysics = true;
+	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
+	Entity->Link ();
 
 	// FIXME: BAD
 	CheckFlies ();
@@ -381,27 +385,27 @@ CFrame InfantryFramesDeath3 [] =
 CAnim InfantryMoveDeath3 (FRAME_death301, FRAME_death309, InfantryFramesDeath3, ConvertDerivedFunction(&CInfantry::Dead));
 
 
-void CInfantry::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
+void CInfantry::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
 // check for gib
-	if (Entity->health <= Entity->gib_health)
+	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
 	{
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
+		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
-			ThrowGib (Entity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
+			ThrowGib (Entity->gameEntity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
 		for (int n= 0; n < 4; n++)
-			ThrowGib (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		ThrowHead (Entity, gMedia.Gib_Head[1], damage, GIB_ORGANIC);
-		Entity->deadflag = DEAD_DEAD;
+			ThrowGib (Entity->gameEntity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		Entity->ThrowHead (gMedia.Gib_Head[1], damage, GIB_ORGANIC);
+		Entity->gameEntity->deadflag = DEAD_DEAD;
 		return;
 	}
 
-	if (Entity->deadflag == DEAD_DEAD)
+	if (Entity->gameEntity->deadflag == DEAD_DEAD)
 		return;
 
 // regular death
-	Entity->deadflag = DEAD_DEAD;
-	Entity->takedamage = DAMAGE_YES;
+	Entity->gameEntity->deadflag = DEAD_DEAD;
+	Entity->gameEntity->takedamage = DAMAGE_YES;
 
 	CAnim *Animation;
 	int pSound;
@@ -422,7 +426,7 @@ void CInfantry::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t p
 		break;
 	}
 	CurrentMove = Animation;
-	PlaySoundFrom (Entity, CHAN_VOICE, pSound);
+	Entity->PlaySound (CHAN_VOICE, pSound);
 }
 
 #ifndef MONSTER_USE_ROGUE_AI
@@ -432,9 +436,9 @@ void CInfantry::Duck_Down ()
 		return;
 	AIFlags |= AI_DUCKED;
 	Entity->maxs[2] -= 32;
-	Entity->takedamage = DAMAGE_YES;
+	Entity->gameEntity->takedamage = DAMAGE_YES;
 	PauseTime = level.framenum + 10;
-	gi.linkentity (Entity);
+	Entity->Link ();
 }
 
 void CInfantry::Duck_Hold ()
@@ -449,8 +453,8 @@ void CInfantry::Duck_Up ()
 {
 	AIFlags &= ~AI_DUCKED;
 	Entity->maxs[2] += 32;
-	Entity->takedamage = DAMAGE_AIM;
-	gi.linkentity (Entity);
+	Entity->gameEntity->takedamage = DAMAGE_AIM;
+	Entity->Link ();
 }
 #endif
 
@@ -478,8 +482,8 @@ void CInfantry::Dodge (edict_t *attacker, float eta)
 	if (random() > 0.25)
 		return;
 
-	if (!Entity->enemy)
-		Entity->enemy = attacker;
+	if (!Entity->gameEntity->enemy)
+		Entity->gameEntity->enemy = attacker;
 
 	CurrentMove = &InfantryMoveDuck;
 }
@@ -487,7 +491,7 @@ void CInfantry::Dodge (edict_t *attacker, float eta)
 
 void CInfantry::CockGun ()
 {
-	PlaySoundFrom (Entity, CHAN_WEAPON, SoundWeaponCock);
+	Entity->PlaySound (CHAN_WEAPON, SoundWeaponCock);
 }
 
 void CInfantry::Fire ()
@@ -545,14 +549,14 @@ CAnim InfantryMoveAttack1 (FRAME_attak112, FRAME_attak101, InfantryFramesAttack1
 
 void CInfantry::Swing ()
 {
-	PlaySoundFrom (Entity, CHAN_WEAPON, SoundPunchSwing);
+	Entity->PlaySound (CHAN_WEAPON, SoundPunchSwing);
 }
 
 void CInfantry::Smack ()
 {
 	vec3_t	aim = {80, 0, 0};
-	if (fire_hit (Entity, aim, (5 + (rand() % 5)), 50))
-		PlaySoundFrom (Entity, CHAN_WEAPON, SoundPunchHit);
+	if (CMeleeWeapon::Fire (Entity, aim, (5 + (rand() % 5)), 50))
+		Entity->PlaySound (CHAN_WEAPON, SoundPunchHit);
 }
 
 CFrame InfantryFramesAttack2 [] =
@@ -626,11 +630,11 @@ void CInfantry::SideStep ()
 
 void CInfantry::Spawn ()
 {
-	Entity->movetype = MOVETYPE_STEP;
-	Entity->solid = SOLID_BBOX;
-	Entity->state.modelIndex = ModelIndex("models/monsters/infantry/tris.md2");
-	Vec3Set (Entity->mins, -16, -16, -24);
-	Vec3Set (Entity->maxs, 16, 16, 32);
+	Entity->TossPhysics = false;
+	Entity->SetSolid (SOLID_BBOX);
+	Entity->State.SetModelIndex ( ModelIndex("models/monsters/infantry/tris.md2"));
+	Entity->SetMins (vec3f(-16, -16, -24));
+	Entity->SetMaxs (vec3f(16, 16, 32));
 
 	SoundPain1 = SoundIndex ("infantry/infpain1.wav");
 	SoundPain2 = SoundIndex ("infantry/infpain2.wav");
@@ -646,9 +650,9 @@ void CInfantry::Spawn ()
 	SoundSearch = SoundIndex ("infantry/infsrch1.wav");
 	SoundIdle = SoundIndex ("infantry/infidle1.wav");
 
-	Entity->health = 100;
-	Entity->gib_health = -40;
-	Entity->mass = 200;
+	Entity->gameEntity->health = 100;
+	Entity->gameEntity->gib_health = -40;
+	Entity->gameEntity->mass = 200;
 
 	MonsterFlags = (MF_HAS_MELEE | MF_HAS_ATTACK | MF_HAS_IDLE | MF_HAS_SIGHT
 #ifdef MONSTER_USE_ROGUE_AI
@@ -656,7 +660,7 @@ void CInfantry::Spawn ()
 #endif
 		);
 
-	gi.linkentity (Entity);
+	Entity->Link ();
 
 	CurrentMove = &InfantryMoveStand;
 	WalkMonsterStart ();

@@ -1,15 +1,49 @@
+/*
+Copyright (C) 1997-2001 Id Software, Inc.
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+/*
+This source file is contained as part of CleanCode Quake2, a project maintained
+by Paril, to 'clean up' and make Quake2 an easier source base to read and work with.
+
+You may use any part of this code to help create your own bases and own mods off
+this code if you wish. It is under the same license as Quake 2 source (as above),
+therefore you are free to have to fun with it. All I ask is you email me so I can
+list the mod on my page for CleanCode Quake2 to help get the word around. Thanks.
+*/
+
+//
+// cc_soldier_base.cpp
+// The base for soldier-like monsters.
+//
+
 #include "cc_local.h"
 #include "m_soldier.h"
+#include "cc_soldier_base.h"
 
 void CSoldierBase::Idle ()
 {
 	if (random() > 0.8)
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
+		Entity->PlaySound (CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
 }
 
 void CSoldierBase::CockGun ()
 {
-	PlaySoundFrom (Entity, CHAN_WEAPON, SoundCock);
+	Entity->PlaySound (CHAN_WEAPON, SoundCock);
 }
 
 
@@ -291,10 +325,10 @@ CFrame SoldierFramesPain4 [] =
 CAnim SoldierMovePain4 (FRAME_pain401, FRAME_pain417, SoldierFramesPain4, ConvertDerivedFunction(&CSoldierBase::Run));
 
 
-void CSoldierBase::Pain (edict_t *other, float kick, int damage)
+void CSoldierBase::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->health < (Entity->max_health / 2))
-			Entity->state.skinNum |= 1;
+	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+			Entity->State.SetSkinNum (Entity->State.GetSkinNum() | 1);
 
 #ifdef MONSTER_USE_ROGUE_AI
 	DoneDodge ();
@@ -307,17 +341,17 @@ void CSoldierBase::Pain (edict_t *other, float kick, int damage)
 		UnDuck();
 #endif
 
-	if (level.framenum < Entity->pain_debounce_time)
+	if (level.framenum < Entity->gameEntity->pain_debounce_time)
 	{
-		if ((Entity->velocity[2] > 100) && ( (CurrentMove == &SoldierMovePain1) || (CurrentMove == &SoldierMovePain2) || (CurrentMove == &SoldierMovePain3)))
+		if ((Entity->gameEntity->velocity[2] > 100) && ( (CurrentMove == &SoldierMovePain1) || (CurrentMove == &SoldierMovePain2) || (CurrentMove == &SoldierMovePain3)))
 			CurrentMove = &SoldierMovePain4;
 		return;
 	}
 
-	Entity->pain_debounce_time = level.framenum + 30;
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundPain);
+	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
+	Entity->PlaySound (CHAN_VOICE, SoundPain);
 
-	if (Entity->velocity[2] > 100)
+	if (Entity->gameEntity->velocity[2] > 100)
 	{
 		CurrentMove = &SoldierMovePain4;
 		return;
@@ -360,13 +394,13 @@ void CSoldierBase::Attack1_Refire1 ()
 	// pmm
 #endif
 
-	if (Entity->state.skinNum > 1)
+	if (Entity->State.GetSkinNum() > 1)
 		return;
 
-	if (Entity->enemy->health <= 0)
+	if (Entity->gameEntity->enemy->health <= 0)
 		return;
 
-	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (range(Entity, Entity->enemy) == RANGE_MELEE) )
+	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (range(Entity->gameEntity, Entity->gameEntity->enemy) == RANGE_MELEE) )
 		NextFrame = FRAME_attak102;
 	else
 		NextFrame = FRAME_attak110;
@@ -374,13 +408,13 @@ void CSoldierBase::Attack1_Refire1 ()
 
 void CSoldierBase::Attack1_Refire2 ()
 {
-	if (Entity->state.skinNum < 2)
+	if (Entity->State.GetSkinNum() < 2)
 		return;
 
-	if (Entity->enemy->health <= 0)
+	if (Entity->gameEntity->enemy->health <= 0)
 		return;
 
-	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (range(Entity, Entity->enemy) == RANGE_MELEE) )
+	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (range(Entity->gameEntity, Entity->gameEntity->enemy) == RANGE_MELEE) )
 		NextFrame = FRAME_attak102;
 }
 
@@ -410,13 +444,13 @@ void CSoldierBase::Fire2 ()
 
 void CSoldierBase::Attack2_Refire1 ()
 {
-	if (Entity->state.skinNum > 1)
+	if (Entity->State.GetSkinNum() > 1)
 		return;
 
-	if (Entity->enemy->health <= 0)
+	if (Entity->gameEntity->enemy->health <= 0)
 		return;
 
-	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (range(Entity, Entity->enemy) == RANGE_MELEE) )
+	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (range(Entity->gameEntity, Entity->gameEntity->enemy) == RANGE_MELEE) )
 		NextFrame = FRAME_attak204;
 	else
 		NextFrame = FRAME_attak216;
@@ -424,13 +458,13 @@ void CSoldierBase::Attack2_Refire1 ()
 
 void CSoldierBase::Attack2_Refire2 ()
 {
-	if (Entity->state.skinNum < 2)
+	if (Entity->State.GetSkinNum() < 2)
 		return;
 
-	if (Entity->enemy->health <= 0)
+	if (Entity->gameEntity->enemy->health <= 0)
 		return;
 
-	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (range(Entity, Entity->enemy) == RANGE_MELEE) )
+	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (range(Entity->gameEntity, Entity->gameEntity->enemy) == RANGE_MELEE) )
 		NextFrame = FRAME_attak204;
 }
 
@@ -536,10 +570,10 @@ void CSoldierBase::Attack6_Refire ()
 	StopCharge ();
 #endif
 
-	if (Entity->enemy->health <= 0)
+	if (Entity->gameEntity->enemy->health <= 0)
 		return;
 
-	if (range(Entity, Entity->enemy) < RANGE_NEAR)
+	if (range(Entity->gameEntity, Entity->gameEntity->enemy) < RANGE_NEAR)
 		return;
 
 	if ((skill->Integer() == 3) || ((random() < (0.25*((float)skill->Integer())))))
@@ -549,17 +583,17 @@ void CSoldierBase::Attack6_Refire ()
 #ifdef MONSTER_USE_ROGUE_AI
 void CSoldierBase::Attack6_RefireBlaster ()
 {
-	if (Entity->state.skinNum > 1)
+	if (Entity->State.GetSkinNum() > 1)
 		return;
 
 	// PMM - make sure dodge & charge bits are cleared
 	DoneDodge ();
 	StopCharge ();
 
-	if (Entity->enemy->health <= 0)
+	if (Entity->gameEntity->enemy->health <= 0)
 		return;
 
-	if (range(Entity, Entity->enemy) < RANGE_NEAR)
+	if (range(Entity->gameEntity, Entity->gameEntity->enemy) < RANGE_NEAR)
 		return;
 
 	if ((skill->Integer() == 3) || ((random() < (0.25*((float)skill->Integer())))))
@@ -623,11 +657,11 @@ CAnim SoldierMoveAttack6 (FRAME_runs01, FRAME_runs14, SoldierFramesAttack6, Conv
 
 void CSoldierBase::Sight ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, (random() < 0.5) ? SoundSight1 : SoundSight2);
+	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundSight1 : SoundSight2);
 
-	if ((skill->Integer() > 0) && (range(Entity, Entity->enemy) >= RANGE_NEAR))
+	if ((skill->Integer() > 0) && (range(Entity->gameEntity, Entity->gameEntity->enemy) >= RANGE_NEAR))
 	{
-		if ((random() > 0.75) && (Entity->state.skinNum <= 3))
+		if ((random() > 0.75) && (Entity->State.GetSkinNum() <= 3))
 			CurrentMove = &SoldierMoveAttack6;
 	}
 }
@@ -655,13 +689,13 @@ CFrame SoldierFramesDuck [] =
 CAnim SoldierMoveDuck (FRAME_duck01, FRAME_duck05, SoldierFramesDuck, ConvertDerivedFunction(&CSoldierBase::Run));
 
 #ifndef MONSTER_USE_ROGUE_AI
-void CSoldierBase::Dodge (edict_t *attacker, float eta)
+void CSoldierBase::Dodge (CBaseEntity *attacker, float eta)
 {
 	if (random() > 0.25)
 		return;
 
-	if (!Entity->enemy)
-		Entity->enemy = attacker;
+	if (!Entity->gameEntity->enemy)
+		Entity->gameEntity->enemy = attacker;
 
 	PauseTime = level.framenum + ((eta + 0.3) * 10);
 
@@ -711,12 +745,12 @@ void CSoldierBase::Fire7 ()
 
 void CSoldierBase::Dead ()
 {
-	Vec3Set (Entity->mins, -16, -16, -24);
-	Vec3Set (Entity->maxs, 16, 16, -8);
-	Entity->movetype = MOVETYPE_TOSS;
-	Entity->svFlags |= SVF_DEADMONSTER;
-	Entity->nextthink = 0;
-	gi.linkentity (Entity);
+	Entity->SetMins (vec3f(-16, -16, -24));
+	Entity->SetMaxs (vec3f(16, 16, -8));
+	Entity->TossPhysics = true;
+	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
+	Entity->NextThink = 0;
+	Entity->Link ();
 }
 
 CFrame SoldierFramesDeath1 [] =
@@ -969,31 +1003,31 @@ CFrame SoldierFramesDeath6 [] =
 };
 CAnim SoldierMoveDeath6 (FRAME_death601, FRAME_death610, SoldierFramesDeath6, ConvertDerivedFunction(&CSoldierBase::Dead));
 
-void CSoldierBase::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
+void CSoldierBase::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
 // check for gib
-	if (Entity->health <= Entity->gib_health)
+	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
 	{
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
+		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 3; n++)
-			ThrowGib (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		ThrowGib (Entity, gMedia.Gib_Chest, damage, GIB_ORGANIC);
-		ThrowHead (Entity, gMedia.Gib_Head[1], damage, GIB_ORGANIC);
-		Entity->deadflag = DEAD_DEAD;
+			ThrowGib (Entity->gameEntity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		ThrowGib (Entity->gameEntity, gMedia.Gib_Chest, damage, GIB_ORGANIC);
+		Entity->ThrowHead (gMedia.Gib_Head[1], damage, GIB_ORGANIC);
+		Entity->gameEntity->deadflag = DEAD_DEAD;
 		return;
 	}
 
-	if (Entity->deadflag == DEAD_DEAD)
+	if (Entity->gameEntity->deadflag == DEAD_DEAD)
 		return;
 
 // regular death
-	Entity->deadflag = DEAD_DEAD;
-	Entity->takedamage = DAMAGE_YES;
-	Entity->state.skinNum |= 1;
+	Entity->gameEntity->deadflag = DEAD_DEAD;
+	Entity->gameEntity->takedamage = DAMAGE_YES;
+	Entity->State.SetSkinNum(Entity->State.GetSkinNum() | 1);
 
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundDeath);
+	Entity->PlaySound (CHAN_VOICE, SoundDeath);
 
-	if (fabs((Entity->state.origin[2] + Entity->viewheight) - point[2]) <= 4)
+	if (fabs((Entity->State.GetOrigin().Z + Entity->gameEntity->viewheight) - point[2]) <= 4)
 	{
 		// head shot
 		CurrentMove = &SoldierMoveDeath3;
@@ -1060,7 +1094,7 @@ void CSoldierBase::Duck (float eta)
 
 void CSoldierBase::SideStep ()
 {
-	if (Entity->state.skinNum <= 3)
+	if (Entity->State.GetSkinNum() <= 3)
 	{
 		if (CurrentMove != &SoldierMoveAttack6)
 			CurrentMove = &SoldierMoveAttack6;
@@ -1078,17 +1112,17 @@ void CSoldierBase::Duck_Down ()
 		return;
 	AIFlags |= AI_DUCKED;
 	Entity->maxs[2] -= 32;
-	Entity->takedamage = DAMAGE_YES;
+	Entity->gameEntity->takedamage = DAMAGE_YES;
 	PauseTime = level.framenum + 10;
-	gi.linkentity (Entity);
+	Entity->Link ();
 }
 
 void CSoldierBase::Duck_Up ()
 {
 	AIFlags &= ~AI_DUCKED;
 	Entity->maxs[2] += 32;
-	Entity->takedamage = DAMAGE_AIM;
-	gi.linkentity (Entity);
+	Entity->gameEntity->takedamage = DAMAGE_AIM;
+	Entity->Link ();
 }
 #endif
 
@@ -1096,19 +1130,19 @@ void CSoldierBase::Spawn ()
 {
 	Scale = MODEL_SCALE;
 
-	Vec3Set (Entity->mins, -16, -16, -24);
-	Vec3Set (Entity->maxs, 16, 16, 32);
-	Entity->movetype = MOVETYPE_STEP;
-	Entity->solid = SOLID_BBOX;
+	Entity->SetMins (vec3f(-16, -16, -24));
+	Entity->SetMaxs (vec3f(16, 16, 32));
+	Entity->TossPhysics = false;
+	Entity->SetSolid (SOLID_BBOX);
 
-	Entity->state.modelIndex = ModelIndex ("models/monsters/soldier/tris.md2");
+	Entity->State.SetModelIndex (ModelIndex ("models/monsters/soldier/tris.md2"));
 
 	SoundIdle =	SoundIndex ("soldier/solidle1.wav");
 	SoundSight1 =	SoundIndex ("soldier/solsght1.wav");
 	SoundSight2 =	SoundIndex ("soldier/solsrch1.wav");
 	SoundCock =	SoundIndex ("infantry/infatck3.wav");
 
-	Entity->mass = 100;
+	Entity->gameEntity->mass = 100;
 	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_SIGHT | MF_HAS_IDLE
 #ifdef MONSTER_USE_ROGUE_AI
 		| MF_HAS_DODGE | MF_HAS_DUCK | MF_HAS_UNDUCK | MF_HAS_SIDESTEP
@@ -1117,7 +1151,7 @@ void CSoldierBase::Spawn ()
 
 	SpawnSoldier ();
 
-	gi.linkentity (Entity);
+	Entity->Link ();
 
 	Stand ();
 	WalkMonsterStart ();

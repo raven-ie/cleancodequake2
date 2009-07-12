@@ -362,4 +362,7 @@ public:
 
 	void Pain (CBaseEntity *other, float kick, int damage);
 	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
+
+	// Printing routines
+	inline void		PrintToClient (EGamePrintLevel printLevel, char *fmt, ...);
 };

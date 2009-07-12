@@ -194,29 +194,29 @@ void CPath::CreatePath ()
 	Incomplete = true;
 };
 
-void CPath::Save (FILE *fp)
+void CPath::Save (fileHandle_t f)
 {
 	uint32 index;
 	// Save all local data
 	index = GetNodeIndex(Start);
-	fwrite (&index, sizeof(uint32), 1, fp);
+	FS_Write (&index, sizeof(uint32), f);
 
 	index = GetNodeIndex(End);
-	fwrite (&index, sizeof(uint32), 1, fp);
+	FS_Write (&index, sizeof(uint32), f);
 
-	fwrite (&Weight, sizeof(uint32), 1, fp);
-	fwrite (&NumNodes, sizeof(uint32), 1, fp);
+	FS_Write (&Weight, sizeof(uint32), f);
+	FS_Write (&NumNodes, sizeof(uint32), f);
 
 	// Save the path data
 	size_t pathLen = Path.size();
-	fwrite (&pathLen, sizeof(uint32), 1, fp);
+	FS_Write (&pathLen, sizeof(uint32), f);
 
 	for (size_t i = 0; i < pathLen; i++)
 	{
 		CPathNode *Node = Path[i];
 		index = GetNodeIndex(Node);
 
-		fwrite (&index, sizeof(uint32), 1, fp);
+		FS_Write (&index, sizeof(uint32), f);
 	}
 }
 
@@ -224,25 +224,25 @@ void CPath::Save (FILE *fp)
 
 std::vector<CPathNode*> NodeList;
 
-void CPath::Load (FILE *fp)
+void CPath::Load (fileHandle_t f)
 {
 	uint32 index;
-	fread (&index, sizeof(uint32), 1, fp);
+	FS_Read (&index, sizeof(uint32), f);
 	Start = NodeList[index];
 
-	fread (&index, sizeof(uint32), 1, fp);
+	FS_Read (&index, sizeof(uint32), f);
 	End = NodeList[index];
 
-	fread (&Weight, sizeof(uint32), 1, fp);
-	fread (&NumNodes, sizeof(uint32), 1, fp);
+	FS_Read (&Weight, sizeof(uint32), f);
+	FS_Read (&NumNodes, sizeof(uint32), f);
 
 	// Save the path data
 	size_t pathLen;
-	fread (&pathLen, sizeof(uint32), 1, fp);
+	FS_Read (&pathLen, sizeof(uint32), f);
 
 	for (size_t i = 0; i < pathLen; i++)
 	{
-		fread (&index, sizeof(uint32), 1, fp);
+		FS_Read (&index, sizeof(uint32), f);
 		Path.push_back (NodeList[index]);
 	}
 }
@@ -250,11 +250,14 @@ void CPath::Load (FILE *fp)
 void Cmd_Node_f (CPlayerEntity *ent);
 CCvar *DebugNodes;
 
-void InitNodes ()
+void Nodes_Register ()
 {
 	Cmd_AddCommand ("node",				Cmd_Node_f);
 	DebugNodes = QNew (com_gamePool, 0) CCvar("node_debug", "0", CVAR_LATCH_SERVER);
+}
 
+void InitNodes ()
+{
 	NodeList.clear();
 	memset (SavedPaths, 0, sizeof(SavedPaths));
 }
@@ -355,7 +358,7 @@ void AddNode (CPlayerEntity *ent, vec3_t origin)
 	NodeList.push_back(QNew (com_levelPool, 0) CPathNode(origin, NODE_REGULAR));
 
 	SpawnNodeEntity (NodeList.at(NodeList.size() - 1));
-	ClientPrintf (ent->gameEntity, PRINT_HIGH, "Node %i added\n", NodeList.size());
+	ent->PrintToClient (PRINT_HIGH, "Node %i added\n", NodeList.size());
 
 	if (Q_stricmp(ArgGets(2), "connect") == 0)
 	{
@@ -394,33 +397,28 @@ void SaveNodes ()
 	// Try to open the file
 	std::string FileName;
 
-	FileName += CCvar("gamename", "").String();
-	FileName += "/maps/nodes/";
+	FileName += "maps/nodes/";
 	FileName += level.mapname;
 	FileName += ".ccn";
 
-#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
-	FILE *fp = fopen (FileName.c_str(), "wb+");
-#else
-	FILE *fp;
-	int errorVal = fopen_s (&fp, FileName.c_str(), "wb+");
-#endif
+	fileHandle_t f;
+	FS_OpenFile (FileName.c_str(), &f, FS_MODE_WRITE_BINARY);
 
-	if (!fp || errorVal)
+	if (!f)
 		return;
 
 	// Write the header
 	int version = NODE_VERSION;
-	fwrite (&version, sizeof(int), 1, fp);
+	FS_Write (&version, sizeof(int), f);
 	size_t siz = NodeList.size();
-	fwrite (&siz, sizeof(uint32), 1, fp);
+	FS_Write (&siz, sizeof(uint32), f);
 
 	numNodes = siz;
 	// Write each node
 	for (uint32 i = 0; i < NodeList.size(); i++)
 	{
-		fwrite (NodeList[i]->Origin, sizeof(NodeList[i]->Origin), 1, fp);
-		fwrite (&NodeList[i]->Type, sizeof(NodeList[i]->Type), 1, fp);
+		FS_Write (NodeList[i]->Origin, sizeof(NodeList[i]->Origin), f);
+		FS_Write (&NodeList[i]->Type, sizeof(NodeList[i]->Type), f);
 
 		if (NodeList[i]->Type)
 			numSpecialNodes++;
@@ -430,19 +428,19 @@ void SaveNodes ()
 			if (NodeList[i]->LinkedEntity)
 			{
 				int modelNum = atoi(NodeList[i]->LinkedEntity->model+1);
-				fwrite (&modelNum, sizeof(int), 1, fp);
+				FS_Write (&modelNum, sizeof(int), f);
 			}
 		}
 
 		uint32 num = NodeList[i]->Children.size();
-		fwrite (&num, sizeof(uint32), 1, fp);
+		FS_Write (&num, sizeof(uint32), f);
 		for (size_t s = 0; s < NodeList[i]->Children.size(); s++)
 		{
 			uint32 ind = GetNodeIndex(NodeList[i]->Children[s]);
-			fwrite (&ind, sizeof(uint32), 1, fp);
+			FS_Write (&ind, sizeof(uint32), f);
 		}
 	}
-	fclose(fp);
+	FS_CloseFile (f);
 
 	DebugPrintf ("Saved %u (%u special) nodes\n", numNodes, numSpecialNodes);
 }
@@ -481,36 +479,27 @@ void LoadNodes ()
 	// Try to open the file
 	std::string FileName;
 
-	FileName += CCvar("gamename", "").String();
-	FileName += "/maps/nodes/";
+	FileName += "maps/nodes/";
 	FileName += level.mapname;
 	FileName += ".ccn";
 
-#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
-	FILE *fp = fopen (FileName.c_str(), "rb");
-#else
-	FILE *fp;
-	int errorVal = fopen_s (&fp, FileName.c_str(), "rb");
-#endif
+	fileHandle_t f;
+	FS_OpenFile (FileName.c_str(), &f, FS_MODE_READ_BINARY);
 
-	if (!fp || errorVal)
+	if (!f)
 		return;
 
 	// Write the header
 	int version;
 	uint32 lastId;
 
-	fread (&version, sizeof(int), 1, fp);
-	fread (&lastId, sizeof(uint32), 1, fp);
+	FS_Read (&version, sizeof(int), f);
+	FS_Read (&lastId, sizeof(uint32), f);
 
 	numNodes = lastId;
 
 	if (version != NODE_VERSION)
-	{
-		//fclose(fp);
-		//return;
 		DebugPrintf ("Old version of nodes!\n");
-	}
 
 	int **tempChildren;
 	tempChildren = QNew (com_genericPool, 0) int*[lastId];
@@ -523,10 +512,10 @@ void LoadNodes ()
 		if (version == 1)
 		{
 			uint32 nothing;
-			fread (&nothing, sizeof(uint32), 1, fp);
+			FS_Read (&nothing, sizeof(uint32), f);
 		}
-		fread (Origin, sizeof(NodeList[i]->Origin), 1, fp);
-		fread (&Type, sizeof(NodeList[i]->Type), 1, fp);
+		FS_Read (Origin, sizeof(NodeList[i]->Origin), f);
+		FS_Read (&Type, sizeof(NodeList[i]->Type), f);
 
 		NodeList.push_back(QNew (com_levelPool, 0) CPathNode(Origin, Type));
 
@@ -537,13 +526,13 @@ void LoadNodes ()
 		if (Type == NODE_DOOR || Type == NODE_PLATFORM)
 		{
 			int modelNum;
-			fread (&modelNum, sizeof(int), 1, fp);
+			FS_Read (&modelNum, sizeof(int), f);
 
 			LinkModelNumberToNode (NodeList[i], modelNum);
 		}
 
 		uint32 num;
-		fread (&num, sizeof(uint32), 1, fp);
+		FS_Read (&num, sizeof(uint32), f);
 
 		tempChildren[i] = QNew (com_genericPool, 0) int[num+1];
 		tempChildren[i][0] = num;
@@ -555,9 +544,9 @@ void LoadNodes ()
 			NodeList[i]->Children.push_back (NodeList[tempId]);
 		}*/
 		for (size_t s = 0; s < num; s++)
-			fread (&tempChildren[i][s+1], sizeof(int), 1, fp);
+			FS_Read (&tempChildren[i][s+1], sizeof(int), f);
 	}
-	fclose(fp);
+	FS_CloseFile (f);
 
 	for (size_t i = 0; i < lastId; i++)
 	{
@@ -579,7 +568,7 @@ bool VecInFront (vec3_t angles, vec3_t origin1, vec3_t origin2)
 	Angles_Vectors (angles, forward, NULL, NULL);
 	Vec3Subtract (origin1, origin2, vec);
 	VectorNormalizef (vec, vec);
-	dot = DotProduct (vec, forward);
+	dot = Dot3Product (vec, forward);
 	
 	if (dot > 0.3)
 		return true;
@@ -641,16 +630,16 @@ void Cmd_Node_f (CPlayerEntity *ent)
 
 		if (firstId >= NodeList.size())
 		{
-			ClientPrintf (ent->gameEntity, PRINT_HIGH, "Node %i doesn't exist!\n", firstId);
+			ent->PrintToClient (PRINT_HIGH, "Node %i doesn't exist!\n", firstId);
 			return;
 		}
 		if (secondId >= NodeList.size())
 		{
-			ClientPrintf (ent->gameEntity, PRINT_HIGH, "Node %i doesn't exist!\n", secondId);
+			ent->PrintToClient (PRINT_HIGH, "Node %i doesn't exist!\n", secondId);
 			return;
 		}
 
-		ClientPrintf (ent->gameEntity, PRINT_HIGH, "Connecting nodes %i and %i...\n", firstId, secondId);
+		ent->PrintToClient (PRINT_HIGH, "Connecting nodes %i and %i...\n", firstId, secondId);
 		ConnectNode (NodeList[firstId], NodeList[secondId]);
 	}
 	else if (Q_stricmp(cmd, "clearstate") == 0)
@@ -704,7 +693,11 @@ void Cmd_Node_f (CPlayerEntity *ent)
 		if (trace.ent && trace.ent->Monster)
 		{
 			if (Q_stricmp(ArgGets(2), "closest") == 0)
-				trace.ent->Monster->P_CurrentNode = GetClosestNodeTo(trace.ent->Monster->Entity->state.origin);
+			{
+				vec3_t origin;
+				trace.ent->Monster->Entity->State.GetOrigin (origin);
+				trace.ent->Monster->P_CurrentNode = GetClosestNodeTo(origin);
+			}
 			else
 				trace.ent->Monster->P_CurrentNode = NodeList[ArgGeti(2)];
 			trace.ent->Monster->P_CurrentGoalNode = NodeList[ArgGeti(3)];
@@ -780,19 +773,13 @@ void SavePathTable ()
 	// Try to open the file
 	std::string FileName;
 
-	FileName += CCvar("gamename", "").String();
-	FileName += "/maps/nodes/";
+	FileName += "maps/nodes/";
 	FileName += level.mapname;
 	FileName += ".cnt";
 
-#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
-	FILE *fp = fopen (FileName.c_str(), "wb+");
-#else
-	FILE *fp;
-	int errorVal = fopen_s (&fp, FileName.c_str(), "wb+");
-#endif
-
-	if (!fp || errorVal)
+	fileHandle_t f;
+	FS_OpenFile (FileName.c_str(), &f, FS_MODE_WRITE_BINARY);
+	if (!f)
 		return;
 
 	DebugPrintf ("Saving node helper table...\n");
@@ -806,7 +793,7 @@ void SavePathTable ()
 				count++;
 		}
 	}
-	fwrite (&count, sizeof(int), 1, fp);
+	FS_Write (&count, sizeof(int), f);
 
 	for (int i = 0; i < MAX_SAVED_PATHS; i++)
 	{
@@ -814,13 +801,13 @@ void SavePathTable ()
 		{
 			if (SavedPaths[i].ToEnd[z])
 			{
-				fwrite (&i, sizeof(int), 1, fp);
-				fwrite (&z, sizeof(int), 1, fp);
-				SavedPaths[i].ToEnd[z]->Save(fp);
+				FS_Write (&i, sizeof(int), f);
+				FS_Write (&z, sizeof(int), f);
+				SavedPaths[i].ToEnd[z]->Save(f);
 			}
 		}
 	}
-	fclose(fp);
+	FS_CloseFile (f);
 }
 
 void LoadPathTable ()
@@ -828,38 +815,33 @@ void LoadPathTable ()
 	// Try to open the file
 	std::string FileName;
 
-	FileName += CCvar("gamename", "").String();
-	FileName += "/maps/nodes/";
+	FileName += "maps/nodes/";
 	FileName += level.mapname;
 	FileName += ".cnt";
 
-#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
-	FILE *fp = fopen (FileName.c_str(), "rb");
-#else
-	FILE *fp;
-	int errorVal = fopen_s (&fp, FileName.c_str(), "rb");
-#endif
+	fileHandle_t f;
+	FS_OpenFile (FileName.c_str(), &f, FS_MODE_READ_BINARY);
 
-	if (!fp || errorVal)
+	if (!f)
 		return;
 
 	DebugPrintf ("Loading node helper table...\n");
 
 	int count;
-	fread (&count, sizeof(int), 1, fp);
+	FS_Read (&count, sizeof(int), f);
 
 	for (int i = 0; i < count; i++)
 	{
 		int indexI, indexZ;
 
-		fread (&indexI, sizeof(int), 1, fp);
-		fread (&indexZ, sizeof(int), 1, fp);
+		FS_Read (&indexI, sizeof(int), f);
+		FS_Read (&indexZ, sizeof(int), f);
 
 		SavedPaths[indexI].ToEnd[indexZ] = QNew (com_levelPool, 0) CPath();
-		SavedPaths[indexI].ToEnd[indexZ]->Load (fp);
+		SavedPaths[indexI].ToEnd[indexZ]->Load (f);
 	}
 
-	fclose(fp);
+	FS_CloseFile (f);
 }
 
 CPath *GetPath (CPathNode *Start, CPathNode *End)

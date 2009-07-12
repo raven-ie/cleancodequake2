@@ -86,10 +86,48 @@ void MapPrint (EMapPrintType printType, edict_t *ent, vec3_t origin, char *fmt, 
 	DebugPrintf ("%s", text);
 }
 
-_CC_DISABLE_DEPRECATION
+// NEW AGE FDSJAHDSKJAFD
+void Map_Print (EMapPrintType printType, CBaseEntity *ent, vec3f origin)
+{
+	if (printType == MAPPRINT_WARNING)
+	{
+		mapWarnings++;
+		DebugPrintf ("Warning %i>", mapWarnings);
+	}
+	else if (printType == MAPPRINT_ERROR)
+	{	
+		mapErrors++;
+		DebugPrintf ("Error %i>", mapErrors);
+	}
+
+	DebugPrintf ("Entity #%i ", entityNumber);
+	if (ent->gameEntity->classname)
+		DebugPrintf ("(%s) ", ent->gameEntity->classname);
+	if (origin)
+		DebugPrintf ("(%.0f %.0f %.0f)", origin.X, origin.Y, origin.Z);
+	DebugPrintf ("\n");
+}
+
+void MapPrint (EMapPrintType printType, CBaseEntity *ent, vec3f origin, char *fmt, ...)
+{
+	Map_Print (printType, ent, origin);
+
+	va_list		argptr;
+	char		text[MAX_COMPRINT];
+
+	va_start (argptr, fmt);
+	vsnprintf_s (text, sizeof(text), MAX_COMPRINT, fmt, argptr);
+	va_end (argptr);
+
+	if (printType == MAPPRINT_WARNING)
+		DebugPrintf ("Warning %i>", mapWarnings);
+	else if (printType == MAPPRINT_ERROR)
+		DebugPrintf ("Error %i>", mapErrors);
+	DebugPrintf ("%s", text);
+}
+
 #include <string>
 #include <vector>
-_CC_ENABLE_DEPRECATION
 using namespace std;
 
 #define POUNDENTITIES_VERSION "1"
@@ -127,6 +165,36 @@ char *CC_ParseLine (char **entString)
 	return token;
 }
 
+enum EPoundVariableType
+{
+	POUNDVARIABLE_INTEGER,
+	POUNDVARIABLE_FLOATING,
+	POUNDVARIABLE_STRING
+};
+
+typedef struct PoundVariable_s
+{
+	char				*variableName;
+	EPoundVariableType	variableType;
+	union
+	{
+		int			*integer;
+		float		*floating;
+		char		*string;
+	} vars;
+} PoundVariable_t;
+
+std::vector<PoundVariable_t *> VariableList;
+
+PoundVariable_t *Pound_FindVar (char *name)
+{
+	for (unsigned int i = 0; i < VariableList.size(); i++)
+	{
+		if (strcmp((VariableList[i])->variableName, name) == 0)
+			return VariableList[i];
+	}
+	return NULL;
+}
 
 char *ParsePound (char *tok, char *realEntities)
 {
@@ -137,6 +205,64 @@ char *ParsePound (char *tok, char *realEntities)
 		if (strcmp(token, POUNDENTITIES_VERSION))
 			DebugPrintf ("Pound entity file is version %s against version "POUNDENTITIES_VERSION"!\n", token);
 		fileVersion = atoi(token);
+	}
+	else if (strcmp(token, "#dim") == 0)
+	{
+		token = Com_Parse (&tok);
+
+		// Name of variable
+		PoundVariable_t *newVar = QNew (com_levelPool, 0) PoundVariable_t;
+		newVar->variableName = Mem_PoolStrDup (token, com_levelPool, 0);
+
+		token = Com_Parse (&tok);
+		int completed = 0;
+
+		for (unsigned int i = 0; i < strlen(token); i++)
+		{
+			if (token[i] == 0 || isdigit(token[i]))
+			{
+				completed++;
+				continue;
+			}
+
+			break;
+		}
+
+		if (completed == strlen(token))
+		{
+			int value = atoi(token);
+			newVar->vars.integer = QNew (com_levelPool, 0) int(value);
+			newVar->variableType = POUNDVARIABLE_INTEGER;
+		}
+		else
+		{
+			completed = 0;
+			// Not an integer, check if it could be a floating point
+			for (unsigned int i = 0; i < strlen(token); i++)
+			{
+				if (token[i] == 0 || isdigit(token[i]) || token[i] == '.')
+				{
+					completed++;
+					continue;
+				}
+
+				break;
+			}
+
+			if (completed == strlen(token))
+			{
+				float value = atof(token);
+				newVar->vars.floating = QNew (com_levelPool, 0) float(value);
+				newVar->variableType = POUNDVARIABLE_FLOATING;
+			}
+			else
+			{
+				// Must be a string then
+				newVar->vars.string = Mem_PoolStrDup (token, com_levelPool, 0);
+				newVar->variableType = POUNDVARIABLE_STRING;
+			}
+		}
+		VariableList.push_back (newVar);
 	}
 	else if (strcmp(token, "#elseifcvar") == 0)
 	{
@@ -195,6 +321,59 @@ char *ParsePound (char *tok, char *realEntities)
 			ParsePound (token, realEntities);
 		}
 	}
+	else if (strcmp(token, "#if") == 0)
+	{
+		token = Com_Parse (&tok);
+		PoundVariable_t *Var = Pound_FindVar (token);
+
+		token = Com_Parse (&tok);
+
+		if (Var)
+		{
+			switch (Var->variableType)
+			{
+				case POUNDVARIABLE_INTEGER:
+					if (*Var->vars.integer == atoi(token))
+						PushIf (true);
+					else
+					{
+						PushIf (false);
+						// Since we evaluated to false, we need to keep going
+						// till we reach an #else*
+						while (((token = CC_ParseLine(&realEntities)) != NULL) && (token[0] != '#' && token[1] != 'e'));
+
+						ParsePound (token, realEntities);
+					}
+					break;
+				case POUNDVARIABLE_FLOATING:
+					if (*Var->vars.floating == atof(token))
+						PushIf (true);
+					else
+					{
+						PushIf (false);
+						// Since we evaluated to false, we need to keep going
+						// till we reach an #else*
+						while (((token = CC_ParseLine(&realEntities)) != NULL) && (token[0] != '#' && token[1] != 'e'));
+
+						ParsePound (token, realEntities);
+					}
+					break;
+				case POUNDVARIABLE_STRING:
+					if (Q_stricmp(Var->vars.string, token) == 0)
+						PushIf (true);
+					else
+					{
+						PushIf (false);
+						// Since we evaluated to false, we need to keep going
+						// till we reach an #else*
+						while (((token = CC_ParseLine(&realEntities)) != NULL) && (token[0] != '#' && token[1] != 'e'));
+
+						ParsePound (token, realEntities);
+					}
+					break;
+			}
+		}
+	}
 
 	return realEntities;
 }
@@ -202,54 +381,16 @@ char *ParsePound (char *tok, char *realEntities)
 char *CC_LoadEntFile (char *mapname, char *entities)
 {
 	string fileName;
-	FILE *fp;
 
-	CCvar Game = CCvar("gamename", "");
-	fileName += Game.String();
-	fileName += "/maps/";
+	fileName = "maps/ents/";
 	fileName += mapname;
-	fileName += ".ent";
+	fileName += ".ccent";
 
-#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
-	fp = fopen(fileName.c_str(), "rb");
-#else
-	int errorVal = fopen_s(&fp, fileName.c_str(), "rb");
-#endif
+	char *newEntities = NULL;
+	FS_LoadFile (fileName.c_str(), (void**)&newEntities, true);
 
-	if (!fp || errorVal)
-	{
-		fileName = "";
-		fileName += "baseq2/maps/";
-		fileName += mapname;
-		fileName += ".ent";
-
-
-#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
-		fp = fopen(fileName.c_str(), "rb");
-#else
-		int errorVal = fopen_s(&fp, fileName.c_str(), "rb");
-
-		if (!fp || errorVal)
-			return entities;
-#endif
-	}
-
-	if (fp)
-	{
-		long len;
-
-		fseek (fp, 0, SEEK_END);
-		len = ftell (fp);
-		fseek (fp, 0, SEEK_SET);
-
-		char *newEntities = QNew (com_levelPool, 0) char[len];
-		fread (newEntities, sizeof(char), len, fp);
-		newEntities[len] = '\0';
-
-		fclose(fp);
-
+	if (newEntities)
 		return newEntities;
-	}
 	return entities;
 }
 
@@ -294,8 +435,11 @@ char *CC_ParseSpawnEntities (char *mapname, char *entities)
 			break;
 	}
 
-	char *finalEntString = QNew (com_levelPool, 0) char[finalString.length()];
-	Q_snprintfz (finalEntString, finalString.length(), "%s", finalString.c_str());
+	//char *finalEntString = QNew (com_levelPool, 0) char[finalString.length()];
+	//Q_snprintfz (finalEntString, finalString.length(), "%s", finalString.c_str());
+	char *finalEntString = Mem_PoolStrDup (finalString.c_str(), com_levelPool, 0);
+
+	FS_FreeFile (tempEntities);
 
 	return finalEntString;
 }

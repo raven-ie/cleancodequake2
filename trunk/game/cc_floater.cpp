@@ -33,6 +33,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 #include "m_float.h"
+#include "cc_floater.h"
 
 CFloater Monster_Floater;
 
@@ -49,12 +50,12 @@ void CFloater::Allocate (edict_t *ent)
 
 void CFloater::Sight ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundSight);
+	Entity->PlaySound (CHAN_VOICE, SoundSight);
 }
 
 void CFloater::Idle ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
+	Entity->PlaySound (CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
 }
 
 void CFloater::FireBlaster ()
@@ -65,7 +66,7 @@ void CFloater::FireBlaster ()
 	vec3_t	dir;
 	int		effect = 0;
 
-	switch (Entity->state.frame)
+	switch (Entity->State.GetFrame())
 	{
 	case FRAME_attak104:
 	case FRAME_attak107:
@@ -73,11 +74,14 @@ void CFloater::FireBlaster ()
 		break;
 	}
 
-	Angles_Vectors (Entity->state.angles, forward, right, NULL);
-	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_FLOAT_BLASTER_1], forward, right, start);
+	vec3_t angles, origin;
+	Entity->State.GetAngles(angles);
+	Entity->State.GetOrigin(origin);
+	Angles_Vectors (angles, forward, right, NULL);
+	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_FLOAT_BLASTER_1], forward, right, start);
 
-	Vec3Copy (Entity->enemy->state.origin, end);
-	end[2] += Entity->enemy->viewheight;
+	Vec3Copy (Entity->gameEntity->enemy->state.origin, end);
+	end[2] += Entity->gameEntity->enemy->viewheight;
 	Vec3Subtract (end, start, dir);
 
 	MonsterFireBlaster (start, dir, 1, 1000, MZ2_FLOAT_BLASTER_1, effect);
@@ -480,8 +484,8 @@ void CFloater::Walk ()
 void CFloater::Wham ()
 {
 	static	vec3_t	aim = {MELEE_DISTANCE, 0, 0};
-	PlaySoundFrom (Entity, CHAN_WEAPON, SoundAttack3);
-	fire_hit (Entity, aim, 5 + rand() % 6, -50);
+	Entity->PlaySound (CHAN_WEAPON, SoundAttack3);
+	CMeleeWeapon::Fire (Entity, aim, 5 + rand() % 6, -50);
 }
 
 void CFloater::Zap ()
@@ -491,20 +495,25 @@ void CFloater::Zap ()
 	vec3_t	dir;
 	vec3_t	offset;
 
-	Vec3Subtract (Entity->enemy->state.origin, Entity->state.origin, dir);
+	vec3_t eOrigin;
+	Entity->State.GetOrigin(eOrigin);
+	Vec3Subtract (Entity->gameEntity->enemy->state.origin, eOrigin, dir);
 
-	Angles_Vectors (Entity->state.angles, forward, right, NULL);
+	vec3_t angles;
+	Entity->State.GetAngles(angles);
+	Angles_Vectors (angles, forward, right, NULL);
 	//FIXME use a flash and replace these two lines with the commented one
 	Vec3Set (offset, 18.5f, -0.9f, 10);
-	G_ProjectSource (Entity->state.origin, offset, forward, right, origin);
+
+	G_ProjectSource (eOrigin, offset, forward, right, origin);
 //	G_ProjectSource (self->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, origin);
 
-	PlaySoundFrom (Entity, CHAN_WEAPON, SoundAttack2);
+	Entity->PlaySound (CHAN_WEAPON, SoundAttack2);
 
 	//FIXME use the flash, Luke
 	CTempEnt_Splashes::Splash (origin, vec3Origin, CTempEnt_Splashes::SPTSparks, 32);
 
-	T_Damage (Entity->enemy, Entity, Entity, vec3Origin, Entity->enemy->state.origin, vec3Origin, 5 + rand() % 6, -10, DAMAGE_ENERGY, MOD_UNKNOWN);
+	T_Damage (Entity->gameEntity->enemy, Entity->gameEntity, Entity->gameEntity, vec3Origin, Entity->gameEntity->enemy->state.origin, vec3Origin, 5 + rand() % 6, -10, DAMAGE_ENERGY, MOD_UNKNOWN);
 }
 
 void CFloater::Attack()
@@ -539,27 +548,27 @@ void CFloater::Melee ()
 	CurrentMove = (random() < 0.5) ? &FloaterMoveAttack3 : &FloaterMoveAttack2;
 }
 
-void CFloater::Pain (edict_t *other, float kick, int damage)
+void CFloater::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->health < (Entity->max_health / 2))
-		Entity->state.skinNum = 1;
+	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+		Entity->State.SetSkinNum(1);
 
-	if (level.framenum < Entity->pain_debounce_time)
+	if (level.framenum < Entity->gameEntity->pain_debounce_time)
 		return;
 
-	Entity->pain_debounce_time = level.framenum + 30;
+	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
 
 	bool n = (random() < 0.5);
-	PlaySoundFrom (Entity, CHAN_VOICE, n ? SoundPain1 : SoundPain2);
+	Entity->PlaySound (CHAN_VOICE, n ? SoundPain1 : SoundPain2);
 	CurrentMove = n ? &FloaterMovePain1 : &FloaterMovePain2;
 }
 
-void CFloater::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
+void CFloater::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundDeath1);
-	BecomeExplosion1(Entity);
+	Entity->PlaySound (CHAN_VOICE, SoundDeath1);
+	BecomeExplosion1(Entity->gameEntity);
 }
 
 void CFloater::Spawn ()
@@ -574,21 +583,21 @@ void CFloater::Spawn ()
 
 	SoundIndex ("floater/fltatck1.wav");
 
-	Entity->state.sound = SoundIndex ("floater/fltsrch1.wav");
+	Entity->State.SetSound (SoundIndex ("floater/fltsrch1.wav"));
 
-	Entity->movetype = MOVETYPE_STEP;
-	Entity->solid = SOLID_BBOX;
-	Entity->state.modelIndex = ModelIndex ("models/monsters/float/tris.md2");
-	Vec3Set (Entity->mins, -24, -24, -24);
-	Vec3Set (Entity->maxs, 24, 24, 32);
+	Entity->TossPhysics = false;
+	Entity->SetSolid (SOLID_BBOX);
+	Entity->State.SetModelIndex (ModelIndex ("models/monsters/float/tris.md2"));
+	Entity->SetMins (vec3f(-24, -24, -24));
+	Entity->SetMaxs (vec3f(24, 24, 32));
 
-	Entity->health = 200;
-	Entity->gib_health = -80;
-	Entity->mass = 300;
+	Entity->gameEntity->health = 200;
+	Entity->gameEntity->gib_health = -80;
+	Entity->gameEntity->mass = 300;
 
 	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_MELEE | MF_HAS_SIGHT | MF_HAS_IDLE);
 
-	gi.linkentity (Entity);
+	Entity->Link ();
 
 	CurrentMove = (random() <= 0.5) ? &FloaterMoveStand1 : &FloaterMoveStand2;	
 

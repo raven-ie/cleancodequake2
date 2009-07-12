@@ -30,10 +30,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // cc_ban.h
 // Simple ban system
 //
-_CC_DISABLE_DEPRECATION
 #include <vector>
 #include <string>
-_CC_ENABLE_DEPRECATION
 
 typedef int EBanTypeFlags;
 enum// EBanTypeFlags

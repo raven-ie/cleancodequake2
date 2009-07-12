@@ -33,6 +33,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 #include "m_hover.h"
+#include "cc_icarus.h"
 
 CIcarus Monster_Icarus;
 
@@ -49,12 +50,12 @@ void CIcarus::Allocate (edict_t *ent)
 
 void CIcarus::Sight ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundSight);
+	Entity->PlaySound (CHAN_VOICE, SoundSight);
 }
 
 void CIcarus::Search ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, (random() < 0.5) ? SoundSearch1 : SoundSearch2);
+	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundSearch1 : SoundSearch2);
 }
 
 CFrame HoverFramesStand [] =
@@ -442,7 +443,7 @@ CAnim HoverMoveEndAttack2 (FRAME_attak107, FRAME_attak108, HoverFramesEndAttack2
 
 void CIcarus::ReAttack ()
 {
-	if (Entity->enemy->health > 0 && visible (Entity, Entity->enemy) && random() <= 0.6)
+	if (Entity->gameEntity->enemy->health > 0 && visible (Entity->gameEntity, Entity->gameEntity->enemy) && random() <= 0.6)
 	{
 #ifdef MONSTER_USE_ROGUE_AI
 		CurrentMove = (AttackState == AS_SLIDING) ? &HoverMoveAttack2 : &HoverMoveAttack1;
@@ -463,14 +464,17 @@ void CIcarus::FireBlaster ()
 	vec3_t	end;
 	vec3_t	dir;
 
-	Angles_Vectors (Entity->state.angles, forward, right, NULL);
-	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_HOVER_BLASTER_1], forward, right, start);
+	vec3_t angles, origin;
+	Entity->State.GetAngles(angles);
+	Entity->State.GetOrigin(origin);
+	Angles_Vectors (angles, forward, right, NULL);
+	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_HOVER_BLASTER_1], forward, right, start);
 
-	Vec3Copy (Entity->enemy->state.origin, end);
-	end[2] += Entity->enemy->viewheight;
+	Vec3Copy (Entity->gameEntity->enemy->state.origin, end);
+	end[2] += Entity->gameEntity->enemy->viewheight;
 	Vec3Subtract (end, start, dir);
 
-	MonsterFireBlaster (start, dir, 1, 1000, MZ2_HOVER_BLASTER_1, (Entity->state.frame == FRAME_attak104) ? EF_HYPERBLASTER : 0);
+	MonsterFireBlaster (start, dir, 1, 1000, MZ2_HOVER_BLASTER_1, (Entity->State.GetFrame() == FRAME_attak104) ? EF_HYPERBLASTER : 0);
 }
 
 
@@ -525,15 +529,15 @@ void CIcarus::StartAttack()
 	CurrentMove = &HoverMoveAttack1;
 }
 
-void CIcarus::Pain (edict_t *other, float kick, int damage)
+void CIcarus::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->health < (Entity->max_health / 2))
-		Entity->state.skinNum = 1;
+	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+		Entity->State.SetSkinNum(1);
 
-	if (level.framenum < Entity->pain_debounce_time)
+	if (level.framenum < Entity->gameEntity->pain_debounce_time)
 		return;
 
-	Entity->pain_debounce_time = level.framenum + 30;
+	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
 
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
@@ -542,30 +546,30 @@ void CIcarus::Pain (edict_t *other, float kick, int damage)
 	{
 		if (random() < 0.5)
 		{
-			PlaySoundFrom (Entity, CHAN_VOICE, SoundPain1);
+			Entity->PlaySound (CHAN_VOICE, SoundPain1);
 			CurrentMove = &HoverMovePain3;
 		}
 		else
 		{
-			PlaySoundFrom (Entity, CHAN_VOICE, SoundPain2);
+			Entity->PlaySound (CHAN_VOICE, SoundPain2);
 			CurrentMove = &HoverMovePain2;
 		}
 	}
 	else
 	{
 #ifndef MONSTER_USE_ROGUE_AI
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain1);
+		Entity->PlaySound (CHAN_VOICE, SoundPain1);
 		CurrentMove = &HoverMovePain1;
 #else
 		//PGM pain sequence is WAY too long
 		if (random() < (0.45 - (0.1 * skill->Float())))
 		{
-			PlaySoundFrom (Entity, CHAN_VOICE, SoundPain1);
+			Entity->PlaySound (CHAN_VOICE, SoundPain1);
 			CurrentMove = &HoverMovePain1;
 		}
 		else
 		{
-			PlaySoundFrom (Entity, CHAN_VOICE, SoundPain2);
+			Entity->PlaySound (CHAN_VOICE, SoundPain2);
 			CurrentMove = &HoverMovePain2;
 		}
 #endif
@@ -574,47 +578,48 @@ void CIcarus::Pain (edict_t *other, float kick, int damage)
 
 void CIcarus::DeadThink ()
 {
-	if (!Entity->groundentity && level.framenum < Entity->timestamp)
+	if (!Entity->gameEntity->groundentity && level.framenum < Entity->gameEntity->timestamp)
 	{
-		NextThink = level.framenum + FRAMETIME;
+		Entity->NextThink = level.framenum + FRAMETIME;
 		return;
 	}
-	BecomeExplosion1(Entity);
+	BecomeExplosion1(Entity->gameEntity);
 }
 
 void CIcarus::Dead ()
 {
-	Vec3Set (Entity->mins, -16, -16, -24);
-	Vec3Set (Entity->maxs, 16, 16, -8);
-	Entity->movetype = MOVETYPE_TOSS;
+	Entity->SetMins (vec3f(-16, -16, -24));
+	Entity->SetMaxs (vec3f(16, 16, -8));
+	Entity->TossPhysics = true;
 	Think = ConvertDerivedFunction(&CIcarus::DeadThink);
-	NextThink = level.framenum + FRAMETIME;
-	Entity->timestamp = level.framenum + 150;
-	gi.linkentity (Entity);
+	Entity->NextThink = level.framenum + FRAMETIME;
+	Entity->gameEntity->timestamp = level.framenum + 150;
+	Entity->Link ();
 }
 
-void CIcarus::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
+void CIcarus::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
 // check for gib
-	if (Entity->health <= Entity->gib_health)
+	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
 	{
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
+		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
-			ThrowGib (Entity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
+			ThrowGib (Entity->gameEntity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
 		for (int n= 0; n < 2; n++)
-			ThrowGib (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		ThrowHead (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		Entity->deadflag = DEAD_DEAD;
+			ThrowGib (Entity->gameEntity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		Entity->ThrowHead (gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		Entity->gameEntity->deadflag = DEAD_DEAD;
 		return;
 	}
 
-	if (Entity->deadflag == DEAD_DEAD)
+	if (Entity->gameEntity->deadflag == DEAD_DEAD)
 		return;
 
+	Entity->TossPhysics = true;
 // regular death
-	PlaySoundFrom (Entity, CHAN_VOICE, (random() < 0.5) ? SoundDeath1 : SoundDeath2);
-	Entity->deadflag = DEAD_DEAD;
-	Entity->takedamage = DAMAGE_YES;
+	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundDeath1 : SoundDeath2);
+	Entity->gameEntity->deadflag = DEAD_DEAD;
+	Entity->gameEntity->takedamage = DAMAGE_YES;
 	CurrentMove = &HoverMoveDeath1;
 }
 
@@ -632,21 +637,21 @@ void CIcarus::Spawn ()
 
 	SoundIndex ("hover/hovatck1.wav");	
 
-	Entity->state.sound = SoundIndex ("hover/hovidle1.wav");
+	Entity->State.SetSound (SoundIndex ("hover/hovidle1.wav"));
 
-	Entity->movetype = MOVETYPE_STEP;
-	Entity->solid = SOLID_BBOX;
-	Entity->state.modelIndex = ModelIndex("models/monsters/hover/tris.md2");
-	Vec3Set (Entity->mins, -24, -24, -24);
-	Vec3Set (Entity->maxs, 24, 24, 32);
+	Entity->TossPhysics = false;
+	Entity->SetSolid (SOLID_BBOX);
+	Entity->State.SetModelIndex ( ModelIndex("models/monsters/hover/tris.md2"));
+	Entity->SetMins (vec3f(-24, -24, -24));
+	Entity->SetMaxs (vec3f(24, 24, 32));
 
-	Entity->health = 240;
-	Entity->gib_health = -100;
-	Entity->mass = 150;
+	Entity->gameEntity->health = 240;
+	Entity->gameEntity->gib_health = -100;
+	Entity->gameEntity->mass = 150;
 
 	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_SIGHT | MF_HAS_SEARCH);
 
-	gi.linkentity (Entity);
+	Entity->Link ();
 
 	CurrentMove = &HoverMoveStand;	
 

@@ -151,7 +151,7 @@ static int CheckPowerArmor (edict_t *ent, vec3_t point, vec3_t normal, int damag
 {
 	int			save;
 	int			power_armor_type;
-	int			index = FindItem("Cells")->GetIndex();
+	int			index = NItems::Cells->GetIndex();
 	int			damagePerCell;
 	int			pa_te_type;
 	int			power = 0;
@@ -172,7 +172,7 @@ static int CheckPowerArmor (edict_t *ent, vec3_t point, vec3_t normal, int damag
 	{
 		power_armor_type = Player->PowerArmorType ();
 		if (power_armor_type != POWER_ARMOR_NONE)
-			power = Player->Client.pers.Inventory.Has(FindItem("Cells"));
+			power = Player->Client.pers.Inventory.Has(index);
 	}
 	else if ((ent->svFlags & SVF_MONSTER) && ent->Monster)
 	{
@@ -197,7 +197,7 @@ static int CheckPowerArmor (edict_t *ent, vec3_t point, vec3_t normal, int damag
 		Angles_Vectors (ent->state.angles, forward, NULL, NULL);
 		Vec3Subtract (point, ent->state.origin, vec);
 		VectorNormalizef (vec, vec);
-		dot = DotProduct (vec, forward);
+		dot = Dot3Product (vec, forward);
 		if (dot <= 0.3)
 			return 0;
 
@@ -347,7 +347,7 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 // figure momentum add
 	if (!(dflags & DAMAGE_NO_KNOCKBACK))
 	{
-		if ((knockback) && (targ->movetype != MOVETYPE_NONE) && (targ->movetype != MOVETYPE_BOUNCE) && (targ->movetype != MOVETYPE_PUSH) && (targ->movetype != MOVETYPE_STOP))
+		if ((knockback))// && (targ->movetype != MOVETYPE_NONE) && (targ->movetype != MOVETYPE_BOUNCE) && (targ->movetype != MOVETYPE_PUSH) && (targ->movetype != MOVETYPE_STOP))
 		{
 			vec3_t	kvel;
 			float	mass;
@@ -425,7 +425,7 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 #ifdef CLEANCTF_ENABLED
 //ZOID
 //resistance tech
-	if (client)
+	if (client && (game.mode & GAME_CTF))
 		take = (dynamic_cast<CPlayerEntity*>(targ->Entity))->CTFApplyResistance(take);
 //ZOID
 #endif
@@ -436,7 +436,7 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 
 #ifdef CLEANCTF_ENABLED
 //ZOID
-	if (targ->client && attacker->client)
+	if ((game.mode & GAME_CTF) && (targ->client && attacker->client))
 		CTFCheckHurtCarrier((dynamic_cast<CPlayerEntity*>(targ->Entity)), (dynamic_cast<CPlayerEntity*>(attacker->Entity)));
 //ZOID
 #endif
@@ -463,9 +463,10 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 	if (targ->Monster)
 	{
 		targ->Monster->ReactToDamage (attacker);
-		if (!(targ->Monster->AIFlags & AI_DUCKED) && take)
+		if (!(targ->Monster->AIFlags & AI_DUCKED) && take &&
+			attacker->Entity && (attacker->Entity->EntityFlags & ENT_HURTABLE))
 		{
-			targ->Monster->Pain (attacker, knockback, take);
+			(dynamic_cast<CHurtableEntity*>(targ->Entity))->Pain (attacker->Entity, knockback, take);
 			if (skill->Integer() == 3)
 				targ->pain_debounce_time = level.framenum + 50;
 		}

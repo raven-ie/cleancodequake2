@@ -163,7 +163,7 @@ void PlaneFromPoints(const vec3_t verts[3], plane_t *plane)
 	Vec3Subtract(verts[2], verts[0], v2);
 	CrossProduct(v2, v1, plane->normal);
 	VectorNormalizef(plane->normal, plane->normal);
-	plane->dist = DotProduct(verts[0], plane->normal);
+	plane->dist = Dot3Product(verts[0], plane->normal);
 }
 
 #define PLANE_NORMAL_EPSILON	0.00001
@@ -218,8 +218,8 @@ ProjectPointOnPlane
 */
 void ProjectPointOnPlane(vec3_t dst, const vec3_t point, const vec3_t normal)
 {
-	const float invDenom = 1.0f / DotProduct(normal, normal);
-	const float dot = DotProduct(normal, point) * invDenom;
+	const float invDenom = 1.0f / Dot3Product(normal, normal);
+	const float dot = Dot3Product(normal, point) * invDenom;
 
 	vec3_t n;
 	n[0] = normal[0] * invDenom;

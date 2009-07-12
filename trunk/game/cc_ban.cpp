@@ -130,38 +130,18 @@ ip 252.6.10.6 5
 
 void CBanList::LoadFromFile ()
 {
-	FILE *fp;
-	std::string fileName;
+	char *data;
+	FS_LoadFile ("bans.lst", (void**)&data, true);
 
-	fileName += CCvar("gamename", "").String();
-	fileName += "/bans.lst"; // FIXME: customizable
-
-#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
-	fp = fopen (fileName.c_str(), "rb");
-#else
-	int errorVal = fopen_s (&fp, fileName.c_str(), "rb");
-#endif
-
-	if (!fp || errorVal)
+	if (!data)
 		return;
-
-	fseek (fp, 0, SEEK_END);
-	size_t length = ftell(fp);
-	fseek (fp, 0, SEEK_SET);
-
-	char *temp = QNew (com_genericPool, 0) char[length+1];
-	fread (temp, length, sizeof(char), fp);
-	temp[length] = 0;
-
-	fclose (fp);
-
-	std::string mainString = temp;
+	std::string mainString = data;
 	std::string line, token;
 
 	// Get the entire line
 	int z = 0, c = 0, oc = 0;
 	z = mainString.find_first_of("\n\0");
-	line = mainString.substr(0, (z == -1) ? length : z);
+	line = mainString.substr(0, (z == -1) ? strlen(data) : z);
 
 	while (line[0])
 	{
@@ -243,39 +223,35 @@ void CBanList::LoadFromFile ()
 	}
 
 	// Free everything
-	QDelete temp;
+	FS_FreeFile (data);
 }
 
 void CBanList::SaveList ()
 {
-	FILE *fp;
-	std::string fileName;
+	fileHandle_t f;
+	FS_OpenFile ("bans.lst", &f, FS_MODE_WRITE_TEXT);
 
-	fileName += CCvar("gamename", "").String();
-	fileName += "/bans.lst"; // FIXME: customizable
-
-#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
-	fp = fopen (fileName.c_str(), "w+");
-#else
-	int errorVal = fopen_s (&fp, fileName.c_str(), "w+");
-#endif
-
-	if (!fp || errorVal)
+	if (!f)
 		return;
 
 	for (size_t i = 0; i < BanList.size(); i++)
 	{
 		BanIndex *Index = BanList[i];
+		char tempData[128];
 
-		fprintf (fp, "%s ", (Index->IP) ? "ip" : "name");
+		Q_snprintfz (tempData, sizeof(tempData), "%s ", (Index->IP) ? "ip" : "name");
+		FS_Write (&tempData, strlen(tempData), f);
 		if (Index->IP)
-			fprintf (fp, "%c.%c.%c.%c ", Index->IPAddress->adr[0], Index->IPAddress->adr[1], Index->IPAddress->adr[2], Index->IPAddress->adr[3]);
+			Q_snprintfz (tempData, sizeof(tempData), "%c.%c.%c.%c ", Index->IPAddress->adr[0], Index->IPAddress->adr[1], Index->IPAddress->adr[2], Index->IPAddress->adr[3]);
 		else
-			fprintf (fp, "%s ", Index->Name);
-		fprintf (fp, "%i\n", Index->Flags);
+			Q_snprintfz (tempData, sizeof(tempData), "%s ", Index->Name);
+		FS_Write (&tempData, strlen(tempData), f);
+
+		Q_snprintfz (tempData, sizeof(tempData), "%i\n", Index->Flags);
+		FS_Write (&tempData, strlen(tempData), f);
 	}
 
-	fclose(fp);
+	FS_CloseFile (f);
 }
 
 void CBanList::AddToList (IPAddress Adr, EBanTypeFlags Flags)

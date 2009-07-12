@@ -33,6 +33,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 #include "m_chick.h"
+#include "cc_bitch.h"
 
 CMaiden Monster_Bitch;
 
@@ -49,7 +50,7 @@ void CMaiden::Allocate (edict_t *ent)
 
 void CMaiden::Moan ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, (random() < 0.5) ? SoundIdle1 : SoundIdle2, 1, ATTN_IDLE, 0);
+	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundIdle1 : SoundIdle2, 1, ATTN_IDLE, 0);
 }
 
 CFrame ChickFramesFidget [] =
@@ -254,28 +255,28 @@ CFrame ChickFramesPain3 [] =
 };
 CAnim ChickMovePain3 (FRAME_pain301, FRAME_pain321, ChickFramesPain3, ConvertDerivedFunction(&CMaiden::Run));
 
-void CMaiden::Pain (edict_t *other, float kick, int damage)
+void CMaiden::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->health < (Entity->max_health / 2))
-		Entity->state.skinNum = 1;
+	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+		Entity->State.SetSkinNum(1);
 
-	if (level.framenum < Entity->pain_debounce_time)
+	if (level.framenum < Entity->gameEntity->pain_debounce_time)
 		return;
 
-	Entity->pain_debounce_time = level.framenum + 30;
+	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
 
 	int r = rand()%3;
 	switch (r)
 	{
 	case 0:
 	default:
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain1);
+		Entity->PlaySound (CHAN_VOICE, SoundPain1);
 		break;
 	case 1:
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain2);
+		Entity->PlaySound (CHAN_VOICE, SoundPain2);
 		break;
 	case 2:
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain3);
+		Entity->PlaySound (CHAN_VOICE, SoundPain3);
 		break;
 	}
 
@@ -301,12 +302,12 @@ void CMaiden::Pain (edict_t *other, float kick, int damage)
 
 void CMaiden::Dead ()
 {
-	Vec3Set (Entity->mins, -16, -16, 0);
-	Vec3Set (Entity->maxs, 16, 16, 16);
-	Entity->movetype = MOVETYPE_TOSS;
-	Entity->svFlags |= SVF_DEADMONSTER;
-	NextThink = 0;
-	gi.linkentity (Entity);
+	Entity->SetMins (vec3f(-16, -16, 0));
+	Entity->SetMaxs (vec3f(16, 16, 16));
+	Entity->TossPhysics = true;
+	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
+	Entity->NextThink = 0;
+	Entity->Link ();
 }
 
 CFrame ChickFramesDeath2 [] =
@@ -354,33 +355,33 @@ CFrame ChickFramesDeath1 [] =
 };
 CAnim ChickMoveDeath1 (FRAME_death101, FRAME_death112, ChickFramesDeath1, ConvertDerivedFunction(&CMaiden::Dead));
 
-void CMaiden::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
+void CMaiden::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
 	int		n;
 
 // check for gib
-	if (Entity->health <= Entity->gib_health)
+	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
 	{
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
+		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (n= 0; n < 2; n++)
-			ThrowGib (Entity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
+			ThrowGib (Entity->gameEntity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
 		for (n= 0; n < 4; n++)
-			ThrowGib (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		ThrowHead (Entity, gMedia.Gib_Head[1], damage, GIB_ORGANIC);
-		Entity->deadflag = DEAD_DEAD;
+			ThrowGib (Entity->gameEntity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		Entity->ThrowHead (gMedia.Gib_Head[1], damage, GIB_ORGANIC);
+		Entity->gameEntity->deadflag = DEAD_DEAD;
 		return;
 	}
 
-	if (Entity->deadflag == DEAD_DEAD)
+	if (Entity->gameEntity->deadflag == DEAD_DEAD)
 		return;
 
 // regular death
-	Entity->deadflag = DEAD_DEAD;
-	Entity->takedamage = DAMAGE_YES;
+	Entity->gameEntity->deadflag = DEAD_DEAD;
+	Entity->gameEntity->takedamage = DAMAGE_YES;
 
 	n = rand() % 2;
 	CurrentMove = (n == 0) ? &ChickMoveDeath1 : &ChickMoveDeath2;
-	PlaySoundFrom (Entity, CHAN_VOICE, (n == 0) ? SoundDeath1 : SoundDeath2);
+	Entity->PlaySound (CHAN_VOICE, (n == 0) ? SoundDeath1 : SoundDeath2);
 }
 
 #ifndef MONSTER_USE_ROGUE_AI
@@ -390,9 +391,9 @@ void CMaiden::DuckDown ()
 		return;
 	AIFlags |= AI_DUCKED;
 	Entity->maxs[2] -= 32;
-	Entity->takedamage = DAMAGE_YES;
+	Entity->gameEntity->takedamage = DAMAGE_YES;
 	PauseTime = level.framenum + 10;
-	gi.linkentity (Entity);
+	Entity->Link ();
 }
 
 void CMaiden::DuckHold ()
@@ -407,8 +408,8 @@ void CMaiden::DuckUp ()
 {
 	AIFlags &= ~AI_DUCKED;
 	Entity->maxs[2] += 32;
-	Entity->takedamage = DAMAGE_AIM;
-	gi.linkentity (Entity);
+	Entity->gameEntity->takedamage = DAMAGE_AIM;
+	Entity->Link ();
 }
 
 CFrame ChickFramesDuck [] =
@@ -534,8 +535,8 @@ void CMaiden::Dodge (edict_t *attacker, float eta)
 	if (random() > 0.25)
 		return;
 
-	if (!Entity->enemy)
-		Entity->enemy = attacker;
+	if (!Entity->gameEntity->enemy)
+		Entity->gameEntity->enemy = attacker;
 
 	CurrentMove = &ChickMoveDuck;
 }
@@ -543,9 +544,9 @@ void CMaiden::Dodge (edict_t *attacker, float eta)
 
 void CMaiden::Slash ()
 {
-	vec3_t	aim = {MELEE_DISTANCE, Entity->mins[0], 10};
-	PlaySoundFrom (Entity, CHAN_WEAPON, SoundMeleeSwing);
-	fire_hit (Entity, aim, (10 + (rand() %6)), 100);
+	vec3_t	aim = {MELEE_DISTANCE, Entity->GetMins().X, 10};
+	Entity->PlaySound (CHAN_WEAPON, SoundMeleeSwing);
+	CMeleeWeapon::Fire (Entity, aim, (10 + (rand() %6)), 100);
 }
 
 void CMaiden::Rocket ()
@@ -560,15 +561,18 @@ void CMaiden::Rocket ()
 	vec3_t	target;
 	bool blindfire = (AIFlags & AI_MANUAL_STEERING) ? true : false;
 
-	Angles_Vectors (Entity->state.angles, forward, right, NULL);
-	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_CHICK_ROCKET_1], forward, right, start);
+	vec3_t angles, origin;
+	Entity->State.GetAngles(angles);
+	Entity->State.GetOrigin(origin);
+	Angles_Vectors (angles, forward, right, NULL);
+	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_CHICK_ROCKET_1], forward, right, start);
 
 	rocketSpeed = 500 + (100 * skill->Integer());	// PGM rock & roll.... :)
 
 	if (blindfire)
 		Vec3Copy (BlindFireTarget, target);
 	else
-		Vec3Copy (Entity->enemy->state.origin, target);
+		Vec3Copy (Entity->gameEntity->enemy->state.origin, target);
 
 	if (blindfire)
 	{
@@ -577,16 +581,16 @@ void CMaiden::Rocket ()
 	}
 	// pmm
 	// don't shoot at feet if they're above where i'm shooting from.
-	else if(random() < 0.33 || (start[2] < Entity->enemy->absMin[2]))
+	else if(random() < 0.33 || (start[2] < Entity->gameEntity->enemy->absMin[2]))
 	{
 		Vec3Copy (target, vec);
-		vec[2] += Entity->enemy->viewheight;
+		vec[2] += Entity->gameEntity->enemy->viewheight;
 		Vec3Subtract (vec, start, dir);
 	}
 	else
 	{
 		Vec3Copy (target, vec);
-		vec[2] = Entity->enemy->absMin[2];
+		vec[2] = Entity->gameEntity->enemy->absMin[2];
 		Vec3Subtract (vec, start, dir);
 	}
 
@@ -598,7 +602,7 @@ void CMaiden::Rocket ()
 
 		dist = Vec3Length (dir);
 		time = dist/rocketSpeed;
-		Vec3MA(vec, time, Entity->enemy->velocity, vec);
+		Vec3MA(vec, time, Entity->gameEntity->enemy->velocity, vec);
 		Vec3Subtract(vec, start, dir);
 	}
 
@@ -607,7 +611,7 @@ void CMaiden::Rocket ()
 
 	// pmm blindfire doesn't check target (done in checkattack)
 	// paranoia, make sure we're not shooting a target right next to us
-	CTrace trace = CTrace(start, vec, Entity, CONTENTS_MASK_SHOT);
+	CTrace trace = CTrace(start, vec, Entity->gameEntity, CONTENTS_MASK_SHOT);
 	if (blindfire)
 	{
 		// blindfire has different fail criteria for the trace
@@ -622,7 +626,7 @@ void CMaiden::Rocket ()
 			Vec3MA (vec, -10, right, vec);
 			Vec3Subtract(vec, start, dir);
 			VectorNormalizeFastf (dir);
-			trace = CTrace(start, vec, Entity, CONTENTS_MASK_SHOT);
+			trace = CTrace(start, vec, Entity->gameEntity, CONTENTS_MASK_SHOT);
 			if (!(trace.startSolid || trace.allSolid || (trace.fraction < 0.5)))
 				MonsterFireRocket (start, dir, 50, rocketSpeed, MZ2_CHICK_ROCKET_1);
 			else 
@@ -632,7 +636,7 @@ void CMaiden::Rocket ()
 				Vec3MA (vec, 10, right, vec);
 				Vec3Subtract(vec, start, dir);
 				VectorNormalizeFastf (dir);
-				trace = CTrace(start, vec, Entity, CONTENTS_MASK_SHOT);
+				trace = CTrace(start, vec, Entity->gameEntity, CONTENTS_MASK_SHOT);
 				if (!(trace.startSolid || trace.allSolid || (trace.fraction < 0.5)))
 					MonsterFireRocket (start, dir, 50, rocketSpeed, MZ2_CHICK_ROCKET_1);
 			}
@@ -649,8 +653,8 @@ void CMaiden::Rocket ()
 	Angles_Vectors (Entity->state.angles, forward, right, NULL);
 	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_CHICK_ROCKET_1], forward, right, start);
 
-	Vec3Copy (Entity->enemy->state.origin, vec);
-	vec[2] += Entity->enemy->viewheight;
+	Vec3Copy (Entity->gameEntity->enemy->state.origin, vec);
+	vec[2] += Entity->gameEntity->enemy->viewheight;
 	Vec3Subtract (vec, start, dir);
 	VectorNormalizef (dir, dir);
 
@@ -660,12 +664,12 @@ void CMaiden::Rocket ()
 
 void CMaiden::PreAttack ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundMissilePrelaunch);
+	Entity->PlaySound (CHAN_VOICE, SoundMissilePrelaunch);
 }
 
 void CMaiden::Reload ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundMissileReload);
+	Entity->PlaySound (CHAN_VOICE, SoundMissileReload);
 }
 
 void CMaiden::ReRocket()
@@ -675,9 +679,9 @@ void CMaiden::ReRocket()
 		AIFlags &= ~AI_MANUAL_STEERING;
 	else
 #endif
-	if (Entity->enemy->health > 0)
+	if (Entity->gameEntity->enemy->health > 0)
 	{
-		if (range (Entity, Entity->enemy) > RANGE_MELEE && visible (Entity, Entity->enemy) && (random() <= (0.6 + (0.05*skill->Float()))))
+		if (range (Entity->gameEntity, Entity->gameEntity->enemy) > RANGE_MELEE && visible (Entity->gameEntity, Entity->gameEntity->enemy) && (random() <= (0.6 + (0.05*skill->Float()))))
 		{
 			CurrentMove = &ChickMoveAttack1;
 			return;
@@ -716,7 +720,7 @@ CAnim ChickMoveEndSlash (FRAME_attak213, FRAME_attak216, ChickFramesEndSlash, Co
 
 void CMaiden::ReSlash()
 {
-	if (Entity->enemy->health > 0 && (range (Entity, Entity->enemy) == RANGE_MELEE) && (random() <= 0.9))
+	if (Entity->gameEntity->enemy->health > 0 && (range (Entity->gameEntity, Entity->gameEntity->enemy) == RANGE_MELEE) && (random() <= 0.9))
 		CurrentMove = &ChickMoveSlash;
 	else
 		CurrentMove = &ChickMoveEndSlash;
@@ -784,16 +788,16 @@ void CMaiden::Attack()
 
 void CMaiden::Sight()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundSight);
+	Entity->PlaySound (CHAN_VOICE, SoundSight);
 }
 
 void CMaiden::Spawn ()
 {
-	Entity->movetype = MOVETYPE_STEP;
-	Entity->solid = SOLID_BBOX;
-	Entity->state.modelIndex = ModelIndex("models/monsters/bitch/tris.md2");
-	Vec3Set (Entity->mins, -16, -16, 0);
-	Vec3Set (Entity->maxs, 16, 16, 56);
+	Entity->TossPhysics = false;
+	Entity->SetSolid (SOLID_BBOX);
+	Entity->State.SetModelIndex ( ModelIndex("models/monsters/bitch/tris.md2"));
+	Entity->SetMins (vec3f(-16, -16, 0));
+	Entity->SetMaxs (vec3f(16, 16, 56));
 
 	SoundMissilePrelaunch	= SoundIndex ("chick/chkatck1.wav");	
 	SoundMissileLaunch	= SoundIndex ("chick/chkatck2.wav");	
@@ -811,9 +815,9 @@ void CMaiden::Spawn ()
 	SoundSight				= SoundIndex ("chick/chksght1.wav");	
 	SoundSearch			= SoundIndex ("chick/chksrch1.wav");	
 
-	Entity->health = 175;
-	Entity->gib_health = -70;
-	Entity->mass = 200;
+	Entity->gameEntity->health = 175;
+	Entity->gameEntity->gib_health = -70;
+	Entity->gameEntity->mass = 200;
 
 	MonsterFlags = (MF_HAS_MELEE | MF_HAS_ATTACK | MF_HAS_IDLE | MF_HAS_SIGHT
 #ifdef MONSTER_USE_ROGUE_AI
@@ -825,7 +829,7 @@ void CMaiden::Spawn ()
 	BlindFire = true;
 #endif
 
-	gi.linkentity (Entity);
+	Entity->Link ();
 
 	CurrentMove = &ChickMoveStand;
 	WalkMonsterStart ();

@@ -110,7 +110,8 @@ enum EGamePrintLevel
 	PRINT_LOW,				// pickup messages
 	PRINT_MEDIUM,			// death messages
 	PRINT_HIGH,				// critical messages
-	PRINT_CHAT				// chat messages
+	PRINT_CHAT,				// chat messages
+	PRINT_CENTER			// center print messages (Paril)
 };
 
 //
@@ -131,8 +132,15 @@ enum EMultiCast
 void	seedMT (uint32 seed);
 uint32	randomMT (void);
 
-#define frand() (randomMT() * 0.00000000023283064365386962890625f)	// 0 to 1
-#define crand() (((int)randomMT() - 0x7FFFFFFF) * 0.000000000465661287307739257812f)	// -1 to 1
+inline float frand ()
+{
+	return randomMT() * 0.00000000023283064365386962890625f;
+}
+
+inline float crand ()
+{
+	return ((int)randomMT() - 0x7FFFFFFF) * 0.000000000465661287307739257812f;
+}
 
 /*
 ==============================================================================
@@ -491,15 +499,6 @@ struct plane_t
 //
 // m_plane.c
 //
-#define PlaneDiff(point,plane) (((plane)->type < 3 ? (point)[(plane)->type] : DotProduct((point), (plane)->normal)) - (plane)->dist)
-#define BOX_ON_PLANE_SIDE(mins, maxs, p)			\
-	(((p)->type < 3)? (								\
-		((p)->dist <= (mins)[(p)->type])? 1 :		\
-		(											\
-			((p)->dist >= (maxs)[(p)->type])? 2 : 3	\
-		)											\
-	) : BoxOnPlaneSide((mins), (maxs), (p)))
-
 int BoxOnPlaneSide(const vec3_t mins, const vec3_t maxs, const plane_t *plane);
 int PlaneTypeForNormal(const vec3_t normal);
 void CategorizePlane(plane_t *plane);
@@ -508,6 +507,21 @@ bool ComparePlanes(const vec3_t p1normal, const float p1dist, const vec3_t p2nor
 void SnapVector(vec3_t normal);
 void ProjectPointOnPlane(vec3_t dst, const vec3_t point, const vec3_t normal);
 int SignbitsForPlane(const plane_t *out);
+
+inline float PlaneDiff (vec3_t point, plane_t *plane)
+{
+	return ((plane->type < 3 ? point[plane->type] : Dot3Product(point, plane->normal)) - plane->dist);
+}
+
+inline int Box_On_Plane_Side (const vec3_t mins, const vec3_t maxs, const plane_t *p)
+{
+	return ((p->type < 3) ?
+		(p->dist <= mins[p->type]) ?
+			1 : ((p->dist >= maxs[p->type])
+				?
+				2 : 3)
+				: BoxOnPlaneSide(mins, maxs, p));
+};
 
 /*
 ==============================================================================
@@ -1157,6 +1171,8 @@ enum
 	CHAN_VOICE,
 	CHAN_ITEM,
 	CHAN_BODY,
+
+	CHAN_MAX			= 8,
 
 	// modifier flags
 	CHAN_NO_PHS_ADD		= 8,	// send to all clients, not just ones in PHS (ATTN 0 will also do this)

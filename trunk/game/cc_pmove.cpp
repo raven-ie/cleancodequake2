@@ -91,7 +91,7 @@ static void SV_PM_ClipVelocity (vec3_t in, vec3_t normal, vec3_t out, float over
 	float	change;
 	int		i;
 	
-	backoff = DotProduct (in, normal) * overbounce;
+	backoff = Dot3Product (in, normal) * overbounce;
 
 	for (i=0 ; i<3 ; i++) {
 		change = normal[i]*backoff;
@@ -190,7 +190,7 @@ static void SV_PM_StepSlideMove_ (void) {
 			SV_PM_ClipVelocity (pml.velocity, planes[i], pml.velocity, 1.01f);
 			for (j=0 ; j<numPlanes ; j++) {
 				if (j != i) {
-					if (DotProduct (pml.velocity, planes[j]) < 0)
+					if (Dot3Product (pml.velocity, planes[j]) < 0)
 						break;	// not ok
 				}
 			}
@@ -208,7 +208,7 @@ static void SV_PM_StepSlideMove_ (void) {
 				break;
 			}
 			CrossProduct (planes[0], planes[1], dir);
-			d = DotProduct (dir, pml.velocity);
+			d = Dot3Product (dir, pml.velocity);
 			Vec3Scale (dir, d, pml.velocity);
 		}
 
@@ -216,7 +216,7 @@ static void SV_PM_StepSlideMove_ (void) {
 		** if velocity is against the original velocity, stop dead
 		** to avoid tiny occilations in sloping corners
 		*/
-		if (DotProduct (pml.velocity, primal_velocity) <= 0) {
+		if (Dot3Product (pml.velocity, primal_velocity) <= 0) {
 			Vec3Clear (pml.velocity);
 			break;
 		}
@@ -338,7 +338,7 @@ Handles user intended acceleration
 static void SV_PM_Accelerate (vec3_t wishdir, float wishspeed, float accel) {
 	float		addspeed, accelspeed, currentspeed;
 
-	currentspeed = DotProduct (pml.velocity, wishdir);
+	currentspeed = Dot3Product (pml.velocity, wishdir);
 	addspeed = wishspeed - currentspeed;
 	if (addspeed <= 0)
 		return;
@@ -366,7 +366,7 @@ static void SV_PM_AirAccelerate (vec3_t wishdir, float wishspeed, float accel) {
 
 	if (wishspd > 30)
 		wishspd = 30;
-	currentspeed = DotProduct (pml.velocity, wishdir);
+	currentspeed = Dot3Product (pml.velocity, wishdir);
 	addspeed = wishspd - currentspeed;
 	if (addspeed <= 0)
 		return;
@@ -808,7 +808,7 @@ static void SV_PM_FlyMove (bool doClip) {
 		wishspeed = SV_PM_MAXSPEED;
 	}
 
-	currentspeed = DotProduct (pml.velocity, wishdir);
+	currentspeed = Dot3Product (pml.velocity, wishdir);
 	addspeed = wishspeed - currentspeed;
 	if (addspeed <= 0)
 		return;
@@ -971,12 +971,12 @@ static void SV_PM_SnapPosition (void)
 		if (pm->state.origin[i]*(1.0f/8.0f) == pml.origin[i])
 			sign[i] = 0;
 	}
-	Vec3Copy (pm->state.origin, base);
+	VecxCopy<svec3_t, 3> (pm->state.origin, base);
 
 	// try all combinations
 	for (i=0 ; i<8 ; i++) {
 		bits = jitterBits[i];
-		Vec3Copy (base, pm->state.origin);
+		VecxCopy<svec3_t, 3> (base, pm->state.origin);
 
 		if (bits & BIT(0))
 			pm->state.origin[0] += sign[0];
@@ -990,7 +990,7 @@ static void SV_PM_SnapPosition (void)
 	}
 
 	// go back to the last position
-	Vec3Copy (pml.previousOrigin, pm->state.origin);
+	VecxCopy<svec3_t, 3> (pml.previousOrigin, pm->state.origin);
 }
 
 
@@ -1004,7 +1004,7 @@ static void SV_PM_InitialSnapPosition (void) {
 	int16		base[3];
 	static int	offset[3] = { 0, -1, 1 };
 
-	Vec3Copy (pm->state.origin, base);
+	VecxCopy<svec3_t, 3> (pm->state.origin, base);
 
 	for (z=0 ; z<3 ; z++) {
 		pm->state.origin[2] = base[2] + offset[z];
@@ -1016,7 +1016,7 @@ static void SV_PM_InitialSnapPosition (void) {
 					pml.origin[0] = pm->state.origin[0]*(1.0f/8.0f);
 					pml.origin[1] = pm->state.origin[1]*(1.0f/8.0f);
 					pml.origin[2] = pm->state.origin[2]*(1.0f/8.0f);
-					Vec3Copy (pm->state.origin, pml.previousOrigin);
+					VecxCopy<svec3_t, 3> (pm->state.origin, pml.previousOrigin);
 					return;
 				}
 			}
@@ -1097,7 +1097,7 @@ void SV_Pmove (edict_t *ent, pMoveNew_t *pMove, float airAcceleration)
 	pml.ent			= ent;
 
 	// save old org in case we get stuck
-	Vec3Copy (pm->state.origin, pml.previousOrigin);
+	VecxCopy<svec3_t, 3> (pm->state.origin, pml.previousOrigin);
 
 	pml.frameTime = pm->cmd.msec * 0.001;
 

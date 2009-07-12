@@ -129,7 +129,7 @@ int ClipVelocity (vec3_t in, vec3_t normal, vec3_t out, float overbounce)
 	if (!normal[2])
 		blocked |= 2;		// step
 	
-	backoff = DotProduct (in, normal) * overbounce;
+	backoff = Dot3Product (in, normal) * overbounce;
 
 	for (i=0 ; i<3 ; i++)
 	{
@@ -249,7 +249,7 @@ int SV_FlyMove (edict_t *ent, float time, int mask)
 			for (j=0 ; j<numplanes ; j++)
 				if ((j != i) && !Vec3Compare (planes[i], planes[j]))
 				{
-					if (DotProduct (new_velocity, planes[j]) < 0)
+					if (Dot3Product (new_velocity, planes[j]) < 0)
 						break;	// not ok
 				}
 			if (j == numplanes)
@@ -269,7 +269,7 @@ int SV_FlyMove (edict_t *ent, float time, int mask)
 				return 7;
 			}
 			CrossProduct (planes[0], planes[1], dir);
-			d = DotProduct (dir, ent->velocity);
+			d = Dot3Product (dir, ent->velocity);
 			Vec3Scale (dir, d, ent->velocity);
 		}
 
@@ -277,7 +277,7 @@ int SV_FlyMove (edict_t *ent, float time, int mask)
 // if original velocity is against the original velocity, stop dead
 // to avoid tiny occilations in sloping corners
 //
-		if (DotProduct (ent->velocity, primal_velocity) <= 0)
+		if (Dot3Product (ent->velocity, primal_velocity) <= 0)
 		{
 			Vec3Copy (vec3Origin, ent->velocity);
 			return blocked;
@@ -469,9 +469,9 @@ bool SV_Push (edict_t *pusher, vec3_t move, vec3_t amove)
 
 			// figure movement due to the pusher's amove
 			Vec3Subtract (check->state.origin, pusher->state.origin, org);
-			org2[0] = DotProduct (org, forward);
-			org2[1] = -DotProduct (org, right);
-			org2[2] = DotProduct (org, up);
+			org2[0] = Dot3Product (org, forward);
+			org2[1] = -Dot3Product (org, right);
+			org2[2] = Dot3Product (org, up);
 			Vec3Subtract (org2, org, move2);
 			Vec3Add (check->state.origin, move2, check->state.origin);
 

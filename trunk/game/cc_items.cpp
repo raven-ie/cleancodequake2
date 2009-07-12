@@ -262,7 +262,7 @@ void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *su
 	if (ent->item->PickupSound)
 		PlaySoundFrom(other, CHAN_ITEM, ent->item->PickupSoundIndex
 #ifdef CLEANCTF_ENABLED
-		, 1, (ent->item == RedFlag || ent->item == BlueFlag) ? ATTN_NONE : ATTN_NORM
+		, 1, (ent->item == NItems::RedFlag || ent->item == NItems::BlueFlag) ? ATTN_NONE : ATTN_NORM
 #endif
 		);
 

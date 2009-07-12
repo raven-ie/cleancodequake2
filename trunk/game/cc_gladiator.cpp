@@ -33,6 +33,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 #include "m_gladiator.h"
+#include "cc_gladiator.h"
 
 CGladiator Monster_Gladiator;
 
@@ -49,22 +50,22 @@ void CGladiator::Allocate (edict_t *ent)
 
 void CGladiator::Idle ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundIdle);
+	Entity->PlaySound (CHAN_VOICE, SoundIdle);
 }
 
 void CGladiator::Sight ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundSight);
+	Entity->PlaySound (CHAN_VOICE, SoundSight);
 }
 
 void CGladiator::Search ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundSearch);
+	Entity->PlaySound (CHAN_VOICE, SoundSearch);
 }
 
 void CGladiator::SwingCleaver ()
 {
-	PlaySoundFrom (Entity, CHAN_WEAPON, SoundCleaverSwing);
+	Entity->PlaySound (CHAN_WEAPON, SoundCleaverSwing);
 }
 
 CFrame GladiatorFramesStand [] =
@@ -128,12 +129,12 @@ void CGladiator::Run ()
 
 void CGladiator::MeleeAttack ()
 {
-	static vec3_t	aim = {MELEE_DISTANCE, Entity->mins[0], -4};
+	static vec3_t	aim = {MELEE_DISTANCE, Entity->GetMins().X, -4};
 
-	if (fire_hit (Entity, aim, (20 + (rand() %5)), 300))
-		PlaySoundFrom (Entity, CHAN_AUTO, SoundCleaverHit);
+	if (CMeleeWeapon::Fire (Entity, aim, (20 + (rand() %5)), 300))
+		Entity->PlaySound (CHAN_AUTO, SoundCleaverHit);
 	else
-		PlaySoundFrom (Entity, CHAN_AUTO, SoundCleaverMiss);
+		Entity->PlaySound (CHAN_AUTO, SoundCleaverMiss);
 }
 
 CFrame GladiatorFramesAttackMelee [] =
@@ -169,11 +170,14 @@ void CGladiator::FireRail ()
 	vec3_t	dir;
 	vec3_t	forward, right;
 
-	Angles_Vectors (Entity->state.angles, forward, right, NULL);
-	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_GLADIATOR_RAILGUN_1], forward, right, start);
+	vec3_t angles, origin;
+	Entity->State.GetAngles(angles);
+	Entity->State.GetOrigin(origin);
+	Angles_Vectors (angles, forward, right, NULL);
+	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_GLADIATOR_RAILGUN_1], forward, right, start);
 
 	// calc direction to where we targted
-	Vec3Subtract (Entity->pos1, start, dir);
+	Vec3Subtract (Entity->gameEntity->pos1, start, dir);
 	VectorNormalizef (dir, dir);
 
 	MonsterFireRailgun (start, dir, 50, 100, MZ2_GLADIATOR_RAILGUN_1);
@@ -198,16 +202,19 @@ void CGladiator::Attack ()
 	float	range;
 	vec3_t	v;
 
+	vec3_t origin;
+	Entity->State.GetOrigin(origin);
+
 	// a small safe zone
-	Vec3Subtract (Entity->state.origin, Entity->enemy->state.origin, v);
+	Vec3Subtract (origin, Entity->gameEntity->enemy->state.origin, v);
 	range = Vec3Length(v);
 	if (range <= (MELEE_DISTANCE + 32))
 		return;
 
 	// charge up the railgun
-	PlaySoundFrom (Entity, CHAN_WEAPON, SoundGun);
-	Vec3Copy (Entity->enemy->state.origin, Entity->pos1);	//save for aiming the shot
-	Entity->pos1[2] += Entity->enemy->viewheight;
+	Entity->PlaySound (CHAN_WEAPON, SoundGun);
+	Vec3Copy (Entity->gameEntity->enemy->state.origin, Entity->gameEntity->pos1);	//save for aiming the shot
+	Entity->gameEntity->pos1[2] += Entity->gameEntity->enemy->viewheight;
 	CurrentMove = &GladiatorMoveAttackGun;
 }
 
@@ -234,35 +241,35 @@ CFrame GladiatorFramesPainAir [] =
 };
 CAnim GladiatorMovePainAir (FRAME_painup1, FRAME_painup7, GladiatorFramesPainAir, &CMonster::Run);
 
-void CGladiator::Pain (edict_t *other, float kick, int damage)
+void CGladiator::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->health < (Entity->max_health / 2))
-		Entity->state.skinNum = 1;
+	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+		Entity->State.SetSkinNum(1);
 
-	if (level.framenum < Entity->pain_debounce_time)
+	if (level.framenum < Entity->gameEntity->pain_debounce_time)
 	{
-		if ((Entity->velocity[2] > 100) && (CurrentMove == &GladiatorMovePain))
+		if ((Entity->gameEntity->velocity[2] > 100) && (CurrentMove == &GladiatorMovePain))
 			CurrentMove = &GladiatorMovePainAir;
 		return;
 	}
 
-	Entity->pain_debounce_time = level.framenum + 30;
+	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
 
-	PlaySoundFrom (Entity, CHAN_VOICE, (random() < 0.5) ? SoundPain1 : SoundPain2);
+	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundPain1 : SoundPain2);
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
 
-	CurrentMove = (Entity->velocity[2] > 100) ? &GladiatorMovePainAir : &GladiatorMovePain;
+	CurrentMove = (Entity->gameEntity->velocity[2] > 100) ? &GladiatorMovePainAir : &GladiatorMovePain;
 }
 
 void CGladiator::Dead ()
 {
-	Vec3Set (Entity->mins, -16, -16, -24);
-	Vec3Set (Entity->maxs, 16, 16, -8);
-	Entity->movetype = MOVETYPE_TOSS;
-	Entity->svFlags |= SVF_DEADMONSTER;
-	NextThink = 0;
-	gi.linkentity (Entity);
+	Entity->SetMins (vec3f(-16, -16, -24));
+	Entity->SetMaxs (vec3f(16, 16, -8));
+	Entity->TossPhysics = true;
+	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
+	Entity->NextThink = 0;
+	Entity->Link ();
 }
 
 CFrame GladiatorFramesDeath [] =
@@ -292,30 +299,30 @@ CFrame GladiatorFramesDeath [] =
 };
 CAnim GladiatorMoveDeath (FRAME_death1, FRAME_death22, GladiatorFramesDeath, ConvertDerivedFunction(&CGladiator::Dead));
 
-void CGladiator::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
+void CGladiator::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
 	int		n;
 
 // check for gib
-	if (Entity->health <= Entity->gib_health)
+	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
 	{
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
+		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (n= 0; n < 2; n++)
-			ThrowGib (Entity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
+			ThrowGib (Entity->gameEntity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
 		for (n= 0; n < 4; n++)
-			ThrowGib (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		ThrowHead (Entity, gMedia.Gib_Head[1], damage, GIB_ORGANIC);
-		Entity->deadflag = DEAD_DEAD;
+			ThrowGib (Entity->gameEntity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		Entity->ThrowHead (gMedia.Gib_Head[1], damage, GIB_ORGANIC);
+		Entity->gameEntity->deadflag = DEAD_DEAD;
 		return;
 	}
 
-	if (Entity->deadflag == DEAD_DEAD)
+	if (Entity->gameEntity->deadflag == DEAD_DEAD)
 		return;
 
 // regular death
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundDie, 1, ATTN_NORM, 0);
-	Entity->deadflag = DEAD_DEAD;
-	Entity->takedamage = DAMAGE_YES;
+	Entity->PlaySound (CHAN_VOICE, SoundDie, 1, ATTN_NORM, 0);
+	Entity->gameEntity->deadflag = DEAD_DEAD;
+	Entity->gameEntity->takedamage = DAMAGE_YES;
 
 	CurrentMove = &GladiatorMoveDeath;
 }
@@ -336,19 +343,19 @@ void CGladiator::Spawn ()
 	SoundSearch = SoundIndex ("gladiator/gldsrch1.wav");
 	SoundSight = SoundIndex ("gladiator/sight.wav");
 
-	Entity->movetype = MOVETYPE_STEP;
-	Entity->solid = SOLID_BBOX;
-	Entity->state.modelIndex = ModelIndex ("models/monsters/gladiatr/tris.md2");
-	Vec3Set (Entity->mins, -32, -32, -24);
-	Vec3Set (Entity->maxs, 32, 32, 64);
+	Entity->TossPhysics = false;
+	Entity->SetSolid (SOLID_BBOX);
+	Entity->State.SetModelIndex (ModelIndex ("models/monsters/gladiatr/tris.md2"));
+	Entity->SetMins (vec3f(-32, -32, -24));
+	Entity->SetMaxs (vec3f(32, 32, 64));
 
-	Entity->health = 400;
-	Entity->gib_health = -175;
-	Entity->mass = 400;
+	Entity->gameEntity->health = 400;
+	Entity->gameEntity->gib_health = -175;
+	Entity->gameEntity->mass = 400;
 
 	MonsterFlags = (MF_HAS_SEARCH | MF_HAS_IDLE | MF_HAS_SIGHT | MF_HAS_MELEE | MF_HAS_ATTACK);
 
-	gi.linkentity (Entity);
+	Entity->Link ();
 
 	CurrentMove = &GladiatorMoveStand;
 	WalkMonsterStart ();

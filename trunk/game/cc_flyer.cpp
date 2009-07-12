@@ -33,6 +33,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 #include "m_flyer.h"
+#include "cc_flyer.h"
 
 CFlyer Monster_Flyer;
 
@@ -49,17 +50,17 @@ void CFlyer::Allocate (edict_t *ent)
 
 void CFlyer::Sight ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundSight);
+	Entity->PlaySound (CHAN_VOICE, SoundSight);
 }
 
 void CFlyer::Idle ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
+	Entity->PlaySound (CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
 }
 
 void CFlyer::PopBlades ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundSproing);
+	Entity->PlaySound (CHAN_VOICE, SoundSproing);
 }
 
 CFrame FlyerFramesStand [] =
@@ -338,16 +339,20 @@ void CFlyer::Fire (int FlashNumber)
 	vec3_t	dir;
 	int		effect;
 
-	if ((Entity->state.frame == FRAME_attak204) || (Entity->state.frame == FRAME_attak207) || (Entity->state.frame == FRAME_attak210))
+	vec3_t angles, origin;
+	Entity->State.GetAngles(angles);
+	Entity->State.GetOrigin(origin);
+
+	if ((Entity->State.GetFrame() == FRAME_attak204) || (Entity->State.GetFrame() == FRAME_attak207) || (Entity->State.GetFrame() == FRAME_attak210))
 		effect = EF_HYPERBLASTER;
 	else
 		effect = 0;
-	Angles_Vectors (Entity->state.angles, forward, right, NULL);
+	Angles_Vectors (angles, forward, right, NULL);
 
-	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[FlashNumber], forward, right, start);
+	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[FlashNumber], forward, right, start);
 	
-	Vec3Copy (Entity->enemy->state.origin, end);
-	end[2] += Entity->enemy->viewheight;
+	Vec3Copy (Entity->gameEntity->enemy->state.origin, end);
+	end[2] += Entity->gameEntity->enemy->viewheight;
 	Vec3Subtract (end, start, dir);
 
 	MonsterFireBlaster (start, dir, 1, 1000, FlashNumber, effect);
@@ -387,16 +392,16 @@ CAnim FlyerMoveAttack2 (FRAME_attak201, FRAME_attak217, FlyerFramesAttack2, Conv
 
 void CFlyer::SlashLeft ()
 {
-	vec3_t	aim = {MELEE_DISTANCE, Entity->mins[0], 0};
-	fire_hit (Entity, aim, 5, 0);
-	PlaySoundFrom (Entity, CHAN_WEAPON, SoundSlash);
+	vec3_t	aim = {MELEE_DISTANCE, Entity->GetMins().X, 0};
+	CMeleeWeapon::Fire (Entity, aim, 5, 0);
+	Entity->PlaySound (CHAN_WEAPON, SoundSlash);
 }
 
 void CFlyer::SlashRight ()
 {
-	vec3_t	aim = {MELEE_DISTANCE, Entity->maxs[0], 0};
-	fire_hit (Entity, aim, 5, 0);
-	PlaySoundFrom (Entity, CHAN_WEAPON, SoundSlash);
+	vec3_t	aim = {MELEE_DISTANCE, Entity->GetMaxs().X, 0};
+	CMeleeWeapon::Fire (Entity, aim, 5, 0);
+	Entity->PlaySound (CHAN_WEAPON, SoundSlash);
 }
 
 CFrame FlyerFramesStartMelee [] =
@@ -459,45 +464,45 @@ void CFlyer::Melee ()
 
 void CFlyer::CheckMelee ()
 {
-	if (range (Entity, Entity->enemy) == RANGE_MELEE)
+	if (range (Entity->gameEntity, Entity->gameEntity->enemy) == RANGE_MELEE)
 		CurrentMove = (random() <= 0.8) ? &FlyerMoveLoopMelee : &FlyerMoveEndMelee;
 	else
 		CurrentMove = &FlyerMoveEndMelee;
 }
 
-void CFlyer::Pain (edict_t *other, float kick, int damage)
+void CFlyer::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->health < (Entity->max_health / 2))
-		Entity->state.skinNum = 1;
+	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+		Entity->State.SetSkinNum(1);
 
-	if (level.framenum < Entity->pain_debounce_time)
+	if (level.framenum < Entity->gameEntity->pain_debounce_time)
 		return;
 
-	Entity->pain_debounce_time = level.framenum + 30;
+	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
 
 	switch (rand() % 3)
 	{
 	case 0:
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain1);
+		Entity->PlaySound (CHAN_VOICE, SoundPain1);
 		CurrentMove = &FlyerMovePain1;
 		break;
 	case 1:
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain2);
+		Entity->PlaySound (CHAN_VOICE, SoundPain2);
 		CurrentMove = &FlyerMovePain2;
 		break;
 	default:
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain1);
+		Entity->PlaySound (CHAN_VOICE, SoundPain1);
 		CurrentMove = &FlyerMovePain3;
 		break;
 	}
 }
 
-void CFlyer::Die(edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
+void CFlyer::Die(CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundDie);
-	BecomeExplosion1(Entity);
+	Entity->PlaySound (CHAN_VOICE, SoundDie);
+	BecomeExplosion1(Entity->gameEntity);
 }
 
 #ifdef FLYER_KNOWS_HOW_TO_DODGE
@@ -533,13 +538,14 @@ void CFlyer::AI_Roll(float Dist)
 {
 	vec3_t	v;
 
-	Vec3Subtract (Entity->enemy->state.origin, Entity->state.origin, v);
+	Entity->State.GetOrigin(v);
+	Vec3Subtract (Entity->gameEntity->enemy->state.origin, v, v);
 	IdealYaw = VecToYaw(v);
 	ChangeYaw ();
 
-	float Yaw = (Entity->state.angles[YAW] - 90);
+	float Yaw = (Entity->State.GetAngles().Y - 90);
 	if (CurrentMove == &FlyerMoveRollRight)
-		Yaw = (Entity->state.angles[YAW] + 90);
+		Yaw = (Entity->State.GetAngles().Y + 90);
 
 	if (Dist)
 		WalkMove (Yaw, Dist);
@@ -551,9 +557,9 @@ void CFlyer::ChooseAfterDodge ()
 }
 
 #ifndef MONSTER_USE_ROGUE_AI
-void CFlyer::Dodge (edict_t *attacker, float eta)
+void CFlyer::Dodge (CBaseEntity *attacker, float eta)
 #else
-void CFlyer::Dodge (edict_t *attacker, float eta, CTrace *tr)
+void CFlyer::Duck (float eta)
 #endif
 {
 	if (random() > (0.35f + ((skill->Float()+1) / 10)) )
@@ -565,8 +571,10 @@ void CFlyer::Dodge (edict_t *attacker, float eta, CTrace *tr)
 
 	CTrace trace;
 	vec3_t right, end;
+	vec3_t angles;
+	Entity->State.GetAngles(angles);
 
-	Angles_Vectors (Entity->state.angles, NULL, right, NULL);
+	Angles_Vectors (angles, NULL, right, NULL);
 	bool WantsLeft = (random() < 0.5);
 
 	// Approximate travel distance.
@@ -574,15 +582,17 @@ void CFlyer::Dodge (edict_t *attacker, float eta, CTrace *tr)
 	bool CanRollRight = false;
 	bool CanRollLeft = false;
 
-	Vec3MA (Entity->state.origin, -(15 * 5), right, end);
-	trace = CTrace (Entity->state.origin, Entity->mins, Entity->maxs, end, Entity, CONTENTS_MASK_MONSTERSOLID);
+	Entity->State.GetOrigin(end);
+	Vec3MA (end, -(15 * 5), right, end);
+	trace = CTrace (Entity->State.GetOrigin(), Entity->GetMins(), Entity->GetMaxs(), vec3f(end), Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
 
 	if (trace.fraction == 1.0)
 		CanRollRight = true;
 
 	// Now check the left
-	Vec3MA (Entity->state.origin, (15 * 5), right, end);
-	trace = CTrace(Entity->state.origin, Entity->mins, Entity->maxs, end, Entity, CONTENTS_MASK_MONSTERSOLID);
+	Entity->State.GetOrigin(end);
+	Vec3MA (end, (15 * 5), right, end);
+	trace = CTrace(Entity->State.GetOrigin(), Entity->GetMins(), Entity->GetMaxs(), vec3f(end), Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
 
 	if (trace.fraction == 1.0)
 		CanRollLeft = true;
@@ -594,9 +604,6 @@ void CFlyer::Dodge (edict_t *attacker, float eta, CTrace *tr)
 		WantsLeft = true;
 
 	CurrentMove = (WantsLeft) ? &FlyerMoveRollLeft : &FlyerMoveRollRight;
-
-	if (!Entity->enemy)
-		Entity->enemy = attacker;
 }
 #endif
 
@@ -613,10 +620,10 @@ void CFlyer::SideStep ()
 void CFlyer::Spawn ()
 {
 	// fix a map bug in jail5.bsp
-	if (!Q_stricmp(level.mapname, "jail5") && (Entity->state.origin[2] == -104))
+	if (!Q_stricmp(level.mapname, "jail5") && (Entity->State.GetOrigin().Z == -104))
 	{
-		Entity->targetname = Entity->target;
-		Entity->target = NULL;
+		Entity->gameEntity->targetname = Entity->gameEntity->target;
+		Entity->gameEntity->target = NULL;
 	}
 
 	SoundSight = SoundIndex ("flyer/flysght1.wav");
@@ -629,23 +636,23 @@ void CFlyer::Spawn ()
 
 	SoundIndex ("flyer/flyatck3.wav");
 
-	Entity->state.modelIndex = ModelIndex ("models/monsters/flyer/tris.md2");
-	Vec3Set (Entity->mins, -16, -16, -24);
-	Vec3Set (Entity->maxs, 16, 16, 16);
-	Entity->movetype = MOVETYPE_STEP;
-	Entity->solid = SOLID_BBOX;
+	Entity->State.SetModelIndex (ModelIndex ("models/monsters/flyer/tris.md2"));
+	Entity->SetMins (vec3f(-16, -16, -24));
+	Entity->SetMaxs (vec3f(16, 16, 16));
+	Entity->TossPhysics = false;
+	Entity->SetSolid (SOLID_BBOX);
 
-	Entity->state.sound = SoundIndex ("flyer/flyidle1.wav");
+	Entity->State.SetSound (SoundIndex ("flyer/flyidle1.wav"));
 
-	Entity->health = 50;
-	Entity->mass = 50;
+	Entity->gameEntity->health = 50;
+	Entity->gameEntity->mass = 50;
 
 	MonsterFlags |= (MF_HAS_IDLE | MF_HAS_SIGHT | MF_HAS_MELEE | MF_HAS_ATTACK
 #ifdef MONSTER_USE_ROGUE_AI
-	| MF_HAS_DUCK | MF_HAS_DODGE | MF_HAS_SIDESTEP
+	| MF_HAS_DUCK | MF_HAS_UNDUCK | MF_HAS_DODGE | MF_HAS_SIDESTEP
 #endif
 		);
-	gi.linkentity (Entity);
+	Entity->Link ();
 
 	CurrentMove = &FlyerMoveStand;
 	FlyMonsterStart ();

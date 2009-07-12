@@ -34,10 +34,6 @@ static inline TType Align(const TType Number, const TType Alignment)
 	return (TType)(((intptr)Number + Alignment-1) & ~(Alignment-1));
 }
 
-#ifndef min
-# define min(a,b)    (((a) < (b)) ? (a) : (b))
-#endif
-
 template<typename TType>
 static inline TType Min(const TType A, const TType B)
 {
@@ -53,10 +49,6 @@ static inline int Min(const int A, const int B)
 {
 	return (A<=B) ? A : B;
 }
-
-#ifndef max
-# define max(a,b)    (((a) > (b)) ? (a) : (b))
-#endif
 
 template<typename TType>
 static inline TType Max(const TType A, const TType B)
@@ -74,10 +66,6 @@ static inline int Max(const int A, const int B)
 	return (A>=B) ? A : B;
 }
 
-#define bound(a,b,c)	((a) >= (c) ? (a) : (b) < (a) ? (a) : (b) > (c) ? (c) : (b))
-#define clamp(a,b,c)	((b) >= (c) ? (b) : (a) < (b) ? (b) : (a) > (c) ? (c) : (a))
-#define clampl(a,b,c)	((b) >= (c) ? (a)=(b) : (a) < (b) ? (a)=(b) : (a) > (c) ? (a)=(c) : (a)=(a))
-
 template<typename TType>
 static inline TType Clamp(const TType V, const TType L, const TType H)
 {
@@ -92,6 +80,22 @@ template<>
 static inline int Clamp(const int V, const int L, const int H)
 {
 	return (V<L) ? L : (V>H) ? H : V;
+}
+
+template<typename TType>
+static inline TType Bound(const TType V, const TType L, const TType H)
+{
+	return (V>=H) ? V : (L<V) ? V : (L>H) ? H : L;
+}
+template<>
+static inline float Bound(const float V, const float L, const float H)
+{
+	return (V>=H) ? V : (L<V) ? V : (L>H) ? H : L;
+}
+template<>
+static inline int Bound(const int V, const int L, const int H)
+{
+	return (V>=H) ? V : (L<V) ? V : (L>H) ? H : L;
 }
 
 template<typename TType>

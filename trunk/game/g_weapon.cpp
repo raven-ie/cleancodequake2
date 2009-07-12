@@ -50,6 +50,9 @@ void check_dodge (edict_t *self, vec3_t start, vec3_t dir, int speed)
 		Vec3Subtract (tr.endPos, start, v);
 		eta = (Vec3Length(v) - tr.ent->maxs[0]) / speed;
 		tr.ent->Monster->Dodge (self, eta, &tr);
+
+		if (tr.ent->enemy != self)
+			tr.ent->enemy = self;
 	}
 #else
 	if ((tr.ent) && (tr.ent->Monster) && (tr.ent->health > 0) && infront(tr.ent, self))
@@ -420,7 +423,7 @@ static void Grenade_Explode (edict_t *ent)
 
 	Vec3Copy (ent->state.origin, origin);
 
-	Vec3MA (ent->state.origin, -0.02, ent->velocity, origin);
+	Vec3MA (ent->state.origin, -0.02f, ent->velocity, origin);
 	if (ent->waterlevel)
 	{
 		if (ent->groundentity)
@@ -571,7 +574,7 @@ void rocket_touch (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t 
 		PlayerNoise(dynamic_cast<CPlayerEntity*>(ent->owner->Entity), ent->state.origin, PNOISE_IMPACT);
 
 	// calculate position for the explosion entity
-	Vec3MA (ent->state.origin, -0.02, ent->velocity, origin);
+	Vec3MA (ent->state.origin, -0.02f, ent->velocity, origin);
 
 	if (other->takedamage)
 	{
@@ -765,7 +768,7 @@ void bfg_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *s
 	PlaySoundFrom (self, CHAN_VOICE, SoundIndex ("weapons/bfg__x1b.wav"));
 	self->solid = SOLID_NOT;
 	self->touch = NULL;
-	Vec3MA (self->state.origin, -0.1, self->velocity, self->state.origin);
+	Vec3MA (self->state.origin, -0.1f, self->velocity, self->state.origin);
 	Vec3Clear (self->velocity);
 	self->state.modelIndex = ModelIndex ("sprites/s_bfg3.sp2");
 	self->state.frame = 0;

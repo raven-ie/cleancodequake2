@@ -46,7 +46,7 @@ argv(0) god
 void Cmd_God_f (CPlayerEntity *ent)
 {
 	ent->gameEntity->flags ^= FL_GODMODE;
-	ClientPrintf (ent->gameEntity, PRINT_HIGH, "God mode %s\n", (!(ent->gameEntity->flags & FL_GODMODE)) ? "off" : "on");
+	ent->PrintToClient (PRINT_HIGH, "God mode %s\n", (!(ent->gameEntity->flags & FL_GODMODE)) ? "off" : "on");
 }
 
 
@@ -62,7 +62,7 @@ argv(0) notarget
 void Cmd_Notarget_f (CPlayerEntity *ent)
 {
 	ent->gameEntity->flags ^= FL_NOTARGET;
-	ClientPrintf (ent->gameEntity, PRINT_HIGH, "Notarget %s\n", (!(ent->gameEntity->flags & FL_NOTARGET)) ? "off" : "on");
+	ent->PrintToClient (PRINT_HIGH, "Notarget %s\n", (!(ent->gameEntity->flags & FL_NOTARGET)) ? "off" : "on");
 }
 
 
@@ -76,7 +76,7 @@ argv(0) noclip
 void Cmd_Noclip_f (CPlayerEntity *ent)
 {
 	ent->gameEntity->movetype = (ent->gameEntity->movetype == MOVETYPE_NOCLIP) ? MOVETYPE_WALK : MOVETYPE_NOCLIP;
-	ClientPrintf (ent->gameEntity, PRINT_HIGH, "Noclip %s\n", (ent->gameEntity->movetype == MOVETYPE_NOCLIP) ? "on" : "off");
+	ent->PrintToClient (PRINT_HIGH, "Noclip %s\n", (ent->gameEntity->movetype == MOVETYPE_NOCLIP) ? "on" : "off");
 }
 
 /*
@@ -179,7 +179,7 @@ void Cmd_Players_f (CPlayerEntity *ent)
 		Q_strcatz (large, small, MAX_INFO_STRING);
 	}
 
-	ClientPrintf (ent->gameEntity, PRINT_HIGH, "%s\n%i players\n", large, count);
+	ent->PrintToClient (PRINT_HIGH, "%s\n%i players\n", large, count);
 
 	delete[] index;
 }
@@ -203,28 +203,28 @@ void Cmd_Wave_f (CPlayerEntity *ent)
 	switch (ArgGeti(1))
 	{
 	case 0:
-		ClientPrintf (ent->gameEntity, PRINT_HIGH, "flipoff\n");
+		ent->PrintToClient (PRINT_HIGH, "flipoff\n");
 		ent->State.SetFrame (FRAME_flip01-1);
 		ent->Client.anim_end = FRAME_flip12;
 		break;
 	case 1:
-		ClientPrintf (ent->gameEntity, PRINT_HIGH, "salute\n");
+		ent->PrintToClient (PRINT_HIGH, "salute\n");
 		ent->State.SetFrame (FRAME_salute01-1);
 		ent->Client.anim_end = FRAME_salute11;
 		break;
 	case 2:
-		ClientPrintf (ent->gameEntity, PRINT_HIGH, "taunt\n");
+		ent->PrintToClient (PRINT_HIGH, "taunt\n");
 		ent->State.SetFrame (FRAME_taunt01-1);
 		ent->Client.anim_end = FRAME_taunt17;
 		break;
 	case 3:
-		ClientPrintf (ent->gameEntity, PRINT_HIGH, "wave\n");
+		ent->PrintToClient (PRINT_HIGH, "wave\n");
 		ent->State.SetFrame (FRAME_wave01-1);
 		ent->Client.anim_end = FRAME_wave11;
 		break;
 	case 4:
 	default:
-		ClientPrintf (ent->gameEntity, PRINT_HIGH, "point\n");
+		ent->PrintToClient (PRINT_HIGH, "point\n");
 		ent->State.SetFrame (FRAME_point01-1);
 		ent->Client.anim_end = FRAME_point12;
 		break;
@@ -246,7 +246,7 @@ bool CheckFlood(CPlayerEntity *ent)
 	{
         if (level.framenum < ent->Client.flood_locktill)
 		{
-			ClientPrintf(ent->gameEntity, PRINT_HIGH, "You can't talk for %d more seconds\n",
+			ent->PrintToClient (PRINT_HIGH, "You can't talk for %d more seconds\n",
 				(int)((ent->Client.flood_locktill - level.framenum)/10));
             return true;
         }
@@ -257,7 +257,7 @@ bool CheckFlood(CPlayerEntity *ent)
 			((level.framenum - ent->Client.flood_when[i])/10) < flood_persecond->Integer())
 		{
 			ent->Client.flood_locktill = level.framenum + (flood_waitdelay->Float() * 10);
-			ClientPrintf(ent->gameEntity, PRINT_CHAT, "Flood protection:  You can't talk for %d seconds.\n",
+			ent->PrintToClient (PRINT_CHAT, "Flood protection:  You can't talk for %d seconds.\n",
 				flood_waitdelay->Integer());
             return true;
         }
@@ -279,7 +279,7 @@ void Cmd_Say_f (CPlayerEntity *ent, bool team, bool arg0)
 
 	if (Bans.IsSquelched(ent->Client.pers.IP) || Bans.IsSquelched(ent->Client.pers.netname))
 	{
-		ClientPrintf (ent->gameEntity, PRINT_HIGH, "You are squelched and may not talk.\n");
+		ent->PrintToClient (PRINT_HIGH, "You are squelched and may not talk.\n");
 		return;
 	}
 
@@ -319,14 +319,14 @@ void Cmd_Say_f (CPlayerEntity *ent, bool team, bool arg0)
 		return;
 
 	if (dedicated->Integer())
-		ClientPrintf(NULL, PRINT_CHAT, "%s", text);
+		Com_Printf(PRINT_CHAT, "%s", text);
 
 	for (j = 1; j <= game.maxclients; j++)
 	{
 		CPlayerEntity *other = dynamic_cast<CPlayerEntity*>(g_edicts[j].Entity);
 		if (!other->IsInUse())
 			continue;
-		ClientPrintf(other->gameEntity, PRINT_CHAT, "%s", text);
+		other->PrintToClient (PRINT_CHAT, "%s", text);
 	}
 }
 
@@ -357,7 +357,7 @@ void Cmd_PlayerList_f(CPlayerEntity *ent)
 			e2->Client.resp.spectator ? " (spectator)" : "");
 		if (strlen(text) + strlen(st) > sizeof(text) - 50) {
 			Q_snprintfz (text+strlen(text), sizeof(text), "And more...\n");
-			ClientPrintf(ent->gameEntity, PRINT_HIGH, "%s", text);
+			ent->PrintToClient (PRINT_HIGH, "%s", text);
 			return;
 		}
 		Q_strcatz(text, st, sizeof(text));
@@ -375,12 +375,12 @@ void Cmd_PlayerList_f(CPlayerEntity *ent)
 			e2->Client.resp.spectator ? " (spectator)" : "");
 		if (strlen(text) + strlen(st) > sizeof(text) - 50) {
 			Q_snprintfz (text+strlen(text), sizeof(text), "And more...\n");
-			ClientPrintf(ent->gameEntity, PRINT_HIGH, "%s", text);
+			ent->PrintToClient (PRINT_HIGH, "%s", text);
 			return;
 		}
 		Q_strcatz(text, st, sizeof(text));
 	}
-	ClientPrintf(ent->gameEntity, PRINT_HIGH, "%s", text);
+	ent->PrintToClient (PRINT_HIGH, "%s", text);
 }
 
 void GCmd_Say_f (CPlayerEntity *ent)
@@ -402,11 +402,8 @@ void Cmd_Test_f (CPlayerEntity *ent)
 
 	gi.configstring (CS_SOUNDS+70, sound);
 	PlaySoundFrom (ent->gameEntity, CHAN_AUTO, 70, 1, ATTN_NONE);*/
-	char *buffer;
-
-	FS_LoadFile ("config.cfg", (void**)&buffer, true);
-
-	FS_FreeFile (buffer);
+	vec3f or = ent->State.GetOrigin();
+	ent->PrintToClient (PRINT_HIGH, "%f %f %f\n", or.X, or.Y, or.Z);
 }
 
 void GCTFSay_Team (CPlayerEntity *ent);

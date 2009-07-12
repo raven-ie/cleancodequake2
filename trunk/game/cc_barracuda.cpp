@@ -33,6 +33,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 #include "m_flipper.h"
+#include "cc_barracuda.h"
 
 CBarracudaShark Monster_Shark;
 
@@ -185,12 +186,12 @@ CAnim FlipperMovePain1 (FRAME_flppn201, FRAME_flppn205, FlipperFramesPain1, &CMo
 void CBarracudaShark::Bite ()
 {
 	vec3_t	aim = {MELEE_DISTANCE, 0, 0};
-	fire_hit (Entity, aim, 5, 0);
+	CMeleeWeapon::Fire (Entity, aim, 5, 0);
 }
 
 void CBarracudaShark::PreAttack ()
 {
-	PlaySoundFrom (Entity, CHAN_WEAPON, SoundChomp);
+	Entity->PlaySound (CHAN_WEAPON, SoundChomp);
 }
 
 CFrame FlipperFramesAttack [] =
@@ -223,15 +224,15 @@ void CBarracudaShark::Melee()
 	CurrentMove = &FlipperMoveAttack;
 }
 
-void CBarracudaShark::Pain (edict_t *other, float kick, int damage)
+void CBarracudaShark::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->health < (Entity->max_health / 2))
-		Entity->state.skinNum = 1;
+	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+		Entity->State.SetSkinNum(1);
 
-	if (level.framenum < Entity->pain_debounce_time)
+	if (level.framenum < Entity->gameEntity->pain_debounce_time)
 		return;
 
-	Entity->pain_debounce_time = level.framenum + 30;
+	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
 	
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
@@ -239,11 +240,11 @@ void CBarracudaShark::Pain (edict_t *other, float kick, int damage)
 	switch ((rand() + 1) % 2)
 	{
 	case 0:
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain1);
+		Entity->PlaySound (CHAN_VOICE, SoundPain1);
 		CurrentMove = &FlipperMovePain1;
 		break;
 	case 1:
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundPain2);
+		Entity->PlaySound (CHAN_VOICE, SoundPain2);
 		CurrentMove = &FlipperMovePain2;
 		break;
 	}
@@ -251,12 +252,12 @@ void CBarracudaShark::Pain (edict_t *other, float kick, int damage)
 
 void CBarracudaShark::Dead ()
 {
-	Vec3Set (Entity->mins, -16, -16, -24);
-	Vec3Set (Entity->maxs, 16, 16, -8);
-	Entity->movetype = MOVETYPE_TOSS;
-	Entity->svFlags |= SVF_DEADMONSTER;
-	Entity->nextthink = 0;
-	gi.linkentity (Entity);
+	Entity->SetMins (vec3f(-16, -16, -24));
+	Entity->SetMaxs (vec3f(16, 16, -8));
+	Entity->TossPhysics = true;
+	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
+	Entity->NextThink = 0;
+	Entity->Link ();
 }
 
 CFrame FlipperFramesDeath [] =
@@ -327,31 +328,31 @@ CAnim FlipperMoveDeath (FRAME_flpdth01, FRAME_flpdth56, FlipperFramesDeath, Conv
 
 void CBarracudaShark::Sight ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundSight);
+	Entity->PlaySound (CHAN_VOICE, SoundSight);
 }
 
-void CBarracudaShark::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
+void CBarracudaShark::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
 // check for gib
-	if (Entity->health <= Entity->gib_health)
+	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
 	{
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
+		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
-			ThrowGib (Entity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
+			ThrowGib (Entity->gameEntity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
 		for (int n= 0; n < 2; n++)
-			ThrowGib (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		ThrowHead (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		Entity->deadflag = DEAD_DEAD;
+			ThrowGib (Entity->gameEntity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		Entity->ThrowHead (gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		Entity->gameEntity->deadflag = DEAD_DEAD;
 		return;
 	}
 
-	if (Entity->deadflag == DEAD_DEAD)
+	if (Entity->gameEntity->deadflag == DEAD_DEAD)
 		return;
 
 // regular death
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundDeath);
-	Entity->deadflag = DEAD_DEAD;
-	Entity->takedamage = DAMAGE_YES;
+	Entity->PlaySound (CHAN_VOICE, SoundDeath);
+	Entity->gameEntity->deadflag = DEAD_DEAD;
+	Entity->gameEntity->takedamage = DAMAGE_YES;
 	CurrentMove = &FlipperMoveDeath;
 }
 
@@ -368,19 +369,19 @@ void CBarracudaShark::Spawn ()
 	SoundSearch		= SoundIndex ("flipper/flpsrch1.wav");
 	SoundSight		= SoundIndex ("flipper/flpsght1.wav");
 
-	Entity->movetype = MOVETYPE_STEP;
-	Entity->solid = SOLID_BBOX;
-	Entity->state.modelIndex = ModelIndex ("models/monsters/flipper/tris.md2");
-	Vec3Set (Entity->mins, -16, -16, 0);
-	Vec3Set (Entity->maxs, 16, 16, 32);
+	Entity->TossPhysics = false;
+	Entity->SetSolid (SOLID_BBOX);
+	Entity->State.SetModelIndex (ModelIndex ("models/monsters/flipper/tris.md2"));
+	Entity->SetMins (vec3f(-16, -16, 0));
+	Entity->SetMaxs (vec3f(16, 16, 32));
 
-	Entity->health = 50;
-	Entity->gib_health = -30;
-	Entity->mass = 100;
+	Entity->gameEntity->health = 50;
+	Entity->gameEntity->gib_health = -30;
+	Entity->gameEntity->mass = 100;
 
 	MonsterFlags = (MF_HAS_MELEE | MF_HAS_SIGHT);
 
-	gi.linkentity (Entity);
+	Entity->Link ();
 	CurrentMove = &FlipperMoveStand;	
 
 	SwimMonsterStart ();

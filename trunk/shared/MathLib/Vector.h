@@ -574,10 +574,10 @@ public:
 	inline vec4b operator +(const vec4b &Vec) const { return vec4b(X+Vec[0], Y+Vec[1], Z+Vec[2], W+Vec[3]); }
 	inline vec4b operator +=(const vec4b &Vec)
 	{
-		X = min(X+Vec[0], 255);
-		Y = min(Y+Vec[1], 255);
-		Z = min(Z+Vec[2], 255);
-		W = min(W+Vec[3], 255);
+		X = Min<byte>(X+Vec[0], 255);
+		Y = Min<byte>(Y+Vec[1], 255);
+		Z = Min<byte>(Z+Vec[2], 255);
+		W = Min<byte>(W+Vec[3], 255);
 
 		return *this;
 	}
@@ -585,10 +585,10 @@ public:
 	inline vec4b operator -(const vec4b &Vec) const { return vec4b(X-Vec[0], Y-Vec[1], Z-Vec[2], W-Vec[3]); }
 	inline vec4b operator -=(const vec4b &Vec)
 	{
-		X = max(X-Vec[0], 0);
-		Y = max(Y-Vec[1], 0);
-		Z = max(Z-Vec[2], 0);
-		W = max(W-Vec[3], 0);
+		X = Max<byte>(X-Vec[0], 0);
+		Y = Max<byte>(Y-Vec[1], 0);
+		Z = Max<byte>(Z-Vec[2], 0);
+		W = Max<byte>(W-Vec[3], 0);
 
 		return *this;
 	}

@@ -51,14 +51,37 @@ enum
 	ROLL		// fall over
 };
 
-#define DEG2RAD(v) ((v) * (M_PI / 180.0f))
-#define RAD2DEG(v) ((v) * (180.0f / M_PI))
+inline float DEG2RAD (const float v)
+{
+	return v * (M_PI / 180.0f);
+}
 
-#define ANGLE2SHORT(x)	((int)((x)*65536/360) & 65535)
-#define SHORT2ANGLE(x)	((x)*(360.0f/65536))
+inline float RAD2DEG (const float v)
+{
+	return v * (180.0f / M_PI);
+}
 
-#define ANGLE2BYTE(x)	((int)((x)*256/360) & 255)
-#define BYTE2ANGLE(x)	((x)*(360.0f/256))
+
+inline int16 ANGLE2SHORT (float x)
+{
+	return ((int)(x*65536/360) & 65535);
+}
+
+inline float SHORT2ANGLE (int16 x)
+{
+	return (x*(360.0f/65536));
+}
+
+
+inline byte ANGLE2BYTE (float x)
+{
+	return ((int)(x*256/360) & 255);
+}
+
+inline float BYTE2ANGLE (byte x)
+{
+	return (x*(360.0f/256));
+}
 
 // ===========================================================================
 
@@ -86,55 +109,6 @@ float		ColorNormalizeb(const float *in, byte *out);
 
 // ===========================================================================
 
-#define Vec2Add(a,b,out)		((out)[0]=(a)[0]+(b)[0],(out)[1]=(a)[1]+(b)[1])
-#define Vec2Clear(in)			(*(int *)&(in)[0]=0,*(int *)&(in)[1]=0)
-#define Vec2Compare(v1,v2)		((v1)[0]==(v2)[0] && (v1)[1]==(v2)[1])
-#define Vec2Copy(a,b)			((b)[0]=(a)[0],(b)[1]=(a)[1])
-#define Vec2DistSquared(v1,v2)	(((v1)[0]-(v2)[0])*((v1)[0]-(v2)[0])+((v1)[1]-(v2)[1])*((v1)[1]-(v2)[1]))
-#define Vec2Dist(v1,v2)			(sqrtf(Vec2DistSquared((v1),(v2))))
-#define Vec2DistFast(v1,v2)		(Q_FastSqrt(Vec2DistSquared((v1),(v2))))
-#define Vec2Inverse(v)			((v)[0]=-(v)[0],(v)[1]=-(v)[1])
-#define Vec2MA(v,s,b,o)			((o)[0]=(v)[0]+(b)[0]*(s),(o)[1]=(v)[1]+(b)[1]*(s))
-#define Vec2Negate(a,b)			((b)[0]=-(a)[0],(b)[1]=-(a)[1])
-#define Vec2Scale(in,s,out)		((out)[0]=(in)[0]*(s),(out)[1]=(in)[1]*(s))
-#define Vec2Set(v,x,y)			((v)[0]=(x),(v)[1]=(y))
-#define Vec2Subtract(a,b,c)		((c)[0]=(a)[0]-(b)[0],(c)[1]=(a)[1]-(b)[1])
-
-#define CrossProduct(v1,v2,cr)	((cr)[0]=(v1)[1]*(v2)[2]-(v1)[2]*(v2)[1],(cr)[1]=(v1)[2]*(v2)[0]-(v1)[0]*(v2)[2],(cr)[2]=(v1)[0]*(v2)[1]-(v1)[1]*(v2)[0])
-#define DotProduct(x,y)			((x)[0]*(y)[0]+(x)[1]*(y)[1]+(x)[2]*(y)[2])
-
-#define Vec3Add(a,b,out)		((out)[0]=(a)[0]+(b)[0],(out)[1]=(a)[1]+(b)[1],(out)[2]=(a)[2]+(b)[2])
-#define Vec3Average(a,b,c)		((c)[0]=((a)[0]+(b)[0])*0.5f,(c)[1]=((a)[1]+(b)[1])*0.5f, (c)[2]=((a)[2]+(b)[2])*0.5f)
-#define Vec3Clear(a)			(*(int *)&(a)[0]=0,*(int *)&(a)[1]=0,*(int *)&(a)[2]=0)
-#define Vec3Compare(v1,v2)		((v1)[0]==(v2)[0] && (v1)[1]==(v2)[1] && (v1)[2]==(v2)[2])
-#define Vec3Copy(a,b)			((b)[0]=(a)[0],(b)[1]=(a)[1],(b)[2]=(a)[2])
-#define Vec3DistSquared(v1,v2)	((((v1)[0]-(v2)[0])*((v1)[0]-(v2)[0])+((v1)[1]-(v2)[1])*((v1)[1]-(v2)[1])+((v1)[2]-(v2)[2])*((v1)[2]-(v2)[2])))
-#define Vec3Dist(v1,v2)			(sqrtf(Vec3DistSquared((v1),(v2))))
-#define Vec3DistFast(v1,v2)		(Q_FastSqrt(Vec3DistSquared((v1),(v2))))
-#define Vec3Inverse(v)			((v)[0]=-(v)[0],(v)[1]=-(v)[1],(v)[2]=-(v)[2])
-#define Vec3Length(v)			(sqrtf(DotProduct((v),(v))))
-#define Vec3LengthFast(v)		(Q_FastSqrt(DotProduct((v),(v))))
-#define Vec3MA(v,s,b,o)			((o)[0]=(v)[0]+(b)[0]*(s),(o)[1]=(v)[1]+(b)[1]*(s),(o)[2]=(v)[2]+(b)[2]*(s))
-#define Vec3Negate(a,b)			((b)[0]=-(a)[0],(b)[1]=-(a)[1],(b)[2]=-(a)[2])
-#define Vec3Scale(in,s,out)		((out)[0]=(in)[0]*(s),(out)[1]=(in)[1]*(s),(out)[2]=(in)[2]*(s))
-#define Vec3Set(v,x,y,z)		((v)[0]=(x),(v)[1]=(y),(v)[2]=(z))
-#define Vec3Subtract(a,b,c)		((c)[0]=(a)[0]-(b)[0],(c)[1]=(a)[1]-(b)[1],(c)[2]=(a)[2]-(b)[2])
-
-#define Vec4Add(a,b,c)			((c)[0]=(a)[0]+(b)[0],(c)[1]=(a)[1]+(b)[1],(c)[2]=(a)[2]+(b)[2],(c)[3]=(a)[3]+(b)[3])
-#define Vec4Average(a,b,c)		((c)[0]=((a)[0]+(b)[0])*0.5f,(c)[1]=((a)[1]+(b)[1])*0.5f,(c)[2]=((a)[2]+(b)[2])*0.5f,(c)[3]=((a)[3]+(b)[3])*0.5f)
-#define Vec4Clear(a)			(*(int *)&(a)[0]=0,*(int *)&(a)[1]=0,*(int *)&(a)[2]=0,*(int *)&(a)[3]=0)
-#define Vec4Copy(a,b)			((b)[0]=(a)[0],(b)[1]=(a)[1],(b)[2]=(a)[2],(b)[3]=(a)[3])
-#define Vec4Identity(a)			((a)[0]=(a)[1]=(a)[2]=(a)[3]=0)
-#define Vec4MA(v,s,b,o)			((o)[0]=(v)[0]+(b)[0]*(s),(o)[1]=(v)[1]+(b)[1]*(s),(o)[2]=(v)[2]+(b)[2]*(s),(o)[3]=(v)[3]+(b)[3]*(s))
-#define Vec4Negate(a,b)			((b)[0]=-(a)[0],(b)[1]=-(a)[1],(b)[2]=-(a)[2],(b)[3]=-(a)[3])
-#define Vec4Scale(in,s,out)		((out)[0]=(in)[0]*(s),(out)[1]=(in)[1]*(s),(out)[2]=(in)[2]*(s),(out)[3]=(in)[3]*(s))
-#define Vec4Set(v,u,x,y,z)		((v)[0]=(u),(v)[1]=(x),(v)[2]=(y),(v)[3]=(z))
-#define Vec4Subtract(a,b,c)		((c)[0]=(a)[0]-(b)[0],(c)[1]=(a)[1]-(b)[1],(c)[2]=(a)[2]-(b)[2],(c)[3]=(a)[3]-(b)[3])
-
-// ===========================================================================
-
-#define Q_rint(x)	((x) < 0 ? ((int)((x)-0.5f)) : ((int)((x)+0.5f)))
-
 #ifdef id386
 long	Q_ftol (float f);
 float	Q_FastSqrt (float value);
@@ -142,6 +116,381 @@ float	Q_FastSqrt (float value);
 # define Q_ftol(f) ((long)(f))
 # define Q_FastSqrt(v) (sqrt(v))
 #endif // id386
+
+// Template functions
+template <class CType, int numElements>
+inline void VecxAdd (const CType a, const CType b, CType c)
+{
+	for (int i = 0; i < numElements; i++)
+		c[i] = a[i] + b[i];
+}
+
+template <class CType, int numElements>
+inline void VecxAverage (const CType a, const CType b, CType c)
+{
+	for (int i = 0; i < numElements; i++)
+		c[i] = (a[i] + b[i])*0.5f;
+}
+
+template <class CType, int numElements>
+inline void VecxClear (CType a)
+{
+	for (int i = 0; i < numElements; i++)
+		*(int*)&a[i] = 0;
+}
+
+template <class CType, int numElements>
+inline bool VecxCompare (const CType a, const CType b)
+{
+	for (int i = 0; i < numElements; i++)
+	{
+		if (a[i] != b[i])
+			return false;
+	}
+	return true;
+}
+
+template <class CType, int numElements>
+inline void VecxCopy (const CType a, CType b)
+{
+	for (int i = 0; i < numElements; i++)
+		b[i] = a[i];
+}
+
+template <class CType, int numElements>
+inline void VecxIdentity (CType a)
+{
+	for (int i = 0; i < numElements; i++)
+		a[i] = 0;
+}
+
+template <class CType, int numElements>
+inline void VecxInverse (CType a)
+{
+	for (int i = 0; i < numElements; i++)
+		a[i] = -a[i];
+}
+
+template <class CType, int numElements>
+inline void VecxMA (const CType v, const float scale, const CType b, CType o)
+{
+	for (int i = 0; i < numElements; i++)
+		o[i] = v[i]+b[i]*scale;
+}
+
+template <class CType, int numElements>
+inline void VecxNegate (const CType a, CType b)
+{
+	for (int i = 0; i < numElements; i++)
+		b[i] = -a[i];
+}
+
+template <class CType, int numElements>
+inline void VecxScale (const CType in, const float scale, CType out)
+{
+	for (int i = 0; i < numElements; i++)
+		out[i] = in[i]*scale;
+}
+
+template <class CType, int numElements>
+inline void VecxSubtract (const CType a, const CType b, CType c)
+{
+	for (int i = 0; i < numElements; i++)
+		c[i] = a[i]-b[i];
+}
+
+template <class CType, int numElements>
+inline float VecxDistSquared (const CType v1, const CType v2)
+{
+	float returnValue = 0;
+	for (int i = 0; i < numElements; i++)
+		returnValue += (v1[i] - v2[i]) * (v1[i] - v2[i]);
+	return returnValue;
+}
+
+template <class CType, int numElements>
+inline float VecxDist (const CType v1, const CType v2)
+{
+	return sqrtf(VecxDistSquared<CType, numElements>(v1, v2));
+}
+
+template <class CType, int numElements>
+inline float VecxDistFast (const CType v1, const CType v2)
+{
+	return Q_FastSqrt(VecxDistSquared<CType, numElements>(v1, v2));
+}
+
+template <class CType, int numElements>
+inline float DotxProduct (const CType x, const CType y)
+{
+	float returnValue = 0;
+	for (int i = 0; i < numElements; i++)
+		returnValue += (x[i] * y[i]);
+	return returnValue;
+}
+
+// vec2_t manipulation
+inline float Dot2Product (const vec2_t x, const vec2_t y)
+{
+	return DotxProduct<vec2_t, 2>(x, y);
+}
+
+inline void Vec2Add (const vec2_t a, const vec2_t b, vec2_t out)
+{
+	VecxAdd <vec2_t, 2> (a, b, out);
+}
+
+inline void Vec2Clear (vec2_t in)
+{
+	VecxClear <vec2_t, 2> (in);
+}
+
+inline bool Vec2Compare (const vec2_t v1, const vec2_t v2)
+{
+	return VecxCompare<vec2_t, 2> (v1, v2);
+}
+
+inline void Vec2Copy (const vec2_t a, vec2_t b)
+{
+	VecxCopy <vec2_t, 2> (a, b);
+}
+
+inline float Vec2DistSquared (const vec2_t v1, const vec2_t v2)
+{
+	return VecxDistSquared<vec2_t, 2> (v1, v2);
+}
+
+inline float Vec2Dist (const vec2_t v1, const vec2_t v2)
+{
+	return VecxDist<vec2_t, 2>(v1, v2);
+}
+
+inline float Vec2DistFast (const vec2_t v1, const vec2_t v2)
+{
+	return VecxDistFast<vec2_t, 2>(v1, v2);
+}
+
+inline void Vec2Identity (vec2_t in)
+{
+	VecxIdentity<vec2_t, 2> (in);
+}
+
+inline void Vec2Inverse (vec2_t v)
+{
+	VecxClear <vec2_t, 2> (v);
+}
+
+inline void Vec2MA (const vec2_t v, const float s, const vec2_t b, vec2_t o)
+{
+	VecxMA <vec2_t, 2> (v, s, b, o);
+}
+
+inline void Vec2Negate (const vec2_t a, vec2_t b)
+{
+	VecxNegate <vec2_t, 2> (a, b);
+}
+
+inline void Vec2Scale (const vec2_t in, const float s, vec2_t out)
+{
+	VecxScale <vec2_t, 2> (in, s, out);
+}
+
+inline void Vec2Set (vec2_t v, const float x, const float y)
+{
+	v[0] = x;
+	v[1] = y;
+}
+
+inline void Vec2Subtract (const vec2_t a, const vec2_t b, vec2_t c)
+{
+	VecxSubtract <vec2_t, 2> (a, b, c);
+}
+
+// vec3_t routines
+inline void CrossProduct (const vec3_t v1, const vec3_t v2, vec3_t cr)
+{
+	cr[0] = v1[1] * v2[2] - v1[2] * v2[1];
+	cr[1] = v1[2] * v2[0] - v1[0] * v2[2];
+	cr[2] = v1[0] * v2[1] - v1[1] * v2[0];
+}
+
+inline float Dot3Product (const vec3_t x, const vec3_t y)
+{
+	return DotxProduct<vec3_t, 3>(x, y);
+}
+
+inline void Vec3Add (const vec3_t a, const vec3_t b, vec3_t out)
+{
+	VecxAdd<vec3_t, 3>(a, b, out);
+}
+
+inline void Vec3Average (const vec3_t a, const vec3_t b, vec3_t c)
+{
+	VecxAverage<vec3_t, 3>(a, b, c);
+}
+
+inline void Vec3Clear (vec3_t a)
+{
+	VecxClear<vec3_t, 3>(a);
+}
+
+inline bool Vec3Compare (const vec3_t v1, const vec3_t v2)
+{
+	return VecxCompare<vec3_t, 3>(v1, v2);
+}
+
+inline void Vec3Copy (const vec3_t a, vec3_t b)
+{
+	VecxCopy<vec3_t, 3>(a, b);
+}
+
+inline float Vec3DistSquared (const vec3_t v1, const vec3_t v2)
+{
+	return VecxDistSquared<vec3_t, 3>(v1, v2);
+}
+
+inline float Vec3Dist (const vec3_t v1, const vec3_t v2)
+{
+	return VecxDist<vec3_t, 3>(v1, v2);
+}
+
+inline float Vec3DistFast (const vec3_t v1, const vec3_t v2)
+{
+	return VecxDistFast<vec3_t, 3>(v1, v2);
+}
+
+inline void Vec3Identity (vec3_t in)
+{
+	VecxIdentity<vec3_t, 3> (in);
+}
+
+inline void Vec3Inverse (vec3_t v)
+{
+	VecxInverse<vec3_t, 3> (v);
+}
+
+inline float Vec3Length (const vec3_t v)
+{
+	return sqrtf(Dot3Product(v,v));
+}
+
+inline float Vec3LengthFast (const vec3_t v)
+{
+	return Q_FastSqrt(Dot3Product(v,v));
+}
+
+inline void Vec3MA (const vec3_t v, float s, const vec3_t b, vec3_t o)
+{
+	VecxMA<vec3_t, 3>(v, s, b, o);
+}
+
+inline void Vec3Negate (const vec3_t a, vec3_t b)
+{
+	VecxNegate<vec3_t, 3>(a, b);
+}
+
+inline void Vec3Scale (const vec3_t in, float s, vec3_t out)
+{
+	VecxScale<vec3_t, 3>(in, s, out);
+}
+
+inline void Vec3Set (vec3_t v, float x, float y, float z)
+{
+	v[0] = x;
+	v[1] = y;
+	v[2] = z;
+}
+
+inline void Vec3Subtract (const vec3_t a, const vec3_t b, vec3_t c)
+{
+	VecxSubtract<vec3_t, 3>(a, b, c);
+}
+
+// vec4_t routines
+
+// vec2_t manipulation
+inline float Dot4Product (const vec4_t x, const vec4_t y)
+{
+	return DotxProduct<vec4_t, 4>(x, y);
+}
+
+inline void Vec4Add (const vec4_t a, const vec4_t b, vec4_t out)
+{
+	VecxAdd <vec4_t, 4> (a, b, out);
+}
+
+inline void Vec4Clear (vec4_t in)
+{
+	VecxClear <vec4_t, 4> (in);
+}
+
+inline bool Vec4Compare (const vec4_t v1, const vec4_t v2)
+{
+	return VecxCompare<vec4_t, 4> (v1, v2);
+}
+
+inline void Vec4Copy (const vec4_t a, vec4_t b)
+{
+	VecxCopy <vec4_t, 4> (a, b);
+}
+
+inline float Vec4DistSquared (const vec4_t v1, const vec4_t v2)
+{
+	return VecxDistSquared<vec4_t, 4> (v1, v2);
+}
+
+inline float Vec4Dist (const vec4_t v1, const vec4_t v2)
+{
+	return VecxDist<vec4_t, 4>(v1, v2);
+}
+
+inline float Vec4DistFast (const vec4_t v1, const vec4_t v2)
+{
+	return VecxDistFast<vec4_t, 4>(v1, v2);
+}
+
+inline void Vec4Identity (vec4_t in)
+{
+	VecxIdentity<vec4_t, 4> (in);
+}
+
+inline void Vec4Inverse (vec4_t v)
+{
+	VecxClear <vec4_t, 4> (v);
+}
+
+inline void Vec4MA (const vec4_t v, const float s, const vec4_t b, vec4_t o)
+{
+	VecxMA <vec4_t, 4> (v, s, b, o);
+}
+
+inline void Vec4Negate (const vec4_t a, vec4_t b)
+{
+	VecxNegate <vec4_t, 4> (a, b);
+}
+
+inline void Vec4Scale (const vec4_t in, const float s, vec4_t out)
+{
+	VecxScale <vec4_t, 4> (in, s, out);
+}
+
+inline void Vec4Set (vec4_t v, const float x, const float y)
+{
+	v[0] = x;
+	v[1] = y;
+}
+
+inline void Vec4Subtract (const vec4_t a, const vec4_t b, vec4_t c)
+{
+	VecxSubtract <vec4_t, 4> (a, b, c);
+}
+
+// ===========================================================================
+
+inline int Q_rint (float x)
+{
+	return ((x) < 0 ? ((int)((x)-0.5f)) : ((int)((x)+0.5f)));
+}
 
 inline void Q_SinCosf(const float X, float *Sin, float *Cos)
 {

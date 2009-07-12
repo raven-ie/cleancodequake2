@@ -21,11 +21,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifdef CLEANCTF_ENABLED
 #include "m_player.h"
 
-extern CTech *Regeneration;
-extern CTech *Haste;
-extern CTech *Strength;
-extern CTech *Resistance;
-
 void EndDMLevel (void);
 
 ctfgame_t ctfgame;
@@ -349,15 +344,15 @@ void CTFFragBonuses(CPlayerEntity *targ, CPlayerEntity *attacker)
 		return; // whoever died isn't on a team
 
 	// same team, if the flag at base, check if he has the enemy flag
-	flag_item = (targ->Client.resp.ctf_team == CTF_TEAM1) ? RedFlag : BlueFlag;
-	enemy_flag_item = (flag_item == RedFlag) ? BlueFlag : RedFlag;
+	flag_item = (targ->Client.resp.ctf_team == CTF_TEAM1) ? NItems::RedFlag : NItems::BlueFlag;
+	enemy_flag_item = (flag_item == NItems::RedFlag) ? NItems::BlueFlag : NItems::RedFlag;
 
 	// did the attacker frag the flag carrier?
 	if (targ->Client.pers.Inventory.Has(enemy_flag_item))
 	{
 		attacker->Client.resp.ctf_lastfraggedcarrier = level.framenum;
 		attacker->Client.resp.score += CTF_FRAG_CARRIER_BONUS;
-		ClientPrintf(attacker->gameEntity, PRINT_MEDIUM, "BONUS: %d points for fragging enemy flag carrier.\n",
+		attacker->PrintToClient (PRINT_MEDIUM, "BONUS: %d points for fragging enemy flag carrier.\n",
 			CTF_FRAG_CARRIER_BONUS);
 
 		// the target had the flag, clear the hurt carrier
@@ -480,9 +475,9 @@ void CTFCheckHurtCarrier(CPlayerEntity *targ, CPlayerEntity *attacker)
 	CBaseItem *flag_item;
 
 	if (targ->Client.resp.ctf_team == CTF_TEAM1)
-		flag_item = BlueFlag;
+		flag_item = NItems::BlueFlag;
 	else
-		flag_item = RedFlag;
+		flag_item = NItems::RedFlag;
 
 	if (targ->Client.pers.Inventory.Has(flag_item) &&
 		targ->Client.resp.ctf_team != attacker->Client.resp.ctf_team)
@@ -573,22 +568,12 @@ void CTFDeadDropFlag(CPlayerEntity *self)
 	}
 }
 
-bool CTFDrop_Flag(edict_t *ent, CBaseItem *item)
-{
-	if (rand() & 1) 
-		ClientPrintf(ent, PRINT_HIGH, "Only lusers drop flags.\n");
-	else
-		ClientPrintf(ent, PRINT_HIGH, "Winners don't drop flags.\n");
-	return false;
-}
-
 static void CTFFlagThink(edict_t *ent)
 {
 	if (ent->solid != SOLID_NOT)
 		ent->state.frame = 173 + (((ent->state.frame - 173) + 1) % 16);
 	ent->nextthink = level.framenum + FRAMETIME;
 }
-
 
 void CTFFlagSetup (edict_t *ent)
 {
@@ -645,7 +630,7 @@ void CTFCalcScores(void)
 void CTFID_f (CPlayerEntity *ent)
 {
 	ent->Client.resp.id_state = !ent->Client.resp.id_state;
-	ClientPrintf (ent->gameEntity, PRINT_HIGH, "%s player identification display\n", (ent->Client.resp.id_state) ? "Activating" : "Deactivating");
+	ent->PrintToClient (PRINT_HIGH, "%s player identification display\n", (ent->Client.resp.id_state) ? "Activating" : "Deactivating");
 }
 
 /*------------------------------------------------------------------------*/
@@ -672,14 +657,14 @@ void CTFTeam_f (CPlayerEntity *ent)
 	t = ArgGetConcatenatedString();
 	if (!*t)
 	{
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "You are on the %s team.\n",
+		ent->PrintToClient (PRINT_HIGH, "You are on the %s team.\n",
 			CTFTeamName(ent->Client.resp.ctf_team));
 		return;
 	}
 
 	if (ctfgame.match > MATCH_SETUP)
 	{
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "Can't change teams in a match.\n");
+		ent->PrintToClient (PRINT_HIGH, "Can't change teams in a match.\n");
 		return;
 	}
 
@@ -689,13 +674,13 @@ void CTFTeam_f (CPlayerEntity *ent)
 		desired_team = CTF_TEAM2;
 	else
 	{
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "Unknown team %s.\n", t);
+		ent->PrintToClient (PRINT_HIGH, "Unknown team %s.\n", t);
 		return;
 	}
 
 	if (ent->Client.resp.ctf_team == desired_team)
 	{
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "You are already on the %s team.\n",
+		ent->PrintToClient (PRINT_HIGH, "You are already on the %s team.\n",
 			CTFTeamName(ent->Client.resp.ctf_team));
 		return;
 	}
@@ -902,7 +887,7 @@ static inline void CTFSay_Team_Armor(CPlayerEntity *who, char *buf, size_t bufSi
 	power_armor_type = who->PowerArmorType ();
 	if (power_armor_type)
 	{
-		cells = who->Client.pers.Inventory.Has(FindItem ("cells"));
+		cells = who->Client.pers.Inventory.Has(NItems::Cells);
 		if (cells)
 			Q_snprintfz(buf+strlen(buf), bufSize, "%s with %i cells ",
 				(power_armor_type == POWER_ARMOR_SCREEN) ?
@@ -1063,7 +1048,7 @@ void CTFSay_Team(CPlayerEntity *who, char *msg)
 		if (cl_ent->Client.pers.state != SVCS_SPAWNED)
 			continue;
 		if (cl_ent->Client.resp.ctf_team == who->Client.resp.ctf_team)
-			ClientPrintf(cl_ent->gameEntity, PRINT_CHAT, "(%s): %s\n", 
+			cl_ent->PrintToClient (PRINT_CHAT, "(%s): %s\n", 
 				who->Client.pers.netname, outmsg);
 	}
 }
@@ -1126,13 +1111,13 @@ bool CTFBeginElection(CPlayerEntity *ent, elect_t type, char *msg)
 	int count;
 
 	if (electpercentage->Integer() == 0) {
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "Elections are disabled, only an admin can process this action.\n");
+		ent->PrintToClient (PRINT_HIGH, "Elections are disabled, only an admin can process this action.\n");
 		return false;
 	}
 
 
 	if (ctfgame.election != ELECT_NONE) {
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "Election already in progress.\n");
+		ent->PrintToClient (PRINT_HIGH, "Election already in progress.\n");
 		return false;
 	}
 
@@ -1148,7 +1133,7 @@ bool CTFBeginElection(CPlayerEntity *ent, elect_t type, char *msg)
 
 	if (count < 2)
 	{
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "Not enough players for election.\n");
+		ent->PrintToClient (PRINT_HIGH, "Not enough players for election.\n");
 		return false;
 	}
 
@@ -1237,7 +1222,7 @@ void CTFStartMatch(void)
 		ent->Client.resp.ctf_state = 0;
 		ent->Client.resp.ghost = NULL;
 
-		CenterPrintf(ent->gameEntity, "******************\n\nMATCH HAS STARTED!\n\n******************");
+		ent->PrintToClient (PRINT_CENTER, "******************\n\nMATCH HAS STARTED!\n\n******************");
 
 		if (ent->Client.resp.ctf_team != CTF_NOTEAM)
 		{
@@ -1314,7 +1299,7 @@ void CTFWinElection(void)
 	case ELECT_ADMIN :
 		ctfgame.etarget->Client.resp.admin = true;
 		BroadcastPrintf(PRINT_HIGH, "%s has become an admin.\n", ctfgame.etarget->Client.pers.netname);
-		ClientPrintf(ctfgame.etarget->gameEntity, PRINT_HIGH, "Type 'admin' to access the adminstration menu.\n");
+		ctfgame.etarget->PrintToClient (PRINT_HIGH, "Type 'admin' to access the adminstration menu.\n");
 		break;
 
 	case ELECT_MAP :
@@ -1331,17 +1316,17 @@ void CTFVoteYes(CPlayerEntity *ent)
 {
 	if (ctfgame.election == ELECT_NONE)
 	{
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "No election is in progress.\n");
+		ent->PrintToClient (PRINT_HIGH, "No election is in progress.\n");
 		return;
 	}
 	if (ent->Client.resp.voted)
 	{
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "You already voted.\n");
+		ent->PrintToClient (PRINT_HIGH, "You already voted.\n");
 		return;
 	}
 	if (ctfgame.etarget == ent)
 	{
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "You can't vote for yourself.\n");
+		ent->PrintToClient (PRINT_HIGH, "You can't vote for yourself.\n");
 		return;
 	}
 
@@ -1362,15 +1347,15 @@ void CTFVoteYes(CPlayerEntity *ent)
 void CTFVoteNo(CPlayerEntity *ent)
 {
 	if (ctfgame.election == ELECT_NONE) {
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "No election is in progress.\n");
+		ent->PrintToClient (PRINT_HIGH, "No election is in progress.\n");
 		return;
 	}
 	if (ent->Client.resp.voted) {
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "You already voted.\n");
+		ent->PrintToClient (PRINT_HIGH, "You already voted.\n");
 		return;
 	}
 	if (ctfgame.etarget == ent) {
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "You can't vote for yourself.\n");
+		ent->PrintToClient (PRINT_HIGH, "You can't vote for yourself.\n");
 		return;
 	}
 
@@ -1388,19 +1373,19 @@ void CTFReady(CPlayerEntity *ent)
 
 	if (ent->Client.resp.ctf_team == CTF_NOTEAM)
 	{
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "Pick a team first (hit <TAB> for menu)\n");
+		ent->PrintToClient (PRINT_HIGH, "Pick a team first (hit <TAB> for menu)\n");
 		return;
 	}
 
 	if (ctfgame.match != MATCH_SETUP)
 	{
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "A match is not being setup.\n");
+		ent->PrintToClient (PRINT_HIGH, "A match is not being setup.\n");
 		return;
 	}
 
 	if (ent->Client.resp.ready)
 	{
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "You have already commited.\n");
+		ent->PrintToClient (PRINT_HIGH, "You have already commited.\n");
 		return;
 	}
 
@@ -1432,17 +1417,17 @@ void CTFReady(CPlayerEntity *ent)
 void CTFNotReady(CPlayerEntity *ent)
 {
 	if (ent->Client.resp.ctf_team == CTF_NOTEAM) {
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "Pick a team first (hit <TAB> for menu)\n");
+		ent->PrintToClient (PRINT_HIGH, "Pick a team first (hit <TAB> for menu)\n");
 		return;
 	}
 
 	if (ctfgame.match != MATCH_SETUP && ctfgame.match != MATCH_PREGAME) {
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "A match is not being setup.\n");
+		ent->PrintToClient (PRINT_HIGH, "A match is not being setup.\n");
 		return;
 	}
 
 	if (!ent->Client.resp.ready) {
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "You haven't commited.\n");
+		ent->PrintToClient (PRINT_HIGH, "You haven't commited.\n");
 		return;
 	}
 
@@ -1464,18 +1449,18 @@ void CTFGhost(CPlayerEntity *ent)
 
 	if (ArgCount() < 2)
 	{
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "Usage:  ghost <code>\n");
+		ent->PrintToClient (PRINT_HIGH, "Usage:  ghost <code>\n");
 		return;
 	}
 
 	if (ent->Client.resp.ctf_team != CTF_NOTEAM)
 	{
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "You are already in the game.\n");
+		ent->PrintToClient (PRINT_HIGH, "You are already in the game.\n");
 		return;
 	}
 	if (ctfgame.match != MATCH_GAME)
 	{
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "No match is in progress.\n");
+		ent->PrintToClient (PRINT_HIGH, "No match is in progress.\n");
 		return;
 	}
 
@@ -1485,7 +1470,7 @@ void CTFGhost(CPlayerEntity *ent)
 	{
 		if (ctfgame.ghosts[i].code && ctfgame.ghosts[i].code == n)
 		{
-			ClientPrintf(ent->gameEntity, PRINT_HIGH, "Ghost code accepted, your position has been reinstated.\n");
+			ent->PrintToClient (PRINT_HIGH, "Ghost code accepted, your position has been reinstated.\n");
 			ctfgame.ghosts[i].ent->Client.resp.ghost = NULL;
 			ent->Client.resp.ctf_team = ctfgame.ghosts[i].team;
 			ent->Client.resp.ghost = ctfgame.ghosts + i;
@@ -1500,7 +1485,7 @@ void CTFGhost(CPlayerEntity *ent)
 			return;
 		}
 	}
-	ClientPrintf(ent->gameEntity, PRINT_HIGH, "Invalid ghost code.\n");
+	ent->PrintToClient (PRINT_HIGH, "Invalid ghost code.\n");
 }
 
 bool CTFMatchSetup(void)
@@ -1525,7 +1510,7 @@ void CTFObserver(CPlayerEntity *ent)
 	// start as 'observer'
 	if (ent->gameEntity->movetype == MOVETYPE_NOCLIP)
 	{
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "You are already an observer.\n");
+		ent->PrintToClient (PRINT_HIGH, "You are already an observer.\n");
 		return;
 	}
 
@@ -1717,8 +1702,8 @@ void CTFStats(CPlayerEntity *ent)
 	if (i == MAX_CS_CLIENTS)
 	{
 		if (*text)
-			ClientPrintf(ent->gameEntity, PRINT_HIGH, "%s", text);
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "No statistics available.\n");
+			ent->PrintToClient (PRINT_HIGH, "%s", text);
+		ent->PrintToClient (PRINT_HIGH, "No statistics available.\n");
 		return;
 	}
 
@@ -1744,12 +1729,12 @@ void CTFStats(CPlayerEntity *ent)
 			e);
 		if (strlen(text) + strlen(st) > sizeof(text) - 50) {
 			Q_snprintfz(text+strlen(text), sizeof(text), "And more...\n");
-			ClientPrintf(ent->gameEntity, PRINT_HIGH, "%s", text);
+			ent->PrintToClient (PRINT_HIGH, "%s", text);
 			return;
 		}
 		Q_strcatz(text, st, sizeof(text));
 	}
-	ClientPrintf(ent->gameEntity, PRINT_HIGH, "%s", text);
+	ent->PrintToClient (PRINT_HIGH, "%s", text);
 }
 
 void CTFPlayerList(CPlayerEntity *ent)
@@ -1796,12 +1781,12 @@ void CTFPlayerList(CPlayerEntity *ent)
 		if (strlen(text) + strlen(st) > sizeof(text) - 50)
 		{
 			Q_snprintfz(text+strlen(text), sizeof(text), "And more...\n");
-			ClientPrintf(ent->gameEntity, PRINT_HIGH, "%s", text);
+			ent->PrintToClient (PRINT_HIGH, "%s", text);
 			return;
 		}
 		Q_strcatz(text, st, sizeof(text));
 	}
-	ClientPrintf(ent->gameEntity, PRINT_HIGH, "%s", text);
+	ent->PrintToClient (PRINT_HIGH, "%s", text);
 }
 
 
@@ -1814,8 +1799,8 @@ void CTFWarp(CPlayerEntity *ent)
 
 	if (ArgCount() < 2)
 	{
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "Where do you want to warp to?\n");
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "Available levels are: %s\n", warp_list->String());
+		ent->PrintToClient (PRINT_HIGH, "Where do you want to warp to?\n");
+		ent->PrintToClient (PRINT_HIGH, "Available levels are: %s\n", warp_list->String());
 		return;
 	}
 
@@ -1831,8 +1816,8 @@ void CTFWarp(CPlayerEntity *ent)
 
 	if (token == NULL)
 	{
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "Unknown CTF level.\n");
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "Available levels are: %s\n", warp_list->String());
+		ent->PrintToClient (PRINT_HIGH, "Unknown CTF level.\n");
+		ent->PrintToClient (PRINT_HIGH, "Available levels are: %s\n", warp_list->String());
 		free(mlist);
 		return;
 	}
@@ -1861,30 +1846,30 @@ void CTFBoot(CPlayerEntity *ent)
 	char text[80];
 
 	if (!ent->Client.resp.admin) {
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "You are not an admin.\n");
+		ent->PrintToClient (PRINT_HIGH, "You are not an admin.\n");
 		return;
 	}
 
 	if (ArgCount() < 2) {
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "Who do you want to kick?\n");
+		ent->PrintToClient (PRINT_HIGH, "Who do you want to kick?\n");
 		return;
 	}
 
 	if (*ArgGets(1) < '0' && *ArgGets(1) > '9') {
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "Specify the player number to kick.\n");
+		ent->PrintToClient (PRINT_HIGH, "Specify the player number to kick.\n");
 		return;
 	}
 
 	i = ArgGeti(1);
 	if (i < 1 || i > game.maxclients) {
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "Invalid player number.\n");
+		ent->PrintToClient (PRINT_HIGH, "Invalid player number.\n");
 		return;
 	}
 
 	CPlayerEntity *targ = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
 	if (!targ->IsInUse())
 	{
-		ClientPrintf(ent->gameEntity, PRINT_HIGH, "That player number is not connected.\n");
+		ent->PrintToClient (PRINT_HIGH, "That player number is not connected.\n");
 		return;
 	}
 

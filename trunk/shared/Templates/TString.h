@@ -37,9 +37,15 @@ char	*Q_strupr(char *s);
 #ifdef id386
 int __cdecl Q_tolower (int c);
 #else // id386
-#define Q_tolower(chr) (tolower((chr)))
+inline int Q_tolower(int chr)
+{
+	return tolower(chr);
+}
 #endif // id386
-#define Q_toupper(chr) (toupper((chr)))
+inline int Q_toupper(int chr)
+{
+	return toupper(chr);
+}
 
 // ===========================================================================
 

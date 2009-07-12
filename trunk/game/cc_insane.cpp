@@ -33,6 +33,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 #include "m_insane.h"
+#include "cc_insane.h"
 
 CInsane Monster_Insane;
 
@@ -49,22 +50,22 @@ void CInsane::Allocate (edict_t *ent)
 
 void CInsane::Fist ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundFist, 1, ATTN_IDLE);
+	Entity->PlaySound (CHAN_VOICE, SoundFist, 1, ATTN_IDLE);
 }
 
 void CInsane::Shake ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundShake, 1, ATTN_IDLE);
+	Entity->PlaySound (CHAN_VOICE, SoundShake, 1, ATTN_IDLE);
 }
 
 void CInsane::Moan ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundMoan, 1, ATTN_IDLE);
+	Entity->PlaySound (CHAN_VOICE, SoundMoan, 1, ATTN_IDLE);
 }
 
 void CInsane::Scream ()
 {
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundScream[rand()%8], 1, ATTN_IDLE);
+	Entity->PlaySound (CHAN_VOICE, SoundScream[rand()%8], 1, ATTN_IDLE);
 }
 
 CFrame InsaneFramesStandNormal [] =
@@ -439,13 +440,13 @@ void CInsane::Cross ()
 
 void CInsane::Walk ()
 {
-	if ( (Entity->spawnflags & 16) && (Entity->state.frame == FRAME_cr_pain10) )			// Hold Ground?
+	if ( (Entity->gameEntity->spawnflags & 16) && (Entity->State.GetFrame() == FRAME_cr_pain10) )			// Hold Ground?
 	{
 		CurrentMove = &InsaneMoveDown;
 		return;
 	}
 
-	if (Entity->spawnflags & 4)
+	if (Entity->gameEntity->spawnflags & 4)
 		CurrentMove = &InsaneMoveCrawl;
 	else
 		CurrentMove = (random() <= 0.5) ? &InsaneMoveWalkNormal : &InsaneMoveWalkInsane;
@@ -453,30 +454,30 @@ void CInsane::Walk ()
 
 void CInsane::Run ()
 {
-	if ( (Entity->spawnflags & 16) && (Entity->state.frame == FRAME_cr_pain10))			// Hold Ground?
+	if ( (Entity->gameEntity->spawnflags & 16) && (Entity->State.GetFrame() == FRAME_cr_pain10))			// Hold Ground?
 	{
 		CurrentMove = &InsaneMoveDown;
 		return;
 	}
 	
-	if (Entity->spawnflags & 4)				// Crawling?
+	if (Entity->gameEntity->spawnflags & 4)				// Crawling?
 		CurrentMove = &InsaneMoveRunCrawl;
 	else // Else, mix it up
 		CurrentMove = (random() <= 0.5) ? &InsaneMoveRunNormal : &InsaneMoveRunInsane;
 }
 
 
-void CInsane::Pain (edict_t *other, float kick, int damage)
+void CInsane::Pain (CBaseEntity *other, float kick, int damage)
 {
 	int	l,r;
 
 //	if (self->health < (self->max_health / 2))
 //		self->state.skinnum = 1;
 
-	if (level.framenum < Entity->pain_debounce_time)
+	if (level.framenum < Entity->gameEntity->pain_debounce_time)
 		return;
 
-	Entity->pain_debounce_time = level.framenum + 30;
+	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
 
 	// Paril
 	// As much as I hate this, this needs to stay
@@ -484,25 +485,25 @@ void CInsane::Pain (edict_t *other, float kick, int damage)
 
 	// START SHIT
 	r = 1 + (rand()&1);
-	if (Entity->health < 25)
+	if (Entity->gameEntity->health < 25)
 		l = 25;
-	else if (Entity->health < 50)
+	else if (Entity->gameEntity->health < 50)
 		l = 50;
-	else if (Entity->health < 75)
+	else if (Entity->gameEntity->health < 75)
 		l = 75;
 	else
 		l = 100;
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundIndex (Q_VarArgs("player/male/pain%i_%i.wav", l, r)), 1, ATTN_IDLE);
+	Entity->PlaySound (CHAN_VOICE, SoundIndex (Q_VarArgs("player/male/pain%i_%i.wav", l, r)), 1, ATTN_IDLE);
 	// END SHIT
 
 	// Don't go into pain frames if crucified.
-	if (Entity->spawnflags & 8)
+	if (Entity->gameEntity->spawnflags & 8)
 	{
 		CurrentMove = &InsaneMoveStruggleCross;			
 		return;
 	}
 	
-	if  ( ((Entity->state.frame >= FRAME_crawl1) && (Entity->state.frame <= FRAME_crawl9)) || ((Entity->state.frame >= FRAME_stand99) && (Entity->state.frame <= FRAME_stand160)) )
+	if  ( ((Entity->State.GetFrame() >= FRAME_crawl1) && (Entity->State.GetFrame() <= FRAME_crawl9)) || ((Entity->State.GetFrame() >= FRAME_stand99) && (Entity->State.GetFrame() <= FRAME_stand160)) )
 		CurrentMove = &InsaneMoveCrawlPain;
 	else
 		CurrentMove = &InsaneMoveStandPain;
@@ -515,7 +516,7 @@ void CInsane::OnGround ()
 
 void CInsane::CheckDown ()
 {
-	if (Entity->spawnflags & 32)				// Always stand
+	if (Entity->gameEntity->spawnflags & 32)				// Always stand
 		return;
 	if (random() < 0.3)
 		CurrentMove = (random() < 0.5) ? &InsaneMoveUpToDown : &InsaneMoveJumpDown;
@@ -524,7 +525,7 @@ void CInsane::CheckDown ()
 void CInsane::CheckUp ()
 {
 	// If Hold_Ground and Crawl are set
-	if ( (Entity->spawnflags & 4) && (Entity->spawnflags & 16) )
+	if ( (Entity->gameEntity->spawnflags & 4) && (Entity->gameEntity->spawnflags & 16) )
 		return;
 	if (random() < 0.5)
 		CurrentMove = &InsaneMoveUpToDown;
@@ -532,13 +533,13 @@ void CInsane::CheckUp ()
 
 void CInsane::Stand ()
 {
-	if (Entity->spawnflags & 8)			// If crucified
+	if (Entity->gameEntity->spawnflags & 8)			// If crucified
 	{
 		CurrentMove = &InsaneMoveCross;
 		AIFlags |= AI_STAND_GROUND;
 	}
 	// If Hold_Ground and Crawl are set
-	else if ( (Entity->spawnflags & 4) && (Entity->spawnflags & 16) )
+	else if ( (Entity->gameEntity->spawnflags & 4) && (Entity->gameEntity->spawnflags & 16) )
 		CurrentMove = &InsaneMoveDown;
 	else
 		CurrentMove = (random() < 0.5) ? &InsaneMoveStandNormal : &InsaneMoveStandInsane;
@@ -546,47 +547,47 @@ void CInsane::Stand ()
 
 void CInsane::Dead ()
 {
-	if (Entity->spawnflags & 8)
-		Entity->flags |= FL_FLY;
+	if (Entity->gameEntity->spawnflags & 8)
+		Entity->gameEntity->flags |= FL_FLY;
 	else
 	{
-		Vec3Set (Entity->mins, -16, -16, -24);
-		Vec3Set (Entity->maxs, 16, 16, -8);
-		Entity->movetype = MOVETYPE_TOSS;
+		Entity->SetMins (vec3f(-16, -16, -24));
+		Entity->SetMaxs (vec3f(16, 16, -8));
+		Entity->TossPhysics = true;
 	}
-	Entity->svFlags |= SVF_DEADMONSTER;
-	NextThink = 0;
-	gi.linkentity (Entity);
+	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
+	Entity->NextThink = 0;
+	Entity->Link ();
 }
 
 
-void CInsane::Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
+void CInsane::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
-	if (Entity->health <= Entity->gib_health)
+	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
 	{
-		PlaySoundFrom (Entity, CHAN_VOICE, SoundIndex ("misc/udeath.wav"), 1, ATTN_IDLE);
+		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"), 1, ATTN_IDLE);
 		for (int n= 0; n < 2; n++)
-			ThrowGib (Entity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
+			ThrowGib (Entity->gameEntity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
 		for (int n= 0; n < 4; n++)
-			ThrowGib (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		ThrowHead (Entity, gMedia.Gib_Head[1], damage, GIB_ORGANIC);
-		Entity->deadflag = DEAD_DEAD;
+			ThrowGib (Entity->gameEntity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		Entity->ThrowHead (gMedia.Gib_Head[1], damage, GIB_ORGANIC);
+		Entity->gameEntity->deadflag = DEAD_DEAD;
 		return;
 	}
 
-	if (Entity->deadflag == DEAD_DEAD)
+	if (Entity->gameEntity->deadflag == DEAD_DEAD)
 		return;
 
-	PlaySoundFrom (Entity, CHAN_VOICE, SoundIndex(Q_VarArgs("player/male/death%i.wav", (rand()%4)+1)), 1, ATTN_IDLE);
+	Entity->PlaySound (CHAN_VOICE, SoundIndex(Q_VarArgs("player/male/death%i.wav", (rand()%4)+1)), 1, ATTN_IDLE);
 
-	Entity->deadflag = DEAD_DEAD;
-	Entity->takedamage = DAMAGE_YES;
+	Entity->gameEntity->deadflag = DEAD_DEAD;
+	Entity->gameEntity->takedamage = DAMAGE_YES;
 
-	if (Entity->spawnflags & 8)
+	if (Entity->gameEntity->spawnflags & 8)
 		Dead ();
 	else
 	{
-		if ( ((Entity->state.frame >= FRAME_crawl1) && (Entity->state.frame <= FRAME_crawl9)) || ((Entity->state.frame >= FRAME_stand99) && (Entity->state.frame <= FRAME_stand160)) )		
+		if ( ((Entity->State.GetFrame() >= FRAME_crawl1) && (Entity->State.GetFrame() <= FRAME_crawl9)) || ((Entity->State.GetFrame() >= FRAME_stand99) && (Entity->State.GetFrame() <= FRAME_stand160)) )		
 			CurrentMove = &InsaneMoveCrawlDeath;
 		else
 			CurrentMove = &InsaneMoveStandDeath;
@@ -610,36 +611,36 @@ void CInsane::Spawn ()
 	SoundScream[6] = SoundIndex ("insane/insane9.wav");
 	SoundScream[7] = SoundIndex ("insane/insane10.wav");
 
-	Entity->movetype = MOVETYPE_STEP;
-	Entity->solid = SOLID_BBOX;
-	Entity->state.modelIndex = ModelIndex("models/monsters/insane/tris.md2");
+	Entity->TossPhysics = false;
+	Entity->SetSolid (SOLID_BBOX);
+	Entity->State.SetModelIndex ( ModelIndex("models/monsters/insane/tris.md2"));
 
-	Vec3Set (Entity->mins, -16, -16, -24);
-	Vec3Set (Entity->maxs, 16, 16, 32);
+	Entity->SetMins (vec3f(-16, -16, -24));
+	Entity->SetMaxs (vec3f(16, 16, 32));
 
-	Entity->health = 100;
-	Entity->gib_health = -50;
-	Entity->mass = 300;
+	Entity->gameEntity->health = 100;
+	Entity->gameEntity->gib_health = -50;
+	Entity->gameEntity->mass = 300;
 
 	AIFlags |= AI_GOOD_GUY;
 
-	gi.linkentity (Entity);
+	Entity->Link ();
 
-	if (Entity->spawnflags & 16)				// Stand Ground
+	if (Entity->gameEntity->spawnflags & 16)				// Stand Ground
 		AIFlags |= AI_STAND_GROUND;
 
 	CurrentMove = &InsaneMoveStandNormal;
 
-	if (Entity->spawnflags & 8)					// Crucified ?
+	if (Entity->gameEntity->spawnflags & 8)					// Crucified ?
 	{
-		Vec3Set (Entity->mins, -16, 0, 0);
-		Vec3Set (Entity->maxs, 16, 8, 32);
-		Entity->flags |= FL_NO_KNOCKBACK;
+		Entity->SetMins (vec3f(-16, 0, 0));
+		Entity->SetMaxs (vec3f(16, 8, 32));
+		Entity->gameEntity->flags |= FL_NO_KNOCKBACK;
 		FlyMonsterStart ();
 	}
 	else
 	{
 		WalkMonsterStart ();
 	}
-	Entity->state.skinNum = rand()%3;
+	Entity->State.SetSkinNum (rand()%3);
 }

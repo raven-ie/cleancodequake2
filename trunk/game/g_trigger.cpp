@@ -90,7 +90,7 @@ void Touch_Multi (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t 
 		vec3_t	forward;
 
 		Angles_Vectors(other->state.angles, forward, NULL, NULL);
-		if (DotProduct (forward, self->movedir) < 0)
+		if (Dot3Product (forward, self->movedir) < 0)
 			return;
 	}
 

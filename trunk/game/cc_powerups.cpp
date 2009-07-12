@@ -178,7 +178,7 @@ void CMegaHealth::MegaHealthThink (edict_t *self)
 void CMegaHealth::DoPickup (edict_t *ent, CPlayerEntity *other)
 {
 #ifdef CLEANCTF_ENABLED
-	if (!other->CTFHasRegeneration())
+	if (((game.mode & GAME_CTF) && !other->CTFHasRegeneration()) || !(game.mode & GAME_CTF))
 	{
 #endif
 		ent->think = &CMegaHealth::MegaHealthThink;
@@ -206,23 +206,12 @@ void CBackPack::DoPickup (edict_t *ent, CPlayerEntity *other)
 	}
 
 	// Give them some more ammo
-	CAmmo *Ammo = dynamic_cast<CAmmo*>(FindItem("Bullets"));
-	Ammo->AddAmmo (other, Ammo->Quantity);
-
-	Ammo = dynamic_cast<CAmmo*>(FindItem("Shells"));
-	Ammo->AddAmmo (other, Ammo->Quantity);
-
-	Ammo = dynamic_cast<CAmmo*>(FindItem("Grenades"));
-	Ammo->AddAmmo (other, Ammo->Quantity);
-
-	Ammo = dynamic_cast<CAmmo*>(FindItem("Cells"));
-	Ammo->AddAmmo (other, Ammo->Quantity);
-
-	Ammo = dynamic_cast<CAmmo*>(FindItem("Slugs"));
-	Ammo->AddAmmo (other, Ammo->Quantity);
-
-	Ammo = dynamic_cast<CAmmo*>(FindItem("Rockets"));
-	Ammo->AddAmmo (other, Ammo->Quantity);
+	NItems::Bullets->AddAmmo (other, NItems::Bullets->Quantity);
+	NItems::Shells->AddAmmo (other, NItems::Shells->Quantity);
+	NItems::Grenades->AddAmmo (other, NItems::Grenades->Quantity);
+	NItems::Cells->AddAmmo (other, NItems::Cells->Quantity);
+	NItems::Slugs->AddAmmo (other, NItems::Slugs->Quantity);
+	NItems::Rockets->AddAmmo (other, NItems::Rockets->Quantity);
 
 	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
 		SetRespawn (ent, 180);
@@ -356,11 +345,8 @@ void CBandolier::DoPickup (edict_t *ent, CPlayerEntity *other)
 	}
 
 	// Give them some more ammo
-	CAmmo *Ammo = dynamic_cast<CAmmo*>(FindItem("Bullets"));
-	Ammo->AddAmmo (other, Ammo->Quantity);
-
-	Ammo = dynamic_cast<CAmmo*>(FindItem("Shells"));
-	Ammo->AddAmmo (other, Ammo->Quantity);
+	NItems::Bullets->AddAmmo (other, NItems::Bullets->Quantity);
+	NItems::Shells->AddAmmo (other, NItems::Shells->Quantity);
 
 	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
 		SetRespawn (ent, 60);
@@ -408,9 +394,9 @@ void CPowerShield::Use (CPlayerEntity *ent)
 	}
 	else
 	{
-		if (!ent->Client.pers.Inventory.Has(FindItem("Cells")))
+		if (!ent->Client.pers.Inventory.Has(NItems::Cells))
 		{
-			ClientPrintf (ent->gameEntity, PRINT_HIGH, "No cells for power armor.\n");
+			ent->PrintToClient (PRINT_HIGH, "No cells for %s.\n", Name);
 			return;
 		}
 		ent->gameEntity->flags |= FL_POWER_ARMOR;
@@ -427,29 +413,29 @@ void CPowerShield::Drop (CPlayerEntity *ent)
 
 void AddPowerupsToList ()
 {
-	CMegaHealth *MegaHealth = QNew (com_gamePool, 0) CMegaHealth("item_health_mega", "models/items/mega_h/tris.md2", 0, "items/m_health.wav", "i_health", "MegaHealth", ITEMFLAG_HEALTH|ITEMFLAG_POWERUP|ITEMFLAG_GRABBABLE, "", 0);
-	CBackPack *BackPack = QNew (com_gamePool, 0) CBackPack ("item_pack", "models/items/pack/tris.md2", EF_ROTATE, "items/pkup.wav", "i_pack", "Ammo Pack", ITEMFLAG_POWERUP|ITEMFLAG_GRABBABLE, "", POWERFLAG_STACK|POWERFLAG_BUTNOTINCOOP);
-	CQuadDamage *Quad = QNew (com_gamePool, 0) CQuadDamage ("item_quad", "models/items/quaddama/tris.md2", EF_ROTATE, "items/pkup.wav", "p_quad", "Quad Damage", ITEMFLAG_POWERUP|ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_USABLE, "", POWERFLAG_STORE|POWERFLAG_STACK|POWERFLAG_BUTNOTINCOOP);
-	CInvulnerability *Invul = QNew (com_gamePool, 0) CInvulnerability ("item_invulnerability", "models/items/invulner/tris.md2", EF_ROTATE, "items/pkup.wav", "p_invulnerability", "Invulnerability", ITEMFLAG_POWERUP|ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_USABLE, "", POWERFLAG_STORE|POWERFLAG_STACK|POWERFLAG_BUTNOTINCOOP);
-	CSilencer *Silencer = QNew (com_gamePool, 0) CSilencer ("item_silencer", "models/items/silencer/tris.md2", EF_ROTATE, "items/pkup.wav", "p_silencer", "Silencer", ITEMFLAG_POWERUP|ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_USABLE, "", POWERFLAG_STORE|POWERFLAG_STACK|POWERFLAG_BUTNOTINCOOP);
-	CRebreather *Rebreather = QNew (com_gamePool, 0) CRebreather ("item_breather", "models/items/breather/tris.md2", EF_ROTATE, "items/pkup.wav", "p_rebreather", "Rebreather", ITEMFLAG_POWERUP|ITEMFLAG_STAY_COOP|ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_USABLE, "", POWERFLAG_STORE|POWERFLAG_STACK|POWERFLAG_BUTNOTINCOOP);
-	CEnvironmentSuit *EnvironmentSuit = QNew (com_gamePool, 0) CEnvironmentSuit ("item_enviro", "models/items/enviro/tris.md2", EF_ROTATE, "items/pkup.wav", "p_envirosuit", "Environment Suit", ITEMFLAG_POWERUP|ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_USABLE, "", POWERFLAG_STORE|POWERFLAG_STACK|POWERFLAG_BUTNOTINCOOP);
-	CBandolier *Bandolier = QNew (com_gamePool, 0) CBandolier ("item_bandolier", "models/items/band/tris.md2", EF_ROTATE, "items/pkup.wav", "p_bandolier", "Bandolier", ITEMFLAG_POWERUP|ITEMFLAG_GRABBABLE, "", POWERFLAG_STACK|POWERFLAG_BUTNOTINCOOP);
-	CAdrenaline *Adrenaline = QNew (com_gamePool, 0) CAdrenaline ("item_adrenaline", "models/items/adrenal/tris.md2", EF_ROTATE, "items/pkup.wav", "p_adrenaline", "Adrenaline", ITEMFLAG_POWERUP|ITEMFLAG_GRABBABLE, "", 0);
-	CAncientHead *AncientHead = QNew (com_gamePool, 0) CAncientHead ("item_ancient_head", "models/items/c_head/tris.md2", EF_ROTATE, "items/pkup.wav", "i_fixme", "Ancient Head", ITEMFLAG_POWERUP|ITEMFLAG_GRABBABLE, "", 0);
-	CPowerShield *PowerShield = QNew (com_gamePool, 0) CPowerShield ("item_power_shield", "models/items/armor/shield/tris.md2", EF_ROTATE, "misc/ar3_pkup.wav", "i_powershield", "Power Shield", ITEMFLAG_ARMOR|ITEMFLAG_POWERUP|ITEMFLAG_GRABBABLE|ITEMFLAG_USABLE|ITEMFLAG_DROPPABLE, "", POWERFLAG_STORE|POWERFLAG_STACK|POWERFLAG_BUTNOTINCOOP);
-	CPowerShield *PowerScreen = QNew (com_gamePool, 0) CPowerShield ("item_power_screen", "models/items/armor/screen/tris.md2", EF_ROTATE, "misc/ar3_pkup.wav", "i_powerscreen", "Power Screen", ITEMFLAG_ARMOR|ITEMFLAG_POWERUP|ITEMFLAG_GRABBABLE|ITEMFLAG_USABLE|ITEMFLAG_DROPPABLE, "", POWERFLAG_STORE|POWERFLAG_STACK|POWERFLAG_BUTNOTINCOOP);
+	NItems::MegaHealth = QNew (com_gamePool, 0) CMegaHealth("item_health_mega", "models/items/mega_h/tris.md2", 0, "items/m_health.wav", "i_health", "MegaHealth", ITEMFLAG_HEALTH|ITEMFLAG_POWERUP|ITEMFLAG_GRABBABLE, "", 0);
+	NItems::BackPack = QNew (com_gamePool, 0) CBackPack ("item_pack", "models/items/pack/tris.md2", EF_ROTATE, "items/pkup.wav", "i_pack", "Ammo Pack", ITEMFLAG_POWERUP|ITEMFLAG_GRABBABLE, "", POWERFLAG_STACK|POWERFLAG_BUTNOTINCOOP);
+	NItems::Quad = QNew (com_gamePool, 0) CQuadDamage ("item_quad", "models/items/quaddama/tris.md2", EF_ROTATE, "items/pkup.wav", "p_quad", "Quad Damage", ITEMFLAG_POWERUP|ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_USABLE, "", POWERFLAG_STORE|POWERFLAG_STACK|POWERFLAG_BUTNOTINCOOP);
+	NItems::Invul = QNew (com_gamePool, 0) CInvulnerability ("item_invulnerability", "models/items/invulner/tris.md2", EF_ROTATE, "items/pkup.wav", "p_invulnerability", "Invulnerability", ITEMFLAG_POWERUP|ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_USABLE, "", POWERFLAG_STORE|POWERFLAG_STACK|POWERFLAG_BUTNOTINCOOP);
+	NItems::Silencer = QNew (com_gamePool, 0) CSilencer ("item_silencer", "models/items/silencer/tris.md2", EF_ROTATE, "items/pkup.wav", "p_silencer", "Silencer", ITEMFLAG_POWERUP|ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_USABLE, "", POWERFLAG_STORE|POWERFLAG_STACK|POWERFLAG_BUTNOTINCOOP);
+	NItems::Rebreather = QNew (com_gamePool, 0) CRebreather ("item_breather", "models/items/breather/tris.md2", EF_ROTATE, "items/pkup.wav", "p_rebreather", "Rebreather", ITEMFLAG_POWERUP|ITEMFLAG_STAY_COOP|ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_USABLE, "", POWERFLAG_STORE|POWERFLAG_STACK|POWERFLAG_BUTNOTINCOOP);
+	NItems::EnvironmentSuit = QNew (com_gamePool, 0) CEnvironmentSuit ("item_enviro", "models/items/enviro/tris.md2", EF_ROTATE, "items/pkup.wav", "p_envirosuit", "Environment Suit", ITEMFLAG_POWERUP|ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_USABLE, "", POWERFLAG_STORE|POWERFLAG_STACK|POWERFLAG_BUTNOTINCOOP);
+	NItems::Bandolier = QNew (com_gamePool, 0) CBandolier ("item_bandolier", "models/items/band/tris.md2", EF_ROTATE, "items/pkup.wav", "p_bandolier", "Bandolier", ITEMFLAG_POWERUP|ITEMFLAG_GRABBABLE, "", POWERFLAG_STACK|POWERFLAG_BUTNOTINCOOP);
+	NItems::Adrenaline = QNew (com_gamePool, 0) CAdrenaline ("item_adrenaline", "models/items/adrenal/tris.md2", EF_ROTATE, "items/pkup.wav", "p_adrenaline", "Adrenaline", ITEMFLAG_POWERUP|ITEMFLAG_GRABBABLE, "", 0);
+	NItems::AncientHead = QNew (com_gamePool, 0) CAncientHead ("item_ancient_head", "models/items/c_head/tris.md2", EF_ROTATE, "items/pkup.wav", "i_fixme", "Ancient Head", ITEMFLAG_POWERUP|ITEMFLAG_GRABBABLE, "", 0);
+	NItems::PowerShield = QNew (com_gamePool, 0) CPowerShield ("item_power_shield", "models/items/armor/shield/tris.md2", EF_ROTATE, "misc/ar3_pkup.wav", "i_powershield", "Power Shield", ITEMFLAG_ARMOR|ITEMFLAG_POWERUP|ITEMFLAG_GRABBABLE|ITEMFLAG_USABLE|ITEMFLAG_DROPPABLE, "", POWERFLAG_STORE|POWERFLAG_STACK|POWERFLAG_BUTNOTINCOOP);
+	NItems::PowerScreen = QNew (com_gamePool, 0) CPowerShield ("item_power_screen", "models/items/armor/screen/tris.md2", EF_ROTATE, "misc/ar3_pkup.wav", "i_powerscreen", "Power Screen", ITEMFLAG_ARMOR|ITEMFLAG_POWERUP|ITEMFLAG_GRABBABLE|ITEMFLAG_USABLE|ITEMFLAG_DROPPABLE, "", POWERFLAG_STORE|POWERFLAG_STACK|POWERFLAG_BUTNOTINCOOP);
 
-	ItemList->AddItemToList (MegaHealth);
-	ItemList->AddItemToList (BackPack);
-	ItemList->AddItemToList (Quad);
-	ItemList->AddItemToList (Invul);
-	ItemList->AddItemToList (Silencer);
-	ItemList->AddItemToList (Rebreather);
-	ItemList->AddItemToList (EnvironmentSuit);
-	ItemList->AddItemToList (Bandolier);
-	ItemList->AddItemToList (Adrenaline);
-	ItemList->AddItemToList (AncientHead);
-	ItemList->AddItemToList (PowerShield);
-	ItemList->AddItemToList (PowerScreen);
+	ItemList->AddItemToList (NItems::MegaHealth);
+	ItemList->AddItemToList (NItems::BackPack);
+	ItemList->AddItemToList (NItems::Quad);
+	ItemList->AddItemToList (NItems::Invul);
+	ItemList->AddItemToList (NItems::Silencer);
+	ItemList->AddItemToList (NItems::Rebreather);
+	ItemList->AddItemToList (NItems::EnvironmentSuit);
+	ItemList->AddItemToList (NItems::Bandolier);
+	ItemList->AddItemToList (NItems::Adrenaline);
+	ItemList->AddItemToList (NItems::AncientHead);
+	ItemList->AddItemToList (NItems::PowerShield);
+	ItemList->AddItemToList (NItems::PowerScreen);
 }

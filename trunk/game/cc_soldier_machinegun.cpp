@@ -32,6 +32,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 //
 
 #include "cc_local.h"
+#include "cc_soldier_base.h"
+#include "cc_soldier_machinegun.h"
 
 CSoldierMachinegun Monster_Soldier_Machinegun;
 
@@ -67,15 +69,18 @@ void CSoldierMachinegun::FireGun (int FlashNumber)
 	float	r, u;
 	int		flashIndex = MachinegunFlash[FlashNumber];
 
-	Angles_Vectors (Entity->state.angles, forward, right, NULL);
-	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[flashIndex], forward, right, start);
+	vec3_t angles, origin;
+	Entity->State.GetAngles(angles);
+	Entity->State.GetOrigin(origin);
+	Angles_Vectors (angles, forward, right, NULL);
+	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[flashIndex], forward, right, start);
 
 	if (FlashNumber == 5 || FlashNumber == 6)
 		Vec3Copy (forward, aim);
 	else
 	{
-		Vec3Copy (Entity->enemy->state.origin, end);
-		end[2] += Entity->enemy->viewheight;
+		Vec3Copy (Entity->gameEntity->enemy->state.origin, end);
+		end[2] += Entity->gameEntity->enemy->viewheight;
 		Vec3Subtract (end, start, aim);
 		VecToAngles (aim, dir);
 		Angles_Vectors (dir, forward, right, up);
@@ -91,11 +96,11 @@ void CSoldierMachinegun::FireGun (int FlashNumber)
 	}
 
 	if (!(AIFlags & AI_HOLD_FRAME))
-		Entity->wait = level.framenum + (3 + rand() % 8);
+		Entity->gameEntity->wait = level.framenum + (3 + rand() % 8);
 
 	MonsterFireBullet (start, aim, 2, 4, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, flashIndex);
 
-	if (level.framenum >= Entity->wait)
+	if (level.framenum >= Entity->gameEntity->wait)
 		AIFlags &= ~AI_HOLD_FRAME;
 	else
 		AIFlags |= AI_HOLD_FRAME;
@@ -106,7 +111,7 @@ void CSoldierMachinegun::SpawnSoldier ()
 	SoundPain = SoundIndex ("soldier/solpain3.wav");
 	SoundDeath = SoundIndex ("soldier/soldeth3.wav");
 
-	Entity->state.skinNum = 4;
-	Entity->health = 40;
-	Entity->gib_health = -30;
+	Entity->State.SetSkinNum (4);
+	Entity->gameEntity->health = 40;
+	Entity->gameEntity->gib_health = -30;
 }

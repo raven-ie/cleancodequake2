@@ -84,11 +84,9 @@ public:
 class CPhysicsEntity abstract : public virtual CBaseEntity
 {
 public:
+	bool		PhysicsDisabled;
 	CPhysicsEntity ();
 	CPhysicsEntity (int index);
-
-	virtual void	Think () {};
-	virtual void	Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf) {};
 
 	class CTrace	PushEntity (vec3_t push);
 	inline void		AddGravity ();
@@ -96,7 +94,7 @@ public:
 };
 
 // "Bouncy" projectile
-class CBounceProjectile abstract : public CPhysicsEntity, public CTouchableEntity, public CThinkableEntity
+class CBounceProjectile abstract : public virtual CPhysicsEntity
 {
 protected:
 	float			backOff;
@@ -104,45 +102,33 @@ public:
 	CBounceProjectile ();
 	CBounceProjectile (int index);
 
-	virtual void	Think () {};
-	virtual void	Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf) {};
-
 	bool			Run ();
 };
 
 // Same as bouncy, except doesn't bounce
-class CTossProjectile abstract : public CBounceProjectile
+class CTossProjectile abstract : public virtual CBounceProjectile
 {
 public:
 	CTossProjectile();
 	CTossProjectile (int index);
-
-	virtual void	Think () {};
-	virtual void	Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf) {};
 };
 
 // Doesn't add gravity
-class CFlyMissileProjectile abstract : public CPhysicsEntity, public CTouchableEntity, public CThinkableEntity
+class CFlyMissileProjectile abstract : public virtual CPhysicsEntity
 {
 public:
 	CFlyMissileProjectile ();
 	CFlyMissileProjectile (int index);
 
-	virtual void	Think () {};
-	virtual void	Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf) {};
-
 	bool			Run ();
 };
 
 // Gravity, special edge handling
-class CStepPhysics abstract : public CPhysicsEntity, public CTouchableEntity, public CThinkableEntity
+class CStepPhysics abstract : public virtual CPhysicsEntity
 {
 public:
 	CStepPhysics ();
 	CStepPhysics (int index);
-
-	virtual void	Think () {};
-	virtual void	Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf) {};
 
 	virtual void	CheckGround ();
 

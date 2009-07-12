@@ -48,7 +48,7 @@ public:
 	void Attack ();
 #ifdef FLYER_KNOWS_HOW_TO_DODGE
 #ifdef MONSTER_USE_ROGUE_AI
-	void Dodge (edict_t *attacker, float eta, CTrace *tr);
+	void Duck (float eta);
 	void SideStep ();
 #else
 	void Dodge (edict_t *attacker, float eta);
@@ -74,8 +74,8 @@ public:
 	void Fire (int FlashNumber);
 
 	void Dead ();
-	void Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
-	void Pain (edict_t *other, float kick, int damage);
+	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
+	void Pain (CBaseEntity *other, float kick, int damage);
 
 	void Spawn ();
 };

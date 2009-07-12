@@ -56,8 +56,8 @@ public:
 	void Walk ();
 
 	void Dead ();
-	void Die (edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
-	void Pain (edict_t *other, float kick, int damage);
+	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
+	void Pain (CBaseEntity *other, float kick, int damage);
 
 	void Spawn ();
 };
