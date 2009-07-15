@@ -270,7 +270,6 @@ enum EComErrorType
 };
 void	Com_Error (EComErrorType code, char *fmt, ...);
 
-#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 //
 // styles for R_DrawString/Char
 //
@@ -283,7 +282,6 @@ enum
 	FS_SHADOW				= BIT(4),
 	FS_SQUARE				= BIT(5),	// Force the width/height to the character width/height value that's largest
 };
-#endif
 
 /*
 ==============================================================================

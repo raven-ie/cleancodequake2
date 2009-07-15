@@ -52,9 +52,9 @@ void FS_CopyFile(char *src, char *dst);
 int FS_FileLength(fileHandle_t fileNum);
 int FS_Tell(fileHandle_t fileNum);
 
-int FS_Read(void *buffer, const int len, fileHandle_t fileNum);
-int FS_Write(void *buffer, const int size, fileHandle_t fileNum);
-void FS_Seek(fileHandle_t fileNum, const int offset, const EFSSeekOrigin seekOrigin);
+size_t FS_Read(void *buffer, const size_t len, fileHandle_t fileNum);
+size_t FS_Write(void *buffer, const size_t size, fileHandle_t fileNum);
+void FS_Seek(fileHandle_t fileNum, const long offset, const EFSSeekOrigin seekOrigin);
 int FS_OpenFile(const char *fileName, fileHandle_t *fileNum, const EFSOpenMode openMode);
 void FS_CloseFile(fileHandle_t fileNum);
 

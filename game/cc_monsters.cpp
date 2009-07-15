@@ -60,7 +60,7 @@ void CMonster::FoundPath ()
 		return;
 	}
 
-	P_CurrentNodeIndex = P_CurrentPath->Path.size()-1;
+	P_CurrentNodeIndex = (int32)P_CurrentPath->Path.size()-1;
 
 	// If our first node is behind us and it's not too far away, we can
 	// just skip this node and go to the next one.	

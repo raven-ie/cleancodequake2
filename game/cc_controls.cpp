@@ -54,10 +54,10 @@ void CMenu_Label::Draw (CPlayerEntity *ent, CStatusBar *DrawState)
 			arrowX += (160 - 12);
 			break;
 		case LA_CENTER:
-			arrowX -= 8 + ((strlen(LabelString)*8)/2);
+			arrowX -= 8 + (((int)strlen(LabelString)*8)/2);
 			break;
 		case LA_RIGHT:
-			arrowX += (160 - (strlen(LabelString)*8)) - 12;
+			arrowX += (160 - ((int)strlen(LabelString)*8)) - 12;
 			break;
 		}
 		DrawState->AddVirtualPoint_X (arrowX);
@@ -75,7 +75,7 @@ void CMenu_Label::Draw (CPlayerEntity *ent, CStatusBar *DrawState)
 	case LA_CENTER:
 		break;
 	case LA_RIGHT:
-		drawX += 160 - (strlen(LabelString)*8);
+		drawX += 160 - ((int)strlen(LabelString)*8);
 		break;
 	}
 
@@ -129,7 +129,7 @@ void CMenu_Spin::Draw (CPlayerEntity *ent, CStatusBar *DrawState)
 	case LA_CENTER:
 		break;
 	case LA_RIGHT:
-		drawX += 160 - (strlen(Indices[Index].Text)*8);
+		drawX += 160 - ((int)strlen(Indices[Index].Text)*8);
 		break;
 	}
 
@@ -140,7 +140,7 @@ void CMenu_Spin::Draw (CPlayerEntity *ent, CStatusBar *DrawState)
 
 	if (Selected)
 	{
-		int numCharsOfSpace = strlen(Indices[Index].Text)*8;
+		int numCharsOfSpace = (int)strlen(Indices[Index].Text)*8;
 		// Is there any more indices to the left?
 		if (Index > 0)
 		{

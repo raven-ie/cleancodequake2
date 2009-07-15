@@ -113,8 +113,8 @@ float		ColorNormalizeb(const float *in, byte *out);
 long	Q_ftol (float f);
 float	Q_FastSqrt (float value);
 #else // id386
-# define Q_ftol(f) ((long)(f))
-# define Q_FastSqrt(v) (sqrt(v))
+inline long Q_ftol (float f) { return ((long)f); }
+inline float Q_FastSqrt (float value) { return sqrt(value); }
 #endif // id386
 
 // Template functions
@@ -504,8 +504,8 @@ inline void Q_SinCosf(const float X, float *Sin, float *Cos)
 	__asm fstp dword ptr [ecx]
 	__asm fstp dword ptr [edx]
 #else
-	Sin = sinf(X);
-	Cos = cosf(X);
+	*Sin = sinf(X);
+	*Cos = cosf(X);
 #endif
 }
 

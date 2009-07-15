@@ -491,7 +491,7 @@ void Cmd_SelectNextItem_f (CPlayerEntity *ent)
 
 	if (ent->Client.chase_target)
 	{
-		ChaseNext(ent);
+		ent->ChaseNext();
 		return;
 	}
 
@@ -510,7 +510,7 @@ void Cmd_SelectPrevItem_f (CPlayerEntity *ent)
 
 	if (ent->Client.chase_target)
 	{
-		ChasePrev(ent);
+		ent->ChasePrev();
 		return;
 	}
 

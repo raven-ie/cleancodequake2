@@ -1916,7 +1916,7 @@ void CPlayerEntity::CTFScoreboardMessage (bool reliable)
 {
 	CStatusBar			Bar;
 	char				entry[1024];
-	int					len;
+	size_t				len;
 	int					sorted[2][MAX_CS_CLIENTS];
 	int					sortedscores[2][MAX_CS_CLIENTS];
 	int					score, total[2], totalscore[2];
@@ -3002,7 +3002,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 	{
 		CPlayerEntity *other = dynamic_cast<CPlayerEntity*>((g_edicts + i)->Entity);
 		if (other->IsInUse() && other->Client.chase_target == this)
-			UpdateChaseCam(other);
+			other->UpdateChaseCam();
 	}
 }
 
@@ -3440,3 +3440,174 @@ void CPlayerEntity::PrintToClient (EGamePrintLevel printLevel, char *fmt, ...)
 	else
 		ClientPrintf (gameEntity, printLevel, "%s", text);
 };
+
+void CPlayerEntity::UpdateChaseCam()
+{
+	vec3_t o, ownerv, goal;
+	vec3_t forward, right;
+	CTrace trace;
+	int i;
+	vec3_t oldgoal;
+	vec3_t angles;
+
+	// is our chase target gone?
+	if (!Client.chase_target->IsInUse()
+		|| Client.chase_target->Client.resp.spectator)
+	{
+		CPlayerEntity *old = Client.chase_target;
+		ChaseNext();
+		if (Client.chase_target == old)
+		{
+			Client.chase_target = NULL;
+			Client.PlayerState.GetPMove()->pmFlags &= ~PMF_NO_PREDICTION;
+			return;
+		}
+	}
+
+	CPlayerEntity *targ = Client.chase_target;
+
+	targ->State.GetOrigin (ownerv);
+	State.GetOrigin (oldgoal);
+
+	ownerv[2] += targ->gameEntity->viewheight;
+
+	Vec3Copy(targ->Client.v_angle, angles);
+	if (angles[PITCH] > 56)
+		angles[PITCH] = 56;
+	Angles_Vectors (angles, forward, right, NULL);
+	VectorNormalizef (forward, forward);
+	Vec3MA (ownerv, -30, forward, o);
+
+	vec3_t temp;
+	targ->State.GetOrigin (temp);
+	if (o[2] < temp[2] + 20)
+		o[2] = temp[2] + 20;
+
+	// jump animation lifts
+	if (!targ->gameEntity->groundentity)
+		o[2] += 16;
+
+	trace = CTrace (ownerv, vec3Origin, vec3Origin, o, targ->gameEntity, CONTENTS_MASK_SOLID);
+
+	Vec3Copy(trace.endPos, goal);
+
+	Vec3MA(goal, 2, forward, goal);
+
+	// pad for floors and ceilings
+	Vec3Copy(goal, o);
+	o[2] += 6;
+	trace = CTrace (goal, vec3Origin, vec3Origin, o, targ->gameEntity, CONTENTS_MASK_SOLID);
+	if (trace.fraction < 1)
+	{
+		Vec3Copy(trace.endPos, goal);
+		goal[2] -= 6;
+	}
+
+	Vec3Copy(goal, o);
+	o[2] -= 6;
+	trace = CTrace (goal, vec3Origin, vec3Origin, o, targ->gameEntity, CONTENTS_MASK_SOLID);
+	if (trace.fraction < 1)
+	{
+		Vec3Copy(trace.endPos, goal);
+		goal[2] += 6;
+	}
+
+	if (targ->gameEntity->deadflag)
+		Client.PlayerState.GetPMove()->pmType = PMT_DEAD;
+	else
+		Client.PlayerState.GetPMove()->pmType = PMT_FREEZE;
+
+	State.SetOrigin(goal);
+	for (i=0 ; i<3 ; i++)
+		Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(targ->Client.v_angle[i] - Client.resp.cmd_angles[i]);
+
+	if (targ->gameEntity->deadflag)
+		Client.PlayerState.SetViewAngles (vec3f(40, -15, targ->Client.killer_yaw));
+	else
+	{
+		Client.PlayerState.SetViewAngles(targ->Client.v_angle);
+		Vec3Copy(targ->Client.v_angle, Client.v_angle);
+	}
+
+	gameEntity->viewheight = 0;
+	Client.PlayerState.GetPMove()->pmFlags |= PMF_NO_PREDICTION;
+	Link ();
+
+	if ((!Client.showscores && !Client.resp.MenuState.InMenu &&
+		!Client.showinventory && !Client.showhelp &&
+		!(level.framenum & 31)) || Client.update_chase)
+	{
+		CStatusBar Chasing;
+		char temp[128];
+		Q_snprintfz (temp, sizeof(temp), "Chasing %s", targ->Client.pers.netname);
+
+		Chasing.AddVirtualPoint_X (0);
+		Chasing.AddVirtualPoint_Y (-68);
+		Chasing.AddString (temp, true, false);
+		Chasing.SendMsg (gameEntity, false);
+
+		Client.update_chase = false;
+	}
+}
+
+void CPlayerEntity::ChaseNext()
+{
+	if (!Client.chase_target)
+		return;
+
+	int i = Client.chase_target->State.GetNumber();
+	CPlayerEntity *e;
+	do {
+		i++;
+		if (i > game.maxclients)
+			i = 1;
+		e = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+		if (!e->IsInUse())
+			continue;
+		if (!e->Client.resp.spectator)
+			break;
+	} while (e != Client.chase_target);
+
+	Client.chase_target = e;
+	Client.update_chase = true;
+}
+
+void CPlayerEntity::ChasePrev()
+{
+	if (!Client.chase_target)
+		return;
+
+	int i = Client.chase_target->State.GetNumber();
+	CPlayerEntity *e;
+	do {
+		i--;
+		if (i < 1)
+			i = game.maxclients;
+		e = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+		if (!e->IsInUse())
+			continue;
+		if (!e->Client.resp.spectator)
+			break;
+	} while (e != Client.chase_target);
+
+	Client.chase_target = e;
+	Client.update_chase = true;
+}
+
+void CPlayerEntity::GetChaseTarget()
+{
+	for (int i = 1; i <= game.maxclients; i++)
+	{
+		CPlayerEntity *other = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+		if (other->IsInUse() && !other->Client.resp.spectator)
+		{
+			Client.chase_target = other;
+			Client.update_chase = true;
+			UpdateChaseCam();
+			return;
+		}
+	}
+	PrintToClient(PRINT_CENTER, "No other players to chase.");
+}
+
+
