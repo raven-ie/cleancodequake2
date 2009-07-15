@@ -319,16 +319,11 @@ ED_NewString
 */
 char *ED_NewString (char *string)
 {
-	char	*newb, *new_p;
-	int		i,l;
-	
-	l = strlen(string) + 1;
+	size_t l = strlen(string) + 1;
+	char *newb = QNew (com_levelPool, 0) char[l];
+	char *new_p = newb;
 
-	newb = QNew (com_levelPool, 0) char[l];
-
-	new_p = newb;
-
-	for (i=0 ; i< l ; i++)
+	for (size_t i=0 ; i< l ; i++)
 	{
 		if (string[i] == '\\' && i < l-1)
 		{

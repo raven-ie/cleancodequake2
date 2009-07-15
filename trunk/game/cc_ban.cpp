@@ -139,7 +139,7 @@ void CBanList::LoadFromFile ()
 	std::string line, token;
 
 	// Get the entire line
-	int z = 0, c = 0, oc = 0;
+	size_t z = 0, c = 0, oc = 0;
 	z = mainString.find_first_of("\n\0");
 	line = mainString.substr(0, (z == -1) ? strlen(data) : z);
 

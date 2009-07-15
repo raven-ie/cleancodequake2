@@ -365,4 +365,9 @@ public:
 
 	// Printing routines
 	inline void		PrintToClient (EGamePrintLevel printLevel, char *fmt, ...);
+
+	void UpdateChaseCam();
+	void ChaseNext();
+	void ChasePrev();
+	void GetChaseTarget ();
 };

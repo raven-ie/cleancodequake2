@@ -38,7 +38,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 void SpawnNodeEntity (CPathNode *Node);
 void CheckNodeFlags (CPathNode *Node);
-uint32 GetNodeIndex (CPathNode *Node);
+size_t GetNodeIndex (CPathNode *Node);
 
 std::vector<CPathNode*>		Closed, Open;
 
@@ -196,7 +196,7 @@ void CPath::CreatePath ()
 
 void CPath::Save (fileHandle_t f)
 {
-	uint32 index;
+	size_t index;
 	// Save all local data
 	index = GetNodeIndex(Start);
 	FS_Write (&index, sizeof(uint32), f);
@@ -379,7 +379,7 @@ void ConnectNode (CPathNode *Node1, CPathNode *Node2)
 		Node2->Children.push_back (Node1);
 }
 
-uint32 GetNodeIndex (CPathNode *Node)
+size_t GetNodeIndex (CPathNode *Node)
 {
 	for (size_t i = 0; i < NodeList.size(); i++)
 	{
@@ -393,7 +393,7 @@ uint32 GetNodeIndex (CPathNode *Node)
 #define NODE_VERSION 2
 void SaveNodes ()
 {
-	uint32 numNodes = 0, numSpecialNodes = 0;
+	size_t numNodes = 0, numSpecialNodes = 0;
 	// Try to open the file
 	std::string FileName;
 
@@ -432,11 +432,11 @@ void SaveNodes ()
 			}
 		}
 
-		uint32 num = NodeList[i]->Children.size();
+		size_t num = NodeList[i]->Children.size();
 		FS_Write (&num, sizeof(uint32), f);
 		for (size_t s = 0; s < NodeList[i]->Children.size(); s++)
 		{
-			uint32 ind = GetNodeIndex(NodeList[i]->Children[s]);
+			size_t ind = GetNodeIndex(NodeList[i]->Children[s]);
 			FS_Write (&ind, sizeof(uint32), f);
 		}
 	}
@@ -846,8 +846,8 @@ void LoadPathTable ()
 
 CPath *GetPath (CPathNode *Start, CPathNode *End)
 {
-	uint32 StartIndex = GetNodeIndex(Start);
-	uint32 EndIndex = GetNodeIndex(End);
+	size_t StartIndex = GetNodeIndex(Start);
+	size_t EndIndex = GetNodeIndex(End);
 
 	CPath *Path = SavedPaths[StartIndex].ToEnd[EndIndex];
 

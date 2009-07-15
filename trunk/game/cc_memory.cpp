@@ -57,7 +57,7 @@ typedef struct memPool_s
 	memBlock_t			blockHeadNode;				// Allocated blocks
 
 	uint32				blockCount;					// Total allocated blocks
-	uint32				byteCount;					// Total allocated bytes
+	size_t				byteCount;					// Total allocated bytes
 
 	const char			*createFile;				// File this pool was created on
 	int					createLine;					// Line this pool was created on
@@ -84,7 +84,7 @@ typedef struct memPuddle_s
 typedef struct memPuddleInfo_s
 {
 	size_t				blockSize;
-	int					granularity;
+	size_t				granularity;
 
 	memPuddle_t			headNode;
 	memPuddle_t			*freePuddles;
@@ -111,13 +111,12 @@ static void Mem_AddPuddles(memPuddleInfo_t *pInfo)
 {
 	size_t PuddleSize = (sizeof(memPuddle_t) + sizeof(memBlock_t) + pInfo->blockSize + sizeof(byte));
 	size_t TotalSize = PuddleSize * pInfo->granularity;
-	int i;
 
 	void *Buffer = calloc(TotalSize, 1);
 	if (!Buffer)
 		Com_Error(ERR_FATAL, "Mem_AddPuddles: failed on allocation of %i bytes", TotalSize);
 
-	for (i=0 ; i<pInfo->granularity ; i++)
+	for (size_t i=0 ; i<pInfo->granularity ; i++)
 	{
 		memPuddle_t *Puddle = (memPuddle_t*)((byte *)Buffer + (PuddleSize * i));
 		memBlock_t *MemBlock = (memBlock_t*)((byte*)Puddle + sizeof(memPuddle_t));
@@ -354,9 +353,9 @@ memPool_t *_Mem_CreatePool(const char *name, const char *fileName, const int fil
 _Mem_DeletePool
 ========================
 */
-uint32 _Mem_DeletePool(struct memPool_s *pool, const char *fileName, const int fileLine)
+size_t _Mem_DeletePool(struct memPool_s *pool, const char *fileName, const int fileLine)
 {
-	uint32	size;
+	size_t size;
 
 	if (!pool)
 		return 0;
@@ -413,10 +412,10 @@ static void _Mem_CheckBlockIntegrity (memBlock_t *mem, const char *fileName, con
 _Mem_Free
 ========================
 */
-uint32 _Mem_Free (const void *ptr, const char *fileName, const int fileLine)
+size_t _Mem_Free (const void *ptr, const char *fileName, const int fileLine)
 {
 	memBlock_t	*mem;
-	uint32		size;
+	size_t		size;
 
 	assert (ptr);
 	if (!ptr)
@@ -437,13 +436,9 @@ uint32 _Mem_Free (const void *ptr, const char *fileName, const int fileLine)
 
 	// Free it
 	if (mem->puddle)
-	{
 		Mem_PuddleFree(mem->puddle);
-	}
 	else
-	{
 		free (mem);
-	}
 
 	return size;
 }
@@ -456,11 +451,11 @@ _Mem_FreeTag
 Free memory blocks assigned to a specified tag within a pool
 ========================
 */
-uint32 _Mem_FreeTag (struct memPool_s *pool, const int tagNum, const char *fileName, const int fileLine)
+size_t _Mem_FreeTag (struct memPool_s *pool, const int tagNum, const char *fileName, const int fileLine)
 {
 	memBlock_t	*mem, *next;
 	memBlock_t	*headNode = &pool->blockHeadNode;
-	uint32		size;
+	size_t		size;
 
 	if (!pool)
 		return 0;
@@ -485,11 +480,11 @@ _Mem_FreePool
 Free all items within a pool
 ========================
 */
-uint32 _Mem_FreePool (struct memPool_s *pool, const char *fileName, const int fileLine)
+size_t _Mem_FreePool (struct memPool_s *pool, const char *fileName, const int fileLine)
 {
 	memBlock_t	*mem, *next;
 	memBlock_t	*headNode = &pool->blockHeadNode;
-	uint32		size;
+	size_t		size;
 
 	if (!pool)
 		return 0;
@@ -655,7 +650,7 @@ char *_Mem_PoolStrDup (const char *in, struct memPool_s *pool, const int tagNum,
 _Mem_PoolSize
 ================
 */
-uint32 _Mem_PoolSize (struct memPool_s *pool)
+size_t _Mem_PoolSize (struct memPool_s *pool)
 {
 	if (!pool)
 		return 0;
@@ -669,11 +664,11 @@ uint32 _Mem_PoolSize (struct memPool_s *pool)
 _Mem_TagSize
 ================
 */
-uint32 _Mem_TagSize (struct memPool_s *pool, const int tagNum)
+size_t _Mem_TagSize (struct memPool_s *pool, const int tagNum)
 {
 	memBlock_t	*mem;
 	memBlock_t	*headNode = &pool->blockHeadNode;
-	uint32		size;
+	size_t		size;
 
 	if (!pool)
 		return 0;
@@ -694,7 +689,7 @@ uint32 _Mem_TagSize (struct memPool_s *pool, const int tagNum)
 _Mem_ChangeTag
 ========================
 */
-uint32 _Mem_ChangeTag (struct memPool_s *pool, const int tagFrom, const int tagTo)
+size_t _Mem_ChangeTag (struct memPool_s *pool, const int tagFrom, const int tagTo)
 {
 	memBlock_t	*mem;
 	memBlock_t	*headNode = &pool->blockHeadNode;
@@ -727,7 +722,7 @@ void _Mem_CheckPoolIntegrity (struct memPool_s *pool, const char *fileName, cons
 	memBlock_t	*mem;
 	memBlock_t	*headNode = &pool->blockHeadNode;
 	uint32		blocks;
-	uint32		size;
+	size_t		size;
 
 	assert (pool);
 	if (!pool)
@@ -851,7 +846,7 @@ static void Mem_Stats_f(CPlayerEntity *ent)
 	Com_Printf(0, "--- ------ ---------- ---------- ------ --------\n");
 
 	uint32 totalBlocks = 0;
-	uint32 totalBytes = 0;
+	size_t totalBytes = 0;
 	uint32 totalPuddles =0 ;
 	uint32 poolCount = 0;
 	for (uint32 i=0 ; i<m_numPools ; i++)
@@ -861,8 +856,6 @@ static void Mem_Stats_f(CPlayerEntity *ent)
 			continue;
 
 		poolCount++;
-		if (poolCount & 1)
-			Com_Printf (0, S_COLOR_GREY);
 
 		// Cycle through the blocks, and find out how many are puddle allocations
 		uint32 numPuddles = 0;

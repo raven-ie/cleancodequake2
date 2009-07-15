@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 // ColorVec.cpp
 //
 
+#include "../game/cc_options.h"
 #include "shared.h"
 
 const colorf	Q_FColorBlack(0, 0, 0, 1);

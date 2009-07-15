@@ -181,7 +181,7 @@ void FS_CopyFile(char *src, char *dst)
 	byte buffer[65536];
 	for ( ; ; )
 	{
-		int l = fread(buffer, 1, sizeof(buffer), f1);
+		size_t l = fread(buffer, 1, sizeof(buffer), f1);
 		if (!l)
 			break;
 		fwrite(buffer, 1, l, f2);
@@ -289,14 +289,14 @@ FS_Read
 Properly handles partial reads
 =================
 */
-int FS_Read(void *buffer, const int len, fileHandle_t fileNum)
+size_t FS_Read(void *buffer, const size_t len, fileHandle_t fileNum)
 {
 	fsHandleIndex_t *handle = FS_GetHandle(fileNum);
 	if (handle->openMode != FS_MODE_READ_BINARY)
 		Com_Error (ERR_FATAL, "FS_Read: %s: was not opened in read mode", handle->name);
 
 	// Read in chunks for progress bar
-	int remaining = len;
+	size_t remaining = len;
 	byte *buf = (byte *)buffer;
 
 	bool tried = false;
@@ -305,7 +305,7 @@ int FS_Read(void *buffer, const int len, fileHandle_t fileNum)
 		// File
 		while (remaining)
 		{
-			int read = fread(buf, 1, remaining, handle->regFile);
+			size_t read = fread(buf, 1, remaining, handle->regFile);
 			switch(read)
 			{
 			case 0:
@@ -344,7 +344,7 @@ int FS_Read(void *buffer, const int len, fileHandle_t fileNum)
 FS_Write
 =================
 */
-int FS_Write(void *buffer, const int size, fileHandle_t fileNum)
+size_t FS_Write(void *buffer, const size_t size, fileHandle_t fileNum)
 {
 	fsHandleIndex_t *handle = FS_GetHandle(fileNum);
 	switch(handle->openMode)
@@ -362,7 +362,7 @@ int FS_Write(void *buffer, const int size, fileHandle_t fileNum)
 		Com_Error(ERR_FATAL, "FS_Write: size < 0");
 
 	// Write
-	int remaining = size;
+	size_t remaining = size;
 	byte *buf = (byte *)buffer;
 
 	if (handle->regFile)
@@ -370,7 +370,7 @@ int FS_Write(void *buffer, const int size, fileHandle_t fileNum)
 		// File
 		while (remaining)
 		{
-			int write = fwrite(buf, 1, remaining, handle->regFile);
+			size_t write = fwrite(buf, 1, remaining, handle->regFile);
 
 			switch(write)
 			{
@@ -402,7 +402,7 @@ int FS_Write(void *buffer, const int size, fileHandle_t fileNum)
 FS_Seek
 =================
 */
-void FS_Seek(fileHandle_t fileNum, const int offset, const EFSSeekOrigin seekOrigin)
+void FS_Seek(fileHandle_t fileNum, const long offset, const EFSSeekOrigin seekOrigin)
 {
 	fsHandleIndex_t *handle = FS_GetHandle(fileNum);
 	if (handle->regFile)

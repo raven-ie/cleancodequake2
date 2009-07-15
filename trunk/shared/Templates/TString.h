@@ -19,38 +19,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 // TString.h
 
-/*
-==============================================================================
-
-	STRING RELATED FUNCTIONS
-
-==============================================================================
-*/
-
-void	Q_snprintfz(char *dest, size_t size, const char *fmt, ...);
-void	Q_strcatz(char *dst, const char *src, int dstSize);
-size_t	Q_strncpyz(char *dest, const char *src, size_t size);
-
-char	*Q_strlwr(char *s);
-char	*Q_strupr(char *s);
-
-#ifdef id386
-int __cdecl Q_tolower (int c);
-#else // id386
-inline int Q_tolower(int chr)
-{
-	return tolower(chr);
-}
-#endif // id386
-inline int Q_toupper(int chr)
-{
-	return toupper(chr);
-}
-
-// ===========================================================================
-
-int		Q_WildcardMatch (const char *filter, const char *string, int ignoreCase);
-char	*Q_VarArgs (char *format, ...);
 
 #ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 /*

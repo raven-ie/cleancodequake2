@@ -192,10 +192,6 @@ void SP_misc_ctf_small_banner (edict_t *ent);
 
 void CreateCTFStatusbar ();
 
-void UpdateChaseCam(CPlayerEntity *ent);
-void ChaseNext(CPlayerEntity *ent);
-void ChasePrev(CPlayerEntity *ent);
-
 void CTFObserver(CPlayerEntity *ent);
 
 void SP_trigger_teleport (edict_t *ent);
