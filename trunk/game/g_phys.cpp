@@ -458,14 +458,21 @@ bool SV_Push (edict_t *pusher, vec3_t move, vec3_t amove)
 			pushed_p->ent = check;
 			Vec3Copy (check->state.origin, pushed_p->origin);
 			Vec3Copy (check->state.angles, pushed_p->angles);
-			pushed_p++;
 
 			// try moving the contacted entity 
 			Vec3Add (check->state.origin, move, check->state.origin);
 			if (check->client)
+			{
 				check->client->playerState.pMove.deltaAngles[YAW] += amove[YAW];
+
+				//r1: dead-body-on-lift / other random view distortion fix
+				pushed_p->deltayaw = pushed_p->ent->client->playerState.pMove.deltaAngles[YAW];
+			}
+
 			else
 				check->state.angles[YAW] += amove[YAW];
+
+			pushed_p++;
 
 			// figure movement due to the pusher's amove
 			Vec3Subtract (check->state.origin, pusher->state.origin, org);

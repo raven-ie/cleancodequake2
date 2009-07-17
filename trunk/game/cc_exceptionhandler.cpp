@@ -42,7 +42,11 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include <conio.h>
 #include <process.h>
 #include <dbghelp.h>
+
+#ifdef id386
+#define USE_GZ
 #include "../minizip/zlib.h"
+#endif
 
 #define APP_FULLNAME "CleanCode Quake II"
 
@@ -328,7 +332,6 @@ DWORD EGLExceptionHandler (DWORD exceptionCode, LPEXCEPTION_POINTERS exceptionIn
 	CONTEXT						context = *exceptionInfo->ContextRecord;
 	SYMBOL_INFO					*symInfo;
 	OSVERSIONINFOEX				osInfo;
-	bool						minidumped;
 #ifdef USE_CURL
 	bool						upload;
 #endif
@@ -544,7 +547,6 @@ DWORD EGLExceptionHandler (DWORD exceptionCode, LPEXCEPTION_POINTERS exceptionIn
 	fprintf (fhReport, "\r\n");
 
 	// Write a minidump
-	minidumped = false;
 	if (fnMiniDumpWriteDump) {
 		HANDLE	hFile;
 
@@ -561,15 +563,18 @@ DWORD EGLExceptionHandler (DWORD exceptionCode, LPEXCEPTION_POINTERS exceptionIn
 				CloseHandle (hFile);
 
 				FILE	*fh;
+#ifdef USE_GZ
 				CHAR	zPath[MAX_PATH];
+#endif
 
 #ifdef CRT_USE_UNDEPRECATED_FUNCTIONS
 				fopen_s (&fh, dumpPath, "rb");
 #else
 				fh = fopen (dumpPath, "rb");
 #endif
-				if (fh) {
-					
+				if (fh)
+#ifdef USE_GZ
+				{
 					BYTE	buff[0xFFFF];
 					size_t	len;
 					gzFile	gz;
@@ -580,15 +585,25 @@ DWORD EGLExceptionHandler (DWORD exceptionCode, LPEXCEPTION_POINTERS exceptionIn
 						while ((len = fread (buff, 1, sizeof(buff), fh)) > 0)
 							gzwrite (gz, buff, (unsigned int)len);
 						gzclose (gz);
+#endif
 						fclose (fh);
+#ifdef USE_GZ
 					}
 				}
+#endif
 		
+#ifdef USE_GZ
 				DeleteFile (dumpPath);
 				Q_strncpyz (dumpPath, zPath, sizeof(dumpPath));
+#endif
 
-				fprintf (fhReport, "A minidump was saved to %s.\r\nPlease include this file when posting a crash report.\r\n", dumpPath);
-				minidumped = true;
+				fprintf (fhReport, "A "
+#ifdef USE_GZ
+					"minidump"
+#else
+					"dump"
+#endif
+					"was saved to %s.\r\nPlease include this file when posting a crash report.\r\n", dumpPath);
 			}
 			else {
 				CloseHandle (hFile);

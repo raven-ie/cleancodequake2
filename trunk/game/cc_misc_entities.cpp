@@ -33,11 +33,14 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 
-class CMiscExploBox : public CStepPhysics, public CHurtableEntity, public CThinkableEntity, public CTouchableEntity
+class CMiscExploBox : public CMapEntity, public CStepPhysics, public CHurtableEntity, public CThinkableEntity, public CTouchableEntity
 {
 	bool Dropped;
 public:
 	CMiscExploBox () :
+	CBaseEntity(),
+	CMapEntity(),
+	CThinkableEntity(),
 	CHurtableEntity (),
 	CStepPhysics()
 	{
@@ -63,6 +66,8 @@ public:
 
 	CMiscExploBox (int Index) : 
 	CBaseEntity(Index),
+	CMapEntity(Index),
+	CThinkableEntity(),
 	CHurtableEntity(Index),
 	CStepPhysics(Index)
 	{
@@ -179,15 +184,10 @@ public:
 	{
 		return CStepPhysics::Run ();
 	};
+
+	void MapSpawn ()
+	{
+	};
 };
 
-void SP_misc_explobox (edict_t *self)
-{
-	if (game.mode & GAME_DEATHMATCH)
-	{
-		G_FreeEdict (self);
-		return;
-	}
-
-	self->Entity = QNew (com_levelPool, 0) CMiscExploBox(self->state.number);
-}
+LINK_CLASSNAME_TO_CLASS ("misc_explobox",CMiscExploBox);
