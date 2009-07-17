@@ -472,3 +472,13 @@ CWorldEntity::CWorldEntity (int Index) :
 CBaseEntity(Index)
 {
 };
+
+CMapEntity::CMapEntity () : 
+CBaseEntity()
+{
+};
+
+CMapEntity::CMapEntity (int Index) : 
+CBaseEntity(Index)
+{
+};

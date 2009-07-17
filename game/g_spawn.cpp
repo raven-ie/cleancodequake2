@@ -99,7 +99,6 @@ void SP_info_notnull (edict_t *self);
 void SP_path_corner (edict_t *self);
 void SP_point_combat (edict_t *self);
 
-void SP_misc_explobox (edict_t *self);
 void SP_misc_banner (edict_t *self);
 void SP_misc_satellite_dish (edict_t *self);
 void SP_misc_actor (edict_t *self);
@@ -209,7 +208,7 @@ spawn_t	spawns[] = {
 	{"path_corner", SP_path_corner},
 	{"point_combat", SP_point_combat},
 
-	{"misc_explobox", SP_misc_explobox},
+	//{"misc_explobox", SP_misc_explobox},
 	{"misc_banner", SP_misc_banner},
 	{"misc_satellite_dish", SP_misc_satellite_dish},
 	//{"misc_actor", SP_misc_actor},
@@ -298,6 +297,11 @@ void ED_CallSpawn (edict_t *ent)
 	}
 	else
 		ent->Monster = NULL;
+
+	// Check CleanCode stuff
+	CBaseEntity *MapEntity = ResolveMapEntity(ent);
+	if (MapEntity != NULL)
+		return;
 
 	// check normal spawn functions
 	for (s=spawns ; s->name ; s++)
@@ -560,8 +564,6 @@ __try
 
 	CPlayerEntity::SaveClientData ();
 
-	int *test = QNew (com_gamePool, 0) int;
-	*test = 5;
 	Mem_FreePool (com_levelPool);
 	gEntString = Mem_PoolStrDup(entities, com_levelPool, 0);
 

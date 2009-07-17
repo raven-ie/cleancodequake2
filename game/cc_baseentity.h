@@ -203,3 +203,14 @@ public:
 	CWorldEntity ();
 	CWorldEntity (int Index);
 };
+
+// An entity that can be seen via a map.
+// Just to bypass the damn abstractness I did.
+class CMapEntity : public virtual CBaseEntity
+{
+public:
+	char		*Classname;
+
+	CMapEntity ();
+	CMapEntity (int Index);
+};
