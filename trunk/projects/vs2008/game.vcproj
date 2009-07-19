@@ -934,99 +934,103 @@
 			Filter="h;hpp;hxx;hm;inl;fi;fd"
 			>
 			<File
-				RelativePath="g_local.h"
+				RelativePath="..\..\game\g_local.h"
 				>
 			</File>
 			<File
-				RelativePath="game.h"
+				RelativePath="..\..\game\game.h"
 				>
 			</File>
 			<File
-				RelativePath="m_actor.h"
+				RelativePath="..\..\game\m_actor.h"
 				>
 			</File>
 			<File
-				RelativePath="m_berserk.h"
+				RelativePath="..\..\game\m_berserk.h"
 				>
 			</File>
 			<File
-				RelativePath="m_boss2.h"
+				RelativePath="..\..\game\m_boss2.h"
 				>
 			</File>
 			<File
-				RelativePath="m_boss31.h"
+				RelativePath="..\..\game\m_boss31.h"
 				>
 			</File>
 			<File
-				RelativePath="m_boss32.h"
+				RelativePath="..\..\game\m_boss32.h"
 				>
 			</File>
 			<File
-				RelativePath="m_brain.h"
+				RelativePath="..\..\game\m_brain.h"
 				>
 			</File>
 			<File
-				RelativePath="m_chick.h"
+				RelativePath="..\..\game\m_chick.h"
 				>
 			</File>
 			<File
-				RelativePath="m_flipper.h"
+				RelativePath="..\..\game\m_flipper.h"
 				>
 			</File>
 			<File
-				RelativePath="m_float.h"
+				RelativePath="..\..\game\m_float.h"
 				>
 			</File>
 			<File
-				RelativePath="m_flyer.h"
+				RelativePath="..\..\game\m_flyer.h"
 				>
 			</File>
 			<File
-				RelativePath="m_gladiator.h"
+				RelativePath="..\..\game\m_gladiator.h"
 				>
 			</File>
 			<File
-				RelativePath="m_gunner.h"
+				RelativePath="..\..\game\m_gunner.h"
 				>
 			</File>
 			<File
-				RelativePath="m_hover.h"
+				RelativePath="..\..\game\m_hover.h"
 				>
 			</File>
 			<File
-				RelativePath="m_infantry.h"
+				RelativePath="..\..\game\m_infantry.h"
 				>
 			</File>
 			<File
-				RelativePath="m_insane.h"
+				RelativePath="..\..\game\m_insane.h"
 				>
 			</File>
 			<File
-				RelativePath="m_medic.h"
+				RelativePath="..\..\game\m_medic.h"
 				>
 			</File>
 			<File
-				RelativePath="m_mutant.h"
+				RelativePath="..\..\game\m_mutant.h"
 				>
 			</File>
 			<File
-				RelativePath="m_parasite.h"
+				RelativePath="..\..\game\m_parasite.h"
 				>
 			</File>
 			<File
-				RelativePath="m_player.h"
+				RelativePath="..\..\game\m_player.h"
 				>
 			</File>
 			<File
-				RelativePath="m_soldier.h"
+				RelativePath="..\..\game\m_rider.h"
 				>
 			</File>
 			<File
-				RelativePath="m_supertank.h"
+				RelativePath="..\..\game\m_soldier.h"
 				>
 			</File>
 			<File
-				RelativePath="m_tank.h"
+				RelativePath="..\..\game\m_supertank.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\m_tank.h"
 				>
 			</File>
 		</Filter>

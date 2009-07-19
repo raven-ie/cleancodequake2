@@ -370,4 +370,6 @@ public:
 	void ChaseNext();
 	void ChasePrev();
 	void GetChaseTarget ();
+
+	void TossHead (int damage);
 };

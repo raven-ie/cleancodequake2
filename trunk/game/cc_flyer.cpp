@@ -339,6 +339,9 @@ void CFlyer::Fire (int FlashNumber)
 	vec3_t	dir;
 	int		effect;
 
+	if (!Entity->gameEntity->enemy)
+		return;
+
 	vec3_t angles, origin;
 	Entity->State.GetAngles(angles);
 	Entity->State.GetOrigin(origin);

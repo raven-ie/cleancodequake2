@@ -161,7 +161,15 @@ void WriteAngle (float val)
 	if (val < 0 || val > 360)
 		Com_Printf (0, "Malformed angle may have been written!\n");
 
-	gi.WriteAngle (val);
+	WriteByte (ANGLE2BYTE (val));
+}
+
+void WriteAngle16 (float val)
+{
+	if (val < 0 || val > 360)
+		Com_Printf (0, "Malformed angle may have been written!\n");
+
+	WriteShort (ANGLE2SHORT (val));
 }
 
 void WriteString (char *val)
@@ -175,28 +183,65 @@ void WriteString (char *val)
 	gi.WriteString (val);
 }
 
+void WriteCoord (float f)
+{
+	WriteShort ((int)(f * 8));
+}
+
 void WritePosition (vec3_t val)
 {
 	if (!val)
-		gi.WritePosition (vec3Origin);
+	{
+		for (int i = 0; i < 3; i++)
+			WriteCoord(vec3Origin[i]);
+	}
 	else
 	{
-		if ((val[0] > 8192 || val[0] < -8192) || (val[1] > 8192 || val[1] < -8192) || (val[2] > 8192 || val[2] < -8192))
-			Com_Printf (0, "Malformed position may have been written!\n");
-		gi.WritePosition (val);
+		bool Printed = false;
+		for (int i = 0; i < 3; i++)
+		{
+			if (!Printed && (val[i] > 4096 || val[i] < -4096))
+			{			
+				Com_Printf (0, "Malformed position may have been written!\n");
+				Printed = true;
+			}
+
+			WriteCoord(val[i]);
+		}
+	}
+}
+
+void WritePosition (vec3f val)
+{
+	if (!val)
+	{
+		for (int i = 0; i < 3; i++)
+			WriteCoord(vec3Origin[i]);
+	}
+	else
+	{
+		bool Printed = false;
+		for (int i = 0; i < 3; i++)
+		{
+			if (!Printed && (val[i] > 4096 || val[i] < -4096))
+			{			
+				Com_Printf (0, "Malformed position may have been written!\n");
+				Printed = true;
+			}
+
+			WriteCoord(val[i]);
+		}
 	}
 }
 
 void WriteDirection (vec3_t val)
 {
-	if (!val)
-		gi.WritePosition (vec3Origin);
-	else
-	{
-		if ((val[0] > 1 || val[0] < -1) || (val[1] > 1 || val[1] < -1) || (val[2] > 1 || val[2] < -1))
-			Com_Printf (0, "Malformed direction may have been written!\n");
-		gi.WriteDir (val);
-	}
+	WriteByte (DirToByte (val));
+}
+
+void WriteDirection (vec3f val)
+{
+	WriteByte (DirToByte (val));
 }
 
 _CC_ENABLE_DEPRECATION

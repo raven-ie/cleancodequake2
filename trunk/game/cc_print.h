@@ -36,7 +36,6 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #ifdef USE_EXTENDED_GAME_IMPORTS
 #define ClientPrintf gi.cprintf
 #define DebugPrintf gi.dprintf
-#define CenterPrintf gi.centerprintf
 #define BroadcastPrintf gi.bprintf
 #else
 void ClientPrintf (edict_t *ent, EGamePrintLevel printLevel, char *fmt, ...);
@@ -48,6 +47,5 @@ void DebugPrintf (char *fmt, ...);
 #define DebugPrintf DeveloperPrintf
 #endif
 
-void CenterPrintf (edict_t *ent, char *fmt, ...);
 void BroadcastPrintf (EGamePrintLevel printLevel, char *fmt, ...);
 #endif

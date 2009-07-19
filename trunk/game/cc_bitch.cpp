@@ -377,7 +377,7 @@ void CMaiden::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 
 // regular death
 	Entity->gameEntity->deadflag = DEAD_DEAD;
-	Entity->gameEntity->takedamage = DAMAGE_YES;
+	Entity->gameEntity->takedamage = true;
 
 	n = rand() % 2;
 	CurrentMove = (n == 0) ? &ChickMoveDeath1 : &ChickMoveDeath2;
@@ -391,7 +391,7 @@ void CMaiden::DuckDown ()
 		return;
 	AIFlags |= AI_DUCKED;
 	Entity->maxs[2] -= 32;
-	Entity->gameEntity->takedamage = DAMAGE_YES;
+	Entity->gameEntity->takedamage = true;
 	PauseTime = level.framenum + 10;
 	Entity->Link ();
 }
@@ -408,7 +408,7 @@ void CMaiden::DuckUp ()
 {
 	AIFlags &= ~AI_DUCKED;
 	Entity->maxs[2] += 32;
-	Entity->gameEntity->takedamage = DAMAGE_AIM;
+	Entity->gameEntity->takedamage = true;
 	Entity->Link ();
 }
 

@@ -68,72 +68,81 @@ public:
 	};
 };
 
+typedef int EMonsterAIFlags;
+enum
+{
 #ifndef MONSTER_USE_ROGUE_AI
 	//monster ai flags
-	#define AI_STAND_GROUND			0x00000001
-	#define AI_TEMP_STAND_GROUND	0x00000002
-	#define AI_SOUND_TARGET			0x00000004
-	#define AI_LOST_SIGHT			0x00000008
-	#define AI_PURSUIT_LAST_SEEN	0x00000010
-	#define AI_PURSUE_NEXT			0x00000020
-	#define AI_PURSUE_TEMP			0x00000040
-	#define AI_HOLD_FRAME			0x00000080
-	#define AI_GOOD_GUY				0x00000100
-	#define AI_BRUTAL				0x00000200
-	#define AI_NOSTEP				0x00000400
-	#define AI_DUCKED				0x00000800
-	#define AI_COMBAT_POINT			0x00001000
-	#define AI_MEDIC				0x00002000
-	#define AI_RESURRECTING			0x00004000
-	#define	AI_SLIDE				0x00008000
+	AI_STAND_GROUND			= BIT(0),
+	AI_TEMP_STAND_GROUND	= BIT(1),
+	AI_SOUND_TARGET			= BIT(2),
+	AI_LOST_SIGHT			= BIT(3),
+	AI_PURSUIT_LAST_SEEN	= BIT(4),
+	AI_PURSUE_NEXT			= BIT(5),
+	AI_PURSUE_TEMP			= BIT(6),
+	AI_HOLD_FRAME			= BIT(7),
+	AI_GOOD_GUY				= BIT(8),
+	AI_BRUTAL				= BIT(9),
+	AI_NOSTEP				= BIT(10),
+	AI_DUCKED				= BIT(11),
+	AI_COMBAT_POINT			= BIT(12),
+	AI_MEDIC				= BIT(13),
+	AI_RESURRECTING			= BIT(14),
+	AI_SLIDE				= BIT(15),
 #else
 	//monster ai flags
-	#define AI_STAND_GROUND			0x00000001
-	#define AI_TEMP_STAND_GROUND	0x00000002
-	#define AI_SOUND_TARGET			0x00000004
-	#define AI_LOST_SIGHT			0x00000008
-	#define AI_PURSUIT_LAST_SEEN	0x00000010
-	#define AI_PURSUE_NEXT			0x00000020
-	#define AI_PURSUE_TEMP			0x00000040
-	#define AI_HOLD_FRAME			0x00000080
-	#define AI_GOOD_GUY				0x00000100
-	#define AI_BRUTAL				0x00000200
-	#define AI_NOSTEP				0x00000400
-	#define AI_DUCKED				0x00000800
-	#define AI_COMBAT_POINT			0x00001000
-	#define AI_MEDIC				0x00002000
-	#define AI_RESURRECTING			0x00004000
+	AI_STAND_GROUND			= BIT(0),
+	AI_TEMP_STAND_GROUND	= BIT(1),
+	AI_SOUND_TARGET			= BIT(2),
+	AI_LOST_SIGHT			= BIT(3),
+	AI_PURSUIT_LAST_SEEN	= BIT(4),
+	AI_PURSUE_NEXT			= BIT(5),
+	AI_PURSUE_TEMP			= BIT(6),
+	AI_HOLD_FRAME			= BIT(7),
+	AI_GOOD_GUY				= BIT(8),
+	AI_BRUTAL				= BIT(9),
+	AI_NOSTEP				= BIT(10),
+	AI_DUCKED				= BIT(11),
+	AI_COMBAT_POINT			= BIT(12),
+	AI_MEDIC				= BIT(13),
+	AI_RESURRECTING			= BIT(14),
 
 	//ROGUE
-	#define AI_WALK_WALLS			0x00008000
-	#define AI_MANUAL_STEERING		0x00010000
-	#define AI_TARGET_ANGER			0x00020000
-	#define AI_DODGING				0x00040000
-	#define AI_CHARGING				0x00080000
-	#define AI_HINT_PATH			0x00100000
-	#define	AI_IGNORE_SHOTS			0x00200000
+	AI_WALK_WALLS			= BIT(15),
+	AI_MANUAL_STEERING		= BIT(16),
+	AI_TARGET_ANGER			= BIT(17),
+	AI_DODGING				= BIT(18),
+	AI_CHARGING				= BIT(19),
+	AI_HINT_PATH			= BIT(20),
+	AI_IGNORE_SHOTS			= BIT(21),
 	// PMM - FIXME - last second added for E3 .. there's probably a better way to do this, but
 	// this works
-	#define	AI_DO_NOT_COUNT			0x00400000	// set for healed monsters
-	#define	AI_SPAWNED_CARRIER		0x00800000	// both do_not_count and spawned are set for spawned monsters
-	#define	AI_SPAWNED_MEDIC_C		0x01000000	// both do_not_count and spawned are set for spawned monsters
-	#define	AI_SPAWNED_WIDOW		0x02000000	// both do_not_count and spawned are set for spawned monsters
-	#define AI_SPAWNED_MASK			0x03800000	// mask to catch all three flavors of spawned
-	#define	AI_BLOCKED				0x04000000	// used by blocked_checkattack: set to say I'm attacking while blocked 
-												// (prevents run-attacks)
+	AI_DO_NOT_COUNT			= BIT(22),	// set for healed monsters
+	AI_SPAWNED_CARRIER		= BIT(23),	// both do_not_count and spawned are set for spawned monsters
+	AI_SPAWNED_MEDIC_C		= BIT(24),	// both do_not_count and spawned are set for spawned monsters
+	AI_SPAWNED_WIDOW		= BIT(25),	// both do_not_count and spawned are set for spawned monsters
+	// mask to catch all three flavors of spawned
+	AI_SPAWNED_MASK			= (AI_SPAWNED_CARRIER | AI_SPAWNED_MEDIC_C | AI_SPAWNED_WIDOW),
+	AI_BLOCKED				= BIT(26),	// used by blocked_checkattack: set to say I'm attacking while blocked 
+										// (prevents run-attacks)
 #endif
+};
 
-#define MF_HAS_MELEE			0x00000001
-#define MF_HAS_IDLE				0x00000002
-#define MF_HAS_SEARCH			0x00000004
-#define	MF_HAS_SIGHT			0x00000008
-#define MF_HAS_ATTACK			0x00000010
+typedef int EMonsterFlags;
+enum
+{
+	MF_HAS_MELEE			= BIT(0),
+	MF_HAS_IDLE				= BIT(1),
+	MF_HAS_SEARCH			= BIT(2),
+	MF_HAS_SIGHT			= BIT(3),
+	MF_HAS_ATTACK			= BIT(4),
 #ifdef MONSTER_USE_ROGUE_AI
-#define MF_HAS_DODGE			0x00000020
-#define MF_HAS_DUCK				0x00000040
-#define MF_HAS_UNDUCK			0x00000080
-#define MF_HAS_SIDESTEP			0x00000100
+	MF_HAS_DODGE			= BIT(5),
+	MF_HAS_DUCK				= BIT(6),
+	MF_HAS_UNDUCK			= BIT(7),
+	MF_HAS_SIDESTEP			= BIT(8),
 #endif
+};
 
 //monster attack state
 enum EAttackState

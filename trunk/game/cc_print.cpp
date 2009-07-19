@@ -55,8 +55,9 @@ static void SV_ClientPrintf (edict_t *ent, EGamePrintLevel printLevel, char *fmt
 	vsnprintf_s (string, sizeof(string), sizeof(string), fmt, argptr);
 	va_end (argptr);
 
-	WriteByte (SVC_PRINT);
-	WriteByte (printLevel);
+	WriteByte ((printLevel != PRINT_CENTER) ? SVC_PRINT : SVC_CENTERPRINT);
+	if (printLevel != PRINT_CENTER)
+		WriteByte (printLevel);
 	WriteString (string);
 	Cast (CASTFLAG_UNRELIABLE, ent);
 }
@@ -138,31 +139,6 @@ _CC_ENABLE_DEPRECATION
 }
 #endif
 
-void CenterPrintf (edict_t *ent, char *fmt, ...)
-{
-	char		msg[MAX_COMPRINT];
-	va_list		argptr;
-	int			n;
-
-	if (!ent)
-	{
-		DebugPrintf ("CleanCode Warning: CenterPrintf to a non-entity\n");
-		return;
-	}
-
-	n = ent - g_edicts;
-	if ((n < 1) || (n > game.maxclients))
-		return;
-
-	va_start (argptr,fmt);
-	vsnprintf_s (msg, sizeof(msg), sizeof(msg), fmt, argptr);
-	va_end (argptr);
-
-	WriteByte (SVC_CENTERPRINT);
-	WriteString (msg);
-	Cast (CASTFLAG_RELIABLE, ent);
-}
-
 void BroadcastPrintf (EGamePrintLevel printLevel, char *fmt, ...)
 {
 	va_list		argptr;
@@ -195,8 +171,10 @@ void BroadcastPrintf (EGamePrintLevel printLevel, char *fmt, ...)
 		if (Player->Client.pers.state != SVCS_SPAWNED)
 			continue;
 
-		WriteByte (SVC_PRINT);
-		WriteByte (printLevel);
+
+		WriteByte ((printLevel != PRINT_CENTER) ? SVC_PRINT : SVC_CENTERPRINT);
+		if (printLevel != PRINT_CENTER)
+			WriteByte (printLevel);
 		WriteString (string);
 		Cast (CASTFLAG_UNRELIABLE, cl);
 	}

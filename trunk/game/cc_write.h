@@ -31,12 +31,16 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // "Write" functions to write and check for malformed writes.
 //
 
-void WriteDirection (vec3_t val);
-void WritePosition (vec3_t val);
-void WriteString (char *val);
-void WriteAngle (float val);
-void WriteFloat (float val);
-void WriteLong (long val);
-void WriteShort (short val);
-void WriteByte (byte val);
 void WriteChar (char val);
+void WriteByte (byte val);
+void WriteShort (short val);
+void WriteLong (long val);
+void WriteFloat (float val);
+void WriteAngle (float val);
+void WriteAngle16 (float val);
+void WriteString (char *val);
+void WriteCoord (float f);
+void WritePosition (vec3_t val);
+void WritePosition (vec3f val);
+void WriteDirection (vec3_t val);
+void WriteDirection (vec3f val);

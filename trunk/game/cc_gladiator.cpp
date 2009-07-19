@@ -322,7 +322,7 @@ void CGladiator::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage,
 // regular death
 	Entity->PlaySound (CHAN_VOICE, SoundDie, 1, ATTN_NORM, 0);
 	Entity->gameEntity->deadflag = DEAD_DEAD;
-	Entity->gameEntity->takedamage = DAMAGE_YES;
+	Entity->gameEntity->takedamage = true;
 
 	CurrentMove = &GladiatorMoveDeath;
 }

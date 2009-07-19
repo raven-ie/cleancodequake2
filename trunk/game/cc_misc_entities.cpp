@@ -58,7 +58,7 @@ public:
 		if (!gameEntity->dmg)
 			gameEntity->dmg = 150;
 
-		gameEntity->takedamage = DAMAGE_YES;
+		gameEntity->takedamage = true;
 		NextThink = level.framenum + FRAMETIME;
 
 		Link ();
@@ -85,7 +85,7 @@ public:
 		if (!gameEntity->dmg)
 			gameEntity->dmg = 150;
 
-		gameEntity->takedamage = DAMAGE_YES;
+		gameEntity->takedamage = true;
 		NextThink = level.framenum + FRAMETIME;
 
 		Link ();
@@ -173,7 +173,7 @@ public:
 
 	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 	{
-		gameEntity->takedamage = DAMAGE_NO;
+		gameEntity->takedamage = false;
 		NextThink = level.framenum + 2;
 		gameEntity->activator = attacker->gameEntity;
 	};

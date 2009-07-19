@@ -811,7 +811,7 @@ void CSuperTank::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage,
 {
 	Entity->PlaySound (CHAN_VOICE, SoundDeath);
 	Entity->gameEntity->deadflag = DEAD_DEAD;
-	Entity->gameEntity->takedamage = DAMAGE_NO;
+	Entity->gameEntity->takedamage = false;
 	Entity->gameEntity->count = 0;
 	CurrentMove = &SuperTankMoveDeath;
 }

@@ -353,7 +353,7 @@ void CGunner::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 // regular death
 	Entity->PlaySound (CHAN_VOICE, SoundDeath);
 	Entity->gameEntity->deadflag = DEAD_DEAD;
-	Entity->gameEntity->takedamage = DAMAGE_YES;
+	Entity->gameEntity->takedamage = true;
 	CurrentMove = &GunnerMoveDeath;
 }
 
@@ -370,7 +370,7 @@ void CGunner::DuckDown ()
 	}
 
 	Entity->maxs[2] -= 32;
-	Entity->gameEntity->takedamage = DAMAGE_YES;
+	Entity->gameEntity->takedamage = true;
 	PauseTime = level.framenum + 10;
 	Entity->Link ();
 #else
@@ -387,7 +387,7 @@ void CGunner::DuckDown ()
 	vec3f maxs = Entity->GetMaxs();
 	maxs.Z = BaseHeight - 32;
 	Entity->SetMaxs(maxs);
-	Entity->gameEntity->takedamage = DAMAGE_YES;
+	Entity->gameEntity->takedamage = true;
 	if (DuckWaitTime < level.framenum)
 		DuckWaitTime = level.framenum + 10;
 	Entity->Link ();
@@ -407,7 +407,7 @@ void CGunner::DuckUp ()
 {
 	AIFlags &= ~AI_DUCKED;
 	Entity->maxs[2] += 32;
-	Entity->gameEntity->takedamage = DAMAGE_AIM;
+	Entity->gameEntity->takedamage = true;
 	Entity->Link ();
 }
 #endif

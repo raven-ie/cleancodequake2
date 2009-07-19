@@ -347,7 +347,7 @@ void AI_SetSightClient (void)
 		ent = &g_edicts[i];
 		if (ent->inUse
 			&& ent->health > 0
-			&& !(ent->flags & FL_NOTARGET) )
+			&& !(ent->flags & FL_NOTARGET) && (level.sight_client != dynamic_cast<CPlayerEntity*>(ent->Entity)))
 		{
 			level.sight_client = dynamic_cast<CPlayerEntity*>(ent->Entity);
 			return;		// got one
@@ -510,7 +510,7 @@ void CMonsterEntity::ThrowHead (MediaIndex gibIndex, int damage, int type)
 	State.SetSound (0);
 	gameEntity->flags |= FL_NO_KNOCKBACK;
 	SetSvFlags (GetSvFlags() & ~SVF_MONSTER);
-	gameEntity->takedamage = DAMAGE_YES;
+	gameEntity->takedamage = true;
 
 	if (type == GIB_ORGANIC)
 	{
@@ -1199,7 +1199,7 @@ void CMonster::MonsterStart ()
 	Entity->NextThink = level.framenum + FRAMETIME;
 	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_MONSTER);
 	Entity->State.AddRenderEffects (RF_FRAMELERP);
-	Entity->gameEntity->takedamage = DAMAGE_AIM;
+	Entity->gameEntity->takedamage = true;
 	Entity->gameEntity->air_finished = level.framenum + 120;
 	Entity->gameEntity->use = &CMonster::MonsterUse;
 	Entity->gameEntity->max_health = Entity->gameEntity->health;
@@ -3884,7 +3884,7 @@ void CMonster::DuckDown ()
 	vec3f tempMaxs = Entity->GetMaxs();
 	tempMaxs.Z = BaseHeight - 32;
 	Entity->SetMaxs(tempMaxs);
-	Entity->gameEntity->takedamage = DAMAGE_YES;
+	Entity->gameEntity->takedamage = true;
 	if (DuckWaitTime < level.framenum)
 		DuckWaitTime = level.framenum + 10;
 	Entity->Link ();
@@ -3909,7 +3909,7 @@ void CMonster::UnDuck ()
 	vec3f tempMaxs = Entity->GetMaxs();
 	tempMaxs.Z = BaseHeight;
 	Entity->SetMaxs(tempMaxs);
-	Entity->gameEntity->takedamage = DAMAGE_AIM;
+	Entity->gameEntity->takedamage = true;
 	NextDuckTime = level.framenum + 5;
 	Entity->Link ();
 }

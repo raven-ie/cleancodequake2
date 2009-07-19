@@ -134,6 +134,33 @@ byte DirToByte(const vec3_t dirVec)
 
 /*
 =================
+DirToByte
+
+This isn't a real cheap function to call!
+=================
+*/
+byte DirToByte(const vec3f dirVec)
+{
+	if (!dirVec)
+		return 0;
+
+	byte best = 0;
+	float bestDot = 0;
+	for (byte i=0 ; i<NUMVERTEXNORMALS ; i++)
+	{
+		float dot = dirVec.Dot(m_byteDirs[i]);
+		if (dot > bestDot)
+		{
+			bestDot = dot;
+			best = i;
+		}
+	}
+
+	return best;
+}
+
+/*
+=================
 ByteToDir
 =================
 */

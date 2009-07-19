@@ -704,7 +704,7 @@ void CMutant::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 
 	Entity->PlaySound (CHAN_VOICE, SoundDeath);
 	Entity->gameEntity->deadflag = DEAD_DEAD;
-	Entity->gameEntity->takedamage = DAMAGE_YES;
+	Entity->gameEntity->takedamage = true;
 	Entity->State.SetSkinNum(1);
 
 	CurrentMove = (random() < 0.5) ? &MutantMoveDeath1 : &MutantMoveDeath2;
