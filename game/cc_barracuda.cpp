@@ -352,7 +352,7 @@ void CBarracudaShark::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int da
 // regular death
 	Entity->PlaySound (CHAN_VOICE, SoundDeath);
 	Entity->gameEntity->deadflag = DEAD_DEAD;
-	Entity->gameEntity->takedamage = DAMAGE_YES;
+	Entity->gameEntity->takedamage = true;
 	CurrentMove = &FlipperMoveDeath;
 }
 

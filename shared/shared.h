@@ -216,11 +216,14 @@ typedef uint32				fileHandle_t;
 #define MAX_OSPATH			128		// max length of a filesystem pathname
 
 // directory searching
-#define SFF_ARCH	0x01
-#define SFF_HIDDEN	0x02
-#define SFF_RDONLY	0x04
-#define SFF_SUBDIR	0x08
-#define SFF_SYSTEM	0x10
+enum ESearchFileFlags
+{
+	SFF_ARCH		= BIT(0),
+	SFF_HIDDEN		= BIT(1),
+	SFF_RDONLY		= BIT(2),
+	SFF_SUBDIR		= BIT(3),
+	SFF_SYSTEM		= BIT(4)
+};
 
 // these are used for FS_OpenFile
 enum EFSOpenMode
@@ -349,123 +352,135 @@ enum
 //
 // lower bits are stronger, and will eat weaker brushes completely
 //
-#define CONTENTS_SOLID			1		// an eye is never valid in a solid
-#define CONTENTS_WINDOW			2		// translucent, but not watery
-#define CONTENTS_AUX			4
-#define CONTENTS_LAVA			8
-#define CONTENTS_SLIME			16
-#define CONTENTS_WATER			32
-#define CONTENTS_MIST			64
+typedef int EBrushContents;
+enum 
+{
+	CONTENTS_SOLID			= BIT(0),		// an eye is never valid in a solid
+	CONTENTS_WINDOW			= BIT(1),		// translucent, but not watery
+	CONTENTS_AUX			= BIT(2),
+	CONTENTS_LAVA			= BIT(3),
+	CONTENTS_SLIME			= BIT(4),
+	CONTENTS_WATER			= BIT(5),
+	CONTENTS_MIST			= BIT(6),
+
+	#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
+	CONTENTS_FOG			= BIT(7), // Q3BSP
+	#endif
+
+	//
+	// remaining contents are non-visible, and don't eat brushes
+	//
+	CONTENTS_AREAPORTAL		= BIT(15),
+
+	CONTENTS_PLAYERCLIP		= BIT(16),
+	CONTENTS_MONSTERCLIP	= BIT(17),
+
+	//
+	// currents can be added to any other contents, and may be mixed
+	//
+	CONTENTS_CURRENT_0		= BIT(18),
+	CONTENTS_CURRENT_90		= BIT(19),
+	CONTENTS_CURRENT_180	= BIT(20),
+	CONTENTS_CURRENT_270	= BIT(21),
+	CONTENTS_CURRENT_UP		= BIT(22),
+	CONTENTS_CURRENT_DOWN	= BIT(23),
+
+	CONTENTS_ORIGIN			= BIT(24),	// removed before bsping an entity
+	CONTENTS_MONSTER		= BIT(25),	// should never be on a brush, only in game
+	CONTENTS_DEADMONSTER	= BIT(26),
+	CONTENTS_DETAIL			= BIT(27),	// brushes to be added after vis leafs
+	CONTENTS_TRANSLUCENT	= BIT(28),	// auto set if any surface has trans
+	CONTENTS_LADDER			= BIT(29),
+
+	#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
+	// Q3BSP
+	Q3CNTNTS_TELEPORTER		= BIT(18),
+	Q3CNTNTS_JUMPPAD		= BIT(19),
+	Q3CNTNTS_CLUSTERPORTAL	= BIT(20),
+	Q3CNTNTS_DONOTENTER		= BIT(21),
+
+	Q3CNTNTS_ORIGIN			= BIT(24),	// removed before bsping an entity
+
+	Q3CNTNTS_BODY			= BIT(25),	// should never be on a brush, only in game
+	Q3CNTNTS_CORPSE			= BIT(26),
+	Q3CNTNTS_DETAIL			= BIT(27),	// brushes not used for the bsp
+	Q3CNTNTS_STRUCTURAL		= BIT(28),	// brushes used for the bsp
+	Q3CNTNTS_TRANSLUCENT	= BIT(29),	// don't consume surface fragments inside
+	Q3CNTNTS_TRIGGER		= BIT(30),
+	Q3CNTNTS_NODROP			= BIT(31),	// don't leave bodies or items (death fog, lava)
+	// !Q3BSP
+	#endif
+
+	//
+	// content masks
+	//
+	CONTENTS_MASK_ALL			= (-1),
+	CONTENTS_MASK_SOLID			= (CONTENTS_SOLID|CONTENTS_WINDOW),
+	CONTENTS_MASK_PLAYERSOLID	= (CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_WINDOW|CONTENTS_MONSTER),
+	CONTENTS_MASK_DEADSOLID		= (CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_WINDOW),
+	#ifdef MONSTERS_HIT_MONSTERSOLID
+	CONTENTS_MASK_MONSTERSOLID	= (CONTENTS_SOLID|CONTENTS_WINDOW|CONTENTS_MONSTER|CONTENTS_MONSTERSOLID),
+	#else
+	CONTENTS_MASK_MONSTERSOLID	= (CONTENTS_SOLID|CONTENTS_WINDOW|CONTENTS_MONSTER),
+	#endif
+	CONTENTS_MASK_WATER			= (CONTENTS_WATER|CONTENTS_LAVA|CONTENTS_SLIME),
+	CONTENTS_MASK_OPAQUE		= (CONTENTS_SOLID|CONTENTS_SLIME|CONTENTS_LAVA),
+	CONTENTS_MASK_SHOT			= (CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_WINDOW|CONTENTS_DEADMONSTER),
+	CONTENTS_MASK_CURRENT		= (CONTENTS_CURRENT_0|CONTENTS_CURRENT_90|CONTENTS_CURRENT_180|CONTENTS_CURRENT_270|CONTENTS_CURRENT_UP|CONTENTS_CURRENT_DOWN),
+};
+
+typedef int ESurfaceFlags;
+enum
+{
+SURF_TEXINFO_LIGHT		= BIT(0),		// value will hold the light strength
+SURF_TEXINFO_SLICK		= BIT(1),		// affects game physics
+SURF_TEXINFO_SKY		= BIT(2),		// don't draw, but add to skybox
+SURF_TEXINFO_WARP		= BIT(3),		// turbulent water warp
+SURF_TEXINFO_TRANS33	= BIT(4),
+SURF_TEXINFO_TRANS66	= BIT(5),
+SURF_TEXINFO_FLOWING	= BIT(6),	// scroll towards angle
+SURF_TEXINFO_NODRAW		= BIT(7),	// don't bother referencing the texture
+
+SURF_TEXINFO_HINT		= BIT(8),	// these aren't known to the engine I believe
+SURF_TEXINFO_SKIP		= BIT(9),	// only the compiler uses them
+};
 
 #ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
-// Q3BSP
-#define CONTENTS_FOG			64
-// !Q3BSP
-#endif
-
-//
-// remaining contents are non-visible, and don't eat brushes
-//
-#define CONTENTS_AREAPORTAL		0x8000
-
-#define CONTENTS_PLAYERCLIP		0x10000
-#define CONTENTS_MONSTERCLIP	0x20000
-
-//
-// currents can be added to any other contents, and may be mixed
-//
-#define CONTENTS_CURRENT_0		0x40000
-#define CONTENTS_CURRENT_90		0x80000
-#define CONTENTS_CURRENT_180	0x100000
-#define CONTENTS_CURRENT_270	0x200000
-#define CONTENTS_CURRENT_UP		0x400000
-#define CONTENTS_CURRENT_DOWN	0x800000
-
-#define CONTENTS_ORIGIN			0x1000000	// removed before bsping an entity
-#define CONTENTS_MONSTER		0x2000000	// should never be on a brush, only in game
-#define CONTENTS_DEADMONSTER	0x4000000
-#define CONTENTS_DETAIL			0x8000000	// brushes to be added after vis leafs
-#define CONTENTS_TRANSLUCENT	0x10000000	// auto set if any surface has trans
-#define CONTENTS_LADDER			0x20000000
-
-#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
-// Q3BSP
-#define Q3CNTNTS_TELEPORTER		0x40000
-#define Q3CNTNTS_JUMPPAD		0x80000
-#define Q3CNTNTS_CLUSTERPORTAL	0x100000
-#define Q3CNTNTS_DONOTENTER		0x200000
-
-#define Q3CNTNTS_ORIGIN			0x1000000	// removed before bsping an entity
-
-#define Q3CNTNTS_BODY			0x2000000	// should never be on a brush, only in game
-#define Q3CNTNTS_CORPSE			0x4000000
-#define Q3CNTNTS_DETAIL			0x8000000	// brushes not used for the bsp
-#define Q3CNTNTS_STRUCTURAL		0x10000000	// brushes used for the bsp
-#define Q3CNTNTS_TRANSLUCENT	0x20000000	// don't consume surface fragments inside
-#define Q3CNTNTS_TRIGGER		0x40000000
-#define Q3CNTNTS_NODROP			0x80000000	// don't leave bodies or items (death fog, lava)
-// !Q3BSP
-#endif
-
-//
-// content masks
-//
-#define CONTENTS_MASK_ALL			(-1)
-#define CONTENTS_MASK_SOLID			(CONTENTS_SOLID|CONTENTS_WINDOW)
-#define CONTENTS_MASK_PLAYERSOLID	(CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_WINDOW|CONTENTS_MONSTER)
-#define CONTENTS_MASK_DEADSOLID		(CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_WINDOW)
-#ifdef MONSTERS_HIT_MONSTERSOLID
-#define CONTENTS_MASK_MONSTERSOLID	(CONTENTS_SOLID|CONTENTS_WINDOW|CONTENTS_MONSTER|CONTENTS_MONSTERSOLID)
-#else
-#define CONTENTS_MASK_MONSTERSOLID	(CONTENTS_SOLID|CONTENTS_WINDOW|CONTENTS_MONSTER)
-#endif
-#define CONTENTS_MASK_WATER			(CONTENTS_WATER|CONTENTS_LAVA|CONTENTS_SLIME)
-#define CONTENTS_MASK_OPAQUE		(CONTENTS_SOLID|CONTENTS_SLIME|CONTENTS_LAVA)
-#define CONTENTS_MASK_SHOT			(CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_WINDOW|CONTENTS_DEADMONSTER)
-#define CONTENTS_MASK_CURRENT		(CONTENTS_CURRENT_0|CONTENTS_CURRENT_90|CONTENTS_CURRENT_180|CONTENTS_CURRENT_270|CONTENTS_CURRENT_UP|CONTENTS_CURRENT_DOWN)
-
-
-#define SURF_TEXINFO_LIGHT		0x1		// value will hold the light strength
-#define SURF_TEXINFO_SLICK		0x2		// effects game physics
-#define SURF_TEXINFO_SKY		0x4		// don't draw, but add to skybox
-#define SURF_TEXINFO_WARP		0x8		// turbulent water warp
-#define SURF_TEXINFO_TRANS33	0x10
-#define SURF_TEXINFO_TRANS66	0x20
-#define SURF_TEXINFO_FLOWING	0x40	// scroll towards angle
-#define SURF_TEXINFO_NODRAW		0x80	// don't bother referencing the texture
-
-#define SURF_TEXINFO_HINT		0x100	// these aren't known to the engine I believe
-#define SURF_TEXINFO_SKIP		0x200	// only the compiler uses them
-
-#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
-// Q3BSP
-#define SHREF_NODAMAGE			0x1		// never give falling damage
-#define SHREF_SLICK				0x2		// effects game physics
-#define SHREF_SKY				0x4		// lighting from environment map
-#define SHREF_LADDER			0x8
-#define SHREF_NOIMPACT			0x10	// don't make missile explosions
-#define SHREF_NOMARKS			0x20	// don't leave missile marks
-#define SHREF_FLESH				0x40	// make flesh sounds and effects
-#define SHREF_NODRAW			0x80	// don't generate a drawsurface at all
-#define SHREF_HINT				0x100	// make a primary bsp splitter
-#define SHREF_SKIP				0x200	// completely ignore, allowing non-closed brushes
-#define SHREF_NOLIGHTMAP		0x400	// surface doesn't need a lightmap
-#define SHREF_POINTLIGHT		0x800	// generate lighting info at vertexes
-#define SHREF_METALSTEPS		0x1000	// clanking footsteps
-#define SHREF_NOSTEPS			0x2000	// no footstep sounds
-#define SHREF_NONSOLID			0x4000	// don't collide against curves with this set
-#define SHREF_LIGHTFILTER		0x8000	// act as a light filter during q3map -light
-#define SHREF_ALPHASHADOW		0x10000	// do per-pixel light shadow casting in q3map
-#define SHREF_NODLIGHT			0x20000	// never add dynamic lights
-#define SHREF_DUST				0x40000 // leave a dust trail when walking on this surface
-// !Q3BSP
+typedef int EQ3SurfaceFlags;
+enum
+{
+	// Q3BSP
+	SHREF_NODAMAGE			= BIT(0),		// never give falling damage
+	SHREF_SLICK				= BIT(1),		// effects game physics
+	SHREF_SKY				= BIT(2),		// lighting from environment map
+	SHREF_LADDER			= BIT(3),
+	SHREF_NOIMPACT			= BIT(4),	// don't make missile explosions
+	SHREF_NOMARKS			= BIT(5),	// don't leave missile marks
+	SHREF_FLESH				= BIT(6),	// make flesh sounds and effects
+	SHREF_NODRAW			= BIT(7),	// don't generate a drawsurface at all
+	SHREF_HINT				= BIT(8),	// make a primary bsp splitter
+	SHREF_SKIP				= BIT(9),	// completely ignore, allowing non-closed brushes
+	SHREF_NOLIGHTMAP		= BIT(10),	// surface doesn't need a lightmap
+	SHREF_POINTLIGHT		= BIT(11),	// generate lighting info at vertexes
+	SHREF_METALSTEPS		= BIT(12),	// clanking footsteps
+	SHREF_NOSTEPS			= BIT(13),	// no footstep sounds
+	SHREF_NONSOLID			= BIT(14),	// don't collide against curves with this set
+	SHREF_LIGHTFILTER		= BIT(15),	// act as a light filter during q3map -light
+	SHREF_ALPHASHADOW		= BIT(16),	// do per-pixel light shadow casting in q3map
+	SHREF_NODLIGHT			= BIT(17),	// never add dynamic lights
+	SHREF_DUST				= BIT(18), // leave a dust trail when walking on this surface
+	// !Q3BSP
+};
 #endif
 
 //
 // gi.BoxEdicts() can return a list of either solid or trigger entities
 //
-#define AREA_SOLID				1
-#define AREA_TRIGGERS			2
+enum
+{
+	AREA_SOLID	= 1,
+	AREA_TRIGGERS
+};
 
 /*
 ==============================================================================
@@ -475,16 +490,20 @@ enum
 ==============================================================================
 */
 
-// 0-2 are axial planes
-#define PLANE_X			0
-#define PLANE_Y			1
-#define PLANE_Z			2
-#define PLANE_NON_AXIAL	3
+typedef int EPlaneInfo;
+enum
+{
+	// Axial planes
+	PLANE_X,
+	PLANE_Y,
+	PLANE_Z,
 
-// 3-5 are non-axial planes snapped to the nearest
-#define PLANE_ANYX		3
-#define PLANE_ANYY		4
-#define PLANE_ANYZ		5
+	// Non-axial, snapped to the nearest
+	PLANE_NON_AXIAL,
+	PLANE_ANYX = 3,
+	PLANE_ANYY,
+	PLANE_ANYZ
+};
 
 struct plane_t
 {
@@ -704,41 +723,52 @@ struct pMoveNew_t
 // Effects are things handled on the client side (lights, particles, frame
 // animations) that happen constantly on the given entity. An entity that has
 // effects will be sent to the client even if it has a zero index model.
-#define EF_ROTATE			0x00000001		// rotate (bonus items)
-#define EF_GIB				0x00000002		// leave a trail
-#define EF_BLASTER			0x00000008		// redlight + trail
-#define EF_ROCKET			0x00000010		// redlight + trail
-#define EF_GRENADE			0x00000020
-#define EF_HYPERBLASTER		0x00000040
-#define EF_BFG				0x00000080
-#define EF_COLOR_SHELL		0x00000100
-#define EF_POWERSCREEN		0x00000200
-#define EF_ANIM01			0x00000400		// automatically cycle between frames 0 and 1 at 2 hz
-#define EF_ANIM23			0x00000800		// automatically cycle between frames 2 and 3 at 2 hz
-#define EF_ANIM_ALL			0x00001000		// automatically cycle through all frames at 2hz
-#define EF_ANIM_ALLFAST		0x00002000		// automatically cycle through all frames at 10hz
-#define EF_FLIES			0x00004000
-#define EF_QUAD				0x00008000
-#define EF_PENT				0x00010000
-#define EF_TELEPORTER		0x00020000		// particle fountain
-#define EF_FLAG1			0x00040000
-#define EF_FLAG2			0x00080000
+typedef uint32 EEntityStateEffects;
+enum
+{
+	EF_ROTATE			= BIT(0),		// rotate (bonus items)
+	EF_GIB				= BIT(1),		// leave a trail
+	EF_BLASTER			= BIT(3),		// redlight + trail
+	EF_ROCKET			= BIT(4),		// redlight + trail
+	EF_GRENADE			= BIT(5),
+	EF_HYPERBLASTER		= BIT(6),
+	EF_BFG				= BIT(7),
+	EF_COLOR_SHELL		= BIT(8),
+	EF_POWERSCREEN		= BIT(9),
+	EF_ANIM01			= BIT(10),		// automatically cycle between frames 0 and 1 at 2 hz
+	EF_ANIM23			= BIT(11),		// automatically cycle between frames 2 and 3 at 2 hz
+	EF_ANIM_ALL			= BIT(12),		// automatically cycle through all frames at 2hz
+	EF_ANIM_ALLFAST		= BIT(13),		// automatically cycle through all frames at 10hz
+	EF_FLIES			= BIT(14),
+	EF_QUAD				= BIT(15),
+	EF_PENT				= BIT(16),
+	EF_TELEPORTER		= BIT(17),		// particle fountain
+	EF_FLAG1			= BIT(18),
+	EF_FLAG2			= BIT(19),
 
-// RAFAEL
-#define EF_IONRIPPER		0x00100000
-#define EF_GREENGIB			0x00200000
-#define EF_BLUEHYPERBLASTER 0x00400000
-#define EF_SPINNINGLIGHTS	0x00800000
-#define EF_PLASMA			0x01000000
-#define EF_TRAP				0x02000000
+	// RAFAEL
+	EF_IONRIPPER		= BIT(20),
+	EF_GREENGIB			= BIT(21),
+	EF_BLUEHYPERBLASTER = BIT(22),
+	EF_SPINNINGLIGHTS	= BIT(23),
+	EF_PLASMA			= BIT(24),
+	EF_TRAP				= BIT(25), // IT'S A TRAP!!!
 
-// ROGUE
-#define EF_TRACKER			0x04000000
-#define EF_DOUBLE			0x08000000
-#define EF_SPHERETRANS		0x10000000
-#define EF_TAGTRAIL			0x20000000
-#define EF_HALF_DAMAGE		0x40000000
-#define EF_TRACKERTRAIL		0x80000000
+	// ROGUE
+	EF_TRACKER			= BIT(26),
+	EF_DOUBLE			= BIT(27),
+	EF_SPHERETRANS		= BIT(28),
+	EF_TAGTRAIL			= BIT(29),
+	EF_HALF_DAMAGE		= BIT(30),
+	EF_TRACKERTRAIL		= 0x80000000, // Bug with BIT(31)
+
+	// Overloads
+	EF_SEMITRANS_BLACKORB	= (0x80000000 | EF_SPHERETRANS),
+	EF_GREENBLASTER			= (EF_BLASTER | EF_TRACKER),
+	EF_GREENHYPERBLASTER	= (EF_HYPERBLASTER | EF_TRACKER),
+	EF_BLACKVOID			= (0x80000000 | EF_TRACKER),
+	EF_PLASMATRAIL			= (EF_PLASMA | EF_ANIM_ALLFAST),
+};
 
 /*
 ==============================================================================
@@ -749,33 +779,40 @@ struct pMoveNew_t
 */
 
 // entityState_t->renderfx flags
-#define RF_MINLIGHT			1		// allways have some light (viewmodel)
-#define RF_VIEWERMODEL		2		// don't draw through eyes, only mirrors
-#define RF_WEAPONMODEL		4		// only draw through eyes
-#define RF_FULLBRIGHT		8		// allways draw full intensity
-#define RF_DEPTHHACK		16		// for view weapon Z crunching
-#define RF_TRANSLUCENT		32
-#define RF_FRAMELERP		64
-#define RF_BEAM				128
-#define RF_CUSTOMSKIN		256		// skin is an index in image_precache
-#define RF_GLOW				512		// pulse lighting for bonus items
+typedef int EEntityStateRenderEffects;
+enum
+{
+	RF_MINLIGHT			= BIT(0),		// allways have some light (viewmodel)
+	RF_VIEWERMODEL		= BIT(1),		// don't draw through eyes, only mirrors
+	RF_WEAPONMODEL		= BIT(2),		// only draw through eyes
+	RF_FULLBRIGHT		= BIT(3),		// allways draw full intensity
+	RF_DEPTHHACK		= BIT(4),		// for view weapon Z crunching
+	RF_TRANSLUCENT		= BIT(5),
+	RF_FRAMELERP		= BIT(6),
+	RF_BEAM				= BIT(7),
+	RF_CUSTOMSKIN		= BIT(8),		// skin is an index in image_precache
+	RF_GLOW				= BIT(9),		// pulse lighting for bonus items
 
-#define RF_SHELL_RED		1024
-#define RF_SHELL_GREEN		2048
-#define RF_SHELL_BLUE		4096
+	RF_SHELL_RED		= BIT(10),
+	RF_SHELL_GREEN		= BIT(11),
+	RF_SHELL_BLUE		= BIT(12),
 
-#define RF_IR_VISIBLE		0x00008000		// 32768
-#define RF_SHELL_DOUBLE		0x00010000		// 65536
-#define RF_SHELL_HALF_DAM	0x00020000
-#define RF_USE_DISGUISE		0x00040000
+	// Paril: What's with the gap here?
 
-#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
-#define RF_NOSHADOW			0x00080000
-#define RF_CULLHACK			0x00100000
-#define RF_FORCENOLOD		0x00200000
-#endif
+	RF_IR_VISIBLE		= BIT(15),		// 32768
+	RF_SHELL_DOUBLE		= BIT(16),		// 65536
+	RF_SHELL_HALF_DAM	= BIT(17),
+	RF_USE_DISGUISE		= BIT(18),
 
-#define RF_SHELLMASK		(RF_SHELL_HALF_DAM|RF_SHELL_DOUBLE|RF_SHELL_RED|RF_SHELL_GREEN|RF_SHELL_BLUE)
+	#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
+	RF_NOSHADOW			= BIT(19),
+	RF_CULLHACK			= BIT(20),
+	RF_FORCENOLOD		= BIT(21),
+	RF_BEAM2			= BIT(22), // EGL specific effect
+	#endif
+
+	RF_SHELLMASK		= (RF_SHELL_HALF_DAM|RF_SHELL_DOUBLE|RF_SHELL_RED|RF_SHELL_GREEN|RF_SHELL_BLUE),
+};
 
 /*
 ==============================================================================
@@ -1197,35 +1234,43 @@ enum
 */
 
 // dmflags->floatVal flags
-#define DF_NO_HEALTH		0x00000001	// 1
-#define DF_NO_ITEMS			0x00000002	// 2
-#define DF_WEAPONS_STAY		0x00000004	// 4
-#define DF_NO_FALLING		0x00000008	// 8
-#define DF_INSTANT_ITEMS	0x00000010	// 16
-#define DF_SAME_LEVEL		0x00000020	// 32
-#define DF_SKINTEAMS		0x00000040	// 64
-#define DF_MODELTEAMS		0x00000080	// 128
-#define DF_NO_FRIENDLY_FIRE	0x00000100	// 256
-#define DF_SPAWN_FARTHEST	0x00000200	// 512
-#define DF_FORCE_RESPAWN	0x00000400	// 1024
-#define DF_NO_ARMOR			0x00000800	// 2048
-#define DF_ALLOW_EXIT		0x00001000	// 4096
-#define DF_INFINITE_AMMO	0x00002000	// 8192
-#define DF_QUAD_DROP		0x00004000	// 16384
-#define DF_FIXED_FOV		0x00008000	// 32768
+typedef int EDeathmatchFlags;
+enum
+{
+	DF_NO_HEALTH		= BIT(0),
+	DF_NO_ITEMS			= BIT(1),
+	DF_WEAPONS_STAY		= BIT(2),
+	DF_NO_FALLING		= BIT(3),
+	DF_INSTANT_ITEMS	= BIT(4),
+	DF_SAME_LEVEL		= BIT(5),
+	DF_SKINTEAMS		= BIT(6),
+	DF_MODELTEAMS		= BIT(7),
+	DF_NO_FRIENDLY_FIRE	= BIT(8),
+	DF_SPAWN_FARTHEST	= BIT(9),
+	DF_FORCE_RESPAWN	= BIT(10),
+	DF_NO_ARMOR			= BIT(11),
+	DF_ALLOW_EXIT		= BIT(12),
+	DF_INFINITE_AMMO	= BIT(13),
+	DF_QUAD_DROP		= BIT(14),
+	DF_FIXED_FOV		= BIT(15),
 
-#define DF_QUADFIRE_DROP	0x00010000	// 65536
+	// Xatrix
+	DF_QUADFIRE_DROP	= BIT(16),
 
-#define DF_NO_MINES			0x00020000
-#define DF_NO_STACK_DOUBLE	0x00040000
-#define DF_NO_NUKES			0x00080000
-#define DF_NO_SPHERES		0x00100000
+	// Rogue
+	DF_NO_MINES			= BIT(17),
+	DF_NO_STACK_DOUBLE	= BIT(18),
+	DF_NO_NUKES			= BIT(19),
+	DF_NO_SPHERES		= BIT(20),
 
+	// CTF
 #ifdef CLEANCTF_ENABLED
-#define DF_CTF_FORCEJOIN	0x00200000	
-#define DF_ARMOR_PROTECT	0x00400000
-#define DF_CTF_NO_TECH      0x00800000
+	DF_CTF_FORCEJOIN	= BIT(21),	
+	DF_ARMOR_PROTECT	= BIT(22),
+	DF_CTF_NO_TECH      = BIT(23),
 #endif
+};
+
 /*
 ==============================================================================
 
@@ -1249,27 +1294,31 @@ enum
 
 // config strings are a general means of communication from the server to all
 // connected clients. Each config string can be at most MAX_CFGSTRLEN characters.
-#define CS_NAME				0
-#define CS_CDTRACK			1
-#define CS_SKY				2
-#define CS_SKYAXIS			3		// %f %f %f format
-#define CS_SKYROTATE		4
-#define CS_STATUSBAR		5		// display program string
+typedef int EConfigStringIndexes;
+enum
+{
+	CS_NAME,
+	CS_CDTRACK,
+	CS_SKY,
+	CS_SKYAXIS, // %f %f %f format
+	CS_SKYROTATE,
+	CS_STATUSBAR,
 
-#define CS_AIRACCEL			29		// air acceleration control
-#define CS_MAXCLIENTS		30
-#define CS_MAPCHECKSUM		31		// for catching cheater maps
+	CS_AIRACCEL = 29,
+	CS_MAXCLIENTS,
+	CS_MAPCHECKSUM,
 
-#define CS_MODELS			32
-#define CS_SOUNDS			(CS_MODELS+MAX_CS_MODELS)
-#define CS_IMAGES			(CS_SOUNDS+MAX_CS_SOUNDS)
-#define CS_LIGHTS			(CS_IMAGES+MAX_CS_IMAGES)
-#define CS_ITEMS			(CS_LIGHTS+MAX_CS_LIGHTSTYLES)
-#define CS_PLAYERSKINS		(CS_ITEMS+MAX_CS_ITEMS)
-#define CS_GENERAL			(CS_PLAYERSKINS+MAX_CS_CLIENTS)
+	CS_MODELS,
+	CS_SOUNDS			= (CS_MODELS+MAX_CS_MODELS),
+	CS_IMAGES			= (CS_SOUNDS+MAX_CS_SOUNDS),
+	CS_LIGHTS			= (CS_IMAGES+MAX_CS_IMAGES),
+	CS_ITEMS			= (CS_LIGHTS+MAX_CS_LIGHTSTYLES),
+	CS_PLAYERSKINS		= (CS_ITEMS+MAX_CS_ITEMS),
+	CS_GENERAL			= (CS_PLAYERSKINS+MAX_CS_CLIENTS),
 
-#define MAX_CFGSTRINGS		(CS_GENERAL+MAX_CS_GENERAL)
-#define MAX_CFGSTRLEN		64
+	MAX_CFGSTRINGS		= (CS_GENERAL+MAX_CS_GENERAL),
+	MAX_CFGSTRLEN		= 64,
+};
 
 /*
 ==============================================================================
@@ -1285,7 +1334,7 @@ enum
 // be converted to events...
 enum
 {
-	EV_NONE				= 0,
+	EV_NONE,
 	EV_ITEM_RESPAWN,
 	EV_FOOTSTEP,
 	EV_FALLSHORT,
@@ -1367,7 +1416,7 @@ struct entityStateOld_t
 // playerState->stats[] indexes
 enum
 {
-	STAT_HEALTH_ICON		= 0,
+	STAT_HEALTH_ICON,
 	STAT_HEALTH,
 	STAT_AMMO_ICON,
 	STAT_AMMO,

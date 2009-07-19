@@ -420,7 +420,7 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 
 	Vec3Clear (Player->gameEntity->avelocity);
 
-	Player->gameEntity->takedamage = DAMAGE_YES;
+	Player->gameEntity->takedamage = true;
 	Player->gameEntity->movetype = MOVETYPE_TOSS;
 
 	Player->State.SetModelIndex (0, 2);	// remove linked weapon model
@@ -509,7 +509,7 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 			ThrowGib (Player->gameEntity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 		ThrowClientHead (Player->gameEntity, damage);
 
-		Player->gameEntity->takedamage = DAMAGE_NO;
+		Player->gameEntity->takedamage = false;
 //ZOID
 		Player->Client.anim_priority = ANIM_DEATH;
 		Player->Client.anim_end = 0;

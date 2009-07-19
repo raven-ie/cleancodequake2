@@ -200,7 +200,7 @@ void G_UseTargets (edict_t *ent, edict_t *activator)
 //
 	if ((ent->message) && !(activator->svFlags & SVF_MONSTER))
 	{
-		CenterPrintf (activator, "%s", ent->message);
+		ClientPrintf (activator, PRINT_CENTER, "%s", ent->message);
 		if (ent->noise_index)
 			PlaySoundFrom (activator, CHAN_AUTO, ent->noise_index);
 		else

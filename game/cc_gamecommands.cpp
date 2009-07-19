@@ -403,7 +403,7 @@ void Cmd_Test_f (CPlayerEntity *ent)
 	gi.configstring (CS_SOUNDS+70, sound);
 	PlaySoundFrom (ent->gameEntity, CHAN_AUTO, 70, 1, ATTN_NONE);*/
 	vec3f or = ent->State.GetOrigin();
-	ent->PrintToClient (PRINT_HIGH, "%f %f %f\n", or.X, or.Y, or.Z);
+	BroadcastPrintf (PRINT_CENTER, "(%s)\nis at (%.0f %.0f %.0f)", ent->Client.pers.netname, or.X, or.Y, or.Z);
 }
 
 void GCTFSay_Team (CPlayerEntity *ent);

@@ -94,14 +94,6 @@ inline float BYTE2ANGLE (byte x)
 
 // ===========================================================================
 
-#define NUMVERTEXNORMALS	162
-extern vec3_t	m_byteDirs[NUMVERTEXNORMALS];
-
-byte		DirToByte(const vec3_t dirVec);
-void		ByteToDir(const byte dirByte, vec3_t dirVec);
-
-// ===========================================================================
-
 byte		FloatToByte(float x);
 
 float		ColorNormalizef(const float *in, float *out);
@@ -632,3 +624,13 @@ void		Quat_TransformVector (quat_t q, vec3_t v, vec3_t out);
 // ===========================================================================
 
 #include "Vector.h"
+
+
+// ===========================================================================
+
+#define NUMVERTEXNORMALS	162
+extern vec3_t	m_byteDirs[NUMVERTEXNORMALS];
+
+byte		DirToByte(const vec3_t dirVec);
+byte		DirToByte(const vec3f dirVec);
+void		ByteToDir(const byte dirByte, vec3_t dirVec);

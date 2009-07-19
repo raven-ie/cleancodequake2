@@ -96,7 +96,7 @@ void CBody::TossHead (int damage)
 	SetMins (vec3f(-16, -16, 0));
 	SetMaxs (vec3f(16, 16, 16));
 
-	gameEntity->takedamage = DAMAGE_NO;
+	gameEntity->takedamage = false;
 	SetSolid (SOLID_NOT);
 	State.SetEffects (EF_GIB);
 	State.SetSound (0);
@@ -177,6 +177,10 @@ CBody *CBodyQueue::GrabFreeBody ()
 	// This should, effectively, remove the last body.
 	CBody *Body = ClosedList.front();
 	ClosedList.pop_front();
+
+	// Revision
+	// Push this body to the end of the closed list so we get recycled last
+	ClosedList.push_back (Body);
 	return Body;
 }
 
@@ -241,7 +245,11 @@ void CBodyQueue::CopyBodyToQueue (CPlayerEntity *Player)
 		Body->SetOwner (owner);
 
 	Body->backOff = 1.0f;
-	Body->gameEntity->takedamage = DAMAGE_YES;
+	Body->gameEntity->takedamage = true;
+
+	// Implied that Player is a dead-head (lol)
+	if (Player->gameEntity->takedamage == false)
+		Body->TossHead (0);
 
 	Body->Link();
 }

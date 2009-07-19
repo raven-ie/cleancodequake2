@@ -405,7 +405,7 @@ void CInfantry::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, 
 
 // regular death
 	Entity->gameEntity->deadflag = DEAD_DEAD;
-	Entity->gameEntity->takedamage = DAMAGE_YES;
+	Entity->gameEntity->takedamage = true;
 
 	CAnim *Animation;
 	int pSound;
@@ -436,7 +436,7 @@ void CInfantry::Duck_Down ()
 		return;
 	AIFlags |= AI_DUCKED;
 	Entity->maxs[2] -= 32;
-	Entity->gameEntity->takedamage = DAMAGE_YES;
+	Entity->gameEntity->takedamage = true;
 	PauseTime = level.framenum + 10;
 	Entity->Link ();
 }
@@ -453,7 +453,7 @@ void CInfantry::Duck_Up ()
 {
 	AIFlags &= ~AI_DUCKED;
 	Entity->maxs[2] += 32;
-	Entity->gameEntity->takedamage = DAMAGE_AIM;
+	Entity->gameEntity->takedamage = true;
 	Entity->Link ();
 }
 #endif

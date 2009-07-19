@@ -1022,7 +1022,7 @@ void CSoldierBase::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damag
 
 // regular death
 	Entity->gameEntity->deadflag = DEAD_DEAD;
-	Entity->gameEntity->takedamage = DAMAGE_YES;
+	Entity->gameEntity->takedamage = true;
 	Entity->State.SetSkinNum(Entity->State.GetSkinNum() | 1);
 
 	Entity->PlaySound (CHAN_VOICE, SoundDeath);
@@ -1112,7 +1112,7 @@ void CSoldierBase::Duck_Down ()
 		return;
 	AIFlags |= AI_DUCKED;
 	Entity->maxs[2] -= 32;
-	Entity->gameEntity->takedamage = DAMAGE_YES;
+	Entity->gameEntity->takedamage = true;
 	PauseTime = level.framenum + 10;
 	Entity->Link ();
 }
@@ -1121,7 +1121,7 @@ void CSoldierBase::Duck_Up ()
 {
 	AIFlags &= ~AI_DUCKED;
 	Entity->maxs[2] += 32;
-	Entity->gameEntity->takedamage = DAMAGE_AIM;
+	Entity->gameEntity->takedamage = true;
 	Entity->Link ();
 }
 #endif

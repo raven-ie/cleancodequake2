@@ -502,7 +502,8 @@ public:
 
 			if (ctfgame.match == MATCH_SETUP)
 			{
-				CenterPrintf(ent->gameEntity,	"***********************\n"
+				ClientPrintf(ent->gameEntity,	PRINT_CENTER, 
+												"***********************\n"
 												"Type \"ready\" in console\n"
 												"to ready up.\n"
 												"***********************");

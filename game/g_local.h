@@ -49,31 +49,24 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define DAMAGE_TIME		5
 #define FALL_TIME		3
 
-
-// edict->spawnflags
-// these are set with checkboxes on each entity in the map editor
-#define SPAWNFLAG_NOT_EASY			0x00000100
-#define SPAWNFLAG_NOT_MEDIUM		0x00000200
-#define SPAWNFLAG_NOT_HARD			0x00000400
-#define SPAWNFLAG_NOT_DEATHMATCH	0x00000800
-#define SPAWNFLAG_NOT_COOP			0x00001000
-
 // edict->flags
-#define FL_FLY					0x00000001
-#define FL_SWIM					0x00000002	// implied immunity to drowining
-#define FL_IMMUNE_LASER			0x00000004
-#define FL_INWATER				0x00000008
-#define FL_GODMODE				0x00000010
-#define FL_NOTARGET				0x00000020
-#define FL_IMMUNE_SLIME			0x00000040
-#define FL_IMMUNE_LAVA			0x00000080
-#define FL_PARTIALGROUND		0x00000100	// not all corners are valid
-#define FL_WATERJUMP			0x00000200	// player jumping out of water
-#define FL_TEAMSLAVE			0x00000400	// not the first on the team
-#define FL_NO_KNOCKBACK			0x00000800
-#define FL_POWER_ARMOR			0x00001000	// power armor is active
-#define FL_RESPAWN				0x80000000	// used for item respawning
-
+typedef int EEdictFlags;
+enum
+{
+	FL_FLY				= BIT(0),
+	FL_SWIM				= BIT(1),
+	FL_IMMUNE_LASER		= BIT(2),
+	FL_INWATER			= BIT(3),
+	FL_GODMODE			= BIT(4),
+	FL_NOTARGET			= BIT(5),
+	FL_IMMUNE_SLIME		= BIT(6),
+	FL_IMMUNE_LAVA		= BIT(7),
+	FL_PARTIALGROUND	= BIT(8),
+	FL_TEAMSLAVE		= BIT(9),
+	FL_NO_KNOCKBACK		= BIT(10),
+	FL_POWER_ARMOR		= BIT(11),
+	FL_RESPAWN			= BIT(12)
+};
 
 #define FRAMETIME		1
 
@@ -85,57 +78,75 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define MELEE_DISTANCE	80
 
-typedef enum
-{
-	DAMAGE_NO,
-	DAMAGE_YES,			// will take damage if hit
-	DAMAGE_AIM			// auto targeting recognizes this
-} damage_t;
-
 //deadflag
-#define DEAD_NO					0
-#define DEAD_DEAD				1
+typedef int EDeadFlag;
+enum
+{
+	DEAD_NO,
+	DEAD_DEAD
+};
 
 //range
-#define RANGE_MELEE				0
-#define RANGE_NEAR				1
-#define RANGE_MID				2
-#define RANGE_FAR				3
+typedef int ERangeType;
+enum
+{
+	RANGE_MELEE,
+	RANGE_NEAR,
+	RANGE_MID,
+	RANGE_FAR
+};
 
 //gib types
-#define GIB_ORGANIC				0
-#define GIB_METALLIC			1
+typedef int EGibType;
+enum
+{
+	GIB_ORGANIC,
+	GIB_METALLIC
+};
 
 // power armor types
-#define POWER_ARMOR_NONE		0
-#define POWER_ARMOR_SCREEN		1
-#define POWER_ARMOR_SHIELD		2
+typedef int EPowerArmorType;
+enum
+{
+	POWER_ARMOR_NONE,
+	POWER_ARMOR_SCREEN,
+	POWER_ARMOR_SHIELD
+};
 
 // handedness values
-#define RIGHT_HANDED			0
-#define LEFT_HANDED				1
-#define CENTER_HANDED			2
+typedef int EHandedness;
+enum
+{
+	RIGHT_HANDED,
+	LEFT_HANDED,
+	CENTER_HANDED
+};
 
-// game.serverflags values
-#define SFL_CROSS_TRIGGER_1		0x00000001
-#define SFL_CROSS_TRIGGER_2		0x00000002
-#define SFL_CROSS_TRIGGER_3		0x00000004
-#define SFL_CROSS_TRIGGER_4		0x00000008
-#define SFL_CROSS_TRIGGER_5		0x00000010
-#define SFL_CROSS_TRIGGER_6		0x00000020
-#define SFL_CROSS_TRIGGER_7		0x00000040
-#define SFL_CROSS_TRIGGER_8		0x00000080
-#define SFL_CROSS_TRIGGER_MASK	0x000000ff
-
+typedef int ECrossLevelTriggerFlags;
+enum
+{
+	SFL_CROSS_TRIGGER_1		= BIT(0),
+	SFL_CROSS_TRIGGER_2		= BIT(1),
+	SFL_CROSS_TRIGGER_3		= BIT(2),
+	SFL_CROSS_TRIGGER_4		= BIT(3),
+	SFL_CROSS_TRIGGER_5		= BIT(4),
+	SFL_CROSS_TRIGGER_6		= BIT(5),
+	SFL_CROSS_TRIGGER_7		= BIT(6),
+	SFL_CROSS_TRIGGER_8		= BIT(7),
+	SFL_CROSS_TRIGGER_MASK	= 255
+};
 
 // noise types for PlayerNoise
-#define PNOISE_SELF				0
-#define PNOISE_WEAPON			1
-#define PNOISE_IMPACT			2
-
+typedef int ENoiseTye;
+enum
+{
+	PNOISE_SELF,
+	PNOISE_WEAPON,
+	PNOISE_IMPACT
+};
 
 // edict->movetype values
-typedef enum
+enum
 {
 	MOVETYPE_NONE,			// never moves
 	MOVETYPE_NOCLIP,		// origin and angles change with no interaction
@@ -148,7 +159,7 @@ typedef enum
 	MOVETYPE_TOSS,			// gravity
 	MOVETYPE_FLYMISSILE,	// extra size to monsters
 	MOVETYPE_BOUNCE
-} movetype_t;
+};
 
 //
 // this structure is left intact through an entire game
@@ -158,12 +169,12 @@ typedef enum
 typedef int EGameMode;
 enum //EGameMode
 {
-	GAME_SINGLEPLAYER		=	1,
-	GAME_DEATHMATCH			=	2,
-	GAME_COOPERATIVE		=	4,
+	GAME_SINGLEPLAYER		=	BIT(0),
+	GAME_DEATHMATCH			=	BIT(1),
+	GAME_COOPERATIVE		=	BIT(2),
 
 #ifdef CLEANCTF_ENABLED
-	GAME_CTF				=	8
+	GAME_CTF				=	BIT(3)
 #endif
 };
 
@@ -302,10 +313,14 @@ typedef struct
 	void		(*endfunc)(edict_t *);
 } moveinfo_t;
 
-#define STATE_TOP			0
-#define STATE_BOTTOM		1
-#define STATE_UP			2
-#define STATE_DOWN			3
+typedef int EFuncState;
+enum
+{
+	STATE_TOP,
+	STATE_BOTTOM,
+	STATE_UP,
+	STATE_DOWN
+};
 
 extern	game_locals_t	game;
 extern	level_locals_t	level;
@@ -359,7 +374,6 @@ enum // EMeansOfDeath
 
 extern	int	meansOfDeath;
 
-
 extern	edict_t			*g_edicts;
 
 #define FOFS(x) (int)&(((edict_t *)0)->x)
@@ -372,21 +386,45 @@ extern	edict_t			*g_edicts;
 
 #define world	(&g_edicts[0])
 
-// item spawnflags
-#define ITEM_TRIGGER_SPAWN		0x00000001
-#define ITEM_NO_TOUCH			0x00000002
+// Spawnflags
 // 6 bits reserved for editor flags
 // 8 bits used as power cube id bits for coop games
-#define DROPPED_ITEM			0x00010000
-#define DROPPED_PLAYER_ITEM		0x00020000
-#define ITEM_TARGETS_USED		0x00040000
+
+// item spawnflags
+typedef int EItemSpawnflags;
+enum
+{
+	ITEM_TRIGGER_SPAWN			= BIT(0),
+	ITEM_NO_TOUCH				= BIT(1),
+
+
+	DROPPED_ITEM				= BIT(16),
+	DROPPED_PLAYER_ITEM			= BIT(17),
+	ITEM_TARGETS_USED			= BIT(18)
+};
+
+// edict->spawnflags
+// these are set with checkboxes on each entity in the map editor
+typedef int EEdictSpawnflags;
+enum
+{
+	SPAWNFLAG_NOT_EASY			= BIT(8),
+	SPAWNFLAG_NOT_MEDIUM		= BIT(9),
+	SPAWNFLAG_NOT_HARD			= BIT(10),
+	SPAWNFLAG_NOT_DEATHMATCH	= BIT(11),
+	SPAWNFLAG_NOT_COOP			= BIT(12)
+};
+
 
 //
 // fields are needed for spawning from the entity string
 // and saving / loading games
 //
-#define FFL_SPAWNTEMP		1
-#define FFL_NOSPAWN			2
+enum
+{
+	FFL_SPAWNTEMP = 1,
+	FFL_NOSPAWN
+};
 
 typedef enum {
 	F_INT, 
@@ -448,12 +486,15 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 void T_RadiusDamage (edict_t *inflictor, edict_t *attacker, float damage, edict_t *ignore, float radius, int mod);
 
 // damage flags
-#define DAMAGE_RADIUS			0x00000001	// damage was indirect
-#define DAMAGE_NO_ARMOR			0x00000002	// armour does not protect from this damage
-#define DAMAGE_ENERGY			0x00000004	// damage is from an energy based weapon
-#define DAMAGE_NO_KNOCKBACK		0x00000008	// do not affect velocity, just view angles
-#define DAMAGE_BULLET			0x00000010  // damage is from a bullet (used for ricochets)
-#define DAMAGE_NO_PROTECTION	0x00000020  // armor, shields, invulnerability, and godmode have no effect
+enum
+{
+	DAMAGE_RADIUS				= BIT(0), // Indirect damage
+	DAMAGE_NO_ARMOR				= BIT(1), // Goes through armor
+	DAMAGE_ENERGY				= BIT(2), // Energy-based (blaster)
+	DAMAGE_NO_KNOCKBACK			= BIT(3), // Don't add knockback
+	DAMAGE_BULLET				= BIT(4), // Bullet damage (used for ricochets)
+	DAMAGE_NO_PROTECTION		= BIT(5)  // Always damages
+};
 
 #define DEFAULT_BULLET_HSPREAD	300
 #define DEFAULT_BULLET_VSPREAD	500
@@ -558,13 +599,16 @@ void GetChaseTarget(CPlayerEntity *ent);
 //============================================================================
 
 // client_t->anim_priority
-#define ANIM_BASIC		0		// stand / run
-#define ANIM_WAVE		1
-#define ANIM_JUMP		2
-#define ANIM_PAIN		3
-#define ANIM_ATTACK		4
-#define ANIM_DEATH		5
-#define ANIM_REVERSE	6
+enum
+{
+	ANIM_BASIC,
+	ANIM_WAVE,
+	ANIM_JUMP,
+	ANIM_PAIN,
+	ANIM_ATTACK,
+	ANIM_DEATH,
+	ANIM_REVERSE
+};
 
 // this structure is cleared on each PutClientInServer(),
 // except for 'client->pers'
@@ -675,7 +719,7 @@ struct edict_s
 	char		*map;			// target_changelevel
 
 	int			viewheight;		// height above origin where eyesight is determined
-	int			takedamage;
+	bool		takedamage;
 	int			dmg;
 	int			radius_dmg;
 	float		dmg_radius;

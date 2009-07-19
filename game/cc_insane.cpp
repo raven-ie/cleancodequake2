@@ -581,7 +581,7 @@ void CInsane::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 	Entity->PlaySound (CHAN_VOICE, SoundIndex(Q_VarArgs("player/male/death%i.wav", (rand()%4)+1)), 1, ATTN_IDLE);
 
 	Entity->gameEntity->deadflag = DEAD_DEAD;
-	Entity->gameEntity->takedamage = DAMAGE_YES;
+	Entity->gameEntity->takedamage = true;
 
 	if (Entity->gameEntity->spawnflags & 8)
 		Dead ();

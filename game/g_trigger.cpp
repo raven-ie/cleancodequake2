@@ -220,7 +220,7 @@ void trigger_key_use (edict_t *self, edict_t *other, edict_t *activator)
 	if (!activator->client)
 		return;
 
-	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(other->Entity);
+	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(activator->Entity);
 
 	index = self->item->GetIndex();
 	if (!Player->Client.pers.Inventory.Has(index))
@@ -228,7 +228,7 @@ void trigger_key_use (edict_t *self, edict_t *other, edict_t *activator)
 		if (level.framenum < self->touch_debounce_time)
 			return;
 		self->touch_debounce_time = level.framenum + 50;
-		CenterPrintf (activator, "You need the %s", self->item->Name);
+		ClientPrintf (activator, PRINT_CENTER, "You need the %s", self->item->Name);
 		PlaySoundFrom (activator, CHAN_AUTO, SoundIndex ("misc/keytry.wav"));
 		return;
 	}
@@ -334,7 +334,7 @@ void trigger_counter_use(edict_t *self, edict_t *other, edict_t *activator)
 	{
 		if (! (self->spawnflags & 1))
 		{
-			CenterPrintf(activator, "%i more to go...", self->count);
+			ClientPrintf(activator, PRINT_CENTER, "%i more to go...", self->count);
 			PlaySoundFrom (activator, CHAN_AUTO, SoundIndex ("misc/talk1.wav"));
 		}
 		return;
@@ -342,7 +342,7 @@ void trigger_counter_use(edict_t *self, edict_t *other, edict_t *activator)
 	
 	if (! (self->spawnflags & 1))
 	{
-		CenterPrintf(activator, "Sequence completed!");
+		ClientPrintf(activator, PRINT_CENTER, "Sequence completed!");
 		PlaySoundFrom (activator, CHAN_AUTO, SoundIndex ("misc/talk1.wav"));
 	}
 	self->activator = activator;

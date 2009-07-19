@@ -150,7 +150,7 @@ void CGrenade::Spawn (CBaseEntity *Spawner, vec3_t start, vec3_t aimdir, int dam
 	Vec3MA (Grenade->gameEntity->velocity, 200 + crandom() * 10.0, up, Grenade->gameEntity->velocity);
 	Vec3MA (Grenade->gameEntity->velocity, crandom() * 10.0, right, Grenade->gameEntity->velocity);
 	Vec3Set (Grenade->gameEntity->avelocity, 300, 300, 300);
-	Grenade->State.SetEffects (EF_GRENADE);
+	Grenade->State.SetEffects (EF_PLASMATRAIL);
 	Grenade->State.SetModelIndex((!handNade) ? ModelIndex ("models/objects/grenade/tris.md2") : ModelIndex ("models/objects/grenade2/tris.md2"));
 	Grenade->SetOwner(Spawner);
 	Grenade->NextThink = level.framenum + (timer * 10);
@@ -250,6 +250,7 @@ void CBlasterProjectile::Think ()
 	Free();
 }
 
+int ClipVelocity (vec3_t in, vec3_t normal, vec3_t out, float overbounce);
 void CBlasterProjectile::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 {
 	if (other->gameEntity == gameEntity->owner)

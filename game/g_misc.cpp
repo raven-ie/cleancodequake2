@@ -126,7 +126,7 @@ void ThrowGib (edict_t *self, MediaIndex gibIndex, int damage, int type)
 	Vec3Clear (gib->maxs);
 	gib->solid = SOLID_NOT;
 	gib->state.effects |= EF_GIB;
-	gib->takedamage = DAMAGE_YES;
+	gib->takedamage = true;
 	gib->die = gib_die;
 
 	if (type == GIB_ORGANIC)
@@ -171,7 +171,7 @@ void ThrowHead (edict_t *self, MediaIndex gibIndex, int damage, int type)
 	self->state.sound = 0;
 	self->flags |= FL_NO_KNOCKBACK;
 	self->svFlags &= ~SVF_MONSTER;
-	self->takedamage = DAMAGE_YES;
+	self->takedamage = true;
 	self->die = gib_die;
 
 	if (type == GIB_ORGANIC)
@@ -217,7 +217,7 @@ void ThrowClientHead (edict_t *self, int damage)
 	Vec3Set (self->mins, -16, -16, 0);
 	Vec3Set (self->maxs, 16, 16, 16);
 
-	self->takedamage = DAMAGE_NO;
+	self->takedamage = false;
 	self->solid = SOLID_NOT;
 	self->state.effects = EF_GIB;
 	self->state.sound = 0;
@@ -275,7 +275,7 @@ void ThrowDebris (edict_t *self, char *modelname, float speed, vec3_t origin)
 	chunk->state.frame = 0;
 	chunk->flags = 0;
 	chunk->classname = "debris";
-	chunk->takedamage = DAMAGE_YES;
+	chunk->takedamage = true;
 	chunk->die = debris_die;
 	gi.linkentity (chunk);
 }
@@ -671,7 +671,7 @@ void func_object_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurf
 		return;
 	if (plane->normal[2] < 1.0)
 		return;
-	if (other->takedamage == DAMAGE_NO)
+	if (other->takedamage == false)
 		return;
 	T_Damage (other, self, self, vec3Origin, self->state.origin, vec3Origin, self->dmg, 1, 0, MOD_CRUSH);
 }
@@ -757,7 +757,7 @@ void func_explosive_explode (edict_t *self, edict_t *inflictor, edict_t *attacke
 	Vec3Add (self->absMin, size, origin);
 	Vec3Copy (origin, self->state.origin);
 
-	self->takedamage = DAMAGE_NO;
+	self->takedamage = false;
 
 	if (self->dmg)
 		T_RadiusDamage (self, attacker, self->dmg, NULL, self->dmg+40, MOD_EXPLOSIVE);
@@ -860,7 +860,7 @@ void SP_func_explosive (edict_t *self)
 		if (!self->health)
 			self->health = 100;
 		self->die = func_explosive_explode;
-		self->takedamage = DAMAGE_YES;
+		self->takedamage = true;
 	}
 
 	gi.linkentity (self);
@@ -1013,7 +1013,7 @@ void barrel_explode (edict_t *self)
 
 void barrel_delay (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
 {
-	self->takedamage = DAMAGE_NO;
+	self->takedamage = false;
 	self->nextthink = level.framenum + 2;
 	self->think = barrel_explode;
 	self->activator = attacker;
@@ -1047,7 +1047,7 @@ void SP_misc_explobox_ (edict_t *self)
 		self->dmg = 150;
 
 	self->die = barrel_delay;
-	self->takedamage = DAMAGE_YES;
+	self->takedamage = true;
 
 	self->touch = barrel_touch;
 
@@ -1214,7 +1214,7 @@ void SP_monster_commander_body (edict_t *self)
 	Vec3Set (self->mins, -32, -32, 0);
 	Vec3Set (self->maxs, 32, 32, 48);
 	self->use = commander_body_use;
-	self->takedamage = DAMAGE_YES;
+	self->takedamage = true;
 	self->flags = FL_GODMODE;
 	self->state.renderFx |= RF_FRAMELERP;
 	gi.linkentity (self);
@@ -1294,7 +1294,7 @@ void SP_misc_deadsoldier (edict_t *ent)
 	Vec3Set (ent->mins, -16, -16, 0);
 	Vec3Set (ent->maxs, 16, 16, 16);
 	ent->deadflag = DEAD_DEAD;
-	ent->takedamage = DAMAGE_YES;
+	ent->takedamage = true;
 	ent->svFlags |= SVF_MONSTER|SVF_DEADMONSTER;
 	ent->die = misc_deadsoldier_die;
 
@@ -1537,7 +1537,7 @@ void SP_misc_gib_arm (edict_t *ent)
 	ent->state.modelIndex = gMedia.Gib_Arm;
 	ent->solid = SOLID_NOT;
 	ent->state.effects |= EF_GIB;
-	ent->takedamage = DAMAGE_YES;
+	ent->takedamage = true;
 	ent->die = gib_die;
 	ent->movetype = MOVETYPE_TOSS;
 	ent->svFlags |= SVF_MONSTER;
@@ -1558,7 +1558,7 @@ void SP_misc_gib_leg (edict_t *ent)
 	ent->state.modelIndex = gMedia.Gib_Leg;
 	ent->solid = SOLID_NOT;
 	ent->state.effects |= EF_GIB;
-	ent->takedamage = DAMAGE_YES;
+	ent->takedamage = true;
 	ent->die = gib_die;
 	ent->movetype = MOVETYPE_TOSS;
 	ent->svFlags |= SVF_MONSTER;
@@ -1579,7 +1579,7 @@ void SP_misc_gib_head (edict_t *ent)
 	ent->state.modelIndex = gMedia.Gib_Head[0];
 	ent->solid = SOLID_NOT;
 	ent->state.effects |= EF_GIB;
-	ent->takedamage = DAMAGE_YES;
+	ent->takedamage = true;
 	ent->die = gib_die;
 	ent->movetype = MOVETYPE_TOSS;
 	ent->svFlags |= SVF_MONSTER;

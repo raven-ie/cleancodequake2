@@ -949,7 +949,7 @@ void CTank::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3
 // regular death
 	Entity->PlaySound (CHAN_VOICE, SoundDie);
 	Entity->gameEntity->deadflag = DEAD_DEAD;
-	Entity->gameEntity->takedamage = DAMAGE_YES;
+	Entity->gameEntity->takedamage = true;
 
 	CurrentMove = &TankMoveDeath;
 }

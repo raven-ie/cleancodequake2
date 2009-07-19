@@ -619,7 +619,7 @@ void CIcarus::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 // regular death
 	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundDeath1 : SoundDeath2);
 	Entity->gameEntity->deadflag = DEAD_DEAD;
-	Entity->gameEntity->takedamage = DAMAGE_YES;
+	Entity->gameEntity->takedamage = true;
 	CurrentMove = &HoverMoveDeath1;
 }
 

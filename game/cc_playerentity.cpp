@@ -537,7 +537,7 @@ void CPlayerEntity::PutInServer ()
 	// FIXME: is this needed?!
 	//Client = CClient(&game.clients[index]);
 	//ent->client = &game.clients[index];
-	gameEntity->takedamage = DAMAGE_AIM;
+	gameEntity->takedamage = true;
 	gameEntity->movetype = MOVETYPE_WALK;
 	gameEntity->viewheight = 22;
 	SetInUse (true);
@@ -3288,6 +3288,38 @@ void CPlayerEntity::Pain (CBaseEntity *other, float kick, int damage)
 	//DebugPrintf ("CPlayerEntity::Pain\n");
 };
 
+void VelocityForDamage (int damage, vec3_t v);
+void CPlayerEntity::TossHead (int damage)
+{
+	vec3_t	vd;
+
+	if (rand()&1)
+	{
+		State.SetModelIndex (gMedia.Gib_Head[1]);
+		State.SetSkinNum (1);		// second skin is player
+	}
+	else
+	{
+		State.SetModelIndex (gMedia.Gib_Skull);
+		State.SetSkinNum (0);
+	}
+
+	State.SetFrame (0);
+	SetMins (vec3f(-16, -16, 0));
+	SetMaxs (vec3f(16, 16, 16));
+
+	gameEntity->takedamage = false;
+	SetSolid (SOLID_NOT);
+	State.SetEffects (EF_GIB);
+	State.SetSound (0);
+	gameEntity->flags |= FL_NO_KNOCKBACK;
+
+	VelocityForDamage (damage, vd);
+	Vec3Add (gameEntity->velocity, vd, gameEntity->velocity);
+
+	Link ();
+}
+
 void ClientObituary (CPlayerEntity *self, edict_t *attacker);
 void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
@@ -3295,7 +3327,7 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 
 	Vec3Clear (gameEntity->avelocity);
 
-	gameEntity->takedamage = DAMAGE_YES;
+	gameEntity->takedamage = true;
 	gameEntity->movetype = MOVETYPE_TOSS;
 
 	State.SetModelIndex (0, 2);	// remove linked weapon model
@@ -3377,9 +3409,9 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 		PlaySoundFrom (gameEntity, CHAN_BODY, SoundIndex ("misc/udeath.wav"));
 		for (int n = 0; n < 4; n++)
 			ThrowGib (gameEntity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		ThrowClientHead (gameEntity, damage);
+		TossHead (damage);
 
-		gameEntity->takedamage = DAMAGE_NO;
+		gameEntity->takedamage = false;
 //ZOID
 		Client.anim_priority = ANIM_DEATH;
 		Client.anim_end = 0;
@@ -3435,10 +3467,7 @@ void CPlayerEntity::PrintToClient (EGamePrintLevel printLevel, char *fmt, ...)
 	vsnprintf_s (text, sizeof(text), MAX_COMPRINT, fmt, argptr);
 	va_end (argptr);
 
-	if (printLevel == PRINT_CENTER)
-		CenterPrintf (gameEntity, "%s", text);
-	else
-		ClientPrintf (gameEntity, printLevel, "%s", text);
+	ClientPrintf (gameEntity, printLevel, "%s", text);
 };
 
 void CPlayerEntity::UpdateChaseCam()
