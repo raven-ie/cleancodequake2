@@ -156,7 +156,7 @@ enum EAttackState
 #endif
 };
 
-class CMonsterEntity : public CStepPhysics, public CTossProjectile, public CHurtableEntity, public CThinkableEntity, public CTouchableEntity
+class CMonsterEntity : public CMapEntity, public CStepPhysics, public CTossProjectile, public CHurtableEntity, public CThinkableEntity, public CTouchableEntity
 {
 public:
 	bool			TossPhysics;
@@ -273,7 +273,6 @@ public:
 	virtual void SideStep ();
 #endif
 
-	virtual void Allocate (edict_t *ent) = 0;
 	// Virtual functions
 	virtual void		Stand			();
 	virtual void		Idle			();
@@ -363,8 +362,6 @@ public:
 	bool StepDirection (float Yaw, float Dist);
 	bool MoveStep (vec3_t move, bool ReLink);
 
-	// Called on a spawn
-	void Init (edict_t *ent);
 	virtual void	Spawn () = 0;
 	virtual void	Die(CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point) = 0;
 	virtual void	Pain(CBaseEntity *other, float kick, int damage) = 0;
@@ -376,3 +373,17 @@ void Monster_Think (edict_t *ent);
 
 #define ConvertDerivedFunction(x) static_cast<void (__thiscall CMonster::* )(void)>(x)
 #define ConvertDerivedAIMove(x) static_cast<void (__thiscall CMonster::* )(float)>(x)
+
+#define LINK_MONSTER_CLASSNAME_TO_CLASS(mapClassName,DLLClassName) \
+	CMapEntity *LINK_RESOLVE_CLASSNAME(DLLClassName, _Spawn) (int Index) \
+	{ \
+		CMonsterEntity *newClass = QNew (com_levelPool, 0) CMonsterEntity(Index); \
+		DLLClassName *Monster = QNew (com_levelPool, 0) DLLClassName (); \
+		newClass->Monster = Monster; \
+		Monster->Entity = newClass; \
+		Monster->Spawn (); \
+		newClass->NextThink = level.framenum + 1; \
+		return newClass; \
+	} \
+	CClassnameToClassIndex LINK_RESOLVE_CLASSNAME(DLLClassName, _Linker) \
+	(LINK_RESOLVE_CLASSNAME(DLLClassName, _Spawn), mapClassName);

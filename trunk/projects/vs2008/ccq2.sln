@@ -1,11 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GAME", "game.vcproj", "{E6207081-A6DE-492E-A7CB-BCF42816FBD5}"
-	ProjectSection(ProjectDependencies) = postProject
-		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D} = {9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SHARED", "shared.vcproj", "{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,22 +30,6 @@ Global
 		{E6207081-A6DE-492E-A7CB-BCF42816FBD5}.Release|x64.Build.0 = Release|x64
 		{E6207081-A6DE-492E-A7CB-BCF42816FBD5}.Release|x86.ActiveCfg = Release|Win32
 		{E6207081-A6DE-492E-A7CB-BCF42816FBD5}.Release|x86.Build.0 = Release|Win32
-		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}.Debug|x64.ActiveCfg = Debug|x64
-		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}.Debug|x64.Build.0 = Debug|x64
-		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}.Debug|x86.ActiveCfg = Debug|Win32
-		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}.Debug|x86.Build.0 = Debug|Win32
-		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}.FrontEnd Debug|x64.ActiveCfg = FrontEnd Debug|x64
-		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}.FrontEnd Debug|x64.Build.0 = FrontEnd Debug|x64
-		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}.FrontEnd Debug|x86.ActiveCfg = FrontEnd Debug|Win32
-		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}.FrontEnd Debug|x86.Build.0 = FrontEnd Debug|Win32
-		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}.FrontEnd Release|x64.ActiveCfg = FrontEnd Release|x64
-		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}.FrontEnd Release|x64.Build.0 = FrontEnd Release|x64
-		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}.FrontEnd Release|x86.ActiveCfg = FrontEnd Release|Win32
-		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}.FrontEnd Release|x86.Build.0 = FrontEnd Release|Win32
-		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}.Release|x64.ActiveCfg = Release|x64
-		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}.Release|x64.Build.0 = Release|x64
-		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}.Release|x86.ActiveCfg = Release|Win32
-		{9C8ABF66-9772-4E44-9C89-9FBCC687CE2D}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

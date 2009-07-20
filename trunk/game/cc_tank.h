@@ -45,8 +45,6 @@ public:
 
 	CTank ();
 
-	virtual void Allocate (edict_t *ent);
-
 	void Attack ();
 	void Idle ();
 	void Run ();
@@ -79,7 +77,6 @@ class CTankCommander : public CTank
 public:
 	CTankCommander ();
 
-	void Allocate (edict_t *ent);
 	void Spawn ();
 };
 

@@ -33,6 +33,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 
+void check_dodge (edict_t *self, vec3_t start, vec3_t dir, int speed);
+void CheckDodge (CBaseEntity *self, vec3f start, vec3f dir, int speed);
+
 /*
 =================
 CGrenade
@@ -275,23 +278,27 @@ void CBlasterProjectile::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface
 	Free (); // "delete" the entity
 }
 
-void check_dodge (edict_t *self, vec3_t start, vec3_t dir, int speed);
-void CBlasterProjectile::Spawn (CBaseEntity *Spawner, vec3_t start, vec3_t dir,
+void ED_CallSpawn (edict_t *ent);
+void CBlasterProjectile::Spawn (CBaseEntity *Spawner, vec3f start, vec3f dir,
 						int damage, int speed, int effect, bool isHyper)
 {
 	CBlasterProjectile		*Bolt = QNew (com_levelPool, 0) CBlasterProjectile;
 
-	VectorNormalizef (dir, dir);
+	dir.NormalizeFast();
 
 	Bolt->SetSvFlags (SVF_PROJECTILE);
 	Bolt->State.SetOrigin (start);
 	Bolt->State.SetOldOrigin (start);
-	vec3_t dirAngles;
-	VecToAngles (dir, dirAngles);
-	Bolt->State.SetAngles (dirAngles);
+	Bolt->State.SetAngles (dir.ToAngles());
 	Vec3Scale (dir, speed, Bolt->gameEntity->velocity);
+	dir.Scale(speed);
+	Bolt->gameEntity->velocity[0] = dir.X;
+	Bolt->gameEntity->velocity[1] = dir.Y;
+	Bolt->gameEntity->velocity[2] = dir.Z;
+
 	Bolt->State.SetEffects (effect);
 	Bolt->State.SetModelIndex (ModelIndex ("models/objects/laser/tris.md2"));
+
 	Bolt->State.SetSound (SoundIndex ("misc/lasfly.wav"));
 	Bolt->SetOwner (Spawner);
 	Bolt->NextThink = level.framenum + 20;
@@ -304,12 +311,10 @@ void CBlasterProjectile::Spawn (CBaseEntity *Spawner, vec3_t start, vec3_t dir,
 	if (Spawner->EntityFlags & ENT_PLAYER)
 		check_dodge (Spawner->gameEntity, start, dir, speed);
 
-	vec3_t origin;
-	Spawner->State.GetOrigin (origin);
-	CTrace tr = CTrace (origin, start, Bolt->gameEntity, CONTENTS_MASK_SHOT);
+	CTrace tr = CTrace (Spawner->State.GetOrigin(), start, Bolt->gameEntity, CONTENTS_MASK_SHOT);
 	if (tr.fraction < 1.0)
 	{
-		Vec3MA (start, -10, dir, start);
+		start = start.MultiplyAngles (-10, dir);
 		Bolt->State.SetOrigin (start);
 		Bolt->State.SetOldOrigin (start);
 

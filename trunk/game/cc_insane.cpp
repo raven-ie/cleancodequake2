@@ -43,11 +43,6 @@ CInsane::CInsane ()
 	Scale = MODEL_SCALE;
 }
 
-void CInsane::Allocate (edict_t *ent)
-{
-	ent->Monster = QNew (com_levelPool, 0) CInsane(Monster_Insane);
-}
-
 void CInsane::Fist ()
 {
 	Entity->PlaySound (CHAN_VOICE, SoundFist, 1, ATTN_IDLE);
@@ -644,3 +639,5 @@ void CInsane::Spawn ()
 	}
 	Entity->State.SetSkinNum (rand()%3);
 }
+
+LINK_MONSTER_CLASSNAME_TO_CLASS ("monster_insane", CInsane);

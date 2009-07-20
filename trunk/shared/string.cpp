@@ -77,7 +77,7 @@ size_t Q_strncpyz(char *dest, const char *src, size_t size)
 {
 	if (size)
 	{
-		while (--size && (*dest++ = *src++)) ;
+		while (--size && ((*dest++ = *src++) != 0)) ;
 		*dest = '\0';
 	}
 

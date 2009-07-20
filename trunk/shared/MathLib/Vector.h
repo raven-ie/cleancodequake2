@@ -27,6 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ==============================================================================
 */
 
+#ifdef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 template<typename TType>
 class vec2Base
 {
@@ -206,6 +207,7 @@ public:
 	inline void Scale(const float Scale) { X *= Scale; Y *= Scale; }
 	inline void Scale(const vec2f &Vec) { X *= Vec[0]; Y *= Vec[1]; }
 };
+#endif
 
 /*
 ==============================================================================
@@ -475,6 +477,65 @@ public:
 
 	inline void Scale(const float Scale) { X *= Scale; Y *= Scale; Z *= Scale; }
 	inline void Scale(const vec3f &Vec) { X *= Vec[0]; Y *= Vec[1]; Z *= Vec[2]; }
+
+	void ToVectors (vec3f *forward, vec3f *right, vec3f *up)
+	{
+		float sr, sp, sy, cr, cp, cy;
+		Q_SinCosf(DEG2RAD (X), &sp, &cp);
+		Q_SinCosf(DEG2RAD (Y), &sy, &cy);
+		Q_SinCosf(DEG2RAD (Z), &sr, &cr);
+
+		if (forward)
+			forward->Set (cp* cy, cp*sy, -sp);
+		if (right)
+			right->Set (-1 * sr * sp * cy + -1 * cr * -sy,
+						-1 * sr * sp * sy + -1 * cr * cy,
+						-1 * sr * cp);
+		if (up)
+			up->Set (cr * sp * cy + -sr * -sy,
+						cr * sp * sy + -sr * cy,
+						cr * cp);
+	};
+
+	inline vec3f MultiplyAngles (const float scale, const vec3f b)
+	{
+		return vec3f(	X + b.X * scale,
+						Y + b.Y * scale,
+						Z + b.Z * scale);
+	}
+
+	vec3f ToAngles ()
+	{
+		float	yaw, pitch;
+		
+		if (Y == 0 && X == 0)
+		{
+			yaw = 0;
+			if (Z > 0)
+				pitch = 90;
+			else
+				pitch = 270;
+		}
+		else
+		{
+			if (X)
+				yaw = atan2f(Y, X) * (180.0f / M_PI);
+			else if (Y > 0)
+				yaw = 90;
+			else
+				yaw = 270;
+
+			if (yaw < 0)
+				yaw += 360;
+
+			float forward = sqrtf(X * X + Y * Y);
+			pitch = atan2f(Z, forward) * (180.0f / M_PI);
+			if (pitch < 0)
+				pitch += 360;
+		}
+
+		return vec3f (-pitch, yaw, 0);
+	}
 };
 
 /*
@@ -485,6 +546,7 @@ public:
 ==============================================================================
 */
 
+#ifdef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 template<typename TType>
 class vec4Base
 {
@@ -750,3 +812,4 @@ public:
 	inline void Scale(const float Scale) { X *= Scale; Y *= Scale; Z *= Scale; W *= Scale; }
 	inline void Scale(const vec4f &Vec) { X *= Vec[0]; Y *= Vec[1]; Z *= Vec[2]; W *= Vec[3]; }
 };
+#endif

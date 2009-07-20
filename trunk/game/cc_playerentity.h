@@ -372,4 +372,7 @@ public:
 	void GetChaseTarget ();
 
 	void TossHead (int damage);
+
+	void P_ProjectSource (vec3f distance, vec3f forward, vec3f right, vec3f &result);
+	void PlayerNoiseAt (vec3_t Where, int type);
 };

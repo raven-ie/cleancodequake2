@@ -861,178 +861,116 @@
 	</References>
 	<Files>
 		<Filter
-			Name="Source Files"
-			Filter="cpp;c;cxx;rc;def;r;odl;hpj;bat;for;f90"
+			Name="Shared"
 			>
 			<File
-				RelativePath=".\..\..\game\g_combat.cpp"
+				RelativePath="..\..\shared\byteswap.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\g_func.cpp"
+				RelativePath="..\..\shared\ColorVec.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\g_main.cpp"
+				RelativePath="..\..\shared\ColorVec.h"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\g_misc.cpp"
+				RelativePath="..\..\shared\infostrings.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\g_phys.cpp"
+				RelativePath="..\..\shared\m_angles.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\g_save.cpp"
+				RelativePath="..\..\shared\m_bounds.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\g_spawn.cpp"
+				RelativePath="..\..\shared\m_mat3.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\g_target.cpp"
+				RelativePath="..\..\shared\m_mat4.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\g_trigger.cpp"
+				RelativePath="..\..\shared\m_plane.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\g_turret.cpp"
+				RelativePath="..\..\shared\m_quat.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\g_utils.cpp"
+				RelativePath="..\..\shared\mathlib.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\g_weapon.cpp"
+				RelativePath="..\..\shared\mersennetwister.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\m_flash.cpp"
+				RelativePath="..\..\shared\Platform.h"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\p_client.cpp"
+				RelativePath="..\..\shared\shared.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\p_hud.cpp"
+				RelativePath="..\..\shared\shared.h"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\p_trail.cpp"
+				RelativePath="..\..\shared\string.cpp"
 				>
 			</File>
-		</Filter>
-		<Filter
-			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;fi;fd"
-			>
-			<File
-				RelativePath="..\..\game\g_local.h"
+			<Filter
+				Name="MathLib"
 				>
-			</File>
-			<File
-				RelativePath="..\..\game\game.h"
+				<File
+					RelativePath="..\..\shared\MathLib\MathLib.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\shared\MathLib\Vector.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Templates"
 				>
-			</File>
-			<File
-				RelativePath="..\..\game\m_actor.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\game\m_berserk.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\game\m_boss2.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\game\m_boss31.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\game\m_boss32.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\game\m_brain.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\game\m_chick.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\game\m_flipper.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\game\m_float.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\game\m_flyer.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\game\m_gladiator.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\game\m_gunner.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\game\m_hover.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\game\m_infantry.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\game\m_insane.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\game\m_medic.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\game\m_mutant.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\game\m_parasite.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\game\m_player.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\game\m_rider.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\game\m_soldier.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\game\m_supertank.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\game\m_tank.h"
-				>
-			</File>
+				<File
+					RelativePath="..\..\shared\Templates\TArray.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\shared\Templates\TAutoPtr.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\shared\Templates\Templates.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\shared\Templates\Templates.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\shared\Templates\TMap.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\shared\Templates\TString.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\shared\Templates\TTypes.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Resources"
@@ -1513,14 +1451,6 @@
 				Name="Monsters"
 				>
 				<File
-					RelativePath=".\..\..\game\cc_monsterlist.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\..\..\game\cc_monsterlist.h"
-					>
-				</File>
-				<File
 					RelativePath=".\..\..\game\cc_monsters.cpp"
 					>
 				</File>
@@ -1837,6 +1767,174 @@
 					>
 				</File>
 			</Filter>
+		</Filter>
+		<Filter
+			Name="Old Files"
+			>
+			<File
+				RelativePath=".\..\..\game\g_combat.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\..\..\game\g_func.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\g_local.h"
+				>
+			</File>
+			<File
+				RelativePath=".\..\..\game\g_main.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\..\..\game\g_misc.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\..\..\game\g_phys.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\..\..\game\g_save.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\..\..\game\g_spawn.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\..\..\game\g_target.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\..\..\game\g_trigger.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\..\..\game\g_turret.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\..\..\game\g_utils.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\..\..\game\g_weapon.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\game.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\m_actor.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\m_berserk.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\m_boss2.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\m_boss31.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\m_boss32.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\m_brain.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\m_chick.h"
+				>
+			</File>
+			<File
+				RelativePath=".\..\..\game\m_flash.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\m_flipper.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\m_float.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\m_flyer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\m_gladiator.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\m_gunner.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\m_hover.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\m_infantry.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\m_insane.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\m_medic.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\m_mutant.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\m_parasite.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\m_player.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\m_rider.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\m_soldier.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\m_supertank.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\game\m_tank.h"
+				>
+			</File>
+			<File
+				RelativePath=".\..\..\game\p_client.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\..\..\game\p_hud.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\..\..\game\p_trail.cpp"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

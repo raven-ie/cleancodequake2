@@ -45,6 +45,10 @@ public:
 	cmBspSurface_t		*surface;
 	int					contents;
 
+	// For vec3f
+	Plane_t				Plane;
+	vec3f				EndPos;
+
 	CTrace ();
 
 	// Constructor easyness

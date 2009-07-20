@@ -354,7 +354,7 @@ void Com_StripExtension(char *dest, size_t size, const char *src)
 {
 	if (size)
 	{
-		while (--size && *src != '.' && (*dest++ = *src++)) ;
+		while (--size && *src != '.' && ((*dest++ = *src++) != 0)) ;
 		*dest = '\0';
 	}
 }

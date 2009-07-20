@@ -42,11 +42,6 @@ CSoldierMachinegun::CSoldierMachinegun ()
 	Classname = "monster_soldier_ss";
 }
 
-void CSoldierMachinegun::Allocate (edict_t *ent)
-{
-	ent->Monster = QNew (com_levelPool, 0) CSoldierMachinegun(Monster_Soldier_Machinegun);
-}
-
 extern CAnim SoldierMoveAttack4;
 
 void CSoldierMachinegun::Attack ()
@@ -115,3 +110,5 @@ void CSoldierMachinegun::SpawnSoldier ()
 	Entity->gameEntity->health = 40;
 	Entity->gameEntity->gib_health = -30;
 }
+
+LINK_MONSTER_CLASSNAME_TO_CLASS ("monster_soldier_ss", CSoldierMachinegun);

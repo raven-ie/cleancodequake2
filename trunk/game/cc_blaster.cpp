@@ -70,29 +70,28 @@ bool CBlaster::AttemptToFire (CPlayerEntity *ent)
 
 void CBlaster::Fire (CPlayerEntity *ent)
 {
-	int damage = deathmatch->Integer() ? 15 : 10;
-	vec3_t	forward, right;
-	vec3_t	start;
-	vec3_t	offset;
+	int Damage = deathmatch->Integer() ? 15 : 10;
+	vec3f	Forward, Start, Right, Offset;
 
 	if (isQuad)
-		damage *= 4;
+		Damage *= 4;
 
-	Angles_Vectors (ent->Client.v_angle, forward, right, NULL);
-	Vec3Set (offset, 24, 8, ent->gameEntity->viewheight-8);
-	P_ProjectSource (ent, offset, forward, right, start);
+	vec3f(ent->Client.v_angle).ToVectors (&Forward, &Right, NULL);
+	Offset.Set (24, 8, ent->gameEntity->viewheight - 8);
+	ent->P_ProjectSource (Offset, Forward, Right, Start);
 
-	Vec3Scale (forward, -2, ent->Client.kick_origin);
+	ent->Client.kick_origin[0] = Forward.X * -2;
+	ent->Client.kick_origin[1] = Forward.Y * -2;
+	ent->Client.kick_origin[2] = Forward.Z * -2;
 	ent->Client.kick_angles[0] = -1;
 
-	//fire_blaster (ent->gameEntity, start, forward, damage, 1000, EF_BLASTER, false);
-	CBlasterProjectile::Spawn (ent, start, forward, damage, 1000, EF_BLASTER, false);
+	CBlasterProjectile::Spawn (ent, Start, Forward, Damage, 1000, EF_BLASTER, false);
 
 	// send muzzle flash
 	Muzzle (ent, MZ_BLASTER);
 	AttackSound (ent);
 
-	PlayerNoise(ent, start, PNOISE_WEAPON);
+	ent->PlayerNoiseAt(Start, PNOISE_WEAPON);
 	FireAnimation(ent);
 
 	ent->Client.PlayerState.SetGunFrame(ent->Client.PlayerState.GetGunFrame() + 1);

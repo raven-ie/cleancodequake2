@@ -50,16 +50,6 @@ CTankCommander::CTankCommander ()
 	Scale = MODEL_SCALE;
 }
 
-void CTank::Allocate (edict_t *ent)
-{
-	ent->Monster = QNew (com_levelPool, 0) CTank(Monster_Tank);
-}
-
-void CTankCommander::Allocate (edict_t *ent)
-{
-	ent->Monster = QNew (com_levelPool, 0) CTankCommander(Monster_Tank_Commander);
-}
-
 //
 // misc
 //
@@ -1001,6 +991,8 @@ void CTank::Spawn ()
 	WalkMonsterStart();
 }
 
+LINK_MONSTER_CLASSNAME_TO_CLASS ("monster_tank", CTank);
+
 void CTankCommander::Spawn ()
 {
 	CTank::Spawn ();
@@ -1008,3 +1000,5 @@ void CTankCommander::Spawn ()
 	Entity->gameEntity->gib_health = -225;
 	Entity->State.SetSkinNum (2);
 }
+
+LINK_MONSTER_CLASSNAME_TO_CLASS ("monster_tank_commander", CTankCommander);

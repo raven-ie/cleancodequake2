@@ -3639,4 +3639,85 @@ void CPlayerEntity::GetChaseTarget()
 	PrintToClient(PRINT_CENTER, "No other players to chase.");
 }
 
+void CPlayerEntity::P_ProjectSource (vec3f distance, vec3f forward, vec3f right, vec3f &result)
+{
+	switch (Client.pers.hand)
+	{
+	case LEFT_HANDED:
+		distance.Y *= -1;
+		break;
+	case CENTER_HANDED:
+		distance.Y = 0;
+		break;
+	default:
+		break;
+	}
 
+	G_ProjectSource (State.GetOrigin(), distance, forward, right, result);
+}
+
+void CPlayerEntity::PlayerNoiseAt (vec3_t Where, int type)
+{
+#ifndef MONSTERS_USE_PATHFINDING
+	edict_t		*noise;
+#endif
+
+	if (type == PNOISE_WEAPON)
+	{
+		if (Client.silencer_shots)
+		{
+			Client.silencer_shots--;
+			return;
+		}
+	}
+
+	if (game.mode & GAME_DEATHMATCH)
+		return;
+
+	//if (who->flags & FL_NOTARGET)
+	//	return;
+
+#ifndef MONSTERS_USE_PATHFINDING
+	if (!Client.mynoise)
+	{
+		noise = G_Spawn();
+		noise->classname = "player_noise";
+		Vec3Set (noise->mins, -8, -8, -8);
+		Vec3Set (noise->maxs, 8, 8, 8);
+		noise->owner = who;
+		noise->svFlags = SVF_NOCLIENT;
+		Client.mynoise = noise;
+
+		noise = G_Spawn();
+		noise->classname = "player_noise";
+		Vec3Set (noise->mins, -8, -8, -8);
+		Vec3Set (noise->maxs, 8, 8, 8);
+		noise->owner = who;
+		noise->svFlags = SVF_NOCLIENT;
+		Client.mynoise2 = noise;
+	}
+
+	if (type == PNOISE_SELF || type == PNOISE_WEAPON)
+	{
+		noise = Client.mynoise;
+		level.sound_entity = noise;
+		level.sound_entity_framenum = level.framenum;
+	}
+	else // type == PNOISE_IMPACT
+	{
+		noise = who->mynoise2;
+		level.sound2_entity = noise;
+		level.sound2_entity_framenum = level.framenum;
+	}
+
+	Vec3Copy (Where, noise->state.origin);
+	Vec3Subtract (Where, noise->maxs, noise->absMin);
+	Vec3Add (Where, noise->maxs, noise->absMax);
+	noise->teleport_time = level.framenum;
+	gi.linkentity (noise);
+#else
+	level.NoiseNode = GetClosestNodeTo(Where);
+	level.SoundEntityFramenum = level.framenum;
+	level.SoundEntity = this;
+#endif
+}

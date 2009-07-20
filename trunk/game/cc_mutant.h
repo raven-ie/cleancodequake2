@@ -53,7 +53,6 @@ public:
 	MediaIndex	SoundThud;
 
 	CMutant ();
-	void Allocate (edict_t *ent);
 
 	void Step ();
 	void Swing ();

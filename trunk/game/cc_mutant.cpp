@@ -43,11 +43,6 @@ CMutant::CMutant ()
 	Scale = MODEL_SCALE;
 }
 
-void CMutant::Allocate (edict_t *ent)
-{
-	ent->Monster = QNew (com_levelPool, 0) CMutant(Monster_Mutant);
-}
-
 //
 // SOUNDS
 //
@@ -749,3 +744,5 @@ void CMutant::Spawn ()
 	CurrentMove = &MutantMoveStand;
 	WalkMonsterStart ();
 }
+
+LINK_MONSTER_CLASSNAME_TO_CLASS ("monster_mutant", CMutant);

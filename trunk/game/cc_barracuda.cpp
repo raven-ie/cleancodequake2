@@ -43,11 +43,6 @@ CBarracudaShark::CBarracudaShark ()
 	Scale = MODEL_SCALE;
 }
 
-void CBarracudaShark::Allocate (edict_t *ent)
-{
-	ent->Monster = QNew (com_levelPool, 0) CBarracudaShark(Monster_Shark);
-}
-
 CFrame FlipperFramesStand [] =
 {
 	CFrame (&CMonster::AI_Stand, 0)
@@ -386,3 +381,5 @@ void CBarracudaShark::Spawn ()
 
 	SwimMonsterStart ();
 }
+
+LINK_MONSTER_CLASSNAME_TO_CLASS ("monster_flipper", CBarracudaShark);

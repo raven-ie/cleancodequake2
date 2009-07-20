@@ -45,8 +45,6 @@ public:
 
 	CBarracudaShark ();
 
-	void Allocate (edict_t *ent);
-
 	void Run ();
 	void Sight ();
 	void Stand ();

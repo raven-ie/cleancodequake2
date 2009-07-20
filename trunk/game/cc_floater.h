@@ -43,7 +43,6 @@ public:
 	MediaIndex	SoundSight;
 
 	CFloater ();
-	void Allocate (edict_t *ent);
 
 	void Attack ();
 	void Idle ();
