@@ -40,7 +40,6 @@ public:
 	MediaIndex	SoundScream[8];
 
 	CInsane ();
-	void Allocate (edict_t *ent);
 
 	void Fist ();
 	void Shake ();

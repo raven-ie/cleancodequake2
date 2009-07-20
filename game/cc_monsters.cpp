@@ -1405,7 +1405,7 @@ void CMonster::MonsterFireBlaster (vec3_t start, vec3_t dir, int damage, int spe
 #endif
 
 	//fire_blaster (Entity, start, dir, damage, speed, effect, false);
-	CBlasterProjectile::Spawn (Entity, start, dir, damage, speed, effect, false);
+	CBlasterProjectile::Spawn (Entity, vec3f(start), vec3f(dir), damage, speed, effect, false);
 
 	if (flashtype != -1)
 		CTempEnt::MonsterFlash (start, Entity->State.GetNumber(), flashtype);
@@ -3729,20 +3729,6 @@ static uint32 lastMonsterID;
 CMonster::CMonster ()
 {
 	MonsterID = lastMonsterID++;
-}
-
-void CMonster::Init (edict_t *ent)
-{
-	Entity = new CMonsterEntity(ent->state.number);
-	Entity->Monster = this;
-	Spawn ();
-
-/*	Entity->die = Monster_Die;
-	Entity->pain = Monster_Pain;
-
-	Entity->think = Monster_Think;
-	Entity->NextThink = level.framenum + 1;*/
-	Entity->NextThink = level.framenum + 1;
 }
 
 #ifdef MONSTER_USE_ROGUE_AI

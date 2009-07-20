@@ -42,11 +42,6 @@ CSoldierLight::CSoldierLight ()
 	Classname = "monster_soldier_light";
 }
 
-void CSoldierLight::Allocate (edict_t *ent)
-{
-	ent->Monster = QNew (com_levelPool, 0) CSoldierLight(Monster_Soldier_Light);
-}
-
 extern CAnim SoldierMoveAttack1;
 extern CAnim SoldierMoveAttack2;
 extern CAnim SoldierMoveAttack6;
@@ -160,3 +155,5 @@ void CSoldierLight::SpawnSoldier ()
 	BlindFire = true;
 #endif
 }
+
+LINK_MONSTER_CLASSNAME_TO_CLASS ("monster_soldier_light", CSoldierLight);

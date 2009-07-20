@@ -36,7 +36,6 @@ class CSoldierMachinegun : public CSoldierBase
 public:
 	CSoldierMachinegun();
 
-	void Allocate (edict_t *ent);
 	void Attack ();
 	void FireGun (int FlashNumber);
 	void SpawnSoldier ();

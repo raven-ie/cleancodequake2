@@ -43,11 +43,6 @@ CGladiator::CGladiator ()
 	Scale = MODEL_SCALE;
 }
 
-void CGladiator::Allocate (edict_t *ent)
-{
-	ent->Monster = QNew (com_levelPool, 0) CGladiator(Monster_Gladiator);
-}
-
 void CGladiator::Idle ()
 {
 	Entity->PlaySound (CHAN_VOICE, SoundIdle);
@@ -360,3 +355,5 @@ void CGladiator::Spawn ()
 	CurrentMove = &GladiatorMoveStand;
 	WalkMonsterStart ();
 }
+
+LINK_MONSTER_CLASSNAME_TO_CLASS ("monster_gladiator", CGladiator);

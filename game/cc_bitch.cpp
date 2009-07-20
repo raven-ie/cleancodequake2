@@ -43,11 +43,6 @@ CMaiden::CMaiden ()
 	Scale = MODEL_SCALE;
 }
 
-void CMaiden::Allocate (edict_t *ent)
-{
-	ent->Monster = QNew (com_levelPool, 0) CMaiden(Monster_Bitch);
-}
-
 void CMaiden::Moan ()
 {
 	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundIdle1 : SoundIdle2, 1, ATTN_IDLE, 0);
@@ -834,3 +829,5 @@ void CMaiden::Spawn ()
 	CurrentMove = &ChickMoveStand;
 	WalkMonsterStart ();
 }
+
+LINK_MONSTER_CLASSNAME_TO_CLASS ("monster_bitch", CMaiden);

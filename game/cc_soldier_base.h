@@ -42,8 +42,6 @@ public:
 	MediaIndex	SoundPain;
 	MediaIndex	SoundDeath;
 
-	virtual void Allocate (edict_t *ent) = 0;
-
 	virtual void Attack () = 0;
 #ifndef MONSTER_USE_ROGUE_AI
 	void Dodge (CBaseEntity *attacker, float eta);

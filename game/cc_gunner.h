@@ -43,7 +43,6 @@ public:
 	MediaIndex	SoundSight;
 
 	CGunner ();
-	void Allocate (edict_t *ent);
 
 	void ReFireChain ();
 	void FireChain ();

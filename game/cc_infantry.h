@@ -49,8 +49,6 @@ public:
 
 	CInfantry ();
 
-	void Allocate (edict_t *ent);
-
 	void Attack ();
 #ifndef MONSTER_USE_ROGUE_AI
 	void Dodge (edict_t *attacker, float eta);

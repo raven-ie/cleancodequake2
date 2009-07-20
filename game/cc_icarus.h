@@ -43,7 +43,6 @@ public:
 	MediaIndex	SoundSearch2;
 
 	CIcarus ();
-	void Allocate (edict_t *ent);
 
 	void ReAttack ();
 	void FireBlaster ();

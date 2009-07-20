@@ -513,6 +513,15 @@ struct plane_t
 	byte			signBits;		// signx + (signy<<1) + (signz<<1)
 };
 
+// Special version of plane_t that takes vec3f
+struct Plane_t
+{
+	vec3f			normal;
+	float			dist;
+	byte			type;			// for fast side tests
+	byte			signBits;		// signx + (signy<<1) + (signz<<1)
+};
+
 //
 // m_plane.c
 //

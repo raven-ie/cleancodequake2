@@ -272,9 +272,6 @@ void InitGame (void)
 	// items
 	InitItemlist ();
 
-	// monsters
-	InitMonsterList();
-
 	Q_snprintfz (game.helpmessage1, sizeof(game.helpmessage1), "");
 
 	Q_snprintfz (game.helpmessage2, sizeof(game.helpmessage2), "");

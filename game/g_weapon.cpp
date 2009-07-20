@@ -64,7 +64,41 @@ void check_dodge (edict_t *self, vec3_t start, vec3_t dir, int speed)
 #endif
 }
 
+void CheckDodge (CBaseEntity *self, vec3f start, vec3f dir, int speed)
+{
+	vec3f	end, v;
+	CTrace	tr;
+	float	eta;
 
+	// easy mode only ducks one quarter the time
+	if (skill->Integer() == 0)
+	{
+		if (random() > 0.25)
+			return;
+	}
+
+	end = start.MultiplyAngles(8192, dir);
+	tr = CTrace (start, end, self->gameEntity, CONTENTS_MASK_SHOT);
+
+#ifdef MONSTER_USE_ROGUE_AI
+	if ((tr.ent) && (tr.ent->Monster) && (tr.ent->health > 0) && (tr.ent->Monster->MonsterFlags & MF_HAS_DODGE) && infront(tr.ent, self->gameEntity))
+	{
+		v = tr.EndPos - start;
+		eta = (v.LengthFast() - tr.ent->maxs[0]) / speed;
+		tr.ent->Monster->Dodge (self->gameEntity, eta, &tr);
+
+		if (tr.ent->enemy != self->gameEntity)
+			tr.ent->enemy = self->gameEntity;
+	}
+#else
+	if ((tr.ent) && (tr.ent->Monster) && (tr.ent->health > 0) && infront(tr.ent, self->gameEntity))
+	{
+		v = tr.EndPos - Start;
+		eta = (v.LengthFast() - tr.ent->maxs[0]) / speed;
+		tr.ent->Monster->Dodge (self->gameEntity, eta);
+	}
+#endif
+}
 /*
 =================
 fire_hit

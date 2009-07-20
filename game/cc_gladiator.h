@@ -47,8 +47,6 @@ public:
 
 	CGladiator ();
 
-	void Allocate (edict_t *ent);
-
 	void Attack ();
 	void Idle ();
 	void Run ();

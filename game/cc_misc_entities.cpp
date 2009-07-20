@@ -184,10 +184,6 @@ public:
 	{
 		return CStepPhysics::Run ();
 	};
-
-	void MapSpawn ()
-	{
-	};
 };
 
 LINK_CLASSNAME_TO_CLASS ("misc_explobox",CMiscExploBox);

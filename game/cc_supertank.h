@@ -45,8 +45,6 @@ public:
 
 	CSuperTank ();
 
-	void Allocate (edict_t *ent);
-
 	void PlayTreadSound ();
 	void Explode ();
 	void MachineGun ();

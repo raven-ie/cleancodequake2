@@ -43,11 +43,6 @@ CSuperTank::CSuperTank ()
 	Scale = MODEL_SCALE;
 };
 
-void CSuperTank::Allocate (edict_t *ent)
-{
-	ent->Monster = QNew (com_levelPool, 0) CSuperTank(Monster_SuperTank);
-}
-
 void CSuperTank::PlayTreadSound ()
 {
 	Entity->PlaySound (CHAN_BODY, TreadSound);
@@ -858,3 +853,5 @@ void CSuperTank::Spawn ()
 
 	WalkMonsterStart();
 }
+
+LINK_MONSTER_CLASSNAME_TO_CLASS ("monster_supertank", CSuperTank);

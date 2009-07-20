@@ -289,6 +289,7 @@ void ED_CallSpawn (edict_t *ent)
 	if (ItemExists(ent))
 		return;
 
+/*
 	if ((ent->Monster = FindMonster(ent->classname)) != NULL)
 	{
 		ent->Monster->Allocate(ent);
@@ -297,6 +298,7 @@ void ED_CallSpawn (edict_t *ent)
 	}
 	else
 		ent->Monster = NULL;
+*/
 
 	// Check CleanCode stuff
 	CBaseEntity *MapEntity = ResolveMapEntity(ent);

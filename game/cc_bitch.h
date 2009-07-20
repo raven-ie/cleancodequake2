@@ -53,7 +53,6 @@ public:
 
 	CMaiden ();
 
-	void Allocate (edict_t *ent);
 
 	void Attack ();
 	void Idle ();

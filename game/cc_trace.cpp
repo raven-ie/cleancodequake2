@@ -43,6 +43,9 @@ void CTrace::Copy (cmTrace_t tr)
 	Vec3Copy (tr.endPos, endPos);
 	surface = tr.surface;
 	contents = tr.contents;
+
+	memcpy (&Plane, &plane, sizeof(Plane));
+	memcpy (EndPos, endPos, sizeof(EndPos));
 };
 
 CTrace::CTrace ()

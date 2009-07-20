@@ -43,11 +43,6 @@ CFloater::CFloater ()
 	Scale = MODEL_SCALE;
 }
 
-void CFloater::Allocate (edict_t *ent)
-{
-	ent->Monster = QNew (com_levelPool, 0) CFloater(Monster_Floater);
-}
-
 void CFloater::Sight ()
 {
 	Entity->PlaySound (CHAN_VOICE, SoundSight);
@@ -603,3 +598,5 @@ void CFloater::Spawn ()
 
 	FlyMonsterStart ();
 }
+
+LINK_MONSTER_CLASSNAME_TO_CLASS ("monster_floater", CFloater);

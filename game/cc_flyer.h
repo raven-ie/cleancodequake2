@@ -43,7 +43,6 @@ public:
 	MediaIndex	SoundDie;
 
 	CFlyer ();
-	void Allocate (edict_t *ent);
 
 	void Attack ();
 #ifdef FLYER_KNOWS_HOW_TO_DODGE
