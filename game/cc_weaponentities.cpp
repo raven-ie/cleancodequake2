@@ -757,6 +757,29 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
 			CBaseEntity *Target = dynamic_cast<CBaseEntity*>(Trace.ent->Entity);
 
 			// Hurt it
+			// Revision
+			// Startsolid mistake..
+			if (Trace.startSolid)
+			{
+				vec3_t origin;
+				Target->State.GetOrigin(origin);
+				if (!DoDamage (Entity, Target, aimdir, origin, Trace.plane.normal))
+					break; // We wanted to stop
+
+				// Set up the start from where we are now
+				vec3_t oldFrom;
+				Vec3Copy (from, oldFrom);
+				Vec3Copy (origin, from);
+
+				DoEffect (from, oldFrom, Water);
+
+				// and ignore the bastard
+				Ignore = Target;
+
+				// Continue our loop
+				continue;
+			}
+
 			if (!DoDamage (Entity, Target, aimdir, Trace.endPos, Trace.plane.normal))
 				break; // We wanted to stop
 
@@ -1087,6 +1110,28 @@ void CBullet::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
 			CBaseEntity *Target = dynamic_cast<CBaseEntity*>(Trace.ent->Entity);
 
 			// Hurt it
+			// Revision
+			// Startsolid mistake..
+			if (Trace.startSolid)
+			{
+				vec3_t origin;
+				Target->State.GetOrigin(origin);
+				if (!DoDamage (Entity, Target, aimdir, origin, Trace.plane.normal))
+					break; // We wanted to stop
+
+				// Set up the start from where we are now
+				vec3_t oldFrom;
+				Vec3Copy (from, oldFrom);
+				Vec3Copy (origin, from);
+
+				DoEffect (from, oldFrom, Water);
+
+				// and ignore the bastard
+				Ignore = Target;
+
+				// Continue our loop
+				continue;
+			}
 			if (!DoDamage (Entity, Target, aimdir, Trace.endPos, Trace.plane.normal))
 				break; // We wanted to stop
 
