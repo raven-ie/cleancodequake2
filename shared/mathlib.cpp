@@ -512,17 +512,17 @@ void PerpendicularVector(const vec3_t src, vec3_t dst)
 	vec3_t	tempVec;
 
 	// Find the smallest magnitude axially aligned vector
-	if (fabs(src[0]) < minElem)
+	if (Q_fabs(src[0]) < minElem)
 	{
 		pos = 0;
 		minElem = fabsf(src[0]);
 	}
-	if (fabs(src[1]) < minElem)
+	if (Q_fabs(src[1]) < minElem)
 	{
 		pos = 1;
 		minElem = fabsf(src[1]);
 	}
-	if (fabs(src[2]) < minElem)
+	if (Q_fabs(src[2]) < minElem)
 	{
 		pos = 2;
 		minElem = fabsf(src[2]);

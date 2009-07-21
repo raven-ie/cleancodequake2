@@ -58,7 +58,7 @@ CKey(Classname, WorldModel, EffectFlags, PickupSound, Icon, Name, Flags,
 };
 
 
-bool CKey::Pickup (edict_t *ent, CPlayerEntity *other)
+bool CKey::Pickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	if (game.mode == GAME_COOPERATIVE)
 	{
@@ -71,19 +71,68 @@ bool CKey::Pickup (edict_t *ent, CPlayerEntity *other)
 	return true;
 }
 
-bool CPowerCube::Pickup (edict_t *ent, CPlayerEntity *other)
+bool CPowerCube::Pickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	if (game.mode == GAME_COOPERATIVE)
 	{
-		if (other->Client.pers.power_cubes & ((ent->spawnflags & 0x0000ff00)>> 8))
+		if (other->Client.pers.power_cubes & ((ent->gameEntity->spawnflags & 0x0000ff00)>> 8))
 			return false;
 		other->Client.pers.Inventory += this;
-		other->Client.pers.power_cubes |= ((ent->spawnflags & 0x0000ff00) >> 8);
+		other->Client.pers.power_cubes |= ((ent->gameEntity->spawnflags & 0x0000ff00) >> 8);
 		return true;
 	}
 	other->Client.pers.Inventory += this;
 	return true;
 }
+
+class CPowerCubeEntity : public CItemEntity
+{
+public:
+	CPowerCubeEntity() :
+	  CBaseEntity(),
+	  CItemEntity ()
+	  {
+	  };
+
+	CPowerCubeEntity (int Index) :
+	  CBaseEntity(Index),
+	  CItemEntity (Index)
+	  {
+	  };
+
+	void Spawn (CBaseItem *item)
+	{
+		if (gameEntity->spawnflags)
+		{
+			gameEntity->spawnflags = 0;
+			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "Invalid spawnflags (%i, should be 0)\n", gameEntity->spawnflags);
+		}
+
+		if (game.mode == GAME_COOPERATIVE)
+		{
+			gameEntity->spawnflags |= (1 << (8 + level.power_cubes));
+			level.power_cubes++;
+		}
+
+		gameEntity->item = item;
+		NextThink = level.framenum + 2;    // items start after other solids
+		ThinkState = ITS_DROPTOFLOOR;
+		NoPhysics = true;
+
+		State.SetEffects(item->EffectFlags);
+		State.SetRenderEffects(RF_GLOW);
+	};
+};
+
+LINK_ITEM_TO_CLASS (key_data_cd, CItemEntity);
+LINK_ITEM_TO_CLASS (key_pyramid, CItemEntity);
+LINK_ITEM_TO_CLASS (key_data_spinner, CItemEntity);
+LINK_ITEM_TO_CLASS (key_pass, CItemEntity);
+LINK_ITEM_TO_CLASS (key_blue_key, CItemEntity);
+LINK_ITEM_TO_CLASS (key_red_key, CItemEntity);
+LINK_ITEM_TO_CLASS (key_commander_head, CItemEntity);
+LINK_ITEM_TO_CLASS (key_airstrike_target, CItemEntity);
+LINK_ITEM_TO_CLASS (key_power_cube, CPowerCubeEntity);
 
 void AddKeysToList ()
 {

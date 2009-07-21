@@ -489,10 +489,9 @@ void CMonsterEntity::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *
 	Monster->Touch (other, plane, surf);
 }
 
-void VelocityForDamage (int damage, vec3_t v);
+void VelocityForDamage (int damage, vec3f &v);
 void CMonsterEntity::ThrowHead (MediaIndex gibIndex, int damage, int type)
 {
-	vec3_t	vd;
 	float	vscale;
 
 	IsHead = true;
@@ -523,8 +522,14 @@ void CMonsterEntity::ThrowHead (MediaIndex gibIndex, int damage, int type)
 		vscale = 1.0;
 	}
 
+	vec3f vd;
 	VelocityForDamage (damage, vd);
-	Vec3MA (gameEntity->velocity, vscale, vd, gameEntity->velocity);
+	
+	vec3f velocity (gameEntity->velocity);
+	velocity.MultiplyAngles (vscale, vd);
+	gameEntity->velocity[0] = velocity.X;
+	gameEntity->velocity[1] = velocity.Y;
+	gameEntity->velocity[2] = velocity.Z;
 
 	if (gameEntity->velocity[0] < -300)
 		gameEntity->velocity[0] = -300;
@@ -3037,7 +3042,7 @@ void CMonster::MonsterDeathUse ()
 
 	if (Entity->gameEntity->item)
 	{
-		Entity->gameEntity->item->DropItem (Entity->gameEntity);
+		Entity->gameEntity->item->DropItem (Entity);
 		Entity->gameEntity->item = NULL;
 	}
 

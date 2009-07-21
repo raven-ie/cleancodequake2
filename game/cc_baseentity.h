@@ -214,3 +214,6 @@ public:
 	CMapEntity ();
 	CMapEntity (int Index);
 };
+
+#include "cc_itementity.h"
+#include "cc_junk_entities.h"

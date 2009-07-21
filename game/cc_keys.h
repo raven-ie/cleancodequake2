@@ -39,7 +39,7 @@ public:
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
 			   char *Precache);
 
-	bool	Pickup (edict_t *ent, CPlayerEntity *other);
+	bool	Pickup (class CItemEntity *ent, CPlayerEntity *other);
 	void	Use (CPlayerEntity *ent);
 	void	Drop (CPlayerEntity *ent);
 };
@@ -51,7 +51,7 @@ public:
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
 			   char *Precache);
 
-	bool	Pickup (edict_t *ent, CPlayerEntity *other);
+	bool	Pickup (class CItemEntity *ent, CPlayerEntity *other);
 };
 
 void AddKeysToList ();

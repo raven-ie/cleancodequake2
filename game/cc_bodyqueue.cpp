@@ -76,11 +76,9 @@ void CBody::Pain (CBaseEntity *other, float kick, int damage)
 {
 }
 
-void VelocityForDamage (int damage, vec3_t v);
+void VelocityForDamage (int damage, vec3f &v);
 void CBody::TossHead (int damage)
 {
-	vec3_t	vd;
-
 	if (rand()&1)
 	{
 		State.SetModelIndex (gMedia.Gib_Head[1]);
@@ -103,8 +101,12 @@ void CBody::TossHead (int damage)
 	gameEntity->flags |= FL_NO_KNOCKBACK;
 
 	backOff = 1.5f;
+	vec3f vd;
 	VelocityForDamage (damage, vd);
-	Vec3Add (gameEntity->velocity, vd, gameEntity->velocity);
+	vec3f vel = vec3f(gameEntity->velocity) + vd;
+	gameEntity->velocity[0] = vel.X;
+	gameEntity->velocity[1] = vel.Y;
+	gameEntity->velocity[2] = vel.Z;
 
 	NextThink = level.framenum + 100 + random()*100;
 
@@ -142,6 +144,7 @@ void CBody::Think ()
 	// Disappear us
 	State.SetModelIndex(0);
 	State.SetEffects(0);
+	SetSvFlags (SVF_NOCLIENT);
 }
 
 void CBody::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
@@ -150,8 +153,8 @@ void CBody::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3
 	{
 		PlaySound(CHAN_BODY, SoundIndex ("misc/udeath.wav"));
 		for (int n = 0; n < 4; n++)
-			ThrowGib (gameEntity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-
+			CGibEntity::Spawn (this, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+			
 		vec3f origin = State.GetOrigin();
 		origin.Z -= 16;
 		State.SetOrigin(origin);
@@ -189,7 +192,7 @@ CBodyQueue::CBodyQueue (int MaxSize)
 	// Add MaxSize entities to the body queue (reserved entities)
 	for (int i = 0; i < MaxSize; i++)
 	{
-		CBody *Body = new CBody ();
+		CBody *Body = QNew (com_levelPool, 0) CBody ();
 		Body->gameEntity->classname = "bodyque";
 		Body->BodyQueueList = this;
 

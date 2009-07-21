@@ -118,7 +118,7 @@ public:
 	///
 	/// \retval	true if it succeeds, false if it fails. 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	virtual	bool	Pickup (edict_t *ent, CPlayerEntity *other) = 0;
+	virtual	bool	Pickup (class CItemEntity *ent, CPlayerEntity *other) = 0;
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// \fn	virtual void Use (edict_t *ent) = 0
@@ -143,19 +143,15 @@ public:
 	/// \param	ent	 - If non-null, the ent. 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	virtual	void	Drop (CPlayerEntity *ent) = 0;
-	virtual edict_t	*DropItem (edict_t *ent);
+	virtual class CItemEntity	*DropItem (CBaseEntity *ent);
 
-	static void		DoRespawn (edict_t *ent);
-	virtual void	SetRespawn (edict_t *ent, float delay);
+	virtual void	SetRespawn (class CItemEntity *ent, int32 delay);
 
 	inline int		GetIndex ();
 	inline int		GetConfigStringNumber ();
 
 	virtual void	Add (CPlayerEntity *ent, int quantity);
 };
-
-void SpawnItem (edict_t *ent, CBaseItem *item);
-void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
 
 #include "cc_weapons.h"
 #include "cc_health.h"

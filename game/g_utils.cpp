@@ -365,6 +365,12 @@ void	G_TouchTriggers (edict_t *ent)
 		hit = touch[i];
 		if (!hit->inUse)
 			continue;
+
+		if (ent->Entity && hit->Entity && (hit->Entity->EntityFlags & ENT_TOUCHABLE))
+		{
+			(dynamic_cast<CTouchableEntity*>(hit->Entity))->Touch (ent->Entity, NULL, NULL);
+			continue;
+		}
 		if (!hit->touch)
 			continue;
 		hit->touch (hit, ent, NULL, NULL);

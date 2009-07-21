@@ -108,6 +108,7 @@ float	Q_FastSqrt (float value);
 inline long Q_ftol (float f) { return ((long)f); }
 inline float Q_FastSqrt (float value) { return sqrt(value); }
 #endif // id386
+inline float Q_fabs (float val) { return ((val < 0.f) ? -val : val); }
 
 // Template functions
 template <class CType, int numElements>

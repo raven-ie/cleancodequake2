@@ -506,8 +506,8 @@ void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damag
 	{	// gib
 		PlaySoundFrom (Player->gameEntity, CHAN_BODY, SoundIndex ("misc/udeath.wav"));
 		for (n= 0; n < 4; n++)
-			ThrowGib (Player->gameEntity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		ThrowClientHead (Player->gameEntity, damage);
+			CGibEntity::Spawn (Player, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		Player->TossHead (damage);
 
 		Player->gameEntity->takedamage = false;
 //ZOID

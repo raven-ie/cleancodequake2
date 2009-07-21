@@ -59,7 +59,7 @@ void CTFHasTech(CPlayerEntity *who)
 	}
 }
 
-bool CTech::Pickup (edict_t *ent, CPlayerEntity *other)
+bool CTech::Pickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	if (other->Client.pers.Tech)
 	{
@@ -74,23 +74,98 @@ bool CTech::Pickup (edict_t *ent, CPlayerEntity *other)
 	return true;
 }
 
-static void TechThink(edict_t *tech);
-void CTech::Drop (CPlayerEntity *ent)
-{
-	edict_t *tech = DropItem(ent->gameEntity);
-	tech->nextthink = level.framenum + CTF_TECH_TIMEOUT;
-	tech->think = TechThink;
-	ent->Client.pers.Inventory.Set(this, 0);
-	ent->Client.pers.Tech = NULL;
-}
-
-void SpawnTech(CBaseItem *item, edict_t *spot);
-
 edict_t *SelectRandomDeathmatchSpawnPoint (void);
 static edict_t *FindTechSpawn(void)
 {
 	return SelectRandomDeathmatchSpawnPoint();
 }
+
+void SpawnTech(CBaseItem *item, edict_t *spot);
+class CTechEntity : public CItemEntity
+{
+public:
+	CTechEntity() :
+	  CItemEntity ()
+	  {
+	  };
+
+	  CTechEntity (int Index) :
+	  CItemEntity(Index)
+	  {
+	  };
+
+	void Think ()
+	{
+		edict_t *spot;
+
+		if ((spot = FindTechSpawn()) != NULL)
+		{
+			SpawnTech(gameEntity->item, spot);
+			Free ();
+		}
+		else
+			NextThink = level.framenum + CTF_TECH_TIMEOUT;
+	};
+};
+
+CItemEntity *CTech::DropItem (CBaseEntity *ent)
+{
+	CTechEntity	*dropped = QNew (com_levelPool, 0) CTechEntity();
+	vec3f	forward, right;
+
+	dropped->gameEntity->classname = Classname;
+	dropped->gameEntity->item = this;
+	dropped->gameEntity->spawnflags = DROPPED_ITEM;
+	dropped->State.SetEffects (EffectFlags);
+	dropped->State.SetRenderEffects (RF_GLOW);
+	dropped->SetMins (vec3f(-15));
+	dropped->SetMaxs (vec3f(15));
+	dropped->State.SetModelIndex (ModelIndex(WorldModel));
+	dropped->SetSolid (SOLID_TRIGGER);
+	dropped->gameEntity->owner = ent->gameEntity;
+
+	if (ent->EntityFlags & ENT_PLAYER)
+	{
+		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(ent);
+		CTrace	trace;
+
+		vec3f (Player->Client.v_angle).ToVectors (&forward, &right, NULL);
+		vec3f offset (24, 0, -16);
+
+		vec3f result;
+		G_ProjectSource (ent->State.GetOrigin(), offset, forward, right, result);
+
+		trace = CTrace (ent->State.GetOrigin(), dropped->GetMins(), dropped->GetMaxs(),
+			result, ent->gameEntity, CONTENTS_SOLID);
+		dropped->State.SetOrigin (trace.endPos);
+	}
+	else
+	{
+		ent->State.GetAngles().ToVectors(&forward, &right, NULL);
+		dropped->State.SetOrigin (ent->State.GetOrigin());
+	}
+
+	forward.Scale(100);
+	dropped->gameEntity->velocity[0] = forward.X;
+	dropped->gameEntity->velocity[1] = forward.Y;
+	dropped->gameEntity->velocity[2] = 300;
+
+	dropped->NextThink = level.framenum + 10;
+	dropped->Link ();
+
+	return dropped;
+}
+
+static void TechThink(edict_t *tech);
+void CTech::Drop (CPlayerEntity *ent)
+{
+	CItemEntity *tech = DropItem(ent);
+	tech->NextThink = level.framenum + CTF_TECH_TIMEOUT;
+	ent->Client.pers.Inventory.Set(this, 0);
+	ent->Client.pers.Tech = NULL;
+}
+
+void SpawnTech(CBaseItem *item, edict_t *spot);
 
 static void TechThink(edict_t *tech)
 {
@@ -114,13 +189,12 @@ void CTFDeadDropTech(CPlayerEntity *ent)
 	if (!ent->Client.pers.Tech)
 		return;
 
-	edict_t *dropped = ent->Client.pers.Tech->DropItem(ent->gameEntity);
+	CItemEntity *dropped = ent->Client.pers.Tech->DropItem(ent);
 	// hack the velocity to make it bounce random
-	dropped->velocity[0] = (rand() % 600) - 300;
-	dropped->velocity[1] = (rand() % 600) - 300;
-	dropped->nextthink = level.framenum + CTF_TECH_TIMEOUT;
-	dropped->think = TechThink;
-	dropped->owner = NULL;
+	dropped->gameEntity->velocity[0] = (rand() % 600) - 300;
+	dropped->gameEntity->velocity[1] = (rand() % 600) - 300;
+	dropped->NextThink = level.framenum + CTF_TECH_TIMEOUT;
+	dropped->gameEntity->owner = NULL;
 	ent->Client.pers.Inventory.Set(ent->Client.pers.Tech, 0);
 
 	ent->Client.pers.Tech = NULL;
@@ -128,39 +202,33 @@ void CTFDeadDropTech(CPlayerEntity *ent)
 
 void SpawnTech(CBaseItem *item, edict_t *spot)
 {
-	edict_t	*ent;
-	vec3_t	forward, right;
-	vec3_t  angles;
+	CTechEntity *ent = QNew (com_levelPool, 0) CTechEntity ();
 
-	ent = G_Spawn();
+	ent->gameEntity->classname = item->Classname;
+	ent->gameEntity->item = item;
+	ent->gameEntity->spawnflags = DROPPED_ITEM;
+	ent->State.SetEffects(item->EffectFlags);
+	ent->State.SetRenderEffects (RF_GLOW);
+	ent->SetMins (vec3f(-15));
+	ent->SetMaxs (vec3f(15));
+	ent->State.SetModelIndex (ModelIndex(item->WorldModel));
+	ent->SetSolid (SOLID_TRIGGER);
+	ent->gameEntity->owner = ent->gameEntity;
 
-	ent->classname = item->Classname;
-	ent->item = item;
-	ent->spawnflags = DROPPED_ITEM;
-	ent->state.effects = item->EffectFlags;
-	ent->state.renderFx = RF_GLOW;
-	Vec3Set (ent->mins, -15, -15, -15);
-	Vec3Set (ent->maxs, 15, 15, 15);
-	ent->state.modelIndex = ModelIndex(ent->item->WorldModel);
-	ent->solid = SOLID_TRIGGER;
-	ent->movetype = MOVETYPE_TOSS;  
-	ent->touch = TouchItem;
-	ent->owner = ent;
+	vec3f forward;
+	vec3f(0, rand()%360, 0).ToVectors(&forward, NULL, NULL);
 
-	angles[0] = 0;
-	angles[1] = rand() % 360;
-	angles[2] = 0;
+	vec3f origin = spot->state.origin;
+	origin.Z += 16;
+	ent->State.SetOrigin (origin);
+	forward.Scale (100);
+	ent->gameEntity->velocity[0] = forward[0];
+	ent->gameEntity->velocity[1] = forward[1];
+	ent->gameEntity->velocity[2] = 300;
 
-	Angles_Vectors (angles, forward, right, NULL);
-	Vec3Copy (spot->state.origin, ent->state.origin);
-	ent->state.origin[2] += 16;
-	Vec3Scale (forward, 100, ent->velocity);
-	ent->velocity[2] = 300;
+	ent->NextThink = level.framenum + CTF_TECH_TIMEOUT;
 
-	ent->nextthink = level.framenum + CTF_TECH_TIMEOUT;
-	ent->think = TechThink;
-
-	gi.linkentity (ent);
+	ent->Link ();
 }
 
 static void SpawnTechs(edict_t *ent)
@@ -241,11 +309,11 @@ void	CFlag::Use (CPlayerEntity *ent)
 {
 }
 
-bool CFlag::Pickup(edict_t *ent, CPlayerEntity *other)
+bool CFlag::Pickup(CItemEntity *ent, CPlayerEntity *other)
 {
 	if (team == other->Client.resp.ctf_team)
 	{
-		if (!(ent->spawnflags & DROPPED_ITEM))
+		if (!(ent->gameEntity->spawnflags & DROPPED_ITEM))
 		{
 			// If we have the flag, but the flag isn't this, then we have another flag.
 			// FIXME this code here will break with > 2 teams (when we get there)!!
@@ -264,7 +332,7 @@ bool CFlag::Pickup(edict_t *ent, CPlayerEntity *other)
 				else
 					ctfgame.team2++;
 
-				PlaySoundFrom (ent, CHAN_RELIABLE+CHAN_NO_PHS_ADD+CHAN_VOICE, SoundIndex("ctf/flagcap.wav"), 1, ATTN_NONE, 0);
+				ent->PlaySound(CHAN_RELIABLE+CHAN_NO_PHS_ADD+CHAN_VOICE, SoundIndex("ctf/flagcap.wav"), 1, ATTN_NONE, 0);
 
 				// other gets another 10 frag bonus
 				other->Client.resp.score += CTF_CAPTURE_BONUS;
@@ -308,7 +376,7 @@ bool CFlag::Pickup(edict_t *ent, CPlayerEntity *other)
 			other->Client.pers.netname, CTFTeamName(team));
 		other->Client.resp.score += CTF_RECOVERY_BONUS;
 		other->Client.resp.ctf_lastreturnedflag = level.framenum;
-		PlaySoundFrom (ent, CHAN_RELIABLE+CHAN_NO_PHS_ADD+CHAN_VOICE, SoundIndex("ctf/flagret.wav"), 1, ATTN_NONE, 0);
+		ent->PlaySound (CHAN_RELIABLE+CHAN_NO_PHS_ADD+CHAN_VOICE, SoundIndex("ctf/flagret.wav"), 1, ATTN_NONE, 0);
 		//CTFResetFlag will remove this entity!  We must return false
 		CTFResetFlag(team);
 		return false;
@@ -326,11 +394,11 @@ bool CFlag::Pickup(edict_t *ent, CPlayerEntity *other)
 	// pick up the flag
 	// if it's not a dropped flag, we just make is disappear
 	// if it's dropped, it will be removed by the pickup caller
-	if (!(ent->spawnflags & DROPPED_ITEM))
+	if (!(ent->gameEntity->spawnflags & DROPPED_ITEM))
 	{
-		ent->flags |= FL_RESPAWN;
-		ent->svFlags |= SVF_NOCLIENT;
-		ent->solid = SOLID_NOT;
+		ent->gameEntity->flags |= FL_RESPAWN;
+		ent->SetSvFlags (ent->GetSvFlags() | SVF_NOCLIENT);
+		ent->SetSolid (SOLID_NOT);
 	}
 	return true;
 }

@@ -131,23 +131,6 @@ void CItemList::SendItemNames ()
 		gi.configstring (Items[i]->GetConfigStringNumber(), this->Items[i]->Name);
 }
 
-bool ItemExists (edict_t *ent)
-{
-	// Check through the itemlist
-	uint32 hash = Com_HashGeneric(ent->classname, MAX_ITEMS_HASH);
-	CBaseItem *Item;
-
-	for (Item = ItemList->HashedClassnameItemList[hash]; Item; Item=Item->hashClassnameNext)
-	{
-		if (Q_stricmp(Item->Classname, ent->classname) == 0)
-		{
-			SpawnItem (ent, Item);
-			return true;
-		}
-	}
-	return false;
-}
-
 CBaseItem *FindItem (char *name)
 {
 	// Check through the itemlist
