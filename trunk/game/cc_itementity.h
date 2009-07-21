@@ -27,32 +27,48 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_health.h
-// New, improved, better, stable item system!
+// cc_itementity.h
+// The entity that lets you pick items up.
+// Moved here because it's seperate from the item system.
 //
 
-// Class for health.
-typedef int EHealthFlags;
-enum //EHealthFlags
+// The item entity class
+typedef int EItemThinkState;
+enum
 {
-	HEALTHFLAG_NONE,
-
-	HEALTHFLAG_IGNOREMAX,
+	ITS_NONE,
+	ITS_DROPTOFLOOR,
+	ITS_RESPAWN,
+	ITS_FREE
 };
 
-class CHealth : public CBaseItem
+// Item entity
+class CItemEntity : public CMapEntity, public CTossProjectile, public CTouchableEntity, public CThinkableEntity
 {
 public:
-	int				Amount; // You spin me right round baby right round
-	EHealthFlags	HealthFlags;
+	bool			NoPhysics;
+	bool			NoTouch;
+	EItemThinkState ThinkState;
 
-	CHealth (char *Classname, char *WorldModel, int EffectFlags,
-			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
-			   char *Precache, int Amount, EHealthFlags HealthFlags);
+	CItemEntity ();
+	CItemEntity (int Index);
 
-	virtual bool	Pickup (class CItemEntity *ent, CPlayerEntity *other);
-	void	Use (CPlayerEntity *ent) {};
-	void	Drop (CPlayerEntity *ent) {};
+	virtual void Spawn (CBaseItem *item);
+
+	virtual void Think ();
+	virtual void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
+
+	bool Run ();
 };
 
-void AddHealthToList ();
+#define LINK_ITEM_TO_CLASS(mapClassName,DLLClassName) \
+	CMapEntity *LINK_RESOLVE_CLASSNAME(mapClassName, _Spawn) (int Index) \
+	{ \
+		DLLClassName *newClass = QNew (com_levelPool, 0) DLLClassName(Index); \
+		CBaseItem *Item = FindItemByClassname(#mapClassName); \
+		if (Item) \
+			newClass->Spawn (Item); \
+		return newClass; \
+	} \
+	CClassnameToClassIndex LINK_RESOLVE_CLASSNAME(mapClassName, _Linker) \
+	(LINK_RESOLVE_CLASSNAME(mapClassName, _Spawn), #mapClassName);

@@ -626,12 +626,13 @@ void Cmd_Give_f (CPlayerEntity *ent)
 	if (give_all || Q_stricmp(name, "Power Shield") == 0)
 	{
 		it = NItems::PowerShield;
-		edict_t *it_ent = G_Spawn();
-		it_ent->classname = it->Classname;
-		SpawnItem (it_ent, it);
-		TouchItem (it_ent, ent->gameEntity, NULL, NULL);
-		if (it_ent->inUse)
-			G_FreeEdict(it_ent);
+		CItemEntity *it_ent = QNew (com_levelPool, 0) CItemEntity();
+		it_ent->gameEntity->classname = it->Classname;
+		it_ent->Spawn (it);
+
+		it_ent->Touch (ent, NULL, NULL);
+		if (it_ent->IsInUse())
+			it_ent->Free();
 
 		if (!give_all)
 			return;
@@ -684,12 +685,12 @@ void Cmd_Give_f (CPlayerEntity *ent)
 	}
 	else
 	{
-		edict_t *it_ent = G_Spawn();
-		it_ent->classname = it->Classname;
-		SpawnItem (it_ent, it);
-		TouchItem (it_ent, ent->gameEntity, NULL, NULL);
-		if (it_ent->inUse)
-			G_FreeEdict(it_ent);
+		CItemEntity *it_ent = QNew (com_levelPool, 0) CItemEntity();
+		it_ent->gameEntity->classname = it->Classname;
+		it_ent->Spawn(it);
+		it_ent->Touch (ent, NULL, NULL);
+		if (it_ent->IsInUse())
+			it_ent->Free ();
 	}
 }
 

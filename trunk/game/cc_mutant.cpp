@@ -686,9 +686,9 @@ void CMutant::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
-			ThrowGib (Entity->gameEntity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
 		for (int n= 0; n < 4; n++)
-			ThrowGib (Entity->gameEntity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 		Entity->ThrowHead (gMedia.Gib_Head[1], damage, GIB_ORGANIC);
 		Entity->gameEntity->deadflag = DEAD_DEAD;
 		return;

@@ -45,7 +45,7 @@ public:
 			   char *Precache, int baseCount, int maxCount, float normalProtection,
 			   float energyProtection);
 
-	bool	Pickup (edict_t *ent, CPlayerEntity *other);
+	bool	Pickup (class CItemEntity *ent, CPlayerEntity *other);
 	void	Use (CPlayerEntity *ent);
 	void	Drop (CPlayerEntity *ent);
 

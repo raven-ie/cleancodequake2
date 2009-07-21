@@ -27,32 +27,27 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_health.h
-// New, improved, better, stable item system!
+// cc_junk_entities.h
+// Entities that share a "Junk" class
 //
 
-// Class for health.
-typedef int EHealthFlags;
-enum //EHealthFlags
-{
-	HEALTHFLAG_NONE,
-
-	HEALTHFLAG_IGNOREMAX,
-};
-
-class CHealth : public CBaseItem
+class CJunkEntity : public virtual CBaseEntity
 {
 public:
-	int				Amount; // You spin me right round baby right round
-	EHealthFlags	HealthFlags;
+	CJunkEntity ();
+	CJunkEntity (int Index);
 
-	CHealth (char *Classname, char *WorldModel, int EffectFlags,
-			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
-			   char *Precache, int Amount, EHealthFlags HealthFlags);
-
-	virtual bool	Pickup (class CItemEntity *ent, CPlayerEntity *other);
-	void	Use (CPlayerEntity *ent) {};
-	void	Drop (CPlayerEntity *ent) {};
+	void Die (); // CALL THIS WHEN A JUNK IS FREED INSTEAD OF FREE()!
 };
 
-void AddHealthToList ();
+class CGibEntity : public CJunkEntity, public CTossProjectile, public CThinkableEntity
+{
+public:
+	CGibEntity ();
+	CGibEntity (int Index);
+
+	void Think ();
+
+	bool Run ();
+	static void Spawn (CBaseEntity *Owner, MediaIndex gibIndex, int damage, int type);
+};

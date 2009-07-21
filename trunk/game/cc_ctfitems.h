@@ -38,7 +38,9 @@ public:
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
 			   char *Precache);
 
-	bool	Pickup (edict_t *ent, CPlayerEntity *other);
+	CItemEntity *DropItem (CBaseEntity *ent);
+
+	bool	Pickup (class CItemEntity *ent, CPlayerEntity *other);
 	void	Drop (CPlayerEntity *ent);
 	void	Use (CPlayerEntity *ent);
 };
@@ -52,7 +54,7 @@ public:
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
 			   char *Precache, int team);
 
-	bool	Pickup (edict_t *ent, CPlayerEntity *other);
+	bool	Pickup (class CItemEntity *ent, CPlayerEntity *other);
 	void	Drop (CPlayerEntity *ent);
 	void	Use (CPlayerEntity *ent);
 };

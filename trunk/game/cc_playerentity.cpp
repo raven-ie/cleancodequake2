@@ -862,7 +862,7 @@ CalcRoll
 */
 inline float CPlayerEntity::CalcRoll (vec3_t angles, vec3_t velocity, vec3_t right)
 {
-	float	side = fabs(Dot3Product (velocity, right));
+	float	side = Q_fabs(Dot3Product (velocity, right));
 	float	sign = side < 0 ? -1 : 1;
 
 	if (side < sv_rollspeed->Float())
@@ -1833,7 +1833,7 @@ void CPlayerEntity::EndServerFrame ()
 		bobtime *= 4;
 
 	bobcycle = (int)bobtime;
-	bobfracsin = fabs(sinf(bobtime*M_PI));
+	bobfracsin = Q_fabs(sinf(bobtime*M_PI));
 
 	// detect hitting the floor
 	FallingDamage ();
@@ -2818,25 +2818,24 @@ void CPlayerEntity::TossClientWeapon ()
 	if (Item)
 	{
 		Client.v_angle[YAW] -= spread;
-		edict_t *drop = Item->DropItem (gameEntity);
+		CItemEntity *drop = Item->DropItem (this);
 		Client.v_angle[YAW] += spread;
-		drop->spawnflags |= DROPPED_PLAYER_ITEM;
+		drop->gameEntity->spawnflags |= DROPPED_PLAYER_ITEM;
 		if (Client.pers.Weapon->WeaponItem)
-			drop->count = Client.pers.Inventory.Has(Client.pers.Weapon->WeaponItem->Ammo);
+			drop->gameEntity->count = Client.pers.Weapon->WeaponItem->Ammo->Quantity;
 		else
-			drop->count = Client.pers.Inventory.Has(Client.pers.Weapon->Item);
+			drop->gameEntity->count = (static_cast<CAmmo*>(Client.pers.Weapon->Item))->Quantity;
 	}
 
 	if (quad)
 	{
 		Client.v_angle[YAW] += spread;
-		edict_t *drop = NItems::Quad->DropItem (gameEntity);
+		CItemEntity *drop = NItems::Quad->DropItem (this);
 		Client.v_angle[YAW] -= spread;
-		drop->spawnflags |= DROPPED_PLAYER_ITEM;
+		drop->gameEntity->spawnflags |= DROPPED_PLAYER_ITEM;
 
-		drop->touch = TouchItem;
-		drop->nextthink = level.framenum + (Client.quad_framenum - level.framenum);
-		drop->think = G_FreeEdict;
+		drop->NextThink = level.framenum + (Client.quad_framenum - level.framenum);
+		drop->ThinkState = ITS_FREE;
 	}
 }
 
@@ -3288,11 +3287,9 @@ void CPlayerEntity::Pain (CBaseEntity *other, float kick, int damage)
 	//DebugPrintf ("CPlayerEntity::Pain\n");
 };
 
-void VelocityForDamage (int damage, vec3_t v);
+void VelocityForDamage (int damage, vec3f &v);
 void CPlayerEntity::TossHead (int damage)
 {
-	vec3_t	vd;
-
 	if (rand()&1)
 	{
 		State.SetModelIndex (gMedia.Gib_Head[1]);
@@ -3314,8 +3311,13 @@ void CPlayerEntity::TossHead (int damage)
 	State.SetSound (0);
 	gameEntity->flags |= FL_NO_KNOCKBACK;
 
+	vec3f vd;
 	VelocityForDamage (damage, vd);
-	Vec3Add (gameEntity->velocity, vd, gameEntity->velocity);
+
+	vec3f vel = vec3f(gameEntity->velocity) + vd;
+	gameEntity->velocity[0] = vel.X;
+	gameEntity->velocity[1] = vel.Y;
+	gameEntity->velocity[2] = vel.Z;
 
 	Link ();
 }
@@ -3408,7 +3410,7 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 	{	// gib
 		PlaySoundFrom (gameEntity, CHAN_BODY, SoundIndex ("misc/udeath.wav"));
 		for (int n = 0; n < 4; n++)
-			ThrowGib (gameEntity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+			CGibEntity::Spawn (this, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 		TossHead (damage);
 
 		gameEntity->takedamage = false;

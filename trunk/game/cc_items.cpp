@@ -74,43 +74,6 @@ Precache(Precache)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-/// \fn	void CBaseItem::DoRespawn (edict_t *ent)
-///
-/// \brief	Executes the respawn operation. 
-///
-/// \author	Paril
-/// \date	5/9/2009
-///
-/// \param	ent	 - If non-null, the entity to be respawned. 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-void CBaseItem::DoRespawn (edict_t *ent)
-{
-	if (ent->team)
-	{
-		edict_t	*master;
-		int	count;
-		int choice;
-
-		master = ent->teammaster;
-
-		for (count = 0, ent = master; ent; ent = ent->chain, count++)
-			;
-
-		choice = rand() % count;
-
-		for (count = 0, ent = master; count < choice; ent = ent->chain, count++)
-			;
-	}
-
-	ent->svFlags &= ~SVF_NOCLIENT;
-	ent->solid = SOLID_TRIGGER;
-	gi.linkentity (ent);
-
-	// send an effect
-	ent->state.event = EV_ITEM_RESPAWN;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
 /// \fn	void CBaseItem::SetRespawn (edict_t *ent, float delay)
 ///
 /// \brief	Sets a respawn time on the item and makes it invisible. 
@@ -121,33 +84,53 @@ void CBaseItem::DoRespawn (edict_t *ent)
 /// \param	ent		 - If non-null, the entity to be respawned. 
 /// \param	delay	 - The delay until it's respawned. 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void CBaseItem::SetRespawn (edict_t *ent, float delay)
+void CBaseItem::SetRespawn (CItemEntity *ent, int32 delay)
 {
-	ent->flags |= FL_RESPAWN;
-	ent->svFlags |= SVF_NOCLIENT;
-	ent->solid = SOLID_NOT;
-	ent->nextthink = level.framenum + (delay * 10);
-	ent->think = &DoRespawn;
-	gi.linkentity (ent);
+	ent->gameEntity->flags |= FL_RESPAWN;
+	ent->SetSvFlags (ent->GetSvFlags() | SVF_NOCLIENT);
+	ent->SetSolid (SOLID_NOT);
+	ent->NextThink = level.framenum + delay;
+	ent->ThinkState = ITS_RESPAWN;
+	ent->Link();
 }
 
-static void DropTempTouch (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf)
+class CDroppedItemEntity : public CItemEntity
 {
-	if (other == ent->owner)
-		return;
+public:
+	bool AvoidOwner;
 
-	TouchItem (ent, other, plane, surf);
-}
-
-static void DropMakeTouchable (edict_t *ent)
-{
-	ent->touch = TouchItem;
-	if (game.mode & GAME_DEATHMATCH)
+	CDroppedItemEntity() :
+	CItemEntity()
 	{
-		ent->nextthink = level.framenum + 290;
-		ent->think = G_FreeEdict;
-	}
-}
+		AvoidOwner = true;
+	};
+	CDroppedItemEntity(int Index) :
+	CItemEntity(Index)
+	{
+		AvoidOwner = true;
+	};
+
+	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
+	{
+		if (AvoidOwner && (other->gameEntity == gameEntity->owner))
+			return;
+
+		CItemEntity::Touch (other, plane, surf);
+	};
+
+	void Think ()
+	{
+		if (AvoidOwner)
+		{
+			AvoidOwner = false;
+			NextThink = level.framenum + 290;
+		}
+		else
+			Free ();
+	};
+};
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 /// \fn	edict_t *CBaseItem::DropItem (edict_t *ent)
@@ -161,52 +144,50 @@ static void DropMakeTouchable (edict_t *ent)
 ///
 /// \retval	null if it fails, else. 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-edict_t *CBaseItem::DropItem (edict_t *ent)
+CItemEntity *CBaseItem::DropItem (CBaseEntity *ent)
 {
-	edict_t	*dropped;
-	vec3_t	forward, right;
-	vec3_t	offset;
+	CDroppedItemEntity	*dropped = QNew (com_levelPool, 0) CDroppedItemEntity();
+	vec3f	forward, right;
 
-	dropped = G_Spawn();
+	dropped->gameEntity->classname = Classname;
+	dropped->gameEntity->item = this;
+	dropped->gameEntity->spawnflags = DROPPED_ITEM;
+	dropped->State.SetEffects (EffectFlags);
+	dropped->State.SetRenderEffects (RF_GLOW);
+	dropped->SetMins (vec3f(-15));
+	dropped->SetMaxs (vec3f(15));
+	dropped->State.SetModelIndex (ModelIndex(WorldModel));
+	dropped->SetSolid (SOLID_TRIGGER);
+	dropped->gameEntity->owner = ent->gameEntity;
 
-	dropped->classname = Classname;
-	dropped->item = this;
-	dropped->spawnflags = DROPPED_ITEM;
-	dropped->state.effects = EffectFlags;
-	dropped->state.renderFx = RF_GLOW;
-	Vec3Set (dropped->mins, -15, -15, -15);
-	Vec3Set (dropped->maxs, 15, 15, 15);
-	dropped->state.modelIndex = ModelIndex(WorldModel);
-	dropped->solid = SOLID_TRIGGER;
-	dropped->movetype = MOVETYPE_TOSS;  
-	dropped->touch = DropTempTouch;
-	dropped->owner = ent;
-
-	if (ent->Entity && (ent->Entity->EntityFlags & ENT_PLAYER))
+	if (ent->EntityFlags & ENT_PLAYER)
 	{
-		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(ent->Entity);
+		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(ent);
 		CTrace	trace;
 
-		Angles_Vectors (Player->Client.v_angle, forward, right, NULL);
-		Vec3Set (offset, 24, 0, -16);
-		G_ProjectSource (ent->state.origin, offset, forward, right, dropped->state.origin);
-		trace = CTrace (ent->state.origin, dropped->mins, dropped->maxs,
-			dropped->state.origin, ent, CONTENTS_SOLID);
-		Vec3Copy (trace.endPos, dropped->state.origin);
+		vec3f (Player->Client.v_angle).ToVectors (&forward, &right, NULL);
+		vec3f offset (24, 0, -16);
+
+		vec3f result;
+		G_ProjectSource (ent->State.GetOrigin(), offset, forward, right, result);
+
+		trace = CTrace (ent->State.GetOrigin(), dropped->GetMins(), dropped->GetMaxs(),
+			result, ent->gameEntity, CONTENTS_SOLID);
+		dropped->State.SetOrigin (trace.endPos);
 	}
 	else
 	{
-		Angles_Vectors (ent->state.angles, forward, right, NULL);
-		Vec3Copy (ent->state.origin, dropped->state.origin);
+		ent->State.GetAngles().ToVectors(&forward, &right, NULL);
+		dropped->State.SetOrigin (ent->State.GetOrigin());
 	}
 
-	Vec3Scale (forward, 100, dropped->velocity);
-	dropped->velocity[2] = 300;
+	forward.Scale(100);
+	dropped->gameEntity->velocity[0] = forward.X;
+	dropped->gameEntity->velocity[1] = forward.Y;
+	dropped->gameEntity->velocity[2] = 300;
 
-	dropped->think = DropMakeTouchable;
-	dropped->nextthink = level.framenum + 10;
-
-	gi.linkentity (dropped);
+	dropped->NextThink = level.framenum + 10;
+	dropped->Link ();
 
 	return dropped;
 }
@@ -241,7 +222,7 @@ void TouchItem (edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *su
 		ent->spawnflags |= ITEM_TARGETS_USED;
 	}
 
-	if (!ent->item->Pickup(ent,Player))
+	if (!ent->item->Pickup(dynamic_cast<CItemEntity*>(ent->Entity),Player))
 		return;
 
 	// flash the screen

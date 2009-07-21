@@ -924,10 +924,10 @@ void CTank::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (n= 0; n < 1 /*4*/; n++)
-			ThrowGib (Entity->gameEntity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 		for (n= 0; n < 4; n++)
-			ThrowGib (Entity->gameEntity, gMedia.Gib_SmallMetal, damage, GIB_METALLIC);
-		ThrowGib (Entity->gameEntity, gMedia.Gib_Chest, damage, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMetal, damage, GIB_METALLIC);
+		CGibEntity::Spawn (Entity, gMedia.Gib_Chest, damage, GIB_ORGANIC);
 		Entity->ThrowHead (gMedia.Gib_Gear, damage, GIB_METALLIC);
 		Entity->gameEntity->deadflag = DEAD_DEAD;
 		return;

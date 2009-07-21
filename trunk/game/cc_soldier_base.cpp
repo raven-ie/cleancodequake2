@@ -1010,8 +1010,8 @@ void CSoldierBase::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damag
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 3; n++)
-			ThrowGib (Entity->gameEntity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		ThrowGib (Entity->gameEntity, gMedia.Gib_Chest, damage, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		CGibEntity::Spawn (Entity, gMedia.Gib_Chest, damage, GIB_ORGANIC);
 		Entity->ThrowHead (gMedia.Gib_Head[1], damage, GIB_ORGANIC);
 		Entity->gameEntity->deadflag = DEAD_DEAD;
 		return;
@@ -1027,7 +1027,7 @@ void CSoldierBase::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damag
 
 	Entity->PlaySound (CHAN_VOICE, SoundDeath);
 
-	if (fabs((Entity->State.GetOrigin().Z + Entity->gameEntity->viewheight) - point[2]) <= 4)
+	if (Q_fabs((Entity->State.GetOrigin().Z + Entity->gameEntity->viewheight) - point[2]) <= 4)
 	{
 		// head shot
 		CurrentMove = &SoldierMoveDeath3;

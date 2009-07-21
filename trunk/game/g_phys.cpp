@@ -832,7 +832,7 @@ void SV_Physics_Step (edict_t *ent)
 	// friction for flying monsters that have been given vertical velocity
 	if ((ent->flags & FL_FLY) && (ent->velocity[2] != 0))
 	{
-		speed = fabs(ent->velocity[2]);
+		speed = Q_fabs(ent->velocity[2]);
 		control = speed < sv_stopspeed ? sv_stopspeed : speed;
 		friction = sv_friction/3;
 		newspeed = speed - (0.1f * control * friction);
@@ -845,7 +845,7 @@ void SV_Physics_Step (edict_t *ent)
 	// friction for flying monsters that have been given vertical velocity
 	if ((ent->flags & FL_SWIM) && (ent->velocity[2] != 0))
 	{
-		speed = fabs(ent->velocity[2]);
+		speed = Q_fabs(ent->velocity[2]);
 		control = speed < sv_stopspeed ? sv_stopspeed : speed;
 		newspeed = speed - (0.1f * control * sv_waterfriction * ent->waterlevel);
 		if (newspeed < 0)

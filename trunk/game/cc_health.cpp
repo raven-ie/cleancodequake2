@@ -43,14 +43,14 @@ HealthFlags(HealthFlags)
 {
 };
 
-bool CHealth::Pickup (edict_t *ent, CPlayerEntity *other)
+bool CHealth::Pickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	if (!(HealthFlags & HEALTHFLAG_IGNOREMAX) && (other->gameEntity->health >= other->gameEntity->max_health))
 		return false;
 
 #ifdef CLEANCTF_ENABLED
 //ZOID
-	if (other->gameEntity->health >= 250 && ent->count > 25)
+	if (other->gameEntity->health >= 250 && ent->gameEntity->count > 25)
 		return false;
 //ZOID
 #endif
@@ -59,7 +59,7 @@ bool CHealth::Pickup (edict_t *ent, CPlayerEntity *other)
 
 #ifdef CLEANCTF_ENABLED
 //ZOID
-	if (other->gameEntity->health > 250 && ent->count > 25)
+	if (other->gameEntity->health > 250 && ent->gameEntity->count > 25)
 		other->gameEntity->health = 250;
 //ZOID
 #endif
@@ -70,11 +70,48 @@ bool CHealth::Pickup (edict_t *ent, CPlayerEntity *other)
 			other->gameEntity->health = other->gameEntity->max_health;
 	}
 
-	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
-		SetRespawn (ent, 30);
+	if (!(ent->gameEntity->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
+		SetRespawn (ent, 300);
 
 	return true;
 }
+
+class CHealthEntity : public CItemEntity
+{
+public:
+	CHealthEntity() :
+	  CBaseEntity(),
+	  CItemEntity ()
+	  {
+	  };
+
+	CHealthEntity (int Index) :
+	  CBaseEntity(Index),
+	  CItemEntity (Index)
+	  {
+	  };
+
+	void Spawn (CBaseItem *item)
+	{
+		if ((game.mode & GAME_DEATHMATCH) && dmFlags.dfNoHealth)
+		{
+			Free ();
+			return;
+		}
+
+		gameEntity->item = item;
+		NextThink = level.framenum + 2;    // items start after other solids
+		ThinkState = ITS_DROPTOFLOOR;
+		NoPhysics = true;
+
+		State.SetEffects(item->EffectFlags);
+		State.SetRenderEffects(RF_GLOW);
+	};
+};
+
+LINK_ITEM_TO_CLASS (item_health_small, CHealthEntity);
+LINK_ITEM_TO_CLASS (item_health, CHealthEntity);
+LINK_ITEM_TO_CLASS (item_health_large, CHealthEntity);
 
 void AddHealthToList ()
 {

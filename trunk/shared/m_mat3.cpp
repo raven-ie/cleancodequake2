@@ -54,7 +54,7 @@ void Matrix3_Angles (mat3x3_t mat, vec3_t angles)
 	c = cosf(pitch);
 	pitch = RAD2DEG (pitch);
 
-	if (fabs (c) > 0.005) {			// Gimball lock?
+	if (Q_fabs (c) > 0.005) {			// Gimball lock?
 		c = 1.0f / c;
 		yaw = RAD2DEG (atan2f((-1)*-mat[0][1] * c, mat[0][0] * c));
 		roll = RAD2DEG (atan2f(-mat[1][2] * c, mat[2][2] * c));

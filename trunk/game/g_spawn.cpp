@@ -286,8 +286,8 @@ void ED_CallSpawn (edict_t *ent)
 	}
 
 	// check item spawn functions
-	if (ItemExists(ent))
-		return;
+//	if (ItemExists(ent))
+//		return;
 
 /*
 	if ((ent->Monster = FindMonster(ent->classname)) != NULL)
@@ -701,6 +701,8 @@ Only used for the world.
 void CreateDMStatusbar ();
 void CreateSPStatusbar ();
 void SetItemNames ();
+void Init_Junk();
+
 void SP_worldspawn (edict_t *ent)
 {
 	ClearList(); // Do this before ANYTHING
@@ -714,6 +716,7 @@ void SP_worldspawn (edict_t *ent)
 
 	// reserve some spots for dead player bodies for coop / deathmatch
 	BodyQueue_Init ();
+	Init_Junk();
 
 	if (st.nextmap)
 		Q_strncpyz (level.nextmap, st.nextmap, sizeof(level.nextmap));

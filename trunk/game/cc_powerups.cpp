@@ -42,7 +42,7 @@ PowerupFlags(PowerupFlags)
 };
 
 // Powerups!
-bool CBasePowerUp::Pickup (edict_t *ent, CPlayerEntity *other)
+bool CBasePowerUp::Pickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	if (PowerupFlags & POWERFLAG_STORE)
 	{
@@ -59,7 +59,7 @@ bool CBasePowerUp::Pickup (edict_t *ent, CPlayerEntity *other)
 	return true;
 }
 
-void CBasePowerUp::DoPickup (edict_t *ent, CPlayerEntity *other)
+void CBasePowerUp::DoPickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 }
 
@@ -71,7 +71,7 @@ void CBasePowerUp::Drop (CPlayerEntity *ent)
 {
 	if (PowerupFlags & POWERFLAG_STORE)
 	{	
-		DropItem (ent->gameEntity);
+		DropItem (ent);
 		ent->Client.pers.Inventory -= this;
 	}
 }
@@ -153,50 +153,95 @@ CBasePowerUp(Classname, WorldModel, EffectFlags, PickupSound, Icon, Name, Flags,
 {
 };
 
-void CMegaHealth::MegaHealthThink (edict_t *self)
+class CMegaHealthEntity : public CItemEntity
 {
-	if (self->owner->health > self->owner->max_health
-#ifdef CLEANCTF_ENABLED
-//ZOID
-		&& !dynamic_cast<CPlayerEntity*>(self->owner->Entity)->CTFHasRegeneration()
-//ZOID
-#endif
-		)
-	{
-		self->nextthink = level.framenum + 10;
-		self->owner->health -= 1;
-		return;
-	}
+public:
+	bool MegaHealthThinking;
 
-	if (!(self->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
-		self->item->SetRespawn (self, 20);
-	else
-		G_FreeEdict (self);
-}
+	CMegaHealthEntity () :
+	  CBaseEntity(),
+	  CItemEntity()
+	  {
+		  MegaHealthThinking = false;
+	  };
+
+	CMegaHealthEntity (int Index) :
+	  CBaseEntity (Index),
+	  CItemEntity(Index)
+	  {
+		  MegaHealthThinking = false;
+	  };
+
+	void Think ()
+	{
+		if (MegaHealthThinking)
+		{
+			if (gameEntity->owner->health > gameEntity->owner->max_health
+		#ifdef CLEANCTF_ENABLED
+		//ZOID
+				&& (!(game.mode & GAME_CTF) || !dynamic_cast<CPlayerEntity*>(gameEntity->owner->Entity)->CTFHasRegeneration())
+		//ZOID
+		#endif
+				)
+			{
+				NextThink = level.framenum + 10;
+				gameEntity->owner->health -= 1;
+				return;
+			}
+
+			if (!(gameEntity->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
+				gameEntity->item->SetRespawn (this, 200);
+			else
+				Free ();
+			MegaHealthThinking = false;
+		}
+		else
+			CItemEntity::Think ();
+	};
+
+	void Spawn (CBaseItem *item)
+	{
+		if ((game.mode & GAME_DEATHMATCH) && (dmFlags.dfNoHealth || dmFlags.dfNoItems))
+		{
+			Free ();
+			return;
+		}
+
+		gameEntity->item = item;
+		NextThink = level.framenum + 2;    // items start after other solids
+		ThinkState = ITS_DROPTOFLOOR;
+		NoPhysics = true;
+
+		State.SetEffects(item->EffectFlags);
+		State.SetRenderEffects(RF_GLOW);
+	};
+};
+
 
 // Seperate powerup classes
-void CMegaHealth::DoPickup (edict_t *ent, CPlayerEntity *other)
+void CMegaHealth::DoPickup (CItemEntity *ent, CPlayerEntity *other)
 {
+	CMegaHealthEntity *MegaHealth = dynamic_cast<CMegaHealthEntity*>(ent);
 #ifdef CLEANCTF_ENABLED
 	if (((game.mode & GAME_CTF) && !other->CTFHasRegeneration()) || !(game.mode & GAME_CTF))
 	{
 #endif
-		ent->think = &CMegaHealth::MegaHealthThink;
-		ent->nextthink = level.framenum + 50;
-		ent->owner = other->gameEntity;
-		ent->flags |= FL_RESPAWN;
-		ent->svFlags |= SVF_NOCLIENT;
-		ent->solid = SOLID_NOT;
+		MegaHealth->MegaHealthThinking = true;
+		MegaHealth->NextThink = level.framenum + 50;
+		MegaHealth->gameEntity->owner = other->gameEntity;
+		MegaHealth->gameEntity->flags |= FL_RESPAWN;
+		MegaHealth->SetSvFlags (MegaHealth->GetSvFlags() | SVF_NOCLIENT);
+		MegaHealth->SetSolid (SOLID_NOT);
 
 		other->gameEntity->health += 100;
 #ifdef CLEANCTF_ENABLED
 	}
-	else if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
-		ent->item->SetRespawn (ent, 30);
+	else if (!(MegaHealth->gameEntity->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
+		MegaHealth->gameEntity->item->SetRespawn (ent, 300);
 #endif
 }
 
-void CBackPack::DoPickup (edict_t *ent, CPlayerEntity *other)
+void CBackPack::DoPickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	// Increase their max ammo, if applicable
 	for (int i = 0; i < AMMOTAG_MAX; i++)
@@ -213,20 +258,20 @@ void CBackPack::DoPickup (edict_t *ent, CPlayerEntity *other)
 	NItems::Slugs->AddAmmo (other, NItems::Slugs->Quantity);
 	NItems::Rockets->AddAmmo (other, NItems::Rockets->Quantity);
 
-	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
-		SetRespawn (ent, 180);
+	if (!(ent->gameEntity->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
+		SetRespawn (ent, 1800);
 }
 
 static int	quad_drop_timeout_hack;
 
-void CQuadDamage::DoPickup (edict_t *ent, CPlayerEntity *other)
+void CQuadDamage::DoPickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	if (game.mode & GAME_DEATHMATCH)
 	{
-		if (!(ent->spawnflags & DROPPED_ITEM) )
-			SetRespawn (ent, 60);
-		if (ent->spawnflags & DROPPED_PLAYER_ITEM)
-			quad_drop_timeout_hack = (ent->nextthink - level.framenum);
+		if (!(ent->gameEntity->spawnflags & DROPPED_ITEM) )
+			SetRespawn (ent, 600);
+		if (ent->gameEntity->spawnflags & DROPPED_PLAYER_ITEM)
+			quad_drop_timeout_hack = (ent->NextThink - level.framenum);
 
 		if (dmFlags.dfInstantItems)
 			Use (other);
@@ -253,13 +298,13 @@ void CQuadDamage::Use (CPlayerEntity *ent)
 	PlaySoundFrom(ent->gameEntity, CHAN_ITEM, SoundIndex("items/damage.wav"));
 }
 
-void CInvulnerability::DoPickup (edict_t *ent, CPlayerEntity *other)
+void CInvulnerability::DoPickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	if (game.mode == GAME_DEATHMATCH)
 	{
-		if (!(ent->spawnflags & DROPPED_ITEM) )
+		if (!(ent->gameEntity->spawnflags & DROPPED_ITEM) )
 			SetRespawn (ent, 300);
-		if (dmFlags.dfInstantItems || (ent->spawnflags & DROPPED_PLAYER_ITEM))
+		if (dmFlags.dfInstantItems || (ent->gameEntity->spawnflags & DROPPED_PLAYER_ITEM))
 			Use (other);
 	}
 }
@@ -276,13 +321,13 @@ void CInvulnerability::Use (CPlayerEntity *ent)
 	PlaySoundFrom(ent->gameEntity, CHAN_ITEM, SoundIndex("items/protect.wav"));
 }
 
-void CSilencer::DoPickup (edict_t *ent, CPlayerEntity *other)
+void CSilencer::DoPickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	if (game.mode & GAME_DEATHMATCH)
 	{
-		if (!(ent->spawnflags & DROPPED_ITEM) )
-			SetRespawn (ent, 30);
-		if (dmFlags.dfInstantItems || (ent->spawnflags & DROPPED_PLAYER_ITEM))
+		if (!(ent->gameEntity->spawnflags & DROPPED_ITEM) )
+			SetRespawn (ent, 300);
+		if (dmFlags.dfInstantItems || (ent->gameEntity->spawnflags & DROPPED_PLAYER_ITEM))
 			Use (other);
 	}
 }
@@ -293,13 +338,13 @@ void CSilencer::Use (CPlayerEntity *ent)
 	ent->Client.silencer_shots += 30;
 }
 
-void CRebreather::DoPickup (edict_t *ent, CPlayerEntity *other)
+void CRebreather::DoPickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	if (game.mode & GAME_DEATHMATCH)
 	{
-		if (!(ent->spawnflags & DROPPED_ITEM) )
-			SetRespawn (ent, 60);
-		if (dmFlags.dfInstantItems || (ent->spawnflags & DROPPED_PLAYER_ITEM))
+		if (!(ent->gameEntity->spawnflags & DROPPED_ITEM) )
+			SetRespawn (ent, 600);
+		if (dmFlags.dfInstantItems || (ent->gameEntity->spawnflags & DROPPED_PLAYER_ITEM))
 			Use (other);
 	}
 }
@@ -314,13 +359,13 @@ void CRebreather::Use (CPlayerEntity *ent)
 		ent->Client.breather_framenum = level.framenum + 300;
 }
 
-void CEnvironmentSuit::DoPickup (edict_t *ent, CPlayerEntity *other)
+void CEnvironmentSuit::DoPickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	if (game.mode & GAME_DEATHMATCH)
 	{
-		if (!(ent->spawnflags & DROPPED_ITEM) )
-			SetRespawn (ent, 60);
-		if (dmFlags.dfInstantItems || (ent->spawnflags & DROPPED_PLAYER_ITEM))
+		if (!(ent->gameEntity->spawnflags & DROPPED_ITEM) )
+			SetRespawn (ent, 600);
+		if (dmFlags.dfInstantItems || (ent->gameEntity->spawnflags & DROPPED_PLAYER_ITEM))
 			Use (other);
 	}
 }
@@ -335,7 +380,7 @@ void CEnvironmentSuit::Use (CPlayerEntity *ent)
 		ent->Client.enviro_framenum = level.framenum + 300;
 }
 
-void CBandolier::DoPickup (edict_t *ent, CPlayerEntity *other)
+void CBandolier::DoPickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	// Increase their max ammo, if applicable
 	for (int i = 0; i < AMMOTAG_MAX; i++)
@@ -348,11 +393,11 @@ void CBandolier::DoPickup (edict_t *ent, CPlayerEntity *other)
 	NItems::Bullets->AddAmmo (other, NItems::Bullets->Quantity);
 	NItems::Shells->AddAmmo (other, NItems::Shells->Quantity);
 
-	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
-		SetRespawn (ent, 60);
+	if (!(ent->gameEntity->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
+		SetRespawn (ent, 600);
 }
 
-void CAdrenaline::DoPickup (edict_t *ent, CPlayerEntity *other)
+void CAdrenaline::DoPickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	if (!(game.mode & GAME_DEATHMATCH))
 		other->gameEntity->max_health += 1;
@@ -360,24 +405,24 @@ void CAdrenaline::DoPickup (edict_t *ent, CPlayerEntity *other)
 	if (other->gameEntity->health < other->gameEntity->max_health)
 		other->gameEntity->health = other->gameEntity->max_health;
 
-	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
-		SetRespawn (ent, 60);
+	if (!(ent->gameEntity->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
+		SetRespawn (ent, 600);
 }
 
-void CAncientHead::DoPickup (edict_t *ent, CPlayerEntity *other)
+void CAncientHead::DoPickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	other->gameEntity->max_health += 2;
 
-	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
-		SetRespawn (ent, 60);
+	if (!(ent->gameEntity->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
+		SetRespawn (ent, 600);
 }
 
-void CPowerShield::DoPickup (edict_t *ent, CPlayerEntity *other)
+void CPowerShield::DoPickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	if (game.mode & GAME_DEATHMATCH)
 	{
-		if (!(ent->spawnflags & DROPPED_ITEM) )
-			SetRespawn (ent, 60);
+		if (!(ent->gameEntity->spawnflags & DROPPED_ITEM) )
+			SetRespawn (ent, 600);
 
 		// auto-use for DM only if we didn't already have one
 		if (!other->Client.pers.Inventory.Has(this))
@@ -410,6 +455,52 @@ void CPowerShield::Drop (CPlayerEntity *ent)
 		Use (ent);
 	CBasePowerUp::Drop (ent);
 }
+
+class CPowerupEntity : public CItemEntity
+{
+public:
+	CPowerupEntity() :
+	  CBaseEntity(),
+	  CItemEntity ()
+	  {
+	  };
+
+	CPowerupEntity (int Index) :
+	  CBaseEntity(Index),
+	  CItemEntity (Index)
+	  {
+	  };
+
+	void Spawn (CBaseItem *item)
+	{
+		if ((game.mode & GAME_DEATHMATCH) && dmFlags.dfNoItems)
+		{
+			Free ();
+			return;
+		}
+
+		gameEntity->item = item;
+		NextThink = level.framenum + 2;    // items start after other solids
+		ThinkState = ITS_DROPTOFLOOR;
+		NoPhysics = true;
+
+		State.SetEffects(item->EffectFlags);
+		State.SetRenderEffects(RF_GLOW);
+	};
+};
+
+LINK_ITEM_TO_CLASS (item_health_mega, CMegaHealthEntity);
+LINK_ITEM_TO_CLASS (item_pack, CPowerupEntity);
+LINK_ITEM_TO_CLASS (item_quad, CPowerupEntity);
+LINK_ITEM_TO_CLASS (item_invulnerability, CPowerupEntity);
+LINK_ITEM_TO_CLASS (item_silencer, CPowerupEntity);
+LINK_ITEM_TO_CLASS (item_breather, CPowerupEntity);
+LINK_ITEM_TO_CLASS (item_enviro, CPowerupEntity);
+LINK_ITEM_TO_CLASS (item_bandolier, CPowerupEntity);
+LINK_ITEM_TO_CLASS (item_adrenaline, CPowerupEntity);
+LINK_ITEM_TO_CLASS (item_ancient_head, CPowerupEntity);
+LINK_ITEM_TO_CLASS (item_power_shield, CPowerupEntity);
+LINK_ITEM_TO_CLASS (item_power_screen, CPowerupEntity);
 
 void AddPowerupsToList ()
 {

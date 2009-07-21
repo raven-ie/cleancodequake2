@@ -509,8 +509,6 @@ enum
 // g_misc.c
 //
 void ThrowHead (edict_t *self, MediaIndex gibIndex, int damage, int type);
-void ThrowClientHead (edict_t *self, int damage);
-void ThrowGib (edict_t *self, MediaIndex gibIndex, int damage, int type);
 void BecomeExplosion1(edict_t *self);
 
 //

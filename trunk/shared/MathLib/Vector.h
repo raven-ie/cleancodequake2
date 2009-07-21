@@ -195,14 +195,14 @@ public:
 
 	const bool Compare(const vec2f &Vec, const float Epsilon) const
 	{
-		if (fabs(X-Vec[0]) > Epsilon)
+		if (Q_fabs(X-Vec[0]) > Epsilon)
 			return false;
-		if (fabs(Y-Vec[1]) > Epsilon)
+		if (Q_fabs(Y-Vec[1]) > Epsilon)
 			return false;
 		return true;
 	}
 
-	const bool IsNearlyZero(const float Epsilon = SMALL_NUMBER) { return (fabs(X) <= Epsilon && fabs(Y) <= Epsilon); }
+	const bool IsNearlyZero(const float Epsilon = SMALL_NUMBER) { return (Q_fabs(X) <= Epsilon && Q_fabs(Y) <= Epsilon); }
 
 	inline void Scale(const float Scale) { X *= Scale; Y *= Scale; }
 	inline void Scale(const vec2f &Vec) { X *= Vec[0]; Y *= Vec[1]; }
@@ -394,11 +394,11 @@ public:
 
 	const bool Compare(const vec3f &Vec, const float Epsilon) const
 	{
-		if (fabs(X-Vec[0]) > Epsilon)
+		if (Q_fabs(X-Vec[0]) > Epsilon)
 			return false;
-		if (fabs(Y-Vec[1]) > Epsilon)
+		if (Q_fabs(Y-Vec[1]) > Epsilon)
 			return false;
-		if (fabs(Z-Vec[2]) > Epsilon)
+		if (Q_fabs(Z-Vec[2]) > Epsilon)
 			return false;
 		return true;
 	}
@@ -415,7 +415,7 @@ public:
 	inline float Dot(const vec3f &Vec) { return X*Vec[0] + Y*Vec[1] + Z*Vec[2]; }
 	inline const float Dot(const vec3f &Vec) const { return X*Vec[0] + Y*Vec[1] + Z*Vec[2]; }
 
-	const bool IsNearlyZero(const float Epsilon = SMALL_NUMBER) { return (fabs(X) <= Epsilon && fabs(Y) <= Epsilon && fabs(Z) <= Epsilon); }
+	const bool IsNearlyZero(const float Epsilon = SMALL_NUMBER) { return (Q_fabs(X) <= Epsilon && Q_fabs(Y) <= Epsilon && Q_fabs(Z) <= Epsilon); }
 
 	inline const float Length() const { return sqrtf(X*X + Y*Y + Z*Z); }
 	inline const float LengthFast() const { return Q_FastSqrt(X*X + Y*Y + Z*Z); }
@@ -796,18 +796,18 @@ public:
 
 	const bool Compare(const vec4f &Vec, const float Epsilon) const
 	{
-		if (fabs(X-Vec[0]) > Epsilon)
+		if (Q_fabs(X-Vec[0]) > Epsilon)
 			return false;
-		if (fabs(Y-Vec[1]) > Epsilon)
+		if (Q_fabs(Y-Vec[1]) > Epsilon)
 			return false;
-		if (fabs(Z-Vec[2]) > Epsilon)
+		if (Q_fabs(Z-Vec[2]) > Epsilon)
 			return false;
-		if (fabs(W-Vec[3]) > Epsilon)
+		if (Q_fabs(W-Vec[3]) > Epsilon)
 			return false;
 		return true;
 	}
 
-	const bool IsNearlyZero(const float Epsilon = SMALL_NUMBER) { return (fabs(X) <= Epsilon && fabs(Y) <= Epsilon && fabs(Z) <= Epsilon && fabs(W) <= Epsilon); }
+	const bool IsNearlyZero(const float Epsilon = SMALL_NUMBER) { return (Q_fabs(X) <= Epsilon && Q_fabs(Y) <= Epsilon && Q_fabs(Z) <= Epsilon && Q_fabs(W) <= Epsilon); }
 
 	inline void Scale(const float Scale) { X *= Scale; Y *= Scale; Z *= Scale; W *= Scale; }
 	inline void Scale(const vec4f &Vec) { X *= Vec[0]; Y *= Vec[1]; Z *= Vec[2]; W *= Vec[3]; }

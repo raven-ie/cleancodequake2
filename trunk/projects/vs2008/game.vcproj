@@ -1203,6 +1203,22 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\game\cc_itementity.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\game\cc_itementity.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\game\cc_junk_entities.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\game\cc_junk_entities.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\game\cc_misc_entities.cpp"
 					>
 				</File>

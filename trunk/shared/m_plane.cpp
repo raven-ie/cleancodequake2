@@ -177,10 +177,10 @@ ComparePlanes
 */
 bool ComparePlanes(const vec3_t p1normal, const float p1dist, const vec3_t p2normal, const float p2dist)
 {
-	if (fabs (p1normal[0] - p2normal[0]) < PLANE_NORMAL_EPSILON
-	&& fabs (p1normal[1] - p2normal[1]) < PLANE_NORMAL_EPSILON
-	&& fabs (p1normal[2] - p2normal[2]) < PLANE_NORMAL_EPSILON
-	&& fabs (p1dist - p2dist) < PLANE_DIST_EPSILON)
+	if (Q_fabs (p1normal[0] - p2normal[0]) < PLANE_NORMAL_EPSILON
+	&& Q_fabs (p1normal[1] - p2normal[1]) < PLANE_NORMAL_EPSILON
+	&& Q_fabs (p1normal[2] - p2normal[2]) < PLANE_NORMAL_EPSILON
+	&& Q_fabs (p1dist - p2dist) < PLANE_DIST_EPSILON)
 		return true;
 
 	return false;
@@ -196,13 +196,13 @@ void SnapVector(vec3_t normal)
 {
 	for (int i=0 ; i<3 ; i++)
 	{
-		if (fabs (normal[i] - 1) < PLANE_NORMAL_EPSILON)
+		if (Q_fabs (normal[i] - 1) < PLANE_NORMAL_EPSILON)
 		{
 			Vec3Clear(normal);
 			normal[i] = 1;
 			break;
 		}
-		if (fabs (normal[i] - -1) < PLANE_NORMAL_EPSILON)
+		if (Q_fabs (normal[i] - -1) < PLANE_NORMAL_EPSILON)
 		{
 			Vec3Clear(normal);
 			normal[i] = -1;

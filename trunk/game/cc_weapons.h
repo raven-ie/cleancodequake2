@@ -50,7 +50,7 @@ public:
 	int					Quantity;
 	char	*VWepModel;
 
-	bool	Pickup (edict_t *ent, CPlayerEntity *other);
+	bool	Pickup (class CItemEntity *ent, CPlayerEntity *other);
 	void	Use (CPlayerEntity *ent);
 	void	Drop (CPlayerEntity *ent);
 };
@@ -87,7 +87,7 @@ public:
 	char	*VWepModel;
 
 	// Only thing different about ammo is how it's picked up.
-	bool	Pickup (edict_t *ent, CPlayerEntity *other);
+	bool	Pickup (class CItemEntity *ent, CPlayerEntity *other);
 	void	Use (CPlayerEntity *ent);
 	void	Drop (CPlayerEntity *ent);
 

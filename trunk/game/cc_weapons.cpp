@@ -68,20 +68,20 @@ VWepModel(VWepModel)
 		Weapon->Item = this;
 }
 
-bool CWeaponItem::Pickup (edict_t *ent, CPlayerEntity *other)
+bool CWeaponItem::Pickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	int			index = GetIndex();
 
 	if ( (dmFlags.dfWeaponsStay || game.mode == GAME_COOPERATIVE) 
 		&& other->Client.pers.Inventory.Has(index))
 	{
-		if (!(ent->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM) ) )
+		if (!(ent->gameEntity->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM) ) )
 			return false;	// leave the weapon for others to pickup
 	}
 
 	other->Client.pers.Inventory += this;
 
-	if (!(ent->spawnflags & DROPPED_ITEM) )
+	if (!(ent->gameEntity->spawnflags & DROPPED_ITEM) )
 	{
 		// give them some ammo with it
 		if (Ammo)
@@ -92,21 +92,21 @@ bool CWeaponItem::Pickup (edict_t *ent, CPlayerEntity *other)
 				Ammo->AddAmmo (other, this->Ammo->Quantity);
 		}
 
-		if (! (ent->spawnflags & DROPPED_PLAYER_ITEM) )
+		if (! (ent->gameEntity->spawnflags & DROPPED_PLAYER_ITEM) )
 		{
 			if (game.mode & GAME_DEATHMATCH)
 			{
 				if (dmFlags.dfWeaponsStay)
-					ent->flags |= FL_RESPAWN;
+					ent->gameEntity->flags |= FL_RESPAWN;
 				else
-					SetRespawn (ent, 30);
+					SetRespawn (ent, 300);
 			}
 			if (game.mode == GAME_COOPERATIVE)
-				ent->flags |= FL_RESPAWN;
+				ent->gameEntity->flags |= FL_RESPAWN;
 		}
 	}
-	else if (ent->count)
-		Ammo->AddAmmo (other, ent->count);
+	else if (ent->gameEntity->count)
+		Ammo->AddAmmo (other, ent->gameEntity->count);
 
 	if (Weapon)
 	{
@@ -146,7 +146,7 @@ void CWeaponItem::Use (CPlayerEntity *ent)
 
 void CWeaponItem::Drop (CPlayerEntity *ent)
 {
-	DropItem(ent->gameEntity);
+	DropItem(ent);
 
 	//if (ent->Client)
 	//{
@@ -212,12 +212,12 @@ void CAmmo::Use (CPlayerEntity *ent)
 void CAmmo::Drop (CPlayerEntity *ent)
 {
 	int count = Quantity;
-	edict_t *dropped = DropItem(ent->gameEntity);
+	CItemEntity *dropped = DropItem(ent);
 
 	if (count > ent->Client.pers.Inventory.Has(this))
 		count = ent->Client.pers.Inventory.Has(this);
 
-	dropped->count = count;
+	dropped->gameEntity->count = count;
 
 	ent->Client.pers.Inventory.Remove (this, count);
 
@@ -246,7 +246,7 @@ bool CAmmo::AddAmmo (CPlayerEntity *ent, int count)
 	return false;
 }
 
-bool CAmmo::Pickup (edict_t *ent, CPlayerEntity *other)
+bool CAmmo::Pickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	int			oldcount;
 	int			count;
@@ -256,8 +256,8 @@ bool CAmmo::Pickup (edict_t *ent, CPlayerEntity *other)
 
 	if ( weapon && dmFlags.dfInfiniteAmmo )
 		count = 1000;
-	else if (ent->count)
-		count = ent->count;
+	else if (ent->gameEntity->count)
+		count = ent->gameEntity->count;
 	else
 		count = Quantity;
 
@@ -273,10 +273,60 @@ bool CAmmo::Pickup (edict_t *ent, CPlayerEntity *other)
 			other->Client.NewWeapon = Weapon;
 	}
 
-	if (!(ent->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)) && (game.mode & GAME_DEATHMATCH))
-		SetRespawn (ent, 30);
+	if (!(ent->gameEntity->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)) && (game.mode & GAME_DEATHMATCH))
+		SetRespawn (ent, 300);
 	return true;
 }
+
+class CAmmoEntity : public CItemEntity
+{
+public:
+	CAmmoEntity() :
+	  CBaseEntity(),
+	  CItemEntity ()
+	  {
+	  };
+
+	CAmmoEntity (int Index) :
+	  CBaseEntity(Index),
+	  CItemEntity (Index)
+	  {
+	  };
+
+	void Spawn (CBaseItem *item)
+	{
+		if ((game.mode & GAME_DEATHMATCH) && dmFlags.dfInfiniteAmmo)
+		{
+			Free ();
+			return;
+		}
+
+		gameEntity->item = item;
+		NextThink = level.framenum + 2;    // items start after other solids
+		ThinkState = ITS_DROPTOFLOOR;
+		NoPhysics = true;
+
+		State.SetEffects(item->EffectFlags);
+		State.SetRenderEffects(RF_GLOW);
+	};
+};
+
+LINK_ITEM_TO_CLASS (ammo_shells, CAmmoEntity);
+LINK_ITEM_TO_CLASS (ammo_bullets, CAmmoEntity);
+LINK_ITEM_TO_CLASS (ammo_slugs, CAmmoEntity);
+LINK_ITEM_TO_CLASS (ammo_grenades, CAmmoEntity);
+LINK_ITEM_TO_CLASS (ammo_rockets, CAmmoEntity);
+LINK_ITEM_TO_CLASS (ammo_cells, CAmmoEntity);
+
+LINK_ITEM_TO_CLASS (weapon_shotgun, CItemEntity);
+LINK_ITEM_TO_CLASS (weapon_supershotgun, CItemEntity);
+LINK_ITEM_TO_CLASS (weapon_machinegun, CItemEntity);
+LINK_ITEM_TO_CLASS (weapon_chaingun, CItemEntity);
+LINK_ITEM_TO_CLASS (weapon_grenadelauncher, CItemEntity);
+LINK_ITEM_TO_CLASS (weapon_rocketlauncher, CItemEntity);
+LINK_ITEM_TO_CLASS (weapon_hyperblaster, CItemEntity);
+LINK_ITEM_TO_CLASS (weapon_railgun, CItemEntity);
+LINK_ITEM_TO_CLASS (weapon_bfg, CItemEntity);
 
 void AddAmmoToList ()
 {

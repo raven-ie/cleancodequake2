@@ -46,7 +46,7 @@ energyProtection(energyProtection)
 {
 };
 
-bool CArmor::Pickup (edict_t *ent, CPlayerEntity *other)
+bool CArmor::Pickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	if (normalProtection == -1)
 	{
@@ -103,8 +103,8 @@ bool CArmor::Pickup (edict_t *ent, CPlayerEntity *other)
 		other->Client.pers.Inventory.Set(this, baseCount);
 	}
 
-	if (!(ent->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
-		SetRespawn (ent, 20);
+	if (!(ent->gameEntity->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
+		SetRespawn (ent, 200);
 
 	return true;
 }
@@ -141,6 +141,44 @@ int CArmor::CheckArmor (CPlayerEntity *Player, vec3_t point, vec3_t normal, int 
 
 	return save;
 }
+
+class CArmorEntity : public CItemEntity
+{
+public:
+	CArmorEntity() :
+	  CBaseEntity(),
+	  CItemEntity ()
+	  {
+	  };
+
+	CArmorEntity (int Index) :
+	  CBaseEntity(Index),
+	  CItemEntity (Index)
+	  {
+	  };
+
+	void Spawn (CBaseItem *item)
+	{
+		if ((game.mode & GAME_DEATHMATCH) && dmFlags.dfNoArmor)
+		{
+			Free ();
+			return;
+		}
+
+		gameEntity->item = item;
+		NextThink = level.framenum + 2;    // items start after other solids
+		ThinkState = ITS_DROPTOFLOOR;
+		NoPhysics = true;
+
+		State.SetEffects(item->EffectFlags);
+		State.SetRenderEffects(RF_GLOW);
+	};
+};
+
+LINK_ITEM_TO_CLASS (item_armor_jacket, CArmorEntity);
+LINK_ITEM_TO_CLASS (item_armor_combat, CArmorEntity);
+LINK_ITEM_TO_CLASS (item_armor_body, CArmorEntity);
+LINK_ITEM_TO_CLASS (item_armor_shard, CArmorEntity);
 
 void AddArmorToList ()
 {

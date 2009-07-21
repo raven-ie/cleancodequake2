@@ -48,201 +48,6 @@ void SP_func_areaportal (edict_t *ent)
 
 //=====================================================
 
-
-/*
-=================
-Misc functions
-=================
-*/
-void VelocityForDamage (int damage, vec3_t v)
-{
-	v[0] = 100.0 * crandom();
-	v[1] = 100.0 * crandom();
-	v[2] = 200.0 + 100.0 * random();
-
-	if (damage < 50)
-		Vec3Scale (v, 0.7f, v);
-	else 
-		Vec3Scale (v, 1.2f, v);
-}
-
-void ClipGibVelocity (edict_t *ent)
-{
-	if (ent->velocity[0] < -300)
-		ent->velocity[0] = -300;
-	else if (ent->velocity[0] > 300)
-		ent->velocity[0] = 300;
-	if (ent->velocity[1] < -300)
-		ent->velocity[1] = -300;
-	else if (ent->velocity[1] > 300)
-		ent->velocity[1] = 300;
-	if (ent->velocity[2] < 200)
-		ent->velocity[2] = 200;	// always some upwards
-	else if (ent->velocity[2] > 500)
-		ent->velocity[2] = 500;
-}
-
-
-/*
-=================
-gibs
-=================
-*/
-void gib_think (edict_t *self)
-{
-	self->state.frame++;
-	self->nextthink = level.framenum + FRAMETIME;
-
-	if (self->state.frame == 10)
-	{
-		self->think = G_FreeEdict;
-		self->nextthink = level.framenum + 80 + random()*100;
-	}
-}
-
-void gib_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
-{
-	G_FreeEdict (self);
-}
-
-void ThrowGib (edict_t *self, MediaIndex gibIndex, int damage, int type)
-{
-	edict_t *gib;
-	vec3_t	vd;
-	vec3_t	origin;
-	vec3_t	size;
-	float	vscale;
-
-	gib = G_Spawn();
-
-	Vec3Scale (self->size, 0.5, size);
-	Vec3Add (self->absMin, size, origin);
-	gib->state.origin[0] = origin[0] + crandom() * size[0];
-	gib->state.origin[1] = origin[1] + crandom() * size[1];
-	gib->state.origin[2] = origin[2] + crandom() * size[2];
-
-	gib->state.modelIndex = gibIndex;
-	Vec3Clear (gib->mins);
-	Vec3Clear (gib->maxs);
-	gib->solid = SOLID_NOT;
-	gib->state.effects |= EF_GIB;
-	gib->takedamage = true;
-	gib->die = gib_die;
-
-	if (type == GIB_ORGANIC)
-	{
-		gib->movetype = MOVETYPE_TOSS;
-		vscale = 0.5;
-	}
-	else
-	{
-		gib->movetype = MOVETYPE_BOUNCE;
-		vscale = 1.0;
-	}
-
-	VelocityForDamage (damage, vd);
-	Vec3MA (self->velocity, vscale, vd, gib->velocity);
-	ClipGibVelocity (gib);
-	gib->avelocity[0] = random()*600;
-	gib->avelocity[1] = random()*600;
-	gib->avelocity[2] = random()*600;
-
-	gib->think = G_FreeEdict;
-	gib->nextthink = level.framenum + 100 + random()*100;
-
-	gi.linkentity (gib);
-}
-
-void ThrowHead (edict_t *self, MediaIndex gibIndex, int damage, int type)
-{
-	vec3_t	vd;
-	float	vscale;
-
-	self->state.skinNum = 0;
-	self->state.frame = 0;
-	Vec3Clear (self->mins);
-	Vec3Clear (self->maxs);
-
-	self->state.modelIndex2 = 0;
-	self->state.modelIndex = gibIndex;
-	self->solid = SOLID_NOT;
-	self->state.effects |= EF_GIB;
-	self->state.effects &= ~EF_FLIES;
-	self->state.sound = 0;
-	self->flags |= FL_NO_KNOCKBACK;
-	self->svFlags &= ~SVF_MONSTER;
-	self->takedamage = true;
-	self->die = gib_die;
-
-	if (type == GIB_ORGANIC)
-	{
-		self->movetype = MOVETYPE_TOSS;
-		vscale = 0.5;
-	}
-	else
-	{
-		self->movetype = MOVETYPE_BOUNCE;
-		vscale = 1.0;
-	}
-
-	VelocityForDamage (damage, vd);
-	Vec3MA (self->velocity, vscale, vd, self->velocity);
-	ClipGibVelocity (self);
-
-	self->avelocity[YAW] = crandom()*600;
-
-	self->think = G_FreeEdict;
-	self->nextthink = level.framenum + 100 + random()*100;
-
-	gi.linkentity (self);
-}
-
-void ThrowClientHead (edict_t *self, int damage)
-{
-	vec3_t	vd;
-
-	if (rand()&1)
-	{
-		self->state.modelIndex = gMedia.Gib_Head[1];
-		self->state.skinNum = 1;		// second skin is player
-	}
-	else
-	{
-		self->state.modelIndex = gMedia.Gib_Skull;
-		self->state.skinNum = 0;
-	}
-
-	self->state.origin[2] += 32;
-	self->state.frame = 0;
-	Vec3Set (self->mins, -16, -16, 0);
-	Vec3Set (self->maxs, 16, 16, 16);
-
-	self->takedamage = false;
-	self->solid = SOLID_NOT;
-	self->state.effects = EF_GIB;
-	self->state.sound = 0;
-	self->flags |= FL_NO_KNOCKBACK;
-
-	self->movetype = MOVETYPE_BOUNCE;
-	VelocityForDamage (damage, vd);
-	Vec3Add (self->velocity, vd, self->velocity);
-
-	if (self->client)	// bodies in the queue don't have a client anymore
-	{
-		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(self->Entity);
-		Player->Client.anim_priority = ANIM_DEATH;
-		Player->Client.anim_end = self->state.frame;
-	}
-	else
-	{
-		self->think = NULL;
-		self->nextthink = 0;
-	}
-
-	gi.linkentity (self);
-}
-
-
 /*
 =================
 debris
@@ -1254,15 +1059,15 @@ This is the dead player model. Comes in 6 exciting different poses!
 */
 void misc_deadsoldier_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
 {
-	int		n;
+//	int		n;
 
 	if (self->health > -80)
 		return;
 
 	PlaySoundFrom (self, CHAN_BODY, SoundIndex ("misc/udeath.wav"));
-	for (n= 0; n < 4; n++)
-		ThrowGib (self, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-	ThrowHead (self, gMedia.Gib_Head[1], damage, GIB_ORGANIC);
+	//for (n= 0; n < 4; n++)
+		//ThrowGib (self, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+	//ThrowHead (self, gMedia.Gib_Head[1], damage, GIB_ORGANIC);
 }
 
 void SP_misc_deadsoldier (edict_t *ent)
@@ -1538,7 +1343,7 @@ void SP_misc_gib_arm (edict_t *ent)
 	ent->solid = SOLID_NOT;
 	ent->state.effects |= EF_GIB;
 	ent->takedamage = true;
-	ent->die = gib_die;
+//	ent->die = gib_die;
 	ent->movetype = MOVETYPE_TOSS;
 	ent->svFlags |= SVF_MONSTER;
 	ent->deadflag = DEAD_DEAD;
@@ -1559,7 +1364,7 @@ void SP_misc_gib_leg (edict_t *ent)
 	ent->solid = SOLID_NOT;
 	ent->state.effects |= EF_GIB;
 	ent->takedamage = true;
-	ent->die = gib_die;
+//	ent->die = gib_die;
 	ent->movetype = MOVETYPE_TOSS;
 	ent->svFlags |= SVF_MONSTER;
 	ent->deadflag = DEAD_DEAD;
@@ -1580,7 +1385,7 @@ void SP_misc_gib_head (edict_t *ent)
 	ent->solid = SOLID_NOT;
 	ent->state.effects |= EF_GIB;
 	ent->takedamage = true;
-	ent->die = gib_die;
+//	ent->die = gib_die;
 	ent->movetype = MOVETYPE_TOSS;
 	ent->svFlags |= SVF_MONSTER;
 	ent->deadflag = DEAD_DEAD;

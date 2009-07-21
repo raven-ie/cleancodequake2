@@ -522,6 +522,7 @@ void CTFResetFlags(void)
 	CTFResetFlag(CTF_TEAM2);
 }
 
+#if 0
 static void CTFDropFlagTouch(edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf)
 {
 	//owner (who dropped us) can't touch for two secs
@@ -529,7 +530,9 @@ static void CTFDropFlagTouch(edict_t *ent, edict_t *other, plane_t *plane, cmBsp
 		ent->nextthink - level.framenum > CTF_AUTO_FLAG_RETURN_TIMEOUT-2)
 		return;
 
+#if 0
 	TouchItem (ent, other, plane, surf);
+#endif
 }
 
 static void CTFDropFlagThink(edict_t *ent)
@@ -546,15 +549,16 @@ static void CTFDropFlagThink(edict_t *ent)
 			CTFTeamName(CTF_TEAM2));
 	}
 }
+#endif
 
 // Called from PlayerDie, to drop the flag from a dying player
 void CTFDeadDropFlag(CPlayerEntity *self)
 {
-	edict_t *dropped = NULL;
+	CItemEntity *dropped = NULL;
 
 	if (self->Client.pers.Flag)
 	{
-		dropped = self->Client.pers.Flag->DropItem (self->gameEntity);
+		dropped = self->Client.pers.Flag->DropItem (self);
 		self->Client.pers.Inventory.Set (self->Client.pers.Flag, 0);
 		BroadcastPrintf (PRINT_HIGH, "%s lost the %s flag!\n", self->Client.pers.netname, CTFTeamName(self->Client.pers.Flag->team));
 		self->Client.pers.Flag = NULL;
@@ -562,9 +566,11 @@ void CTFDeadDropFlag(CPlayerEntity *self)
 
 	if (dropped)
 	{
+#if 0
 		dropped->think = CTFDropFlagThink;
 		dropped->nextthink = level.framenum + CTF_AUTO_FLAG_RETURN_TIMEOUT;
 		dropped->touch = CTFDropFlagTouch;
+#endif
 	}
 }
 
@@ -589,7 +595,7 @@ void CTFFlagSetup (edict_t *ent)
 		ent->state.modelIndex = ModelIndex(ent->item->WorldModel);
 	ent->solid = SOLID_TRIGGER;
 	ent->movetype = MOVETYPE_TOSS;  
-	ent->touch = TouchItem;
+	//ent->touch = TouchItem;
 
 	vec3_t v = {0,0,-128};
 	Vec3Add (ent->state.origin, v, dest);
@@ -858,7 +864,7 @@ static inline void CTFSay_Team_Location(CPlayerEntity *who, char *buf, size_t bu
 
 	// near or above
 	Vec3Subtract(origin, hot->state.origin, v);
-	if (fabs(v[2]) > fabs(v[0]) && fabs(v[2]) > fabs(v[1]))
+	if (Q_fabs(v[2]) > Q_fabs(v[0]) && Q_fabs(v[2]) > Q_fabs(v[1]))
 		if (v[2] > 0)
 			Q_strcatz(buf, "above ", bufSize);
 		else

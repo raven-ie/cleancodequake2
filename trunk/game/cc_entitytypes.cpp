@@ -630,7 +630,7 @@ bool CStepPhysics::Run ()
 	// friction for flying monsters that have been given vertical velocity
 	if ((gameEntity->flags & FL_FLY) && (gameEntity->velocity[2] != 0))
 	{
-		speed = fabs(gameEntity->velocity[2]);
+		speed = Q_fabs(gameEntity->velocity[2]);
 		control = (speed < SV_STOPSPEED) ? SV_STOPSPEED : speed;
 		friction = SV_FRICTION/3;
 		newspeed = speed - (0.1f * control * friction);
@@ -643,7 +643,7 @@ bool CStepPhysics::Run ()
 	// friction for flying monsters that have been given vertical velocity
 	if ((gameEntity->flags & FL_SWIM) && (gameEntity->velocity[2] != 0))
 	{
-		speed = fabs(gameEntity->velocity[2]);
+		speed = Q_fabs(gameEntity->velocity[2]);
 		control = (speed < SV_STOPSPEED) ? SV_STOPSPEED : speed;
 		newspeed = speed - (0.1f * control * SV_WATERFRICTION * gameEntity->waterlevel);
 		if (newspeed < 0)

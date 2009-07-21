@@ -787,10 +787,10 @@ void CSuperTank::Explode ()
 	case 8:
 		Entity->State.SetSound (0);
 		for (n= 0; n < 4; n++)
-			ThrowGib (Entity->gameEntity, gMedia.Gib_SmallMeat, 500, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, 500, GIB_ORGANIC);
 		for (n= 0; n < 8; n++)
-			ThrowGib (Entity->gameEntity, gMedia.Gib_SmallMetal, 500, GIB_METALLIC);
-		ThrowGib (Entity->gameEntity, gMedia.Gib_Chest, 500, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMetal, 500, GIB_METALLIC);
+		CGibEntity::Spawn (Entity, gMedia.Gib_Chest, 500, GIB_ORGANIC);
 		Entity->ThrowHead (gMedia.Gib_Gear, 500, GIB_METALLIC);
 		Entity->gameEntity->deadflag = DEAD_DEAD;
 		return;
