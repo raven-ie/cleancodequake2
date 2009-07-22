@@ -85,5 +85,3 @@ public:
 
 	void Spawn ();
 };
-
-extern CMutant Monster_Mutant;

@@ -139,7 +139,7 @@ DirToByte
 This isn't a real cheap function to call!
 =================
 */
-byte DirToByte(const vec3f dirVec)
+byte DirToByte(const vec3f &dirVec)
 {
 	if (!dirVec)
 		return 0;

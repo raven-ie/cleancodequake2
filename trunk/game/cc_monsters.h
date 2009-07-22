@@ -192,7 +192,6 @@ public:
 	uint32				HashValue;
 	CMonster			*HashNext;
 
-	char				*Classname;
 	CMonsterEntity		*Entity; // Entity linked to the monster
 
 	float				IdealYaw;

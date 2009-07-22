@@ -66,5 +66,3 @@ public:
 
 	void Spawn ();
 };
-
-extern CSuperTank Monster_SuperTank;

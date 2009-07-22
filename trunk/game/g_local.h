@@ -464,7 +464,7 @@ void Cmd_Score_f (CPlayerEntity *ent);
 //
 bool	KillBox (edict_t *ent);
 void	G_ProjectSource (vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result);
-void	G_ProjectSource (vec3f point, vec3f distance, vec3f forward, vec3f right, vec3f &result);
+void	G_ProjectSource (vec3f &point, vec3f &distance, vec3f &forward, vec3f &right, vec3f &result);
 edict_t *G_Find (edict_t *from, int fieldofs, char *match);
 edict_t *findradius (edict_t *from, vec3_t org, float rad);
 edict_t *G_PickTarget (char *targetname);
@@ -520,19 +520,7 @@ int range (edict_t *self, edict_t *other);
 bool infront (edict_t *self, edict_t *other);
 bool visible (edict_t *self, edict_t *other);
 
-//
-// g_weapon.c
-//
 void ThrowDebris (edict_t *self, char *modelname, float speed, vec3_t origin);
-bool fire_hit (edict_t *self, vec3_t aim, int damage, int kick);
-void fire_bullet (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int mod);
-void fire_shotgun (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int count, int mod);
-void fire_blaster (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, int effect, bool isHyper);
-void fire_grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer, float damage_radius);
-void fire_grenade2 (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer, float damage_radius, bool held);
-void fire_rocket (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, float damage_radius, int radius_damage);
-void fire_rail (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick);
-void fire_bfg (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, float damage_radius);
 
 //
 // g_ptrail.c
@@ -540,8 +528,8 @@ void fire_bfg (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, f
 void PlayerTrail_Init (void);
 void PlayerTrail_Add (vec3_t spot);
 void PlayerTrail_New (vec3_t spot);
-edict_t *PlayerTrail_PickFirst (edict_t *self);
-edict_t *PlayerTrail_PickNext (edict_t *self);
+edict_t *PlayerTrail_PickFirst (CMonsterEntity *Self);
+edict_t *PlayerTrail_PickNext (CMonsterEntity *Self);
 edict_t	*PlayerTrail_LastSpot (void);
 
 //
@@ -763,8 +751,6 @@ struct edict_s
 
 	// Paril
 	CBaseItem		*item;
-	CMonster		*Monster;
-
 	CBaseEntity		*Entity;
 #if 0
 	const NewtonBody	*newtonBody;

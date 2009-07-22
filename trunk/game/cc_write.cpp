@@ -211,7 +211,7 @@ void WritePosition (vec3_t val)
 	}
 }
 
-void WritePosition (vec3f val)
+void WritePosition (vec3f &val)
 {
 	if (!val)
 	{

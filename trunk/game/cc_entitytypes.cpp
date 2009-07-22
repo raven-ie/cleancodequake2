@@ -598,8 +598,8 @@ bool CStepPhysics::Run ()
 		return false;
 
 	// airborn monsters should always check for ground
-	if (!gameEntity->groundentity && gameEntity->Monster)
-		gameEntity->Monster->CheckGround ();
+	if (!gameEntity->groundentity && (EntityFlags & ENT_MONSTER))
+		(dynamic_cast<CMonsterEntity*>(this))->Monster->CheckGround ();
 	else
 		CheckGround (); // Specific non-monster checkground
 
@@ -656,7 +656,7 @@ bool CStepPhysics::Run ()
 	{
 		// apply friction
 		// let dead monsters who aren't completely onground slide
-		if ((wasonground) || (gameEntity->flags & (FL_SWIM|FL_FLY)) && !(gameEntity->health <= 0.0 && (gameEntity->Monster && !gameEntity->Monster->CheckBottom())))
+		if ((wasonground) || (gameEntity->flags & (FL_SWIM|FL_FLY)) && !(gameEntity->health <= 0.0 && ((EntityFlags & ENT_MONSTER) && !(dynamic_cast<CMonsterEntity*>(this))->Monster->CheckBottom())))
 		{
 			vel = gameEntity->velocity;
 			speed = sqrtf(vel[0]*vel[0] +vel[1]*vel[1]);
@@ -676,7 +676,7 @@ bool CStepPhysics::Run ()
 			}
 		}
 
-		if (gameEntity->Monster)
+		if (EntityFlags & ENT_MONSTER)
 			mask = CONTENTS_MASK_MONSTERSOLID;
 		else
 			mask = CONTENTS_MASK_SOLID;

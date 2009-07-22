@@ -136,32 +136,32 @@ void			CPlayerState::SetGunFrame (int val)
 	playerState->gunFrame = val;
 }
 
-void			CPlayerState::SetViewAngles (vec3f in)
+void			CPlayerState::SetViewAngles (vec3f &in)
 {
 	playerState->viewAngles[0] = in.X;
 	playerState->viewAngles[1] = in.Y;
 	playerState->viewAngles[2] = in.Z;
 }
-void			CPlayerState::SetViewOffset (vec3f in)
+void			CPlayerState::SetViewOffset (vec3f &in)
 {
 	playerState->viewOffset[0] = in.X;
 	playerState->viewOffset[1] = in.Y;
 	playerState->viewOffset[2] = in.Z;
 }
 
-void			CPlayerState::SetGunAngles (vec3f in)
+void			CPlayerState::SetGunAngles (vec3f &in)
 {
 	playerState->gunAngles[0] = in.X;
 	playerState->gunAngles[1] = in.Y;
 	playerState->gunAngles[2] = in.Z;
 }
-void			CPlayerState::SetGunOffset (vec3f in)
+void			CPlayerState::SetGunOffset (vec3f &in)
 {
 	playerState->gunOffset[0] = in.X;
 	playerState->gunOffset[1] = in.Y;
 	playerState->gunOffset[2] = in.Z;
 }
-void			CPlayerState::SetKickAngles (vec3f in)
+void			CPlayerState::SetKickAngles (vec3f &in)
 {
 	playerState->kickAngles[0] = in.X;
 	playerState->kickAngles[1] = in.Y;
@@ -3641,7 +3641,7 @@ void CPlayerEntity::GetChaseTarget()
 	PrintToClient(PRINT_CENTER, "No other players to chase.");
 }
 
-void CPlayerEntity::P_ProjectSource (vec3f distance, vec3f forward, vec3f right, vec3f &result)
+void CPlayerEntity::P_ProjectSource (vec3f distance, vec3f &forward, vec3f &right, vec3f &result)
 {
 	switch (Client.pers.hand)
 	{

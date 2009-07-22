@@ -61,5 +61,3 @@ public:
 
 	void Spawn ();
 };
-
-extern CFloater Monster_Floater;

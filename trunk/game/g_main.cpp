@@ -481,8 +481,8 @@ __try
 		if ((ent->groundentity) && (ent->groundentity->linkCount != ent->groundentity_linkcount))
 		{
 			ent->groundentity = NULL;
-			if ( !(ent->flags & (FL_SWIM|FL_FLY)) && (ent->svFlags & SVF_MONSTER) && ent->Monster )
-				ent->Monster->CheckGround ();
+			if ( !(ent->flags & (FL_SWIM|FL_FLY)) && (ent->svFlags & SVF_MONSTER) && ent->Entity && (ent->Entity->EntityFlags & ENT_MONSTER) )
+				(dynamic_cast<CMonsterEntity*>(ent->Entity))->Monster->CheckGround ();
 		}
 
 		/*if (i > 0 && i <= game.maxclients)

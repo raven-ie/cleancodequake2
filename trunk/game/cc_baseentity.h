@@ -53,13 +53,13 @@ public:
 	vec3f	GetOldOrigin	();
 
 	void	SetOrigin		(vec3_t in);
-	void	SetOrigin		(vec3f in);
+	void	SetOrigin		(vec3f &in);
 
 	void	SetAngles		(vec3_t in);
-	void	SetAngles		(vec3f in);
+	void	SetAngles		(vec3f &in);
 
 	void	SetOldOrigin	(vec3_t in);
-	void	SetOldOrigin	(vec3f in);
+	void	SetOldOrigin	(vec3f &in);
 
 	// Can be 1, 2, 3, or 4
 	int		GetModelIndex	(uint8 index = 1);
@@ -143,12 +143,12 @@ public:
 	void			SetSize (vec3_t in);
 
 	// Vec3f
-	void			SetMins (vec3f in);
-	void			SetMaxs (vec3f in);
+	void			SetMins (vec3f &in);
+	void			SetMaxs (vec3f &in);
 
-	void			SetAbsMin (vec3f in);
-	void			SetAbsMax (vec3f in);
-	void			SetSize (vec3f in);
+	void			SetAbsMin (vec3f &in);
+	void			SetAbsMax (vec3f &in);
+	void			SetSize (vec3f &in);
 
 	int				GetSvFlags ();
 	void			SetSvFlags (int SVFlags);
@@ -183,11 +183,12 @@ public:
 // EntityFlags values
 enum
 {
-	ENT_BASE		=	1, // Can be casted to CBaseEntity
-	ENT_HURTABLE	=	2, // Can be casted to CHurtableEntity
-	ENT_THINKABLE	=	4, // Can be casted to CThinkableEntity
-	ENT_TOUCHABLE	=	8, // Can be casted to CTouchableEntity
-	ENT_PLAYER		=	16, // Can be casted to CPlayerEntity
+	ENT_BASE		=	BIT(0), // Can be casted to CBaseEntity
+	ENT_HURTABLE	=	BIT(1), // Can be casted to CHurtableEntity
+	ENT_THINKABLE	=	BIT(2), // Can be casted to CThinkableEntity
+	ENT_TOUCHABLE	=	BIT(3), // Can be casted to CTouchableEntity
+	ENT_PLAYER		=	BIT(4), // Can be casted to CPlayerEntity
+	ENT_MONSTER		=	BIT(5), // Can be casted to CMonsterEntity
 };
 
 // Base classes

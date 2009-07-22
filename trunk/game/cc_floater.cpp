@@ -35,11 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "m_float.h"
 #include "cc_floater.h"
 
-CFloater Monster_Floater;
-
 CFloater::CFloater ()
 {
-	Classname = "monster_floater";
 	Scale = MODEL_SCALE;
 }
 

@@ -35,11 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "m_gladiator.h"
 #include "cc_gladiator.h"
 
-CGladiator Monster_Gladiator;
-
 CGladiator::CGladiator ()
 {
-	Classname = "monster_gladiator";
 	Scale = MODEL_SCALE;
 }
 

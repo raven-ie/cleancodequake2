@@ -65,12 +65,12 @@ public:
 	void			SetGunOffset (vec3_t in);
 	void			SetKickAngles (vec3_t in);
 
-	void			SetViewAngles (vec3f in);
-	void			SetViewOffset (vec3f in);
+	void			SetViewAngles (vec3f &in);
+	void			SetViewOffset (vec3f &in);
 
-	void			SetGunAngles (vec3f in);
-	void			SetGunOffset (vec3f in);
-	void			SetKickAngles (vec3f in);
+	void			SetGunAngles (vec3f &in);
+	void			SetGunOffset (vec3f &in);
+	void			SetKickAngles (vec3f &in);
 
 	MediaIndex		GetGunIndex ();
 	void			SetGunIndex (MediaIndex val);
@@ -373,6 +373,6 @@ public:
 
 	void TossHead (int damage);
 
-	void P_ProjectSource (vec3f distance, vec3f forward, vec3f right, vec3f &result);
+	void P_ProjectSource (vec3f distance, vec3f &forward, vec3f &right, vec3f &result);
 	void PlayerNoiseAt (vec3_t Where, int type);
 };

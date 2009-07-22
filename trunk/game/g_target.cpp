@@ -423,7 +423,8 @@ void use_target_blaster (edict_t *self, edict_t *other, edict_t *activator)
 	else
 		effect = EF_BLASTER;
 
-	fire_blaster (self, self->state.origin, self->movedir, self->dmg, self->speed, EF_BLASTER, true);
+//	fire_blaster (self, self->state.origin, self->movedir, self->dmg, self->speed, EF_BLASTER, true);
+	CBlasterProjectile::Spawn (NULL, self->state.origin, self->movedir, self->dmg, self->speed, EF_BLASTER, true);
 	PlaySoundFrom (self, CHAN_VOICE, self->noise_index);
 }
 

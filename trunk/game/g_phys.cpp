@@ -802,10 +802,6 @@ void SV_Physics_Step (edict_t *ent)
 	edict_t		*groundentity;
 	int			mask;
 
-	// airborn monsters should always check for ground
-	if (!ent->groundentity && ent->Monster)
-		ent->Monster->CheckGround ();
-
 	groundentity = ent->groundentity;
 
 	if (groundentity)
@@ -858,7 +854,7 @@ void SV_Physics_Step (edict_t *ent)
 	{
 		// apply friction
 		// let dead monsters who aren't completely onground slide
-		if ((wasonground) || (ent->flags & (FL_SWIM|FL_FLY)) && !(ent->health <= 0.0 && (ent->Monster && !ent->Monster->CheckBottom())))
+		if (wasonground)
 		{
 			vel = ent->velocity;
 			speed = sqrtf(vel[0]*vel[0] +vel[1]*vel[1]);

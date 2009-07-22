@@ -459,7 +459,7 @@ void LinkModelNumberToNode (CPathNode *Node, int modelNum)
 			continue;
 		if (e->client)
 			continue;
-		if (e->Monster)
+		if (e->Entity && (e->Entity->EntityFlags & ENT_MONSTER))
 			continue;
 		if (!e->model)
 			continue;
@@ -690,18 +690,18 @@ void Cmd_Node_f (CPlayerEntity *ent)
 
 		CTrace trace = CTrace(origin, end, ent->gameEntity, CONTENTS_MASK_ALL);
 
-		if (trace.ent && trace.ent->Monster)
+		if (trace.ent && trace.ent->Entity && (trace.ent->Entity->EntityFlags & ENT_MONSTER))
 		{
 			if (Q_stricmp(ArgGets(2), "closest") == 0)
 			{
 				vec3_t origin;
-				trace.ent->Monster->Entity->State.GetOrigin (origin);
-				trace.ent->Monster->P_CurrentNode = GetClosestNodeTo(origin);
+				(dynamic_cast<CMonsterEntity*>(trace.ent->Entity))->Monster->Entity->State.GetOrigin (origin);
+				(dynamic_cast<CMonsterEntity*>(trace.ent->Entity))->Monster->P_CurrentNode = GetClosestNodeTo(origin);
 			}
 			else
-				trace.ent->Monster->P_CurrentNode = NodeList[ArgGeti(2)];
-			trace.ent->Monster->P_CurrentGoalNode = NodeList[ArgGeti(3)];
-			trace.ent->Monster->FoundPath ();
+				(dynamic_cast<CMonsterEntity*>(trace.ent->Entity))->Monster->P_CurrentNode = NodeList[ArgGeti(2)];
+			(dynamic_cast<CMonsterEntity*>(trace.ent->Entity))->Monster->P_CurrentGoalNode = NodeList[ArgGeti(3)];
+			(dynamic_cast<CMonsterEntity*>(trace.ent->Entity))->Monster->FoundPath ();
 		}
 	}
 	else if (Q_stricmp(cmd, "kill") == 0)

@@ -35,11 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "m_hover.h"
 #include "cc_icarus.h"
 
-CIcarus Monster_Icarus;
-
 CIcarus::CIcarus ()
 {
-	Classname = "monster_hover";
 	Scale = MODEL_SCALE;
 }
 
@@ -504,14 +501,14 @@ void CIcarus::Attack ()
 
 	if (random() > chance)
 	{
-		CurrentMove = &HoverMoveAttack1;
+		CurrentMove = &HoverMoveStartAttack;
 		AttackState = AS_STRAIGHT;
 	}
 	else // circle strafe
 	{
 		if (random () <= 0.5) // switch directions
 			Lefty = !Lefty;
-		CurrentMove = &HoverMoveAttack2;
+		CurrentMove = &HoverMoveStartAttack2;
 		AttackState = AS_SLIDING;
 	}
 #else

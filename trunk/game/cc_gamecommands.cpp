@@ -405,25 +405,6 @@ void Cmd_Test_f (CPlayerEntity *ent)
 	//vec3f or = ent->State.GetOrigin();
 	//BroadcastPrintf (PRINT_CENTER, "(%s)\nis at (%.0f %.0f %.0f)", ent->Client.pers.netname, or.X, or.Y, or.Z);
 	//CGibEntity::Spawn (ent, gMedia.Gib_SmallMeat, ArgGeti(1), GIB_ORGANIC);
-	uint32 sec = Sys_Milliseconds();
-
-	uint32 i = 0;
-	while ((i++) < 3000000)
-	{
-		fabs(-0.000001f);
-	}
-
-	DebugPrintf ("(fabs: %f) Elapsed: %ums\n", fabs(-0.000001f), Sys_Milliseconds() - sec);
-
-	sec = Sys_Milliseconds();
-
-	i = 0;
-	while ((i++) < 3000000)
-	{
-		Q_fabs(-0.000001f);
-	}
-
-	DebugPrintf ("(Q_fabs: %f) Elapsed: %ums\n", Q_fabs(-0.000001f), Sys_Milliseconds() - sec);
 }
 
 void GCTFSay_Team (CPlayerEntity *ent);

@@ -62,5 +62,3 @@ public:
 
 	void Spawn ();
 };
-
-extern CIcarus Monster_Icarus;

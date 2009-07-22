@@ -40,5 +40,3 @@ public:
 	void FireGun (int FlashNumber);
 	void SpawnSoldier ();
 };
-
-extern CSoldierMachinegun Monster_Soldier_Machinegun;

@@ -1486,6 +1486,14 @@
 						>
 					</File>
 					<File
+						RelativePath="..\..\game\cc_berserk.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\..\game\cc_berserk.h"
+						>
+					</File>
+					<File
 						RelativePath=".\..\..\game\cc_bitch.cpp"
 						>
 					</File>
@@ -1555,6 +1563,14 @@
 					</File>
 					<File
 						RelativePath=".\..\..\game\cc_mutant.h"
+						>
+					</File>
+					<File
+						RelativePath="..\..\game\cc_parasite.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\..\game\cc_parasite.h"
 						>
 					</File>
 					<File
@@ -1833,10 +1849,6 @@
 			</File>
 			<File
 				RelativePath=".\..\..\game\g_utils.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\..\..\game\g_weapon.cpp"
 				>
 			</File>
 			<File

@@ -633,5 +633,5 @@ void		Quat_TransformVector (quat_t q, vec3_t v, vec3_t out);
 extern vec3_t	m_byteDirs[NUMVERTEXNORMALS];
 
 byte		DirToByte(const vec3_t dirVec);
-byte		DirToByte(const vec3f dirVec);
+byte		DirToByte(const vec3f &dirVec);
 void		ByteToDir(const byte dirByte, vec3_t dirVec);
