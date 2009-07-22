@@ -35,11 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "m_insane.h"
 #include "cc_insane.h"
 
-CInsane Monster_Insane;
-
 CInsane::CInsane ()
 {
-	Classname = "monster_insane";
 	Scale = MODEL_SCALE;
 }
 
@@ -640,4 +637,4 @@ void CInsane::Spawn ()
 	Entity->State.SetSkinNum (rand()%3);
 }
 
-LINK_MONSTER_CLASSNAME_TO_CLASS ("monster_insane", CInsane);
+LINK_MONSTER_CLASSNAME_TO_CLASS ("misc_insane", CInsane);

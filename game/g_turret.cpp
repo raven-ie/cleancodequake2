@@ -88,7 +88,7 @@ void turret_breach_fire (edict_t *self)
 
 	damage = 100 + random() * 50;
 	speed = 550 + 50 * skill->Integer();
-	fire_rocket (self->teammaster->owner, start, f, damage, speed, 150, damage);
+//	fire_rocket (self->teammaster->owner, start, f, damage, speed, 150, damage);
 	PlaySoundAt (start, self, CHAN_WEAPON, SoundIndex("weapons/rocklf1a.wav"));
 }
 

@@ -35,11 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "m_chick.h"
 #include "cc_bitch.h"
 
-CMaiden Monster_Bitch;
-
 CMaiden::CMaiden ()
 {
-	Classname = "monster_bitch";
 	Scale = MODEL_SCALE;
 }
 

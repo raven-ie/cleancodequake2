@@ -78,5 +78,3 @@ public:
 
 	void Spawn ();
 };
-
-extern CFlyer Monster_Flyer;

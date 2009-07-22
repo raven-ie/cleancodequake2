@@ -87,7 +87,7 @@ void MapPrint (EMapPrintType printType, edict_t *ent, vec3_t origin, char *fmt, 
 }
 
 // NEW AGE FDSJAHDSKJAFD
-void Map_Print (EMapPrintType printType, CBaseEntity *ent, vec3f origin)
+void Map_Print (EMapPrintType printType, CBaseEntity *ent, vec3f &origin)
 {
 	if (printType == MAPPRINT_WARNING)
 	{

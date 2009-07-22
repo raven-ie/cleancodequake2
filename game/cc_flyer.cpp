@@ -35,11 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "m_flyer.h"
 #include "cc_flyer.h"
 
-CFlyer Monster_Flyer;
-
 CFlyer::CFlyer ()
 {
-	Classname = "monster_flyer";
 	Scale = MODEL_SCALE;
 }
 

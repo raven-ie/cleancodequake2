@@ -33,8 +33,41 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 
-void check_dodge (edict_t *self, vec3_t start, vec3_t dir, int speed);
-void CheckDodge (CBaseEntity *self, vec3f start, vec3f dir, int speed);
+void CheckDodge (CBaseEntity *self, vec3f &start, vec3f &dir, int speed)
+{
+	vec3f	end, v;
+	CTrace	tr;
+	float	eta;
+
+	// easy mode only ducks one quarter the time
+	if (skill->Integer() == 0)
+	{
+		if (random() > 0.25)
+			return;
+	}
+
+	end = start.MultiplyAngles(8192, dir);
+	tr = CTrace (start, end, self->gameEntity, CONTENTS_MASK_SHOT);
+
+#ifdef MONSTER_USE_ROGUE_AI
+	if ((tr.ent) && (tr.ent->Entity) && (tr.ent->Entity->EntityFlags & ENT_MONSTER) && (tr.ent->health > 0) && infront(tr.ent, self->gameEntity))
+	{
+		v = tr.EndPos - start;
+		eta = (v.LengthFast() - tr.ent->maxs[0]) / speed;
+		(dynamic_cast<CMonsterEntity*>(tr.ent->Entity))->Monster->Dodge (self->gameEntity, eta, &tr);
+
+		if (tr.ent->enemy != self->gameEntity)
+			tr.ent->enemy = self->gameEntity;
+	}
+#else
+	if ((tr.ent) && (tr.ent->Entity) && (tr.ent->Entity->EntityFlags & ENT_MONSTER) (tr.ent->health > 0) && infront(tr.ent, self->gameEntity))
+	{
+		v = tr.EndPos - Start;
+		eta = (v.LengthFast() - tr.ent->maxs[0]) / speed;
+		(dynamic_cast<CMonsterEntity*>(tr.ent->Entity))->Dodge (self->gameEntity, eta);
+	}
+#endif
+}
 
 /*
 =================
@@ -284,6 +317,9 @@ void CBlasterProjectile::Spawn (CBaseEntity *Spawner, vec3f start, vec3f dir,
 {
 	CBlasterProjectile		*Bolt = QNew (com_levelPool, 0) CBlasterProjectile;
 
+	if (Spawner && Spawner->EntityFlags & ENT_PLAYER)
+		CheckDodge (Spawner, start, dir, speed);
+
 	dir.NormalizeFast();
 
 	Bolt->SetSvFlags (SVF_PROJECTILE);
@@ -309,10 +345,7 @@ void CBlasterProjectile::Spawn (CBaseEntity *Spawner, vec3f start, vec3f dir,
 		Bolt->gameEntity->spawnflags = 1;
 	Bolt->Link ();
 
-	if (Spawner->EntityFlags & ENT_PLAYER)
-		check_dodge (Spawner->gameEntity, start, dir, speed);
-
-	CTrace tr = CTrace (Spawner->State.GetOrigin(), start, Bolt->gameEntity, CONTENTS_MASK_SHOT);
+	CTrace tr = CTrace ((Spawner) ? Spawner->State.GetOrigin() : start, start, Bolt->gameEntity, CONTENTS_MASK_SHOT);
 	if (tr.fraction < 1.0)
 	{
 		start = start.MultiplyAngles (-10, dir);
@@ -412,7 +445,11 @@ void CRocket::Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t dir,
 	Rocket->gameEntity->classname = "rocket";
 
 	if (Spawner->EntityFlags & ENT_PLAYER)
-		check_dodge (Spawner->gameEntity, start, dir, speed);
+	{
+		vec3f astart = vec3f(start);
+		vec3f adir = vec3f(dir);
+		CheckDodge (Spawner, astart, adir, speed);
+	}
 
 	Rocket->Link ();
 }

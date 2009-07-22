@@ -35,11 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "m_supertank.h"
 #include "cc_supertank.h"
 
-CSuperTank Monster_SuperTank;
-
 CSuperTank::CSuperTank ()
 {
-	Classname = "monster_supertank";
 	Scale = MODEL_SCALE;
 };
 

@@ -35,18 +35,13 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "m_tank.h"
 #include "cc_tank.h"
 
-CTank Monster_Tank;
-CTankCommander Monster_Tank_Commander;
-
 CTank::CTank ()
 {
-	Classname = "monster_tank";
 	Scale = MODEL_SCALE;
 }
 
 CTankCommander::CTankCommander ()
 {
-	Classname = "monster_tank_commander";
 	Scale = MODEL_SCALE;
 }
 

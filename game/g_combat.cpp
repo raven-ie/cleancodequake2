@@ -96,9 +96,9 @@ void Killed (edict_t *targ, edict_t *inflictor, edict_t *attacker, int damage, v
 
 	targ->enemy = attacker;
 
-	if ((targ->svFlags & SVF_MONSTER) && (targ->deadflag != DEAD_DEAD) && targ->Monster)
+	if ((targ->svFlags & SVF_MONSTER) && (targ->deadflag != DEAD_DEAD) && targ->Entity && (targ->Entity->EntityFlags & ENT_MONSTER))
 	{
-		if (!(targ->Monster->AIFlags & AI_GOOD_GUY))
+		if (!((dynamic_cast<CMonsterEntity*>(targ->Entity))->Monster->AIFlags & AI_GOOD_GUY))
 		{
 			level.killed_monsters++;
 			if (game.mode == GAME_COOPERATIVE && (attacker->client))
@@ -109,12 +109,12 @@ void Killed (edict_t *targ, edict_t *inflictor, edict_t *attacker, int damage, v
 		}
 	}
 
-	if (!(targ->movetype == MOVETYPE_PUSH || targ->movetype == MOVETYPE_STOP || targ->movetype == MOVETYPE_NONE) && 
+	if (//!(targ->movetype == MOVETYPE_PUSH || targ->movetype == MOVETYPE_STOP || targ->movetype == MOVETYPE_NONE) && 
 		(targ->svFlags & SVF_MONSTER) && (targ->deadflag != DEAD_DEAD))
 	{
 		targ->touch = NULL;
-		if (targ->Monster)
-			targ->Monster->MonsterDeathUse();
+		if (targ->Entity && (targ->Entity->EntityFlags & ENT_MONSTER))
+			(dynamic_cast<CMonsterEntity*>(targ->Entity))->Monster->MonsterDeathUse();
 	}
 
 	if (targ->Entity && (targ->Entity->EntityFlags & ENT_HURTABLE) && inflictor->Entity && attacker->Entity)
@@ -174,10 +174,10 @@ static int CheckPowerArmor (edict_t *ent, vec3_t point, vec3_t normal, int damag
 		if (power_armor_type != POWER_ARMOR_NONE)
 			power = Player->Client.pers.Inventory.Has(index);
 	}
-	else if ((ent->svFlags & SVF_MONSTER) && ent->Monster)
+	else if ((ent->svFlags & SVF_MONSTER) && ent->Entity && (ent->Entity->EntityFlags & ENT_MONSTER))
 	{
-		power_armor_type = ent->Monster->PowerArmorType;
-		power = ent->Monster->PowerArmorPower;
+		power_armor_type = (dynamic_cast<CMonsterEntity*>(ent->Entity))->Monster->PowerArmorType;
+		power = (dynamic_cast<CMonsterEntity*>(ent->Entity))->Monster->PowerArmorPower;
 	}
 	else
 		return 0;
@@ -227,8 +227,8 @@ static int CheckPowerArmor (edict_t *ent, vec3_t point, vec3_t normal, int damag
 
 	if (IsClient)
 		Player->Client.pers.Inventory.Remove(index, power_used);
-	else if (ent->Monster)
-		ent->Monster->PowerArmorPower -= power_used;
+	else if (ent->Entity && (ent->Entity->EntityFlags & ENT_MONSTER))
+		(dynamic_cast<CMonsterEntity*>(ent->Entity))->Monster->PowerArmorPower -= power_used;
 	return save;
 }
 
@@ -460,10 +460,10 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 		}
 	}
 
-	if (targ->Monster)
+	if (targ->Entity && (targ->Entity->EntityFlags & ENT_MONSTER))
 	{
-		targ->Monster->ReactToDamage (attacker);
-		if (!(targ->Monster->AIFlags & AI_DUCKED) && take &&
+		(dynamic_cast<CMonsterEntity*>(targ->Entity))->Monster->ReactToDamage (attacker);
+		if (!((dynamic_cast<CMonsterEntity*>(targ->Entity))->Monster->AIFlags & AI_DUCKED) && take &&
 			attacker->Entity && (attacker->Entity->EntityFlags & ENT_HURTABLE))
 		{
 			(dynamic_cast<CHurtableEntity*>(targ->Entity))->Pain (attacker->Entity, knockback, take);

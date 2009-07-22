@@ -35,11 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "m_gunner.h"
 #include "cc_gunner.h"
 
-CGunner Monster_Gunner;
-
 CGunner::CGunner ()
 {
-	Classname = "monster_gunner";
 	Scale = MODEL_SCALE;
 }
 

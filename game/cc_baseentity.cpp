@@ -84,7 +84,7 @@ void	CEntityState::SetOrigin		(vec3_t in)
 {
 	Vec3Copy (in, state->origin);
 }
-void	CEntityState::SetOrigin		(vec3f in)
+void	CEntityState::SetOrigin		(vec3f &in)
 {
 	state->origin[0] = in.X;
 	state->origin[1] = in.Y;
@@ -95,7 +95,7 @@ void	CEntityState::SetAngles		(vec3_t in)
 {
 	Vec3Copy (in, state->angles);
 }
-void	CEntityState::SetAngles		(vec3f in)
+void	CEntityState::SetAngles		(vec3f &in)
 {
 	state->angles[0] = in.X;
 	state->angles[1] = in.Y;
@@ -106,7 +106,7 @@ void	CEntityState::SetOldOrigin	(vec3_t in)
 {
 	Vec3Copy (in, state->oldOrigin);
 }
-void	CEntityState::SetOldOrigin	(vec3f in)
+void	CEntityState::SetOldOrigin	(vec3f &in)
 {
 	state->oldOrigin[0] = in.X;
 	state->oldOrigin[1] = in.Y;
@@ -356,32 +356,32 @@ void			CBaseEntity::SetSize (vec3_t in)
 }
 
 // Vec3f
-void			CBaseEntity::SetMins (vec3f in)
+void			CBaseEntity::SetMins (vec3f &in)
 {
 	gameEntity->mins[0] = in.X;
 	gameEntity->mins[1] = in.Y;
 	gameEntity->mins[2] = in.Z;
 }
-void			CBaseEntity::SetMaxs (vec3f in)
+void			CBaseEntity::SetMaxs (vec3f &in)
 {
 	gameEntity->maxs[0] = in.X;
 	gameEntity->maxs[1] = in.Y;
 	gameEntity->maxs[2] = in.Z;
 }
 
-void			CBaseEntity::SetAbsMin (vec3f in)
+void			CBaseEntity::SetAbsMin (vec3f &in)
 {
 	gameEntity->absMin[0] = in.X;
 	gameEntity->absMin[1] = in.Y;
 	gameEntity->absMin[2] = in.Z;
 }
-void			CBaseEntity::SetAbsMax (vec3f in)
+void			CBaseEntity::SetAbsMax (vec3f &in)
 {
 	gameEntity->absMax[0] = in.X;
 	gameEntity->absMax[1] = in.Y;
 	gameEntity->absMax[2] = in.Z;
 }
-void			CBaseEntity::SetSize (vec3f in)
+void			CBaseEntity::SetSize (vec3f &in)
 {
 	gameEntity->size[0] = in.X;
 	gameEntity->size[1] = in.Y;

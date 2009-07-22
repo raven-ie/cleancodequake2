@@ -35,11 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_soldier_base.h"
 #include "cc_soldier_machinegun.h"
 
-CSoldierMachinegun Monster_Soldier_Machinegun;
-
 CSoldierMachinegun::CSoldierMachinegun ()
 {
-	Classname = "monster_soldier_ss";
 }
 
 extern CAnim SoldierMoveAttack4;

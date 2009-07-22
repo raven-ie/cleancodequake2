@@ -91,7 +91,7 @@ void PlayerTrail_New (vec3_t spot)
 }
 
 
-edict_t *PlayerTrail_PickFirst (edict_t *self)
+edict_t *PlayerTrail_PickFirst (CMonsterEntity *Self)
 {
 	int		marker;
 	int		n;
@@ -101,26 +101,22 @@ edict_t *PlayerTrail_PickFirst (edict_t *self)
 
 	for (marker = trail_head, n = TRAIL_LENGTH; n; n--)
 	{
-		if(trail[marker]->timestamp <= self->Monster->TrailTime)
+		if(trail[marker]->timestamp <= Self->Monster->TrailTime)
 			marker = NEXT(marker);
 		else
 			break;
 	}
 
-	if (visible(self, trail[marker]))
-	{
+	if (visible(Self->gameEntity, trail[marker]))
 		return trail[marker];
-	}
 
-	if (visible(self, trail[PREV(marker)]))
-	{
+	if (visible(Self->gameEntity, trail[PREV(marker)]))
 		return trail[PREV(marker)];
-	}
 
 	return trail[marker];
 }
 
-edict_t *PlayerTrail_PickNext (edict_t *self)
+edict_t *PlayerTrail_PickNext (CMonsterEntity *Self)
 {
 	int		marker;
 	int		n;
@@ -130,7 +126,7 @@ edict_t *PlayerTrail_PickNext (edict_t *self)
 
 	for (marker = trail_head, n = TRAIL_LENGTH; n; n--)
 	{
-		if(trail[marker]->timestamp <= self->Monster->TrailTime)
+		if(trail[marker]->timestamp <= Self->Monster->TrailTime)
 			marker = NEXT(marker);
 		else
 			break;

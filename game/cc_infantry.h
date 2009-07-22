@@ -78,5 +78,3 @@ public:
 
 	void Spawn ();
 };
-
-extern CInfantry Monster_Infantry;

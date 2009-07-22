@@ -8,7 +8,7 @@ of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 See the GNU General Public License for more details.
 
@@ -27,55 +27,47 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_gunner.h
-// Gunner Monster
+// cc_parasite.h
+// Parasite
 //
 
-class CGunner : public CMonster
+class CParasite : public CMonster
 {
 public:
-	MediaIndex	SoundPain;
+	MediaIndex	SoundPain1;
 	MediaIndex	SoundPain2;
-	MediaIndex	SoundDeath;
-	MediaIndex	SoundIdle;
-	MediaIndex	SoundOpen;
-	MediaIndex	SoundSearch;
+	MediaIndex	SoundDie;
+	MediaIndex	SoundLaunch;
+	MediaIndex	SoundImpact;
+	MediaIndex	SoundSuck;
+	MediaIndex	SoundReelIn;
 	MediaIndex	SoundSight;
+	MediaIndex	SoundTap;
+	MediaIndex	SoundScratch;
+	MediaIndex	SoundSearch;
 
-	CGunner ();
+	CParasite ();
 
-	void ReFireChain ();
-	void FireChain ();
-	void Grenade ();
-	void OpenGun ();
-	void Fire ();
-
-#ifndef MONSTER_USE_ROGUE_AI
-	void DuckUp ();
-	void DuckHold ();
-#else
-	bool GrenadeCheck ();
-	void BlindCheck ();
-	void Duck (float eta);
-	void SideStep ();
-#endif
-
-	void DuckDown ();
-	void RunAndShoot ();
-	void Fidget ();
-
-	void Attack ();
-#ifndef MONSTER_USE_ROGUE_AI
-	void Dodge (edict_t *attacker, float eta);
-#else
-	void Dodge (CBaseEntity *attacker, float eta, CTrace *trace);
-#endif
-	void Idle ();
-	void Search ();
 	void Run ();
+	void Walk ();
 	void Sight ();
 	void Stand ();
-	void Walk ();
+	void Idle ();
+	void Attack ();
+	bool CheckAttack ();
+
+	void Launch ();
+	void ReelIn ();
+	void Tap ();
+	void Scratch ();
+	void DoFidget();
+	void ReFidget();
+	void EndFidget();
+	void DoWalk ();
+	void DoRun ();
+	void StartRun ();
+	bool DrainAttackOK (vec3f &start, vec3f &end);
+	void DrainAttack ();
 
 	void Dead ();
 	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);

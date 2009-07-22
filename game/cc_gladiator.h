@@ -66,5 +66,3 @@ public:
 
 	void Spawn ();
 };
-
-extern CGladiator Monster_Gladiator;

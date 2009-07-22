@@ -28,7 +28,7 @@ void G_ProjectSource (vec3_t point, vec3_t distance, vec3_t forward, vec3_t righ
 	result[2] = point[2] + forward[2] * distance[0] + right[2] * distance[1] + distance[2];
 }
 
-void G_ProjectSource (vec3f point, vec3f distance, vec3f forward, vec3f right, vec3f &result)
+void G_ProjectSource (vec3f &point, vec3f &distance, vec3f &forward, vec3f &right, vec3f &result)
 {
 	result.Set (point.X + forward.X * distance.X + right.X * distance.Y,
 				point.Y + forward.Y * distance.X + right.Y * distance.Y,

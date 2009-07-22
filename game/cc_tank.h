@@ -79,6 +79,3 @@ public:
 
 	void Spawn ();
 };
-
-extern CTank Monster_Tank;
-extern CTankCommander Monster_Tank_Commander;

@@ -67,7 +67,9 @@ void CMonster::FoundPath ()
 	vec3_t angles, origin;
 	Entity->State.GetAngles (angles);
 	Entity->State.GetOrigin (origin);
-	if (VecInFront(angles, origin, P_CurrentPath->Path[P_CurrentNodeIndex]->Origin))
+
+	// Revision: Only do this if we have > 2 nodes (it messes up if we have exactly 2)
+	if (VecInFront(angles, origin, P_CurrentPath->Path[P_CurrentNodeIndex]->Origin) && P_CurrentPath->Path.size() > 2)
 		P_CurrentNodeIndex--;
 
 	P_CurrentNode = P_CurrentPath->Path[P_CurrentNodeIndex];
@@ -453,6 +455,7 @@ CStepPhysics(),
 CTossProjectile(),
 CHurtableEntity()
 {
+	EntityFlags |= ENT_MONSTER;
 };
 
 CMonsterEntity::CMonsterEntity (int Index) :
@@ -461,6 +464,7 @@ CStepPhysics(Index),
 CTossProjectile(Index),
 CHurtableEntity(Index)
 {
+	EntityFlags |= ENT_MONSTER;
 };
 
 void CMonsterEntity::Think ()
@@ -1246,28 +1250,28 @@ void CMonster::MonsterTriggeredStart ()
 
 void _cdecl CMonster::MonsterUse (edict_t *self, edict_t *other, edict_t *activator)
 {
-	if (self->enemy || !self->Monster)
+	if (self->enemy || !(self->Entity && (self->Entity->EntityFlags & ENT_MONSTER)))
 		return;
 	if (self->health <= 0)
 		return;
 	if (activator->flags & FL_NOTARGET)
 		return;
-	if (!(activator->client) && !(self->Monster->AIFlags & AI_GOOD_GUY))
+	if (!(activator->client) && !((dynamic_cast<CMonsterEntity*>(self->Entity))->Monster->AIFlags & AI_GOOD_GUY))
 		return;
 	
 // delay reaction so if the monster is teleported, its sound is still heard
 	self->enemy = activator;
-	self->Monster->FoundTarget ();
+	(dynamic_cast<CMonsterEntity*>(self->Entity))->Monster->FoundTarget ();
 }
 
 void _cdecl CMonster::MonsterTriggeredSpawnUse (edict_t *self, edict_t *other, edict_t *activator)
 {
-	if (!self->Monster)
+	if (!(self->Entity && (self->Entity->EntityFlags & ENT_MONSTER)))
 		return;
 
 	// we have a one frame delay here so we don't telefrag the guy who activated us
-	self->Monster->Think = &CMonster::MonsterTriggeredSpawn;
-	self->Monster->Entity->NextThink = level.framenum + FRAMETIME;
+	(dynamic_cast<CMonsterEntity*>(self->Entity))->Monster->Think = &CMonster::MonsterTriggeredSpawn;
+	(dynamic_cast<CMonsterEntity*>(self->Entity))->Monster->Entity->NextThink = level.framenum + FRAMETIME;
 	if (activator->client)
 		self->enemy = activator;
 	self->use = &CMonster::MonsterUse;
@@ -1304,7 +1308,7 @@ bool CMonster::FriendlyInLine (vec3_t Origin, vec3_t Direction)
 	Vec3MA (Origin, 8192, forward, end);
 	CTrace trace = CTrace(Origin, end, Entity->gameEntity, CONTENTS_MONSTER);
 
-	if (trace.fraction <= 0.5 && trace.ent && trace.ent->Monster && (trace.ent->enemy != Entity->gameEntity))
+	if (trace.fraction <= 0.5 && trace.ent && (trace.ent->Entity && (trace.ent->Entity->EntityFlags & ENT_MONSTER)) && (trace.ent->enemy != Entity->gameEntity))
 		return true;
 	return false;
 }
@@ -1355,7 +1359,7 @@ void CMonster::AlertNearbyStroggs ()
 		if (strogg == Entity->gameEntity)
 			continue;
 
-		if (strogg->client || !strogg->Monster)
+		if (strogg->client || !(strogg->Entity && (strogg->Entity->EntityFlags & ENT_MONSTER)))
 			continue;
 
 		if (strogg->enemy)
@@ -1363,9 +1367,21 @@ void CMonster::AlertNearbyStroggs ()
 		
 #ifdef MONSTERS_USE_PATHFINDING
 		// Set us up for pathing
-		P_CurrentNode = GetClosestNodeTo(strogg->state.origin);
-		P_CurrentGoalNode = GetClosestNodeTo(Entity->gameEntity->enemy->state.origin);
-		strogg->Monster->FoundPath ();
+		// Revision: if we aren't visible, that is.
+		CMonsterEntity *FoundStrogg = dynamic_cast<CMonsterEntity*>(strogg->Entity); 
+		if (!visible(strogg, Entity->gameEntity->enemy))
+		{
+			FoundStrogg->Monster->P_CurrentNode = GetClosestNodeTo(strogg->state.origin);
+			FoundStrogg->Monster->P_CurrentGoalNode = GetClosestNodeTo(Entity->gameEntity->enemy->state.origin);
+			FoundStrogg->gameEntity->enemy = Entity->gameEntity->enemy;
+			FoundStrogg->Monster->FoundPath ();
+		}
+		else
+		{
+			FoundStrogg->gameEntity->enemy = Entity->gameEntity->enemy;
+			FoundStrogg->Monster->FoundTarget ();
+			FoundStrogg->Monster->Sight ();
+		}
 #else
 		//strogg->enemy = Entity->gameEntity->enemy;
 		//strogg->Monster->FoundTarget ();
@@ -2521,10 +2537,10 @@ void CMonster::AI_Run(float Dist)
 		else if (AIFlags & AI_PURSUIT_LAST_SEEN)
 		{
 			AIFlags &= ~AI_PURSUIT_LAST_SEEN;
-			marker = PlayerTrail_PickFirst (Entity->gameEntity);
+			marker = PlayerTrail_PickFirst (Entity);
 		}
 		else
-			marker = PlayerTrail_PickNext (Entity->gameEntity);
+			marker = PlayerTrail_PickNext (Entity);
 
 		if (marker)
 		{
@@ -2889,7 +2905,7 @@ void CMonster::AI_Stand (float Dist)
 
 void CMonster::ReactToDamage (edict_t *attacker)
 {
-	if (!(attacker->client) && !(attacker->Monster))
+	if (!(attacker->client) && !(attacker->Entity && (attacker->Entity->EntityFlags & ENT_MONSTER)))
 		return;
 
 	if (attacker == Entity->gameEntity || attacker == Entity->gameEntity->enemy)
@@ -2899,7 +2915,7 @@ void CMonster::ReactToDamage (edict_t *attacker)
 	// or another good guy, do not get mad at them
 	if (AIFlags & AI_GOOD_GUY)
 	{
-		if (attacker->client || (attacker->Monster->AIFlags & AI_GOOD_GUY))
+		if (attacker->client || ((dynamic_cast<CMonsterEntity*>(attacker->Entity))->Monster->AIFlags & AI_GOOD_GUY))
 			return;
 	}
 
@@ -2929,7 +2945,7 @@ void CMonster::ReactToDamage (edict_t *attacker)
 
 #ifdef MONSTERS_ARENT_STUPID
 	// Help our buddy!
-	if (attacker->Monster && attacker->enemy && attacker->enemy != Entity->gameEntity)
+	if ((attacker->Entity && (attacker->Entity->EntityFlags & ENT_MONSTER)) && attacker->enemy && attacker->enemy != Entity->gameEntity)
 	{
 		if (Entity->gameEntity->enemy && Entity->gameEntity->enemy->client)
 			Entity->gameEntity->oldenemy = Entity->gameEntity->enemy;

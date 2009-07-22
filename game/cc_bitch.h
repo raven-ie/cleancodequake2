@@ -88,5 +88,3 @@ public:
 
 	void Spawn ();
 };
-
-extern CMaiden Monster_Bitch;

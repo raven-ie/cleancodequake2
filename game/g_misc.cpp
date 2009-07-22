@@ -172,21 +172,21 @@ void path_corner_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurf
 
 	if (self->wait)
 	{
-		if (other->Monster)
+		if (other->Entity->EntityFlags & ENT_MONSTER)
 		{
 			// Backcompat
-			other->Monster->PauseTime = level.framenum + (self->wait * 10);
-			other->Monster->Stand();
+			(dynamic_cast<CMonsterEntity*>(other->Entity))->Monster->PauseTime = level.framenum + (self->wait * 10);
+			(dynamic_cast<CMonsterEntity*>(other->Entity))->Monster->Stand();
 		}
 		return;
 	}
 
 	if (!other->movetarget)
 	{
-		if (other->Monster)
+		if (other->Entity->EntityFlags & ENT_MONSTER)
 		{
-			other->Monster->PauseTime = level.framenum + 100000000;
-			other->Monster->Stand ();
+			(dynamic_cast<CMonsterEntity*>(other->Entity))->Monster->PauseTime = level.framenum + 100000000;
+			(dynamic_cast<CMonsterEntity*>(other->Entity))->Monster->Stand ();
 		}
 	}
 	else
@@ -240,11 +240,11 @@ void point_combat_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSur
 	}
 	else if ((self->spawnflags & 1) && !(other->flags & (FL_SWIM|FL_FLY)))
 	{
-		if (other->Monster)
+		if (other->Entity->EntityFlags & ENT_MONSTER)
 		{
-			other->Monster->PauseTime = level.framenum + 100000000;
-			other->Monster->AIFlags |= AI_STAND_GROUND;
-			other->Monster->Stand ();
+			(dynamic_cast<CMonsterEntity*>(other->Entity))->Monster->PauseTime = level.framenum + 100000000;
+			(dynamic_cast<CMonsterEntity*>(other->Entity))->Monster->AIFlags |= AI_STAND_GROUND;
+			(dynamic_cast<CMonsterEntity*>(other->Entity))->Monster->Stand ();
 		}
 	}
 
@@ -254,8 +254,8 @@ void point_combat_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSur
 		other->movetarget = NULL;
 		other->goalentity = other->enemy;
 
-		if (other->Monster)
-			other->Monster->AIFlags &= ~AI_COMBAT_POINT;
+		if (other->Entity->EntityFlags & ENT_MONSTER)
+			(dynamic_cast<CMonsterEntity*>(other->Entity))->Monster->AIFlags &= ~AI_COMBAT_POINT;
 	}
 
 	if (self->pathtarget)

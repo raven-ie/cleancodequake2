@@ -60,5 +60,3 @@ public:
 
 	void Spawn ();
 };
-
-extern CInsane Monster_Insane;

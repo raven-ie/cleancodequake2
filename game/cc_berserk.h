@@ -8,7 +8,7 @@ of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 See the GNU General Public License for more details.
 
@@ -27,55 +27,37 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_gunner.h
-// Gunner Monster
+// cc_berserk.h
+// Berserker
 //
 
-class CGunner : public CMonster
+class CBerserker : public CMonster
 {
 public:
 	MediaIndex	SoundPain;
-	MediaIndex	SoundPain2;
-	MediaIndex	SoundDeath;
+	MediaIndex	SoundDie;
 	MediaIndex	SoundIdle;
-	MediaIndex	SoundOpen;
-	MediaIndex	SoundSearch;
+	MediaIndex	SoundPunch;
 	MediaIndex	SoundSight;
+	MediaIndex	SoundSearch;
 
-	CGunner ();
+	CBerserker ();
 
-	void ReFireChain ();
-	void FireChain ();
-	void Grenade ();
-	void OpenGun ();
-	void Fire ();
-
-#ifndef MONSTER_USE_ROGUE_AI
-	void DuckUp ();
-	void DuckHold ();
-#else
-	bool GrenadeCheck ();
-	void BlindCheck ();
-	void Duck (float eta);
-	void SideStep ();
-#endif
-
-	void DuckDown ();
-	void RunAndShoot ();
-	void Fidget ();
-
-	void Attack ();
-#ifndef MONSTER_USE_ROGUE_AI
-	void Dodge (edict_t *attacker, float eta);
-#else
-	void Dodge (CBaseEntity *attacker, float eta, CTrace *trace);
-#endif
-	void Idle ();
-	void Search ();
 	void Run ();
+	void Search ();
 	void Sight ();
 	void Stand ();
 	void Walk ();
+	void Melee ();
+
+	void Fidget ();
+	void AttackSpike ();
+	void AttackClub ();
+	void Swing ();
+
+#ifdef MONSTER_USE_ROGUE_AI
+	void SideStep ();
+#endif
 
 	void Dead ();
 	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);

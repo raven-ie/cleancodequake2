@@ -73,7 +73,7 @@ CTrace::CTrace (vec3_t start, vec3_t end, int contentMask)
 	Copy(temp);
 };
 
-CTrace::CTrace (vec3f start, vec3f mins, vec3f maxs, vec3f end, edict_t *ignore, int contentMask)
+CTrace::CTrace (vec3f &start, vec3f &mins, vec3f &maxs, vec3f &end, edict_t *ignore, int contentMask)
 {
 	vec3_t stVec = {start.X, start.Y, start.Z};
 	vec3_t minVec = {mins.X, mins.Y, mins.Z};
@@ -84,7 +84,7 @@ CTrace::CTrace (vec3f start, vec3f mins, vec3f maxs, vec3f end, edict_t *ignore,
 	Copy(temp);
 };
 
-CTrace::CTrace (vec3f start, vec3f end, edict_t *ignore, int contentMask)
+CTrace::CTrace (vec3f &start, vec3f &end, edict_t *ignore, int contentMask)
 {
 	vec3_t stVec = {start.X, start.Y, start.Z};
 	vec3_t endVec = {end.X, end.Y, end.Z};
@@ -93,7 +93,7 @@ CTrace::CTrace (vec3f start, vec3f end, edict_t *ignore, int contentMask)
 	Copy(temp);
 };
 
-CTrace::CTrace (vec3f start, vec3f end, int contentMask)
+CTrace::CTrace (vec3f &start, vec3f &end, int contentMask)
 {
 	vec3_t stVec = {start.X, start.Y, start.Z};
 	vec3_t endVec = {end.X, end.Y, end.Z};
