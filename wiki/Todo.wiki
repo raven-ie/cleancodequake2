@@ -13,7 +13,7 @@ Monsters (bold means done)
   * *Flipper*
   * *Floater*
   * *Flyer*
-  * Gladiator
+  * *Gladiator*
   * *Gunner*
   * *Hover*
   * *Infantry*
