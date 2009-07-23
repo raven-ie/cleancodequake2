@@ -629,17 +629,17 @@ static void SV_PM_CatagorizePosition (void) {
 	sample1 = sample2 / 2;
 
 	point[2] = pml.origin[2] + pm->mins[2] + 1;	
-	cont = gi.pointcontents (point);
+	cont = PointContents (point);
 
 	if (cont & CONTENTS_MASK_WATER) {
 		pm->waterType = cont;
 		pm->waterLevel = 1;
 		point[2] = pml.origin[2] + pm->mins[2] + sample1;
-		cont = gi.pointcontents (point);
+		cont = PointContents (point);
 		if (cont & CONTENTS_MASK_WATER) {
 			pm->waterLevel = 2;
 			point[2] = pml.origin[2] + pm->mins[2] + sample2;
-			cont = gi.pointcontents (point);
+			cont = PointContents (point);
 			if (cont & CONTENTS_MASK_WATER)
 				pm->waterLevel = 3;
 		}
@@ -736,12 +736,12 @@ static void SV_PM_CheckSpecialMovement (void) {
 
 	Vec3MA (pml.origin, 30, flatforward, spot);
 	spot[2] += 4;
-	cont = gi.pointcontents (spot);
+	cont = PointContents (spot);
 	if (!(cont & CONTENTS_SOLID))
 		return;
 
 	spot[2] += 16;
-	cont = gi.pointcontents (spot);
+	cont = PointContents (spot);
 	if (cont)
 		return;
 

@@ -719,7 +719,7 @@ void Cmd_Give (CPlayerEntity *ent)
 	ent->State.GetOrigin(Origin);
 	Vec3MA (Origin, 150, forward, Origin);
 
-	if (gi.pointcontents(Origin) & CONTENTS_SOLID)
+	if (PointContents(Origin) & CONTENTS_SOLID)
 		return;
 
 	edict_t *Spawned = G_Spawn();

@@ -312,9 +312,7 @@ void CParasite::DrainAttack ()
 	else if (Entity->State.GetFrame() == FRAME_drain04)
 		Entity->PlaySound (CHAN_WEAPON, SoundSuck, 1, ATTN_NORM, 0);
 
-	vec3_t ostart = {start.X, start.Y, start.Z};
-	vec3_t oend = {end.X, end.Y, end.Z};
-	CTempEnt_Trails::FleshCable (ostart, oend, Entity->State.GetNumber());
+	CTempEnt_Trails::FleshCable (start, end, Entity->State.GetNumber());
 
 	vec3_t dir;
 	dir[0] = start.X - end.X;

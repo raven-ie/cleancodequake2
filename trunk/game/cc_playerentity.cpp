@@ -1192,7 +1192,7 @@ inline void CPlayerEntity::CalcBlend ()
 	State.GetOrigin (vieworg);
 	Vec3Add (vieworg, vOff, vieworg);
 
-	int contents = gi.pointcontents (vieworg);
+	int contents = PointContents (vieworg);
 
 	if (contents & (CONTENTS_LAVA|CONTENTS_SLIME|CONTENTS_WATER) )
 		Client.PlayerState.SetRdFlags (Client.PlayerState.GetRdFlags() | RDF_UNDERWATER);
@@ -2906,7 +2906,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 
 #ifdef USE_EXTENDED_GAME_IMPORTS
 	pm.trace = PM_trace;
-	pm.pointContents = gi.pointcontents;
+	pm.pointContents = PointContents;
 #endif
 
 	// perform a pmove

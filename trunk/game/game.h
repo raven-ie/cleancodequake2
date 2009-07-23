@@ -170,6 +170,9 @@ typedef struct gameImport_s
 	_CC_INSECURE_DEPRECATE (class CTrace)
 #endif
 	cmTrace_t	(*trace) (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *passEnt, int contentMask);
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (PointContents)
+#endif
 	int			(*pointcontents) (vec3_t point);
 	BOOL		(*inPVS) (vec3_t p1, vec3_t p2);
 	BOOL		(*inPHS) (vec3_t p1, vec3_t p2);
