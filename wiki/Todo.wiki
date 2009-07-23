@@ -6,7 +6,7 @@ Monsters (bold means done)
 
   * Actor
   * *Berserk*
-  * Boss2
+  * *Boss2*
   * Boss3
   * Boss31/32
   * *Chick*
