@@ -984,15 +984,15 @@
 			Name="CleanCode Files"
 			>
 			<File
-				RelativePath=".\..\..\game\cc_local.h"
+				RelativePath=".\..\..\source\cc_local.h"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\cc_options.h"
+				RelativePath=".\..\..\source\cc_options.h"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\cc_shared.h"
+				RelativePath=".\..\..\source\cc_shared.h"
 				>
 			</File>
 			<File
@@ -1003,11 +1003,11 @@
 				Name="Dmflags"
 				>
 				<File
-					RelativePath=".\..\..\game\cc_dmflags.cpp"
+					RelativePath=".\..\..\source\cc_dmflags.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_dmflags.h"
+					RelativePath=".\..\..\source\cc_dmflags.h"
 					>
 				</File>
 			</Filter>
@@ -1015,22 +1015,22 @@
 				Name="Game API"
 				>
 				<File
-					RelativePath=".\..\..\game\cc_gameapi.cpp"
+					RelativePath=".\..\..\source\cc_gameapi.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_gameapi.h"
+					RelativePath=".\..\..\source\cc_gameapi.h"
 					>
 				</File>
 				<Filter
 					Name="Cvar"
 					>
 					<File
-						RelativePath=".\..\..\game\cc_cvar.cpp"
+						RelativePath=".\..\..\source\cc_cvar.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_cvar.h"
+						RelativePath=".\..\..\source\cc_cvar.h"
 						>
 					</File>
 				</Filter>
@@ -1038,11 +1038,11 @@
 					Name="Trace"
 					>
 					<File
-						RelativePath=".\..\..\game\cc_trace.cpp"
+						RelativePath=".\..\..\source\cc_trace.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_trace.h"
+						RelativePath=".\..\..\source\cc_trace.h"
 						>
 					</File>
 				</Filter>
@@ -1050,19 +1050,19 @@
 					Name="Messages"
 					>
 					<File
-						RelativePath=".\..\..\game\cc_tent.cpp"
+						RelativePath=".\..\..\source\cc_tent.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_tent.h"
+						RelativePath=".\..\..\source\cc_tent.h"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_write.cpp"
+						RelativePath=".\..\..\source\cc_write.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_write.h"
+						RelativePath=".\..\..\source\cc_write.h"
 						>
 					</File>
 				</Filter>
@@ -1070,11 +1070,11 @@
 					Name="Statusbar"
 					>
 					<File
-						RelativePath=".\..\..\game\cc_sbar.cpp"
+						RelativePath=".\..\..\source\cc_sbar.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_sbar.h"
+						RelativePath=".\..\..\source\cc_sbar.h"
 						>
 					</File>
 				</Filter>
@@ -1082,7 +1082,7 @@
 					Name="FrontEnd"
 					>
 					<File
-						RelativePath=".\..\..\game\cc_frontend.cpp"
+						RelativePath=".\..\..\source\cc_frontend.cpp"
 						>
 					</File>
 				</Filter>
@@ -1090,11 +1090,11 @@
 					Name="Indexing"
 					>
 					<File
-						RelativePath=".\..\..\game\cc_indexing.cpp"
+						RelativePath=".\..\..\source\cc_indexing.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_indexing.h"
+						RelativePath=".\..\..\source\cc_indexing.h"
 						>
 					</File>
 				</Filter>
@@ -1102,11 +1102,11 @@
 					Name="Arg"
 					>
 					<File
-						RelativePath=".\..\..\game\cc_arg.cpp"
+						RelativePath=".\..\..\source\cc_arg.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_arg.h"
+						RelativePath=".\..\..\source\cc_arg.h"
 						>
 					</File>
 				</Filter>
@@ -1114,19 +1114,19 @@
 					Name="Replacements"
 					>
 					<File
-						RelativePath=".\..\..\game\cc_print.cpp"
+						RelativePath=".\..\..\source\cc_print.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_print.h"
+						RelativePath=".\..\..\source\cc_print.h"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_sound.cpp"
+						RelativePath=".\..\..\source\cc_sound.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_sound.h"
+						RelativePath=".\..\..\source\cc_sound.h"
 						>
 					</File>
 				</Filter>
@@ -1134,11 +1134,11 @@
 					Name="Pmove"
 					>
 					<File
-						RelativePath=".\..\..\game\cc_pmove.cpp"
+						RelativePath=".\..\..\source\cc_pmove.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_pmove.h"
+						RelativePath=".\..\..\source\cc_pmove.h"
 						>
 					</File>
 				</Filter>
@@ -1147,31 +1147,31 @@
 				Name="Commands"
 				>
 				<File
-					RelativePath=".\..\..\game\cc_cmds.cpp"
+					RelativePath=".\..\..\source\cc_cmds.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_cmds.h"
+					RelativePath=".\..\..\source\cc_cmds.h"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_cmds_local.h"
+					RelativePath=".\..\..\source\cc_cmds_local.h"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_gamecommands.cpp"
+					RelativePath=".\..\..\source\cc_gamecommands.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_gamecommands.h"
+					RelativePath=".\..\..\source\cc_gamecommands.h"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_servercommands.cpp"
+					RelativePath=".\..\..\source\cc_servercommands.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_servercommands.h"
+					RelativePath=".\..\..\source\cc_servercommands.h"
 					>
 				</File>
 			</Filter>
@@ -1179,67 +1179,67 @@
 				Name="Entities"
 				>
 				<File
-					RelativePath=".\..\..\game\cc_baseentity.cpp"
+					RelativePath=".\..\..\source\cc_baseentity.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_baseentity.h"
+					RelativePath=".\..\..\source\cc_baseentity.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\game\cc_entitylist.cpp"
+					RelativePath="..\..\source\cc_entitylist.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\game\cc_entitylist.h"
+					RelativePath="..\..\source\cc_entitylist.h"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_entitytypes.cpp"
+					RelativePath=".\..\..\source\cc_entitytypes.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_entitytypes.h"
+					RelativePath=".\..\..\source\cc_entitytypes.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\game\cc_itementity.cpp"
+					RelativePath="..\..\source\cc_itementity.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\game\cc_itementity.h"
+					RelativePath="..\..\source\cc_itementity.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\game\cc_junk_entities.cpp"
+					RelativePath="..\..\source\cc_junk_entities.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\game\cc_junk_entities.h"
+					RelativePath="..\..\source\cc_junk_entities.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\game\cc_misc_entities.cpp"
+					RelativePath="..\..\source\cc_misc_entities.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\game\cc_misc_entities.h"
+					RelativePath="..\..\source\cc_misc_entities.h"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_playerentity.cpp"
+					RelativePath=".\..\..\source\cc_playerentity.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_playerentity.h"
+					RelativePath=".\..\..\source\cc_playerentity.h"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_weaponentities.cpp"
+					RelativePath=".\..\..\source\cc_weaponentities.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_weaponentities.h"
+					RelativePath=".\..\..\source\cc_weaponentities.h"
 					>
 				</File>
 			</Filter>
@@ -1247,158 +1247,158 @@
 				Name="Items"
 				>
 				<File
-					RelativePath=".\..\..\game\cc_armor.cpp"
+					RelativePath=".\..\..\source\cc_armor.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_armor.h"
+					RelativePath=".\..\..\source\cc_armor.h"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_health.cpp"
+					RelativePath=".\..\..\source\cc_health.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_health.h"
+					RelativePath=".\..\..\source\cc_health.h"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_itemlist.cpp"
+					RelativePath=".\..\..\source\cc_itemlist.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_itemlist.h"
+					RelativePath=".\..\..\source\cc_itemlist.h"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_items.cpp"
+					RelativePath=".\..\..\source\cc_items.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_items.h"
+					RelativePath=".\..\..\source\cc_items.h"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_keys.cpp"
+					RelativePath=".\..\..\source\cc_keys.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_keys.h"
+					RelativePath=".\..\..\source\cc_keys.h"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_powerups.cpp"
+					RelativePath=".\..\..\source\cc_powerups.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_powerups.h"
+					RelativePath=".\..\..\source\cc_powerups.h"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_weapons.cpp"
+					RelativePath=".\..\..\source\cc_weapons.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_weapons.h"
+					RelativePath=".\..\..\source\cc_weapons.h"
 					>
 				</File>
 				<Filter
 					Name="Weapon System"
 					>
 					<File
-						RelativePath=".\..\..\game\cc_bfg.cpp"
+						RelativePath=".\..\..\source\cc_bfg.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_bfg.h"
+						RelativePath=".\..\..\source\cc_bfg.h"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_blaster.cpp"
+						RelativePath=".\..\..\source\cc_blaster.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_blaster.h"
+						RelativePath=".\..\..\source\cc_blaster.h"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_chaingun.cpp"
+						RelativePath=".\..\..\source\cc_chaingun.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_chaingun.h"
+						RelativePath=".\..\..\source\cc_chaingun.h"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_grenadelauncher.cpp"
+						RelativePath=".\..\..\source\cc_grenadelauncher.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_grenadelauncher.h"
+						RelativePath=".\..\..\source\cc_grenadelauncher.h"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_handgrenade.cpp"
+						RelativePath=".\..\..\source\cc_handgrenade.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_handgrenade.h"
+						RelativePath=".\..\..\source\cc_handgrenade.h"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_hyperblaster.cpp"
+						RelativePath=".\..\..\source\cc_hyperblaster.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_hyperblaster.h"
+						RelativePath=".\..\..\source\cc_hyperblaster.h"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_machinegun.cpp"
+						RelativePath=".\..\..\source\cc_machinegun.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_machinegun.h"
+						RelativePath=".\..\..\source\cc_machinegun.h"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_railgun.cpp"
+						RelativePath=".\..\..\source\cc_railgun.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_railgun.h"
+						RelativePath=".\..\..\source\cc_railgun.h"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_rocketlauncher.cpp"
+						RelativePath=".\..\..\source\cc_rocketlauncher.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_rocketlauncher.h"
+						RelativePath=".\..\..\source\cc_rocketlauncher.h"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_shotgun.cpp"
+						RelativePath=".\..\..\source\cc_shotgun.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_shotgun.h"
+						RelativePath=".\..\..\source\cc_shotgun.h"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_supershotgun.cpp"
+						RelativePath=".\..\..\source\cc_supershotgun.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_supershotgun.h"
+						RelativePath=".\..\..\source\cc_supershotgun.h"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_weaponmain.cpp"
+						RelativePath=".\..\..\source\cc_weaponmain.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_weaponmain.h"
+						RelativePath=".\..\..\source\cc_weaponmain.h"
 						>
 					</File>
 				</Filter>
@@ -1406,11 +1406,11 @@
 					Name="Inventory"
 					>
 					<File
-						RelativePath=".\..\..\game\cc_inventory.cpp"
+						RelativePath=".\..\..\source\cc_inventory.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_inventory.h"
+						RelativePath=".\..\..\source\cc_inventory.h"
 						>
 					</File>
 				</Filter>
@@ -1419,11 +1419,11 @@
 				Name="Hashing"
 				>
 				<File
-					RelativePath=".\..\..\game\cc_hash.cpp"
+					RelativePath=".\..\..\source\cc_hash.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_hash.h"
+					RelativePath=".\..\..\source\cc_hash.h"
 					>
 				</File>
 			</Filter>
@@ -1431,7 +1431,7 @@
 				Name="Extras"
 				>
 				<File
-					RelativePath=".\..\..\game\cc_newton.cpp"
+					RelativePath=".\..\..\source\cc_newton.cpp"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
@@ -1455,11 +1455,11 @@
 				Name="Banning"
 				>
 				<File
-					RelativePath=".\..\..\game\cc_ban.cpp"
+					RelativePath=".\..\..\source\cc_ban.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_ban.h"
+					RelativePath=".\..\..\source\cc_ban.h"
 					>
 				</File>
 			</Filter>
@@ -1467,136 +1467,137 @@
 				Name="Monsters"
 				>
 				<File
-					RelativePath=".\..\..\game\cc_monsters.cpp"
+					RelativePath=".\..\..\source\cc_monsters.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_monsters.h"
+					RelativePath=".\..\..\source\cc_monsters.h"
 					>
 				</File>
 				<Filter
 					Name="Monster Files"
 					>
 					<File
-						RelativePath=".\..\..\game\cc_barracuda.cpp"
+						RelativePath=".\..\..\source\cc_barracuda.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_barracuda.h"
+						RelativePath=".\..\..\source\cc_barracuda.h"
 						>
 					</File>
 					<File
-						RelativePath="..\..\game\cc_berserk.cpp"
+						RelativePath="..\..\source\cc_berserk.cpp"
 						>
 					</File>
 					<File
-						RelativePath="..\..\game\cc_berserk.h"
+						RelativePath="..\..\source\cc_berserk.h"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_bitch.cpp"
+						RelativePath=".\..\..\source\cc_bitch.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_bitch.h"
+						RelativePath=".\..\..\source\cc_bitch.h"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_floater.cpp"
+						RelativePath=".\..\..\source\cc_floater.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_floater.h"
+						RelativePath=".\..\..\source\cc_floater.h"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_flyer.cpp"
+						RelativePath=".\..\..\source\cc_flyer.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_flyer.h"
+						RelativePath=".\..\..\source\cc_flyer.h"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_gladiator.cpp"
+						RelativePath=".\..\..\source\cc_gladiator.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_gladiator.h"
+						RelativePath=".\..\..\source\cc_gladiator.h"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_gunner.cpp"
+						RelativePath=".\..\..\source\cc_gunner.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_gunner.h"
+						RelativePath=".\..\..\source\cc_gunner.h"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_icarus.cpp"
+						RelativePath=".\..\..\source\cc_icarus.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_icarus.h"
+						RelativePath=".\..\..\source\cc_icarus.h"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_infantry.cpp"
+						RelativePath=".\..\..\source\cc_infantry.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_infantry.h"
+						RelativePath=".\..\..\source\cc_infantry.h"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_insane.cpp"
+						RelativePath=".\..\..\source\cc_insane.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_insane.h"
+						RelativePath=".\..\..\source\cc_insane.h"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_mutant.cpp"
+						RelativePath="..\..\source\cc_medic.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_mutant.h"
+						RelativePath="..\..\source\cc_medic.h"
 						>
 					</File>
 					<File
-						RelativePath="..\..\game\cc_parasite.cpp"
+						RelativePath=".\..\..\source\cc_mutant.cpp"
 						>
 					</File>
 					<File
-						RelativePath="..\..\game\cc_parasite.h"
+						RelativePath=".\..\..\source\cc_mutant.h"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_tank.cpp"
+						RelativePath="..\..\source\cc_parasite.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\..\..\game\cc_tank.h"
+						RelativePath="..\..\source\cc_parasite.h"
+						>
+					</File>
+					<File
+						RelativePath=".\..\..\source\cc_tank.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\..\..\source\cc_tank.h"
 						>
 					</File>
 					<Filter
 						Name="Bosses"
 						>
 						<File
-							RelativePath="..\..\game\cc_boss2.cpp"
+							RelativePath="..\..\source\cc_boss2.cpp"
 							>
-							<FileConfiguration
-								Name="Debug|Win32"
-								>
-								<Tool
-									Name="VCCLCompilerTool"
-								/>
-							</FileConfiguration>
 						</File>
 						<File
-							RelativePath="..\..\game\cc_boss2.h"
+							RelativePath="..\..\source\cc_boss2.h"
 							>
 							<FileConfiguration
 								Name="Debug|Win32"
@@ -1607,11 +1608,11 @@
 							</FileConfiguration>
 						</File>
 						<File
-							RelativePath=".\..\..\game\cc_supertank.cpp"
+							RelativePath=".\..\..\source\cc_supertank.cpp"
 							>
 						</File>
 						<File
-							RelativePath=".\..\..\game\cc_supertank.h"
+							RelativePath=".\..\..\source\cc_supertank.h"
 							>
 						</File>
 					</Filter>
@@ -1619,35 +1620,35 @@
 						Name="Soldiers"
 						>
 						<File
-							RelativePath=".\..\..\game\cc_soldier_base.cpp"
+							RelativePath=".\..\..\source\cc_soldier_base.cpp"
 							>
 						</File>
 						<File
-							RelativePath=".\..\..\game\cc_soldier_base.h"
+							RelativePath=".\..\..\source\cc_soldier_base.h"
 							>
 						</File>
 						<File
-							RelativePath=".\..\..\game\cc_soldier_light.cpp"
+							RelativePath=".\..\..\source\cc_soldier_light.cpp"
 							>
 						</File>
 						<File
-							RelativePath=".\..\..\game\cc_soldier_light.h"
+							RelativePath=".\..\..\source\cc_soldier_light.h"
 							>
 						</File>
 						<File
-							RelativePath=".\..\..\game\cc_soldier_machinegun.cpp"
+							RelativePath=".\..\..\source\cc_soldier_machinegun.cpp"
 							>
 						</File>
 						<File
-							RelativePath=".\..\..\game\cc_soldier_machinegun.h"
+							RelativePath=".\..\..\source\cc_soldier_machinegun.h"
 							>
 						</File>
 						<File
-							RelativePath=".\..\..\game\cc_soldier_shotgun.cpp"
+							RelativePath=".\..\..\source\cc_soldier_shotgun.cpp"
 							>
 						</File>
 						<File
-							RelativePath=".\..\..\game\cc_soldier_shotgun.h"
+							RelativePath=".\..\..\source\cc_soldier_shotgun.h"
 							>
 						</File>
 					</Filter>
@@ -1657,11 +1658,11 @@
 				Name="Colors"
 				>
 				<File
-					RelativePath="..\..\game\cc_colors.cpp"
+					RelativePath="..\..\source\cc_colors.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_colors.h"
+					RelativePath=".\..\..\source\cc_colors.h"
 					>
 				</File>
 			</Filter>
@@ -1669,11 +1670,11 @@
 				Name="Pathfinding"
 				>
 				<File
-					RelativePath=".\..\..\game\cc_pathfinding.cpp"
+					RelativePath=".\..\..\source\cc_pathfinding.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_pathfinding.h"
+					RelativePath=".\..\..\source\cc_pathfinding.h"
 					>
 				</File>
 			</Filter>
@@ -1681,11 +1682,11 @@
 				Name="Media"
 				>
 				<File
-					RelativePath=".\..\..\game\cc_media.cpp"
+					RelativePath=".\..\..\source\cc_media.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_media.h"
+					RelativePath=".\..\..\source\cc_media.h"
 					>
 				</File>
 			</Filter>
@@ -1693,7 +1694,7 @@
 				Name="Font"
 				>
 				<File
-					RelativePath=".\..\..\game\cc_conchars.h"
+					RelativePath=".\..\..\source\cc_conchars.h"
 					>
 				</File>
 			</Filter>
@@ -1701,19 +1702,19 @@
 				Name="Menu"
 				>
 				<File
-					RelativePath=".\..\..\game\cc_controls.cpp"
+					RelativePath=".\..\..\source\cc_controls.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_controls.h"
+					RelativePath=".\..\..\source\cc_controls.h"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_menu.cpp"
+					RelativePath=".\..\..\source\cc_menu.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_menu.h"
+					RelativePath=".\..\..\source\cc_menu.h"
 					>
 				</File>
 			</Filter>
@@ -1721,11 +1722,11 @@
 				Name="Exception Handling"
 				>
 				<File
-					RelativePath=".\..\..\game\cc_exceptionhandler.cpp"
+					RelativePath=".\..\..\source\cc_exceptionhandler.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_exceptionhandler.h"
+					RelativePath=".\..\..\source\cc_exceptionhandler.h"
 					>
 				</File>
 			</Filter>
@@ -1733,11 +1734,11 @@
 				Name="Map"
 				>
 				<File
-					RelativePath=".\..\..\game\cc_mapprint.cpp"
+					RelativePath=".\..\..\source\cc_mapprint.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_mapprint.h"
+					RelativePath=".\..\..\source\cc_mapprint.h"
 					>
 				</File>
 			</Filter>
@@ -1745,11 +1746,11 @@
 				Name="Memory"
 				>
 				<File
-					RelativePath="..\..\game\cc_memory.cpp"
+					RelativePath="..\..\source\cc_memory.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\game\cc_memory.h"
+					RelativePath="..\..\source\cc_memory.h"
 					>
 				</File>
 			</Filter>
@@ -1757,11 +1758,11 @@
 				Name="File system"
 				>
 				<File
-					RelativePath="..\..\game\cc_filesystem.cpp"
+					RelativePath="..\..\source\cc_filesystem.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\game\cc_filesystem.h"
+					RelativePath="..\..\source\cc_filesystem.h"
 					>
 				</File>
 			</Filter>
@@ -1769,11 +1770,11 @@
 				Name="Body Queue"
 				>
 				<File
-					RelativePath="..\..\game\cc_bodyqueue.cpp"
+					RelativePath="..\..\source\cc_bodyqueue.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\game\cc_bodyqueue.h"
+					RelativePath="..\..\source\cc_bodyqueue.h"
 					>
 				</File>
 			</Filter>
@@ -1781,43 +1782,43 @@
 				Name="CTF Addon"
 				>
 				<File
-					RelativePath=".\..\..\game\cc_ctf.cpp"
+					RelativePath=".\..\..\source\cc_ctf.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_ctf.h"
+					RelativePath=".\..\..\source\cc_ctf.h"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_ctfadmin.cpp"
+					RelativePath=".\..\..\source\cc_ctfadmin.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_ctfadmin.h"
+					RelativePath=".\..\..\source\cc_ctfadmin.h"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_ctfitems.cpp"
+					RelativePath=".\..\..\source\cc_ctfitems.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_ctfitems.h"
+					RelativePath=".\..\..\source\cc_ctfitems.h"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_ctfmenu.cpp"
+					RelativePath=".\..\..\source\cc_ctfmenu.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_ctfmenu.h"
+					RelativePath=".\..\..\source\cc_ctfmenu.h"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_grapple.cpp"
+					RelativePath=".\..\..\source\cc_grapple.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\game\cc_grapple.h"
+					RelativePath=".\..\..\source\cc_grapple.h"
 					>
 				</File>
 			</Filter>
@@ -1826,163 +1827,163 @@
 			Name="Old Files"
 			>
 			<File
-				RelativePath=".\..\..\game\g_combat.cpp"
+				RelativePath=".\..\..\source\g_combat.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\g_func.cpp"
+				RelativePath=".\..\..\source\g_func.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\g_local.h"
+				RelativePath="..\..\source\g_local.h"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\g_main.cpp"
+				RelativePath=".\..\..\source\g_main.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\g_misc.cpp"
+				RelativePath=".\..\..\source\g_misc.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\g_phys.cpp"
+				RelativePath=".\..\..\source\g_phys.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\g_save.cpp"
+				RelativePath=".\..\..\source\g_save.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\g_spawn.cpp"
+				RelativePath=".\..\..\source\g_spawn.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\g_target.cpp"
+				RelativePath=".\..\..\source\g_target.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\g_trigger.cpp"
+				RelativePath=".\..\..\source\g_trigger.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\g_turret.cpp"
+				RelativePath=".\..\..\source\g_turret.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\g_utils.cpp"
+				RelativePath=".\..\..\source\g_utils.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\game.h"
+				RelativePath="..\..\source\game.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\m_actor.h"
+				RelativePath="..\..\source\m_actor.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\m_berserk.h"
+				RelativePath="..\..\source\m_berserk.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\m_boss2.h"
+				RelativePath="..\..\source\m_boss2.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\m_boss31.h"
+				RelativePath="..\..\source\m_boss31.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\m_boss32.h"
+				RelativePath="..\..\source\m_boss32.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\m_brain.h"
+				RelativePath="..\..\source\m_brain.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\m_chick.h"
+				RelativePath="..\..\source\m_chick.h"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\m_flash.cpp"
+				RelativePath=".\..\..\source\m_flash.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\m_flipper.h"
+				RelativePath="..\..\source\m_flipper.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\m_float.h"
+				RelativePath="..\..\source\m_float.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\m_flyer.h"
+				RelativePath="..\..\source\m_flyer.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\m_gladiator.h"
+				RelativePath="..\..\source\m_gladiator.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\m_gunner.h"
+				RelativePath="..\..\source\m_gunner.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\m_hover.h"
+				RelativePath="..\..\source\m_hover.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\m_infantry.h"
+				RelativePath="..\..\source\m_infantry.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\m_insane.h"
+				RelativePath="..\..\source\m_insane.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\m_medic.h"
+				RelativePath="..\..\source\m_medic.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\m_mutant.h"
+				RelativePath="..\..\source\m_mutant.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\m_parasite.h"
+				RelativePath="..\..\source\m_parasite.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\m_player.h"
+				RelativePath="..\..\source\m_player.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\m_rider.h"
+				RelativePath="..\..\source\m_rider.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\m_soldier.h"
+				RelativePath="..\..\source\m_soldier.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\m_supertank.h"
+				RelativePath="..\..\source\m_supertank.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\game\m_tank.h"
+				RelativePath="..\..\source\m_tank.h"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\p_client.cpp"
+				RelativePath=".\..\..\source\p_client.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\p_hud.cpp"
+				RelativePath=".\..\..\source\p_hud.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\game\p_trail.cpp"
+				RelativePath=".\..\..\source\p_trail.cpp"
 				>
 			</File>
 		</Filter>

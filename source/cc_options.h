@@ -41,13 +41,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Makes pathfinding work.
 #define MONSTERS_USE_PATHFINDING
 
-// Specific monster options
-#define SUPERTANK_USES_GRENADE_LAUNCHER
-#define FLYER_KNOWS_HOW_TO_DODGE
-#define INFANTRY_DOES_REVERSE_GUN_ATTACK
-
-// "Extended game imports" refers to:
-// gi.cprintf, gi.dprintf, gi.centerprintf, gi.bprintf, gi.sound, gi.positioned_sound, gi.pmove
+// "Extended game imports" refers to all deprecated imports.
+// This is actually a bad thing, even though it sounds good!
 //#define USE_EXTENDED_GAME_IMPORTS
 
 // Define this if you don't want old function calls to warn you about deprecation.

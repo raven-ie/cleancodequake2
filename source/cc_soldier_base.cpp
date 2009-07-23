@@ -695,7 +695,7 @@ void CSoldierBase::Dodge (CBaseEntity *attacker, float eta)
 		return;
 
 	if (!Entity->gameEntity->enemy)
-		Entity->gameEntity->enemy = attacker;
+		Entity->gameEntity->enemy = attacker->gameEntity;
 
 	PauseTime = level.framenum + ((eta + 0.3) * 10);
 
@@ -1111,7 +1111,9 @@ void CSoldierBase::Duck_Down ()
 	if (AIFlags & AI_DUCKED)
 		return;
 	AIFlags |= AI_DUCKED;
-	Entity->maxs[2] -= 32;
+	vec3f maxs = Entity->GetMaxs();
+	maxs.Z -= 32;
+	Entity->SetMaxs (maxs);
 	Entity->gameEntity->takedamage = true;
 	PauseTime = level.framenum + 10;
 	Entity->Link ();
@@ -1120,7 +1122,9 @@ void CSoldierBase::Duck_Down ()
 void CSoldierBase::Duck_Up ()
 {
 	AIFlags &= ~AI_DUCKED;
-	Entity->maxs[2] += 32;
+	vec3f maxs = Entity->GetMaxs();
+	maxs.Z += 32;
+	Entity->SetMaxs (maxs);
 	Entity->gameEntity->takedamage = true;
 	Entity->Link ();
 }

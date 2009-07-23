@@ -60,11 +60,11 @@ void CheckDodge (CBaseEntity *self, vec3f &start, vec3f &dir, int speed)
 			tr.ent->enemy = self->gameEntity;
 	}
 #else
-	if ((tr.ent) && (tr.ent->Entity) && (tr.ent->Entity->EntityFlags & ENT_MONSTER) (tr.ent->health > 0) && infront(tr.ent, self->gameEntity))
+	if ((tr.ent) && (tr.ent->Entity) && (tr.ent->Entity->EntityFlags & ENT_MONSTER) && (tr.ent->health > 0) && infront(tr.ent, self->gameEntity))
 	{
-		v = tr.EndPos - Start;
+		v = tr.EndPos - start;
 		eta = (v.LengthFast() - tr.ent->maxs[0]) / speed;
-		(dynamic_cast<CMonsterEntity*>(tr.ent->Entity))->Dodge (self->gameEntity, eta);
+		(dynamic_cast<CMonsterEntity*>(tr.ent->Entity))->Monster->Dodge (self->gameEntity, eta);
 	}
 #endif
 }
