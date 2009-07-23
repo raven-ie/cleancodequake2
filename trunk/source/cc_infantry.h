@@ -27,55 +27,51 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_gunner.h
-// Gunner Monster
+// cc_infantry.h
+// Infantry Monster
 //
+#define INFANTRY_DOES_REVERSE_GUN_ATTACK
 
-class CGunner : public CMonster
+class CInfantry : public CMonster
 {
 public:
-	MediaIndex	SoundPain;
+	MediaIndex	SoundPain1;
 	MediaIndex	SoundPain2;
-	MediaIndex	SoundDeath;
-	MediaIndex	SoundIdle;
-	MediaIndex	SoundOpen;
-	MediaIndex	SoundSearch;
+	MediaIndex	SoundDie1;
+	MediaIndex	SoundDie2;
+
+	MediaIndex	SoundGunshot;
+	MediaIndex	SoundWeaponCock;
+	MediaIndex	SoundPunchSwing;
+	MediaIndex	SoundPunchHit;
 	MediaIndex	SoundSight;
+	MediaIndex	SoundSearch;
+	MediaIndex	SoundIdle;
 
-	CGunner ();
-
-	void ReFireChain ();
-	void FireChain ();
-	void Grenade ();
-	void OpenGun ();
-	void Fire ();
-
-#ifndef MONSTER_USE_ROGUE_AI
-	void DuckUp ();
-	void DuckHold ();
-#else
-	bool GrenadeCheck ();
-	void BlindCheck ();
-	void Duck (float eta);
-	void SideStep ();
-#endif
-
-	void DuckDown ();
-	void RunAndShoot ();
-	void Fidget ();
+	CInfantry ();
 
 	void Attack ();
 #ifndef MONSTER_USE_ROGUE_AI
 	void Dodge (edict_t *attacker, float eta);
+	void Duck_Down ();
+	void Duck_Hold ();
+	void Duck_Up ();
 #else
-	void Dodge (CBaseEntity *attacker, float eta, CTrace *trace);
+	void Duck (float eta);
+	void SideStep ();
 #endif
 	void Idle ();
-	void Search ();
 	void Run ();
 	void Sight ();
 	void Stand ();
 	void Walk ();
+	void Melee ();
+
+	void CockGun ();
+	void Fire ();
+	void Smack ();
+	void Swing ();
+	void MachineGun ();
 
 	void Dead ();
 	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);

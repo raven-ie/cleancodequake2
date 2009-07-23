@@ -1499,12 +1499,12 @@ bool CMonster::CheckAttack ()
 	if (Entity->gameEntity->enemy->health > 0)
 	{
 	// see if any entities are in the way of the shot
-		Vec3Copy (Entity->state.origin, spot1);
+		Entity->State.GetOrigin(spot1);
 		spot1[2] += Entity->gameEntity->viewheight;
 		Vec3Copy (Entity->gameEntity->enemy->state.origin, spot2);
 		spot2[2] += Entity->gameEntity->enemy->viewheight;
 
-		tr = CTrace(spot1, spot2, Entity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
+		tr = CTrace(spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
 
 		// do we have a clear shot?
 		if (tr.ent != Entity->gameEntity->enemy)
@@ -1744,12 +1744,14 @@ void CMonster::AI_Charge(float Dist)
 #ifndef MONSTER_USE_ROGUE_AI
 	vec3_t	v;
 
-	Vec3Subtract (Entity->gameEntity->enemy->state.origin, Entity->state.origin, v);
+	vec3_t origin;
+	Entity->State.GetOrigin (origin);
+	Vec3Subtract (Entity->gameEntity->enemy->state.origin, origin, v);
 	IdealYaw = VecToYaw(v);
 	ChangeYaw ();
 
 	if (Dist)
-		WalkMove (Entity->state.angles[YAW], Dist);
+		WalkMove (Entity->State.GetAngles().Y, Dist);
 #else
 	vec3_t	v;
 	// PMM
@@ -1910,9 +1912,11 @@ bool CMonster::AI_CheckAttack()
 		Vec3Copy (Entity->gameEntity->enemy->state.origin, LastSighting);
 	}
 
-	EnemyInfront = infront(Entity, Entity->gameEntity->enemy);
+	EnemyInfront = infront(Entity->gameEntity, Entity->gameEntity->enemy);
 	EnemyRange = range(Entity->gameEntity, Entity->gameEntity->enemy);
-	Vec3Subtract (Entity->gameEntity->enemy->state.origin, Entity->state.origin, temp);
+	vec3_t origin;
+	Entity->State.GetOrigin (origin);
+	Vec3Subtract (Entity->gameEntity->enemy->state.origin, origin, temp);
 	EnemyYaw = VecToYaw(temp);
 
 	// JDC self->ideal_yaw = enemy_yaw;
@@ -2138,7 +2142,9 @@ void CMonster::AI_Run(float Dist)
 	{
 		if (Entity->gameEntity->enemy)
 		{
-			Vec3Subtract (Entity->state.origin, Entity->gameEntity->enemy->state.origin, v);
+			vec3_t origin;
+			Entity->State.GetOrigin(origin);
+			Vec3Subtract (origin, Entity->gameEntity->enemy->state.origin, v);
 			if (Vec3Length(v) < 64)
 			{
 				AIFlags |= (AI_STAND_GROUND | AI_TEMP_STAND_GROUND);
@@ -2201,7 +2207,9 @@ void CMonster::AI_Run(float Dist)
 
 #ifdef MONSTERS_USE_PATHFINDING
 		// Set us up for pathing
-		P_CurrentNode = GetClosestNodeTo(Entity->state.origin);
+		vec3_t origin;
+		Entity->State.GetOrigin(origin);
+		P_CurrentNode = GetClosestNodeTo(origin);
 		P_CurrentGoalNode = GetClosestNodeTo(Entity->gameEntity->enemy->state.origin);
 		FoundPath ();
 #endif
@@ -2239,7 +2247,10 @@ void CMonster::AI_Run(float Dist)
 		{
 			Vec3Copy (marker->state.origin, LastSighting);
 			TrailTime = marker->timestamp;
-			Entity->state.angles[YAW] = IdealYaw = marker->state.angles[YAW];
+			vec3_t angles;
+			Entity->State.GetAngles(angles);
+			angles[YAW] = IdealYaw = marker->state.angles[YAW];
+			Entity->State.SetAngles(angles);
 //			dprint("heading is "); dprint(ftos(self.ideal_yaw)); dprint("\n");
 
 //			debug_drawline(self.origin, self.last_sighting, 52);
@@ -2247,7 +2258,9 @@ void CMonster::AI_Run(float Dist)
 		}
 	}
 
-	Vec3Subtract (Entity->state.origin, LastSighting, v);
+	vec3_t origin;
+	Entity->State.GetOrigin();
+	Vec3Subtract (origin, LastSighting, v);
 	d1 = Vec3Length(v);
 	if (d1 <= Dist)
 	{
@@ -2261,24 +2274,28 @@ void CMonster::AI_Run(float Dist)
 	{
 //		gi.dprintf("checking for course correction\n");
 
-		tr = CTrace (Entity->state.origin, Entity->mins, Entity->maxs, LastSighting, Entity, CONTENTS_MASK_PLAYERSOLID);
+		tr = CTrace (Entity->State.GetOrigin(), Entity->GetMins(), Entity->GetMaxs(), vec3f(LastSighting), Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
 		if (tr.fraction < 1)
 		{
-			Vec3Subtract (Entity->gameEntity->goalentity->state.origin, Entity->state.origin, v);
+			Vec3Subtract (Entity->gameEntity->goalentity->state.origin, origin, v);
 			d1 = Vec3Length(v);
 			center = tr.fraction;
 			d2 = d1 * ((center+1)/2);
-			Entity->state.angles[YAW] = IdealYaw = VecToYaw(v);
-			Angles_Vectors(Entity->state.angles, v_forward, v_right, NULL);
+			vec3_t ang;
+			Entity->State.GetAngles(ang);
+			ang[YAW] = IdealYaw = VecToYaw(v);
+			Entity->State.SetAngles(ang);
+
+			Angles_Vectors(ang, v_forward, v_right, NULL);
 
 			Vec3Set (v, d2, -16, 0);
-			G_ProjectSource (Entity->state.origin, v, v_forward, v_right, left_target);
-			tr = CTrace(Entity->state.origin, Entity->mins, Entity->maxs, left_target, Entity, CONTENTS_MASK_PLAYERSOLID);
+			G_ProjectSource (origin, v, v_forward, v_right, left_target);
+			tr = CTrace(Entity->State.GetOrigin(), Entity->GetMins(), Entity->GetMaxs(), vec3f(left_target), Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
 			left = tr.fraction;
 
 			Vec3Set (v, d2, 16, 0);
-			G_ProjectSource (Entity->state.origin, v, v_forward, v_right, right_target);
-			tr = CTrace(Entity->state.origin, Entity->mins, Entity->maxs, right_target, Entity, CONTENTS_MASK_PLAYERSOLID);
+			G_ProjectSource (origin, v, v_forward, v_right, right_target);
+			tr = CTrace(Entity->State.GetOrigin(), Entity->GetMins(), Entity->GetMaxs(), vec3f(right_target), Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
 			right = tr.fraction;
 
 			center = (d1*center)/d2;
@@ -2287,15 +2304,19 @@ void CMonster::AI_Run(float Dist)
 				if (left < 1)
 				{
 					Vec3Set (v, d2 * left * 0.5, -16, 0);
-					G_ProjectSource (Entity->state.origin, v, v_forward, v_right, left_target);
+					G_ProjectSource (origin, v, v_forward, v_right, left_target);
 //					gi.dprintf("incomplete path, go part way and adjust again\n");
 				}
 				Vec3Copy (LastSighting, SavedGoal);
 				AIFlags |= AI_PURSUE_TEMP;
 				Vec3Copy (left_target, Entity->gameEntity->goalentity->state.origin);
 				Vec3Copy (left_target, LastSighting);
-				Vec3Subtract (Entity->gameEntity->goalentity->state.origin, Entity->state.origin, v);
-				Entity->state.angles[YAW] = IdealYaw = VecToYaw(v);
+				Vec3Subtract (Entity->gameEntity->goalentity->state.origin, origin, v);
+
+				vec3_t ang;
+				Entity->State.GetAngles(ang);
+				ang[YAW] = IdealYaw = VecToYaw(v);
+				Entity->State.SetAngles(ang);
 //				gi.dprintf("adjusted left\n");
 //				debug_drawline(self.origin, self.last_sighting, 152);
 			}
@@ -2303,15 +2324,18 @@ void CMonster::AI_Run(float Dist)
 			{
 				if (right < 1) {
 					Vec3Set (v, d2 * right * 0.5, 16, 0);
-					G_ProjectSource (Entity->state.origin, v, v_forward, v_right, right_target);
+					G_ProjectSource (origin, v, v_forward, v_right, right_target);
 //					gi.dprintf("incomplete path, go part way and adjust again\n");
 				}
 				Vec3Copy (LastSighting, SavedGoal);
 				AIFlags |= AI_PURSUE_TEMP;
 				Vec3Copy (right_target, Entity->gameEntity->goalentity->state.origin);
 				Vec3Copy (right_target, LastSighting);
-				Vec3Subtract (Entity->gameEntity->goalentity->state.origin, Entity->state.origin, v);
-				Entity->state.angles[YAW] = IdealYaw = VecToYaw(v);
+				Vec3Subtract (Entity->gameEntity->goalentity->state.origin, origin, v);
+				vec3_t ang;
+				Entity->State.GetAngles(ang);
+				ang[YAW] = IdealYaw = VecToYaw(v);
+				Entity->State.SetAngles(ang);
 //				gi.dprintf("adjusted right\n");
 //				debug_drawline(self.origin, self.last_sighting, 152);
 			}
@@ -2745,7 +2769,7 @@ void CMonster::AI_Stand (float Dist)
 {
 #ifndef MONSTER_USE_ROGUE_AI
 	if (Dist)
-		WalkMove (Entity->state.angles[YAW], Dist);
+		WalkMove (Entity->State.GetAngles().Y, Dist);
 
 #ifdef MONSTERS_USE_PATHFINDING
 	if (FollowingPath)
@@ -2770,9 +2794,10 @@ void CMonster::AI_Stand (float Dist)
 		if (Entity->gameEntity->enemy)
 		{
 			vec3_t v;
-			Vec3Subtract (Entity->gameEntity->enemy->state.origin, Entity->state.origin, v);
+			Entity->State.GetOrigin(v);
+			Vec3Subtract (Entity->gameEntity->enemy->state.origin, v, v);
 			IdealYaw = VecToYaw(v);
-			if (Entity->state.angles[YAW] != IdealYaw && AIFlags & AI_TEMP_STAND_GROUND)
+			if (Entity->State.GetAngles().Y != IdealYaw && AIFlags & AI_TEMP_STAND_GROUND)
 			{
 				AIFlags &= ~(AI_STAND_GROUND | AI_TEMP_STAND_GROUND);
 				Run ();

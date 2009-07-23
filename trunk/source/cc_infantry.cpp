@@ -427,7 +427,9 @@ void CInfantry::Duck_Down ()
 	if (AIFlags & AI_DUCKED)
 		return;
 	AIFlags |= AI_DUCKED;
-	Entity->maxs[2] -= 32;
+	vec3f maxs = Entity->GetMaxs();
+	maxs.Z -= 32;
+	Entity->SetMaxs (maxs);
 	Entity->gameEntity->takedamage = true;
 	PauseTime = level.framenum + 10;
 	Entity->Link ();
@@ -444,7 +446,9 @@ void CInfantry::Duck_Hold ()
 void CInfantry::Duck_Up ()
 {
 	AIFlags &= ~AI_DUCKED;
-	Entity->maxs[2] += 32;
+	vec3f maxs = Entity->GetMaxs();
+	maxs.Z += 32;
+	Entity->SetMaxs (maxs);
 	Entity->gameEntity->takedamage = true;
 	Entity->Link ();
 }

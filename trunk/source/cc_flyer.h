@@ -30,6 +30,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // cc_flyer.h
 // Flyer Monster
 //
+#define FLYER_KNOWS_HOW_TO_DODGE
 
 class CFlyer : public CMonster
 {
@@ -50,7 +51,7 @@ public:
 	void Duck (float eta);
 	void SideStep ();
 #else
-	void Dodge (edict_t *attacker, float eta);
+	void Dodge (CBaseEntity *attacker, float eta);
 #endif
 
 	void ChooseAfterDodge ();

@@ -382,7 +382,9 @@ void CMaiden::DuckDown ()
 	if (AIFlags & AI_DUCKED)
 		return;
 	AIFlags |= AI_DUCKED;
-	Entity->maxs[2] -= 32;
+	vec3f maxs = Entity->GetMaxs();
+	maxs.Z -= 32;
+	Entity->SetMaxs (maxs);
 	Entity->gameEntity->takedamage = true;
 	PauseTime = level.framenum + 10;
 	Entity->Link ();
@@ -399,7 +401,9 @@ void CMaiden::DuckHold ()
 void CMaiden::DuckUp ()
 {
 	AIFlags &= ~AI_DUCKED;
-	Entity->maxs[2] += 32;
+	vec3f maxs = Entity->GetMaxs();
+	maxs.Z += 32;
+	Entity->SetMaxs (maxs);
 	Entity->gameEntity->takedamage = true;
 	Entity->Link ();
 }
@@ -642,8 +646,11 @@ void CMaiden::Rocket ()
 	vec3_t	dir;
 	vec3_t	vec;
 
-	Angles_Vectors (Entity->state.angles, forward, right, NULL);
-	G_ProjectSource (Entity->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_CHICK_ROCKET_1], forward, right, start);
+	vec3_t angles, origin;
+	Entity->State.GetAngles(angles);
+	Entity->State.GetOrigin(origin);
+	Angles_Vectors (angles, forward, right, NULL);
+	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_CHICK_ROCKET_1], forward, right, start);
 
 	Vec3Copy (Entity->gameEntity->enemy->state.origin, vec);
 	vec[2] += Entity->gameEntity->enemy->viewheight;

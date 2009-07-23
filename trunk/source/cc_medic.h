@@ -8,7 +8,7 @@ of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 See the GNU General Public License for more details.
 
@@ -27,29 +27,34 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_infantry.h
-// Infantry Monster
+// cc_medic.h
+// Medic
 //
 
-class CInfantry : public CMonster
+class CMedic : public CMonster
 {
 public:
+	MediaIndex	SoundIdle1;
 	MediaIndex	SoundPain1;
 	MediaIndex	SoundPain2;
-	MediaIndex	SoundDie1;
-	MediaIndex	SoundDie2;
-
-	MediaIndex	SoundGunshot;
-	MediaIndex	SoundWeaponCock;
-	MediaIndex	SoundPunchSwing;
-	MediaIndex	SoundPunchHit;
+	MediaIndex	SoundDie;
 	MediaIndex	SoundSight;
 	MediaIndex	SoundSearch;
-	MediaIndex	SoundIdle;
+	MediaIndex	SoundHookLaunch;
+	MediaIndex	SoundHookHit;
+	MediaIndex	SoundHookHeal;
+	MediaIndex	SoundHookRetract;
 
-	CInfantry ();
+	CMedic ();
 
 	void Attack ();
+	void Run ();
+	void Search ();
+	void Idle ();
+	void Sight ();
+	void Stand ();
+	void Walk ();
+	bool CheckAttack ();
 #ifndef MONSTER_USE_ROGUE_AI
 	void Dodge (edict_t *attacker, float eta);
 	void Duck_Down ();
@@ -59,18 +64,8 @@ public:
 	void Duck (float eta);
 	void SideStep ();
 #endif
-	void Idle ();
-	void Run ();
-	void Sight ();
-	void Stand ();
-	void Walk ();
-	void Melee ();
 
-	void CockGun ();
-	void Fire ();
-	void Smack ();
-	void Swing ();
-	void MachineGun ();
+
 
 	void Dead ();
 	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
