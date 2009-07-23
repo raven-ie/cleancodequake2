@@ -5,7 +5,7 @@
 Monsters (bold means done)
 
   * Actor
-  * Berserk
+  * *Berserk*
   * Boss2
   * Boss3
   * Boss31/32
@@ -20,7 +20,7 @@ Monsters (bold means done)
   * *Insane*
   * Medic
   * *Mutant*
-  * Parasite
+  * *Parasite*
   * *Soldiers*
   * *Supertank*
   * *Tank*
