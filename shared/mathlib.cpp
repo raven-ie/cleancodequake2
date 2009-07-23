@@ -34,6 +34,8 @@ vec3_t vec3Origin =
 	0, 0, 0
 };
 
+vec3f vec3fOrigin (0, 0, 0);
+
 vec4_t vec4Origin =
 {
 	0, 0, 0, 0

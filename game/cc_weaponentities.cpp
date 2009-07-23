@@ -172,19 +172,29 @@ void CGrenade::Think ()
 	Explode();
 }
 
-void CGrenade::Spawn (CBaseEntity *Spawner, vec3_t start, vec3_t aimdir, int damage, int speed, float timer, float damage_radius, bool handNade, bool held)
+void CGrenade::Spawn (CBaseEntity *Spawner, vec3f start, vec3f aimdir, int damage, int speed, float timer, float damage_radius, bool handNade, bool held)
 {
 	CGrenade	*Grenade = QNew (com_levelPool, 0) CGrenade();
-	vec3_t		dir;
-	vec3_t		forward, right, up;
+	vec3f		forward, right, up;
 
+	vec3f dir = aimdir.ToAngles();
 	VecToAngles (aimdir, dir);
-	Angles_Vectors (dir, forward, right, up);
+
+	dir.ToVectors (&forward, &right, &up);
 
 	Grenade->State.SetOrigin (start);
-	Vec3Scale (aimdir, speed, Grenade->gameEntity->velocity);
-	Vec3MA (Grenade->gameEntity->velocity, 200 + crandom() * 10.0, up, Grenade->gameEntity->velocity);
-	Vec3MA (Grenade->gameEntity->velocity, crandom() * 10.0, right, Grenade->gameEntity->velocity);
+	aimdir.Scale (speed);
+	Grenade->gameEntity->velocity[0] = aimdir.X;
+	Grenade->gameEntity->velocity[1] = aimdir.Y;
+	Grenade->gameEntity->velocity[2] = aimdir.Z;
+
+	vec3f velocity = aimdir;
+	velocity = velocity.MultiplyAngles (200 + crandom() * 10.0f, up);
+	velocity = velocity.MultiplyAngles (crandom() * 10.0, right);
+	Grenade->gameEntity->velocity[0] = velocity.X;
+	Grenade->gameEntity->velocity[1] = velocity.Y;
+	Grenade->gameEntity->velocity[2] = velocity.Z;
+
 	Vec3Set (Grenade->gameEntity->avelocity, 300, 300, 300);
 	Grenade->State.SetEffects (EF_GRENADE);
 	Grenade->State.SetModelIndex((!handNade) ? ModelIndex ("models/objects/grenade/tris.md2") : ModelIndex ("models/objects/grenade2/tris.md2"));
@@ -234,59 +244,11 @@ CThinkableEntity(Index)
 {
 };
 
-// Remove this line
-#define DEFINITELY_NOT_KEVIN
-#define VectorLength Vec3Length
-
-// CL_CalcParticleLOD
-// Used for particles that have a constant particle number:
-// ie:		while (i < 40)
-//				i--
-
-#ifdef DEFINITELY_NOT_KEVIN
-#define VIEWORG g_edicts[1].state.origin
-#else
-#define VIEWORG cl.refdef.vieworg
-#endif
-
-// Set to the cvar if you want
-#define LOD_DISTANCE	2000
-
-int CL_CalcParticleLOD (int amount, 
-#ifdef DEFINITELY_NOT_KEVIN
-						vec3f origin
-#else
-						vec3_t origin
-#endif
-						)
-{
-	vec3_t subt;
-	float len;
-
-	Vec3Subtract (origin, VIEWORG, subt);
-	len = VectorLength (subt);
-
-	len = (len - 750) / 100;
-
-	if (len < 0)
-		len = 0;
-	else if (len > LOD_DISTANCE)
-		len = LOD_DISTANCE;
-
-	amount -= len;
-
-	return amount;
-}
-
 void CBlasterProjectile::Think ()
 {
-	//int amount = CL_CalcParticleLOD (40, State.GetOrigin());
-	//DebugPrintf ("%i\n", amount);
-	//NextThink = level.framenum + FRAMETIME;
 	Free();
 }
 
-int ClipVelocity (vec3_t in, vec3_t normal, vec3_t out, float overbounce);
 void CBlasterProjectile::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 {
 	if (other->gameEntity == gameEntity->owner)
@@ -311,7 +273,6 @@ void CBlasterProjectile::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface
 	Free (); // "delete" the entity
 }
 
-void ED_CallSpawn (edict_t *ent);
 void CBlasterProjectile::Spawn (CBaseEntity *Spawner, vec3f start, vec3f dir,
 						int damage, int speed, int effect, bool isHyper)
 {
@@ -326,7 +287,6 @@ void CBlasterProjectile::Spawn (CBaseEntity *Spawner, vec3f start, vec3f dir,
 	Bolt->State.SetOrigin (start);
 	Bolt->State.SetOldOrigin (start);
 	Bolt->State.SetAngles (dir.ToAngles());
-	Vec3Scale (dir, speed, Bolt->gameEntity->velocity);
 	vec3f Scaled = dir;
 	Scaled.Scale(speed);
 	Bolt->gameEntity->velocity[0] = Scaled.X;
@@ -423,17 +383,19 @@ void CRocket::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	Free ();
 }
 
-void CRocket::Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t dir,
+void CRocket::Spawn	(CBaseEntity *Spawner, vec3f start, vec3f dir,
 						int damage, int speed, float damage_radius, int radius_damage)
 {
 	CRocket	*Rocket = QNew (com_levelPool, 0) CRocket;
 
 	Rocket->State.SetOrigin (start);
 
-	vec3_t dirAngles;
-	VecToAngles (dir, dirAngles);
-	Rocket->State.SetAngles (dirAngles);
-	Vec3Scale (dir, speed, Rocket->gameEntity->velocity);
+	Rocket->State.SetAngles (dir.ToAngles());
+	vec3f vel = dir;
+	vel.Scale(speed);
+	Rocket->gameEntity->velocity[0] = vel.X;
+	Rocket->gameEntity->velocity[1] = vel.Y;
+	Rocket->gameEntity->velocity[2] = vel.Z;
 	Rocket->State.SetEffects (EF_ROCKET);
 	Rocket->State.SetModelIndex (ModelIndex ("models/objects/rocket/tris.md2"));
 	Rocket->SetOwner (Spawner);
@@ -445,11 +407,7 @@ void CRocket::Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t dir,
 	Rocket->gameEntity->classname = "rocket";
 
 	if (Spawner->EntityFlags & ENT_PLAYER)
-	{
-		vec3f astart = vec3f(start);
-		vec3f adir = vec3f(dir);
-		CheckDodge (Spawner, astart, adir, speed);
-	}
+		CheckDodge (Spawner, start, dir, speed);
 
 	Rocket->Link ();
 }
@@ -652,17 +610,19 @@ void CBFGBolt::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	CTempEnt_Explosions::BFGExplosion (boltOrigin, true);
 }
 
-void CBFGBolt::Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t dir,
+void CBFGBolt::Spawn	(CBaseEntity *Spawner, vec3f start, vec3f dir,
 						int damage, int speed, float damage_radius)
 {
 	CBFGBolt	*BFG = QNew (com_levelPool, 0) CBFGBolt;
 
 	BFG->State.SetOrigin (start);
 
-	vec3_t dirAngles;
-	VecToAngles (dir, dirAngles);
-	BFG->State.SetAngles (dirAngles);
-	Vec3Scale (dir, speed, BFG->gameEntity->velocity);
+	BFG->State.SetAngles (dir.ToAngles());
+	vec3f vel = dir;
+	vel.Scale(speed);
+	BFG->gameEntity->velocity[0] = vel.X;
+	BFG->gameEntity->velocity[1] = vel.Y;
+	BFG->gameEntity->velocity[2] = vel.Z;
 	BFG->State.SetEffects (EF_BFG | EF_ANIM_ALLFAST);
 	BFG->State.SetModelIndex (ModelIndex ("sprites/s_bfg1.sp2"));
 	BFG->SetOwner (Spawner);
@@ -681,17 +641,17 @@ bool CBFGBolt::Run ()
 	return CFlyMissileProjectile::Run();
 }
 
-CTrace CHitScan::DoTrace(vec3_t start, vec3_t end, CBaseEntity *ignore, int mask)
+CTrace CHitScan::DoTrace(vec3f &start, vec3f &end, CBaseEntity *ignore, int mask)
 {
 	return CTrace (start, end, (ignore) ? ignore->gameEntity : NULL, mask);
 }
 
-bool CHitScan::DoDamage (CBaseEntity *Attacker, CBaseEntity *Target, vec3_t dir, vec3_t point, vec3_t normal)
+bool CHitScan::DoDamage (CBaseEntity *Attacker, CBaseEntity *Target, vec3f &dir, vec3f &point, vec3f &normal)
 {
 	return true;
 }
 
-void CHitScan::DoEffect	(vec3_t start, vec3_t end, bool water)
+void CHitScan::DoEffect	(vec3f &start, vec3f &end, bool water)
 {
 };
 
@@ -699,7 +659,7 @@ void CHitScan::DoSolidHit	(CTrace *Trace)
 {
 };
 
-bool CHitScan::ModifyEnd(vec3_t aimDir, vec3_t start, vec3_t end)
+bool CHitScan::ModifyEnd(vec3f &aimDir, vec3f &start, vec3f &end)
 {
 	return false;
 };
@@ -709,46 +669,45 @@ void CHitScan::DoWaterHit (CTrace *Trace)
 }
 
 #define HITSCANSTEP 100
-void CHitScan::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
+void CHitScan::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 {
-	vec3_t end, from;
-	vec3_t lastWaterStart, lastWaterEnd;
+	vec3f end, from;
+	vec3f lastWaterStart, lastWaterEnd;
 
 	// Calculate end
 	if (!ModifyEnd(aimdir, start, end))
-		Vec3MA (start, 8192, aimdir, end);
+		end = start.MultiplyAngles (8192, aimdir);
 
-	Vec3Copy (start, from);
+	from = start;
 
 	int Mask = CONTENTS_MASK_SHOT|CONTENTS_MASK_WATER;
 	bool Water = false;
 	CBaseEntity *Ignore = Entity;
 
-	Vec3Copy (start, lastWaterStart);
+	lastWaterStart = start;
 
 	bool hitOutOfWater = false;
-	if (gi.pointcontents(start) & CONTENTS_MASK_WATER)
+	if (PointContents(start) & CONTENTS_MASK_WATER)
 	{
 		// Copy up our point for the effect
-		Vec3Copy (start, lastWaterEnd);
+		lastWaterEnd = start;
 	
 		// Special case if we started in water
 		Water = true;
-
 		Mask = CONTENTS_MASK_SHOT;
 
 		// Find the exit point
 		int tries = 20; // Cover about 2000 units
-		vec3_t	stWater;
+		vec3f	stWater;
 
-		Vec3Copy (from, stWater);
-		Vec3Clear (lastWaterStart);
+		stWater = from;
+		lastWaterStart.Clear();
 		
 		while (tries > 0)
 		{
-			Vec3MA (stWater, HITSCANSTEP, aimdir, stWater);
+			stWater = stWater.MultiplyAngles (HITSCANSTEP, aimdir);
 
-			int contents = gi.pointcontents(stWater);
+			int contents = PointContents(stWater);
 			if (contents == 0) // "Clear" or solid
 				break; // Got it
 			else if (contents & CONTENTS_MASK_SOLID)
@@ -766,14 +725,14 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
 		{
 			// We reached air
 			// Trace backwards and grab the water brush
-			vec3_t tempOrigin;
-			Vec3MA (stWater, -(HITSCANSTEP + 5), aimdir, tempOrigin);
+			vec3f tempOrigin;
+			tempOrigin = stWater.MultiplyAngles (-(HITSCANSTEP + 5), aimdir);
 			CTrace tempTrace = DoTrace (stWater, tempOrigin, NULL, CONTENTS_MASK_WATER);
 
 			if (tempTrace.contents & CONTENTS_MASK_WATER)// All is good
 			{
 				// This is our end
-				Vec3Copy (tempTrace.endPos, lastWaterStart);
+				lastWaterStart = tempTrace.EndPos;
 				hitOutOfWater = true;
 			}
 		}
@@ -798,15 +757,13 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
 			// Startsolid mistake..
 			if (Trace.startSolid)
 			{
-				vec3_t origin;
-				Target->State.GetOrigin(origin);
-				if (!DoDamage (Entity, Target, aimdir, origin, Trace.plane.normal))
+				vec3f origin = Target->State.GetOrigin();
+				if (!DoDamage (Entity, Target, aimdir, origin, Trace.Plane.normal))
 					break; // We wanted to stop
 
 				// Set up the start from where we are now
-				vec3_t oldFrom;
-				Vec3Copy (from, oldFrom);
-				Vec3Copy (origin, from);
+				vec3f oldFrom = from;
+				from = origin;
 
 				DoEffect (from, oldFrom, Water);
 
@@ -817,13 +774,12 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
 				continue;
 			}
 
-			if (!DoDamage (Entity, Target, aimdir, Trace.endPos, Trace.plane.normal))
+			if (!DoDamage (Entity, Target, aimdir, Trace.EndPos, Trace.Plane.normal))
 				break; // We wanted to stop
 
 			// Set up the start from where we are now
-			vec3_t oldFrom;
-			Vec3Copy (from, oldFrom);
-			Vec3Copy (Trace.endPos, from);
+			vec3f oldFrom = from;
+			from = Trace.EndPos;
 
 			DoEffect (from, oldFrom, Water);
 
@@ -841,19 +797,18 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
 			//if (Trace.contents & CONTENTS_MASK_SOLID)
 			{
 				// If we didn't grab water last time...
-				if (Vec3Compare(lastWaterStart, vec3Origin))
+				if (lastWaterStart == vec3fOrigin)
 				{
 					// We hit the ground!
 					// Swap start and end points
-					Vec3Copy (lastWaterEnd, lastWaterStart);
-					Vec3MA (lastWaterStart, 5, aimdir, lastWaterStart);
+					lastWaterStart = lastWaterEnd;
+					lastWaterStart = lastWaterStart.MultiplyAngles (5, aimdir);
 
 					// Set end point
-					Vec3Copy (Trace.endPos, lastWaterEnd);
+					lastWaterEnd = Trace.EndPos;
 
 					// Draw the effect
 					DoEffect (lastWaterStart, lastWaterEnd, true);
-
 					DoSolidHit (&Trace);
 
 					break; // We're done
@@ -867,16 +822,15 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
 					// We hit the ground!
 					// Swap start and end points
 					if (!hitOutOfWater)
-						Vec3Copy (lastWaterEnd, lastWaterStart);
+						lastWaterStart = lastWaterEnd;
 					else
 						hitOutOfWater = false;
 
 					// Set end point
-					Vec3Copy (Trace.endPos, lastWaterEnd);
+					lastWaterEnd = Trace.EndPos;
 
 					// Draw the effect
 					DoEffect (lastWaterStart, lastWaterEnd, false);
-
 					DoSolidHit (&Trace);
 
 					break; // We're done
@@ -889,33 +843,29 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
 			(Trace.surface && !(Trace.surface->flags & (SURF_TEXINFO_TRANS33|SURF_TEXINFO_TRANS66))))
 		{
 			// Copy up our point for the effect
-			Vec3Copy (Trace.endPos, lastWaterEnd);
+			lastWaterEnd = Trace.EndPos;
 
 			// Tell the system we're in water
 			Water = true;
 
 			// Draw the effect
 			DoEffect (lastWaterStart, lastWaterEnd, false);
-
 			DoWaterHit (&Trace);
 
 			// Set up the start from where we are now
-			Vec3Copy (Trace.endPos, from);
-
+			from = Trace.EndPos;
 			Mask = CONTENTS_MASK_SHOT;
 
 			// Find the exit point
 			int tries = 20; // Cover about 2000 units
-			vec3_t	stWater;
-
-			Vec3Copy (from, stWater);
-			Vec3Clear (lastWaterStart);
+			vec3f	stWater = from;
+			lastWaterStart.Clear();
 			
 			while (tries > 0)
 			{
-				Vec3MA (stWater, HITSCANSTEP, aimdir, stWater);
+				stWater = stWater.MultiplyAngles (HITSCANSTEP, aimdir);
 
-				int contents = gi.pointcontents(stWater);
+				int contents = PointContents(stWater);
 				if (contents == 0) // "Clear" or solid
 					break; // Got it
 				else if (contents & CONTENTS_MASK_SOLID)
@@ -933,14 +883,13 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
 			{
 				// We reached air
 				// Trace backwards and grab the water brush
-				vec3_t tempOrigin;
-				Vec3MA (stWater, -(HITSCANSTEP + 5), aimdir, tempOrigin);
+				vec3f tempOrigin = stWater.MultiplyAngles (-(HITSCANSTEP + 5), aimdir);
 				CTrace tempTrace = DoTrace (stWater, tempOrigin, NULL, CONTENTS_MASK_WATER);
 
 				if (tempTrace.contents & CONTENTS_MASK_WATER) // All is good
 				{
 					// This is our end
-					Vec3Copy (tempTrace.endPos, lastWaterStart);
+					lastWaterStart = tempTrace.EndPos;
 					continue; // Head to the next area
 				}
 			}
@@ -981,30 +930,30 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
 		else
 		{
 			// Draw the effect
-			DoEffect (from, Trace.endPos, false);
+			DoEffect (from, Trace.EndPos, false);
 			DoSolidHit (&Trace);
 			break; // We're done
 		}
 	}
 }
 
-bool CRailGunShot::DoDamage (CBaseEntity *Attacker, CBaseEntity *Target, vec3_t dir, vec3_t point, vec3_t normal)
+bool CRailGunShot::DoDamage (CBaseEntity *Attacker, CBaseEntity *Target, vec3f &dir, vec3f &point, vec3f &normal)
 {
 	T_Damage (Target->gameEntity, Attacker->gameEntity, Attacker->gameEntity, dir, point, normal, Damage, Kick, 0, MOD_RAILGUN);
 	return ThroughAndThrough;
 }
 
-void CRailGunShot::DoEffect	(vec3_t start, vec3_t end, bool water)
+void CRailGunShot::DoEffect	(vec3f &start, vec3f &end, bool water)
 {
 	CTempEnt_Trails::RailTrail (start, end);
 }
 
-void CRailGunShot::Fire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir, int damage, int kick)
+void CRailGunShot::Fire(CBaseEntity *Entity, vec3f start, vec3f aimdir, int damage, int kick)
 {
 	CRailGunShot(damage, kick).DoFire (Entity, start, aimdir);
 }
 
-bool CBullet::DoDamage (CBaseEntity *Attacker, CBaseEntity *Target, vec3_t dir, vec3_t point, vec3_t normal)
+bool CBullet::DoDamage (CBaseEntity *Attacker, CBaseEntity *Target, vec3f &dir, vec3f &point, vec3f &normal)
 {
 	T_Damage (Target->gameEntity, Attacker->gameEntity, Attacker->gameEntity, dir, point, normal, Damage, Kick, DAMAGE_BULLET, MeansOfDeath);
 	return ThroughAndThrough;
@@ -1013,24 +962,24 @@ bool CBullet::DoDamage (CBaseEntity *Attacker, CBaseEntity *Target, vec3_t dir, 
 void CBullet::DoSolidHit	(CTrace *Trace)
 {
 	if (strncmp (Trace->surface->name, "sky", 3) != 0)
-		CTempEnt_Splashes::Gunshot (Trace->endPos, Trace->plane.normal);
+		CTempEnt_Splashes::Gunshot (Trace->EndPos, Trace->Plane.normal);
 }
 
-bool CBullet::ModifyEnd (vec3_t aimDir, vec3_t start, vec3_t end)
+bool CBullet::ModifyEnd (vec3f &aimDir, vec3f &start, vec3f &end)
 {
-	vec3_t dir, forward, right, up;
-	VecToAngles (aimDir, dir);
-	Angles_Vectors (dir, forward, right, up);
+	vec3f dir = aimDir.ToAngles();
+	vec3f forward, right, up;
+	dir.ToVectors (&forward, &right, &up);
 
 	float r = crandom()*hSpread;
 	float u = crandom()*vSpread;
-	Vec3MA (start, 8192, forward, end);
-	Vec3MA (end, r, right, end);
-	Vec3MA (end, u, up, end);
+	end = start.MultiplyAngles (8192, forward);
+	end = end.MultiplyAngles (r, right);
+	end = end.MultiplyAngles (u, up);
 	return true;
 }
 
-void CBullet::DoEffect	(vec3_t start, vec3_t end, bool water)
+void CBullet::DoEffect	(vec3f &start, vec3f &end, bool water)
 {
 	if (water)
 		CTempEnt_Trails::BubbleTrail(start, end);
@@ -1053,37 +1002,37 @@ void CBullet::DoWaterHit	(CTrace *Trace)
 	else
 		return;
 
-	CTempEnt_Splashes::Splash (Trace->endPos, Trace->plane.normal, color);
+	CTempEnt_Splashes::Splash (Trace->EndPos, Trace->Plane.normal, color);
 }
 
-void CBullet::Fire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir, int damage, int kick, int hSpread, int vSpread, int mod)
+void CBullet::Fire(CBaseEntity *Entity, vec3f start, vec3f aimdir, int damage, int kick, int hSpread, int vSpread, int mod)
 {
 	CBullet(damage, kick, hSpread, vSpread, mod).DoFire (Entity, start, aimdir);
 }
 
 // An overload to handle transparent water
-void CBullet::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
+void CBullet::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 {
-	vec3_t end, from;
-	vec3_t lastWaterStart, lastWaterEnd;
+	vec3f end, from;
+	vec3f lastWaterStart, lastWaterEnd;
 
 	// Calculate end
 	if (!ModifyEnd(aimdir, start, end))
-		Vec3MA (start, 8192, aimdir, end);
+		end = start.MultiplyAngles (8192, aimdir);
 
-	Vec3Copy (start, from);
+	from = start;
 
 	int Mask = CONTENTS_MASK_SHOT|CONTENTS_MASK_WATER;
 	bool Water = false;
 	CBaseEntity *Ignore = Entity;
 
-	Vec3Copy (start, lastWaterStart);
+	lastWaterStart = start;
 
 	bool hitOutOfWater = false;
-	if (gi.pointcontents(start) & CONTENTS_MASK_WATER)
+	if (PointContents(start) & CONTENTS_MASK_WATER)
 	{
 		// Copy up our point for the effect
-		Vec3Copy (start, lastWaterEnd);
+		lastWaterEnd = start;
 	
 		// Special case if we started in water
 		Water = true;
@@ -1092,16 +1041,14 @@ void CBullet::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
 
 		// Find the exit point
 		int tries = 20; // Cover about 2000 units
-		vec3_t	stWater;
-
-		Vec3Copy (from, stWater);
-		Vec3Clear (lastWaterStart);
+		vec3f	stWater = from;
+		lastWaterStart.Clear ();
 		
 		while (tries > 0)
 		{
-			Vec3MA (stWater, HITSCANSTEP, aimdir, stWater);
+			stWater = stWater.MultiplyAngles (HITSCANSTEP, aimdir);
 
-			int contents = gi.pointcontents(stWater);
+			int contents = PointContents(stWater);
 			if (contents == 0) // "Clear" or solid
 				break; // Got it
 			else if (contents & CONTENTS_MASK_SOLID)
@@ -1119,14 +1066,13 @@ void CBullet::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
 		{
 			// We reached air
 			// Trace backwards and grab the water brush
-			vec3_t tempOrigin;
-			Vec3MA (stWater, -(HITSCANSTEP + 5), aimdir, tempOrigin);
+			vec3f tempOrigin = stWater.MultiplyAngles (-(HITSCANSTEP + 5), aimdir);
 			CTrace tempTrace = DoTrace (stWater, tempOrigin, NULL, CONTENTS_MASK_WATER);
 
 			if (tempTrace.contents & CONTENTS_MASK_WATER)// All is good
 			{
 				// This is our end
-				Vec3Copy (tempTrace.endPos, lastWaterStart);
+				lastWaterStart = tempTrace.EndPos;
 				hitOutOfWater = true;
 			}
 		}
@@ -1151,16 +1097,13 @@ void CBullet::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
 			// Startsolid mistake..
 			if (Trace.startSolid)
 			{
-				vec3_t origin;
-				Target->State.GetOrigin(origin);
-				if (!DoDamage (Entity, Target, aimdir, origin, Trace.plane.normal))
+				vec3f origin = Target->State.GetOrigin();
+				if (!DoDamage (Entity, Target, aimdir, origin, Trace.Plane.normal))
 					break; // We wanted to stop
 
 				// Set up the start from where we are now
-				vec3_t oldFrom;
-				Vec3Copy (from, oldFrom);
-				Vec3Copy (origin, from);
-
+				vec3f oldFrom = from;
+				from = origin;
 				DoEffect (from, oldFrom, Water);
 
 				// and ignore the bastard
@@ -1169,14 +1112,12 @@ void CBullet::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
 				// Continue our loop
 				continue;
 			}
-			if (!DoDamage (Entity, Target, aimdir, Trace.endPos, Trace.plane.normal))
+			if (!DoDamage (Entity, Target, aimdir, Trace.EndPos, Trace.Plane.normal))
 				break; // We wanted to stop
 
 			// Set up the start from where we are now
-			vec3_t oldFrom;
-			Vec3Copy (from, oldFrom);
-			Vec3Copy (Trace.endPos, from);
-
+			vec3f oldFrom = from;
+			from = Trace.EndPos;
 			DoEffect (from, oldFrom, Water);
 
 			// and ignore the bastard
@@ -1193,19 +1134,17 @@ void CBullet::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
 			//if (Trace.contents & CONTENTS_MASK_SOLID)
 			{
 				// If we didn't grab water last time...
-				if (Vec3Compare(lastWaterStart, vec3Origin))
+				if (lastWaterStart == vec3fOrigin)
 				{
 					// We hit the ground!
 					// Swap start and end points
-					Vec3Copy (lastWaterEnd, lastWaterStart);
-					Vec3MA (lastWaterStart, 5, aimdir, lastWaterStart);
+					lastWaterStart = lastWaterEnd.MultiplyAngles (5, aimdir);
 
 					// Set end point
-					Vec3Copy (Trace.endPos, lastWaterEnd);
+					lastWaterEnd = Trace.EndPos;
 
 					// Draw the effect
 					DoEffect (lastWaterStart, lastWaterEnd, true);
-
 					DoSolidHit (&Trace);
 
 					break; // We're done
@@ -1219,16 +1158,15 @@ void CBullet::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
 					// We hit the ground!
 					// Swap start and end points
 					if (!hitOutOfWater)
-						Vec3Copy (lastWaterEnd, lastWaterStart);
+						lastWaterStart = lastWaterEnd;
 					else
 						hitOutOfWater = false;
 
 					// Set end point
-					Vec3Copy (Trace.endPos, lastWaterEnd);
+					lastWaterEnd = Trace.EndPos;
 
 					// Draw the effect
 					DoEffect (lastWaterStart, lastWaterEnd, false);
-
 					DoSolidHit (&Trace);
 
 					break; // We're done
@@ -1241,33 +1179,29 @@ void CBullet::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
 			(Trace.surface && !(Trace.surface->flags & (SURF_TEXINFO_TRANS33|SURF_TEXINFO_TRANS66))))
 		{
 			// Copy up our point for the effect
-			Vec3Copy (Trace.endPos, lastWaterEnd);
+			lastWaterEnd = Trace.EndPos;
 
 			// Tell the system we're in water
 			Water = true;
 
 			// Draw the effect
 			DoEffect (lastWaterStart, lastWaterEnd, false);
-
 			DoWaterHit (&Trace);
 
 			// Set up the start from where we are now
-			Vec3Copy (Trace.endPos, from);
-
+			from = Trace.EndPos;
 			Mask = CONTENTS_MASK_SHOT;
 
 			// Find the exit point
 			int tries = 20; // Cover about 2000 units
-			vec3_t	stWater;
-
-			Vec3Copy (from, stWater);
-			Vec3Clear (lastWaterStart);
+			vec3f	stWater = from;
+			lastWaterStart.Clear();
 			
 			while (tries > 0)
 			{
-				Vec3MA (stWater, HITSCANSTEP, aimdir, stWater);
+				stWater = stWater.MultiplyAngles(HITSCANSTEP, aimdir);
 
-				int contents = gi.pointcontents(stWater);
+				int contents = PointContents(stWater);
 				if (contents == 0) // "Clear" or solid
 					break; // Got it
 				else if (contents & CONTENTS_MASK_SOLID)
@@ -1285,14 +1219,13 @@ void CBullet::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
 			{
 				// We reached air
 				// Trace backwards and grab the water brush
-				vec3_t tempOrigin;
-				Vec3MA (stWater, -(HITSCANSTEP + 5), aimdir, tempOrigin);
+				vec3f tempOrigin = stWater.MultiplyAngles (-(HITSCANSTEP + 5), aimdir);
 				CTrace tempTrace = DoTrace (stWater, tempOrigin, NULL, CONTENTS_MASK_WATER);
 
 				if (tempTrace.contents & CONTENTS_MASK_WATER) // All is good
 				{
 					// This is our end
-					Vec3Copy (tempTrace.endPos, lastWaterStart);
+					lastWaterStart = tempTrace.EndPos;
 					continue; // Head to the next area
 				}
 			}
@@ -1310,10 +1243,10 @@ void CBullet::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
 			// It has the same PVS, meaning we don't need to
 			// do complex tracing.
 			// Copy up our point for the effect
-			Vec3Copy (Trace.endPos, lastWaterEnd);
+			lastWaterEnd = Trace.EndPos;
 
 			// Draw the effect we have so far
-			DoEffect (from, Trace.endPos, false);
+			DoEffect (from, Trace.EndPos, false);
 
 			// Water hit effect
 			DoWaterHit (&Trace);
@@ -1324,16 +1257,14 @@ void CBullet::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
 
 			// Find the exit point
 			int tries = 20; // Cover about 2000 units
-			vec3_t	stWater;
-
-			Vec3Copy (from, stWater);
-			Vec3Clear (lastWaterStart);
+			vec3f	stWater = from;
+			lastWaterStart.Clear();
 			
 			while (tries > 0)
 			{
-				Vec3MA (stWater, HITSCANSTEP, aimdir, stWater);
+				stWater = stWater.MultiplyAngles (HITSCANSTEP, aimdir);
 
-				int contents = gi.pointcontents(stWater);
+				int contents = PointContents(stWater);
 				if (contents == 0) // "Clear" or solid
 					break; // Got it
 				else if (contents & CONTENTS_MASK_SOLID)
@@ -1351,14 +1282,13 @@ void CBullet::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
 			{
 				// We reached air
 				// Trace backwards and grab the water brush
-				vec3_t tempOrigin;
-				Vec3MA (stWater, -(HITSCANSTEP + 5), aimdir, tempOrigin);
+				vec3f tempOrigin = stWater.MultiplyAngles (-(HITSCANSTEP + 5), aimdir);
 				CTrace tempTrace = DoTrace (stWater, tempOrigin, NULL, CONTENTS_MASK_WATER);
 
 				if (tempTrace.contents & CONTENTS_MASK_WATER) // All is good
 				{
 					// This is our end
-					Vec3Copy (tempTrace.endPos, lastWaterStart);
+					lastWaterStart = tempTrace.EndPos;
 					continue; // Head to the next area
 				}
 			}
@@ -1372,7 +1302,7 @@ void CBullet::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
 		else
 		{
 			// Draw the effect
-			DoEffect (from, Trace.endPos, false);
+			DoEffect (from, Trace.EndPos, false);
 			DoSolidHit (&Trace);
 			break; // We're done
 		}
@@ -1382,49 +1312,45 @@ void CBullet::DoFire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir)
 void CShotgunPellets::DoSolidHit	(CTrace *Trace)
 {
 	if (strncmp (Trace->surface->name, "sky", 3) != 0)
-		CTempEnt_Splashes::Shotgun (Trace->endPos, Trace->plane.normal);
+		CTempEnt_Splashes::Shotgun (Trace->EndPos, Trace->Plane.normal);
 }
 
-void CShotgunPellets::Fire(CBaseEntity *Entity, vec3_t start, vec3_t aimdir, int damage, int kick, int hSpread, int vSpread, int Count, int mod)
+void CShotgunPellets::Fire(CBaseEntity *Entity, vec3f start, vec3f aimdir, int damage, int kick, int hSpread, int vSpread, int Count, int mod)
 {
 	for (int i = 0; i < Count; i++)
 		CShotgunPellets(damage, kick, hSpread, vSpread, mod).DoFire (Entity, start, aimdir);
 }
 
-bool CMeleeWeapon::Fire(CBaseEntity *Entity, vec3_t aim, int damage, int kick)
+bool CMeleeWeapon::Fire(CBaseEntity *Entity, vec3f aim, int damage, int kick)
 {
 	CTrace		tr;
-	vec3_t		forward, right, up;
-	vec3_t		v;
-	vec3_t		point;
+	vec3f		forward, right, up;
+	vec3f		v;
+	vec3f		point;
 	float		range;
-	vec3_t		dir;
+	vec3f		dir;
 
-	Entity->State.GetOrigin(dir);
+	vec3f origin = Entity->State.GetOrigin();
+
+	dir = origin - vec3f(Entity->gameEntity->enemy->state.origin);
 	//see if enemy is in range
-	Vec3Subtract (Entity->gameEntity->enemy->state.origin, dir, dir);
-	range = Vec3Length(dir);
-	if (range > aim[0])
+	range = dir.Length();
+	if (range > aim.X)
 		return false;
 
-	if (aim[1] > Entity->GetMins().X && aim[1] < Entity->GetMaxs().X)
-	{
+	if (aim.Y > Entity->GetMins().X && aim.Y < Entity->GetMaxs().X)
 		// the hit is straight on so back the range up to the edge of their bbox
 		range -= Entity->gameEntity->enemy->maxs[0];
-	}
 	else
 	{
 		// this is a side hit so adjust the "right" value out to the edge of their bbox
-		if (aim[1] < 0)
-			aim[1] = Entity->gameEntity->enemy->mins[0];
+		if (aim.Y < 0)
+			aim.Y = Entity->gameEntity->enemy->mins[0];
 		else
-			aim[1] = Entity->gameEntity->enemy->maxs[0];
+			aim.Y = Entity->gameEntity->enemy->maxs[0];
 	}
 
-	vec3_t origin;
-	Entity->State.GetOrigin(origin);
-	Vec3MA (origin, range, dir, point);
-
+	point = origin.MultiplyAngles (range, dir);
 	tr = CTrace (origin, point, Entity->gameEntity, CONTENTS_MASK_SHOT);
 	if (tr.fraction < 1)
 	{
@@ -1435,26 +1361,29 @@ bool CMeleeWeapon::Fire(CBaseEntity *Entity, vec3_t aim, int damage, int kick)
 			tr.ent = Entity->gameEntity->enemy;
 	}
 
-	vec3_t angles;
-	Entity->State.GetAngles(angles);
+	vec3f angles = Entity->State.GetAngles();
 
-	Angles_Vectors(angles, forward, right, up);
-	Vec3MA (origin, range, forward, point);
-	Vec3MA (point, aim[1], right, point);
-	Vec3MA (point, aim[2], up, point);
-	Vec3Subtract (point, origin, dir);
+	angles.ToVectors (&forward, &right, &up);
+	point = origin.MultiplyAngles (range, forward);
+	point = point.MultiplyAngles(aim.Y, right);
+	point = point.MultiplyAngles (aim.Z, up);
+	dir = point - origin;
 
 	// do the damage
-	T_Damage (tr.ent, Entity->gameEntity, Entity->gameEntity, dir, point, vec3Origin, damage, kick/2, DAMAGE_NO_KNOCKBACK, MOD_HIT);
+	vec3_t odir = {dir.X, dir.Y, dir.Z};
+	vec3_t opoint = {point.X, point.Y, point.Z};
+	T_Damage (tr.ent, Entity->gameEntity, Entity->gameEntity, odir, opoint, vec3Origin, damage, kick/2, DAMAGE_NO_KNOCKBACK, MOD_HIT);
 
 	if (!(tr.ent->svFlags & SVF_MONSTER) && (!tr.ent->client))
 		return false;
 
 	// do our special form of knockback here
-	Vec3MA (Entity->gameEntity->enemy->absMin, 0.5, Entity->gameEntity->enemy->size, v);
-	Vec3Subtract (v, point, v);
-	VectorNormalizef (v, v);
-	Vec3MA (Entity->gameEntity->enemy->velocity, kick, v, Entity->gameEntity->enemy->velocity);
+	vec3_t tempv;
+	Vec3MA (Entity->gameEntity->enemy->absMin, 0.5, Entity->gameEntity->enemy->size, tempv);
+	v = vec3f(tempv) - point;
+	v.Normalize();
+	Vec3Set (tempv, v.X, v.Y, v.Z);
+	Vec3MA (Entity->gameEntity->enemy->velocity, kick, tempv, Entity->gameEntity->enemy->velocity);
 	if (Entity->gameEntity->enemy->velocity[2] > 0)
 		Entity->gameEntity->enemy->groundentity = NULL;
 	return true;

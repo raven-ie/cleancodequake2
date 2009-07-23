@@ -44,7 +44,7 @@ public:
 
 	void Explode ();
 
-	static void Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t aimdir,
+	static void Spawn	(CBaseEntity *Spawner, vec3f start, vec3f aimdir,
 						int damage, int speed, float timer, float damage_radius, bool handNade = false, bool held = false);
 
 	bool Run ();
@@ -79,7 +79,7 @@ public:
 	void Think ();
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
 
-	static void Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t dir,
+	static void Spawn	(CBaseEntity *Spawner, vec3f start, vec3f dir,
 						int damage, int speed, float damage_radius, int radius_damage);
 
 	bool Run ();
@@ -98,7 +98,7 @@ public:
 	void Think ();
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
 
-	static void Spawn	(CBaseEntity *Spawner, vec3_t start, vec3_t dir,
+	static void Spawn	(CBaseEntity *Spawner, vec3f start, vec3f dir,
 						int damage, int speed, float damage_radius);
 
 	bool Run ();
@@ -116,14 +116,14 @@ public:
 	Kick(kick),
 	ThroughAndThrough(throughAndThrough) {};
 
-	virtual inline CTrace	DoTrace		(vec3_t start, vec3_t end, CBaseEntity *ignore, int mask);
-	virtual inline bool		DoDamage	(CBaseEntity *Attacker, CBaseEntity *Target, vec3_t dir, vec3_t point, vec3_t normal);
-	virtual inline void		DoEffect	(vec3_t start, vec3_t end, bool water);
+	virtual inline CTrace	DoTrace		(vec3f &start, vec3f &end, CBaseEntity *ignore, int mask);
+	virtual inline bool		DoDamage	(CBaseEntity *Attacker, CBaseEntity *Target, vec3f &dir, vec3f &point, vec3f &normal);
+	virtual inline void		DoEffect	(vec3f &start, vec3f &end, bool water);
 	virtual inline void		DoSolidHit	(CTrace *Trace);
 	virtual inline void		DoWaterHit	(CTrace *Trace);
-	virtual bool			ModifyEnd	(vec3_t aimDir, vec3_t start, vec3_t end);
+	virtual bool			ModifyEnd	(vec3f &aimDir, vec3f &start, vec3f &end);
 
-	virtual void			DoFire		(CBaseEntity *Entity, vec3_t start, vec3_t aimdir);
+	virtual void			DoFire		(CBaseEntity *Entity, vec3f start, vec3f aimdir);
 };
 
 class CRailGunShot : public CHitScan
@@ -132,10 +132,10 @@ public:
 	CRailGunShot (int damage, int kick) :
 	CHitScan (damage, kick, true) {};
 
-	inline bool		DoDamage (CBaseEntity *Attacker, CBaseEntity *Target, vec3_t dir, vec3_t point, vec3_t normal);
-	inline void		DoEffect (vec3_t start, vec3_t end, bool water);
+	inline bool		DoDamage (CBaseEntity *Attacker, CBaseEntity *Target, vec3f &dir, vec3f &point, vec3f &normal);
+	inline void		DoEffect (vec3f &start, vec3f &end, bool water);
 
-	static void		Fire		(CBaseEntity *Entity, vec3_t start, vec3_t aimdir, int damage, int kick);
+	static void		Fire		(CBaseEntity *Entity, vec3f start, vec3f aimdir, int damage, int kick);
 };
 
 class CBullet : public CHitScan
@@ -150,14 +150,14 @@ public:
 	hSpread(hSpread),
 	MeansOfDeath(mod) {};
 
-	inline bool				DoDamage (CBaseEntity *Attacker, CBaseEntity *Target, vec3_t dir, vec3_t point, vec3_t normal);
+	inline bool				DoDamage (CBaseEntity *Attacker, CBaseEntity *Target, vec3f &dir, vec3f &point, vec3f &normal);
 	virtual inline void		DoSolidHit	(CTrace *Trace);
 	inline void				DoWaterHit	(CTrace *Trace);
-	bool					ModifyEnd (vec3_t aimDir, vec3_t start, vec3_t end);
-	void					DoEffect (vec3_t start, vec3_t end, bool water);
-	virtual void			DoFire		(CBaseEntity *Entity, vec3_t start, vec3_t aimdir);
+	bool					ModifyEnd (vec3f &aimDir, vec3f &start, vec3f &end);
+	void					DoEffect (vec3f &start, vec3f &end, bool water);
+	virtual void			DoFire		(CBaseEntity *Entity, vec3f start, vec3f aimdir);
 
-	static void				Fire		(CBaseEntity *Entity, vec3_t start, vec3_t aimdir, int damage, int kick, int hSpread, int vSpread, int mod);
+	static void				Fire		(CBaseEntity *Entity, vec3f start, vec3f aimdir, int damage, int kick, int hSpread, int vSpread, int mod);
 };
 
 class CShotgunPellets : public CBullet
@@ -170,7 +170,7 @@ public:
 
 	inline void				DoSolidHit (CTrace *Trace);
 
-	static void				Fire		(CBaseEntity *Entity, vec3_t start, vec3_t aimdir, int damage, int kick, int hSpread, int vSpread, int Count, int mod);
+	static void				Fire		(CBaseEntity *Entity, vec3f start, vec3f aimdir, int damage, int kick, int hSpread, int vSpread, int Count, int mod);
 };
 
 class CMeleeWeapon
@@ -178,5 +178,5 @@ class CMeleeWeapon
 public:
 	CMeleeWeapon();
 
-	static bool		Fire (CBaseEntity *Entity, vec3_t aim, int damage, int kick);
+	static bool		Fire (CBaseEntity *Entity, vec3f aim, int damage, int kick);
 };

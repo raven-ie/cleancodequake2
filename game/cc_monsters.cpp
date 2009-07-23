@@ -625,7 +625,7 @@ bool CMonster::CheckBottom ()
 			start.Y = y ? maxs.Y : mins.Y;
 
 			vec3_t startVec = {start.X, start.Y, start.Z};
-			if (gi.pointcontents (startVec) != CONTENTS_SOLID)
+			if (PointContents (startVec) != CONTENTS_SOLID)
 				goto realcheck;
 		}
 	}
@@ -757,7 +757,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 					test[0] = trace.endPos[0];
 					test[1] = trace.endPos[1];
 					test[2] = trace.endPos[2] + Entity->GetMins().Z + 1;
-					contents = gi.pointcontents(test);
+					contents = PointContents(test);
 					if (contents & CONTENTS_MASK_WATER)
 						return false;
 				}
@@ -771,7 +771,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 					test[0] = trace.endPos[0];
 					test[1] = trace.endPos[1];
 					test[2] = trace.endPos[2] + Entity->GetMins().Z + 1;
-					contents = gi.pointcontents(test);
+					contents = PointContents(test);
 					if (!(contents & CONTENTS_MASK_WATER))
 						return false;
 				}
@@ -825,7 +825,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 		test[0] = trace.endPos[0];
 		test[1] = trace.endPos[1];
 		test[2] = trace.endPos[2] + Entity->mins[2] + 1;	
-		contents = gi.pointcontents(test);
+		contents = PointContents(test);
 
 		if (contents & CONTENTS_MASK_WATER)
 			return false;
@@ -1467,7 +1467,7 @@ void CMonster::MonsterFireRailgun (vec3_t start, vec3_t aimdir, int damage, int 
 		return;
 #endif
 
-	if (!(gi.pointcontents (start) & CONTENTS_MASK_SOLID))
+	if (!(PointContents (start) & CONTENTS_MASK_SOLID))
 		//fire_rail (Entity, start, aimdir, damage, kick);
 		CRailGunShot::Fire (Entity, start, aimdir, damage, kick);
 
@@ -3368,7 +3368,7 @@ void CMonster::CatagorizePosition()
 //
 	Entity->State.GetOrigin(point);
 	point[2] += Entity->GetMins().Z + 1;	
-	cont = gi.pointcontents (point);
+	cont = PointContents (point);
 
 	if (!(cont & CONTENTS_MASK_WATER))
 	{
@@ -3380,13 +3380,13 @@ void CMonster::CatagorizePosition()
 	Entity->gameEntity->watertype = cont;
 	Entity->gameEntity->waterlevel = 1;
 	point[2] += 26;
-	cont = gi.pointcontents (point);
+	cont = PointContents (point);
 	if (!(cont & CONTENTS_MASK_WATER))
 		return;
 
 	Entity->gameEntity->waterlevel = 2;
 	point[2] += 22;
-	cont = gi.pointcontents (point);
+	cont = PointContents (point);
 	if (cont & CONTENTS_MASK_WATER)
 		Entity->gameEntity->waterlevel = 3;
 }

@@ -1585,6 +1585,28 @@
 						Name="Bosses"
 						>
 						<File
+							RelativePath="..\..\game\cc_boss2.cpp"
+							>
+							<FileConfiguration
+								Name="Debug|Win32"
+								>
+								<Tool
+									Name="VCCLCompilerTool"
+								/>
+							</FileConfiguration>
+						</File>
+						<File
+							RelativePath="..\..\game\cc_boss2.h"
+							>
+							<FileConfiguration
+								Name="Debug|Win32"
+								>
+								<Tool
+									Name="VCCustomBuildTool"
+								/>
+							</FileConfiguration>
+						</File>
+						<File
 							RelativePath=".\..\..\game\cc_supertank.cpp"
 							>
 						</File>

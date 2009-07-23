@@ -8,7 +8,7 @@ of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 See the GNU General Public License for more details.
 
@@ -27,20 +27,39 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_write.h
-// "Write" functions to write and check for malformed writes.
+// cc_boss2.h
+// Biggun Protector
 //
 
-void WriteChar (char val);
-void WriteByte (byte val);
-void WriteShort (short val);
-void WriteLong (long val);
-void WriteFloat (float val);
-void WriteAngle (float val);
-void WriteAngle16 (float val);
-void WriteString (char *val);
-void WriteCoord (float f);
-void WritePosition (vec3_t val);
-void WritePosition (vec3f &val);
-void WriteDirection (vec3_t val);
-void WriteDirection (vec3f &val);
+class CBoss2 : public CMonster
+{
+public:
+	MediaIndex	SoundPain1;
+	MediaIndex	SoundPain2;
+	MediaIndex	SoundPain3;
+	MediaIndex	SoundDeath;
+	MediaIndex	SoundSearch1;
+
+	CBoss2 ();
+
+	void Attack ();
+	void Run ();
+	void Search ();
+	void Stand ();
+	void Walk ();
+	bool CheckAttack ();
+
+	void FireRocket ();
+	void FireBulletLeft ();
+	void FireBulletRight ();
+	void MachineGun ();
+	void AttackMg ();
+	void ReAttackMg ();
+	void Explode ();
+
+	void Dead ();
+	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
+	void Pain (CBaseEntity *other, float kick, int damage);
+
+	void Spawn ();
+};

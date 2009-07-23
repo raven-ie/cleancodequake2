@@ -237,7 +237,7 @@ bool CBounceProjectile::Run ()
 	State.GetOrigin (or);
 
 	wasinwater = (gameEntity->watertype & CONTENTS_MASK_WATER) ? true : false;
-	gameEntity->watertype = gi.pointcontents (or);
+	gameEntity->watertype = PointContents (or);
 	isinwater = (gameEntity->watertype & CONTENTS_MASK_WATER) ? true : false;
 
 	if (isinwater)
@@ -349,7 +349,7 @@ bool CFlyMissileProjectile::Run ()
 	State.GetOrigin (or);
 
 	wasinwater = (gameEntity->watertype & CONTENTS_MASK_WATER) ? true : false;
-	gameEntity->watertype = gi.pointcontents (or);
+	gameEntity->watertype = PointContents (or);
 	isinwater = (gameEntity->watertype & CONTENTS_MASK_WATER) ? true : false;
 
 	if (isinwater)

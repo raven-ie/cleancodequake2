@@ -101,6 +101,76 @@ void Cast (ECastFlags castFlags, edict_t *Ent)
 	Cast (CAST_UNI, castFlags, NULL, Ent);
 }
 
+// vec3f overloads
+void Cast (ECastType castType, ECastFlags castFlags, vec3f *Origin = NULL, CBaseEntity *Ent = NULL)
+{
+	vec3_t oOrigin;
+	if (Origin)
+	{
+		oOrigin[0] = Origin->X;
+		oOrigin[1] = Origin->Y;
+		oOrigin[2] = Origin->Z;
+	}
+	// Sanity checks
+	if (castType == CAST_MULTI && Ent)
+		Com_Printf (0, "Multicast with an associated Ent\n");
+	else if (castType == CAST_MULTI && !Origin)
+	{
+		Com_Printf (0, "Multicast with no assicated Origin! Can't do!\n");
+		return;
+	}
+	else if (castType == CAST_UNI && !Ent)
+	{
+		Com_Printf (0, "Unicast with no assicated Ent! Can't do!\n");
+		return;
+	}
+	else if (castType == CAST_UNI && Origin)
+		Com_Printf (0, "Multicast with an associated Origin\n");
+
+	// Sends to all entities
+	// FIXME: The data still gets written and the tempents happen only once these are hit..
+	// Bad, might need to have writes queued :S
+	/*if (castType == CAST_MULTI)
+	{
+		edict_t *e = &g_edicts[1];
+		for (int i = 0; i < game.maxclients; i++, e++)
+		{
+			if (!e || !e->inUse || !e->client || !e->client->pers.connected)
+				continue;
+
+			if ((castFlags & CASTFLAG_PVS) && !gi.inPVS(Origin, e->state.origin))
+				continue;
+			if ((castFlags & CASTFLAG_PHS) && !gi.inPHS(Origin, e->state.origin))
+				continue;
+
+			gi.unicast (e, (castFlags & CASTFLAG_RELIABLE) ? true : false);
+		}
+	}
+	// Send to one entity
+	else if (castType == CAST_UNI)
+	{
+		if ((castFlags & CASTFLAG_PVS) && !gi.inPVS(Origin, Ent->state.origin))
+			return;
+		if ((castFlags & CASTFLAG_PHS) && !gi.inPHS(Origin, Ent->state.origin))
+			return;
+
+		gi.unicast (Ent, (castFlags & CASTFLAG_RELIABLE) ? true : false);
+	}*/
+	if (castType == CAST_MULTI)
+		gi.multicast (oOrigin, (castFlags & CASTFLAG_PVS) ? MULTICAST_PVS : MULTICAST_PHS);
+	else if (castType == CAST_UNI)
+		gi.unicast (Ent->gameEntity, (castFlags & CASTFLAG_RELIABLE) ? true : false);
+
+}
+void Cast (ECastFlags castFlags, vec3f *Origin)
+{
+	Cast (CAST_MULTI, castFlags, Origin, NULL);
+}
+void Cast (ECastFlags castFlags, CBaseEntity *Ent)
+{
+	Cast (CAST_UNI, castFlags, NULL, Ent);
+}
+
 void WriteChar (char val)
 {
 	if (val < CHAR_MIN || val > CHAR_MAX)
@@ -239,7 +309,7 @@ void WriteDirection (vec3_t val)
 	WriteByte (DirToByte (val));
 }
 
-void WriteDirection (vec3f val)
+void WriteDirection (vec3f &val)
 {
 	WriteByte (DirToByte (val));
 }

@@ -626,6 +626,7 @@ void		Quat_TransformVector (quat_t q, vec3_t v, vec3_t out);
 
 #include "Vector.h"
 
+extern vec3f vec3fOrigin;
 
 // ===========================================================================
 

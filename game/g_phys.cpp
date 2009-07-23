@@ -721,7 +721,7 @@ void SV_Physics_Toss (edict_t *ent)
 	
 // check for water transition
 	wasinwater = (ent->watertype & CONTENTS_MASK_WATER) ? true : false;
-	ent->watertype = gi.pointcontents (ent->state.origin);
+	ent->watertype = PointContents (ent->state.origin);
 	isinwater = (ent->watertype & CONTENTS_MASK_WATER) ? true : false;
 
 	if (isinwater)

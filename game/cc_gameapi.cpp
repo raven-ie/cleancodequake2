@@ -43,6 +43,19 @@ _CC_DISABLE_DEPRECATION
 _CC_ENABLE_DEPRECATION
 }
 
+int PointContents (vec3_t start)
+{
+_CC_DISABLE_DEPRECATION
+	return gi.pointcontents(start);
+_CC_ENABLE_DEPRECATION
+};
+
+int PointContents (vec3f &start)
+{
+	vec3_t temp = {start.X, start.Y, start.Z};
+	return PointContents(temp);
+};
+
 /*
 ================
 Sys_Milliseconds

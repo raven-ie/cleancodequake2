@@ -124,6 +124,49 @@ public:
 					vec3_t Normal);
 
 	static void ChainfistSmoke	(vec3_t Origin);
+
+	// vec3f overloads
+	static void Gunshot	(vec3f &Origin,
+					vec3f &Normal);
+
+	static void Shotgun	(vec3f &Origin,
+					vec3f &Normal);
+
+	static void Blood	(vec3f &Origin,
+				vec3f &Normal,
+				EBloodType BloodType = BTBlood);
+
+	static void Blaster	(vec3f &Origin,
+					vec3f &Normal,
+					EBlasterType BlasterType = BLBlaster);
+
+	static void Sparks	(vec3f &Origin,
+				vec3f &Normal,
+				ESparkType SparkType = STSparks,
+				ESplashType color = SPTUnknown,
+				byte amount = 8);
+
+	static void Splash	(vec3f &Origin,
+				vec3f &Normal,
+				ESplashType color = SPTUnknown,
+				byte amount = 8);
+
+	static void ShieldSparks	(vec3f &Origin,
+						vec3f &Normal,
+						bool Screen = false);
+
+	static void Steam	(vec3f &Origin,
+				vec3f &Normal,
+				byte count = 8,
+				ESplashType color = SPTUnknown,
+				short magnitude = 12,
+				short id = -1,
+				long endTime = 0);
+
+	static void HeatSteam	(vec3f &Origin,
+					vec3f &Normal);
+
+	static void ChainfistSmoke	(vec3f &Origin);
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -170,6 +213,42 @@ public:
 						short Ent);
 	static void BubbleTrail	(vec3_t Start,
 						vec3_t End);
+
+	// vec3f overloads
+	static void RailTrail	(vec3f &Start,
+					vec3f &End);
+
+	static void HeatBeam	(vec3f & Start,
+					vec3f &End,
+					short Ent,
+					bool Monster = false);
+
+	static void ForceWall	(vec3f &Start,
+					vec3f &End,
+					byte color = NSColor::Lime);
+
+	static void DebugTrail	(vec3f &Start,
+					vec3f &End);
+
+	static void Lightning	(vec3f &Start,
+					vec3f &End,
+					short SrcEnt,
+					short DestEnt);
+
+	static void GrappleCable	(vec3f &Start,
+						vec3f &End,
+						short Ent,
+						vec3f &Offset = vec3fOrigin);
+
+	static void BFGLaser	(vec3f &Start,
+					vec3f &End);
+
+	static void FleshCable		(vec3f &Start,
+						vec3f &End,
+						short Ent);
+	static void BubbleTrail	(vec3f &Start,
+						vec3f &End);
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -199,6 +278,24 @@ public:
 	static void TrackerExplosion	(vec3_t Origin);
 
 	static void NukeBlast			(vec3_t Origin);
+
+	// vec3f overloads
+	static void RocketExplosion	(vec3f &Origin, CBaseEntity *ent,
+							bool Water = false,
+							bool Particles = true);
+
+	static void GrenadeExplosion	(vec3f &Origin,
+							CBaseEntity *ent,
+							bool Water = false);
+
+	static void BFGExplosion		(vec3f &Origin,
+							bool Big = false);
+
+	static void PlasmaExplosion	(vec3f &Origin);
+
+	static void TrackerExplosion	(vec3f &Origin);
+
+	static void NukeBlast			(vec3f &Origin);
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -232,6 +329,27 @@ public:
 	static void MonsterFlash	(vec3_t Origin,
 						short Ent,
 						short id);
+
+	// vec3f overloads
+	static void Flashlight		(vec3f &Origin,
+						short Ent);
+
+	static void BossTeleport	(vec3f &Origin);
+
+	static void TeleportEffect	(vec3f &Origin);
+
+	static void WidowBeamOut	(vec3f &Origin,
+						short id = -1);
+
+	static void WidowSplash	(vec3f &Origin);
+
+	static void MuzzleFlash	(vec3f &Origin,
+						short Ent,
+						short id);
+
+	static void MonsterFlash	(vec3f &Origin,
+						short Ent,
+						short id);
 };
 
 enum ECastType
@@ -246,32 +364,4 @@ enum ECastFlags
 	CASTFLAG_PVS = 1,
 	CASTFLAG_PHS = 2,
 	CASTFLAG_RELIABLE = 4
-};
-
-/// A small class to automatically multicast and do the first two writebytes.
-class TECast
-{
-	vec3_t Or;
-	ECastFlags castType;
-
-public:
-	TECast	(vec3_t Origin,
-		byte Enum,
-		ECastFlags castFlags = CASTFLAG_PVS);
-
-	~TECast ();
-};
-
-/// Automatically sets up the multicasting for regular casts
-class MultiCast
-{
-	vec3_t Or;
-	ECastFlags castType;
-
-public:
-	MultiCast	(vec3_t Origin,
-				byte Enum,
-				ECastFlags castFlags = CASTFLAG_PVS);
-
-	~MultiCast ();
 };
