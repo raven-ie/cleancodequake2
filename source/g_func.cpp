@@ -90,16 +90,6 @@ void Move_Final (edict_t *ent)
 
 void Move_Begin (edict_t *ent)
 {
-/*	if (ent->moveinfo.speed >= ent->moveinfo.remaining_distance)
-	{
-		Move_Final (ent);
-		return;
-	}
-	Vec3Scale (ent->moveinfo.dir, ent->moveinfo.speed, ent->velocity);
-	int32 frames = (ent->moveinfo.remaining_distance / ent->moveinfo.speed) / 0.1f;
-	ent->moveinfo.remaining_distance -= frames * ent->moveinfo.speed;
-	ent->nextthink = level.framenum + frames;
-	ent->think = Move_Final;*/
 	if (ent->moveinfo.speed >= (ent->moveinfo.remaining_distance * 10))
 	{
 		Move_Final (ent);
@@ -358,6 +348,7 @@ void Think_AccelMove (edict_t *ent)
 }
 
 
+#if 0
 void plat_go_down (edict_t *ent);
 
 void plat_hit_top (edict_t *ent)
@@ -581,6 +572,7 @@ void SP_func_plat (edict_t *ent)
 	ent->moveinfo.sound_middle = SoundIndex ("plats/pt1_mid.wav");
 	ent->moveinfo.sound_end = SoundIndex ("plats/pt1_end.wav");
 }
+#endif
 
 //====================================================================
 

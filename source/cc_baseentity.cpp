@@ -482,3 +482,26 @@ CMapEntity::CMapEntity (int Index) :
 CBaseEntity(Index)
 {
 };
+
+CPrivateEntity::CPrivateEntity (int Index)
+{
+};
+
+CPrivateEntity::CPrivateEntity ()
+{
+	InUse = true;
+};
+
+bool			CPrivateEntity::IsInUse ()
+{
+	return InUse;
+}
+void			CPrivateEntity::SetInUse (bool inuse)
+{
+	InUse = inuse;
+}
+
+void CPrivateEntity::Free ()
+{
+	Freed = true;
+}

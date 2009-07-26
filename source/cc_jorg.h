@@ -27,56 +27,47 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_medic.h
-// Medic
+// cc_jorg.h
+// 
 //
 
-class CMedic : public CMonster
+class CJorg : public CMonster
 {
 public:
-	MediaIndex	SoundIdle1;
 	MediaIndex	SoundPain1;
 	MediaIndex	SoundPain2;
-	MediaIndex	SoundDie;
-	MediaIndex	SoundSight;
-	MediaIndex	SoundSearch;
-	MediaIndex	SoundHookLaunch;
-	MediaIndex	SoundHookHit;
-	MediaIndex	SoundHookHeal;
-	MediaIndex	SoundHookRetract;
+	MediaIndex	SoundPain3;
+	MediaIndex	SoundIdle;
+	MediaIndex	SoundDeath;
+	MediaIndex	SoundSearch1;
+	MediaIndex	SoundSearch2;
+	MediaIndex	SoundSearch3;
+	MediaIndex	SoundAttack1;
+	MediaIndex	SoundAttack2;
+	MediaIndex	SoundFiregun;
+	MediaIndex	SoundStepLeft;
+	MediaIndex	SoundStepRight;
+	MediaIndex	SoundDeathHit;
 
-	CMedic ();
+	CJorg ();
 
-	void Attack ();
 	void Run ();
 	void Search ();
-	void Idle ();
-	void Sight ();
 	void Stand ();
 	void Walk ();
+	void Attack();
 	bool CheckAttack ();
-#ifndef MONSTER_USE_ROGUE_AI
-	void Dodge (edict_t *attacker, float eta);
-	void Duck_Down ();
-	void Duck_Hold ();
-	void Duck_Up ();
-#else
-	void Duck (float eta);
-	void SideStep ();
-#endif
+	void Idle(); // Overloaded, but not an actual Idle..
 
-	CMonsterEntity	*FindDeadMonster ();
-	void FireBlaster ();
-	void ContinueFiring ();
-	void HookLaunch ();
-	void HookRetract();
-	void CableAttack ();
-
-#ifdef MONSTER_USE_ROGUE_AI
-	void CleanupHeal (bool ChangeFrame = false);
-	void AbortHeal (bool ChangeFrame, bool Gib, bool Mark);
-	bool CanReach (CBaseEntity *other);
-#endif
+	void StepLeft ();
+	void StepRight ();
+	void DeathHit ();
+	void Explode ();
+	void TossMakron ();
+	void FireBFG ();
+	void DoChainguns ();
+	void ReAttack1 ();
+	void FireBullet ();
 
 	void Dead ();
 	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);

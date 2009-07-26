@@ -259,6 +259,7 @@ void CGladiator::Dead ()
 	Entity->SetMins (vec3f(-16, -16, -24));
 	Entity->SetMaxs (vec3f(16, 16, -8));
 	Entity->TossPhysics = true;
+	Entity->PhysicsType = PHYSICS_TOSS;
 	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
 	Entity->NextThink = 0;
 	Entity->Link ();
@@ -335,7 +336,6 @@ void CGladiator::Spawn ()
 	SoundSearch = SoundIndex ("gladiator/gldsrch1.wav");
 	SoundSight = SoundIndex ("gladiator/sight.wav");
 
-	Entity->TossPhysics = false;
 	Entity->SetSolid (SOLID_BBOX);
 	Entity->State.SetModelIndex (ModelIndex ("models/monsters/gladiatr/tris.md2"));
 	Entity->SetMins (vec3f(-32, -32, -24));

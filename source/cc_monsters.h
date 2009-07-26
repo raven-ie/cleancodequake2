@@ -213,12 +213,12 @@ public:
 	int32		DuckWaitTime;
 	int32		BlindFireDelay;
 	edict_t		*LastPlayerEnemy;
-	edict_t		*BadMedic1, *BadMedic2;	// these medics have declared this monster "unhealable"
-	edict_t		*Healer;	// this is who is healing this monster
 	vec3_t		BlindFireTarget;
 	// blindfire stuff .. the boolean says whether the monster will do it, and blind_fire_time is the timing
 	// (set in the monster) of the next shot
+	CMonsterEntity		*BadMedic1, *BadMedic2;	// these medics have declared this monster "unhealable"
 #endif
+	CMonsterEntity		*Healer;	// this is who is healing this monster
 
 	int					NextFrame;
 	float				Scale;

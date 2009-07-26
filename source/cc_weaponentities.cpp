@@ -619,6 +619,7 @@ void CBFGBolt::Spawn	(CBaseEntity *Spawner, vec3f start, vec3f dir,
 
 	BFG->State.SetAngles (dir.ToAngles());
 	vec3f vel = dir;
+	vel.NormalizeFast();
 	vel.Scale(speed);
 	BFG->gameEntity->velocity[0] = vel.X;
 	BFG->gameEntity->velocity[1] = vel.Y;

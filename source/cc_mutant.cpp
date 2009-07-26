@@ -642,6 +642,7 @@ void CMutant::Dead ()
 	Entity->SetMins (vec3f(-16, -16, -24));
 	Entity->SetMaxs (vec3f(16, 16, -8));
 	Entity->TossPhysics = true;
+	Entity->PhysicsType = PHYSICS_TOSS;
 	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
 	Entity->Link ();
 
@@ -725,7 +726,6 @@ void CMutant::Spawn ()
 	SoundStep3 = SoundIndex ("mutant/step3.wav");
 	SoundThud = SoundIndex ("mutant/thud1.wav");
 	
-	Entity->TossPhysics = false;
 	Entity->SetSolid (SOLID_BBOX);
 	Entity->State.SetModelIndex (ModelIndex ("models/monsters/mutant/tris.md2"));
 	Entity->SetMins (vec3f(-32, -32, -24));

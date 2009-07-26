@@ -478,6 +478,21 @@ void	G_FreeEdict (edict_t *e);
 void	G_TouchTriggers (edict_t *ent);
 void	G_TouchSolids (edict_t *ent);
 
+// Changed to int, rarely used as a float..
+CBaseEntity *FindRadius (CBaseEntity *From, vec3f &org, int Radius, uint32 EntityFlags);
+
+template <class ReturnType, uint32 EntityFlags>
+ReturnType *FindRadius (CBaseEntity *From, vec3f &org, int Radius)
+{
+	return dynamic_cast<ReturnType*>(FindRadius (From, org, Radius, EntityFlags));
+}
+
+template <uint32 EntityFlags>
+inline CBaseEntity *FindRadius (CBaseEntity *From, vec3f &org, int Radius)
+{
+	return FindRadius (From, org, Radius, EntityFlags);
+}
+
 //
 // g_combat.c
 //

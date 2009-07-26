@@ -122,6 +122,7 @@ void SP_misc_model (edict_t *self);
 void SP_turret_breach (edict_t *self);
 void SP_turret_base (edict_t *self);
 //void SP_turret_driver (edict_t *self);
+void SP_monster_boss3_stand (edict_t *self);
 
 spawn_t	spawns[] = {
 	/*{"item_health", SP_item_health},
@@ -140,7 +141,7 @@ spawn_t	spawns[] = {
 //ZOID
 #endif
 
-	{"func_plat", SP_func_plat},
+//	{"func_plat", SP_func_plat},
 	{"func_button", SP_func_button},
 	{"func_door", SP_func_door},
 	{"func_door_secret", SP_func_door_secret},
@@ -260,6 +261,7 @@ spawn_t	spawns[] = {
 	{"monster_makron", SP_monster_makron},
 
 	{"monster_commander_body", SP_monster_commander_body},*/
+	{"monster_boss3_stand", SP_monster_boss3_stand},
 
 	{"turret_breach", SP_turret_breach},
 	{"turret_base", SP_turret_base},

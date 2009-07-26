@@ -303,6 +303,7 @@ void CGunner::Dead ()
 	Entity->SetMins (vec3f(-16, -16, -24));
 	Entity->SetMaxs (vec3f(16, 16, -8));
 	Entity->TossPhysics = true;
+	Entity->PhysicsType = PHYSICS_TOSS;
 	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
 	Entity->NextThink = 0;
 	Entity->Link ();
@@ -865,7 +866,6 @@ void CGunner::Spawn ()
 	SoundIndex ("gunner/gunatck2.wav");
 	SoundIndex ("gunner/gunatck3.wav");
 
-	Entity->TossPhysics = false;
 	Entity->SetSolid (SOLID_BBOX);
 	Entity->State.SetModelIndex (ModelIndex ("models/monsters/gunner/tris.md2"));
 	Entity->SetMins (vec3f(-16, -16, -24));

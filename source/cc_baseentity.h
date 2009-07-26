@@ -167,13 +167,13 @@ public:
 
 	int				GetLinkCount ();
 
-	bool			IsInUse ();
-	void			SetInUse (bool inuse);
+	virtual bool	IsInUse ();
+	virtual void	SetInUse (bool inuse);
 
 	void			Link ();
 	void			Unlink ();
 
-	void			Free ();
+	virtual void	Free ();
 
 	// Sound functions
 	void			PlaySound (EEntSndChannel channel, MediaIndex soundIndex, float volume = 1.0f, int attenuation = ATTN_NORM, float timeOfs = 0.0f);
@@ -189,6 +189,9 @@ enum
 	ENT_TOUCHABLE	=	BIT(3), // Can be casted to CTouchableEntity
 	ENT_PLAYER		=	BIT(4), // Can be casted to CPlayerEntity
 	ENT_MONSTER		=	BIT(5), // Can be casted to CMonsterEntity
+	ENT_PHYSICS		=	BIT(6), // Can be casted to CPhysicsEntity
+	ENT_BLOCKABLE	=	BIT(7), // Can be casted to CBlockableEntity
+	ENT_USABLE		=	BIT(8), // Can be casted to CUsableEntity
 };
 
 // Base classes
@@ -214,6 +217,22 @@ public:
 
 	CMapEntity ();
 	CMapEntity (int Index);
+};
+
+// An entity completely privatized.
+// Does not take up a g_edicts space.
+class CPrivateEntity : public virtual CBaseEntity
+{
+	CPrivateEntity (int Index); // Can't do this.
+
+public:
+	bool		InUse; // Replaces gameEntity->inUse
+
+	CPrivateEntity ();
+	void Free ();
+
+	bool IsInUse ();
+	void SetInUse (bool inuse);
 };
 
 #include "cc_itementity.h"

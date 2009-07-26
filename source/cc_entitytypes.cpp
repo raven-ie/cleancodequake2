@@ -85,11 +85,15 @@ void CTouchableEntity::Touch(CBaseEntity *other, plane_t *plane, cmBspSurface_t 
 CPhysicsEntity::CPhysicsEntity () :
 CBaseEntity()
 {
+	EntityFlags |= ENT_PHYSICS;
+	PhysicsType = PHYSICS_NONE;
 };
 
 CPhysicsEntity::CPhysicsEntity (int Index) :
 CBaseEntity(Index)
 {
+	EntityFlags |= ENT_PHYSICS;
+	PhysicsType = PHYSICS_NONE;
 };
 
 void CPhysicsEntity::AddGravity()
@@ -160,6 +164,8 @@ CPhysicsEntity ()
 	SetSolid (SOLID_BBOX);
 	SetMins(vec3Origin);
 	SetMaxs(vec3Origin);
+
+	PhysicsType = PHYSICS_BOUNCE;
 }
 
 CBounceProjectile::CBounceProjectile (int Index) :
@@ -171,6 +177,8 @@ CPhysicsEntity (Index)
 	SetSolid (SOLID_BBOX);
 	SetMins(vec3Origin);
 	SetMaxs(vec3Origin);
+
+	PhysicsType = PHYSICS_BOUNCE;
 }
 
 int ClipVelocity (vec3_t in, vec3_t normal, vec3_t out, float overbounce);
@@ -264,12 +272,16 @@ CTossProjectile::CTossProjectile () :
 CBounceProjectile ()
 {
 	backOff = 1.0f;
+
+	PhysicsType = PHYSICS_TOSS;
 }
 
 CTossProjectile::CTossProjectile (int Index) :
 CBounceProjectile (Index)
 {
 	backOff = 1.0f;
+
+	PhysicsType = PHYSICS_TOSS;
 }
 
 CFlyMissileProjectile::CFlyMissileProjectile () :
@@ -280,6 +292,8 @@ CPhysicsEntity ()
 	SetSolid (SOLID_BBOX);
 	SetMins(vec3Origin);
 	SetMaxs(vec3Origin);
+
+	PhysicsType = PHYSICS_FLYMISSILE;
 }
 
 CFlyMissileProjectile::CFlyMissileProjectile (int Index) :
@@ -290,6 +304,8 @@ CPhysicsEntity (Index)
 	SetSolid (SOLID_BBOX);
 	SetMins(vec3Origin);
 	SetMaxs(vec3Origin);
+
+	PhysicsType = PHYSICS_FLYMISSILE;
 }
 
 bool CFlyMissileProjectile::Run ()
@@ -380,6 +396,8 @@ CPhysicsEntity ()
 	SetSolid (SOLID_BBOX);
 	SetMins(vec3Origin);
 	SetMaxs(vec3Origin);
+
+	PhysicsType = PHYSICS_STEP;
 }
 
 CStepPhysics::CStepPhysics (int Index) :
@@ -390,6 +408,8 @@ CPhysicsEntity (Index)
 	SetSolid (SOLID_BBOX);
 	SetMins(vec3Origin);
 	SetMaxs(vec3Origin);
+
+	PhysicsType = PHYSICS_STEP;
 }
 
 void CStepPhysics::CheckGround ()
@@ -691,4 +711,320 @@ bool CStepPhysics::Run ()
 			PlaySoundFrom (gameEntity, CHAN_AUTO, SoundIndex("world/land.wav"));
 	}
 	return true;
+}
+
+// Move physics
+CPushPhysics::CPushPhysics() :
+CPhysicsEntity()
+{
+	PhysicsType = PHYSICS_PUSH;
+};
+
+CPushPhysics::CPushPhysics(int Index) :
+CPhysicsEntity(Index)
+{
+	PhysicsType = PHYSICS_PUSH;
+};
+
+typedef struct
+{
+	edict_t	*ent;
+	vec3_t	origin;
+	vec3_t	angles;
+	float	deltayaw;
+} pushed_t;
+extern pushed_t	pushed[MAX_CS_EDICTS], *pushed_p;
+
+extern edict_t	*obstacle;
+
+edict_t	*SV_TestEntityPosition (edict_t *ent);
+bool CPushPhysics::Push (vec3_t move, vec3_t amove)
+{
+	int			i, e;
+	edict_t		*check, *block;
+	vec3_t		mins, maxs;
+	pushed_t	*p;
+	vec3_t		org, org2, move2, forward, right, up;
+
+	// clamp the move to 1/8 units, so the position will
+	// be accurate for client side prediction
+	for (i=0 ; i<3 ; i++)
+	{
+		float	temp;
+		temp = move[i]*8.0;
+		if (temp > 0.0)
+			temp += 0.5;
+		else
+			temp -= 0.5;
+		move[i] = 0.125 * (int)temp;
+	}
+
+	vec3_t absMinTemp, absMaxTemp;
+	GetAbsMin (absMinTemp);
+	GetAbsMax (absMaxTemp);
+	// find the bounding box
+	for (i=0 ; i<3 ; i++)
+	{
+		mins[i] = absMinTemp[i] + move[i];
+		maxs[i] = absMaxTemp[i] + move[i];
+	}
+
+// we need this for pushing things later
+	Vec3Subtract (vec3Origin, amove, org);
+	Angles_Vectors (org, forward, right, up);
+
+// save the pusher's original position
+	pushed_p->ent = gameEntity;
+	State.GetOrigin (pushed_p->origin);
+	State.GetAngles (pushed_p->angles);
+	if (gameEntity->client)
+		pushed_p->deltayaw = (dynamic_cast<CPlayerEntity*>(this))->Client.PlayerState.GetPMove()->deltaAngles[YAW];
+	pushed_p++;
+
+// move the pusher to it's final position
+	State.SetOrigin (State.GetOrigin() + vec3f(move));
+	State.SetAngles (State.GetAngles() + vec3f(amove));
+	Link ();
+
+// see if any solid entities are inside the final position
+	check = g_edicts+1;
+	for (e = 1; e < globals.numEdicts; e++, check++)
+	{
+		if (!check->inUse)
+			continue;
+		if (!check->Entity)
+			continue;
+
+		CBaseEntity *Check = check->Entity;
+		if (Check->EntityFlags & ENT_PHYSICS)
+		{
+			CPhysicsEntity *CheckPhys = dynamic_cast<CPhysicsEntity*>(Check);
+			if (CheckPhys->PhysicsType == PHYSICS_PUSH
+			|| CheckPhys->PhysicsType == PHYSICS_STOP
+			|| CheckPhys->PhysicsType == PHYSICS_NONE
+			|| CheckPhys->PhysicsType == PHYSICS_NOCLIP)
+				continue;
+		}
+		else if (!(Check->EntityFlags & ENT_PLAYER))
+			continue;
+
+		if (!check->area.prev)
+			continue;		// not linked in anywhere
+
+	// if the entity is standing on the pusher, it will definitely be moved
+		if (check->groundentity != gameEntity)
+		{
+			// see if the ent needs to be tested
+			if (check->absMin[0] >= maxs[0]
+			|| check->absMin[1] >= maxs[1]
+			|| check->absMin[2] >= maxs[2]
+			|| check->absMax[0] <= mins[0]
+			|| check->absMax[1] <= mins[1]
+			|| check->absMax[2] <= mins[2])
+				continue;
+
+			// see if the ent's bbox is inside the pusher's final position
+			if (!SV_TestEntityPosition (check))
+				continue;
+		}
+
+		if ((PhysicsType == PHYSICS_PUSH) || (check->groundentity == gameEntity))
+		{
+			// move this entity
+			pushed_p->ent = check;
+			Vec3Copy (check->state.origin, pushed_p->origin);
+			Vec3Copy (check->state.angles, pushed_p->angles);
+
+			// try moving the contacted entity 
+			Vec3Add (check->state.origin, move, check->state.origin);
+			if (check->client)
+			{
+				(dynamic_cast<CPlayerEntity*>(Check))->Client.PlayerState.GetPMove()->deltaAngles[YAW] += amove[YAW];
+
+				//r1: dead-body-on-lift / other random view distortion fix
+				pushed_p->deltayaw = (dynamic_cast<CPlayerEntity*>(pushed_p->ent->Entity))->Client.PlayerState.GetPMove()->deltaAngles[YAW];
+			}
+
+			else
+				check->state.angles[YAW] += amove[YAW];
+
+			pushed_p++;
+
+			// figure movement due to the pusher's amove
+			vec3_t temporigin;
+			State.GetOrigin (temporigin);
+			Vec3Subtract (check->state.origin, temporigin, org);
+			org2[0] = Dot3Product (org, forward);
+			org2[1] = -Dot3Product (org, right);
+			org2[2] = Dot3Product (org, up);
+			Vec3Subtract (org2, org, move2);
+			Vec3Add (check->state.origin, move2, check->state.origin);
+
+			// may have pushed them off an edge
+			if (check->groundentity != gameEntity)
+				check->groundentity = NULL;
+
+			block = SV_TestEntityPosition (check);
+			if (!block)
+			{	// pushed ok
+				gi.linkentity (check);
+				// impact?
+				continue;
+			}
+
+			// if it is ok to leave in the old position, do it
+			// this is only relevent for riding entities, not pushed
+			// FIXME: this doesn't acount for rotation
+			Vec3Subtract (check->state.origin, move, check->state.origin);
+			block = SV_TestEntityPosition (check);
+			if (!block)
+			{
+				pushed_p--;
+				continue;
+			}
+		}
+		
+		// save off the obstacle so we can call the block function
+		obstacle = check;
+
+		// move back any entities we already moved
+		// go backwards, so if the same entity was pushed
+		// twice, it goes back to the original position
+		for (p=pushed_p-1 ; p>=pushed ; p--)
+		{
+			Vec3Copy (p->origin, p->ent->state.origin);
+			Vec3Copy (p->angles, p->ent->state.angles);
+			if (p->ent->client)
+			{
+				(dynamic_cast<CPlayerEntity*>(p->ent->Entity))->Client.PlayerState.GetPMove()->deltaAngles[YAW] = p->deltayaw;
+			}
+			gi.linkentity (p->ent);
+		}
+		return false;
+	}
+
+//FIXME: is there a better way to handle this?
+	// see if anything we moved has touched a trigger
+	for (p=pushed_p-1 ; p>=pushed ; p--)
+		G_TouchTriggers (p->ent);
+
+	return true;
+}
+
+bool CPushPhysics::Run ()
+{
+	vec3_t		move, amove;
+	edict_t		*part, *mv;
+
+	// if not a team captain, so movement will be handled elsewhere
+	if ( gameEntity->flags & FL_TEAMSLAVE)
+		return false;
+
+	// make sure all team slaves can move before commiting
+	// any moves or calling any think functions
+	// if the move is blocked, all moved objects will be backed out
+//retry:
+	pushed_p = pushed;
+	for (part = gameEntity ; part ; part=part->teamchain)
+	{
+		if (part->velocity[0] || part->velocity[1] || part->velocity[2] ||
+			part->avelocity[0] || part->avelocity[1] || part->avelocity[2]
+			)
+		{	// object is moving
+			Vec3Scale (part->velocity, 0.1f, move);
+			Vec3Scale (part->avelocity, 0.1f, amove);
+
+			if (part->Entity == this)
+			{
+				if (!Push (move, amove))
+					break;
+			}
+			else if (!(dynamic_cast<CPushPhysics*>(part->Entity))->Push (move, amove))
+				break;	// move was blocked
+		}
+	}
+	if (pushed_p > &pushed[MAX_CS_EDICTS])
+		gi.error ("pushed_p > &pushed[MAX_CS_EDICTS], memory corrupted");
+
+	if (part)
+	{
+		// the move failed, bump all nextthink times and back out moves
+		for (mv = gameEntity ; mv ; mv=mv->teamchain)
+		{
+			//if (mv->nextthink > 0)
+			//	mv->nextthink += FRAMETIME;
+			if (mv->Entity && (mv->Entity->EntityFlags & ENT_THINKABLE))
+			{
+				CThinkableEntity *Thinkable = dynamic_cast<CThinkableEntity*>(mv->Entity);
+
+				if (Thinkable->NextThink > 0)
+					Thinkable->NextThink += FRAMETIME;
+			}
+		}
+
+		// if the pusher has a "blocked" function, call it
+		// otherwise, just stay in place until the obstacle is gone
+		if (part->Entity && (part->Entity->EntityFlags & ENT_BLOCKABLE) && obstacle->Entity)
+			(dynamic_cast<CBlockableEntity*>(part->Entity))->Blocked (obstacle->Entity);
+#if 0
+		// if the pushed entity went away and the pusher is still there
+		if (!obstacle->inUse && part->inUse)
+			goto retry;
+#endif
+	}
+	else
+	{
+		// the move succeeded, so call all think functions
+		for (part = gameEntity ; part ; part=part->teamchain)
+		{
+			if (part->Entity && (part->Entity->EntityFlags & ENT_THINKABLE))
+			{
+				CThinkableEntity *Thinkable = dynamic_cast<CThinkableEntity*>(part->Entity);
+				Thinkable->RunThink ();
+			}
+//			SV_RunThink (part);
+		}
+	}
+	return true;
+}
+
+CStopPhysics::CStopPhysics () :
+CPushPhysics()
+{
+	PhysicsType = PHYSICS_STOP;
+};
+
+CStopPhysics::CStopPhysics (int Index) :
+CPushPhysics(Index)
+{
+	PhysicsType = PHYSICS_STOP;
+};
+
+bool CStopPhysics::Run ()
+{
+	return CPushPhysics::Run ();
+}
+
+CBlockableEntity::CBlockableEntity () :
+CBaseEntity ()
+{
+	EntityFlags |= ENT_BLOCKABLE;
+}
+
+CBlockableEntity::CBlockableEntity (int Index) :
+CBaseEntity (Index)
+{
+	EntityFlags |= ENT_BLOCKABLE;
+}
+
+CUsableEntity::CUsableEntity () :
+CBaseEntity ()
+{
+	EntityFlags |= ENT_USABLE;
+}
+
+CUsableEntity::CUsableEntity (int Index) :
+CBaseEntity (Index)
+{
+	EntityFlags |= ENT_USABLE;
 }
