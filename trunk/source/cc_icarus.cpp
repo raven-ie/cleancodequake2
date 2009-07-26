@@ -582,7 +582,6 @@ void CIcarus::Dead ()
 {
 	Entity->SetMins (vec3f(-16, -16, -24));
 	Entity->SetMaxs (vec3f(16, 16, -8));
-	Entity->TossPhysics = true;
 	Think = ConvertDerivedFunction(&CIcarus::DeadThink);
 	Entity->NextThink = level.framenum + FRAMETIME;
 	Entity->gameEntity->timestamp = level.framenum + 150;
@@ -608,6 +607,7 @@ void CIcarus::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 		return;
 
 	Entity->TossPhysics = true;
+	Entity->PhysicsType = PHYSICS_TOSS;
 // regular death
 	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundDeath1 : SoundDeath2);
 	Entity->gameEntity->deadflag = DEAD_DEAD;
@@ -631,7 +631,6 @@ void CIcarus::Spawn ()
 
 	Entity->State.SetSound (SoundIndex ("hover/hovidle1.wav"));
 
-	Entity->TossPhysics = false;
 	Entity->SetSolid (SOLID_BBOX);
 	Entity->State.SetModelIndex ( ModelIndex("models/monsters/hover/tris.md2"));
 	Entity->SetMins (vec3f(-24, -24, -24));

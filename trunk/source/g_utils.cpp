@@ -106,6 +106,41 @@ edict_t *findradius (edict_t *from, vec3_t org, float rad)
 	return NULL;
 }
 
+CBaseEntity *FindRadius (CBaseEntity *From, vec3f &org, int Radius, uint32 EntityFlags)
+{
+	vec3f	eOrigin;
+
+	edict_t *from;
+	if (!From)
+		from = g_edicts;
+	else
+	{
+		from = From->gameEntity;
+		from++;
+	}
+
+	for ( ; from < &g_edicts[globals.numEdicts]; from++)
+	{
+		if (!from->inUse)
+			continue;
+		if (from->solid == SOLID_NOT)
+			continue;
+		if (!from->Entity)
+			continue;
+		if (!(from->Entity->EntityFlags & EntityFlags))
+			continue;
+		
+		eOrigin.X = org.X - (from->state.origin[0] + (from->mins[0] + from->maxs[0]) * 0.5);
+		eOrigin.Y = org.Y - (from->state.origin[1] + (from->mins[1] + from->maxs[1]) * 0.5);
+		eOrigin.Z = org.Z - (from->state.origin[2] + (from->mins[2] + from->maxs[2]) * 0.5);
+
+		if ((int)eOrigin.LengthFast() > Radius)
+			continue;
+		return from->Entity;
+	}
+
+	return NULL;
+}
 
 /*
 =============

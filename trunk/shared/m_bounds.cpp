@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 // m_bounds.c
 //
 
-#include "../game/cc_options.h"
+#include "../source/cc_options.h"
 #include "shared.h"
 
 /*

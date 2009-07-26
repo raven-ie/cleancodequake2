@@ -297,6 +297,7 @@ void CMaiden::Dead ()
 	Entity->SetMins (vec3f(-16, -16, 0));
 	Entity->SetMaxs (vec3f(16, 16, 16));
 	Entity->TossPhysics = true;
+	Entity->PhysicsType = PHYSICS_TOSS;
 	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
 	Entity->NextThink = 0;
 	Entity->Link ();
@@ -792,7 +793,6 @@ void CMaiden::Sight()
 
 void CMaiden::Spawn ()
 {
-	Entity->TossPhysics = false;
 	Entity->SetSolid (SOLID_BBOX);
 	Entity->State.SetModelIndex ( ModelIndex("models/monsters/bitch/tris.md2"));
 	Entity->SetMins (vec3f(-16, -16, 0));

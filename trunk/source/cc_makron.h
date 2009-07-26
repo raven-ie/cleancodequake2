@@ -27,60 +27,68 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_medic.h
-// Medic
+// cc_makron.h
+// 
 //
 
-class CMedic : public CMonster
+class CMakron : public CMonster
 {
 public:
-	MediaIndex	SoundIdle1;
-	MediaIndex	SoundPain1;
-	MediaIndex	SoundPain2;
-	MediaIndex	SoundDie;
-	MediaIndex	SoundSight;
-	MediaIndex	SoundSearch;
-	MediaIndex	SoundHookLaunch;
-	MediaIndex	SoundHookHit;
-	MediaIndex	SoundHookHeal;
-	MediaIndex	SoundHookRetract;
+	vec3f		SavedLoc;
 
-	CMedic ();
+	MediaIndex	SoundPain4;
+	MediaIndex	SoundPain5;
+	MediaIndex	SoundPain6;
+	MediaIndex	SoundDeath;
+	MediaIndex	SoundStepLeft;
+	MediaIndex	SoundStepRight;
+	MediaIndex	SoundAttackBfg;
+	MediaIndex	SoundBrainSplorch;
+	MediaIndex	SoundPreRailgun;
+	MediaIndex	SoundPopUp;
+	MediaIndex	SoundTaunt1;
+	MediaIndex	SoundTaunt2;
+	MediaIndex	SoundTaunt3;
+	MediaIndex	SoundHit;
 
-	void Attack ();
+	CMakron ();
+
 	void Run ();
-	void Search ();
-	void Idle ();
-	void Sight ();
 	void Stand ();
 	void Walk ();
+	void Attack();
 	bool CheckAttack ();
-#ifndef MONSTER_USE_ROGUE_AI
-	void Dodge (edict_t *attacker, float eta);
-	void Duck_Down ();
-	void Duck_Hold ();
-	void Duck_Up ();
-#else
-	void Duck (float eta);
-	void SideStep ();
-#endif
+	void Sight ();
 
-	CMonsterEntity	*FindDeadMonster ();
-	void FireBlaster ();
-	void ContinueFiring ();
-	void HookLaunch ();
-	void HookRetract();
-	void CableAttack ();
-
-#ifdef MONSTER_USE_ROGUE_AI
-	void CleanupHeal (bool ChangeFrame = false);
-	void AbortHeal (bool ChangeFrame, bool Gib, bool Mark);
-	bool CanReach (CBaseEntity *other);
-#endif
+	void Taunt ();
+	void StepLeft ();
+	void StepRight ();
+	void Hit ();
+	void PopUp ();
+	void BrainSplorch ();
+	void PreRailgun ();
+	void FireBFG ();
+	void FireHyperblaster ();
+	void FireRailgun ();
+	void SavePosition ();
 
 	void Dead ();
 	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
 	void Pain (CBaseEntity *other, float kick, int damage);
 
 	void Spawn ();
+	static void Precache ();
+	static void Toss (CBaseEntity *Spawner);
+};
+
+class CMakronJumpTimer : public virtual CBaseEntity, public CThinkableEntity
+{
+public:
+	char		*Target;
+
+	CMakronJumpTimer ();
+	CMakronJumpTimer (int Index);
+
+	void Think ();
+	static void Spawn (CBaseEntity *Jorg);
 };

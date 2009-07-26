@@ -97,7 +97,7 @@ void CMonster::FoundPath ()
 	Run ();
 }
 
-void plat_go_up (edict_t *ent);
+void ForcePlatToGoUp (CBaseEntity *Entity);
 void CMonster::MoveToPath (float Dist)
 {
 	if (!Entity->gameEntity->groundentity && !(Entity->gameEntity->flags & (FL_FLY|FL_SWIM)))
@@ -149,12 +149,7 @@ void CMonster::MoveToPath (float Dist)
 				{
 					//P_CurrentNode->LinkedEntity->use (P_CurrentNode->LinkedEntity, Entity, Entity);
 					if (P_CurrentNode->Type == NODE_PLATFORM)
-					{
-						if (P_CurrentNode->LinkedEntity->moveinfo.state == STATE_BOTTOM)
-							plat_go_up (P_CurrentNode->LinkedEntity);
-						else if (P_CurrentNode->LinkedEntity->moveinfo.state == STATE_TOP)
-							P_CurrentNode->LinkedEntity->nextthink = level.framenum + 10;	// the player is still on the plat, so delay going down
-					}
+						ForcePlatToGoUp (P_CurrentNode->LinkedEntity->Entity);
 					else
 						P_CurrentNode->LinkedEntity->use (P_CurrentNode->LinkedEntity, Entity->gameEntity, Entity->gameEntity);
 					Stand (); // We stand, and wait.
@@ -456,6 +451,7 @@ CTossProjectile(),
 CHurtableEntity()
 {
 	EntityFlags |= ENT_MONSTER;
+	PhysicsType = PHYSICS_STEP;
 };
 
 CMonsterEntity::CMonsterEntity (int Index) :
@@ -465,6 +461,7 @@ CTossProjectile(Index),
 CHurtableEntity(Index)
 {
 	EntityFlags |= ENT_MONSTER;
+	PhysicsType = PHYSICS_STEP;
 };
 
 void CMonsterEntity::Think ()
@@ -518,10 +515,12 @@ void CMonsterEntity::ThrowHead (MediaIndex gibIndex, int damage, int type)
 	if (type == GIB_ORGANIC)
 	{
 		TossPhysics = true;
+		PhysicsType = PHYSICS_TOSS;
 		vscale = 0.5;
 	}
 	else
 	{
+		PhysicsType = PHYSICS_BOUNCE;
 		BouncePhysics = true;
 		vscale = 1.0;
 	}
@@ -559,7 +558,9 @@ void CMonsterEntity::ThrowHead (MediaIndex gibIndex, int damage, int type)
 bool CMonsterEntity::Run ()
 {
 	if (TossPhysics)
+	{
 		return CTossProjectile::Run();
+	}
 	else if (BouncePhysics)
 	{
 		backOff = 1.5f;

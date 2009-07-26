@@ -868,6 +868,7 @@ void CTank::Dead ()
 	Entity->SetMins (vec3f(-16, -16, -16));
 	Entity->SetMaxs (vec3f(16, 16, -0));
 	Entity->TossPhysics = true;
+	Entity->PhysicsType = PHYSICS_TOSS;
 	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
 	Entity->NextThink = 0;
 	Entity->Link ();
@@ -949,7 +950,6 @@ void CTank::Spawn ()
 	Entity->State.SetModelIndex (ModelIndex ("models/monsters/tank/tris.md2"));
 	Entity->SetMins (vec3f(-32, -32, -16));
 	Entity->SetMaxs (vec3f(32, 32, 72));
-	Entity->TossPhysics = false;
 	Entity->SetSolid (SOLID_BBOX);
 
 	SoundPain = SoundIndex ("tank/tnkpain2.wav");

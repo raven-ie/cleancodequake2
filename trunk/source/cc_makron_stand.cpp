@@ -27,60 +27,53 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_medic.h
-// Medic
+// cc_makron_stand.cpp
+// 
 //
 
-class CMedic : public CMonster
+#include "cc_local.h"
+#include "m_boss32.h"
+
+void Use_Boss3 (edict_t *ent, edict_t *other, edict_t *activator)
 {
-public:
-	MediaIndex	SoundIdle1;
-	MediaIndex	SoundPain1;
-	MediaIndex	SoundPain2;
-	MediaIndex	SoundDie;
-	MediaIndex	SoundSight;
-	MediaIndex	SoundSearch;
-	MediaIndex	SoundHookLaunch;
-	MediaIndex	SoundHookHit;
-	MediaIndex	SoundHookHeal;
-	MediaIndex	SoundHookRetract;
+	CTempEnt::BossTeleport (ent->state.origin);
+	G_FreeEdict (ent);
+}
 
-	CMedic ();
+void Think_Boss3Stand (edict_t *ent)
+{
+	if (ent->state.frame == FRAME_stand260)
+		ent->state.frame = FRAME_stand201;
+	else
+		ent->state.frame++;
+	ent->nextthink = level.framenum + FRAMETIME;
+}
 
-	void Attack ();
-	void Run ();
-	void Search ();
-	void Idle ();
-	void Sight ();
-	void Stand ();
-	void Walk ();
-	bool CheckAttack ();
-#ifndef MONSTER_USE_ROGUE_AI
-	void Dodge (edict_t *attacker, float eta);
-	void Duck_Down ();
-	void Duck_Hold ();
-	void Duck_Up ();
-#else
-	void Duck (float eta);
-	void SideStep ();
-#endif
+/*QUAKED monster_boss3_stand (1 .5 0) (-32 -32 0) (32 32 90)
 
-	CMonsterEntity	*FindDeadMonster ();
-	void FireBlaster ();
-	void ContinueFiring ();
-	void HookLaunch ();
-	void HookRetract();
-	void CableAttack ();
+Just stands and cycles in one place until targeted, then teleports away.
+*/
+void SP_monster_boss3_stand (edict_t *self)
+{
+	if (game.mode & GAME_DEATHMATCH)
+	{
+		G_FreeEdict (self);
+		return;
+	}
 
-#ifdef MONSTER_USE_ROGUE_AI
-	void CleanupHeal (bool ChangeFrame = false);
-	void AbortHeal (bool ChangeFrame, bool Gib, bool Mark);
-	bool CanReach (CBaseEntity *other);
-#endif
+	self->movetype = MOVETYPE_STEP;
+	self->solid = SOLID_BBOX;
+	self->model = "models/monsters/boss3/rider/tris.md2";
+	self->state.modelIndex = ModelIndex (self->model);
+	self->state.frame = FRAME_stand201;
 
-	void Dead ();
-	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
-	void Pain (CBaseEntity *other, float kick, int damage);
+	SoundIndex ("misc/bigtele.wav");
 
-	void Spawn ();
-};
+	Vec3Set (self->mins, -32, -32, 0);
+	Vec3Set (self->maxs, 32, 32, 90);
+
+	self->use = Use_Boss3;
+	self->think = Think_Boss3Stand;
+	self->nextthink = level.framenum + FRAMETIME;
+	gi.linkentity (self);
+}

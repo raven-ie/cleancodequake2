@@ -56,6 +56,24 @@ public:
 	virtual void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point) = 0;
 };
 
+class CBlockableEntity abstract : public virtual CBaseEntity
+{
+public:
+	CBlockableEntity ();
+	CBlockableEntity (int Index);
+
+	virtual void Blocked (CBaseEntity *other) = 0;
+};
+
+class CUsableEntity abstract : public virtual CBaseEntity
+{
+public:
+	CUsableEntity ();
+	CUsableEntity (int Index);
+
+	virtual void Use (CBaseEntity *other, CBaseEntity *activator) = 0;
+};
+
 // Thinkable entity
 // Simple think function
 class CThinkableEntity abstract : public virtual CBaseEntity
@@ -80,11 +98,28 @@ public:
 	virtual void	Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
 };
 
+typedef int32 EPhysicsType;
+enum
+{
+	PHYSICS_NONE,
+
+	PHYSICS_NOCLIP,
+	PHYSICS_PUSH,
+	PHYSICS_STOP,
+	PHYSICS_WALK,
+	PHYSICS_STEP,
+	PHYSICS_FLY,
+	PHYSICS_TOSS,
+	PHYSICS_FLYMISSILE,
+	PHYSICS_BOUNCE
+};
 // Contains common code that projectiles will use
 class CPhysicsEntity abstract : public virtual CBaseEntity
 {
 public:
-	bool		PhysicsDisabled;
+	EPhysicsType		PhysicsType;
+
+	bool				PhysicsDisabled;
 	CPhysicsEntity ();
 	CPhysicsEntity (int index);
 
@@ -134,5 +169,24 @@ public:
 
 	int				FlyMove (float time, int mask);
 	void			AddRotationalFriction ();
+	bool			Run ();
+};
+
+class CPushPhysics abstract : public virtual CPhysicsEntity
+{
+public:
+	CPushPhysics ();
+	CPushPhysics (int Index);
+
+	bool			Push (vec3_t move, vec3_t amove);
+	bool			Run ();
+};
+
+class CStopPhysics abstract : public virtual CPushPhysics
+{
+public:
+	CStopPhysics ();
+	CStopPhysics (int Index);
+
 	bool			Run ();
 };

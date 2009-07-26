@@ -634,7 +634,6 @@ void CFlyer::Spawn ()
 	Entity->State.SetModelIndex (ModelIndex ("models/monsters/flyer/tris.md2"));
 	Entity->SetMins (vec3f(-16, -16, -24));
 	Entity->SetMaxs (vec3f(16, 16, 16));
-	Entity->TossPhysics = false;
 	Entity->SetSolid (SOLID_BBOX);
 
 	Entity->State.SetSound (SoundIndex ("flyer/flyidle1.wav"));

@@ -577,7 +577,6 @@ void CFloater::Spawn ()
 
 	Entity->State.SetSound (SoundIndex ("floater/fltsrch1.wav"));
 
-	Entity->TossPhysics = false;
 	Entity->SetSolid (SOLID_BBOX);
 	Entity->State.SetModelIndex (ModelIndex ("models/monsters/float/tris.md2"));
 	Entity->SetMins (vec3f(-24, -24, -24));

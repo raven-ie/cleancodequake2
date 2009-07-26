@@ -1187,6 +1187,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\source\cc_brushmodels.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\source\cc_brushmodels.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\source\cc_entitylist.cpp"
 					>
 				</File>
@@ -1478,10 +1486,6 @@
 					Name="Monster Files"
 					>
 					<File
-						RelativePath=".\..\..\source\cc_barracuda.cpp"
-						>
-					</File>
-					<File
 						RelativePath=".\..\..\source\cc_barracuda.h"
 						>
 					</File>
@@ -1608,6 +1612,26 @@
 							</FileConfiguration>
 						</File>
 						<File
+							RelativePath="..\..\source\cc_jorg.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\..\source\cc_jorg.h"
+							>
+						</File>
+						<File
+							RelativePath="..\..\source\cc_makron.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\..\source\cc_makron.h"
+							>
+						</File>
+						<File
+							RelativePath="..\..\source\cc_makron_stand.cpp"
+							>
+						</File>
+						<File
 							RelativePath=".\..\..\source\cc_supertank.cpp"
 							>
 						</File>
@@ -1619,6 +1643,10 @@
 					<Filter
 						Name="Soldiers"
 						>
+						<File
+							RelativePath=".\..\..\source\cc_barracuda.cpp"
+							>
+						</File>
 						<File
 							RelativePath=".\..\..\source\cc_soldier_base.cpp"
 							>

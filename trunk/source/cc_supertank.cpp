@@ -734,6 +734,7 @@ void CSuperTank::Dead ()
 	Entity->SetMins (vec3f(-60, -60, 0));
 	Entity->SetMaxs (vec3f(60, 60, 72));
 	Entity->TossPhysics = true;
+	Entity->PhysicsType = PHYSICS_TOSS;
 	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
 	Entity->NextThink = 0;
 	Entity->Link ();
@@ -825,7 +826,6 @@ void CSuperTank::Spawn ()
 
 	TreadSound = SoundIndex ("bosstank/btkengn1.wav");
 
-	Entity->TossPhysics = false;
 	Entity->SetSolid (SOLID_BBOX);
 	Entity->State.SetModelIndex (ModelIndex ("models/monsters/boss1/tris.md2"));
 	Entity->SetMins (vec3f(-64, -64, 0));
