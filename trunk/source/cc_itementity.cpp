@@ -202,12 +202,19 @@ void CItemEntity::Think ()
 				{
 		//ZOID
 		#endif
-					for (count = 0, gameEntity->Entity = master->Entity; gameEntity->Entity; gameEntity->Entity = gameEntity->chain->Entity, count++)
+					//for (count = 0, gameEntity->Entity = master->Entity; gameEntity->Entity; gameEntity->Entity = gameEntity->chain->Entity, count++)
+					//	;
+
+					//choice = rand() % count;
+
+					//for (count = 0, gameEntity->Entity = master->Entity; count < choice; gameEntity->Entity = gameEntity->chain->Entity, count++)
+					//	;
+					for (count = 0, gameEntity = master; gameEntity; gameEntity = gameEntity->chain, count++)
 						;
 
 					choice = rand() % count;
 
-					for (count = 0, gameEntity->Entity = master->Entity; count < choice; gameEntity->Entity = gameEntity->chain->Entity, count++)
+					for (count = 0, gameEntity = master; count < choice; gameEntity = gameEntity->chain, count++)
 						;
 		#ifdef CLEANCTF_ENABLED
 				}
