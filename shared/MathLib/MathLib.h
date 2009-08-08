@@ -519,12 +519,14 @@ inline TType Q_NearestPow(const TType Value, const bool bRoundDown)
 	return Result;
 }
 
+#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 float	Q_CalcFovY (float fovX, float width, float height);
 
 // ===========================================================================
 
 void		NormToLatLong(const vec3_t normal, byte out[2]);
 void		LatLongToNorm(const byte latlong[2], vec3_t out);
+#endif
 void		MakeNormalVectorsf (const vec3_t forward, vec3_t right, vec3_t up);
 void		PerpendicularVector (const vec3_t src, vec3_t dst);
 void		RotatePointAroundVector(vec3_t dest, const vec3_t dir, const vec3_t point, const float degrees);

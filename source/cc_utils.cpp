@@ -8,6 +8,41 @@ of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+/*
+This source file is contained as part of CleanCode Quake2, a project maintained
+by Paril, to 'clean up' and make Quake2 an easier source base to read and work with.
+
+You may use any part of this code to help create your own bases and own mods off
+this code if you wish. It is under the same license as Quake 2 source (as above),
+therefore you are free to have to fun with it. All I ask is you email me so I can
+list the mod on my page for CleanCode Quake2 to help get the word around. Thanks.
+*/
+
+//
+// cc_utils.cpp
+// g_utils, CleanCode style
+//
+
+#include "cc_local.h"
+
+/*
+Copyright (C) 1997-2001 Id Software, Inc.
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
 
 See the GNU General Public License for more details.
@@ -21,78 +56,45 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
-void G_ProjectSource (vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result)
+void G_ProjectSource (vec3f &point, vec3f &distance, vec3f &forward, vec3f &right, vec3f &result)
 {
-	result[0] = point[0] + forward[0] * distance[0] + right[0] * distance[1];
-	result[1] = point[1] + forward[1] * distance[0] + right[1] * distance[1];
-	result[2] = point[2] + forward[2] * distance[0] + right[2] * distance[1] + distance[2];
+	result.Set (point.X + forward.X * distance.X + right.X * distance.Y,
+				point.Y + forward.Y * distance.X + right.Y * distance.Y,
+				point.Z + forward.Z * distance.X + right.Z * distance.Y + distance.Z);
 }
 
-/*
-=============
-G_Find
 
-Searches all active entities for the next one that holds
-the matching string at fieldofs (use the FOFS() macro) in the structure.
-
-Searches beginning at the edict after from, or the beginning if NULL
-NULL will be returned if the end of the list is reached.
-
-=============
-*/
-edict_t *G_Find (edict_t *from, int fieldofs, char *match)
+CBaseEntity *FindRadius (CBaseEntity *From, vec3f &org, int Radius, uint32 EntityFlags)
 {
-	char	*s;
+	vec3f	eOrigin;
 
-	if (!from)
+	edict_t *from;
+	if (!From)
 		from = g_edicts;
 	else
-		from++;
-
-	for ( ; from < &g_edicts[globals.numEdicts] ; from++)
 	{
-		if (!from->inUse)
-			continue;
-		s = *(char **) ((byte *)from + fieldofs);
-		if (!s)
-			continue;
-		if (!Q_stricmp (s, match))
-			return from;
+		from = From->gameEntity;
+		from++;
 	}
 
-	return NULL;
-}
-
-
-/*
-=================
-findradius
-
-Returns entities that have origins within a spherical area
-
-findradius (origin, radius)
-=================
-*/
-edict_t *findradius (edict_t *from, vec3_t org, float rad)
-{
-	vec3_t	eorg;
-	int		j;
-
-	if (!from)
-		from = g_edicts;
-	else
-		from++;
 	for ( ; from < &g_edicts[globals.numEdicts]; from++)
 	{
 		if (!from->inUse)
 			continue;
 		if (from->solid == SOLID_NOT)
 			continue;
-		for (j=0 ; j<3 ; j++)
-			eorg[j] = org[j] - (from->state.origin[j] + (from->mins[j] + from->maxs[j])*0.5);
-		if (Vec3Length(eorg) > rad)
+		if (!from->Entity)
 			continue;
-		return from;
+		if (!(from->Entity->EntityFlags & EntityFlags))
+			continue;
+		
+		eOrigin.X = org.X - (from->state.origin[0] + (from->mins[0] + from->maxs[0]) * 0.5);
+		eOrigin.Y = org.Y - (from->state.origin[1] + (from->mins[1] + from->maxs[1]) * 0.5);
+		eOrigin.Z = org.Z - (from->state.origin[2] + (from->mins[2] + from->maxs[2]) * 0.5);
+
+		if ((int)eOrigin.LengthFast() > Radius)
+			continue;
+		return from->Entity;
 	}
 
 	return NULL;
@@ -110,6 +112,7 @@ NULL will be returned if the end of the list is reached.
 
 =============
 */
+#if 0
 #define MAXCHOICES	8
 
 edict_t *G_PickTarget (char *targetname)
@@ -247,90 +250,19 @@ void G_UseTargets (edict_t *ent, edict_t *activator)
 		}
 	}
 }
+#endif
 
-vec3_t VEC_UP		= {0, -1, 0};
-vec3_t MOVEDIR_UP	= {0, 0, 1};
-vec3_t VEC_DOWN		= {0, -2, 0};
-vec3_t MOVEDIR_DOWN	= {0, 0, -1};
-
-void G_SetMovedir (vec3_t angles, vec3_t movedir)
+void G_SetMovedir (vec3f &angles, vec3f &movedir)
 {
-	if (angles[1] == VEC_UP[1])
-		Vec3Copy (MOVEDIR_UP, movedir);
-	else if (angles[1] == VEC_DOWN[1])
-		Vec3Copy (MOVEDIR_DOWN, movedir);
+	if (angles.Y == -1)
+		movedir.Set (0, 0, 1);
+	else if (angles.Y == -2)
+		movedir.Set (0, 0, -1);
 	else
-		Angles_Vectors (angles, movedir, NULL, NULL);
+		angles.ToVectors (&movedir, NULL, NULL);
 
-	Vec3Clear (angles);
+	angles.Clear();
 }
-
-void G_InitEdict (edict_t *e)
-{
-	e->inUse = true;
-	e->classname = "noclass";
-	e->gravity = 1.0;
-	e->state.number = e - g_edicts;
-}
-
-/*
-=================
-G_Spawn
-
-Either finds a free edict, or allocates a new one.
-Try to avoid reusing an entity that was recently freed, because it
-can cause the client to think the entity morphed into something else
-instead of being removed and recreated, which can cause interpolated
-angles and bad trails.
-=================
-*/
-edict_t *G_Spawn (void)
-{
-	int			i;
-	edict_t		*e;
-
-	e = &g_edicts[game.maxclients+1];
-	for ( i=game.maxclients+1 ; i<globals.numEdicts ; i++, e++)
-	{
-		// the first couple seconds of server time can involve a lot of
-		// freeing and allocating, so relax the replacement policy
-		if (!e->inUse && ( e->freetime < 20 || level.framenum - e->freetime > 5 ) )
-		{
-			G_InitEdict (e);
-			//DebugPrintf ("Entity %i reused\n", i);
-			return e;
-		}
-	}
-	
-	if (i == game.maxentities)
-		gi.error ("ED_Alloc: no free edicts");
-		
-	//DebugPrintf ("Entity %i allocated\n", i);
-	globals.numEdicts++;
-	G_InitEdict (e);
-	return e;
-}
-
-/*
-=================
-G_FreeEdict
-
-Marks the edict as free
-=================
-*/
-void G_FreeEdict (edict_t *ed)
-{
-	gi.unlinkentity (ed);		// unlink from world
-
-	// Paril, hack
-	CBaseEntity *Entity = ed->Entity;
-	memset (ed, 0, sizeof(*ed));
-	ed->Entity = Entity;
-	ed->classname = "freed";
-	ed->freetime = level.framenum;
-	ed->inUse = false;
-}
-
 
 /*
 ============
@@ -338,33 +270,35 @@ G_TouchTriggers
 
 ============
 */
-void	G_TouchTriggers (edict_t *ent)
+void	G_TouchTriggers (CBaseEntity *ent)
 {
-	int			i, num;
-	edict_t		*touch[MAX_CS_EDICTS], *hit;
+	edict_t		*touch[MAX_CS_EDICTS];
+	memset(touch, 0, sizeof(touch));
 
 	// dead things don't activate triggers!
-	if ((ent->client || (ent->svFlags & SVF_MONSTER)) && (ent->health <= 0))
+	if ((ent->EntityFlags & ENT_HURTABLE) && (ent->gameEntity->health <= 0))
 		return;
 
-	num = BoxEdicts (ent->absMin, ent->absMax, touch, MAX_CS_EDICTS, true);
+	int num = BoxEdicts (ent->GetAbsMin(), ent->GetAbsMax(), touch, MAX_CS_EDICTS, true);
 
 	// be careful, it is possible to have an entity in this
 	// list removed before we get to it (killtriggered)
-	for (i=0 ; i<num ; i++)
+	for (int i=0 ; i<num ; i++)
 	{
-		hit = touch[i];
-		if (!hit->inUse)
+		edict_t *hit = touch[i];
+		CBaseEntity *Entity = hit->Entity;
+
+		if (!Entity || !Entity->IsInUse())
 			continue;
 
-		if (ent->Entity && hit->Entity && (hit->Entity->EntityFlags & ENT_TOUCHABLE))
+		if (Entity->EntityFlags & ENT_TOUCHABLE)
 		{
-			(dynamic_cast<CTouchableEntity*>(hit->Entity))->Touch (ent->Entity, NULL, NULL);
+			(dynamic_cast<CTouchableEntity*>(Entity))->Touch (ent, NULL, NULL);
 			continue;
 		}
-		if (!hit->touch)
-			continue;
-		hit->touch (hit, ent, NULL, NULL);
+
+		if (!ent->IsInUse())
+			break;
 	}
 }
 
@@ -376,23 +310,29 @@ Call after linking a new trigger in during gameplay
 to force all entities it covers to immediately touch it
 ============
 */
-void	G_TouchSolids (edict_t *ent)
+void	G_TouchSolids (CBaseEntity *ent)
 {
-	int			i, num;
-	edict_t		*touch[MAX_CS_EDICTS], *hit;
+	edict_t		*touch[MAX_CS_EDICTS];
 
-	num = BoxEdicts (ent->absMin, ent->absMax, touch, MAX_CS_EDICTS, false);
+	int num = BoxEdicts (ent->GetAbsMin(), ent->GetAbsMax(), touch, MAX_CS_EDICTS, false);
 
 	// be careful, it is possible to have an entity in this
 	// list removed before we get to it (killtriggered)
-	for (i=0 ; i<num ; i++)
+	for (int i=0 ; i<num ; i++)
 	{
-		hit = touch[i];
-		if (!hit->inUse)
+		edict_t *hit = touch[i];
+		CBaseEntity *Entity = hit->Entity;
+
+		if (!Entity || !Entity->IsInUse())
 			continue;
-		if (ent->touch)
-			ent->touch (hit, ent, NULL, NULL);
-		if (!ent->inUse)
+
+		if (Entity->EntityFlags & ENT_TOUCHABLE)
+		{
+			(dynamic_cast<CTouchableEntity*>(Entity))->Touch (ent, NULL, NULL);
+			continue;
+		}
+
+		if (!ent->IsInUse())
 			break;
 	}
 }
@@ -416,18 +356,18 @@ Kills all entities that would touch the proposed new positioning
 of ent.  Ent should be unlinked before calling this!
 =================
 */
-bool KillBox (edict_t *ent)
+bool KillBox (CBaseEntity *ent)
 {
 	CTrace		tr;
 
 	while (1)
 	{
-		tr = CTrace (ent->state.origin, ent->mins, ent->maxs, ent->state.origin, NULL, CONTENTS_MASK_PLAYERSOLID);
+		tr = CTrace (ent->State.GetOrigin(), ent->GetMins(), ent->GetMaxs(), ent->State.GetOrigin(), NULL, CONTENTS_MASK_PLAYERSOLID);
 		if (!tr.ent)
 			break;
 
 		// nail it
-		T_Damage (tr.ent, ent, ent, vec3Origin, ent->state.origin, vec3Origin, 100000, 0, DAMAGE_NO_PROTECTION, MOD_TELEFRAG);
+		T_Damage (tr.ent, ent->gameEntity, ent->gameEntity, vec3Origin, ent->State.GetOrigin(), vec3Origin, 100000, 0, DAMAGE_NO_PROTECTION, MOD_TELEFRAG);
 
 		// if we didn't kill it, fail
 		if (tr.ent->solid)
@@ -435,4 +375,47 @@ bool KillBox (edict_t *ent)
 	}
 
 	return true;		// all clear
+}
+
+// Returns a random team member of ent
+CBaseEntity *GetRandomTeamMember (CBaseEntity *Entity, CBaseEntity *Master)
+{
+	CBaseEntity *Member = Master;
+	int count = 0;
+
+	//for (count = 0, Member = Master; Member->gameEntity; Member = Member->gameEntity->chain->Entity, count++);
+	while (Member)
+	{
+		// Sanity
+		if (!Member->gameEntity)
+			break;
+
+		count++;
+		if (!Member->gameEntity->chain)
+			break;
+		else
+			Member = Member->gameEntity->chain->Entity;
+	}
+
+	int choice = rand() % count;
+	//for (count = 0, Member = Master; count < choice; Member = Member->gameEntity->chain->Entity, count++);
+	count = 0;
+	Member = Master;
+	while (Member)
+	{
+		if (count == choice)
+			break;
+
+		// Sanity
+		if (!Member->gameEntity)
+			break;
+
+		count++;
+		if (!Member->gameEntity->chain)
+			break;
+		else
+			Member = Member->gameEntity->chain->Entity;
+	}
+
+	return Member;
 }

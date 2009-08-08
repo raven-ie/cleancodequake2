@@ -182,13 +182,10 @@ void CItemEntity::Think ()
 		ThinkState = ITS_NONE;
 
 		{
+			CBaseEntity *RespawnedEntity = this;
 			if (gameEntity->team)
 			{
-				edict_t *master;
-				int     count;
-				int choice;
-
-				master = gameEntity->teammaster;
+				CBaseEntity *Master = gameEntity->teammaster->Entity;
 
 		#ifdef CLEANCTF_ENABLED
 		//ZOID
@@ -196,37 +193,20 @@ void CItemEntity::Think ()
 		//is spawned
 				if ((game.mode & GAME_CTF) &&
 					dmFlags.dfWeaponsStay &&
-					master->item && (master->item->Flags & ITEMFLAG_WEAPON))
-					gameEntity->Entity = master->Entity; // This the way to do it?
+					Master->gameEntity->item && (Master->gameEntity->item->Flags & ITEMFLAG_WEAPON))
+					RespawnedEntity = Master; // This the way to do it?
 				else
-				{
 		//ZOID
 		#endif
-					//for (count = 0, gameEntity->Entity = master->Entity; gameEntity->Entity; gameEntity->Entity = gameEntity->chain->Entity, count++)
-					//	;
-
-					//choice = rand() % count;
-
-					//for (count = 0, gameEntity->Entity = master->Entity; count < choice; gameEntity->Entity = gameEntity->chain->Entity, count++)
-					//	;
-					for (count = 0, gameEntity = master; gameEntity; gameEntity = gameEntity->chain, count++)
-						;
-
-					choice = rand() % count;
-
-					for (count = 0, gameEntity = master; count < choice; gameEntity = gameEntity->chain, count++)
-						;
-		#ifdef CLEANCTF_ENABLED
-				}
-		#endif
+				RespawnedEntity = GetRandomTeamMember(this, Master);
 			}
 
-			SetSvFlags (GetSvFlags() & ~SVF_NOCLIENT);
-			SetSolid (SOLID_TRIGGER);
-			Link ();
+			RespawnedEntity->SetSvFlags (RespawnedEntity->GetSvFlags() & ~SVF_NOCLIENT);
+			RespawnedEntity->SetSolid (SOLID_TRIGGER);
+			RespawnedEntity->Link ();
 
 			// send an effect
-			State.SetEvent (EV_ITEM_RESPAWN);
+			RespawnedEntity->State.SetEvent (EV_ITEM_RESPAWN);
 		}
 		break;
 	case ITS_FREE:
@@ -240,6 +220,8 @@ void CItemEntity::Think ()
 void CItemEntity::Spawn (CBaseItem *item)
 {
 	gameEntity->item = item;
+
+	assert (item != NULL);
 	NextThink = level.framenum + 2;    // items start after other solids
 	ThinkState = ITS_DROPTOFLOOR;
 	NoPhysics = true;

@@ -57,8 +57,10 @@
 				ExceptionHandling="0"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="true"
+				FloatingPointExceptions="true"
 				DefaultCharIsUnsigned="true"
 				UsePrecompiledHeader="0"
+				PrecompiledHeaderThrough=""
 				PrecompiledHeaderFile=".\debug/game.pch"
 				AssemblerListingLocation="$(IntDir)\"
 				ObjectFile="$(IntDir)\"
@@ -996,6 +998,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\StdAfx.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\todo.txt"
 				>
 			</File>
@@ -1847,6 +1853,18 @@
 				</File>
 				<File
 					RelativePath=".\..\..\source\cc_grapple.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Utils"
+				>
+				<File
+					RelativePath="..\..\source\cc_utils.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\source\cc_utils.h"
 					>
 				</File>
 			</Filter>

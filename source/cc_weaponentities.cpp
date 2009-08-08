@@ -940,7 +940,8 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 
 bool CRailGunShot::DoDamage (CBaseEntity *Attacker, CBaseEntity *Target, vec3f &dir, vec3f &point, vec3f &normal)
 {
-	T_Damage (Target->gameEntity, Attacker->gameEntity, Attacker->gameEntity, dir, point, normal, Damage, Kick, 0, MOD_RAILGUN);
+	if (Attacker != Target) // Hurt self protection
+		T_Damage (Target->gameEntity, Attacker->gameEntity, Attacker->gameEntity, dir, point, normal, Damage, Kick, 0, MOD_RAILGUN);
 	return ThroughAndThrough;
 }
 
@@ -962,7 +963,7 @@ bool CBullet::DoDamage (CBaseEntity *Attacker, CBaseEntity *Target, vec3f &dir, 
 
 void CBullet::DoSolidHit	(CTrace *Trace)
 {
-	if (strncmp (Trace->surface->name, "sky", 3) != 0)
+	if (!(Trace->surface->flags & SURF_TEXINFO_SKY))
 		CTempEnt_Splashes::Gunshot (Trace->EndPos, Trace->Plane.normal);
 }
 
@@ -1312,7 +1313,7 @@ void CBullet::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 
 void CShotgunPellets::DoSolidHit	(CTrace *Trace)
 {
-	if (strncmp (Trace->surface->name, "sky", 3) != 0)
+	if (!(Trace->surface->flags & SURF_TEXINFO_SKY))
 		CTempEnt_Splashes::Shotgun (Trace->EndPos, Trace->Plane.normal);
 }
 

@@ -633,7 +633,7 @@ void CPlayerEntity::PutInServer ()
 	else
 		Client.resp.spectator = false;
 
-	if (!KillBox (gameEntity))
+	if (!KillBox (this))
 	{	// could't spawn in?
 	}
 
@@ -2963,7 +2963,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 	Link ();
 
 	if (gameEntity->movetype != MOVETYPE_NOCLIP)
-		G_TouchTriggers (gameEntity);
+		G_TouchTriggers (this);
 
 	// touch other objects
 	for (int i = 0; i < pm.numTouch; i++)
@@ -2972,7 +2972,12 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 		if (other->Entity)
 		{
 			if ((other->Entity->EntityFlags & ENT_TOUCHABLE) && other->Entity->IsInUse())
-				dynamic_cast<CTouchableEntity*>(other->Entity)->Touch (this, NULL, NULL);
+			{
+				CTouchableEntity *Touchered = dynamic_cast<CTouchableEntity*>(other->Entity);
+
+				if (Touchered->Touchable)
+					Touchered->Touch (this, NULL, NULL);
+			}
 			continue;
 		}
 		if (!other->touch)

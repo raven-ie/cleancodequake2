@@ -31,6 +31,23 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // 
 //
 
+enum
+{
+	BRUSHTHINK_NONE,
+
+	BRUSHTHINK_MOVEBEGIN,
+	BRUSHTHINK_MOVEFINAL,
+	BRUSHTHINK_MOVEDONE,
+
+	BRUSHTHINK_MOVEACCEL,
+
+	BRUSHTHINK_AMOVEBEGIN,
+	BRUSHTHINK_AMOVEFINAL,
+	BRUSHTHINK_AMOVEDONE,
+
+	BRUSHTHINK_CUSTOM_START,
+};
+
 // Contains code common to brush models
 class CBrushModel : public virtual CBaseEntity, public CThinkableEntity, public CPushPhysics, public CStopPhysics
 {
@@ -94,4 +111,105 @@ public:
 	bool Run ();
 };
 
-#define ConvertDerivedBrushModelEndFunc(x) static_cast<void (__thiscall CBrushModel::*) (void)>(x)
+class CPlatForm : public CMapEntity, public CBrushModel, public CBlockableEntity, public CUsableEntity
+{
+public:
+	enum
+	{
+		PLATTHINK_GO_DOWN = BRUSHTHINK_CUSTOM_START
+	};
+	CPlatForm();
+	CPlatForm(int Index);
+
+	bool Run ();
+	void Blocked (CBaseEntity *other);
+	void Use (CBaseEntity *other, CBaseEntity *activator);
+	void HitTop ();
+	void HitBottom ();
+
+	enum
+	{
+		PLATENDFUNC_HITBOTTOM,
+		PLATENDFUNC_HITTOP
+	};
+
+	void DoEndFunc ();
+	void GoDown ();
+	void GoUp ();
+	void Think ();
+
+	class CPlatFormInsideTrigger : public CTouchableEntity
+	{
+	public:
+		CPlatFormInsideTrigger::CPlatFormInsideTrigger ();
+		CPlatFormInsideTrigger::CPlatFormInsideTrigger (int Index);
+		void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
+	};
+
+	void SpawnInsideTrigger ();
+	void Spawn ();
+};
+
+// Base door class
+class CDoor : public CMapEntity, public CBrushModel, public CHurtableEntity, public CBlockableEntity, public CTouchableEntity, public CUsableEntity
+{
+public:
+	enum
+	{
+		DOORTHINK_SPAWNDOORTRIGGER = BRUSHTHINK_CUSTOM_START,
+		DOORTHINK_CALCMOVESPEED,
+
+		DOORTHINK_GODOWN,
+	};
+	CDoor();
+	CDoor(int Index);
+
+	void UseAreaPortals (bool isOpen);
+	bool Run ();
+
+	enum
+	{
+		DOORENDFUNC_HITBOTTOM,
+		DOORENDFUNC_HITTOP
+	};
+
+	virtual void HitTop ();
+	virtual void HitBottom ();
+	virtual void GoDown ();
+	virtual void GoUp (CBaseEntity *activator);
+	virtual void DoEndFunc ();
+	virtual void Think ();
+
+	class CDoorTrigger : public CTouchableEntity
+	{
+	public:
+		CDoorTrigger::CDoorTrigger ();
+		CDoorTrigger::CDoorTrigger (int Index);
+
+		void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
+	};
+
+	void Blocked (CBaseEntity *other);
+	void Use (CBaseEntity *other, CBaseEntity *activator);
+	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
+	void Pain (CBaseEntity *other, float kick, int damage);
+	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
+
+	// Thinks
+	void SpawnDoorTrigger ();
+	void CalcMoveSpeed ();
+
+	virtual void Spawn ();
+};
+
+class CRotatingDoor : public CDoor
+{
+public:
+	CRotatingDoor ();
+	CRotatingDoor (int Index);
+
+	void GoDown();
+	void GoUp (CBaseEntity *activator);
+
+	void Spawn ();
+};

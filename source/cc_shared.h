@@ -79,6 +79,7 @@ class CPlayerEntity;
 #include "cc_ctfmenu.h"
 #endif
 #include "cc_entitylist.h"
+#include "cc_utils.h"
 
 extern dmFlagsConfig dmFlags;
 

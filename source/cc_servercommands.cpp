@@ -108,6 +108,9 @@ void SvCmd_RunCommand (char *commandName)
 void SvCmd_Test_f ()
 {
 	Com_Printf (0, "D:\n");
+
+	int ga = ArgGeti (2);
+	(dynamic_cast<CPlayerEntity*>(g_edicts[ga].Entity))->Client.resp.score++;
 }
 
 extern char *gEntString;
