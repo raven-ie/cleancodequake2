@@ -169,7 +169,7 @@ public:
 
 	// the move is ok
 		Link ();
-		G_TouchTriggers (gameEntity);
+		G_TouchTriggers (this);
 	}
 
 	void Think ()

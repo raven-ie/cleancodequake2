@@ -258,6 +258,7 @@ void G_Register ()
 
 void InitGame (void)
 {
+//	InitTables ();
 	Mem_Init ();
 	DebugPrintf ("==== InitGame ====\n");
 

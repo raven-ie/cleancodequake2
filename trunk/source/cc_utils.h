@@ -8,7 +8,7 @@ of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 See the GNU General Public License for more details.
 
@@ -27,24 +27,12 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_gameapi.h
-// Contains overloads and other neat things
+// cc_utils.h
+// g_utils, CleanCode style
 //
 
-void Cast (ECastFlags castFlags, edict_t *Ent);
-void Cast (ECastFlags castFlags, vec3_t Origin);
-void Cast (ECastType castType, ECastFlags castFlags, vec3_t Origin, edict_t *Ent);
-
-// vec3f overloads
-void Cast (ECastFlags castFlags, CBaseEntity *Ent);
-void Cast (ECastFlags castFlags, vec3f *Origin);
-void Cast (ECastType castType, ECastFlags castFlags, vec3f *Origin, CBaseEntity *Ent);
-
-void SetModel (edict_t *ent, char *model);
-
-int PointContents (vec3_t start);
-int PointContents (vec3f &start);
-
-int BoxEdicts (vec3_t mins, vec3_t maxs, edict_t **list, int maxCount, bool triggers);
-int BoxEdicts (vec3f &mins, vec3f &maxs, edict_t **list, int maxCount, bool triggers);
-
+void	G_TouchTriggers (CBaseEntity *ent);
+void	G_TouchSolids (CBaseEntity *ent);
+void G_SetMovedir (vec3f &angles, vec3f &movedir);
+bool KillBox (CBaseEntity *ent);
+CBaseEntity *GetRandomTeamMember (CBaseEntity *Entity, CBaseEntity *Master);

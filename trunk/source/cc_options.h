@@ -109,3 +109,6 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
                 (_CrtDbgBreak(), 0))
 #endif
 #endif
+
+// Define this if you want to use the sin/cos tables.
+#define SINCOS_TABLES

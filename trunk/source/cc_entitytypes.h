@@ -92,6 +92,8 @@ public:
 class CTouchableEntity abstract : public virtual CBaseEntity
 {
 public:
+	bool Touchable; // Setting to false is equivilent to putting touch = NULL in original Q2
+
 	CTouchableEntity ();
 	CTouchableEntity (int index);
 
@@ -178,7 +180,7 @@ public:
 	CPushPhysics ();
 	CPushPhysics (int Index);
 
-	bool			Push (vec3_t move, vec3_t amove);
+	//bool			Push (vec3_t move, vec3_t amove);
 	bool			Run ();
 };
 

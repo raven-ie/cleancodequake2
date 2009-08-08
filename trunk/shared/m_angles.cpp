@@ -75,6 +75,7 @@ void Angles_Matrix3 (vec3_t angles, mat3x3_t axis)
 Angles_Vectors
 ===============
 */
+#include <errno.h>
 void Angles_Vectors (vec3_t angles, vec3_t forward, vec3_t right, vec3_t up)
 {
 	float angle;

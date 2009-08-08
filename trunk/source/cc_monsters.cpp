@@ -32,6 +32,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 //
 
 #include "cc_local.h"
+#include "cc_brushmodels.h"
 #define STEPSIZE	18
 
 #ifdef MONSTERS_USE_PATHFINDING
@@ -133,36 +134,50 @@ void CMonster::MoveToPath (float Dist)
 			P_CurrentNode = P_CurrentPath->Path[P_CurrentNodeIndex];
 			DebugPrintf ("Hit node %u\n", P_CurrentNodeIndex);
 			doit = true;
-			if (P_CurrentNode->Type == NODE_DOOR || P_CurrentNode->Type == NODE_PLATFORM)
+			switch (P_CurrentNode->Type)
 			{
-				// If we reached the node, but the platform isn't down, go back two nodes
-				if (P_CurrentNode->Type == NODE_PLATFORM && P_CurrentNode->LinkedEntity->moveinfo.state != STATE_BOTTOM)
-				{
-					if (P_CurrentPath->Path.size() >= (uint32)(P_CurrentNodeIndex + 2)) // Can we even go that far?
-					{
-						P_CurrentNodeIndex += 2;
-						P_CurrentNode = P_CurrentPath->Path[P_CurrentNodeIndex];
-						DebugPrintf ("Plat in bad spot: going back to %u\n", P_CurrentNodeIndex);
-					}
-				}
-				else
-				{
-					//P_CurrentNode->LinkedEntity->use (P_CurrentNode->LinkedEntity, Entity, Entity);
-					if (P_CurrentNode->Type == NODE_PLATFORM)
-						ForcePlatToGoUp (P_CurrentNode->LinkedEntity->Entity);
-					else
+			case NODE_DOOR:
+					if (P_CurrentNode->LinkedEntity->use)
 						P_CurrentNode->LinkedEntity->use (P_CurrentNode->LinkedEntity, Entity->gameEntity, Entity->gameEntity);
 					Stand (); // We stand, and wait.
+				break;
+			case NODE_PLATFORM:
+				{
+					CPlatForm *Plat = dynamic_cast<CPlatForm*>(P_CurrentNode->LinkedEntity->Entity); // get the plat
+					// If we reached the node, but the platform isn't down, go back two nodes
+					if (Plat->MoveState != STATE_BOTTOM)
+					{
+						if (P_CurrentPath->Path.size() > (uint32)(P_CurrentNodeIndex + 2)) // Can we even go that far?
+						{
+							P_CurrentNodeIndex += 2;
+							P_CurrentNode = P_CurrentPath->Path[P_CurrentNodeIndex];
+							DebugPrintf ("Plat in bad spot: going back to %u\n", P_CurrentNodeIndex);
+						}
+					}
+					else
+					{
+						Stand (); // We stand, and wait.
+						if (Plat->MoveState == STATE_BOTTOM)
+							Plat->GoUp ();
+						else if (Plat->MoveState == STATE_TOP)
+							Plat->NextThink = level.framenum + 10;	// the player is still on the plat, so delay going down
+						//ForcePlatToGoUp (P_CurrentNode->LinkedEntity->Entity);
+					}
 				}
-			}
+
+				break;
+			default:
+				break;
+			};
 
 			if (P_CurrentNodeIndex > 1) // If we have two more goals to destination
 			{
 				// In two goals, do we reach the platform node?
 				if (P_CurrentPath->Path[P_CurrentNodeIndex-1]->Type == NODE_PLATFORM)
 				{
+					CPlatForm *Plat = dynamic_cast<CPlatForm*>(P_CurrentPath->Path[P_CurrentNodeIndex-1]->LinkedEntity->Entity); // get the plat
 					// Is it at bottom?
-					if (P_CurrentPath->Path[P_CurrentNodeIndex-1]->LinkedEntity->moveinfo.state != STATE_BOTTOM)
+					if (Plat->MoveState != STATE_BOTTOM)
 						Stand (); // We wait till it comes down
 				}
 			}
@@ -784,7 +799,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 				if (ReLink)
 				{
 					Entity->Link ();
-					G_TouchTriggers (Entity->gameEntity);
+					G_TouchTriggers (Entity);
 				}
 				return true;
 			}
@@ -844,7 +859,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 			if (ReLink)
 			{
 				Entity->Link ();
-				G_TouchTriggers (Entity->gameEntity);
+				G_TouchTriggers (Entity);
 			}
 			Entity->gameEntity->groundentity = NULL;
 			return true;
@@ -864,7 +879,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 			if (ReLink)
 			{
 				Entity->Link ();
-				G_TouchTriggers (Entity->gameEntity);
+				G_TouchTriggers (Entity);
 			}
 			return true;
 		}
@@ -903,7 +918,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 	if (ReLink)
 	{
 		Entity->Link ();
-		G_TouchTriggers (Entity->gameEntity);
+		G_TouchTriggers (Entity);
 	}
 	return true;
 }
@@ -1027,11 +1042,11 @@ bool CMonster::StepDirection (float Yaw, float Dist)
 		if (delta > 45 && delta < 315)
 			Entity->State.SetOrigin (oldorigin);
 		Entity->Link ();
-		G_TouchTriggers (Entity->gameEntity);
+		G_TouchTriggers (Entity);
 		return true;
 	}
 	Entity->Link ();
-	G_TouchTriggers (Entity->gameEntity);
+	G_TouchTriggers (Entity);
 	return false;
 }
 
@@ -1283,7 +1298,7 @@ void CMonster::MonsterTriggeredSpawn ()
 	vec3f newOrigin = Entity->State.GetOrigin();
 	newOrigin.Z += 1;
 	Entity->State.SetOrigin (newOrigin);
-	KillBox (Entity->gameEntity);
+	KillBox (Entity);
 
 	Entity->SetSolid (SOLID_BBOX);
 	Entity->PhysicsDisabled = false;
@@ -2850,8 +2865,9 @@ void CMonster::AI_Stand (float Dist)
 		// In two goals, do we reach the platform node?
 		else if (P_CurrentPath->Path[P_CurrentNodeIndex-1]->Type == NODE_PLATFORM)
 		{
+			CPlatForm *Plat = dynamic_cast<CPlatForm*>(P_CurrentPath->Path[P_CurrentNodeIndex-1]->LinkedEntity->Entity); // get the plat
 			// Is it at bottom?
-			if (P_CurrentPath->Path[P_CurrentNodeIndex-1]->LinkedEntity->moveinfo.state == STATE_BOTTOM)
+			if (Plat->MoveState == STATE_BOTTOM)
 				Run (); // Go!
 		}
 		else

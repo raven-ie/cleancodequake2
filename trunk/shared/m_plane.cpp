@@ -118,9 +118,9 @@ int	PlaneTypeForNormal(const vec3_t normal)
 	if (normal[2] >= 1.0)
 		return PLANE_Z;
 
-	const float ax = fabsf(normal[0]);
-	const float ay = fabsf(normal[1]);
-	const float az = fabsf(normal[2]);
+	const float ax = Q_fabs(normal[0]);
+	const float ay = Q_fabs(normal[1]);
+	const float az = Q_fabs(normal[2]);
 
 	if (ax >= ay && ax >= az)
 		return PLANE_ANYX;

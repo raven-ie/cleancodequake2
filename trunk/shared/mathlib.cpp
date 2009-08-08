@@ -349,6 +349,7 @@ int Q_log2(int val)
 
 // ===========================================================================
 
+#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 /*
 ====================
 Q_CalcFovY
@@ -481,6 +482,7 @@ void LatLongToNorm(const byte latLong[2], vec3_t out)
 
 	Vec3Set(out, cos_b * sin_a, sin_b * sin_a, cos_a);
 }
+#endif
 
 
 /*
@@ -517,17 +519,17 @@ void PerpendicularVector(const vec3_t src, vec3_t dst)
 	if (Q_fabs(src[0]) < minElem)
 	{
 		pos = 0;
-		minElem = fabsf(src[0]);
+		minElem = Q_fabs(src[0]);
 	}
 	if (Q_fabs(src[1]) < minElem)
 	{
 		pos = 1;
-		minElem = fabsf(src[1]);
+		minElem = Q_fabs(src[1]);
 	}
 	if (Q_fabs(src[2]) < minElem)
 	{
 		pos = 2;
-		minElem = fabsf(src[2]);
+		minElem = Q_fabs(src[2]);
 	}
 
 	assert(pos != 5);

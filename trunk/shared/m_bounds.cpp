@@ -199,9 +199,9 @@ float RadiusFromBounds (vec3_t mins, vec3_t maxs)
 {
 	vec3_t	corner;
 
-	corner[0] = fabsf(mins[0]) > fabsf(maxs[0]) ? fabsf(mins[0]) : fabsf(maxs[0]);
-	corner[1] = fabsf(mins[1]) > fabsf(maxs[1]) ? fabsf(mins[1]) : fabsf(maxs[1]);
-	corner[2] = fabsf(mins[2]) > fabsf(maxs[2]) ? fabsf(mins[2]) : fabsf(maxs[2]);
+	corner[0] = Q_fabs(mins[0]) > Q_fabs(maxs[0]) ? Q_fabs(mins[0]) : Q_fabs(maxs[0]);
+	corner[1] = Q_fabs(mins[1]) > Q_fabs(maxs[1]) ? Q_fabs(mins[1]) : Q_fabs(maxs[1]);
+	corner[2] = Q_fabs(mins[2]) > Q_fabs(maxs[2]) ? Q_fabs(mins[2]) : Q_fabs(maxs[2]);
 
 	return (float)Vec3Length (corner);
 }

@@ -143,9 +143,9 @@ spawn_t	spawns[] = {
 
 //	{"func_plat", SP_func_plat},
 	{"func_button", SP_func_button},
-	{"func_door", SP_func_door},
+//	{"func_door", SP_func_door},
 	{"func_door_secret", SP_func_door_secret},
-	{"func_door_rotating", SP_func_door_rotating},
+//	{"func_door_rotating", SP_func_door_rotating},
 	{"func_rotating", SP_func_rotating},
 	{"func_train", SP_func_train},
 	{"func_water", SP_func_water},
