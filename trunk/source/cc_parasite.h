@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Parasite
 //
 
+#if !defined(__CC_PARASITE_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_PARASITE_H__
+
 class CParasite : public CMonster
 {
 public:
@@ -75,3 +78,7 @@ public:
 
 	void Spawn ();
 };
+
+#else
+FILE_WARNING
+#endif

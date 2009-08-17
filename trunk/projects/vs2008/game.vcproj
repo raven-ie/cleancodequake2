@@ -1492,6 +1492,10 @@
 					Name="Monster Files"
 					>
 					<File
+						RelativePath=".\..\..\source\cc_barracuda.cpp"
+						>
+					</File>
+					<File
 						RelativePath=".\..\..\source\cc_barracuda.h"
 						>
 					</File>
@@ -1649,10 +1653,6 @@
 					<Filter
 						Name="Soldiers"
 						>
-						<File
-							RelativePath=".\..\..\source\cc_barracuda.cpp"
-							>
-						</File>
 						<File
 							RelativePath=".\..\..\source\cc_soldier_base.cpp"
 							>
@@ -1829,6 +1829,14 @@
 				</File>
 				<File
 					RelativePath=".\..\..\source\cc_ctfadmin.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\source\cc_ctfitementities.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\source\cc_ctfitementities.h"
 					>
 				</File>
 				<File

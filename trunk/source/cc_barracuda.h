@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Sharky!
 //
 
+#if !defined(__CC_BARRACUDA_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_BARRACUDA_H__
+
 class CBarracudaShark : public CMonster
 {
 public:
@@ -62,3 +65,7 @@ public:
 
 	void Spawn ();
 };
+
+#else
+FILE_WARNING
+#endif

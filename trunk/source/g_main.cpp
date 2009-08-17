@@ -189,7 +189,9 @@ void Com_Error (EComErrorType code, char *fmt, ...)
 	vsnprintf_s (text, sizeof(text), MAX_COMPRINT, fmt, argptr);
 	va_end (argptr);
 
+_CC_DISABLE_DEPRECATION
 	gi.error ("%s", text);
+_CC_ENABLE_DEPRECATION
 }
 
 #endif
@@ -494,7 +496,7 @@ __try
 		{
 			ent->Entity->Run ();
 
-			if (ent->Entity->EntityFlags & ENT_THINKABLE)
+			if (!ent->Entity->Freed && (ent->Entity->EntityFlags & ENT_THINKABLE))
 				dynamic_cast<CThinkableEntity*>(ent->Entity)->RunThink ();
 
 			// Were we freed?

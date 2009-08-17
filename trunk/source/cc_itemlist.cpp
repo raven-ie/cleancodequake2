@@ -128,7 +128,7 @@ void CItemList::AddItemToList (CBaseItem *Item)
 void CItemList::SendItemNames ()
 {
 	for (int i = 0 ; i < numItems ; i++)
-		gi.configstring (Items[i]->GetConfigStringNumber(), this->Items[i]->Name);
+		ConfigString (Items[i]->GetConfigStringNumber(), this->Items[i]->Name);
 }
 
 CBaseItem *FindItem (char *name)

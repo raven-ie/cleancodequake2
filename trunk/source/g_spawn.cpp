@@ -430,16 +430,16 @@ static char *ED_ParseEdict (char *data, edict_t *ent)
 		if (token[0] == '}')
 			break;
 		if (!data)
-			gi.error ("ED_ParseEntity: EOF without closing brace");
+			GameError ("ED_ParseEntity: EOF without closing brace");
 
 		Q_strncpyz (keyName, token, sizeof(keyName));
 		
 		// Parse value	
 		token = Com_Parse (&data);
 		if (!data)
-			gi.error ("ED_ParseEntity: EOF without closing brace");
+			GameError ("ED_ParseEntity: EOF without closing brace");
 		if (token[0] == '}')
-			gi.error ("ED_ParseEntity: closing brace without data");
+			GameError ("ED_ParseEntity: closing brace without data");
 
 		init = true;	
 
@@ -605,7 +605,7 @@ __try
 		if (!entities)
 			break;
 		if (token[0] != '{')
-			gi.error ("ED_LoadFromFile: found %s when expecting {", token);
+			GameError ("ED_LoadFromFile: found %s when expecting {", token);
 
 		if (!ent)
 			ent = g_edicts;
@@ -726,25 +726,25 @@ void SP_worldspawn (edict_t *ent)
 	// make some data visible to the server
 	if (ent->message && ent->message[0])
 	{
-		gi.configstring (CS_NAME, ent->message);
+		ConfigString (CS_NAME, ent->message);
 		Q_strncpyz (level.level_name, ent->message, sizeof(level.level_name));
 	}
 	else
 		Q_strncpyz (level.level_name, level.mapname, sizeof(level.level_name));
 
 	if (st.sky && st.sky[0])
-		gi.configstring (CS_SKY, st.sky);
+		ConfigString (CS_SKY, st.sky);
 	else
-		gi.configstring (CS_SKY, "unit1_");
+		ConfigString (CS_SKY, "unit1_");
 
-	gi.configstring (CS_SKYROTATE, Q_VarArgs ("%f", st.skyrotate) );
+	ConfigString (CS_SKYROTATE, Q_VarArgs ("%f", st.skyrotate) );
 
-	gi.configstring (CS_SKYAXIS, Q_VarArgs ("%f %f %f",
+	ConfigString (CS_SKYAXIS, Q_VarArgs ("%f %f %f",
 		st.skyaxis[0], st.skyaxis[1], st.skyaxis[2]) );
 
-	gi.configstring (CS_CDTRACK, Q_VarArgs ("%i", ent->sounds) );
+	ConfigString (CS_CDTRACK, Q_VarArgs ("%i", ent->sounds) );
 
-	gi.configstring (CS_MAXCLIENTS, maxclients->String() );
+	ConfigString (CS_MAXCLIENTS, maxclients->String() );
 
 	// status bar program
 	if (game.mode & GAME_DEATHMATCH)
@@ -813,45 +813,45 @@ void SP_worldspawn (edict_t *ent)
 //
 
 	// 0 normal
-	gi.configstring(CS_LIGHTS+0, "m");
+	ConfigString(CS_LIGHTS+0, "m");
 	
 	// 1 FLICKER (first variety)
-	gi.configstring(CS_LIGHTS+1, "mmnmmommommnonmmonqnmmo");
+	ConfigString(CS_LIGHTS+1, "mmnmmommommnonmmonqnmmo");
 	
 	// 2 SLOW STRONG PULSE
-	gi.configstring(CS_LIGHTS+2, "abcdefghijklmnopqrstuvwxyzyxwvutsrqponmlkjihgfedcba");
+	ConfigString(CS_LIGHTS+2, "abcdefghijklmnopqrstuvwxyzyxwvutsrqponmlkjihgfedcba");
 	
 	// 3 CANDLE (first variety)
-	gi.configstring(CS_LIGHTS+3, "mmmmmaaaaammmmmaaaaaabcdefgabcdefg");
+	ConfigString(CS_LIGHTS+3, "mmmmmaaaaammmmmaaaaaabcdefgabcdefg");
 	
 	// 4 FAST STROBE
-	gi.configstring(CS_LIGHTS+4, "mamamamamama");
+	ConfigString(CS_LIGHTS+4, "mamamamamama");
 	
 	// 5 GENTLE PULSE 1
-	gi.configstring(CS_LIGHTS+5,"jklmnopqrstuvwxyzyxwvutsrqponmlkj");
+	ConfigString(CS_LIGHTS+5,"jklmnopqrstuvwxyzyxwvutsrqponmlkj");
 	
 	// 6 FLICKER (second variety)
-	gi.configstring(CS_LIGHTS+6, "nmonqnmomnmomomno");
+	ConfigString(CS_LIGHTS+6, "nmonqnmomnmomomno");
 	
 	// 7 CANDLE (second variety)
-	gi.configstring(CS_LIGHTS+7, "mmmaaaabcdefgmmmmaaaammmaamm");
+	ConfigString(CS_LIGHTS+7, "mmmaaaabcdefgmmmmaaaammmaamm");
 	
 	// 8 CANDLE (third variety)
-	gi.configstring(CS_LIGHTS+8, "mmmaaammmaaammmabcdefaaaammmmabcdefmmmaaaa");
+	ConfigString(CS_LIGHTS+8, "mmmaaammmaaammmabcdefaaaammmmabcdefmmmaaaa");
 	
 	// 9 SLOW STROBE (fourth variety)
-	gi.configstring(CS_LIGHTS+9, "aaaaaaaazzzzzzzz");
+	ConfigString(CS_LIGHTS+9, "aaaaaaaazzzzzzzz");
 	
 	// 10 FLUORESCENT FLICKER
-	gi.configstring(CS_LIGHTS+10, "mmamammmmammamamaaamammma");
+	ConfigString(CS_LIGHTS+10, "mmamammmmammamamaaamammma");
 
 	// 11 SLOW PULSE NOT FADE TO BLACK
-	gi.configstring(CS_LIGHTS+11, "abcdefghijklmnopqrrqponmlkjihgfedcba");
+	ConfigString(CS_LIGHTS+11, "abcdefghijklmnopqrrqponmlkjihgfedcba");
 	
 	// styles 32-62 are assigned by the light program for switchable lights
 
 	// 63 testing
-	gi.configstring(CS_LIGHTS+63, "a");
+	ConfigString(CS_LIGHTS+63, "a");
 
 	dmFlags.UpdateFlags(dmflags->Integer());
 }

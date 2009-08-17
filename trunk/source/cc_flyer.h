@@ -30,6 +30,10 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // cc_flyer.h
 // Flyer Monster
 //
+
+#if !defined(__CC_FLYER_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_FLYER_H__
+
 #define FLYER_KNOWS_HOW_TO_DODGE
 
 class CFlyer : public CMonster
@@ -79,3 +83,7 @@ public:
 
 	void Spawn ();
 };
+
+#else
+FILE_WARNING
+#endif

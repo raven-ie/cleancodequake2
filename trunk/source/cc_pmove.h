@@ -31,6 +31,13 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Necessary to keep 3.21 compatibility and allow cgame dlls
 //
 
+#if !defined(__CC_PMOVE_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_PMOVE_H__
+
 #ifndef USE_EXTENDED_GAME_IMPORTS
 void SV_Pmove (edict_t *ent, pMoveNew_t *pMove, float airAcceleration);
+#endif
+
+#else
+FILE_WARNING
 #endif

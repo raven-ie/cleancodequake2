@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // The base for soldier-like monsters.
 //
 
+#if !defined(__CC_SOLDIER_BASE_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_SOLDIER_BASE_H__
+
 class CSoldierBase : public CMonster
 {
 public:
@@ -92,3 +95,7 @@ public:
 	void Spawn (); // Initialize "commonalities"
 	virtual void SpawnSoldier () = 0; // Initialize health, etc.
 };
+
+#else
+FILE_WARNING
+#endif

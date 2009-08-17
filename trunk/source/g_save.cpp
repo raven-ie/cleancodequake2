@@ -250,7 +250,9 @@ void G_Register ()
 //ZOID
 	capturelimit = QNew (com_gamePool, 0) CCvar ("capturelimit", "0", CVAR_SERVERINFO);
 	instantweap = QNew (com_gamePool, 0) CCvar ("instantweap", "0", CVAR_SERVERINFO);
-//ZOID
+
+	// Setup CTF if we have it
+	CTFInit();
 #endif
 
 	Nodes_Register ();
@@ -258,9 +260,10 @@ void G_Register ()
 
 void InitGame (void)
 {
-//	InitTables ();
 	Mem_Init ();
 	DebugPrintf ("==== InitGame ====\n");
+	DebugPrintf ("Running CleanCode Quake2, built on %s (%s %s)\nInitializing game...", __TIMESTAMP__, BUILDSTRING, CPUSTRING);
+	uint32 start = Sys_Milliseconds();
 
 	seedMT (time(NULL));
 
@@ -269,6 +272,9 @@ void InitGame (void)
 
 	// File-system
 	FS_Init ();
+
+	// Setup the gamemode
+	SetupGamemode ();
 
 	// items
 	InitItemlist ();
@@ -292,18 +298,11 @@ void InitGame (void)
 	game.maxspectators = maxspectators->Integer();
 	game.cheats = (sv_cheats->Integer()) ? true : false;
 
-	DebugPrintf ("Running CleanCode Quake2, built on %s (%s %s)\n", __TIMESTAMP__, BUILDSTRING, CPUSTRING);
-
 	Bans.LoadFromFile ();
 
-#ifdef CLEANCTF_ENABLED
-	// Setup CTF if we have it
-	CTFInit();
-#endif
-
-	// Setup the gamemode
-	SetupGamemode ();
 	Mem_Register ();
+
+	DebugPrintf ("\nGame initialized in %ums.\n", Sys_Milliseconds()-start);
 }
 
 //=========================================================
@@ -378,7 +377,7 @@ void WriteField1 (FILE *f, field_t *field, byte *base)
 		break;
 
 	default:
-		gi.error ("WriteEdict: unknown field type");
+		GameError ("WriteEdict: unknown field type");
 	}
 }
 
@@ -471,7 +470,7 @@ void ReadField (FILE *f, field_t *field, byte *base)
 			*(byte **)p = ((byte *)InitGame) + index;
 		break;
 	default:
-		gi.error ("ReadEdict: unknown field type");
+		GameError ("ReadEdict: unknown field type");
 	}
 }
 
@@ -628,7 +627,7 @@ void WriteGame (char *filename, BOOL autosave)
 
 	if (!f)
 	{
-		gi.error ("Couldn't open %s", filename);
+		GameError ("Couldn't open %s", filename);
 		return; // Fix to engines who don't shutdown on gi.error
 	}
 
@@ -661,13 +660,13 @@ void ReadGame (char *filename)
 #endif
 
 	if (!f || errorVal)
-		gi.error ("Couldn't open %s", filename);
+		GameError ("Couldn't open %s", filename);
 
 	fread (str, sizeof(str), 1, f);
 	if (strcmp (str, __DATE__))
 	{
 		fclose (f);
-		gi.error ("Savegame from an older version.\n");
+		GameError ("Savegame from an older version.\n");
 	}
 
 	g_edicts = QNew (com_gamePool, 0) edict_t[game.maxentities];//(edict_t*)gi.TagMalloc (game.maxentities * sizeof(g_edicts[0]), TAG_GAME);
@@ -822,7 +821,7 @@ void WriteLevel (char *filename)
 #endif
 
 	if (!f || errorVal)
-		gi.error ("Couldn't open %s", filename);
+		GameError ("Couldn't open %s", filename);
 
 	// write out edict size for checking
 	i = sizeof(edict_t);
@@ -882,7 +881,7 @@ void ReadLevel (char *filename)
 #endif
 
 	if (!f || errorVal)
-		gi.error ("Couldn't open %s", filename);
+		GameError ("Couldn't open %s", filename);
 
 	// free any dynamic memory allocated by loading the level
 	// base state
@@ -902,7 +901,7 @@ void ReadLevel (char *filename)
 	if (i != sizeof(edict_t))
 	{
 		fclose (f);
-		gi.error ("ReadLevel: mismatched edict size");
+		GameError ("ReadLevel: mismatched edict size");
 	}
 
 	// check function pointer base address
@@ -911,7 +910,7 @@ void ReadLevel (char *filename)
 	if (base != (void *)InitGame)
 	{
 		fclose (f);
-		gi.error ("ReadLevel: function pointers have moved");
+		GameError ("ReadLevel: function pointers have moved");
 	}
 #else
 	gi.dprintf("Function offsets %d\n", ((byte *)base) - ((byte *)InitGame));
@@ -926,7 +925,7 @@ void ReadLevel (char *filename)
 		if (fread (&entNum, sizeof(entNum), 1, f) != 1)
 		{
 			fclose (f);
-			gi.error ("ReadLevel: failed to read entNum");
+			GameError ("ReadLevel: failed to read entNum");
 		}
 		if (entNum == -1)
 			break;

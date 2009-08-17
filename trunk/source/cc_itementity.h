@@ -32,6 +32,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Moved here because it's seperate from the item system.
 //
 
+#if !defined(__CC_ITEMENTITY_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_ITEMENTITY_H__
+
 // The item entity class
 typedef int EItemThinkState;
 enum
@@ -39,7 +42,9 @@ enum
 	ITS_NONE,
 	ITS_DROPTOFLOOR,
 	ITS_RESPAWN,
-	ITS_FREE
+	ITS_FREE,
+
+	ITS_CUSTOM
 };
 
 // Item entity
@@ -72,3 +77,11 @@ public:
 	} \
 	CClassnameToClassIndex LINK_RESOLVE_CLASSNAME(mapClassName, _Linker) \
 	(LINK_RESOLVE_CLASSNAME(mapClassName, _Spawn), #mapClassName);
+
+#ifdef CLEANCTF_ENABLED
+#include "cc_ctfitementities.h"
+#endif
+
+#else
+FILE_WARNING
+#endif

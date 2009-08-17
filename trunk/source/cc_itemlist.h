@@ -32,6 +32,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Basically the link between items and the real world
 //
 
+#if !defined(__CC_ITEMLIST_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_ITEMLIST_H__
+
 // Just to conform to the configstrings
 #define MAX_ITEMS		256
 #define MAX_ITEMS_HASH	(MAX_ITEMS/2)
@@ -131,3 +134,7 @@ namespace NItems
 	extern CPowerShield *PowerShield;
 	extern CPowerShield *PowerScreen;
 };
+
+#else
+FILE_WARNING
+#endif

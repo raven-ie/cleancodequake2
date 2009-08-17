@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // A small wrapper for cvars that make managing and using cvars a bit easier.
 //
 
+#if !defined(__CC_CVAR_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_CVAR_H__
+
 // I know this grabs string and converts and that EGL has floatval/intval, but
 // this is just to make sure, because engines that don't might cause problems
 class CCvar
@@ -46,27 +49,10 @@ class CCvar
 
 public:
 	// Constructors, to make it a bit easier (using 'new')
-	CCvar ()
-	{
-		cVar = NULL;
-		mainValue = NULL;
-		floatVal = intVal = 0;
-	}
-	CCvar (char *cvarName, char *defaultValue, int flags = 0)
-	{
-		CCvar();
-		Register(cvarName, defaultValue, flags);
-	}
-	CCvar (char *cvarName, int defaultValue, int flags = 0)
-	{
-		CCvar();
-		Register(cvarName, defaultValue, flags);
-	}
-	CCvar (char *cvarName, float defaultValue, int flags = 0)
-	{
-		CCvar();
-		Register(cvarName, defaultValue, flags);
-	}
+	CCvar ();
+	CCvar (char *cvarName, char *defaultValue, int flags = 0);
+	CCvar (char *cvarName, int defaultValue, int flags = 0);
+	CCvar (char *cvarName, float defaultValue, int flags = 0);
 	// I didn't list any deconstructors, but if any are needed throw them here (you can't really delete cvars from the list from game anyway)
 
 	void Register (char *cvarName, char *defaultValue, int flags = 0);
@@ -84,3 +70,7 @@ public:
 
 	bool Modified ();
 };
+
+#else
+FILE_WARNING
+#endif

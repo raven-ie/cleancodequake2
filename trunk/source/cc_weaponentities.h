@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Entities related to weaponry
 //
 
+#if !defined(__CC_WEAPONENTITIES_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_WEAPONENTITIES_H__
+
 class CGrenade : public CBounceProjectile, public CThinkableEntity, public CTouchableEntity
 {
 public:
@@ -180,3 +183,29 @@ public:
 
 	static bool		Fire (CBaseEntity *Entity, vec3f aim, int damage, int kick);
 };
+
+#ifdef CLEANCTF_ENABLED
+// Grappling class
+class CGrappleEntity : public CFlyMissileProjectile, public CTouchableEntity
+{
+	CPlayerEntity		*Player;
+	float				Damage;
+
+public:
+	CGrappleEntity ();
+	CGrappleEntity (int Index);
+
+	void ResetGrapple ();
+	void GrapplePull ();
+	void GrappleDrawCable ();
+
+	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
+	bool Run ();
+
+	static void Spawn (CPlayerEntity *Spawner, vec3f start, vec3f dir, int damage, int speed);
+};
+#endif
+
+#else
+FILE_WARNING
+#endif

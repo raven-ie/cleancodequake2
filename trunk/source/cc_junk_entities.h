@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Entities that share a "Junk" class
 //
 
+#if !defined(__CC_JUNK_ENTITIES_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_JUNK_ENTITIES_H__
+
 class CJunkEntity : public virtual CBaseEntity
 {
 public:
@@ -51,3 +54,7 @@ public:
 	bool Run ();
 	static void Spawn (CBaseEntity *Owner, MediaIndex gibIndex, int damage, int type);
 };
+
+#else
+FILE_WARNING
+#endif

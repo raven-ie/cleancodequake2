@@ -32,16 +32,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // From EGL
 //
 
-#ifndef __FILES_H__
-#define __FILES_H__
-
-/*
-=============================================================================
-
-	FUNCTIONS
-
-=============================================================================
-*/
+#if !defined(__CC_FILESYSTEM_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_FILESYSTEM_H__
 
 #define FS_FreeFile(buffer) _FS_FreeFile ((buffer),__FILE__,__LINE__)
 #define FS_FreeFileList(list,num) _FS_FreeFileList ((list),(num),__FILE__,__LINE__)
@@ -73,4 +65,6 @@ char *FS_NextPath(char *prevPath);
 
 void FS_Init();
 
-#endif // __FILES_H__
+#else
+FILE_WARNING
+#endif

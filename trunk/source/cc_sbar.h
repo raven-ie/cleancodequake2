@@ -32,6 +32,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // This can also be used for like, scoreboards (+ SendMsg)
 //
 
+#if !defined(__CC_SBAR_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_SBAR_H__
+
 class CStatusBar
 {
 	char bar[MAX_COMPRINT/2];
@@ -64,3 +67,7 @@ public:
 };
 
 void HelpComputer (CPlayerEntity *ent);
+
+#else
+FILE_WARNING
+#endif

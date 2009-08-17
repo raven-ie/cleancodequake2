@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Menu system
 //
 
+#if !defined(__CC_MENU_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_MENU_H__
+
 class CMenuItem abstract
 {
 public:
@@ -101,3 +104,7 @@ void Cmd_MenuRight_t (CPlayerEntity *ent);
 
 // Controls
 #include "cc_controls.h"
+
+#else
+FILE_WARNING
+#endif

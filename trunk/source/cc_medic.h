@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Medic
 //
 
+#if !defined(__CC_MEDIC_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_MEDIC_H__
+
 class CMedic : public CMonster
 {
 public:
@@ -84,3 +87,7 @@ public:
 
 	void Spawn ();
 };
+
+#else
+FILE_WARNING
+#endif

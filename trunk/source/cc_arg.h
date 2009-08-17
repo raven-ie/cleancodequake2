@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Wrapper for the argv/s/c system
 //
 
+#if !defined(__CC_ARG_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_ARG_H__
+
 void SetupArg ();
 void InitArg ();
 void EndArg ();
@@ -39,3 +42,7 @@ char *ArgGets (int Index);
 int ArgGeti (int Index);
 float ArgGetf (int Index);
 char *ArgGetConcatenatedString ();
+
+#else
+FILE_WARNING
+#endif

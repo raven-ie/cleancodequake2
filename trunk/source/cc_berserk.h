@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Berserker
 //
 
+#if !defined(__CC_BERSERK_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_BERSERK_H__
+
 class CBerserker : public CMonster
 {
 public:
@@ -65,3 +68,7 @@ public:
 
 	void Spawn ();
 };
+
+#else
+FILE_WARNING
+#endif

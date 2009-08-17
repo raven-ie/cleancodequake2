@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Railgun
 //
 
+#if !defined(__CC_RAILGUN_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_RAILGUN_H__
+
 class CRailgun : public CWeapon
 {
 public:
@@ -44,3 +47,7 @@ public:
 };
 
 extern CRailgun WeaponRailgun;
+
+#else
+FILE_WARNING
+#endif

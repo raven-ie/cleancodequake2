@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Print replacements
 //
 
+#if !defined(__CC_PRINT_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_PRINT_H__
+
 // If we're using the old, extended library functions
 // we need to make sure that these just re-route to those
 #ifdef USE_EXTENDED_GAME_IMPORTS
@@ -48,4 +51,8 @@ void DebugPrintf (char *fmt, ...);
 #endif
 
 void BroadcastPrintf (EGamePrintLevel printLevel, char *fmt, ...);
+#endif
+
+#else
+FILE_WARNING
 #endif

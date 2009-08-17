@@ -27,18 +27,48 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_utils.h
-// g_utils, CleanCode style
+// cc_ctfitementities.h
+// CTF Item Entities
 //
 
-#if !defined(__CC_UTILS_H__) || !defined(INCLUDE_GUARDS)
-#define __CC_UTILS_H__
+#if !defined(__CC_CTFITEMENTITIES_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_CTFITEMENTITIES_H__
 
-void	G_TouchTriggers (CBaseEntity *ent);
-void	G_TouchSolids (CBaseEntity *ent);
-void G_SetMovedir (vec3f &angles, vec3f &movedir);
-bool KillBox (CBaseEntity *ent);
-CBaseEntity *GetRandomTeamMember (CBaseEntity *Entity, CBaseEntity *Master);
+enum
+{
+	FTS_FLAGSETUP = ITS_CUSTOM,
+	FTS_FLAGTHINK,
+};
+
+class CFlagEntity abstract : public CItemEntity
+{
+public:
+	CFlagEntity ();
+	CFlagEntity (int Index);
+
+	virtual void Spawn (CBaseItem *item);
+	void Think ();
+
+	bool Run ();
+};
+
+class CRedFlagEntity : public CFlagEntity
+{
+public:
+	CRedFlagEntity ();
+	CRedFlagEntity (int Index);
+
+	bool Run ();
+};
+
+class CBlueFlagEntity : public CFlagEntity
+{
+public:
+	CBlueFlagEntity ();
+	CBlueFlagEntity (int Index);
+
+	bool Run ();
+};
 
 #else
 FILE_WARNING

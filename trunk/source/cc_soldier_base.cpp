@@ -576,6 +576,9 @@ void CSoldierBase::Attack6_Refire ()
 	if (range(Entity->gameEntity, Entity->gameEntity->enemy) < RANGE_NEAR)
 		return;
 
+	if (!EnemyVis)
+		return;
+
 	if ((skill->Integer() == 3) || ((random() < (0.25*((float)skill->Integer())))))
 		NextFrame = FRAME_runs03;
 }
@@ -594,6 +597,9 @@ void CSoldierBase::Attack6_RefireBlaster ()
 		return;
 
 	if (range(Entity->gameEntity, Entity->gameEntity->enemy) < RANGE_NEAR)
+		return;
+
+	if (!EnemyVis)
 		return;
 
 	if ((skill->Integer() == 3) || ((random() < (0.25*((float)skill->Integer())))))

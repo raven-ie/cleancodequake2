@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // New indexing system
 //
 
+#if !defined(__CC_INDEXING_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_INDEXING_H__
+
 typedef byte MediaIndex;
 
 class CIndex
@@ -66,3 +69,6 @@ MediaIndex SoundIndex (char *string);
 MediaIndex ImageIndex (char *string);
 void ClearList ();
 
+#else
+FILE_WARNING
+#endif

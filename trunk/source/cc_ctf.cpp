@@ -504,14 +504,18 @@ void CTFResetFlag(int ctf_team)
 	}
 
 	ent = NULL;
-	while ((ent = G_Find (ent, FOFS(classname), c)) != NULL) {
-		if (ent->spawnflags & DROPPED_ITEM)
-			G_FreeEdict(ent);
-		else {
-			ent->svFlags &= ~SVF_NOCLIENT;
-			ent->solid = SOLID_TRIGGER;
-			gi.linkentity(ent);
-			ent->state.event = EV_ITEM_RESPAWN;
+	while ((ent = G_Find (ent, FOFS(classname), c)) != NULL)
+	{
+		CFlagEntity *Flag = dynamic_cast<CFlagEntity*>(ent->Entity);
+
+		if (Flag->gameEntity->spawnflags & DROPPED_ITEM)
+			Flag->Free ();
+		else
+		{
+			Flag->SetSvFlags(Flag->GetSvFlags() & ~SVF_NOCLIENT);
+			Flag->SetSolid (SOLID_TRIGGER);
+			Flag->Link ();
+			Flag->State.SetEvent (EV_ITEM_RESPAWN);
 		}
 	}
 }
@@ -522,98 +526,16 @@ void CTFResetFlags(void)
 	CTFResetFlag(CTF_TEAM2);
 }
 
-#if 0
-static void CTFDropFlagTouch(edict_t *ent, edict_t *other, plane_t *plane, cmBspSurface_t *surf)
-{
-	//owner (who dropped us) can't touch for two secs
-	if (other == ent->owner && 
-		ent->nextthink - level.framenum > CTF_AUTO_FLAG_RETURN_TIMEOUT-2)
-		return;
-
-#if 0
-	TouchItem (ent, other, plane, surf);
-#endif
-}
-
-static void CTFDropFlagThink(edict_t *ent)
-{
-	// auto return the flag
-	// reset flag will remove ourselves
-	if (strcmp(ent->classname, "item_flag_team1") == 0) {
-		CTFResetFlag(CTF_TEAM1);
-		BroadcastPrintf(PRINT_HIGH, "The %s flag has returned!\n",
-			CTFTeamName(CTF_TEAM1));
-	} else if (strcmp(ent->classname, "item_flag_team2") == 0) {
-		CTFResetFlag(CTF_TEAM2);
-		BroadcastPrintf(PRINT_HIGH, "The %s flag has returned!\n",
-			CTFTeamName(CTF_TEAM2));
-	}
-}
-#endif
-
 // Called from PlayerDie, to drop the flag from a dying player
 void CTFDeadDropFlag(CPlayerEntity *self)
 {
-	CItemEntity *dropped = NULL;
-
 	if (self->Client.pers.Flag)
 	{
-		dropped = self->Client.pers.Flag->DropItem (self);
+		self->Client.pers.Flag->DropItem (self);
 		self->Client.pers.Inventory.Set (self->Client.pers.Flag, 0);
 		BroadcastPrintf (PRINT_HIGH, "%s lost the %s flag!\n", self->Client.pers.netname, CTFTeamName(self->Client.pers.Flag->team));
 		self->Client.pers.Flag = NULL;
 	}
-
-	if (dropped)
-	{
-#if 0
-		dropped->think = CTFDropFlagThink;
-		dropped->nextthink = level.framenum + CTF_AUTO_FLAG_RETURN_TIMEOUT;
-		dropped->touch = CTFDropFlagTouch;
-#endif
-	}
-}
-
-static void CTFFlagThink(edict_t *ent)
-{
-	if (ent->solid != SOLID_NOT)
-		ent->state.frame = 173 + (((ent->state.frame - 173) + 1) % 16);
-	ent->nextthink = level.framenum + FRAMETIME;
-}
-
-void CTFFlagSetup (edict_t *ent)
-{
-	CTrace		tr;
-	vec3_t		dest;
-
-	Vec3Set (ent->mins, -15, -15, -15);
-	Vec3Set (ent->maxs, 15, 15, 15);
-
-	if (ent->model)
-		ent->state.modelIndex = ModelIndex(ent->model);
-	else
-		ent->state.modelIndex = ModelIndex(ent->item->WorldModel);
-	ent->solid = SOLID_TRIGGER;
-	ent->movetype = MOVETYPE_TOSS;  
-	//ent->touch = TouchItem;
-
-	vec3_t v = {0,0,-128};
-	Vec3Add (ent->state.origin, v, dest);
-
-	tr = CTrace (ent->state.origin, ent->mins, ent->maxs, dest, ent, CONTENTS_MASK_SOLID);
-	if (tr.startSolid)
-	{
-		DebugPrintf ("CTFFlagSetup: %s startSolid at (%f %f %f)\n", ent->classname, ent->state.origin[0], ent->state.origin[1], ent->state.origin[2]);
-		G_FreeEdict (ent);
-		return;
-	}
-
-	Vec3Copy (tr.endPos, ent->state.origin);
-
-	gi.linkentity (ent);
-
-	ent->nextthink = level.framenum + FRAMETIME;
-	ent->think = CTFFlagThink;
 }
 
 // called when we enter the intermission
@@ -1604,20 +1526,20 @@ bool CTFCheckRules(void)
 			else
 				Q_snprintfz(text, sizeof(text), "SETUP: %d not ready", j);
 
-			gi.configstring (CONFIG_CTF_MATCH, text);
+			ConfigString (CONFIG_CTF_MATCH, text);
 			break;
 
 
 		case MATCH_PREGAME :
 			Q_snprintfz(text, sizeof(text), "%02d:%02d UNTIL START",
 				t / 60, t % 60);
-			gi.configstring (CONFIG_CTF_MATCH, text);
+			ConfigString (CONFIG_CTF_MATCH, text);
 			break;
 
 		case MATCH_GAME:
 			Q_snprintfz(text, sizeof(text), "%02d:%02d MATCH",
 				t / 60, t % 60);
-			gi.configstring (CONFIG_CTF_MATCH, text);
+			ConfigString (CONFIG_CTF_MATCH, text);
 			break;
 		}
 		return false;

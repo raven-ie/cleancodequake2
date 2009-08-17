@@ -32,6 +32,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 //
 
 #include "cc_local.h"
+
 #ifdef CLEANCTF_ENABLED
 #include "m_player.h"
 
@@ -74,230 +75,8 @@ bool CGrapple::AttemptToFire (CPlayerEntity *ent)
 void CGrapple::PlayerResetGrapple(CPlayerEntity *ent)
 {
 	if (ent->Client.ctf_grapple)
-		ResetGrapple(ent->Client.ctf_grapple);
+		ent->Client.ctf_grapple->ResetGrapple ();
 }
-
-// self is grapple, not player
-void CGrapple::ResetGrapple(edict_t *self)
-{
-	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(self->owner->Entity);
-	if (Player->Client.ctf_grapple)
-	{
-		float volume = 1.0;
-
-		if (Player->Client.silencer_shots)
-			volume = 0.2f;
-
-		//PlaySoundFrom (Player->gameEntity, CHAN_WEAPON, SoundIndex("weapons/grapple/grreset.wav"), volume, ATTN_NORM, 0);
-		Player->Client.ctf_grapple = NULL;
-		Player->Client.ctf_grapplereleasetime = level.framenum;
-		Player->Client.ctf_grapplestate = CTF_GRAPPLE_STATE_HANG+1; // we're firing, not on hook
-		Player->Client.PlayerState.GetPMove()->pmFlags &= ~PMF_NO_PREDICTION;
-		G_FreeEdict(self);
-	}
-}
-
-void CGrapple::GrappleTouch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *surf)
-{
-	float volume = 1.0;
-
-	if (other == self->owner)
-		return;
-
-	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(self->owner->Entity);
-	if (Player->Client.ctf_grapplestate != CTF_GRAPPLE_STATE_FLY)
-		return;
-
-	if (surf && (surf->flags & SURF_TEXINFO_SKY))
-	{
-		ResetGrapple(self);
-		return;
-	}
-
-	Vec3Copy(vec3Origin, self->velocity);
-
-	PlayerNoise(Player, self->state.origin, PNOISE_IMPACT);
-
-	if (other->takedamage)
-	{
-		T_Damage (other, self, Player->gameEntity, self->velocity, self->state.origin, plane->normal, self->dmg, 1, 0, MOD_GRAPPLE);
-		ResetGrapple(self);
-		return;
-	}
-
-	Player->Client.ctf_grapplestate = CTF_GRAPPLE_STATE_PULL; // we're on hook
-	self->enemy = other;
-
-	self->solid = SOLID_NOT;
-
-	if (Player->Client.silencer_shots)
-		volume = 0.2f;
-
-	PlaySoundFrom (Player->gameEntity, CHAN_WEAPON, SoundIndex("weapons/grapple/grpull.wav"), volume, ATTN_NORM, 0);
-	PlaySoundFrom (self, CHAN_WEAPON, SoundIndex("weapons/grapple/grhit.wav"), volume, ATTN_NORM, 0);
-
-	WriteByte (SVC_TEMP_ENTITY);
-	WriteByte (TE_SPARKS);
-	WritePosition (self->state.origin);
-	if (!plane)
-		WriteDirection (vec3Origin);
-	else
-		WriteDirection (plane->normal);
-	Cast (CASTFLAG_PVS, self->state.origin);
-}
-
-// draw beam between grapple and self
-void CGrapple::GrappleDrawCable(edict_t *self)
-{
-	vec3_t	offset, start, end, f, r, origin;
-	vec3_t	dir;
-	float	distance;
-	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(self->owner->Entity);
-
-	Player->State.GetOrigin (origin);
-
-	Angles_Vectors (Player->Client.v_angle, f, r, NULL);
-	Vec3Set(offset, 16, 16, Player->gameEntity->viewheight-8);
-	P_ProjectSource (Player, offset, f, r, start);
-
-	Vec3Subtract(start, origin, offset);
-
-	Vec3Subtract (start, self->state.origin, dir);
-	distance = Vec3Length(dir);
-	// don't draw cable if close
-	if (distance < 64)
-		return;
-
-	// adjust start for beam origin being in middle of a segment
-	Vec3Copy (self->state.origin, end);
-
-	CTempEnt_Trails::GrappleCable (origin, end, Player->State.GetNumber(), offset);
-}
-
-void SV_AddGravity (edict_t *ent);
-
-// pull the player toward the grapple
-void CGrapple::GrapplePull(edict_t *self)
-{
-	vec3_t hookdir, v;
-	float vlen;
-	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(self->owner->Entity);
-
-	if (Player->Client.pers.Weapon->Item == NItems::Grapple &&
-		!Player->Client.NewWeapon &&
-		Player->Client.weaponstate != WS_FIRING &&
-		Player->Client.weaponstate != WS_ACTIVATING)
-	{
-		ResetGrapple(self);
-		return;
-	}
-
-	if (self->enemy)
-	{
-		if (self->enemy->solid == SOLID_NOT)
-		{
-			ResetGrapple(self);
-			return;
-		}
-		if (self->enemy->solid == SOLID_BBOX)
-		{
-			Vec3Scale(self->enemy->size, 0.5, v);
-			Vec3Add(v, self->enemy->state.origin, v);
-			Vec3Add(v, self->enemy->mins, self->state.origin);
-			gi.linkentity (self);
-		}
-		else
-			Vec3Copy(self->enemy->velocity, self->velocity);
-		if (self->enemy->takedamage &&
-			!CheckTeamDamage (self->enemy, Player->gameEntity))
-		{
-			float volume = 1.0;
-
-			if (Player->Client.silencer_shots)
-				volume = 0.2f;
-
-			T_Damage (self->enemy, self, Player->gameEntity, self->velocity, self->state.origin, vec3Origin, 1, 1, 0, MOD_GRAPPLE);
-			PlaySoundFrom (self, CHAN_WEAPON, SoundIndex("weapons/grapple/grhurt.wav"), volume, ATTN_NORM, 0);
-		}
-		if (self->enemy->deadflag)
-		{ // he died
-			ResetGrapple(self);
-			return;
-		}
-	}
-
-	GrappleDrawCable(self);
-
-	if (Player->Client.ctf_grapplestate > CTF_GRAPPLE_STATE_FLY)
-	{
-		// pull player toward grapple
-		// this causes icky stuff with prediction, we need to extend
-		// the prediction layer to include two new fields in the player
-		// move stuff: a point and a velocity.  The client should add
-		// that velociy in the direction of the point
-		vec3_t forward, up;
-
-		Angles_Vectors (Player->Client.v_angle, forward, NULL, up);
-		Player->State.GetOrigin (v);
-		v[2] += Player->gameEntity->viewheight;
-		Vec3Subtract (self->state.origin, v, hookdir);
-
-		vlen = Vec3Length(hookdir);
-
-		if (Player->Client.ctf_grapplestate == CTF_GRAPPLE_STATE_PULL &&
-			vlen < 64)
-		{
-			float volume = 1.0;
-
-			if (Player->Client.silencer_shots)
-				volume = 0.2f;
-
-			Player->Client.PlayerState.GetPMove()->pmFlags |= PMF_NO_PREDICTION;
-			PlaySoundFrom (Player->gameEntity, CHAN_WEAPON, SoundIndex("weapons/grapple/grhang.wav"), volume, ATTN_NORM, 0);
-			Player->Client.ctf_grapplestate = CTF_GRAPPLE_STATE_HANG;
-		}
-
-		VectorNormalizeFastf (hookdir);
-		Vec3Scale(hookdir, CTF_GRAPPLE_PULL_SPEED, hookdir);
-		Vec3Copy(hookdir, Player->gameEntity->velocity);
-		SV_AddGravity(Player->gameEntity);
-	}
-}
-
-void CGrapple::FireGrapple (CPlayerEntity *Player, vec3_t start, vec3_t dir, int damage, int speed, int effect)
-{
-	edict_t	*grapple;
-
-	VectorNormalizeFastf (dir);
-
-	grapple = G_Spawn();
-	Vec3Copy (start, grapple->state.origin);
-	Vec3Copy (start, grapple->state.oldOrigin);
-	VecToAngles (dir, grapple->state.angles);
-	Vec3Scale (dir, speed, grapple->velocity);
-	grapple->movetype = MOVETYPE_FLYMISSILE;
-	grapple->clipMask = CONTENTS_MASK_SHOT;
-	grapple->solid = SOLID_BBOX;
-	grapple->state.effects |= effect;
-	Vec3Clear (grapple->mins);
-	Vec3Clear (grapple->maxs);
-	grapple->state.modelIndex = ModelIndex ("models/weapons/grapple/hook/tris.md2");
-	grapple->owner = Player->gameEntity;
-	grapple->touch = GrappleTouch;
-	grapple->dmg = damage;
-	Player->Client.ctf_grapple = grapple;
-	Player->Client.ctf_grapplestate = CTF_GRAPPLE_STATE_FLY; // we're firing, not on hook
-	gi.linkentity (grapple);
-
-	vec3_t origin;
-	Player->State.GetOrigin (origin);
-	CTrace tr = CTrace (origin, grapple->state.origin, grapple, CONTENTS_MASK_SHOT);
-	if (tr.fraction < 1.0)
-	{
-		Vec3MA (grapple->state.origin, -10, dir, grapple->state.origin);
-		grapple->touch (grapple, tr.ent, NULL, NULL);
-	}
-}	
 
 void CGrapple::Fire (CPlayerEntity *Player)
 {
@@ -320,8 +99,9 @@ void CGrapple::Fire (CPlayerEntity *Player)
 		volume = 0.2f;
 
 	PlaySoundFrom (Player->gameEntity, CHAN_WEAPON, SoundIndex("weapons/grapple/grfire.wav"), volume, ATTN_NORM, 0);
-	FireGrapple (Player, start, forward, 10, CTF_GRAPPLE_SPEED, 0);
-
+	//FireGrapple (Player, start, forward, 10, CTF_GRAPPLE_SPEED, 0);
+	CGrappleEntity::Spawn (Player, start, forward, 10, CTF_GRAPPLE_SPEED);
+		
 	PlayerNoise(Player, start, PNOISE_WEAPON);
 	FireAnimation(Player);
 
@@ -418,7 +198,7 @@ void CGrapple::WeaponGeneric (CPlayerEntity *Player)
 		else if (!(Player->Client.buttons & BUTTON_ATTACK))
 		{
 			if (Player->Client.ctf_grapple)
-				ResetGrapple(Player->Client.ctf_grapple);
+				Player->Client.ctf_grapple->ResetGrapple ();
 			newFrame = IdleStart+1;
 			newState = WS_IDLE;
 		}

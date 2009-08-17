@@ -30,6 +30,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // cc_ctfitems.h
 // Flags and Techs
 //
+#if !defined(__CC_CTFITEMS_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_CTFITEMS_H__
+
 
 class CTech : public CBaseItem
 {
@@ -54,6 +57,8 @@ public:
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
 			   char *Precache, int team);
 
+	CItemEntity *DropItem (CBaseEntity *ent);
+
 	bool	Pickup (class CItemEntity *ent, CPlayerEntity *other);
 	void	Drop (CPlayerEntity *ent);
 	void	Use (CPlayerEntity *ent);
@@ -61,3 +66,7 @@ public:
 
 void AddTechsToList ();
 void AddFlagsToList ();
+
+#else
+FILE_WARNING
+#endif

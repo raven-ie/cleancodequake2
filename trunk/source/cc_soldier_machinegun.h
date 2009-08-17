@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // T-t-t-t-t-t-t.
 //
 
+#if !defined(__CC_SOLDIER_MACHINEGUN_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_SOLDIER_MACHINEGUN_H__
+
 class CSoldierMachinegun : public CSoldierBase
 {
 public:
@@ -40,3 +43,7 @@ public:
 	void FireGun (int FlashNumber);
 	void SpawnSoldier ();
 };
+
+#else
+FILE_WARNING
+#endif

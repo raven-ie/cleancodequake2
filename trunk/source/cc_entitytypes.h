@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Different base entity classes
 //
 
+#if !defined(__CC_ENTITYTYPES_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_ENTITYTYPES_H__
+
 // "Hurtable" entity
 enum EDeadFlags
 {
@@ -192,3 +195,7 @@ public:
 
 	bool			Run ();
 };
+
+#else
+FILE_WARNING
+#endif

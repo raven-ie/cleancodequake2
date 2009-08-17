@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // A container with enumerations for colors and classes
 //
 
+#if !defined(__CC_COLORS_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_COLORS_H__
+
 namespace NSColor
 {
 	enum EColors
@@ -354,3 +357,7 @@ namespace NSColor
 		inline byte GetClosestColorFromRGB (byte r, byte g, byte b);
 	};
 };
+
+#else
+FILE_WARNING
+#endif

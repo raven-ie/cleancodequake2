@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Biggun Protector
 //
 
+#if !defined(__CC_BOSS2_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_BOSS2_H__
+
 class CBoss2 : public CMonster
 {
 public:
@@ -63,3 +66,7 @@ public:
 
 	void Spawn ();
 };
+
+#else
+FILE_WARNING
+#endif

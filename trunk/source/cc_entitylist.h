@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Resolves an entity from a classname
 //
 
+#if !defined(__CC_ENTITYLIST_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_ENTITYLIST_H__
+
 #define MAX_CLASSNAME_CLASSES 1024
 #define MAX_CLASSNAME_CLASSES_HASH (MAX_CLASSNAME_CLASSES / 4)
 
@@ -74,3 +77,7 @@ CBaseEntity *ResolveMapEntity (edict_t *ent);
 	} \
 	CClassnameToClassIndex LINK_RESOLVE_CLASSNAME(DLLClassName, _Linker) \
 	(LINK_RESOLVE_CLASSNAME(DLLClassName, _Spawn), mapClassName);
+
+#else
+FILE_WARNING
+#endif

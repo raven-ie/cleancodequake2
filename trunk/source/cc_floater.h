@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Floater Monster
 //
 
+#if !defined(__CC_FLOATER_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_FLOATER_H__
+
 class CFloater : public CMonster
 {
 public:
@@ -61,3 +64,7 @@ public:
 
 	void Spawn ();
 };
+
+#else
+FILE_WARNING
+#endif

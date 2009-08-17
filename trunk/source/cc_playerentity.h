@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Player entity
 //
 
+#if !defined(__CC_PLAYERENTITY_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_PLAYERENTITY_H__
+
 class CPlayerState
 {
 protected:
@@ -281,7 +284,7 @@ public:
 
 #ifdef CLEANCTF_ENABLED
 //ZOID
-	edict_t		*ctf_grapple;		// entity of grapple
+	class CGrappleEntity	*ctf_grapple;		// entity of grapple
 	int			ctf_grapplestate;		// true if pulling
 	int32		ctf_grapplereleasetime;	// time of grapple release
 	int32		ctf_regentime;		// regen tech
@@ -376,3 +379,7 @@ public:
 	void P_ProjectSource (vec3f distance, vec3f &forward, vec3f &right, vec3f &result);
 	void PlayerNoiseAt (vec3_t Where, int type);
 };
+
+#else
+FILE_WARNING
+#endif

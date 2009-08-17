@@ -31,9 +31,11 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // New item system code
 //
 
+#if !defined(__CC_WEAPONS_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_WEAPONS_H__
+
 // Class for weapon items.
-// Named not to interfere with the CWeapon system, when
-// it is completed.
+// Named not to interfere with the CWeapon system.
 // This class is missing ViewWeapon and the like
 // because the CWeapon system will handle all of that in the weapon
 // class itself. That way we don't have a bunch of useless SHIT spread
@@ -98,3 +100,7 @@ public:
 
 void AddAmmoToList();
 void DoWeaponVweps();
+
+#else
+FILE_WARNING
+#endif

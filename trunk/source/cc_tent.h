@@ -36,6 +36,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // A huge class containing containers to spawn temp entities with a single function call.
 //
 
+#if !defined(__CC_TENT_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_TENT_H__
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 /// \class	CTempEnt_Splashes
 ///
@@ -365,3 +368,7 @@ enum ECastFlags
 	CASTFLAG_PHS = 2,
 	CASTFLAG_RELIABLE = 4
 };
+
+#else
+FILE_WARNING
+#endif

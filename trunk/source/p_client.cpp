@@ -963,7 +963,7 @@ void ClientDisconnect (edict_t *ent)
 	Player->SetInUse (false);
 	ent->classname = "disconnected";
 
-	gi.configstring (CS_PLAYERSKINS+(Player->State.GetNumber()-1), "");
+	ConfigString (CS_PLAYERSKINS+(Player->State.GetNumber()-1), "");
 }
 
 
@@ -992,7 +992,34 @@ This will be called once for each client frame, which will
 usually be a couple times for each server frame.
 ==============
 */
+/*
+uint32 frametest[20] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+uint16 curIndex = 0;
+*/
 void ClientThink (edict_t *ent, userCmd_t *ucmd)
 {
+	/*
+	if (curIndex == 20)
+	{
+		uint32 frameCounts[19];
+		float av = 0;
+
+		// Count em up
+		for (int i = 0; i < 19; i++)
+		{
+			frameCounts[i] = (frametest[i+1] - frametest[i]);
+			av += frameCounts[i];
+		}
+
+		av /= 19;
+
+		DebugPrintf ("%f\n", av);
+
+		memset (frametest, 0, sizeof(frametest));
+		curIndex = 0;
+	}
+	else
+		frametest[curIndex++] = Sys_Milliseconds();
+	*/
 	(dynamic_cast<CPlayerEntity*>(ent->Entity))->ClientThink (ucmd);
 }

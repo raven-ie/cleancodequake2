@@ -105,12 +105,21 @@ void SvCmd_RunCommand (char *commandName)
 		Com_Printf (0, "Unknown server command \"%s\"\n", commandName);
 }
 
-void SvCmd_Test_f ()
+void SvCmd_EntList_f ()
 {
-	Com_Printf (0, "D:\n");
+	int numOld = 0, numNew = 0;
+	for (int i = 0; i < globals.numEdicts; i++)
+	{
+		edict_t *e = (&g_edicts[i]);
+		if (!e->inUse)
+			continue;
 
-	int ga = ArgGeti (2);
-	(dynamic_cast<CPlayerEntity*>(g_edicts[ga].Entity))->Client.resp.score++;
+		if (!e->Entity)
+			numOld++;
+		else
+			numNew++;
+	}
+	DebugPrintf ("Clean Entities: %i\nOld Entities: %i\nTotal Entities: %i\n", numNew, numOld, numOld+numNew);
 }
 
 extern char *gEntString;
@@ -131,7 +140,7 @@ void SvCmd_Dump_f ()
 
 void SvCmd_Register ()
 {
-	SvCmd_AddCommand ("test", SvCmd_Test_f);
+	SvCmd_AddCommand ("entlist", SvCmd_EntList_f);
 	SvCmd_AddCommand ("dump", SvCmd_Dump_f);
 }
 
