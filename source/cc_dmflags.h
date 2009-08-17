@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // This is so that I don't have to keep doing dmflags->Integer(). Should be faster than bitwise ops every frame!
 //
 
+#if !defined(__CC_DMFLAGS_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_DMFLAGS_H__
+
 class dmFlagsConfig
 {
 public:
@@ -66,3 +69,7 @@ public:
 	dmFlagsConfig();
 	void UpdateFlags (int dmFlags);
 };
+
+#else
+FILE_WARNING
+#endif

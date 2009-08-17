@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Exception handler, stolen from EGL. Shh!
 //
 
+#if !defined(__CC_EXCEPTIONHANDLER_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_EXCEPTIONHANDLER_H__
+
 #ifdef CC_USE_EXCEPTION_HANDLER
 #define CC_HANDLE_EXCEPTIONS(x) __try { x } __except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation())) { return; }
 
@@ -40,3 +43,6 @@ DWORD EGLExceptionHandler (DWORD exceptionCode, LPEXCEPTION_POINTERS exceptionIn
 #define CC_HANDLE_EXCEPTIONS(x) x
 #endif
 
+#else
+FILE_WARNING
+#endif

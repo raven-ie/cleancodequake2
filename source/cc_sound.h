@@ -31,7 +31,14 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Sound replacements
 //
 
+#if !defined(__CC_SOUND_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_SOUND_H__
+
 void PlaySoundFrom	(edict_t *ent,  EEntSndChannel channel, MediaIndex soundIndex,
 					float volume = 1.0f, int attenuation = ATTN_NORM, float timeOfs = 0.0f);
 void PlaySoundAt	(vec3_t origin, edict_t *ent, EEntSndChannel channel, MediaIndex soundIndex,
 					float volume = 1.0f, int attenuation = ATTN_NORM, float timeOfs = 0.0f);
+
+#else
+FILE_WARNING
+#endif

@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Hyperblaster
 //
 
+#if !defined(__CC_HYPERBLASTER_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_HYPERBLASTER_H__
+
 class CHyperBlaster : public CWeapon
 {
 public:
@@ -44,3 +47,7 @@ public:
 };
 
 extern CHyperBlaster WeaponHyperBlaster;
+
+#else
+FILE_WARNING
+#endif

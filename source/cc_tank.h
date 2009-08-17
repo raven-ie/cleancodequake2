@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Tank
 //
 
+#if !defined(__CC_TANK_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_TANK_H__
+
 class CTank : public CMonster
 {
 public:
@@ -79,3 +82,7 @@ public:
 
 	void Spawn ();
 };
+
+#else
+FILE_WARNING
+#endif

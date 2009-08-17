@@ -31,4 +31,11 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Duh
 //
 
-uint32 Com_HashGenericFast(const char *name, const int hashSize);
+#if !defined(__CC_HASH_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_HASH_H__
+
+uint32 Com_HashGeneric(const char *name, const int hashSize);
+
+#else
+FILE_WARNING
+#endif

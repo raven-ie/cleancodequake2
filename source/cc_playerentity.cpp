@@ -729,7 +729,7 @@ void CPlayerEntity::UserinfoChanged (char *userinfo)
 	else
 //ZOID
 #endif
-		gi.configstring (CS_PLAYERSKINS+playernum, Q_VarArgs ("%s\\%s", Client.pers.netname, s) );
+		ConfigString (CS_PLAYERSKINS+playernum, Q_VarArgs ("%s\\%s", Client.pers.netname, s) );
 
 	// fov
 	if ((game.mode & GAME_DEATHMATCH) && dmFlags.dfFixedFov)
@@ -803,15 +803,15 @@ void CPlayerEntity::CTFAssignSkin(char *s)
 	switch (Client.resp.ctf_team)
 	{
 	case CTF_TEAM1:
-		gi.configstring (CS_PLAYERSKINS+playernum, Q_VarArgs("%s\\%s%s", 
+		ConfigString (CS_PLAYERSKINS+playernum, Q_VarArgs("%s\\%s%s", 
 			Client.pers.netname, t, CTF_TEAM1_SKIN) );
 		break;
 	case CTF_TEAM2:
-		gi.configstring (CS_PLAYERSKINS+playernum,
+		ConfigString (CS_PLAYERSKINS+playernum,
 			Q_VarArgs("%s\\%s%s", Client.pers.netname, t, CTF_TEAM2_SKIN) );
 		break;
 	default:
-		gi.configstring (CS_PLAYERSKINS+playernum, 
+		ConfigString (CS_PLAYERSKINS+playernum, 
 			Q_VarArgs("%s\\%s", Client.pers.netname, s) );
 		break;
 	}
@@ -2307,8 +2307,8 @@ void CPlayerEntity::SetStats ()
 	Client.PlayerState.SetStat(STAT_LAYOUTS, 0);
 
 	if (Client.pers.health <= 0 || Client.resp.MenuState.InMenu ||
-		(((game.mode & GAME_DEATHMATCH) && (level.intermissiontime || Client.showscores)) || 
-		(!(game.mode & GAME_DEATHMATCH)) && Client.showhelp))
+		(level.intermissiontime || Client.showscores) || 
+		(!(game.mode & GAME_DEATHMATCH)) && Client.showhelp)
 		Client.PlayerState.SetStat(STAT_LAYOUTS, Client.PlayerState.GetStat(STAT_LAYOUTS) | 1);
 	if (Client.showinventory && Client.pers.health > 0)
 		Client.PlayerState.SetStat(STAT_LAYOUTS, Client.PlayerState.GetStat(STAT_LAYOUTS) | 2);
@@ -2956,7 +2956,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 #ifdef CLEANCTF_ENABLED
 //ZOID
 	if (Client.ctf_grapple)
-		CGrapple::GrapplePull(Client.ctf_grapple);
+		Client.ctf_grapple->GrapplePull ();
 //ZOID
 #endif
 
@@ -3193,8 +3193,9 @@ void	CPlayerEntity::SelectSpawnPoint (vec3_t origin, vec3_t angles)
 				if (!spot)
 					spot = G_Find (spot, FOFS(classname), "info_player_deathmatch");
 			}
+			// FIXME: Remove.
 			if (!spot)
-				gi.error ("Couldn't find spawn point %s", game.spawnpoint);
+				GameError ("Couldn't find spawn point %s", game.spawnpoint);
 		}
 	}
 

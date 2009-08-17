@@ -30,6 +30,10 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // cc_infantry.h
 // Infantry Monster
 //
+
+#if !defined(__CC_INFANTRY_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_INFANTRY_H__
+
 #define INFANTRY_DOES_REVERSE_GUN_ATTACK
 
 class CInfantry : public CMonster
@@ -79,3 +83,7 @@ public:
 
 	void Spawn ();
 };
+
+#else
+FILE_WARNING
+#endif

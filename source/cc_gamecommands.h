@@ -31,5 +31,12 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // ClientCommand & related functions
 //
 
+#if !defined(__CC_GAMECOMMANDS_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_GAMECOMMANDS_H__
+
 void Cmd_Register ();
 void ClientCommand (edict_t *ent);
+
+#else
+FILE_WARNING
+#endif

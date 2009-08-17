@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Supertank (Boss1)
 //
 
+#if !defined(__CC_SUPERTANK_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_SUPERTANK_H__
+
 #define SUPERTANK_USES_GRENADE_LAUNCHER
 
 class CSuperTank : public CMonster
@@ -68,3 +71,7 @@ public:
 
 	void Spawn ();
 };
+
+#else
+FILE_WARNING
+#endif

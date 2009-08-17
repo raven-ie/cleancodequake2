@@ -19,12 +19,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 // g_local.h -- local definitions for game module
 
+#if !defined(__G_LOCAL_H__) || !defined(INCLUDE_GUARDS)
+#define __G_LOCAL_H__
+
 #include "cc_options.h"
-
-#ifdef HAS_PRAGMA_ONCE
-#pragma once
-#endif
-
 #include "../shared/shared.h"
 
 #if 0
@@ -822,3 +820,7 @@ extern	CCvar	*instantweap;
 
 bool CheckTeamDamage (edict_t *targ, edict_t *attacker);
 void	SelectSpawnPoint (edict_t *ent, vec3_t origin, vec3_t angles);
+
+#else
+FILE_WARNING
+#endif

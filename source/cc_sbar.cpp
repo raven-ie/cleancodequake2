@@ -47,7 +47,7 @@ size_t CStatusBar::Length ()
 
 void CStatusBar::Send ()
 {
-	gi.configstring (CS_STATUSBAR, bar);
+	ConfigString (CS_STATUSBAR, bar);
 }
 
 void CStatusBar::SendMsg (edict_t *ent, bool reliable)

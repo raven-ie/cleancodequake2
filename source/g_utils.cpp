@@ -303,7 +303,7 @@ edict_t *G_Spawn (void)
 	}
 	
 	if (i == game.maxentities)
-		gi.error ("ED_Alloc: no free edicts");
+		GameError ("ED_Alloc: no free edicts");
 		
 	//DebugPrintf ("Entity %i allocated\n", i);
 	globals.numEdicts++;

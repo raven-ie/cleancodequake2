@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Chaingun
 //
 
+#if !defined(__CC_CHAINGUN_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_CHAINGUN_H__
+
 class CChaingun : public CWeapon
 {
 public:
@@ -46,3 +49,7 @@ public:
 };
 
 extern CChaingun WeaponChaingun;
+
+#else
+FILE_WARNING
+#endif

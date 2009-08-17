@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // THE WONDER OF THE WORLD IS GONE I KNOW FOR SURE
 //
 
+#if !defined(__CC_KEYS_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_KEYS_H__
+
 // Class for keys.
 class CKey : public CBaseItem
 {
@@ -55,3 +58,7 @@ public:
 };
 
 void AddKeysToList ();
+
+#else
+FILE_WARNING
+#endif

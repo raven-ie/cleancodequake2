@@ -18,6 +18,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
+#if !defined(__CC_CTF_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_CTF_H__
+
 #define CTF_VERSION			1.09b
 #define CTF_VSTRING2(x) #x
 #define CTF_VSTRING(x) CTF_VSTRING2(x)
@@ -210,3 +213,7 @@ extern	CCvar *matchsetuptime;
 extern	CCvar *matchstarttime;
 extern	CCvar *admin_password;
 extern	CCvar *warp_list;
+
+#else
+FILE_WARNING
+#endif

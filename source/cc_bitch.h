@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Iron Maiden
 //
 
+#if !defined(__CC_BITCH_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_BITCH_H__
+
 class CMaiden : public CMonster
 {
 public:
@@ -87,3 +90,7 @@ public:
 
 	void Spawn ();
 };
+
+#else
+FILE_WARNING
+#endif

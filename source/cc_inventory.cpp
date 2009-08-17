@@ -686,13 +686,13 @@ void Cmd_Give_f (CPlayerEntity *ent)
 	}
 	else
 	{
-		/*CItemEntity *it_ent = QNew (com_levelPool, 0) CItemEntity();
+		CItemEntity *it_ent = QNew (com_levelPool, 0) CItemEntity();
 		it_ent->gameEntity->classname = it->Classname;
 		it_ent->Spawn(it);
 		it_ent->Touch (ent, NULL, NULL);
 		if (it_ent->IsInUse())
-			it_ent->Free ();*/
-		it->Add (ent, 1);
+			it_ent->Free ();
+		//it->Add (ent, 1);
 	}
 }
 

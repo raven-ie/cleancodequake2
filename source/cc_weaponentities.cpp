@@ -1390,3 +1390,204 @@ bool CMeleeWeapon::Fire(CBaseEntity *Entity, vec3f aim, int damage, int kick)
 		Entity->gameEntity->enemy->groundentity = NULL;
 	return true;
 }
+
+#ifdef CLEANCTF_ENABLED
+
+CGrappleEntity::CGrappleEntity () :
+CBaseEntity(),
+CFlyMissileProjectile(),
+CTouchableEntity()
+{
+};
+
+CGrappleEntity::CGrappleEntity (int Index) :
+CBaseEntity(Index),
+CFlyMissileProjectile(Index),
+CTouchableEntity(Index)
+{
+};
+
+void CGrappleEntity::GrappleDrawCable()
+{
+	vec3f	start, end, f, r;
+
+	vec3f origin = Player->State.GetOrigin ();
+	vec3f(Player->Client.v_angle).ToVectors (&f, &r, NULL);
+	Player->P_ProjectSource (vec3f(16, 16, Player->gameEntity->viewheight-8), f, r, start);
+
+	vec3f offset = start - origin;
+	vec3f dir = start - State.GetOrigin();
+
+	// don't draw cable if close
+	if (dir.LengthFast() < 64)
+		return;
+
+	// adjust start for beam origin being in middle of a segment
+	end = State.GetOrigin();
+	CTempEnt_Trails::GrappleCable (origin, end, Player->State.GetNumber(), offset);
+};
+
+void SV_AddGravity (edict_t *ent);
+void CGrappleEntity::GrapplePull()
+{
+	float volume = (Player->Client.silencer_shots) ? 0.2f : 1.0;
+
+	if ((Player->Client.pers.Weapon->Item == NItems::Grapple) &&
+		!Player->Client.NewWeapon &&
+		(Player->Client.weaponstate != WS_FIRING) &&
+		(Player->Client.weaponstate != WS_ACTIVATING))
+	{
+		ResetGrapple();
+		return;
+	}
+
+	if (gameEntity->enemy)
+	{
+		if (gameEntity->enemy->solid == SOLID_NOT)
+		{
+			ResetGrapple();
+			return;
+		}
+		if (gameEntity->enemy->solid == SOLID_BBOX)
+		{
+			vec3f v = vec3f(gameEntity->enemy->size);
+			v.Scale(0.5f);
+			v += vec3f(gameEntity->enemy->state.origin);
+			State.SetOrigin (v + vec3f(gameEntity->enemy->mins));
+			Link ();
+		}
+		else
+			Vec3Copy (gameEntity->enemy->velocity, gameEntity->velocity);
+		if (gameEntity->enemy->takedamage &&
+			!CheckTeamDamage (gameEntity->enemy, Player->gameEntity))
+		{
+			T_Damage (gameEntity->enemy, gameEntity, Player->gameEntity, gameEntity->velocity, State.GetOrigin(), vec3Origin, 1, 1, 0, MOD_GRAPPLE);
+			PlaySound (CHAN_WEAPON, SoundIndex("weapons/grapple/grhurt.wav"), volume);
+		}
+		if (gameEntity->enemy->deadflag)
+		{ // he died
+			ResetGrapple();
+			return;
+		}
+	}
+
+	GrappleDrawCable();
+
+	if (Player->Client.ctf_grapplestate > CTF_GRAPPLE_STATE_FLY)
+	{
+		// pull player toward grapple
+		// this causes icky stuff with prediction, we need to extend
+		// the prediction layer to include two new fields in the player
+		// move stuff: a point and a velocity.  The client should add
+		// that velociy in the direction of the point
+		vec3f forward, up;
+
+		vec3f(Player->Client.v_angle).ToVectors (&forward, &up, NULL);
+		vec3f v = Player->State.GetOrigin ();
+		v.Z += Player->gameEntity->viewheight;
+		vec3f hookdir = State.GetOrigin() - v;
+
+		float vlen = hookdir.LengthFast();
+
+		if ((Player->Client.ctf_grapplestate == CTF_GRAPPLE_STATE_PULL) &&
+			vlen < 64)
+		{
+			Player->Client.PlayerState.GetPMove()->pmFlags |= PMF_NO_PREDICTION;
+			PlaySoundFrom (Player->gameEntity, CHAN_WEAPON, SoundIndex("weapons/grapple/grhang.wav"), volume, ATTN_NORM, 0);
+			Player->Client.ctf_grapplestate = CTF_GRAPPLE_STATE_HANG;
+		}
+
+		hookdir.NormalizeFast ();
+		hookdir.Scale(CTF_GRAPPLE_PULL_SPEED);
+		Player->gameEntity->velocity[0] = hookdir.X;
+		Player->gameEntity->velocity[1] = hookdir.Y;
+		Player->gameEntity->velocity[2] = hookdir.Z;
+		SV_AddGravity(Player->gameEntity);
+	}
+};
+
+void CGrappleEntity::ResetGrapple ()
+{
+	Player->Client.ctf_grapple = NULL;
+	Player->Client.ctf_grapplereleasetime = level.framenum;
+	Player->Client.ctf_grapplestate = CTF_GRAPPLE_STATE_HANG+1; // we're firing, not on hook
+	Player->Client.PlayerState.GetPMove()->pmFlags &= ~PMF_NO_PREDICTION;
+	Free ();
+};
+
+void CGrappleEntity::Spawn (CPlayerEntity *Spawner, vec3f start, vec3f dir, int damage, int speed)
+{
+	CGrappleEntity *Grapple = QNew (com_levelPool, 0) CGrappleEntity;
+	Grapple->Player = Spawner;
+	Grapple->Damage = damage;
+
+	dir.NormalizeFast();
+
+	Grapple->State.SetOrigin (start);
+	Grapple->State.SetOldOrigin (start);
+	Grapple->State.SetAngles (dir.ToAngles());
+	vec3f vel = dir;
+	vel.Scale (speed);
+	Grapple->gameEntity->velocity[0] = vel.X;
+	Grapple->gameEntity->velocity[1] = vel.Y;
+	Grapple->gameEntity->velocity[2] = vel.Z;
+	Grapple->SetClipmask (CONTENTS_MASK_SHOT);
+	Grapple->SetSolid (SOLID_BBOX);
+	Grapple->SetMins (vec3fOrigin);
+	Grapple->SetMaxs (vec3fOrigin);
+	Grapple->State.SetModelIndex (ModelIndex ("models/weapons/grapple/hook/tris.md2"));
+	Grapple->SetOwner (Spawner);
+	Spawner->Client.ctf_grapple = Grapple;
+	Spawner->Client.ctf_grapplestate = CTF_GRAPPLE_STATE_FLY; // we're firing, not on hook
+	Grapple->Link ();
+
+	vec3f origin = Spawner->State.GetOrigin();
+	CTrace tr = CTrace (origin, Grapple->State.GetOrigin(), Grapple->gameEntity, CONTENTS_MASK_SHOT);
+	if (tr.fraction < 1.0)
+	{
+		Grapple->State.SetOrigin (Grapple->State.GetOrigin().MultiplyAngles (-10, dir));
+		Grapple->Touch (tr.ent->Entity, NULL, NULL);
+	}
+};
+
+void CGrappleEntity::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
+{
+	if (other == Player)
+		return;
+
+	if (Player->Client.ctf_grapplestate != CTF_GRAPPLE_STATE_FLY)
+		return;
+
+	if (surf && (surf->flags & SURF_TEXINFO_SKY))
+	{
+		ResetGrapple();
+		return;
+	}
+
+	Vec3Copy(vec3Origin, gameEntity->velocity);
+	Player->PlayerNoiseAt (State.GetOrigin(), PNOISE_IMPACT);
+
+	if (other->gameEntity->takedamage)
+	{
+		T_Damage (other->gameEntity, gameEntity, Player->gameEntity, gameEntity->velocity, State.GetOrigin(), plane->normal, Damage, 1, 0, MOD_GRAPPLE);
+		ResetGrapple();
+		return;
+	}
+
+	Player->Client.ctf_grapplestate = CTF_GRAPPLE_STATE_PULL; // we're on hook
+	gameEntity->enemy = other->gameEntity;
+
+	SetSolid (SOLID_NOT);
+
+	float volume = (Player->Client.silencer_shots) ? 0.2f : 1.0f;
+	Player->PlaySound (CHAN_WEAPON, SoundIndex("weapons/grapple/grpull.wav"), volume);
+	PlaySound (CHAN_WEAPON, SoundIndex("weapons/grapple/grhit.wav"), volume);
+
+	CTempEnt_Splashes::Sparks (State.GetOrigin(), (!plane) ? vec3fOrigin : plane->normal);
+};
+
+bool CGrappleEntity::Run ()
+{
+	return CFlyMissileProjectile::Run();
+};
+#endif

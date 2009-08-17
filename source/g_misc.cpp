@@ -352,12 +352,12 @@ static void light_use (edict_t *self, edict_t *other, edict_t *activator)
 {
 	if (self->spawnflags & START_OFF)
 	{
-		gi.configstring (CS_LIGHTS+self->style, "m");
+		ConfigString (CS_LIGHTS+self->style, "m");
 		self->spawnflags &= ~START_OFF;
 	}
 	else
 	{
-		gi.configstring (CS_LIGHTS+self->style, "a");
+		ConfigString (CS_LIGHTS+self->style, "a");
 		self->spawnflags |= START_OFF;
 	}
 }
@@ -375,9 +375,9 @@ void SP_light (edict_t *self)
 	{
 		self->use = light_use;
 		if (self->spawnflags & START_OFF)
-			gi.configstring (CS_LIGHTS+self->style, "a");
+			ConfigString (CS_LIGHTS+self->style, "a");
 		else
-			gi.configstring (CS_LIGHTS+self->style, "m");
+			ConfigString (CS_LIGHTS+self->style, "m");
 	}
 }
 

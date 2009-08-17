@@ -21,6 +21,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 // memory.h
 //
 
+#if !defined(__CC_MEMORY_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_MEMORY_H__
+
 // Constants
 extern struct memPool_s	*com_genericPool; // Generic memory; memory that will be freed on level change, but not necessarily needed for anything
 extern struct memPool_s	*com_levelPool; // Flushed per level
@@ -112,3 +115,7 @@ inline void operator delete(void *Pointer, struct memPool_s *Pool, const int Tag
 }
 
 #define QDelete	delete
+
+#else
+FILE_WARNING
+#endif

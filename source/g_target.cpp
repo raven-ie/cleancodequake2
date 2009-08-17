@@ -195,7 +195,7 @@ void use_target_goal (edict_t *ent, edict_t *other, edict_t *activator)
 	level.found_goals++;
 
 	if (level.found_goals == level.total_goals)
-		gi.configstring (CS_CDTRACK, "0");
+		ConfigString (CS_CDTRACK, "0");
 
 	G_UseTargets (ent, activator);
 	G_FreeEdict (ent);
@@ -678,7 +678,7 @@ void target_lightramp_think (edict_t *self)
 
 	style[0] = 'a' + self->movedir[0] + (level.framenum - self->timestamp) / 0.1f * self->movedir[2];
 	style[1] = 0;
-	gi.configstring (CS_LIGHTS+self->enemy->style, style);
+	ConfigString (CS_LIGHTS+self->enemy->style, style);
 
 	if ((level.framenum - self->timestamp) < self->speed)
 		self->nextthink = level.framenum + FRAMETIME;

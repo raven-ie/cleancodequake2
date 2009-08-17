@@ -30,6 +30,10 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // cc_monsters.h
 // Monsters
 //
+
+#if !defined(__CC_MONSTERS_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_MONSTERS_H__
+
 class CMonster;
 
 class CFrame
@@ -386,3 +390,7 @@ void Monster_Think (edict_t *ent);
 	} \
 	CClassnameToClassIndex LINK_RESOLVE_CLASSNAME(DLLClassName, _Linker) \
 	(LINK_RESOLVE_CLASSNAME(DLLClassName, _Spawn), mapClassName);
+
+#else
+FILE_WARNING
+#endif

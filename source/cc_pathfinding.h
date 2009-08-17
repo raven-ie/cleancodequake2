@@ -31,11 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Pathfinding algorithm for monsters
 //
 
-#ifdef HAS_PRAGMA_ONCE
-#pragma once
-#endif
+#if (!defined(__CC_PATHFINDING_H__) || !defined(INCLUDE_GUARDS)) && defined(MONSTERS_USE_PATHFINDING)
+#define __CC_PATHFINDING_H__
 
-#ifdef MONSTERS_USE_PATHFINDING
 #include <vector>
 
 enum ENodeType
@@ -126,4 +124,6 @@ void LoadPathTable ();
 
 void Nodes_Register ();
 
+#else
+FILE_WARNING
 #endif

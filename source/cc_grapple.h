@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // CTF Grappling hook
 //
 
+#if !defined(__CC_GRAPPLE_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_GRAPPLE_H__
+
 class CGrapple : public CWeapon
 {
 public:
@@ -47,12 +50,11 @@ public:
 	// The function called to "fire"
 	void	Fire (CPlayerEntity *Player);
 
-	static void		GrapplePull (edict_t *self);
-	static void		GrappleDrawCable (edict_t *self);
-	static void		GrappleTouch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
-	static void		ResetGrapple (edict_t *self);
 	static void		PlayerResetGrapple (CPlayerEntity *Player);
-	void			FireGrapple (CPlayerEntity *Player, vec3_t start, vec3_t dir, int damage, int speed, int effect);
 };
 
 extern CGrapple WeaponGrapple;
+
+#else
+FILE_WARNING
+#endif

@@ -130,11 +130,11 @@ typedef struct gameImport_s
 	void	(*centerprintf) (edict_t *ent, char *fmt, ...);
 
 #ifndef USE_EXTENDED_GAME_IMPORTS
-	_CC_INSECURE_DEPRECATE (PlaySoundFrom)
+	_CC_INSECURE_DEPRECATE (PlaySoundFrom or CBaseEntity->PlaySound)
 #endif
 	void	(*sound) (edict_t *ent, int channel, int soundIndex, float volume, float attenuation, float timeOffset);
 #ifndef USE_EXTENDED_GAME_IMPORTS
-	_CC_INSECURE_DEPRECATE (PlaySoundAt)
+	_CC_INSECURE_DEPRECATE (PlaySoundAt or CBaseEntity->PlayPositionedSound)
 #endif
 	void	(*positioned_sound) (vec3_t origin, edict_t *ent, int channel, int soundIndex, float volume, float attenuation, float timeOffset);
 
@@ -142,8 +142,14 @@ typedef struct gameImport_s
 	// and misc data like the sky definition and cdtrack.
 	// All of the current configstrings are sent to clients when
 	// they connect, and changes are sent to all connected clients.
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (ConfigString)
+#endif
 	void	(*configstring) (int num, char *string);
 
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (GameError)
+#endif
 	void	(*error) (char *fmt, ...);
 
 	// the *index functions create configstrings and some internal server state
@@ -182,7 +188,17 @@ typedef struct gameImport_s
 	// an entity will never be sent to a client or used for collision
 	// if it is not passed to linkentity.  If the size, position, or
 	// solidity changes, it must be relinked.
-	void	(*linkentity) (edict_t *ent);
+	/*
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE ((CBaseEntity)->Link)
+#endif
+	*/
+		void	(*linkentity) (edict_t *ent);
+	/*
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE ((CBaseEntity)->Unlink)
+#endif
+	*/
 	void	(*unlinkentity) (edict_t *ent);		// call before removing an interactive edict
 #ifndef USE_EXTENDED_GAME_IMPORTS
 	_CC_INSECURE_DEPRECATE (BoxEdicts)
@@ -257,11 +273,11 @@ typedef struct gameImport_s
 
 	// managed memory allocation
 #ifndef USE_EXTENDED_GAME_IMPORTS
-	_CC_INSECURE_DEPRECATE (operator new or Mem_Alloc)
+	_CC_INSECURE_DEPRECATE (QNew)
 #endif
 	void	*(*TagMalloc) (int size, int tag);
 #ifndef USE_EXTENDED_GAME_IMPORTS
-	_CC_INSECURE_DEPRECATE (operator delete or Mem_Free)
+	_CC_INSECURE_DEPRECATE (QDelete)
 #endif
 	void	(*TagFree) (void *block);
 #ifndef USE_EXTENDED_GAME_IMPORTS

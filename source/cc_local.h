@@ -31,13 +31,14 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Local header. Contains definitions local to CleanCode files and not necessarily used by the Quake2 base.
 //
 
-#ifdef HAS_PRAGMA_ONCE
-#pragma once
-#endif
+#if !defined(__CC_LOCAL_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_LOCAL_H__
 
 #include "g_local.h"
 #include "cc_cmds_local.h"
 
-uint32 Com_HashGeneric(const char *name, const int hashSize);
-
 extern CItemList *ItemList;
+
+#else
+FILE_WARNING
+#endif

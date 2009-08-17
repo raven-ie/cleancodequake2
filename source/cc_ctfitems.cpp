@@ -84,15 +84,27 @@ void SpawnTech(CBaseItem *item, edict_t *spot);
 class CTechEntity : public CItemEntity
 {
 public:
+	bool AvoidOwner;
+
 	CTechEntity() :
 	  CItemEntity ()
 	  {
+		AvoidOwner = true;
 	  };
 
 	  CTechEntity (int Index) :
 	  CItemEntity(Index)
 	  {
+		AvoidOwner = true;
 	  };
+
+	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
+	{
+		if (AvoidOwner && (other->gameEntity == gameEntity->owner))
+			return;
+
+		CItemEntity::Touch (other, plane, surf);
+	};
 
 	void Think ()
 	{

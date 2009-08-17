@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // An enumeration for each character in conchars
 //
 
+#if !defined(__CC_CONCHARS_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_CONCHARS_H__
+
 #define	CFLAG_SECONDARY		128
 
 typedef int EConChars;
@@ -87,3 +90,7 @@ enum // EConChars
 	CCHAR_DOWNLOADBAR_RIGHT,
 	CCHAR_DOWNLOADBAR_THUMB
 };
+
+#else
+FILE_WARNING
+#endif

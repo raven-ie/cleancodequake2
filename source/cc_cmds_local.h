@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // The class, local to CleanCode.
 //
 
+#if !defined(__CC_CMDS_LOCAL_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_CMDS_LOCAL_H__
+
 #define MAX_COMMANDS 128
 #define MAX_CMD_HASH (MAX_COMMANDS/4)
 
@@ -65,3 +68,7 @@ public:
 
 	void Run ();
 };
+
+#else
+FILE_WARNING
+#endif

@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Insane marine
 //
 
+#if !defined(__CC_INSANE_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_INSANE_H__
+
 class CInsane : public CMonster
 {
 public:
@@ -60,3 +63,7 @@ public:
 
 	void Spawn ();
 };
+
+#else
+FILE_WARNING
+#endif

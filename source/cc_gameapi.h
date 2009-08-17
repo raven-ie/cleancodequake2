@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Contains overloads and other neat things
 //
 
+#if !defined(__CC_GAMEAPI_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_GAMEAPI_H__
+
 void Cast (ECastFlags castFlags, edict_t *Ent);
 void Cast (ECastFlags castFlags, vec3_t Origin);
 void Cast (ECastType castType, ECastFlags castFlags, vec3_t Origin, edict_t *Ent);
@@ -48,3 +51,9 @@ int PointContents (vec3f &start);
 int BoxEdicts (vec3_t mins, vec3_t maxs, edict_t **list, int maxCount, bool triggers);
 int BoxEdicts (vec3f &mins, vec3f &maxs, edict_t **list, int maxCount, bool triggers);
 
+void ConfigString (int configStringIndex, char *configStringValue, CPlayerEntity *Audience = NULL);
+void GameError (char *fmt, ...);
+
+#else
+FILE_WARNING
+#endif

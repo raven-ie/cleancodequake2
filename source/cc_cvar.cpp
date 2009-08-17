@@ -35,6 +35,28 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 _CC_DISABLE_DEPRECATION
 
+CCvar::CCvar ()
+{
+	cVar = NULL;
+	mainValue = NULL;
+	floatVal = intVal = 0;
+}
+CCvar::CCvar (char *cvarName, char *defaultValue, int flags)
+{
+	CCvar();
+	Register(cvarName, defaultValue, flags);
+}
+CCvar::CCvar (char *cvarName, int defaultValue, int flags)
+{
+	CCvar();
+	Register(cvarName, defaultValue, flags);
+}
+CCvar::CCvar (char *cvarName, float defaultValue, int flags)
+{
+	CCvar();
+	Register(cvarName, defaultValue, flags);
+}
+
 void CCvar::Update()
 {
 	mainValue = cVar->string;

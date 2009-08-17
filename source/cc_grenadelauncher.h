@@ -31,6 +31,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Grenade Launcher
 //
 
+#if !defined(__CC_GRENADELAUNCHER_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_GRENADELAUNCHER_H__
+
 class CGrenadeLauncher : public CWeapon
 {
 public:
@@ -44,3 +47,7 @@ public:
 };
 
 extern CGrenadeLauncher WeaponGrenadeLauncher;
+
+#else
+FILE_WARNING
+#endif

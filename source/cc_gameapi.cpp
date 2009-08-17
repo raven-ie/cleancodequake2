@@ -70,6 +70,48 @@ int BoxEdicts (vec3f &mins, vec3f &maxs, edict_t **list, int maxCount, bool trig
 	return BoxEdicts (amins, amaxs, list, maxCount, triggers);
 }
 
+void ConfigString (int configStringIndex, char *configStringValue, CPlayerEntity *Audience)
+{
+	if (Audience)
+	{
+		WriteChar (SVC_CONFIGSTRING);
+		WriteShort (configStringIndex);
+		WriteString (configStringValue);
+		Cast (CASTFLAG_UNRELIABLE, Audience->gameEntity);
+	}
+	else
+	{
+_CC_DISABLE_DEPRECATION
+		gi.configstring (configStringIndex, configStringValue);
+_CC_ENABLE_DEPRECATION
+	}
+}
+
+#if defined(WIN32) && defined(_DEBUG)
+#include <windows.h>
+#endif
+
+void GameError (char *fmt, ...)
+{
+	va_list		argptr;
+	char		text[MAX_COMPRINT];
+
+	va_start (argptr, fmt);
+	vsnprintf_s (text, sizeof(text), MAX_COMPRINT, fmt, argptr);
+	va_end (argptr);
+
+#if defined(WIN32)
+	// Pipe to visual studio
+	OutputDebugString(text);
+#endif
+
+	assert (0); // Break, if debugging
+
+_CC_DISABLE_DEPRECATION
+	gi.error (text);
+_CC_ENABLE_DEPRECATION
+}
+
 /*
 ================
 Sys_Milliseconds

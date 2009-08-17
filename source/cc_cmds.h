@@ -30,6 +30,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // cc_cmds.h
 // Contains a class and functions to register/remove commands parsed by ClientCommand.
 //
+#if !defined(__CC_CMDS_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_CMDS_H__
 
 #define MAX_COMMANDS 128
 #define MAX_CMD_HASH (MAX_COMMANDS/4)
@@ -44,3 +46,7 @@ enum ECmdTypeFlags
 void Cmd_RunCommand (char *commandName, CPlayerEntity *ent);
 void Cmd_RemoveCommands ();
 void Cmd_AddCommand (char *commandName, void (*Func) (CPlayerEntity *ent), ECmdTypeFlags Flags = CMD_NORMAL);
+
+#else
+FILE_WARNING
+#endif

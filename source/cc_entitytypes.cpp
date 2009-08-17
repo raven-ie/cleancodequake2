@@ -953,7 +953,7 @@ bool CPushPhysics::Run ()
 		}
 	}
 	if (pushed_p > &pushed[MAX_CS_EDICTS])
-		gi.error ("pushed_p > &pushed[MAX_CS_EDICTS], memory corrupted");
+		GameError ("pushed_p > &pushed[MAX_CS_EDICTS], memory corrupted");
 
 	if (part)
 	{

@@ -569,7 +569,7 @@ void SV_Physics_Pusher (edict_t *ent)
 		}
 	}
 	if (pushed_p > &pushed[MAX_CS_EDICTS])
-		gi.error ("pushed_p > &pushed[MAX_CS_EDICTS], memory corrupted");
+		GameError ("pushed_p > &pushed[MAX_CS_EDICTS], memory corrupted");
 
 	if (part)
 	{
@@ -927,6 +927,6 @@ void G_RunEntity (edict_t *ent)
 		SV_Physics_Toss (ent);
 		break;
 	default:
-		gi.error ("SV_Physics: bad movetype %i", (int)ent->movetype);			
+		GameError ("SV_Physics: bad movetype %i", (int)ent->movetype);			
 	}
 }
