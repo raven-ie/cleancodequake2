@@ -514,8 +514,8 @@ void CMonsterEntity::ThrowHead (MediaIndex gibIndex, int damage, int type)
 	State.SetSkinNum (0);
 	State.SetFrame (0);
 
-	SetMins (vec3Origin);
-	SetMaxs (vec3Origin);
+	SetMins (vec3fOrigin);
+	SetMaxs (vec3fOrigin);
 
 	State.SetModelIndex (0, 2);
 	State.SetModelIndex (gibIndex);
