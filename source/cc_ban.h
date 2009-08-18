@@ -45,9 +45,12 @@ enum// EBanTypeFlags
 	BAN_ENTER		=	4, // Banned from entering the game
 };
 
-typedef struct IPAddress_s
+#define MAX_IP_BLOCK_LEN 3
+#define MAX_IP_LEN (MAX_IP_BLOCK_LEN * 4 + 3)
+
+typedef struct
 {
-	byte adr[4];
+	char str[MAX_IP_LEN];
 } IPAddress;
 
 typedef struct BanIndex_s
@@ -90,9 +93,6 @@ public:
 };
 
 extern CBanList	Bans;
-
-IPAddress IPStringToArrays (const char *IP);
-IPAddress IPStringToArrays (char *IP);
 
 #else
 FILE_WARNING

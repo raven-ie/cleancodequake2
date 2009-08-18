@@ -35,86 +35,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 CBanList	Bans;
 
-IPAddress IPStringToArrays (const char *IP)
+int ipcmp (IPAddress &filter, IPAddress &string)
 {
-	IPAddress Address = {0,0,0,0};
-	int i = 0, z = 0, c = 0;
-	char tempAddress[3];
-
-	while (i != 4)
-	{
-		if (IP[c] == '.' || IP[c] == 0)
-		{
-			if (z == 1)
-			{
-				tempAddress[2] = tempAddress[0];
-				tempAddress[0] = tempAddress[1] = '0';
-			}
-			else if (z == 2)
-			{
-				tempAddress[2] = tempAddress[1];
-				tempAddress[1] = tempAddress[0];
-				tempAddress[0] = '0';
-			}
-
-			Address.adr[i++] = atoi(tempAddress);
-			tempAddress[0] = tempAddress[1] = tempAddress[2] = 0;
-
-			c++;
-			z = 0;
-			continue;
-		}
-
-		tempAddress[z++] = IP[c++];
-	}
-
-	return Address;
-}
-
-IPAddress IPStringToArrays (char *IP)
-{
-	IPAddress Address = {0,0,0,0};
-	int i = 0, z = 0, c = 0;
-	char tempAddress[3];
-
-	while (i != 4)
-	{
-		if (IP[c] == '.' || IP[c] == 0)
-		{
-			if (z == 1)
-			{
-				tempAddress[2] = tempAddress[0];
-				tempAddress[0] = tempAddress[1] = '0';
-			}
-			else if (z == 2)
-			{
-				tempAddress[2] = tempAddress[1];
-				tempAddress[1] = tempAddress[0];
-				tempAddress[0] = '0';
-			}
-
-			Address.adr[i++] = atoi(tempAddress);
-			tempAddress[0] = tempAddress[1] = tempAddress[2] = 0;
-
-			c++;
-			z = 0;
-			continue;
-		}
-
-		tempAddress[z++] = IP[c++];
-	}
-
-	return Address;
-}
-
-int ipcmp (IPAddress left, IPAddress right)
-{
-	for (int i = 0; i < 4; i++)
-	{
-		if (left.adr[i] != right.adr[i])
-			return 1;
-	}
-	return 0;
+	return !Q_WildcardMatch (filter.str, string.str, true);
 }
 
 // Ban list looks as follows:
@@ -190,20 +113,19 @@ void CBanList::LoadFromFile ()
 				BanIndex *NewIndex = QNew (com_gamePool, 0) BanIndex;
 				NewIndex->IP = true;
 
-				NewIndex->IPAddress = QNew (com_gamePool, 0) IPAddress(IPStringToArrays(token.c_str()));
+				NewIndex->IPAddress = QNew (com_gamePool, 0) IPAddress;
+				Q_snprintfz (NewIndex->IPAddress->str, sizeof(NewIndex->IPAddress->str), "%s", token.c_str());
 
 				oc = line.find_first_of(" \n\0", ++c);
 				token = line.substr (c, oc-c);
 				c = oc;
 
 				EBanTypeFlags Flags = atoi(token.c_str());
-
 				NewIndex->Flags = Flags;
-
 				BanList.push_back (NewIndex);
 			}
 
-			if (c == -1)
+			if (c == -1 || c == std::string::npos)
 				break;
 
 			oc = line.find_first_of(" \n\0", ++c);
@@ -242,7 +164,7 @@ void CBanList::SaveList ()
 		Q_snprintfz (tempData, sizeof(tempData), "%s ", (Index->IP) ? "ip" : "name");
 		FS_Write (&tempData, strlen(tempData), f);
 		if (Index->IP)
-			Q_snprintfz (tempData, sizeof(tempData), "%c.%c.%c.%c ", Index->IPAddress->adr[0], Index->IPAddress->adr[1], Index->IPAddress->adr[2], Index->IPAddress->adr[3]);
+			Q_snprintfz (tempData, sizeof(tempData), "%s ", Index->IPAddress->str);
 		else
 			Q_snprintfz (tempData, sizeof(tempData), "%s ", Index->Name);
 		FS_Write (&tempData, strlen(tempData), f);
@@ -288,7 +210,7 @@ void CBanList::RemoveFromList (IPAddress Adr)
 		if (!Index->IP)
 			continue;
 
-		if (!ipcmp(Adr, *Index->IPAddress))
+		if (!ipcmp(*Index->IPAddress, Adr))
 		{
 			BanList.erase(it);
 			break;
@@ -326,7 +248,7 @@ void CBanList::ChangeBan (IPAddress Adr, EBanTypeFlags Flags)
 		if (!Index->IP)
 			continue;
 
-		if (!ipcmp(Adr, *Index->IPAddress))
+		if (!ipcmp(*Index->IPAddress, Adr))
 		{
 			Index->Flags = Flags;
 			break;
@@ -364,7 +286,7 @@ bool CBanList::IsSquelched (IPAddress Adr)
 		if (!Index->IP)
 			continue;
 
-		if (!ipcmp(Adr, *Index->IPAddress))
+		if (!ipcmp(*Index->IPAddress, Adr))
 			return !!(Index->Flags & BAN_SQUELCH);
 	}
 	return false;
@@ -381,7 +303,7 @@ bool CBanList::IsBannedFromSpectator (IPAddress Adr)
 		if (!Index->IP)
 			continue;
 
-		if (!ipcmp(Adr, *Index->IPAddress))
+		if (!ipcmp(*Index->IPAddress, Adr))
 			return !!(Index->Flags & BAN_SPECTATOR);
 	}
 	return false;
@@ -398,7 +320,7 @@ bool CBanList::IsBanned (IPAddress Adr)
 		if (!Index->IP)
 			continue;
 
-		if (!ipcmp(Adr, *Index->IPAddress))
+		if (!ipcmp(*Index->IPAddress, Adr))
 			return !!(Index->Flags & BAN_ENTER);
 	}
 	return false;

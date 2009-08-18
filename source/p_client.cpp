@@ -833,6 +833,25 @@ Changing levels will NOT cause this to be called again, but
 loadgames will.
 ============
 */
+IPAddress CopyIP (const char *val)
+{
+	// Do we have a :?
+	std::string str (val);
+
+	size_t loc = str.find_first_of (':');
+
+	if (loc != std::string::npos)
+		str = str.substr(0, loc);
+
+	IPAddress Adr;
+	if (str.length() > sizeof(Adr.str))
+		assert (0);
+
+	Q_snprintfz (Adr.str, sizeof(Adr.str), "%s", str.c_str());
+
+	return Adr;
+}
+
 BOOL ClientConnect (edict_t *ent, char *userinfo)
 {
 	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(ent->Entity);
@@ -840,10 +859,12 @@ BOOL ClientConnect (edict_t *ent, char *userinfo)
 
 	// check to see if they are on the banned IP list
 	value = Info_ValueForKey (userinfo, "ip");
-	IPAddress Adr = IPStringToArrays(value);
+	IPAddress Adr;
+
+	Adr = CopyIP (value);
 	if (Bans.IsBanned(Adr) || Bans.IsBanned(Info_ValueForKey(userinfo, "name")))
 	{
-		Info_SetValueForKey(userinfo, "rejmsg", "Banned from server.");
+		Info_SetValueForKey(userinfo, "rejmsg", "Connection refused.");
 		return false;
 	}
 
@@ -911,6 +932,7 @@ BOOL ClientConnect (edict_t *ent, char *userinfo)
 	}
 
 	ClientUserinfoChanged (ent, userinfo);
+	Player->Client.pers.IP = Adr;
 
 	if (game.maxclients > 1)
 	{
