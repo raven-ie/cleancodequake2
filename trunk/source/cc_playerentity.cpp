@@ -751,9 +751,8 @@ void CPlayerEntity::UserinfoChanged (char *userinfo)
 		Client.pers.hand = atoi(s);
 
 	// IP
-	s = Info_ValueForKey (userinfo, "ip");
-	if (strlen(s))
-		Client.pers.IP = IPStringToArrays(s);
+	// Paril: removed. could be changed any time in-game!
+	//s = Info_ValueForKey (userinfo, "ip");
 
 	// Gender
 	s = Info_ValueForKey (userinfo, "gender");
