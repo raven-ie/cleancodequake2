@@ -56,14 +56,16 @@ public:
 CBody::CBody () :
 CBaseEntity(),
 CHurtableEntity(),
-CTouchableEntity()
+CTouchableEntity(),
+BodyQueueList(NULL)
 {
 };
 
 CBody::CBody (int Index) :
 CBaseEntity(Index),
 CHurtableEntity(Index),
-CTouchableEntity(Index)
+CTouchableEntity(Index),
+BodyQueueList(NULL)
 {
 };
 

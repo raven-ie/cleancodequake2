@@ -54,16 +54,6 @@ bool CHyperBlaster::CanStopFidgetting (CPlayerEntity *ent)
 	return false;
 }
 
-float hyperblasterRotationTable[] =
-{
-	1.04f,
-	2.09f,
-	3.14f,
-	4.18f,
-	5.23f,
-	6.28f
-};
-
 vec3_t hyperblasterOffsetTable[] =
 {
 	{ -3.46f, 0, 2.0f	},
@@ -76,11 +66,6 @@ vec3_t hyperblasterOffsetTable[] =
 
 void CHyperBlaster::Fire (CPlayerEntity *ent)
 {
-	float	rotation;
-	vec3_t	offset;
-	int		effect;
-	int		damage;
-
 	ent->Client.weapon_sound = SoundIndex("weapons/hyprbl1a.wav");
 
 	if (!(ent->Client.buttons & BUTTON_ATTACK))
@@ -94,16 +79,13 @@ void CHyperBlaster::Fire (CPlayerEntity *ent)
 		}
 		else
 		{
+			vec3_t	offset;
+
 			// I replaced this part with a table because they are constant.
-			rotation = hyperblasterRotationTable[ent->Client.PlayerState.GetGunFrame() - 6];
 			Vec3Copy (hyperblasterOffsetTable[ent->Client.PlayerState.GetGunFrame() - 6], offset);
 
-			if ((ent->Client.PlayerState.GetGunFrame() == 6) || (ent->Client.PlayerState.GetGunFrame() == 9))
-				effect = EF_HYPERBLASTER;
-			else
-				effect = 0;
-
-			damage = (game.mode & GAME_DEATHMATCH) ? 15 : 20;
+			int effect = ((ent->Client.PlayerState.GetGunFrame() == 6) || (ent->Client.PlayerState.GetGunFrame() == 9)) ? EF_HYPERBLASTER : 0;
+			int damage = (game.mode & GAME_DEATHMATCH) ? 15 : 20;
 
 			vec3_t	forward, right;
 			vec3_t	start;

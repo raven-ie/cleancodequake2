@@ -70,6 +70,7 @@ class CMiscExploBox : public CMapEntity, public CStepPhysics, public CHurtableEn
 	bool Dropped;
 public:
 	CMiscExploBox () :
+	Dropped(false),
 	CBaseEntity(),
 	CMapEntity(),
 	CThinkableEntity(),
@@ -97,6 +98,7 @@ public:
 	};
 
 	CMiscExploBox (int Index) : 
+	Dropped(false),
 	CBaseEntity(Index),
 	CMapEntity(Index),
 	CThinkableEntity(),

@@ -378,7 +378,6 @@ void CJorg::TossMakron ()
 void CJorg::Explode ()
 {
 	vec3_t	org;
-	int		n;
 
 	Think = ConvertDerivedFunction(&CJorg::Explode);
 	Entity->State.GetOrigin(org);
@@ -419,9 +418,9 @@ void CJorg::Explode ()
 		break;
 	case 8:
 		Entity->State.SetSound (0);
-		for (n= 0; n < 4; n++)
+		for (int n= 0; n < 4; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, 500, GIB_ORGANIC);
-		for (n= 0; n < 8; n++)
+		for (int n= 0; n < 8; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMetal, 500, GIB_METALLIC);
 		CGibEntity::Spawn (Entity, gMedia.Gib_Chest, 500, GIB_ORGANIC);
 		Entity->ThrowHead (gMedia.Gib_Gear, 500, GIB_METALLIC);
@@ -673,19 +672,18 @@ bool CJorg::CheckAttack ()
 
 	return false;
 #else
-	vec3_t	spot1, spot2;
 	float	chance;
-	CTrace	tr;
 
 	if (Entity->gameEntity->enemy->health > 0)
 	{
-	// see if any entities are in the way of the shot
+		// see if any entities are in the way of the shot
+		vec3_t	spot1, spot2;
 		Entity->State.GetOrigin (spot1);
 		spot1[2] += Entity->gameEntity->viewheight;
 		Vec3Copy (Entity->gameEntity->enemy->state.origin, spot2);
 		spot2[2] += Entity->gameEntity->enemy->viewheight;
 
-		tr = CTrace (spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
+		CTrace tr (spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
 
 		// do we have a clear shot?
 		if (tr.ent != Entity->gameEntity->enemy)

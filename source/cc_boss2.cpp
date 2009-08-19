@@ -392,7 +392,6 @@ CAnim Boss2MoveDeath (FRAME_death2, FRAME_death50, Boss2FramesDeath, ConvertDeri
 void CBoss2::Explode ()
 {
 	vec3_t	org;
-	int		n;
 
 	Think = ConvertDerivedFunction(&CBoss2::Explode);
 	Entity->State.GetOrigin(org);
@@ -433,9 +432,9 @@ void CBoss2::Explode ()
 		break;
 	case 8:
 		Entity->State.SetSound (0);
-		for (n= 0; n < 4; n++)
+		for (int n= 0; n < 4; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, 500, GIB_ORGANIC);
-		for (n= 0; n < 8; n++)
+		for (int n= 0; n < 8; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMetal, 500, GIB_METALLIC);
 		CGibEntity::Spawn (Entity, gMedia.Gib_Chest, 500, GIB_ORGANIC);
 		Entity->ThrowHead (gMedia.Gib_Gear, 500, GIB_METALLIC);
@@ -521,10 +520,8 @@ void CBoss2::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec
 
 bool CBoss2::CheckAttack ()
 {
-	vec3f	spot1, spot2;
 	vec3f	temp;
 	float	chance;
-	CTrace	tr;
 	bool	enemy_infront;
 	int		enemy_range;
 	float	enemy_yaw;
@@ -532,12 +529,12 @@ bool CBoss2::CheckAttack ()
 	if (Entity->gameEntity->enemy->health > 0)
 	{
 	// see if any entities are in the way of the shot
-		spot1 = Entity->State.GetOrigin();
+		vec3f spot1 = Entity->State.GetOrigin();
 		spot1.Z += Entity->gameEntity->viewheight;
-		spot2 = vec3f (Entity->gameEntity->enemy->state.origin);
+		vec3f spot2 = vec3f (Entity->gameEntity->enemy->state.origin);
 		spot2.Z += Entity->gameEntity->enemy->viewheight;
 
-		tr = CTrace (spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA);
+		CTrace tr (spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA);
 
 		// do we have a clear shot?
 		if (tr.ent != Entity->gameEntity->enemy)

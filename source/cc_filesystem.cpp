@@ -295,12 +295,12 @@ size_t FS_Read(void *buffer, const size_t len, fileHandle_t fileNum)
 		Com_Error (ERR_FATAL, "FS_Read: %s: was not opened in read mode", handle->name);
 
 	// Read in chunks for progress bar
-	size_t remaining = len;
 	byte *buf = (byte *)buffer;
 
-	bool tried = false;
 	if (handle->regFile)
 	{
+		size_t remaining = len;
+		bool tried = false;
 		// File
 		while (remaining)
 		{
@@ -361,11 +361,11 @@ size_t FS_Write(void *buffer, const size_t size, fileHandle_t fileNum)
 		Com_Error(ERR_FATAL, "FS_Write: size < 0");
 
 	// Write
-	size_t remaining = size;
 	byte *buf = (byte *)buffer;
 
 	if (handle->regFile)
 	{
+		size_t remaining = size;
 		// File
 		while (remaining)
 		{
@@ -1155,7 +1155,6 @@ FS_Init
 void FS_Init()
 {
 	fsPath_t	*next;
-	int			i;
 
 	fs_basedir		= QNew (com_gamePool, 0) CCvar ("basedir",			".", 0);
 	fs_cddir		= QNew (com_gamePool, 0) CCvar ("cddir",			"",		0);
@@ -1179,6 +1178,7 @@ void FS_Init()
 		// Store a copy of the search paths inverted for FS_FindFiles
 		for (fs_numInvSearchPaths=0, next=fs_searchPaths ; next ; next=next->next, fs_numInvSearchPaths++);
 		fs_invSearchPaths = (fsPath_t**)Mem_PoolAlloc (sizeof(fsPath_t) * fs_numInvSearchPaths, com_fileSysPool, 0);
+		int i;
 		for (i=fs_numInvSearchPaths-1, next=fs_searchPaths ; i>=0 ; next=next->next, i--)
 			fs_invSearchPaths[i] = next;
 	}

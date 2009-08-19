@@ -251,9 +251,8 @@ vec3_t	DeathAimAngles[] =
 
 void CInfantry::MachineGun ()
 {
-	vec3_t	start, target;
+	vec3_t	start;
 	vec3_t	forward, right;
-	vec3_t	vec;
 	int		flash_number;
 
 	vec3_t angles, origin;
@@ -267,6 +266,7 @@ void CInfantry::MachineGun ()
 
 		if (Entity->gameEntity->enemy)
 		{
+			vec3_t target;
 			Vec3MA (Entity->gameEntity->enemy->state.origin, -0.2f, Entity->gameEntity->enemy->velocity, target);
 			target[2] += Entity->gameEntity->enemy->viewheight;
 			Vec3Subtract (target, start, forward);
@@ -282,6 +282,7 @@ void CInfantry::MachineGun ()
 		Angles_Vectors (angles, forward, right, NULL);
 		G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
+		vec3_t vec;
 		Vec3Subtract (angles, DeathAimAngles[flash_number-MZ2_INFANTRY_MACHINEGUN_2], vec);
 		Angles_Vectors (vec, forward, NULL, NULL);
 	}

@@ -44,6 +44,13 @@ public:
 	// ClosedList = Junk that is already in use
 	std::list<int>	OpenList, ClosedList;
 
+	CJunkList () :
+	NumAllocatedJunk (0),
+	OpenList(),
+	ClosedList()
+	{
+	};
+
 	template <class JunkClassType>
 	// Re-sets the entity structure if the
 	// entity is not already freed

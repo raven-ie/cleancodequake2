@@ -1527,9 +1527,9 @@ void train_next (edict_t *self)
 {
 	edict_t		*ent;
 	vec3_t		dest;
-	bool	first;
+	bool		first = true;
 
-	first = true;
+	first; // Shut up compiler.
 again:
 	if (!self->target)
 	{

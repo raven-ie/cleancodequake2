@@ -1632,7 +1632,6 @@ void SP_misc_model (edict_t *ent)
 void teleporter_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *surf)
 {
 	edict_t		*dest;
-	int			i;
 
 	dest = G_Find (NULL, FOFS(targetname), self->target);
 	if (!dest)
@@ -1676,7 +1675,7 @@ void teleporter_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurfa
 	// set angles
 	if (other->client)
 	{
-		for (i=0 ; i<3 ; i++)
+		for (int i=0 ; i<3 ; i++)
 			Player->Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(dest->state.angles[i] - Player->Client.resp.cmd_angles[i]);
 	}
 

@@ -386,8 +386,6 @@ void CPlayerEntity::Respawn ()
  */
 void CPlayerEntity::SpectatorRespawn ()
 {
-	int i, numspec;
-
 	// if the user wants to become a spectator, make sure he doesn't
 	// exceed max_spectators
 
@@ -407,7 +405,8 @@ void CPlayerEntity::SpectatorRespawn ()
 		}
 
 		// count spectators
-		for (i = 1, numspec = 0; i <= game.maxclients; i++)
+		int numspec = 0;
+		for (int i = 1; i <= game.maxclients; i++)
 		{
 			CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
 			if (Player->IsInUse() && Player->Client.pers.spectator)
@@ -999,7 +998,6 @@ inline void CPlayerEntity::CalcViewOffset (vec3_t forward, vec3_t right, vec3_t 
 {
 	float		bob;
 	float		ratio;
-	float		delta;
 	vec3_t		v = {0,0,0};
 	vec3_t		angles = {0,0,0};
 
@@ -1032,7 +1030,7 @@ inline void CPlayerEntity::CalcViewOffset (vec3_t forward, vec3_t right, vec3_t 
 		angles[PITCH] += ratio * Client.fall_value;
 
 		// add angles based on velocity
-		delta = Dot3Product (gameEntity->velocity, forward);
+		float delta = Dot3Product (gameEntity->velocity, forward);
 		angles[PITCH] += delta*run_pitch->Float();
 		
 		delta = Dot3Product (gameEntity->velocity, right);
@@ -1303,8 +1301,6 @@ inline void CPlayerEntity::FallingDamage ()
 //ZOID
 #endif
 	float	delta;
-	int		damage;
-	vec3_t	dir;
 
 	if ((Client.oldvelocity[2] < 0) && (gameEntity->velocity[2] > Client.oldvelocity[2]) && (!gameEntity->groundentity))
 		delta = Client.oldvelocity[2];
@@ -1348,9 +1344,11 @@ inline void CPlayerEntity::FallingDamage ()
 				State.SetEvent (EV_FALL);
 		}
 		gameEntity->pain_debounce_time = level.framenum;	// no normal pain sound
-		damage = (delta-30)/2;
+		int damage = (delta-30)/2;
 		if (damage < 1)
 			damage = 1;
+
+		vec3_t dir;
 		Vec3Set (dir, 0, 0, 1);
 
 		if (!dmFlags.dfNoFallingDamage )
@@ -2700,15 +2698,10 @@ void CPlayerEntity::CTFApplyHasteSound()
 
 void CPlayerEntity::CTFApplyRegeneration()
 {
-	bool noise = false;
-	CBaseItem *index;
-	float volume = 1.0;
-
-	if (Client.silencer_shots)
-		volume = 0.2f;
-
 	if (Client.pers.Tech == NItems::Regeneration)
 	{
+		CBaseItem *index;
+		bool noise = false;
 		if (Client.ctf_regentime < level.framenum)
 		{
 			Client.ctf_regentime = level.framenum;
@@ -2733,6 +2726,11 @@ void CPlayerEntity::CTFApplyRegeneration()
 		if (noise && Client.ctf_techsndtime < level.framenum)
 		{
 			Client.ctf_techsndtime = level.framenum + 10;
+			float volume = 1.0;
+
+			if (Client.silencer_shots)
+				volume = 0.2f;
+
 			PlaySoundFrom(gameEntity, CHAN_ITEM, SoundIndex("ctf/tech4.wav"), volume, ATTN_NORM, 0);
 		}
 	}

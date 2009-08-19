@@ -347,8 +347,6 @@ CheckDMRules
 */
 void CheckDMRules (void)
 {
-	int			i;
-
 	if (level.intermissiontime)
 		return;
 
@@ -379,7 +377,7 @@ void CheckDMRules (void)
 
 	if (fraglimit->Integer())
 	{
-		for (i=0 ; i<game.maxclients ; i++)
+		for (int i=0 ; i<game.maxclients ; i++)
 		{
 			CPlayerEntity *cl = dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity);
 			if (!cl->IsInUse())

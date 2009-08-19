@@ -438,15 +438,13 @@ CAnim ParasiteMoveDeath (FRAME_death101, FRAME_death107, ParasiteFramesDeath, Co
 
 void CParasite::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
-	int		n;
-
 // check for gib
 	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"), 1, ATTN_NORM, 0);
-		for (n= 0; n < 2; n++)
+		for (int n= 0; n < 2; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
-		for (n= 0; n < 4; n++)
+		for (int n= 0; n < 4; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 		Entity->ThrowHead (gMedia.Gib_Head[1], damage, GIB_ORGANIC);
 		Entity->gameEntity->deadflag = DEAD_DEAD;
