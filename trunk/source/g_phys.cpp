@@ -653,7 +653,6 @@ void SV_Physics_Toss (edict_t *ent)
 {
 	CTrace	trace;
 	vec3_t		move;
-	float		backoff;
 	edict_t		*slave;
 	bool		wasinwater;
 	bool		isinwater;
@@ -696,12 +695,7 @@ void SV_Physics_Toss (edict_t *ent)
 
 	if (trace.fraction < 1)
 	{
-		if (ent->movetype == MOVETYPE_BOUNCE)
-			backoff = 1.5;
-		else
-			backoff = 1;
-
-		ClipVelocity (ent->velocity, trace.plane.normal, ent->velocity, backoff);
+		ClipVelocity (ent->velocity, trace.plane.normal, ent->velocity, (ent->movetype == MOVETYPE_BOUNCE) ? 1.5f : 1);
 
 		// stop if on ground
 		if (trace.plane.normal[2] > 0.9)
@@ -800,7 +794,6 @@ void SV_Physics_Step (edict_t *ent)
 	float		speed, newspeed, control;
 	float		friction;
 	edict_t		*groundentity;
-	int			mask;
 
 	groundentity = ent->groundentity;
 
@@ -874,11 +867,7 @@ void SV_Physics_Step (edict_t *ent)
 			}
 		}
 
-		if (ent->svFlags & SVF_MONSTER)
-			mask = CONTENTS_MASK_MONSTERSOLID;
-		else
-			mask = CONTENTS_MASK_SOLID;
-		SV_FlyMove (ent, 0.1f, mask);
+		SV_FlyMove (ent, 0.1f, (ent->svFlags & SVF_MONSTER) ? CONTENTS_MASK_MONSTERSOLID : CONTENTS_MASK_SOLID);
 
 		gi.linkentity (ent);
 		G_TouchTriggers (ent);

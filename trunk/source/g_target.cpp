@@ -57,8 +57,6 @@ Multiple identical looping sounds will just increase volume without any speed co
 */
 void Use_Target_Speaker (edict_t *ent, edict_t *other, edict_t *activator)
 {
-	int		chan;
-
 	if (ent->spawnflags & 3)
 	{	// looping sound toggles
 		if (ent->state.sound)
@@ -67,14 +65,10 @@ void Use_Target_Speaker (edict_t *ent, edict_t *other, edict_t *activator)
 			ent->state.sound = ent->noise_index;	// start it
 	}
 	else
-	{	// normal sound
-		if (ent->spawnflags & 4)
-			chan = CHAN_VOICE|CHAN_RELIABLE;
-		else
-			chan = CHAN_VOICE;
+	{
 		// use a positioned_sound, because this entity won't normally be
 		// sent to any clients because it is invisible
-		PlaySoundAt (ent->state.origin, ent, chan, ent->noise_index, ent->volume, ent->attenuation);
+		PlaySoundAt (ent->state.origin, ent, (ent->spawnflags & 4) ? CHAN_VOICE|CHAN_RELIABLE : CHAN_VOICE, ent->noise_index, ent->volume, ent->attenuation);
 	}
 }
 
@@ -508,8 +502,6 @@ void target_laser_think (edict_t *self)
 	vec3_t	start;
 	vec3_t	end;
 	CTrace	tr;
-	vec3_t	point;
-	vec3_t	last_movedir;
 	int		count;
 
 	if (self->spawnflags & 0x80000000)
@@ -519,6 +511,7 @@ void target_laser_think (edict_t *self)
 
 	if (self->enemy)
 	{
+		vec3_t point, last_movedir;
 		Vec3Copy (self->movedir, last_movedir);
 		Vec3MA (self->enemy->absMin, 0.5, self->enemy->size, point);
 		Vec3Subtract (point, self->state.origin, self->movedir);

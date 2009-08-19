@@ -505,7 +505,6 @@ CAnim MakronMoveAttack4 (FRAME_attak401, FRAME_attak426, MakronFramesAttack4, &C
 void CMakron::FireHyperblaster ()
 {
 	vec3f	dir;
-	vec3f	vec;
 	vec3f	start;
 	vec3f	forward, right;
 	int		flash_number = MZ2_MAKRON_BLASTER_1 + (Entity->State.GetFrame() - FRAME_attak405);
@@ -515,7 +514,7 @@ void CMakron::FireHyperblaster ()
 
 	if (Entity->gameEntity->enemy)
 	{
-		vec = vec3f (Entity->gameEntity->enemy->state.origin);
+		vec3f vec = vec3f (Entity->gameEntity->enemy->state.origin);
 		vec.Z += Entity->gameEntity->enemy->viewheight;
 		vec = vec - start;
 		vec = vec.ToAngles();
@@ -786,19 +785,18 @@ bool CMakron::CheckAttack ()
 
 	return false;
 #else
-	vec3_t	spot1, spot2;
 	float	chance;
-	CTrace	tr;
 
 	if (Entity->gameEntity->enemy->health > 0)
 	{
 	// see if any entities are in the way of the shot
+		vec3_t	spot1, spot2;
 		Entity->State.GetOrigin (spot1);
 		spot1[2] += Entity->gameEntity->viewheight;
 		Vec3Copy (Entity->gameEntity->enemy->state.origin, spot2);
 		spot2[2] += Entity->gameEntity->enemy->viewheight;
 
-		tr = CTrace (spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
+		CTrace tr (spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
 
 		// do we have a clear shot?
 		if (tr.ent != Entity->gameEntity->enemy)

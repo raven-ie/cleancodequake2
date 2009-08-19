@@ -719,13 +719,9 @@ bool CMonster::WalkMove (float Yaw, float Dist)
 
 bool CMonster::MoveStep (vec3_t move, bool ReLink)
 {
-	float		dz;
 	vec3_t		oldorg, neworg, end;
 	CTrace		trace;
-	int			i;
 	float		stepsize;
-	vec3_t		test;
-	int			contents;
 
 // try the move	
 	Entity->State.GetOrigin(oldorg);
@@ -735,14 +731,14 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 	if ( Entity->gameEntity->flags & (FL_SWIM | FL_FLY) )
 	{
 	// try one move with vertical motion, then one without
-		for (i=0 ; i<2 ; i++)
+		for (int i=0 ; i<2 ; i++)
 		{
 			Vec3Add (oldorg, move, neworg);
 			if (i == 0 && Entity->gameEntity->enemy)
 			{
 				if (!Entity->gameEntity->goalentity)
 					Entity->gameEntity->goalentity = Entity->gameEntity->enemy;
-				dz = oldorg[2] - Entity->gameEntity->goalentity->state.origin[2];
+				float dz = oldorg[2] - Entity->gameEntity->goalentity->state.origin[2];
 				if (Entity->gameEntity->goalentity->client)
 				{
 					if (dz > 40)
@@ -770,11 +766,9 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 			{
 				if (!Entity->gameEntity->waterlevel)
 				{
-					test[0] = trace.endPos[0];
-					test[1] = trace.endPos[1];
-					test[2] = trace.endPos[2] + Entity->GetMins().Z + 1;
-					contents = PointContents(test);
-					if (contents & CONTENTS_MASK_WATER)
+					vec3f test (trace.EndPos);
+					test.Z += Entity->GetMins().Z + 1;
+					if (PointContents(test) & CONTENTS_MASK_WATER)
 						return false;
 				}
 			}
@@ -784,11 +778,9 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 			{
 				if (Entity->gameEntity->waterlevel < 2)
 				{
-					test[0] = trace.endPos[0];
-					test[1] = trace.endPos[1];
-					test[2] = trace.endPos[2] + Entity->GetMins().Z + 1;
-					contents = PointContents(test);
-					if (!(contents & CONTENTS_MASK_WATER))
+					vec3f test (trace.EndPos);
+					test.Z += Entity->GetMins().Z + 1;
+					if (!(PointContents(test) & CONTENTS_MASK_WATER))
 						return false;
 				}
 			}
@@ -1123,8 +1115,6 @@ void CMonster::FlyMonsterStart ()
 
 void CMonster::MonsterStartGo ()
 {
-	vec3_t	v;
-
 	if (Entity->gameEntity->health <= 0)
 		return;
 
@@ -1177,9 +1167,9 @@ void CMonster::MonsterStartGo ()
 		}
 		else if (strcmp (Entity->gameEntity->movetarget->classname, "path_corner") == 0)
 		{
-			vec3_t origin;
-			Entity->State.GetOrigin(origin);
+			vec3_t origin, v;
 
+			Entity->State.GetOrigin(origin);
 			Vec3Subtract (Entity->gameEntity->goalentity->state.origin, origin, v);
 			vec3f angles = Entity->State.GetAngles();
 			IdealYaw = angles.Y = VecToYaw(v);
@@ -1593,19 +1583,18 @@ bool CMonster::CheckAttack ()
 
 	return false;
 #else
-	vec3_t	spot1, spot2;
 	float	chance;
-	CTrace	tr;
 
 	if (Entity->gameEntity->enemy->health > 0)
 	{
 	// see if any entities are in the way of the shot
+		vec3_t	spot1, spot2;
 		Entity->State.GetOrigin (spot1);
 		spot1[2] += Entity->gameEntity->viewheight;
 		Vec3Copy (Entity->gameEntity->enemy->state.origin, spot2);
 		spot2[2] += Entity->gameEntity->enemy->viewheight;
 
-		tr = CTrace (spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
+		CTrace tr (spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
 
 		// do we have a clear shot?
 		if (tr.ent != Entity->gameEntity->enemy)
@@ -1769,11 +1758,6 @@ void CMonster::AI_Charge(float Dist)
 	if (Dist)
 		WalkMove (Entity->State.GetAngles().Y, Dist);
 #else
-	vec3_t	v;
-	// PMM
-	float	ofs;
-	// PMM
-
 	// PMM - made AI_MANUAL_STEERING affect things differently here .. they turn, but
 	// don't set the ideal_yaw
 
@@ -1789,7 +1773,7 @@ void CMonster::AI_Charge(float Dist)
 
 	if (!(AIFlags & AI_MANUAL_STEERING))
 	{
-		vec3_t origin;
+		vec3_t origin, v;
 		Entity->State.GetOrigin (origin);
 		Vec3Subtract (Entity->gameEntity->enemy->state.origin, origin, v);
 		IdealYaw = VecToYaw(v);
@@ -1806,6 +1790,7 @@ void CMonster::AI_Charge(float Dist)
 		// circle strafe support
 		if (AttackState == AS_SLIDING)
 		{
+			float ofs;
 			// if we're fighting a tesla, NEVER circle strafe
 			if ((Entity->gameEntity->enemy) && (Entity->gameEntity->enemy->classname) && (!strcmp(Entity->gameEntity->enemy->classname, "tesla")))
 				ofs = 0;
@@ -2371,11 +2356,6 @@ void CMonster::AI_Run(float Dist)
 	edict_t		*save;
 	bool	isNew;
 	edict_t		*marker;
-	float		d1, d2;
-	CTrace		tr;
-	vec3_t		v_forward, v_right;
-	float		left, center, right;
-	vec3_t		left_target, right_target;
 	//PMM
 	bool	retval;
 	bool	alreadyMoved = false;
@@ -2596,7 +2576,7 @@ void CMonster::AI_Run(float Dist)
 	}
 
 	Vec3Subtract (origin, LastSighting, v);
-	d1 = Vec3Length(v);
+	float d1 = Vec3Length(v);
 	if (d1 <= Dist)
 	{
 		AIFlags |= AI_PURSUE_NEXT;
@@ -2607,13 +2587,14 @@ void CMonster::AI_Run(float Dist)
 
 	if (isNew)
 	{
-		tr = CTrace(vec3f(origin), Entity->GetMins(), Entity->GetMaxs(), vec3f(LastSighting), Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
+		CTrace tr (vec3f(origin), Entity->GetMins(), Entity->GetMaxs(), vec3f(LastSighting), Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
 		if (tr.fraction < 1)
 		{
+			float center = tr.fraction;
 			Vec3Subtract (Entity->gameEntity->goalentity->state.origin, origin, v);
 			d1 = Vec3Length(v);
-			center = tr.fraction;
-			d2 = d1 * ((center+1)/2);
+
+			float d2 = d1 * ((center+1)/2);
 			vec3_t angles;
 			vec3_t origin;
 
@@ -2621,17 +2602,21 @@ void CMonster::AI_Run(float Dist)
 			Entity->State.GetAngles (angles);
 			angles[YAW] = IdealYaw = VecToYaw(v);
 			Entity->State.SetAngles(angles);
+
+			vec3_t v_forward, v_right;
 			Angles_Vectors(angles, v_forward, v_right, NULL);
 
+			vec3_t left_target;
 			Vec3Set(v, d2, -16, 0);
 			G_ProjectSource (origin, v, v_forward, v_right, left_target);
 			tr = CTrace(Entity->State.GetOrigin(), Entity->GetMins(), Entity->GetMaxs(), vec3f(left_target), Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
-			left = tr.fraction;
+			float left = tr.fraction;
 
+			vec3_t right_target;
 			Vec3Set(v, d2, 16, 0);
 			G_ProjectSource (origin, v, v_forward, v_right, right_target);
 			tr = CTrace(Entity->State.GetOrigin(), Entity->GetMins(), Entity->GetMaxs(), vec3f(right_target), Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
-			right = tr.fraction;
+			float right = tr.fraction;
 
 			center = (d1*center)/d2;
 			if (left >= center && left > right)
@@ -2846,10 +2831,6 @@ void CMonster::AI_Stand (float Dist)
 			IdleTime = level.framenum + (random() * 150);
 	}
 #else
-	vec3_t	v;
-	// PMM
-	bool retval;
-
 	if (Dist)
 		WalkMove (Entity->State.GetAngles().Y, Dist);
 
@@ -2883,7 +2864,7 @@ void CMonster::AI_Stand (float Dist)
 	{
 		if (Entity->gameEntity->enemy)
 		{
-			vec3_t origin;
+			vec3_t origin, v;
 			Entity->State.GetOrigin (origin);
 
 			Vec3Subtract (Entity->gameEntity->enemy->state.origin, origin, v);
@@ -2897,7 +2878,7 @@ void CMonster::AI_Stand (float Dist)
 				ChangeYaw ();
 			// PMM
 			// find out if we're going to be shooting
-			retval = AI_CheckAttack ();
+			bool retval = AI_CheckAttack ();
 			// record sightings of player
 			if ((Entity->gameEntity->enemy) && (Entity->gameEntity->enemy->inUse) && (visible(Entity->gameEntity, Entity->gameEntity->enemy)))
 			{
@@ -3490,7 +3471,6 @@ void CMonster::HuntTarget()
 bool CMonster::FindTarget()
 {
 	bool		heardit;
-	int			r;
 	CPlayerEntity *client;
 
 	if (AIFlags & AI_GOOD_GUY)
@@ -3661,7 +3641,7 @@ bool CMonster::FindTarget()
 	edict_t *old = Entity->gameEntity->enemy;
 	if (!heardit)
 	{
-		r = range (Entity->gameEntity, client->gameEntity);
+		int r = range (Entity->gameEntity, client->gameEntity);
 
 		if (r == RANGE_FAR)
 			return false;

@@ -35,9 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 void CheckDodge (CBaseEntity *self, vec3f &start, vec3f &dir, int speed)
 {
-	vec3f	end, v;
+	vec3f	end;
 	CTrace	tr;
-	float	eta;
 
 	// easy mode only ducks one quarter the time
 	if (skill->Integer() == 0)
@@ -52,8 +51,8 @@ void CheckDodge (CBaseEntity *self, vec3f &start, vec3f &dir, int speed)
 #ifdef MONSTER_USE_ROGUE_AI
 	if ((tr.ent) && (tr.ent->Entity) && (tr.ent->Entity->EntityFlags & ENT_MONSTER) && (tr.ent->health > 0) && infront(tr.ent, self->gameEntity))
 	{
-		v = tr.EndPos - start;
-		eta = (v.LengthFast() - tr.ent->maxs[0]) / speed;
+		vec3f v = tr.EndPos - start;
+		float eta = (v.LengthFast() - tr.ent->maxs[0]) / speed;
 		(dynamic_cast<CMonsterEntity*>(tr.ent->Entity))->Monster->Dodge (self->gameEntity, eta, &tr);
 
 		if (tr.ent->enemy != self->gameEntity)
@@ -62,8 +61,8 @@ void CheckDodge (CBaseEntity *self, vec3f &start, vec3f &dir, int speed)
 #else
 	if ((tr.ent) && (tr.ent->Entity) && (tr.ent->Entity->EntityFlags & ENT_MONSTER) && (tr.ent->health > 0) && infront(tr.ent, self->gameEntity))
 	{
-		v = tr.EndPos - start;
-		eta = (v.LengthFast() - tr.ent->maxs[0]) / speed;
+		vec3f v = tr.EndPos - start;
+		float eta = (v.LengthFast() - tr.ent->maxs[0]) / speed;
 		(dynamic_cast<CMonsterEntity*>(tr.ent->Entity))->Monster->Dodge (self->gameEntity, eta);
 	}
 #endif
@@ -344,7 +343,6 @@ void CRocket::Think ()
 void CRocket::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 {
 	vec3_t		origin;
-	int			n;
 
 	if (other->gameEntity == gameEntity->owner)
 		return;
@@ -368,8 +366,7 @@ void CRocket::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 		{
 			if ((surf) && !(surf->flags & (SURF_TEXINFO_WARP|SURF_TEXINFO_TRANS33|SURF_TEXINFO_TRANS66|SURF_TEXINFO_FLOWING)))
 			{
-				n = rand() % 5;
-				while(n--)
+				for (int n = 0; n < rand()%5; n++)
 					ThrowDebris (gameEntity, "models/objects/debris2/tris.md2", 2, origin);
 			}
 		}
@@ -439,9 +436,6 @@ void CBFGBolt::Think ()
 	if (Exploded)
 	{
 		edict_t	*ent;
-		float	points;
-		vec3_t	v;
-		float	dist;
 		vec3_t	origin;
 
 		State.GetOrigin (origin);
@@ -461,11 +455,12 @@ void CBFGBolt::Think ()
 				if (!CanDamage (ent, gameEntity->owner))
 					continue;
 
+				vec3_t v;
 				Vec3Add (ent->mins, ent->maxs, v);
 				Vec3MA (ent->state.origin, 0.5, v, v);
 				Vec3Subtract (origin, v, v);
-				dist = Vec3Length(v);
-				points = Damage * (1.0f - sqrtf(dist/DamageRadius));
+				float dist = Vec3Length(v);
+				float points = Damage * (1.0f - sqrtf(dist/DamageRadius));
 				if (ent == gameEntity->owner)
 					points = points * 0.5;
 

@@ -132,7 +132,6 @@ static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channe
 	float		leftVol, rightVol, distanceMult;
 	edict_t		*client;
 	vec3_t		sourceVec, listenerRight;
-	vec3_t		originVec;
 	float		dot, dist;
 	float		rightScale, leftScale;
 	bool		usePHS;
@@ -197,6 +196,7 @@ static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channe
 	// use the entity origin/bmodel origin if the origin is specified
 	if (!origin)
 	{
+		vec3_t originVec;
 		if (entity->solid == SOLID_BSP)
 		{
 			originVec[0] = entity->state.origin[0] + 0.5f * (entity->mins[0] + entity->maxs[0]);

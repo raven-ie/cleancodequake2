@@ -626,7 +626,6 @@ bool CStepPhysics::Run ()
 	float		*vel;
 	float		speed, newspeed, control;
 	float		friction;
-	int			mask;
 
 	if (PhysicsDisabled)
 		return false;
@@ -710,11 +709,7 @@ bool CStepPhysics::Run ()
 			}
 		}
 
-		if (EntityFlags & ENT_MONSTER)
-			mask = CONTENTS_MASK_MONSTERSOLID;
-		else
-			mask = CONTENTS_MASK_SOLID;
-		FlyMove (0.1f, mask);
+		FlyMove (0.1f,  (EntityFlags & ENT_MONSTER) ? CONTENTS_MASK_MONSTERSOLID : CONTENTS_MASK_SOLID);
 
 		Link();
 		G_TouchTriggers (this);

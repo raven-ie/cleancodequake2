@@ -690,11 +690,10 @@ CAnim GunnerMoveEndFireChain (FRAME_attak224, FRAME_attak230, GunnerFramesEndFir
 #ifdef MONSTER_USE_ROGUE_AI
 void CGunner::BlindCheck ()
 {
-	vec3_t	aim;
-
 	if (AIFlags & AI_MANUAL_STEERING)
 	{
 		vec3_t origin;
+		vec3_t aim;
 		Entity->State.GetOrigin(origin);
 		Vec3Subtract(BlindFireTarget, origin, aim);
 		IdealYaw = VecToYaw(aim);
@@ -740,23 +739,11 @@ void CGunner::Attack()
 	else
 		CurrentMove = (random() <= 0.5) ? &GunnerMoveAttackGrenade : &GunnerMoveAttackChain;
 #else
-	float chance, r;
-
 	DoneDodge();
 
 	// PMM 
 	if (AttackState == AS_BLIND)
 	{
-		// setup shot probabilities
-		if (BlindFireDelay < 1.0)
-			chance = 1.0;
-		else if (BlindFireDelay < 7.5)
-			chance = 0.4f;
-		else
-			chance = 0.1f;
-
-		r = random();
-
 		// minimum of 2 seconds, plus 0-3, after the shots are done
 		BlindFireDelay += 2.1 + 2.0 + random()*3.0;
 
@@ -765,8 +752,12 @@ void CGunner::Attack()
 			return;
 
 		// don't shoot if the dice say not to
-		if (r > chance)
+		float r = random();
+		if (BlindFireDelay < 7.5 && (r > 0.4f))
 			return;
+		else if (r > 0.1f)
+			return;
+
 
 		// turn on manual steering to signal both manual steering and blindfire
 		AIFlags |= AI_MANUAL_STEERING;

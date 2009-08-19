@@ -38,7 +38,8 @@ public:
 	/**
 	 * Constructors
 	 */
-	colorf() {}
+	colorf() 
+		: R(0), G(0), B(0), A(0){}
 
 	inline colorf(const colorf &Other)
 		: R(Other.R), G(Other.G), B(Other.B), A(Other.A) {}
@@ -102,7 +103,8 @@ public:
 	/**
 	 * Constructors
 	 */
-	colorb() {}
+	colorb() 
+		: R(0), G(0), B(0), A(0) {}
 
 	inline colorb(const colorb &Other)
 		: R(Other.R), G(Other.G), B(Other.B), A(Other.A) {}

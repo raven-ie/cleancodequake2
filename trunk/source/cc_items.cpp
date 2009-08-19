@@ -262,9 +262,6 @@ void DoRespawn (edict_t *ent)
 	if (ent->team)
 	{
 		edict_t *master;
-		int     count;
-		int choice;
-
 		master = ent->teammaster;
 
 #ifdef CLEANCTF_ENABLED
@@ -277,12 +274,13 @@ void DoRespawn (edict_t *ent)
 			ent = master;
 		else
 		{
+			int     count;
 //ZOID
 #endif
 			for (count = 0, ent = master; ent; ent = ent->chain, count++)
 				;
 
-			choice = rand() % count;
+			int choice = rand() % count;
 
 			for (count = 0, ent = master; count < choice; ent = ent->chain, count++)
 				;

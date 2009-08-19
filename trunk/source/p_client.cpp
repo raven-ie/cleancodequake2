@@ -754,7 +754,6 @@ to be placed into the game.  This will happen every level load.
 */
 void ClientBegin (edict_t *ent)
 {
-	int		i;
 	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(ent->Entity);
 
 	ent->client = game.clients + (Player->State.GetNumber()-1);
@@ -775,7 +774,7 @@ void ClientBegin (edict_t *ent)
 		// with deltaangles
 		vec3_t viewAngles;
 		Player->Client.PlayerState.GetViewAngles(viewAngles);
-		for (i=0 ; i<3 ; i++)
+		for (int i=0 ; i<3 ; i++)
 			Player->Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(viewAngles[i]);
 	}
 	else

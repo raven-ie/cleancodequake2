@@ -328,7 +328,6 @@ CAnim SuperTankMoveAttack4 (FRAME_attak4_1, FRAME_attak4_6, SuperTankFramesAttac
 
 void CSuperTank::Grenade ()
 {
-	vec3_t	vec;
 	vec3_t	start;
 	vec3_t	forward, right;
 	vec3_t	offset = {32.0f, 37.0f, 50.0f};
@@ -344,6 +343,7 @@ void CSuperTank::Grenade ()
 
 	if (Entity->gameEntity->enemy)
 	{
+		vec3_t vec;
 		Vec3Copy (Entity->gameEntity->enemy->state.origin, vec);
 		Vec3MA (vec, 0, Entity->gameEntity->enemy->velocity, vec);
 		vec[2] += Entity->gameEntity->enemy->viewheight;
@@ -640,7 +640,6 @@ void CSuperTank::Rocket ()
 
 void CSuperTank::MachineGun ()
 {
-	vec3_t	vec;
 	vec3_t	start;
 	vec3_t	forward, right;
 	int		FlashNumber = MZ2_SUPERTANK_MACHINEGUN_1 + (Entity->State.GetFrame() - FRAME_attak1_1);
@@ -654,6 +653,7 @@ void CSuperTank::MachineGun ()
 
 	if (Entity->gameEntity->enemy)
 	{
+		vec3_t vec;
 		Vec3Copy (Entity->gameEntity->enemy->state.origin, vec);
 		Vec3MA (vec, 0, Entity->gameEntity->enemy->velocity, vec);
 		vec[2] += Entity->gameEntity->enemy->viewheight;
@@ -743,7 +743,6 @@ void CSuperTank::Dead ()
 void CSuperTank::Explode ()
 {
 	vec3_t	org;
-	int		n;
 
 	Think = ConvertDerivedFunction(&CSuperTank::Explode);
 	Entity->State.GetOrigin(org);
@@ -784,9 +783,9 @@ void CSuperTank::Explode ()
 		break;
 	case 8:
 		Entity->State.SetSound (0);
-		for (n= 0; n < 4; n++)
+		for (int n= 0; n < 4; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, 500, GIB_ORGANIC);
-		for (n= 0; n < 8; n++)
+		for (int n= 0; n < 8; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMetal, 500, GIB_METALLIC);
 		CGibEntity::Spawn (Entity, gMedia.Gib_Chest, 500, GIB_ORGANIC);
 		Entity->ThrowHead (gMedia.Gib_Gear, 500, GIB_METALLIC);

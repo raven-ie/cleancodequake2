@@ -54,11 +54,8 @@ static int MachinegunFlash [] = {MZ2_SOLDIER_MACHINEGUN_1, MZ2_SOLDIER_MACHINEGU
 void CSoldierMachinegun::FireGun (int FlashNumber)
 {
 	vec3_t	start;
-	vec3_t	forward, right, up;
+	vec3_t	forward, right;
 	vec3_t	aim;
-	vec3_t	dir;
-	vec3_t	end;
-	float	r, u;
 	int		flashIndex = MachinegunFlash[FlashNumber];
 
 	vec3_t angles, origin;
@@ -71,17 +68,20 @@ void CSoldierMachinegun::FireGun (int FlashNumber)
 		Vec3Copy (forward, aim);
 	else
 	{
+		vec3_t end;
 		Vec3Copy (Entity->gameEntity->enemy->state.origin, end);
 		end[2] += Entity->gameEntity->enemy->viewheight;
 		Vec3Subtract (end, start, aim);
+		
+		vec3_t dir;
 		VecToAngles (aim, dir);
+
+		vec3_t up;
 		Angles_Vectors (dir, forward, right, up);
 
-		r = crandom()*1000;
-		u = crandom()*500;
 		Vec3MA (start, 8192, forward, end);
-		Vec3MA (end, r, right, end);
-		Vec3MA (end, u, up, end);
+		Vec3MA (end, crandom()*1000, right, end);
+		Vec3MA (end, crandom()*500, up, end);
 
 		Vec3Subtract (end, start, aim);
 		VectorNormalizef (aim, aim);

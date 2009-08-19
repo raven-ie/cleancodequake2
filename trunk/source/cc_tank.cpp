@@ -500,7 +500,6 @@ void CTank::Rocket ()
 void CTank::MachineGun ()
 {
 	vec3_t	dir;
-	vec3_t	vec;
 	vec3_t	start;
 	vec3_t	forward, right;
 	int		flash_number = MZ2_TANK_MACHINEGUN_1 + (Entity->State.GetFrame() - FRAME_attak406);
@@ -513,6 +512,7 @@ void CTank::MachineGun ()
 
 	if (Entity->gameEntity->enemy)
 	{
+		vec3_t vec;
 		Vec3Copy (Entity->gameEntity->enemy->state.origin, vec);
 		vec[2] += Entity->gameEntity->enemy->viewheight;
 		Vec3Subtract (vec, start, vec);
@@ -777,9 +777,6 @@ void CTank::Attack ()
 	vec3_t	vec;
 	float	range;
 	float	r;
-#ifdef MONSTER_USE_ROGUE_AI
-	float	chance;
-#endif
 
 	if (Entity->gameEntity->enemy->health < 0)
 	{
@@ -793,13 +790,6 @@ void CTank::Attack ()
 	if (AttackState == AS_BLIND)
 	{
 		// setup shot probabilities
-		if (BlindFireDelay < 1.0)
-			chance = 1.0;
-		else if (BlindFireDelay < 7.5)
-			chance = 0.4f;
-		else
-			chance = 0.1f;
-
 		r = random();
 
 		BlindFireDelay += 3.2 + 2.0 + random()*3.0;
@@ -809,7 +799,9 @@ void CTank::Attack ()
 			return;
 
 		// don't shoot if the dice say not to
-		if (r > chance)
+		if (BlindFireDelay < 7.5 && (r > 0.4f))
+			return;
+		else if (r > 0.1f)
 			return;
 
 		// turn on manual steering to signal both manual steering and blindfire
@@ -913,15 +905,13 @@ CAnim TankMoveDeath (FRAME_death101, FRAME_death132, TankFramesDeath1, ConvertDe
 
 void CTank::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
-	int		n;
-
 // check for gib
 	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
-		for (n= 0; n < 1 /*4*/; n++)
+		for (int n= 0; n < 1 /*4*/; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		for (n= 0; n < 4; n++)
+		for (int n= 0; n < 4; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMetal, damage, GIB_METALLIC);
 		CGibEntity::Spawn (Entity, gMedia.Gib_Chest, damage, GIB_ORGANIC);
 		Entity->ThrowHead (gMedia.Gib_Gear, damage, GIB_METALLIC);

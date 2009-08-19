@@ -68,7 +68,7 @@ End(End)
 
 bool CPath::NodeIsClosed (CPathNode *Node)
 {
-	for (std::vector<CPathNode*>::iterator it = Closed.begin(); it < Closed.end(); it++ )
+	for (std::vector<CPathNode*>::iterator it = Closed.begin(); it < Closed.end(); ++it )
 	{
 		CPathNode *Check = *it;
 

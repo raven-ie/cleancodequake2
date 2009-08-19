@@ -554,7 +554,6 @@ void CMaiden::Rocket ()
 	vec3_t	dir;
 	vec3_t	vec;
 	int		rocketSpeed;
-	float	dist;
 	vec3_t	target;
 	bool blindfire = (AIFlags & AI_MANUAL_STEERING) ? true : false;
 
@@ -595,11 +594,7 @@ void CMaiden::Rocket ()
 	// 20, 35, 50, 65 chance of leading
 	if((!blindfire) && ((random() < (0.2 + ((3 - skill->Integer()) * 0.15)))))
 	{
-		float	time;
-
-		dist = Vec3Length (dir);
-		time = dist/rocketSpeed;
-		Vec3MA(vec, time, Entity->gameEntity->enemy->velocity, vec);
+		Vec3MA(vec, Vec3Length (dir)/rocketSpeed, Entity->gameEntity->enemy->velocity, vec);
 		Vec3Subtract(vec, start, dir);
 	}
 
@@ -747,23 +742,11 @@ void CMaiden::Melee()
 void CMaiden::Attack()
 {
 #ifdef MONSTER_USE_ROGUE_AI
-	float r, chance;
-
 	DoneDodge ();
 
 	// PMM 
 	if (AttackState == AS_BLIND)
 	{
-		// setup shot probabilities
-		if (BlindFireDelay < 1.0f)
-			chance = 1.0;
-		else if (BlindFireDelay < 7.5f)
-			chance = 0.4f;
-		else
-			chance = 0.1f;
-
-		r = random();
-
 		// minimum of 2 seconds, plus 0-3, after the shots are done
 		BlindFireDelay += 2.0 + (4.5 * random());
 
@@ -772,7 +755,10 @@ void CMaiden::Attack()
 			return;
 
 		// don't shoot if the dice say not to
-		if (r > chance)
+		float r = random();
+		if (BlindFireDelay < 7.5f && (r > 0.4))
+			return;
+		else if (r > 0.1)
 			return;
 
 		// turn on manual steering to signal both manual steering and blindfire

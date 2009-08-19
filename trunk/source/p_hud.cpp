@@ -30,7 +30,6 @@ INTERMISSION
 
 void BeginIntermission (edict_t *targ)
 {
-	int		i, n;
 	edict_t	*ent;
 
 	if (level.intermissiontime)
@@ -46,7 +45,7 @@ void BeginIntermission (edict_t *targ)
 	game.autosaved = false;
 
 	// respawn any dead clients
-	for (i=0 ; i<game.maxclients ; i++)
+	for (int i=0 ; i<game.maxclients ; i++)
 	{
 		CPlayerEntity *client = dynamic_cast<CPlayerEntity*>((g_edicts + 1 + i)->Entity);
 		if (!client->IsInUse())
@@ -62,13 +61,13 @@ void BeginIntermission (edict_t *targ)
 	{
 		if (game.mode == GAME_COOPERATIVE)
 		{
-			for (i=0 ; i<game.maxclients ; i++)
+			for (int i=0 ; i<game.maxclients ; i++)
 			{
 				CPlayerEntity *client = dynamic_cast<CPlayerEntity*>((g_edicts + 1 + i)->Entity);
 				if (!client->IsInUse())
 					continue;
 				// strip players of all keys between units
-				for (n = 0; n < MAX_CS_ITEMS; n++)
+				for (int n = 0; n < MAX_CS_ITEMS; n++)
 				{
 					if (n >= GetNumItems())
 						break;
@@ -99,7 +98,7 @@ void BeginIntermission (edict_t *targ)
 	}
 	else
 	{	// chose one of four spots
-		i = rand() & 3;
+		int i = rand() & 3;
 		while (i--)
 		{
 			ent = G_Find (ent, FOFS(classname), "info_player_intermission");
@@ -112,7 +111,7 @@ void BeginIntermission (edict_t *targ)
 	Vec3Copy (ent->state.angles, level.intermission_angle);
 
 	// move all clients to the intermission point
-	for (i=0 ; i<game.maxclients ; i++)
+	for (int i=0 ; i<game.maxclients ; i++)
 	{
 		CPlayerEntity *client = dynamic_cast<CPlayerEntity*>((g_edicts + 1 + i)->Entity);
 		if (!client->IsInUse())

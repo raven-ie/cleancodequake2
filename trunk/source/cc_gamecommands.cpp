@@ -240,27 +240,25 @@ Cmd_Say_f
 
 bool CheckFlood(CPlayerEntity *ent)
 {
-	int		i;
-
 	if (flood_msgs->Integer())
 	{
-        if (level.framenum < ent->Client.flood_locktill)
+		if (level.framenum < ent->Client.flood_locktill)
 		{
 			ent->PrintToClient (PRINT_HIGH, "You can't talk for %d more seconds\n",
 				(int)((ent->Client.flood_locktill - level.framenum)/10));
-            return true;
-        }
-        i = ent->Client.flood_whenhead - flood_msgs->Integer() + 1;
-        if (i < 0)
-            i = (sizeof(ent->Client.flood_when)/sizeof(ent->Client.flood_when[0])) + i;
+			return true;
+		}
+		int i = ent->Client.flood_whenhead - flood_msgs->Integer() + 1;
+		if (i < 0)
+			i = (sizeof(ent->Client.flood_when)/sizeof(ent->Client.flood_when[0])) + i;
 		if (ent->Client.flood_when[i] && 
 			((level.framenum - ent->Client.flood_when[i])/10) < flood_persecond->Integer())
 		{
 			ent->Client.flood_locktill = level.framenum + (flood_waitdelay->Float() * 10);
 			ent->PrintToClient (PRINT_CHAT, "Flood protection:  You can't talk for %d seconds.\n",
 				flood_waitdelay->Integer());
-            return true;
-        }
+			return true;
+		}
 		ent->Client.flood_whenhead = (ent->Client.flood_whenhead + 1) %
 			(sizeof(ent->Client.flood_when)/sizeof(ent->Client.flood_when[0]));
 		ent->Client.flood_when[ent->Client.flood_whenhead] = level.framenum;
@@ -311,7 +309,7 @@ void Cmd_Say_f (CPlayerEntity *ent, bool team, bool arg0)
 
 	// don't let text be too long for malicious reasons
 	if (strlen(text) > sizeof(text))
-		text[sizeof(text)] = 0;
+		text[sizeof(text)-1] = 0;
 
 	Q_strcatz(text, "\n", sizeof(text));
 

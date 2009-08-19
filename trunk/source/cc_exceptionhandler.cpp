@@ -164,12 +164,10 @@ static VOID EGLUploadCrashDump (LPCSTR crashDump, LPCSTR crashText)
 	struct curl_httppost* post = NULL;
 	struct curl_httppost* last = NULL;
 	CURL	*curl;
-	DWORD	lenDmp;
-	DWORD	lenTxt;
 
 	__try {
-		lenDmp = Sys_FileLength (crashDump);
-		lenTxt = Sys_FileLength (crashText);
+		DWORD	lenDmp = Sys_FileLength (crashDump);
+		DWORD	lenTxt = Sys_FileLength (crashText);
 
 		if (lenTxt == -1)
 			return;
@@ -230,11 +228,12 @@ static BOOL CALLBACK EnumerateLoadedModulesProcSymInfo (PSTR ModuleName, DWORD64
 {
 	IMAGEHLP_MODULE64	symInfo = {0};
 	FILE				*fhReport = (FILE *)UserContext;
-	PCHAR				symType;
 
 	symInfo.SizeOfStruct = sizeof(symInfo);
 
-	if (fnSymGetModuleInfo64 (GetCurrentProcess(), ModuleBase, &symInfo)) {
+	if (fnSymGetModuleInfo64 (GetCurrentProcess(), ModuleBase, &symInfo))
+	{
+		PCHAR				symType;
 		switch (symInfo.SymType) {
 		case SymCoff:		symType = "COFF";		break;
 		case SymCv:			symType = "CV";			break;
@@ -246,7 +245,8 @@ static BOOL CALLBACK EnumerateLoadedModulesProcSymInfo (PSTR ModuleName, DWORD64
 
 		fprintf (fhReport, "%s, %s symbols loaded.\r\n", symInfo.LoadedImageName, symType);
 	}
-	else {
+	else
+	{
 		int i = GetLastError ();
 		fprintf (fhReport, "%s, couldn't check symbols (error %d, DBGHELP.DLL too old?)\r\n", ModuleName, i);
 	}
@@ -258,7 +258,6 @@ static BOOL CALLBACK EnumerateLoadedModulesProcDump (PSTR ModuleName, DWORD64 Mo
 {
 	VS_FIXEDFILEINFO *fileVersion;
 	BYTE	*verInfo;
-	DWORD	len;
 	UINT	dummy;
 	FILE	*fhReport = (FILE *)UserContext;
 	CHAR	verString[32];
@@ -267,30 +266,29 @@ static BOOL CALLBACK EnumerateLoadedModulesProcDump (PSTR ModuleName, DWORD64 Mo
 	Q_strncpyz (lowered, ModuleName, sizeof(lowered)-1);
 	Q_strlwr (lowered);
 
-	if (fnGetFileVersionInfo && fnVerQueryValue && fnGetFileVersionInfoSize) {
-		if ((len = (fnGetFileVersionInfoSize ((LPTSTR)ModuleName, (LPDWORD)&dummy))) != 0) {
+	if (fnGetFileVersionInfo && fnVerQueryValue && fnGetFileVersionInfoSize)
+	{
+		DWORD len;
+		if ((len = (fnGetFileVersionInfoSize ((LPTSTR)ModuleName, (LPDWORD)&dummy))) != 0)
+		{
 			verInfo = (byte*)LocalAlloc (LPTR, len);
-			if (fnGetFileVersionInfo (ModuleName, dummy, len, verInfo)) {
-				if (fnVerQueryValue ((void*)verInfo, "\\", (PUINT)&fileVersion, &dummy)) {
+			if (fnGetFileVersionInfo (ModuleName, dummy, len, verInfo))
+			{
+				if (fnVerQueryValue ((void*)verInfo, "\\", (PUINT)&fileVersion, &dummy))
 					Q_snprintfz (verString, sizeof(verString), "%d.%d.%d.%d", HIWORD(fileVersion->dwFileVersionMS), LOWORD(fileVersion->dwFileVersionMS), HIWORD(fileVersion->dwFileVersionLS), LOWORD(fileVersion->dwFileVersionLS));
-				}
-				else {
+				else
 					Q_strncpyz (verString, "unknown", sizeof(verString));
-				}
 			}
-			else {
+			else
 				Q_strncpyz (verString, "unknown", sizeof(verString));
-			}
 
 			LocalFree (verInfo);
 		}
-		else {
-			Q_strncpyz (verString, "unknown", sizeof(verString));
-		}	
+		else
+			Q_strncpyz (verString, "unknown", sizeof(verString));	
 	}
-	else {
+	else
 		Q_strncpyz (verString, "unknown", sizeof(verString));
-	}	
 
 	fprintf (fhReport, "[0x%I64p - 0x%I64p] %s (%lu bytes, version %s)\r\n", ModuleBase, ModuleBase + (DWORD64)ModuleSize, ModuleName, ModuleSize, verString);
 	return TRUE;
@@ -576,12 +574,13 @@ DWORD EGLExceptionHandler (DWORD exceptionCode, LPEXCEPTION_POINTERS exceptionIn
 #ifdef USE_GZ
 				{
 					BYTE	buff[0xFFFF];
-					size_t	len;
 					gzFile	gz;
 
 					Q_snprintfz (zPath, sizeof(zPath)-1, "%s\\CCCrashLog%.4d-%.2d-%.2d_%d.dmp.gz", searchPath, timeInfo.wYear, timeInfo.wMonth, timeInfo.wDay, i);
 					gz = gzopen (zPath, "wb");
-					if (gz) {
+					if (gz)
+					{
+						size_t len;
 						while ((len = fread (buff, 1, sizeof(buff), fh)) > 0)
 							gzwrite (gz, buff, (unsigned int)len);
 						gzclose (gz);

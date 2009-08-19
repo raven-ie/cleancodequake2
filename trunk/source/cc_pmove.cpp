@@ -289,14 +289,14 @@ Handles both ground friction and water friction
 */
 static void SV_PM_Friction (void) {
 	float	*vel;
-	float	speed, newspeed, control;
-	float	friction;
+	float	speed, newspeed;
 	float	drop;
 	
 	vel = pml.velocity;
 	
 	speed = Vec3Length (vel);
-	if (speed < 1) {
+	if (speed < 1)
+	{
 		vel[0] = 0;
 		vel[1] = 0;
 		return;
@@ -305,11 +305,8 @@ static void SV_PM_Friction (void) {
 	drop = 0;
 
 	// apply ground friction
-	if ((pm->groundEntity && pml.groundSurface && !(pml.groundSurface->flags & SURF_TEXINFO_SLICK)) || pml.ladder) {
-		friction = SV_PM_FRICTION;
-		control = (speed < SV_PM_STOPSPEED) ? SV_PM_STOPSPEED : speed;
-		drop += control*friction*pml.frameTime;
-	}
+	if ((pm->groundEntity && pml.groundSurface && !(pml.groundSurface->flags & SURF_TEXINFO_SLICK)) || pml.ladder)
+		drop += ((speed < SV_PM_STOPSPEED) ? SV_PM_STOPSPEED : speed) * SV_PM_FRICTION * pml.frameTime;
 
 	// apply water friction
 	if (pm->waterLevel && !pml.ladder)
@@ -322,9 +319,7 @@ static void SV_PM_Friction (void) {
 
 	newspeed /= speed;
 
-	vel[0] = vel[0] * newspeed;
-	vel[1] = vel[1] * newspeed;
-	vel[2] = vel[2] * newspeed;
+	Vec3Scale (vel, newspeed, vel);
 }
 
 
@@ -386,12 +381,13 @@ static void SV_PM_AirAccelerate (vec3_t wishdir, float wishspeed, float accel) {
 SV_PM_AddCurrents
 =============
 */
-static void SV_PM_AddCurrents (vec3_t	wishvel) {
+static void SV_PM_AddCurrents (vec3_t	wishvel)
+{
 	vec3_t	v;
-	float	s;
 
 	// account for ladders
-	if (pml.ladder && Q_fabs (pml.velocity[2]) <= 200) {
+	if (pml.ladder && Q_fabs (pml.velocity[2]) <= 200)
+	{
 		if ((pm->viewAngles[PITCH] <= -15) && (pm->cmd.forwardMove > 0))
 			wishvel[2] = 200;
 		else if ((pm->viewAngles[PITCH] >= 15) && (pm->cmd.forwardMove > 0))
@@ -412,7 +408,8 @@ static void SV_PM_AddCurrents (vec3_t	wishvel) {
 	}
 
 	// add water currents
-	if (pm->waterType & CONTENTS_MASK_CURRENT) {
+	if (pm->waterType & CONTENTS_MASK_CURRENT)
+	{
 		Vec3Clear (v);
 
 		if (pm->waterType & CONTENTS_CURRENT_0)		v[0] += 1;
@@ -422,15 +419,12 @@ static void SV_PM_AddCurrents (vec3_t	wishvel) {
 		if (pm->waterType & CONTENTS_CURRENT_UP)	v[2] += 1;
 		if (pm->waterType & CONTENTS_CURRENT_DOWN)	v[2] -= 1;
 
-		s = SV_PM_WATERSPEED;
-		if ((pm->waterLevel == 1) && (pm->groundEntity))
-			s /= 2;
-
-		Vec3MA (wishvel, s, v, wishvel);
+		Vec3MA (wishvel, (((pm->waterLevel == 1) && (pm->groundEntity)) ? (SV_PM_WATERSPEED / 2) : SV_PM_WATERSPEED), v, wishvel);
 	}
 
 	// add conveyor belt velocities
-	if (pm->groundEntity) {
+	if (pm->groundEntity)
+	{
 		Vec3Clear (v);
 
 		if (pml.groundContents & CONTENTS_CURRENT_0)	v[0] += 1;
@@ -568,7 +562,6 @@ SV_PM_CatagorizePosition
 static void SV_PM_CatagorizePosition (void) {
 	vec3_t		point;
 	int			cont;
-	CTrace		trace;
 	float		sample1;
 	float		sample2;
 
@@ -578,29 +571,35 @@ static void SV_PM_CatagorizePosition (void) {
 	point[1] = pml.origin[1];
 	point[2] = pml.origin[2] - 0.25;
 
-	if (pml.velocity[2] > 180) {
+	if (pml.velocity[2] > 180)
+	{
 		pm->state.pmFlags &= ~PMF_ON_GROUND;
 		pm->groundEntity = NULL;
 	}
-	else {
-		trace = CTrace (pml.origin, pm->mins, pm->maxs, point, pml.ent, (pml.ent->health > 0) ? CONTENTS_MASK_PLAYERSOLID : CONTENTS_MASK_DEADSOLID);
+	else
+	{
+		CTrace trace (pml.origin, pm->mins, pm->maxs, point, pml.ent, (pml.ent->health > 0) ? CONTENTS_MASK_PLAYERSOLID : CONTENTS_MASK_DEADSOLID);
 		pml.groundSurface = trace.surface;
 		pml.groundContents = trace.contents;
 
-		if (!trace.ent || ((trace.plane.normal[2] < 0.7) && !trace.startSolid)) {
+		if (!trace.ent || ((trace.plane.normal[2] < 0.7) && !trace.startSolid))
+		{
 			pm->groundEntity = NULL;
 			pm->state.pmFlags &= ~PMF_ON_GROUND;
 		}
-		else {
+		else
+		{
 			pm->groundEntity = trace.ent;
 
 			// hitting solid ground will end a waterjump
-			if (pm->state.pmFlags & PMF_TIME_WATERJUMP) {
+			if (pm->state.pmFlags & PMF_TIME_WATERJUMP)
+			{
 				pm->state.pmFlags &= ~(PMF_TIME_WATERJUMP | PMF_TIME_LAND | PMF_TIME_TELEPORT);
 				pm->state.pmTime = 0;
 			}
 
-			if (!(pm->state.pmFlags & PMF_ON_GROUND)) {
+			if (!(pm->state.pmFlags & PMF_ON_GROUND))
+			{
 				// just hit the ground
 				pm->state.pmFlags |= PMF_ON_GROUND;
 				// don't do landing time if we were just going down a slope
@@ -615,7 +614,8 @@ static void SV_PM_CatagorizePosition (void) {
 			}
 		}
 
-		if ((pm->numTouch < MAXTOUCH) && trace.ent) {
+		if ((pm->numTouch < MAXTOUCH) && trace.ent)
+		{
 			pm->touchEnts[pm->numTouch] = trace.ent;
 			pm->numTouch++;
 		}
@@ -631,12 +631,14 @@ static void SV_PM_CatagorizePosition (void) {
 	point[2] = pml.origin[2] + pm->mins[2] + 1;	
 	cont = PointContents (point);
 
-	if (cont & CONTENTS_MASK_WATER) {
+	if (cont & CONTENTS_MASK_WATER)
+	{
 		pm->waterType = cont;
 		pm->waterLevel = 1;
 		point[2] = pml.origin[2] + pm->mins[2] + sample1;
 		cont = PointContents (point);
-		if (cont & CONTENTS_MASK_WATER) {
+		if (cont & CONTENTS_MASK_WATER)
+		{
 			pm->waterLevel = 2;
 			point[2] = pml.origin[2] + pm->mins[2] + sample2;
 			cont = PointContents (point);
@@ -652,8 +654,10 @@ static void SV_PM_CatagorizePosition (void) {
 SV_PM_CheckJump
 =============
 */
-static void SV_PM_CheckJump (void) {
-	if (pm->state.pmFlags & PMF_TIME_LAND) {
+static void SV_PM_CheckJump (void)
+{
+	if (pm->state.pmFlags & PMF_TIME_LAND)
+	{
 		// hasn't been long enough since landing to jump again
 		return;
 	}
@@ -760,11 +764,10 @@ SV_PM_FlyMove
 ===============
 */
 static void SV_PM_FlyMove (bool doClip) {
-	float	speed, drop, friction, control, newspeed;
+	float	speed;
 	float	currentspeed, addspeed, accelspeed;
-	vec3_t	wishvel, wishdir, end;
+	vec3_t	wishvel, wishdir;
 	float	fmove, smove, wishspeed;
-	CTrace	trace;
 
 	pm->viewHeight = 22;
 
@@ -772,15 +775,10 @@ static void SV_PM_FlyMove (bool doClip) {
 	speed = Vec3Length (pml.velocity);
 	if (speed < 1)
 		Vec3Clear (pml.velocity);
-	else {
-		drop = 0;
-
-		friction = SV_PM_FRICTION*1.5;	// extra friction
-		control = (speed < SV_PM_STOPSPEED) ? SV_PM_STOPSPEED : speed;
-		drop += control*friction*pml.frameTime;
-
+	else
+	{
 		// scale the velocity
-		newspeed = speed - drop;
+		float newspeed = speed - ((speed < SV_PM_STOPSPEED) ? SV_PM_STOPSPEED : speed)*SV_PM_FRICTION*1.5*pml.frameTime;
 		if (newspeed < 0)
 			newspeed = 0;
 		newspeed /= speed;
@@ -803,7 +801,8 @@ static void SV_PM_FlyMove (bool doClip) {
 	wishspeed = VectorNormalizef (wishdir, wishdir);
 
 	// clamp to server defined max speed
-	if (wishspeed > SV_PM_MAXSPEED) {
+	if (wishspeed > SV_PM_MAXSPEED)
+	{
 		Vec3Scale (wishvel, SV_PM_MAXSPEED/wishspeed, wishvel);
 		wishspeed = SV_PM_MAXSPEED;
 	}
@@ -814,6 +813,7 @@ static void SV_PM_FlyMove (bool doClip) {
 		return;
 
 	accelspeed = SV_PM_ACCELERATE*pml.frameTime*wishspeed;
+
 	if (accelspeed > addspeed)
 		accelspeed = addspeed;
 
@@ -821,16 +821,16 @@ static void SV_PM_FlyMove (bool doClip) {
 	pml.velocity[1] += accelspeed*wishdir[1];
 	pml.velocity[2] += accelspeed*wishdir[2];	
 
-	if (doClip) {
-		end[0] = pml.origin[0] + pml.frameTime * pml.velocity[0];
-		end[1] = pml.origin[1] + pml.frameTime * pml.velocity[1];
-		end[2] = pml.origin[2] + pml.frameTime * pml.velocity[2];
+	if (doClip)
+	{
+		vec3_t end;
+		Vec3MA (pml.origin, pml.frameTime, pml.velocity, end);
 
-		trace = CTrace (pml.origin, pm->mins, pm->maxs, end, pml.ent, (pml.ent->health > 0) ? CONTENTS_MASK_PLAYERSOLID : CONTENTS_MASK_DEADSOLID);
-
+		CTrace trace (pml.origin, pm->mins, pm->maxs, end, pml.ent, (pml.ent->health > 0) ? CONTENTS_MASK_PLAYERSOLID : CONTENTS_MASK_DEADSOLID);
 		Vec3Copy (trace.endPos, pml.origin);
 	}
-	else {
+	else
+	{
 		// move
 		Vec3MA (pml.origin, pml.frameTime, pml.velocity, pml.origin);
 	}
@@ -844,16 +844,16 @@ SV_PM_CheckDuck
 Sets mins, maxs, and pm->viewHeight
 ==============
 */
-static void SV_PM_CheckDuck (void) {
-	CTrace	trace;
-
+static void SV_PM_CheckDuck (void)
+{
 	pm->mins[0] = -16;
 	pm->mins[1] = -16;
 
 	pm->maxs[0] = 16;
 	pm->maxs[1] = 16;
 
-	if (pm->state.pmType == PMT_GIB) {
+	if (pm->state.pmType == PMT_GIB)
+	{
 		pm->mins[2] = 0;
 		pm->maxs[2] = 16;
 		pm->viewHeight = 8;
@@ -862,33 +862,35 @@ static void SV_PM_CheckDuck (void) {
 
 	pm->mins[2] = -24;
 
-	if (pm->state.pmType == PMT_DEAD) {
+	if (pm->state.pmType == PMT_DEAD)
 		pm->state.pmFlags |= PMF_DUCKED;
-	}
 #ifdef ALLOW_CROUCH_JUMPING
-	else if (pm->cmd.upMove < 0) {
+	else if (pm->cmd.upMove < 0)
 #else
-	else if (pm->cmd.upMove < 0 && (pm->state.pmFlags & PMF_ON_GROUND)) {
+	else if (pm->cmd.upMove < 0 && (pm->state.pmFlags & PMF_ON_GROUND))
 #endif
 		// duck
 		pm->state.pmFlags |= PMF_DUCKED;
-	}
-	else {
+	else
+	{
 		// stand up if possible
-		if (pm->state.pmFlags & PMF_DUCKED) {
+		if (pm->state.pmFlags & PMF_DUCKED)
+		{
 			// try to stand up
 			pm->maxs[2] = 32;
-			trace = CTrace (pml.origin, pm->mins, pm->maxs, pml.origin, pml.ent, (pml.ent->health > 0) ? CONTENTS_MASK_PLAYERSOLID : CONTENTS_MASK_DEADSOLID);
+			CTrace trace (pml.origin, pm->mins, pm->maxs, pml.origin, pml.ent, (pml.ent->health > 0) ? CONTENTS_MASK_PLAYERSOLID : CONTENTS_MASK_DEADSOLID);
 			if (!trace.allSolid)
 				pm->state.pmFlags &= ~PMF_DUCKED;
 		}
 	}
 
-	if (pm->state.pmFlags & PMF_DUCKED) {
+	if (pm->state.pmFlags & PMF_DUCKED)
+	{
 		pm->maxs[2] = 4;
 		pm->viewHeight = -2;
 	}
-	else {
+	else
+	{
 		pm->maxs[2] = 32;
 		pm->viewHeight = 22;
 	}
@@ -1032,17 +1034,17 @@ static void SV_PM_InitialSnapPosition (void) {
 SV_PM_ClampAngles
 ================
 */
-static void SV_PM_ClampAngles (void) {
-	int16	temp;
-
+static void SV_PM_ClampAngles (void)
+{
 	if (pm->state.pmFlags & PMF_TIME_TELEPORT) {
 		pm->viewAngles[YAW] = SHORT2ANGLE (pm->cmd.angles[YAW] + pm->state.deltaAngles[YAW]);
 		pm->viewAngles[PITCH] = 0;
 		pm->viewAngles[ROLL] = 0;
 	}
-	else {
+	else
+	{
 		// circularly clamp the angles with deltas
-		temp = pm->cmd.angles[0] + pm->state.deltaAngles[0];
+		int16 temp = pm->cmd.angles[0] + pm->state.deltaAngles[0];
 		pm->viewAngles[0] = SHORT2ANGLE(temp);
 
 		temp = pm->cmd.angles[1] + pm->state.deltaAngles[1];

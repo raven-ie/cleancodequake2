@@ -807,7 +807,6 @@ static inline void CTFSay_Team_Location(CPlayerEntity *who, char *buf, size_t bu
 static inline void CTFSay_Team_Armor(CPlayerEntity *who, char *buf, size_t bufSize)
 {
 	CBaseItem		*item;
-	int			cells;
 	int			power_armor_type;
 
 	*buf = 0;
@@ -815,7 +814,7 @@ static inline void CTFSay_Team_Armor(CPlayerEntity *who, char *buf, size_t bufSi
 	power_armor_type = who->PowerArmorType ();
 	if (power_armor_type)
 	{
-		cells = who->Client.pers.Inventory.Has(NItems::Cells);
+		int cells = who->Client.pers.Inventory.Has(NItems::Cells);
 		if (cells)
 			Q_snprintfz(buf+strlen(buf), bufSize, "%s with %i cells ",
 				(power_armor_type == POWER_ARMOR_SCREEN) ?
@@ -1465,8 +1464,6 @@ bool CTFInMatch(void)
 
 bool CTFCheckRules(void)
 {
-	int t;
-	int i, j;
 	char text[64];
 
 	if (ctfgame.election != ELECT_NONE && ctfgame.electtime <= level.framenum) {
@@ -1474,8 +1471,9 @@ bool CTFCheckRules(void)
 		ctfgame.election = ELECT_NONE;
 	}
 
-	if (ctfgame.match != MATCH_NONE) {
-		t = ctfgame.matchtime - level.framenum;
+	if (ctfgame.match != MATCH_NONE)
+	{
+		int t = ctfgame.matchtime - level.framenum;
 
 		if (t <= 0) { // time ended on something
 			switch (ctfgame.match) {
@@ -1508,8 +1506,10 @@ bool CTFCheckRules(void)
 
 		ctfgame.lasttime = t;
 
-		switch (ctfgame.match) {
+		switch (ctfgame.match)
+		{
 		case MATCH_SETUP :
+			int j, i;
 			for (j = 0, i = 1; i <= game.maxclients; i++)
 			{
 				CPlayerEntity *ent = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
