@@ -735,7 +735,7 @@ void CPlayerEntity::UserinfoChanged (char *userinfo)
 		Client.PlayerState.SetFov (90);
 	else
 	{
-		float fov = atof(Info_ValueForKey(Client.pers.userinfo, "fov"));
+		float fov = atof(Info_ValueForKey(userinfo, "fov"));
 		if (fov < 1)
 			fov = 90;
 		else if (fov > 160)
