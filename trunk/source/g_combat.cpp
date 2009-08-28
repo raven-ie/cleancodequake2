@@ -392,12 +392,9 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 #ifdef CLEANCTF_ENABLED
 //ZOID
 //team armor protect
-	if ((game.mode & GAME_CTF) && targ->client && attacker->client)
-	{
-		if ((dynamic_cast<CPlayerEntity*>(targ->Entity))->Client.resp.ctf_team == (dynamic_cast<CPlayerEntity*>(attacker->Entity))->Client.resp.ctf_team &&
-		targ != attacker && dmFlags.dfCtfArmorProtect)
+	if ((game.mode & GAME_CTF) && targ->client && attacker->client && ((dynamic_cast<CPlayerEntity*>(targ->Entity))->Client.resp.ctf_team == (dynamic_cast<CPlayerEntity*>(attacker->Entity))->Client.resp.ctf_team &&
+		targ != attacker && dmFlags.dfCtfArmorProtect))
 		psave = asave = 0;
-	}
 	else
 	{
 //ZOID
