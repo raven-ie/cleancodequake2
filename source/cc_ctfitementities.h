@@ -50,6 +50,7 @@ public:
 	void Think ();
 
 	bool Run ();
+	virtual void BecomeExplosion (bool grenade) {};
 };
 
 class CRedFlagEntity : public CFlagEntity
@@ -59,6 +60,7 @@ public:
 	CRedFlagEntity (int Index);
 
 	bool Run ();
+	void BecomeExplosion (bool grenade);
 };
 
 class CBlueFlagEntity : public CFlagEntity
@@ -68,6 +70,7 @@ public:
 	CBlueFlagEntity (int Index);
 
 	bool Run ();
+	void BecomeExplosion (bool grenade);
 };
 
 #else

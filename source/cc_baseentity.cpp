@@ -505,3 +505,12 @@ void CPrivateEntity::Free ()
 {
 	Freed = true;
 }
+
+void CBaseEntity::BecomeExplosion (bool grenade)
+{
+	if (grenade)
+		CTempEnt_Explosions::GrenadeExplosion (State.GetOrigin(), gameEntity);
+	else
+		CTempEnt_Explosions::RocketExplosion (State.GetOrigin(), gameEntity);
+	Free ();
+}

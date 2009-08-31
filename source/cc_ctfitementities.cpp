@@ -132,6 +132,14 @@ bool CRedFlagEntity::Run ()
 	return CFlagEntity::Run ();
 };
 
+void CRedFlagEntity::BecomeExplosion (bool grenade)
+{
+	CTFResetFlag(CTF_TEAM1); // this will free self!
+	BroadcastPrintf(PRINT_HIGH, "The %s flag has returned!\n",
+		CTFTeamName(CTF_TEAM1));
+};
+
+
 CBlueFlagEntity::CBlueFlagEntity () :
 CBaseEntity(),
 CFlagEntity()
@@ -147,6 +155,13 @@ CFlagEntity(Index)
 bool CBlueFlagEntity::Run ()
 {
 	return CFlagEntity::Run ();
+};
+
+void CBlueFlagEntity::BecomeExplosion (bool grenade)
+{
+	CTFResetFlag(CTF_TEAM2); // this will free self!
+	BroadcastPrintf(PRINT_HIGH, "The %s flag has returned!\n",
+		CTFTeamName(CTF_TEAM2));
 };
 
 class CDroppedFlagEntity : public CFlagEntity

@@ -1106,53 +1106,6 @@ void SP_misc_deadsoldier (edict_t *ent)
 	gi.linkentity (ent);
 }
 
-/*QUAKED misc_viper (1 .5 0) (-16 -16 0) (16 16 32)
-This is the Viper for the flyby bombing.
-It is trigger_spawned, so you must have something use it for it to show up.
-There must be a path for it to follow once it is activated.
-
-"speed"		How fast the Viper should fly
-*/
-
-extern void train_use (edict_t *self, edict_t *other, edict_t *activator);
-extern void func_train_find (edict_t *self);
-
-void misc_viper_use  (edict_t *self, edict_t *other, edict_t *activator)
-{
-	self->svFlags &= ~SVF_NOCLIENT;
-	self->use = train_use;
-	train_use (self, other, activator);
-}
-
-void SP_misc_viper (edict_t *ent)
-{
-	if (!ent->target)
-	{
-		//gi.dprintf ("misc_viper without a target at (%f %f %f)\n", ent->absMin[0], ent->absMin[1], ent->absMin[2]);
-		MapPrint (MAPPRINT_ERROR, ent, ent->state.origin, "No targetname\n");
-		G_FreeEdict (ent);
-		return;
-	}
-
-	if (!ent->speed)
-		ent->speed = 300;
-
-	ent->movetype = MOVETYPE_PUSH;
-	ent->solid = SOLID_NOT;
-	ent->state.modelIndex = ModelIndex ("models/ships/viper/tris.md2");
-	Vec3Set (ent->mins, -16, -16, 0);
-	Vec3Set (ent->maxs, 16, 16, 32);
-
-	ent->think = func_train_find;
-	ent->nextthink = level.framenum + FRAMETIME;
-	ent->use = misc_viper_use;
-	ent->svFlags |= SVF_NOCLIENT;
-	ent->moveinfo.accel = ent->moveinfo.decel = ent->moveinfo.speed = ent->speed;
-
-	gi.linkentity (ent);
-}
-
-
 /*QUAKED misc_bigviper (1 .5 0) (-176 -120 -24) (176 120 72) 
 This is a large stationary viper as seen in Paul's intro
 */
@@ -1235,54 +1188,6 @@ void SP_misc_viper_bomb (edict_t *self)
 
 	gi.linkentity (self);
 }
-
-
-/*QUAKED misc_strogg_ship (1 .5 0) (-16 -16 0) (16 16 32)
-This is a Storgg ship for the flybys.
-It is trigger_spawned, so you must have something use it for it to show up.
-There must be a path for it to follow once it is activated.
-
-"speed"		How fast it should fly
-*/
-
-extern void train_use (edict_t *self, edict_t *other, edict_t *activator);
-extern void func_train_find (edict_t *self);
-
-void misc_strogg_ship_use  (edict_t *self, edict_t *other, edict_t *activator)
-{
-	self->svFlags &= ~SVF_NOCLIENT;
-	self->use = train_use;
-	train_use (self, other, activator);
-}
-
-void SP_misc_strogg_ship (edict_t *ent)
-{
-	if (!ent->target)
-	{
-		//gi.dprintf ("%s without a target at (%f %f %f)\n", ent->classname, ent->absMin[0], ent->absMin[1], ent->absMin[2]);
-		MapPrint (MAPPRINT_ERROR, ent, ent->state.origin, "No target\n");
-		G_FreeEdict (ent);
-		return;
-	}
-
-	if (!ent->speed)
-		ent->speed = 300;
-
-	ent->movetype = MOVETYPE_PUSH;
-	ent->solid = SOLID_NOT;
-	ent->state.modelIndex = ModelIndex ("models/ships/strogg1/tris.md2");
-	Vec3Set (ent->mins, -16, -16, 0);
-	Vec3Set (ent->maxs, 16, 16, 32);
-
-	ent->think = func_train_find;
-	ent->nextthink = level.framenum + FRAMETIME;
-	ent->use = misc_strogg_ship_use;
-	ent->svFlags |= SVF_NOCLIENT;
-	ent->moveinfo.accel = ent->moveinfo.decel = ent->moveinfo.speed = ent->speed;
-
-	gi.linkentity (ent);
-}
-
 
 /*QUAKED misc_satellite_dish (1 .5 0) (-64 -64 0) (64 64 128)
 */

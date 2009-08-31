@@ -192,11 +192,11 @@ public:
 		void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
 	};
 
-	void Blocked (CBaseEntity *other);
-	void Use (CBaseEntity *other, CBaseEntity *activator);
-	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
-	void Pain (CBaseEntity *other, float kick, int damage);
-	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
+	virtual void Blocked (CBaseEntity *other);
+	virtual void Use (CBaseEntity *other, CBaseEntity *activator);
+	virtual void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
+	virtual void Pain (CBaseEntity *other, float kick, int damage);
+	virtual void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
 
 	// Thinks
 	void SpawnDoorTrigger ();
@@ -213,6 +213,132 @@ public:
 
 	void GoDown();
 	void GoUp (CBaseEntity *activator);
+
+	void Spawn ();
+};
+
+class CMovableWater : public CDoor
+{
+public:
+	CMovableWater ();
+	CMovableWater (int Index);
+
+	void Spawn ();
+};
+
+class CDoorSecret : public CDoor
+{
+public:
+	enum
+	{
+		DOORSECRETTHINK_6 = BRUSHTHINK_CUSTOM_START,
+		DOORSECRETTHINK_4,
+		DOORSECRETTHINK_2
+	};
+
+	enum
+	{
+		DOORSECRETENDFUNC_DONE,
+		DOORSECRETENDFUNC_5,
+		DOORSECRETENDFUNC_3,
+		DOORSECRETENDFUNC_1
+	};
+
+	CDoorSecret ();
+	CDoorSecret (int Index);
+
+	void Blocked (CBaseEntity *other);
+	void Use (CBaseEntity *other, CBaseEntity *activator);
+	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
+
+	void DoEndFunc ();
+	void Think ();
+
+	void Spawn ();
+};
+
+class CButton : public CMapEntity, public CBrushModel, public CHurtableEntity, public CTouchableEntity, public CUsableEntity
+{
+public:
+	enum
+	{
+		BUTTONTHINK_RETURN = BRUSHTHINK_CUSTOM_START,
+	};
+	CButton();
+	CButton(int Index);
+
+	bool Run ();
+
+	enum
+	{
+		BUTTONENDFUNC_WAIT,
+		BUTTONENDFUNC_DONE
+	};
+
+	virtual void DoEndFunc ();
+	virtual void Think ();
+	virtual void Fire ();
+
+	virtual void Use (CBaseEntity *other, CBaseEntity *activator);
+	virtual void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
+	virtual void Pain (CBaseEntity *other, float kick, int damage);
+	virtual void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
+
+	virtual void Spawn ();
+};
+
+class CTrainBase : public CMapEntity, public CBrushModel, public CBlockableEntity, public CUsableEntity
+{
+public:
+	enum
+	{
+		TRAINTHINK_FIND = BRUSHTHINK_CUSTOM_START,
+		TRAINTHINK_NEXT,
+	};
+	CTrainBase();
+	CTrainBase(int Index);
+
+	virtual bool Run ();
+
+	enum
+	{
+		TRAINENDFUNC_WAIT,
+	};
+
+	void TrainWait ();
+	void Next ();
+	void Resume ();
+	void Find ();
+
+	virtual void DoEndFunc ();
+	virtual void Think ();
+
+	virtual void Blocked (CBaseEntity *other);
+	virtual void Use (CBaseEntity *other, CBaseEntity *activator);
+
+	virtual void Spawn ();
+};
+
+class CTrain : public CTrainBase
+{
+public:
+	CTrain ();
+	CTrain (int Index);
+
+	void Spawn ();
+};
+
+class CTriggerElevator : public CMapEntity, public CThinkableEntity, public CUsableEntity
+{
+public:
+	CTrain			*MoveTarget;
+	bool			Usable;
+
+	CTriggerElevator ();
+	CTriggerElevator (int Index);
+
+	void Think ();
+	void Use (CBaseEntity *other, CBaseEntity *activator);
 
 	void Spawn ();
 };

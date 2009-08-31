@@ -118,6 +118,17 @@ public:
 		else
 			NextThink = level.framenum + CTF_TECH_TIMEOUT;
 	};
+
+	void Respawn ()
+	{
+		SpawnTech(gameEntity->item, FindTechSpawn());
+		Free ();
+	};
+
+	void BecomeExplosion (bool grenade)
+	{
+		Respawn(); // this frees self!
+	};
 };
 
 CItemEntity *CTech::DropItem (CBaseEntity *ent)

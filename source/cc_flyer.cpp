@@ -497,7 +497,7 @@ void CFlyer::Pain (CBaseEntity *other, float kick, int damage)
 void CFlyer::Die(CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
 	Entity->PlaySound (CHAN_VOICE, SoundDie);
-	BecomeExplosion1(Entity->gameEntity);
+	Entity->BecomeExplosion(false);
 }
 
 #ifdef FLYER_KNOWS_HOW_TO_DODGE

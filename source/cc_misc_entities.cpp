@@ -221,3 +221,92 @@ public:
 };
 
 LINK_CLASSNAME_TO_CLASS ("misc_explobox",CMiscExploBox);
+
+#include "cc_brushmodels.h"
+/*QUAKED misc_viper (1 .5 0) (-16 -16 0) (16 16 32)
+This is the Viper for the flyby bombing.
+It is trigger_spawned, so you must have something use it for it to show up.
+There must be a path for it to follow once it is activated.
+
+"speed"		How fast the Viper should fly
+*/
+class CMiscViper : public CTrainBase
+{
+	bool MyUse;
+public:
+	CMiscViper() :
+		CBaseEntity (),
+		CTrainBase(),
+		MyUse(true)
+	{
+	};
+
+	CMiscViper(int Index) :
+		CBaseEntity (Index),
+		CTrainBase(Index),
+		MyUse(true)
+	{
+	};
+
+	virtual void Use (CBaseEntity *other, CBaseEntity *activator)
+	{
+		if (MyUse)
+		{
+			SetSvFlags (GetSvFlags() & ~SVF_NOCLIENT);
+			MyUse = false;
+		}
+		CTrainBase::Use (other, activator);
+	};
+
+	virtual void Spawn ()
+	{
+		if (!gameEntity->target)
+		{
+			//gi.dprintf ("misc_viper without a target at (%f %f %f)\n", ent->absMin[0], ent->absMin[1], ent->absMin[2]);
+			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No targetname\n");
+			Free ();
+			return;
+		}
+
+		if (!gameEntity->speed)
+			gameEntity->speed = 300;
+
+		PhysicsType = PHYSICS_PUSH;
+		SetSolid (SOLID_NOT);
+		State.SetModelIndex (ModelIndex ("models/ships/viper/tris.md2"));
+		SetMins (vec3f(-16, -16, 0));
+		SetMaxs (vec3f(16, 16, 32));
+
+		NextThink = level.framenum + FRAMETIME;
+		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
+		Accel = Decel = Speed = gameEntity->speed;
+
+		Link ();
+	};
+};
+
+LINK_CLASSNAME_TO_CLASS ("misc_viper", CMiscViper);
+
+class CMiscStroggShip : public CMiscViper
+{
+public:
+	CMiscStroggShip () :
+	  CBaseEntity (),
+	  CMiscViper ()
+	  {
+	  };
+
+	CMiscStroggShip (int Index) :
+	  CBaseEntity (Index),
+	  CMiscViper (Index)
+	  {
+	  };
+
+	void Spawn ()
+	{
+		CMiscViper::Spawn ();
+		State.SetModelIndex (ModelIndex ("models/ships/strogg1/tris.md2"));
+	};
+};
+
+LINK_CLASSNAME_TO_CLASS ("misc_strogg_ship", CMiscStroggShip);
