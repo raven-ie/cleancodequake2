@@ -560,7 +560,7 @@ void CFloater::Pain (CBaseEntity *other, float kick, int damage)
 void CFloater::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
 	Entity->PlaySound (CHAN_VOICE, SoundDeath1);
-	BecomeExplosion1(Entity->gameEntity);
+	Entity->BecomeExplosion (false);
 }
 
 void CFloater::Spawn ()

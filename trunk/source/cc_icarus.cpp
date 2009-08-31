@@ -575,7 +575,7 @@ void CIcarus::DeadThink ()
 		Entity->NextThink = level.framenum + FRAMETIME;
 		return;
 	}
-	BecomeExplosion1(Entity->gameEntity);
+	Entity->BecomeExplosion(false);
 }
 
 void CIcarus::Dead ()

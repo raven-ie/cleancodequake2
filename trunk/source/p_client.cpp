@@ -221,10 +221,10 @@ void ClientObituary (CPlayerEntity *self, edict_t *attacker)
 			switch (self->Client.resp.Gender)
 			{
 			case GenderMale:
-				message = "tripped on its his grenade";
+				message = "tripped on his own grenade";
 				break;
 			case GenderFemale:
-				message = "tripped on its her grenade";
+				message = "tripped on her own grenade";
 				break;
 			default:
 				message = "tripped on its own grenade";

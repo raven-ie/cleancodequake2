@@ -401,11 +401,7 @@ void CPlatForm::Blocked (CBaseEntity *other)
 		T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, other->State.GetOrigin(), vec3Origin, 100000, 1, 0, MOD_CRUSH);
 		// if it's still there, nuke it
 		if (!other->Freed)
-		{
-			CTempEnt_Explosions::RocketExplosion (other->State.GetOrigin(), other->gameEntity);
-			other->Free();
-			//BecomeExplosion1 (other);
-		}
+			other->BecomeExplosion(false);
 		return;
 	}
 
@@ -628,6 +624,8 @@ void CPlatForm::Spawn ()
 LINK_CLASSNAME_TO_CLASS ("func_plat", CPlatForm);
 #pragma endregion Platforms
 
+#pragma region Doors
+#pragma region Base Door
 CDoor::CDoor() :
 CBaseEntity(),
 CMapEntity(),
@@ -891,7 +889,7 @@ void CDoor::Blocked (CBaseEntity *other)
 		T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, other->State.GetOrigin(), vec3Origin, 100000, 1, 0, MOD_CRUSH);
 		// if it's still there, nuke it
 		if (other->IsInUse())
-			BecomeExplosion1 (other->gameEntity);
+			other->BecomeExplosion (false);
 		return;
 	}
 
@@ -1073,7 +1071,9 @@ void CDoor::Spawn ()
 }
 
 LINK_CLASSNAME_TO_CLASS ("func_door", CDoor);
+#pragma endregion Base Door
 
+#pragma region Rotating Door
 CRotatingDoor::CRotatingDoor () :
 CBaseEntity(),
 CDoor ()
@@ -1230,3 +1230,864 @@ void CRotatingDoor::Spawn ()
 }
 
 LINK_CLASSNAME_TO_CLASS ("func_door_rotating", CRotatingDoor);
+#pragma endregion Rotating Door
+
+#pragma region Moving Water
+CMovableWater::CMovableWater () :
+CBaseEntity(),
+CDoor ()
+{
+};
+
+CMovableWater::CMovableWater (int Index) :
+CBaseEntity(Index),
+CDoor(Index)
+{
+};
+
+void CMovableWater::Spawn ()
+{
+	vec3_t angles;
+	State.GetAngles(angles);
+	G_SetMovedir (angles, gameEntity->movedir);
+	State.SetAngles(angles);
+	PhysicsType = PHYSICS_PUSH;
+	SetSolid (SOLID_BSP);
+	SetModel (gameEntity, gameEntity->model);
+
+	switch (gameEntity->sounds)
+	{
+		default:
+			break;
+
+		case 1: // water
+		case 2: // lava
+			SoundStart = SoundIndex  ("world/mov_watr.wav");
+			SoundEnd = SoundIndex  ("world/stp_watr.wav");
+			break;
+	}
+
+	// calculate second position
+	State.GetOrigin (gameEntity->pos1);
+
+	vec3f abs_movedir(Q_fabs(gameEntity->movedir[0]), Q_fabs(gameEntity->movedir[1]), Q_fabs(gameEntity->movedir[2]));
+
+	Distance = abs_movedir.X * gameEntity->size[0] + abs_movedir.Y * gameEntity->size[1] + abs_movedir.Z * gameEntity->size[2] - st.lip;
+	Vec3MA (gameEntity->pos1, Distance, gameEntity->movedir, gameEntity->pos2);
+
+	// if it starts open, switch the positions
+	if (gameEntity->spawnflags & DOOR_START_OPEN)
+	{
+		State.SetOrigin (gameEntity->pos2);
+		Vec3Copy (gameEntity->pos1, gameEntity->pos2);
+		State.GetOrigin (gameEntity->pos1);
+	}
+
+	Vec3Copy (gameEntity->pos1, StartOrigin);
+	State.GetAngles(StartAngles);
+	Vec3Copy (gameEntity->pos2, EndOrigin);
+	State.GetAngles(EndAngles);
+
+	MoveState = STATE_BOTTOM;
+
+	if (!gameEntity->speed)
+		gameEntity->speed = 25;
+	Accel = Decel = Speed = gameEntity->speed;
+
+	if (!gameEntity->wait)
+		gameEntity->wait = -1;
+	Wait = gameEntity->wait;
+
+	Touchable = false;
+
+	if (gameEntity->wait == -1)
+		gameEntity->spawnflags |= DOOR_TOGGLE;
+
+	gameEntity->classname = "func_door";
+
+	Link ();
+};
+
+LINK_CLASSNAME_TO_CLASS ("func_water", CMovableWater);
+#pragma endregion Moving Water
+
+#pragma region Secret Door
+/*QUAKED func_door_secret (0 .5 .8) ? always_shoot 1st_left 1st_down
+A secret door.  Slide back and then to the side.
+
+open_once		doors never closes
+1st_left		1st move is left of arrow
+1st_down		1st move is down from arrow
+always_shoot	door is shootebale even if targeted
+
+"angle"		determines the direction
+"dmg"		damage to inflic when blocked (default 2)
+"wait"		how long to hold in the open position (default 5, -1 means hold)
+*/
+
+#define SECRET_ALWAYS_SHOOT	1
+#define SECRET_1ST_LEFT		2
+#define SECRET_1ST_DOWN		4
+
+CDoorSecret::CDoorSecret () :
+CBaseEntity(),
+CDoor ()
+{
+};
+
+CDoorSecret::CDoorSecret (int Index) :
+CBaseEntity(Index),
+CDoor(Index)
+{
+};
+
+void CDoorSecret::DoEndFunc ()
+{
+	switch (EndFunc)
+	{
+		case DOORSECRETENDFUNC_DONE:
+			if (!(gameEntity->targetname) || (gameEntity->spawnflags & SECRET_ALWAYS_SHOOT))
+			{
+				gameEntity->health = 0;
+				gameEntity->takedamage = true;
+			}
+			UseAreaPortals (false);
+			break;
+		case DOORSECRETENDFUNC_5:
+			NextThink = level.framenum + 10;
+			ThinkType = DOORSECRETTHINK_6;
+			break;
+		case DOORSECRETENDFUNC_3:
+			if (gameEntity->wait == -1)
+				return;
+
+			// Backcompat
+			NextThink = level.framenum + (gameEntity->wait * 10);
+			ThinkType = DOORSECRETTHINK_4;
+			break;
+		case DOORSECRETENDFUNC_1:
+			NextThink = level.framenum + 10;
+			ThinkType = DOORSECRETTHINK_2;
+			break;
+	};
+}
+
+void CDoorSecret::Think ()
+{
+	switch (ThinkType)
+	{
+	case DOORSECRETTHINK_6:
+		MoveCalc (vec3Origin, DOORSECRETENDFUNC_DONE);
+		break;
+	case DOORSECRETTHINK_4:
+		MoveCalc (gameEntity->pos1, DOORSECRETENDFUNC_5);
+		break;
+	case DOORSECRETTHINK_2:
+		MoveCalc (gameEntity->pos2, DOORSECRETENDFUNC_3);
+		break;
+	default:
+		CBrushModel::Think ();
+	}
+}
+
+void CDoorSecret::Use (CBaseEntity *other, CBaseEntity *activator)
+{
+	// make sure we're not already moving
+	if (State.GetOrigin() != vec3fOrigin)
+		return;
+
+	MoveCalc (gameEntity->pos1, DOORSECRETENDFUNC_1);
+	UseAreaPortals (true);
+}
+
+void CDoorSecret::Blocked (CBaseEntity *other)
+{
+	if (!(other->GetSvFlags() & SVF_MONSTER) && (!(other->EntityFlags & ENT_PLAYER)) )
+	{
+		// give it a chance to go away on it's own terms (like gibs)
+		T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, State.GetOrigin(), vec3Origin, 100000, 1, 0, MOD_CRUSH);
+		// if it's still there, nuke it
+		if (other->IsInUse())
+			other->BecomeExplosion(false);
+		return;
+	}
+
+	if (level.framenum < gameEntity->touch_debounce_time)
+		return;
+	gameEntity->touch_debounce_time = level.framenum + 5;
+
+	T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, State.GetOrigin(), vec3Origin, gameEntity->dmg, 1, 0, MOD_CRUSH);
+}
+
+void CDoorSecret::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+{
+	gameEntity->takedamage = false;
+	Use (attacker, attacker);
+}
+
+void CDoorSecret::Spawn ()
+{
+	SoundStart = SoundIndex  ("doors/dr1_strt.wav");
+	SoundMiddle = SoundIndex  ("doors/dr1_mid.wav");
+	SoundEnd = SoundIndex  ("doors/dr1_end.wav");
+
+	PhysicsType = PHYSICS_PUSH;
+	SetSolid (SOLID_BSP);
+	SetModel (gameEntity, gameEntity->model);
+
+	if (!(gameEntity->targetname) || (gameEntity->spawnflags & SECRET_ALWAYS_SHOOT))
+	{
+		gameEntity->health = 0;
+		gameEntity->takedamage = true;
+	}
+
+	Touchable = false;
+
+	if (!gameEntity->dmg)
+		gameEntity->dmg = 2;
+
+	if (!gameEntity->wait)
+		gameEntity->wait = 5;
+
+	Accel =
+	Decel =
+	Speed = 50;
+
+	// calculate positions
+	vec3f	forward, right, up;
+	State.GetAngles().ToVectors (&forward, &right, &up);
+	State.SetAngles (vec3fOrigin);
+	float side = 1.0 - (gameEntity->spawnflags & SECRET_1ST_LEFT);
+
+	float width = (gameEntity->spawnflags & SECRET_1ST_DOWN) ? Q_fabs(Dot3Product(up, gameEntity->size)) : Q_fabs(Dot3Product(right, gameEntity->size));
+	float length = Q_fabs(Dot3Product(forward, gameEntity->size));
+	if (gameEntity->spawnflags & SECRET_1ST_DOWN)
+	{
+		State.GetOrigin (gameEntity->pos1);
+		Vec3MA (gameEntity->pos1, -1 * width, up, gameEntity->pos1);
+	}
+	else
+	{
+		State.GetOrigin (gameEntity->pos1);
+		Vec3MA (gameEntity->pos1, side * width, right, gameEntity->pos1);
+	}
+	Vec3MA (gameEntity->pos1, length, forward, gameEntity->pos2);
+
+	if (gameEntity->health)
+	{
+		gameEntity->takedamage = true;
+		gameEntity->max_health = gameEntity->health;
+	}
+	else if (gameEntity->targetname && gameEntity->message)
+	{
+		SoundIndex ("misc/talk.wav");
+		Touchable = true;
+	}
+	
+	gameEntity->classname = "func_door";
+
+	Link ();
+}
+
+LINK_CLASSNAME_TO_CLASS ("func_door_secret", CDoorSecret);
+#pragma endregion Secret Door
+#pragma endregion Doors
+
+#pragma region Button
+/*
+======================================================================
+
+BUTTONS
+
+======================================================================
+*/
+
+/*QUAKED func_button (0 .5 .8) ?
+When a button is touched, it moves some distance in the direction of it's angle, triggers all of it's targets, waits some time, then returns to it's original position where it can be triggered again.
+
+"angle"		determines the opening direction
+"target"	all entities with a matching targetname will be used
+"speed"		override the default 40 speed
+"wait"		override the default 1 second wait (-1 = never return)
+"lip"		override the default 4 pixel lip remaining at end of move
+"health"	if set, the button must be killed instead of touched
+"sounds"
+1) silent
+2) steam metal
+3) wooden clunk
+4) metallic click
+5) in-out
+*/
+
+CButton::CButton() :
+CBaseEntity(),
+CMapEntity(),
+CBrushModel(),
+CUsableEntity(),
+CHurtableEntity(),
+CTouchableEntity()
+{
+	Spawn ();
+};
+
+CButton::CButton(int Index) :
+CBaseEntity(Index),
+CMapEntity(Index),
+CBrushModel(Index),
+CUsableEntity(Index),
+CHurtableEntity(Index),
+CTouchableEntity(Index)
+{
+	Spawn ();
+};
+
+bool CButton::Run ()
+{
+	return CBrushModel::Run ();
+};
+
+void CButton::Pain (CBaseEntity *other, float kick, int damage)
+{
+};
+
+void CButton::DoEndFunc ()
+{
+	switch (EndFunc)
+	{
+	case BUTTONENDFUNC_DONE:
+		MoveState = STATE_BOTTOM;
+		State.RemoveEffects (EF_ANIM23);
+		State.AddEffects (EF_ANIM01);
+		break;
+	case BUTTONENDFUNC_WAIT:
+		MoveState = STATE_BOTTOM;
+		State.RemoveEffects (EF_ANIM01);
+		State.AddEffects (EF_ANIM23);
+
+		G_UseTargets (gameEntity, gameEntity->activator);
+		State.SetFrame (1);
+		if (Wait >= 0)
+		{
+			NextThink = level.framenum + (Wait * 10);
+			ThinkType = BUTTONTHINK_RETURN;
+		}
+		break;
+	};
+}
+
+void CButton::Think ()
+{
+	switch (ThinkType)
+	{
+	case BUTTONTHINK_RETURN:
+		MoveState = STATE_DOWN;
+		MoveCalc (StartOrigin, BUTTONENDFUNC_DONE);
+		State.SetFrame (0);
+
+		if (gameEntity->health)
+			gameEntity->takedamage = true;
+		break;
+	default:
+		CBrushModel::Think ();
+	};
+}
+
+void CButton::Fire ()
+{
+	if (MoveState == STATE_UP || MoveState == STATE_TOP)
+		return;
+
+	MoveState = STATE_UP;
+	if (SoundStart && !(gameEntity->flags & FL_TEAMSLAVE))
+		PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 1, ATTN_STATIC);
+	MoveCalc (EndOrigin, BUTTONENDFUNC_WAIT);
+}
+
+void CButton::Use (CBaseEntity *other, CBaseEntity *activator)
+{
+	gameEntity->activator = activator->gameEntity;
+	Fire ();
+}
+
+void CButton::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
+{
+	if (!(other->EntityFlags & ENT_PLAYER))
+		return;
+
+	if (other->gameEntity->health <= 0)
+		return;
+
+	gameEntity->activator = other->gameEntity;
+	Fire ();
+}
+
+void CButton::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+{
+	gameEntity->activator = attacker->gameEntity;
+	gameEntity->health = gameEntity->max_health;
+	gameEntity->takedamage = false;
+	Fire ();
+}
+
+void CButton::Spawn ()
+{
+	vec3_t angles;
+	State.GetAngles(angles);
+	G_SetMovedir (angles, gameEntity->movedir);
+	State.SetAngles(angles);
+
+	PhysicsType = PHYSICS_STOP;
+	SetSolid (SOLID_BSP);
+	SetModel (gameEntity, gameEntity->model);
+
+	if (gameEntity->sounds != 1)
+		SoundStart = SoundIndex ("switches/butn2.wav");
+	
+	if (!gameEntity->speed)
+		gameEntity->speed = 40;
+	if (!gameEntity->accel)
+		gameEntity->accel = gameEntity->speed;
+	if (!gameEntity->decel)
+		gameEntity->decel = gameEntity->speed;
+
+	if (!gameEntity->wait)
+		gameEntity->wait = 3;
+	if (!st.lip)
+		st.lip = 4;
+
+	State.GetOrigin (gameEntity->pos1);
+	vec3f abs_movedir (
+		Q_fabs(gameEntity->movedir[0]),
+		Q_fabs(gameEntity->movedir[1]),
+		Q_fabs(gameEntity->movedir[2]));
+	float dist = abs_movedir.X * gameEntity->size[0] + abs_movedir.Y * gameEntity->size[1] + abs_movedir.Z * gameEntity->size[2] - st.lip;
+	Vec3MA (gameEntity->pos1, dist, gameEntity->movedir, gameEntity->pos2);
+
+	State.AddEffects (EF_ANIM01);
+
+	Touchable = false;
+	if (gameEntity->health)
+	{
+		gameEntity->max_health = gameEntity->health;
+		gameEntity->takedamage = true;
+	}
+	else if (!gameEntity->targetname)
+		Touchable = true;
+
+	MoveState = STATE_BOTTOM;
+
+	Speed = gameEntity->speed;
+	Accel = gameEntity->accel;
+	Decel = gameEntity->decel;
+	Wait = gameEntity->wait;
+	Vec3Copy (gameEntity->pos1, StartOrigin);
+	State.GetAngles (StartAngles);
+	Vec3Copy (gameEntity->pos2, EndOrigin);
+	State.GetAngles (EndAngles);
+
+	Link ();
+}
+
+LINK_CLASSNAME_TO_CLASS ("func_button", CButton);
+#pragma endregion Button
+
+#pragma region Train
+#define TRAIN_START_ON		1
+#define TRAIN_TOGGLE		2
+#define TRAIN_BLOCK_STOPS	4
+
+/*QUAKED func_train (0 .5 .8) ? START_ON TOGGLE BLOCK_STOPS
+Trains are moving platforms that players can ride.
+The targets origin specifies the min point of the train at each corner.
+The train spawns at the first target it is pointing at.
+If the train is the target of a button or trigger, it will not begin moving until activated.
+speed	default 100
+dmg		default	2
+noise	looping sound to play when the train is in motion
+
+*/
+
+CTrainBase::CTrainBase() :
+CBaseEntity(),
+CMapEntity(),
+CBrushModel(),
+CBlockableEntity(),
+CUsableEntity()
+{
+	Spawn ();
+};
+
+CTrainBase::CTrainBase(int Index) :
+CBaseEntity(Index),
+CMapEntity(Index),
+CBrushModel(Index),
+CBlockableEntity(Index),
+CUsableEntity(Index)
+{
+	Spawn ();
+};
+
+bool CTrainBase::Run ()
+{
+	return CBrushModel::Run ();
+};
+
+void CTrainBase::Blocked (CBaseEntity *other)
+{
+	if (!(other->GetSvFlags() & SVF_MONSTER) && (!(other->EntityFlags & ENT_PLAYER)) )
+	{
+		// give it a chance to go away on it's own terms (like gibs)
+		T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, other->State.GetOrigin(), vec3Origin, 100000, 1, 0, MOD_CRUSH);
+		// if it's still there, nuke it
+		if (other->IsInUse())
+			other->BecomeExplosion (false);
+		return;
+	}
+
+	if (level.framenum < gameEntity->touch_debounce_time)
+		return;
+
+	if (!gameEntity->dmg)
+		return;
+	gameEntity->touch_debounce_time = level.framenum + 5;
+	T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, other->State.GetOrigin(), vec3Origin, gameEntity->dmg, 1, 0, MOD_CRUSH);
+}
+
+void CTrainBase::TrainWait ()
+{
+	if (gameEntity->target_ent->pathtarget)
+	{
+		char	*savetarget;
+		edict_t	*ent;
+
+		ent = gameEntity->target_ent;
+		savetarget = ent->target;
+		ent->target = ent->pathtarget;
+		G_UseTargets (ent, gameEntity->activator);
+		ent->target = savetarget;
+
+		// make sure we didn't get killed by a killtarget
+		if (!IsInUse())
+			return;
+	}
+
+	if (Wait)
+	{
+		if (Wait > 0)
+		{
+			NextThink = level.framenum + (Wait * 10);
+			ThinkType = TRAINTHINK_NEXT;
+		}
+		else if (gameEntity->spawnflags & TRAIN_TOGGLE)  // && wait < 0
+		{
+			Next ();
+			gameEntity->spawnflags &= ~TRAIN_START_ON;
+			Vec3Clear (gameEntity->velocity);
+			NextThink = 0;
+		}
+
+		if (!(gameEntity->flags & FL_TEAMSLAVE))
+		{
+			if (SoundEnd)
+				PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundEnd, 1, ATTN_STATIC);
+			State.SetSound (0);
+		}
+	}
+	else
+		Next ();	
+}
+
+void CTrainBase::Next ()
+{
+	edict_t		*ent;
+	vec3_t		dest;
+	bool		first = true;
+
+	first; // Shut up compiler.
+again:
+	if (!gameEntity->target)
+		return;
+
+	ent = G_PickTarget (gameEntity->target);
+	if (!ent)
+	{
+		DebugPrintf ("train_next: bad target %s\n", gameEntity->target);
+		return;
+	}
+
+	gameEntity->target = ent->target;
+
+	// check for a teleport path_corner
+	if (ent->spawnflags & 1)
+	{
+		if (!first)
+		{
+			DebugPrintf ("connected teleport path_corners, see %s at (%f %f %f)\n", ent->classname, ent->state.origin[0], ent->state.origin[1], ent->state.origin[2]);
+			return;
+		}
+		first = false;
+		vec3_t sub;
+		Vec3Subtract (ent->state.origin, gameEntity->mins, sub);
+		State.SetOrigin (sub);
+		State.SetOldOrigin (State.GetOrigin());
+		State.SetEvent (EV_OTHER_TELEPORT);
+		Link ();
+		goto again;
+	}
+
+	Wait = ent->wait;
+	gameEntity->target_ent = ent;
+
+	if (!(gameEntity->flags & FL_TEAMSLAVE))
+	{
+		if (SoundStart)
+			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 1, ATTN_STATIC);
+		State.SetSound (SoundMiddle);
+	}
+
+	Vec3Subtract (ent->state.origin, GetMins(), dest);
+	MoveState = STATE_TOP;
+	State.GetOrigin (StartOrigin);
+	Vec3Copy (dest, EndOrigin);
+	MoveCalc (dest, TRAINENDFUNC_WAIT);
+
+	gameEntity->spawnflags |= TRAIN_START_ON;
+}
+
+void CTrainBase::Resume ()
+{
+	edict_t	*ent;
+	vec3_t	dest;
+
+	ent = gameEntity->target_ent;
+
+	Vec3Subtract (ent->state.origin, GetMins(), dest);
+	MoveState = STATE_TOP;
+	State.GetOrigin (StartOrigin);
+	Vec3Copy (dest, EndOrigin);
+	MoveCalc (dest, TRAINENDFUNC_WAIT);
+	gameEntity->spawnflags |= TRAIN_START_ON;
+}
+
+void CTrainBase::Find ()
+{
+	edict_t *ent;
+
+	if (!gameEntity->target)
+	{
+		DebugPrintf ("train_find: no target\n");
+		return;
+	}
+	ent = G_PickTarget (gameEntity->target);
+	if (!ent)
+	{
+		DebugPrintf ("train_find: target %s not found\n", gameEntity->target);
+		return;
+	}
+	gameEntity->target = ent->target;
+
+	vec3_t sub;
+	Vec3Subtract (ent->state.origin, GetMins(), sub);
+	State.SetOrigin (sub);
+
+	Link ();
+
+	// if not triggered, start immediately
+	if (!gameEntity->targetname)
+		gameEntity->spawnflags |= TRAIN_START_ON;
+
+	if (gameEntity->spawnflags & TRAIN_START_ON)
+	{
+		NextThink = level.framenum + FRAMETIME;
+		ThinkType = TRAINTHINK_NEXT;
+		gameEntity->activator = gameEntity;
+	}
+}
+
+void CTrainBase::Use (CBaseEntity *other, CBaseEntity *activator)
+{
+	gameEntity->activator = activator->gameEntity;
+
+	if (gameEntity->spawnflags & TRAIN_START_ON)
+	{
+		if (!(gameEntity->spawnflags & TRAIN_TOGGLE))
+			return;
+		gameEntity->spawnflags &= ~TRAIN_START_ON;
+		Vec3Clear (gameEntity->velocity);
+		NextThink = 0;
+	}
+	else
+	{
+		if (gameEntity->target_ent)
+			Resume();
+		else
+			Next();
+	}
+}
+
+void CTrainBase::DoEndFunc ()
+{
+	switch (EndFunc)
+	{
+	case TRAINENDFUNC_WAIT:
+		TrainWait ();
+		break;
+	}
+}
+
+void CTrainBase::Think ()
+{
+	switch (ThinkType)
+	{
+	case TRAINTHINK_FIND:
+		Find ();
+		break;
+	case TRAINTHINK_NEXT:
+		Next ();
+		break;
+	default:
+		CBrushModel::Think ();
+	}
+}
+
+void CTrainBase::Spawn ()
+{
+};
+
+CTrain::CTrain () :
+CBaseEntity (),
+CTrainBase ()
+{
+};
+
+CTrain::CTrain (int Index) :
+CBaseEntity (Index),
+CTrainBase (Index)
+{
+};
+
+void CTrain::Spawn ()
+{
+	PhysicsType = PHYSICS_PUSH;
+
+	State.SetAngles (vec3fOrigin);
+	if (gameEntity->spawnflags & TRAIN_BLOCK_STOPS)
+		gameEntity->dmg = 0;
+	else
+	{
+		if (!gameEntity->dmg)
+			gameEntity->dmg = 100;
+	}
+	SetSolid (SOLID_BSP);
+	SetModel (gameEntity, gameEntity->model);
+
+	if (st.noise)
+		SoundMiddle = SoundIndex  (st.noise);
+
+	if (!gameEntity->speed)
+		gameEntity->speed = 100;
+
+	Speed = gameEntity->speed;
+	Accel = Decel = Speed;
+
+	Link ();
+
+	if (gameEntity->target)
+	{
+		// start trains on the second frame, to make sure their targets have had
+		// a chance to spawn
+		NextThink = level.framenum + FRAMETIME;
+		ThinkType = TRAINTHINK_FIND;
+	}
+	else
+	{
+		//gi.dprintf ("func_train without a target at (%f %f %f)\n", self->absMin[0], self->absMin[1], self->absMin[2]);
+		MapPrint (MAPPRINT_ERROR, this, GetAbsMin(), "No target\n");
+	}
+}
+
+LINK_CLASSNAME_TO_CLASS ("func_train", CTrain);
+
+/*QUAKED trigger_elevator (0.3 0.1 0.6) (-8 -8 -8) (8 8 8)
+*/
+
+CTriggerElevator::CTriggerElevator () :
+CBaseEntity (),
+CMapEntity (),
+CThinkableEntity (),
+CUsableEntity ()
+{
+	Spawn ();
+};
+
+CTriggerElevator::CTriggerElevator (int Index) :
+CBaseEntity (Index),
+CMapEntity (Index),
+CThinkableEntity (Index),
+CUsableEntity (Index)
+{
+	Spawn ();
+};
+
+void CTriggerElevator::Use (CBaseEntity *other, CBaseEntity *activator)
+{
+	if (!MoveTarget)
+		return;
+
+	edict_t *target;
+
+	if (MoveTarget->NextThink)
+		return;
+
+	if (!other->gameEntity->pathtarget)
+	{
+		DebugPrintf("elevator used with no pathtarget\n");
+		return;
+	}
+
+	target = G_PickTarget (other->gameEntity->pathtarget);
+	if (!target)
+	{
+		DebugPrintf("elevator used with bad pathtarget: %s\n", other->gameEntity->pathtarget);
+		return;
+	}
+
+	MoveTarget->gameEntity->target_ent = target;
+	MoveTarget->Resume ();
+}
+
+void CTriggerElevator::Think ()
+{
+	if (!gameEntity->target)
+	{
+		//gi.dprintf("trigger_elevator has no target\n");
+		MapPrint (MAPPRINT_ERROR, this, GetAbsMin(), "No target\n");
+		return;
+	}
+	edict_t *newTarg = G_PickTarget (gameEntity->target);
+	if (!newTarg)
+	{
+		//gi.dprintf("trigger_elevator unable to find target %s\n", self->target);
+		MapPrint (MAPPRINT_ERROR, this, GetAbsMin(), "Unable to find target \"%s\"\n", gameEntity->target);
+		return;
+	}
+	if (strcmp(newTarg->classname, "func_train") != 0)
+	{
+		//gi.dprintf("trigger_elevator target %s is not a train\n", self->target);
+		MapPrint (MAPPRINT_ERROR, this, GetAbsMin(), "Target \"%s\" is not a train\n", gameEntity->target);
+		return;
+	}
+
+	MoveTarget = dynamic_cast<CTrain*>(G_PickTarget (gameEntity->target)->Entity);
+	Usable = true;
+	SetSvFlags (SVF_NOCLIENT);
+}
+
+void CTriggerElevator::Spawn ()
+{
+	NextThink = level.framenum + FRAMETIME;
+}
+
+LINK_CLASSNAME_TO_CLASS ("trigger_elevator", CTriggerElevator);
+
+#pragma endregion Train
