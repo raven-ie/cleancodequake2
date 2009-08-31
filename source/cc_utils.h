@@ -39,6 +39,8 @@ void	G_TouchSolids (CBaseEntity *ent);
 void G_SetMovedir (vec3f &angles, vec3f &movedir);
 bool KillBox (CBaseEntity *ent);
 CBaseEntity *GetRandomTeamMember (CBaseEntity *Entity, CBaseEntity *Master);
+CBaseEntity *CC_PickTarget (char *targetname);
+void G_UseTargets (CBaseEntity *ent, CBaseEntity *activator);
 
 #else
 FILE_WARNING

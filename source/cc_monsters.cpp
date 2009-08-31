@@ -1156,7 +1156,8 @@ void CMonster::MonsterStartGo ()
 
 	if (Entity->gameEntity->target)
 	{
-		Entity->gameEntity->goalentity = Entity->gameEntity->movetarget = G_PickTarget(Entity->gameEntity->target);
+		CBaseEntity *Target = CC_PickTarget(Entity->gameEntity->target);
+		Entity->gameEntity->goalentity = Entity->gameEntity->movetarget = Target->gameEntity;
 		if (!Entity->gameEntity->movetarget)
 		{
 			//gi.dprintf ("%s can't find target %s at (%f %f %f)\n", self->classname, self->target, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
@@ -3091,7 +3092,7 @@ void CMonster::MonsterDeathUse ()
 	if (!Entity->gameEntity->target)
 		return;
 
-	G_UseTargets (Entity->gameEntity, Entity->gameEntity->enemy);
+	G_UseTargets (Entity, Entity->gameEntity->enemy->Entity);
 }
 
 void CMonster::MonsterThink ()
@@ -3242,7 +3243,8 @@ void CMonster::FoundTarget ()
 		return;
 	}
 
-	Entity->gameEntity->goalentity = Entity->gameEntity->movetarget = G_PickTarget(Entity->gameEntity->combattarget);
+	CBaseEntity *Target = CC_PickTarget(Entity->gameEntity->combattarget);
+	Entity->gameEntity->goalentity = Entity->gameEntity->movetarget = Target->gameEntity;
 	if (!Entity->gameEntity->movetarget)
 	{
 		Entity->gameEntity->goalentity = Entity->gameEntity->movetarget = Entity->gameEntity->enemy;

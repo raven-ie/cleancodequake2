@@ -744,7 +744,7 @@ void CDoor::GoUp (CBaseEntity *activator)
 	//else if (strcmp(self->classname, "func_door_rotating") == 0)
 	//	AngleMove_Calc (self, door_hit_top);
 
-	G_UseTargets (gameEntity, activator->gameEntity);
+	G_UseTargets (this, activator);
 	UseAreaPortals (true);
 }
 
@@ -1125,7 +1125,7 @@ void CRotatingDoor::GoUp (CBaseEntity *activator)
 	MoveState = STATE_UP;
 	AngleMoveCalc (DOORENDFUNC_HITTOP);
 
-	G_UseTargets (gameEntity, activator->gameEntity);
+	G_UseTargets (this, activator);
 	UseAreaPortals (true);
 }
 
@@ -1564,7 +1564,7 @@ void CButton::DoEndFunc ()
 		State.RemoveEffects (EF_ANIM01);
 		State.AddEffects (EF_ANIM23);
 
-		G_UseTargets (gameEntity, gameEntity->activator);
+		G_UseTargets (this, gameEntity->activator->Entity);
 		State.SetFrame (1);
 		if (Wait >= 0)
 		{
@@ -1758,13 +1758,11 @@ void CTrainBase::TrainWait ()
 	if (gameEntity->target_ent->pathtarget)
 	{
 		char	*savetarget;
-		edict_t	*ent;
-
-		ent = gameEntity->target_ent;
-		savetarget = ent->target;
-		ent->target = ent->pathtarget;
-		G_UseTargets (ent, gameEntity->activator);
-		ent->target = savetarget;
+		CBaseEntity	*ent = gameEntity->target_ent->Entity;
+		savetarget = ent->gameEntity->target;
+		ent->gameEntity->target = ent->gameEntity->pathtarget;
+		G_UseTargets (ent, gameEntity->activator->Entity);
+		ent->gameEntity->target = savetarget;
 
 		// make sure we didn't get killed by a killtarget
 		if (!IsInUse())
@@ -1799,8 +1797,6 @@ void CTrainBase::TrainWait ()
 
 void CTrainBase::Next ()
 {
-	edict_t		*ent;
-	vec3_t		dest;
 	bool		first = true;
 
 	first; // Shut up compiler.
@@ -1808,35 +1804,33 @@ again:
 	if (!gameEntity->target)
 		return;
 
-	ent = G_PickTarget (gameEntity->target);
+	CBaseEntity *ent = CC_PickTarget (gameEntity->target);
 	if (!ent)
 	{
 		DebugPrintf ("train_next: bad target %s\n", gameEntity->target);
 		return;
 	}
 
-	gameEntity->target = ent->target;
+	gameEntity->target = ent->gameEntity->target;
 
 	// check for a teleport path_corner
-	if (ent->spawnflags & 1)
+	if (ent->gameEntity->spawnflags & 1)
 	{
 		if (!first)
 		{
-			DebugPrintf ("connected teleport path_corners, see %s at (%f %f %f)\n", ent->classname, ent->state.origin[0], ent->state.origin[1], ent->state.origin[2]);
+			DebugPrintf ("connected teleport path_corners, see %s at (%f %f %f)\n", ent->gameEntity->classname, ent->State.GetOrigin().X, ent->State.GetOrigin().Y, ent->State.GetOrigin().Z);
 			return;
 		}
 		first = false;
-		vec3_t sub;
-		Vec3Subtract (ent->state.origin, gameEntity->mins, sub);
-		State.SetOrigin (sub);
+		State.SetOrigin (ent->State.GetOrigin() - GetMins());
 		State.SetOldOrigin (State.GetOrigin());
 		State.SetEvent (EV_OTHER_TELEPORT);
 		Link ();
 		goto again;
 	}
 
-	Wait = ent->wait;
-	gameEntity->target_ent = ent;
+	Wait = ent->gameEntity->wait;
+	gameEntity->target_ent = ent->gameEntity;
 
 	if (!(gameEntity->flags & FL_TEAMSLAVE))
 	{
@@ -1845,9 +1839,9 @@ again:
 		State.SetSound (SoundMiddle);
 	}
 
-	Vec3Subtract (ent->state.origin, GetMins(), dest);
 	MoveState = STATE_TOP;
 	State.GetOrigin (StartOrigin);
+	vec3f dest = (ent->State.GetOrigin() - GetMins());
 	Vec3Copy (dest, EndOrigin);
 	MoveCalc (dest, TRAINENDFUNC_WAIT);
 
@@ -1871,24 +1865,19 @@ void CTrainBase::Resume ()
 
 void CTrainBase::Find ()
 {
-	edict_t *ent;
-
 	if (!gameEntity->target)
 	{
 		DebugPrintf ("train_find: no target\n");
 		return;
 	}
-	ent = G_PickTarget (gameEntity->target);
+	CBaseEntity *ent = CC_PickTarget (gameEntity->target);
 	if (!ent)
 	{
 		DebugPrintf ("train_find: target %s not found\n", gameEntity->target);
 		return;
 	}
-	gameEntity->target = ent->target;
-
-	vec3_t sub;
-	Vec3Subtract (ent->state.origin, GetMins(), sub);
-	State.SetOrigin (sub);
+	gameEntity->target = ent->gameEntity->target;
+	State.SetOrigin (ent->State.GetOrigin() - GetMins());
 
 	Link ();
 
@@ -2034,8 +2023,6 @@ void CTriggerElevator::Use (CBaseEntity *other, CBaseEntity *activator)
 	if (!MoveTarget)
 		return;
 
-	edict_t *target;
-
 	if (MoveTarget->NextThink)
 		return;
 
@@ -2045,14 +2032,14 @@ void CTriggerElevator::Use (CBaseEntity *other, CBaseEntity *activator)
 		return;
 	}
 
-	target = G_PickTarget (other->gameEntity->pathtarget);
+	CBaseEntity *target = CC_PickTarget (other->gameEntity->pathtarget);
 	if (!target)
 	{
 		DebugPrintf("elevator used with bad pathtarget: %s\n", other->gameEntity->pathtarget);
 		return;
 	}
 
-	MoveTarget->gameEntity->target_ent = target;
+	MoveTarget->gameEntity->target_ent = target->gameEntity;
 	MoveTarget->Resume ();
 }
 
@@ -2064,21 +2051,21 @@ void CTriggerElevator::Think ()
 		MapPrint (MAPPRINT_ERROR, this, GetAbsMin(), "No target\n");
 		return;
 	}
-	edict_t *newTarg = G_PickTarget (gameEntity->target);
+	CBaseEntity *newTarg = CC_PickTarget (gameEntity->target);
 	if (!newTarg)
 	{
 		//gi.dprintf("trigger_elevator unable to find target %s\n", self->target);
 		MapPrint (MAPPRINT_ERROR, this, GetAbsMin(), "Unable to find target \"%s\"\n", gameEntity->target);
 		return;
 	}
-	if (strcmp(newTarg->classname, "func_train") != 0)
+	if (strcmp(newTarg->gameEntity->classname, "func_train") != 0)
 	{
 		//gi.dprintf("trigger_elevator target %s is not a train\n", self->target);
 		MapPrint (MAPPRINT_ERROR, this, GetAbsMin(), "Target \"%s\" is not a train\n", gameEntity->target);
 		return;
 	}
 
-	MoveTarget = dynamic_cast<CTrain*>(G_PickTarget (gameEntity->target)->Entity);
+	MoveTarget = dynamic_cast<CTrain*>(newTarg);
 	Usable = true;
 	SetSvFlags (SVF_NOCLIENT);
 }
