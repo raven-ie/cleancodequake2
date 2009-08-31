@@ -70,7 +70,7 @@ void CItemEntity::Touch(CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf
 
 	if (!(gameEntity->spawnflags & ITEM_TARGETS_USED))
 	{
-		G_UseTargets (gameEntity, other->gameEntity);
+		G_UseTargets (this, other);
 		gameEntity->spawnflags |= ITEM_TARGETS_USED;
 	}
 

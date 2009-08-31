@@ -89,27 +89,26 @@ NULL will be returned if the end of the list is reached.
 
 =============
 */
-#if 0
 #define MAXCHOICES	8
 
-edict_t *G_PickTarget (char *targetname)
+CBaseEntity *CC_PickTarget (char *targetname)
 {
-	edict_t	*ent = NULL;
 	int		num_choices = 0;
-	edict_t	*choice[MAXCHOICES];
+	CBaseEntity	*choice[MAXCHOICES];
 
 	if (!targetname)
-	{
-		//gi.dprintf("G_PickTarget called with NULL targetname\n");
 		return NULL;
-	}
 
+	edict_t *ent = NULL;
 	while(1)
 	{
 		ent = G_Find (ent, FOFS(targetname), targetname);
 		if (!ent)
 			break;
-		choice[num_choices++] = ent;
+		if (!ent->Entity)
+			continue;
+
+		choice[num_choices++] = ent->Entity;
 		if (num_choices == MAXCHOICES)
 			break;
 	}
@@ -123,13 +122,29 @@ edict_t *G_PickTarget (char *targetname)
 	return choice[rand() % num_choices];
 }
 
-
-
-void Think_Delay (edict_t *ent)
+class CDelayedUse : public CThinkableEntity
 {
-	G_UseTargets (ent, ent->activator);
-	G_FreeEdict (ent);
-}
+public:
+	CBaseEntity	*Activator;
+
+	CDelayedUse () :
+	  CBaseEntity (),
+	  CThinkableEntity ()
+	  {
+	  };
+
+	CDelayedUse (int Index) :
+	  CBaseEntity (Index),
+	  CThinkableEntity (Index)
+	  {
+	  };
+
+	void Think ()
+	{
+		G_UseTargets (this, Activator);
+		Free ();
+	}
+};
 
 /*
 ==============================
@@ -147,54 +162,55 @@ match (string)self.target and call their .use function
 
 ==============================
 */
-void G_UseTargets (edict_t *ent, edict_t *activator)
+void G_UseTargets (CBaseEntity *ent, CBaseEntity *activator)
 {
-	edict_t		*t;
-
 //
 // check for a delay
 //
-	if (ent->delay)
+	if (ent->gameEntity->delay)
 	{
 	// create a temp object to fire at a later time
-		t = G_Spawn();
-		t->classname = "DelayedUse";
+		CDelayedUse *t = QNew (com_levelPool, 0) CDelayedUse;
+		t->gameEntity->classname = "DelayedUse";
 
 		// Paril: for compatibility
-		t->nextthink = level.framenum + (ent->delay * 10);
-		t->think = Think_Delay;
-		t->activator = activator;
+		t->NextThink = level.framenum + (ent->gameEntity->delay * 10);
+		t->Activator = activator;
 		if (!activator)
 			DebugPrintf ("Think_Delay with no activator\n");
-		t->message = ent->message;
-		t->target = ent->target;
-		t->killtarget = ent->killtarget;
+		t->gameEntity->message = ent->gameEntity->message;
+		t->gameEntity->target = ent->gameEntity->target;
+		t->gameEntity->killtarget = ent->gameEntity->killtarget;
 		return;
 	}
-	
-	
+
 //
 // print the message
 //
-	if ((ent->message) && !(activator->svFlags & SVF_MONSTER))
+	if ((ent->gameEntity->message) && (activator->EntityFlags & ENT_PLAYER))
 	{
-		ClientPrintf (activator, PRINT_CENTER, "%s", ent->message);
-		if (ent->noise_index)
-			PlaySoundFrom (activator, CHAN_AUTO, ent->noise_index);
+		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(activator);
+		Player->PrintToClient (PRINT_CENTER, "%s", ent->gameEntity->message);
+		if (ent->gameEntity->noise_index)
+			Player->PlaySound (CHAN_AUTO, ent->gameEntity->noise_index);
 		else
-			PlaySoundFrom (activator, CHAN_AUTO, SoundIndex ("misc/talk1.wav"));
+			Player->PlaySound (CHAN_AUTO, SoundIndex ("misc/talk1.wav"));
 	}
 
 //
 // kill killtargets
 //
-	if (ent->killtarget)
+	if (ent->gameEntity->killtarget)
 	{
-		t = NULL;
-		while ((t = G_Find (t, FOFS(targetname), ent->killtarget)) != NULL)
+		edict_t *t = NULL;
+		while ((t = G_Find (t, FOFS(targetname), ent->gameEntity->killtarget)) != NULL)
 		{
-			G_FreeEdict (t);
-			if (!ent->inUse)
+			if (!t->Entity)
+				G_FreeEdict (t);
+			else
+				t->Entity->Free ();
+
+			if (!ent->IsInUse())
 			{
 				DebugPrintf("entity was removed while using killtargets\n");
 				return;
@@ -205,21 +221,25 @@ void G_UseTargets (edict_t *ent, edict_t *activator)
 //
 // fire targets
 //
-	if (ent->target)
+	if (ent->gameEntity->target)
 	{
-		t = NULL;
-		while ((t = G_Find (t, FOFS(targetname), ent->target)) != NULL)
+		edict_t *t = NULL;
+		while ((t = G_Find (t, FOFS(targetname), ent->gameEntity->target)) != NULL)
 		{
-			// doors fire area portals in a specific way
-			if (!Q_stricmp(t->classname, "func_areaportal") &&
-				(!Q_stricmp(ent->classname, "func_door") || !Q_stricmp(ent->classname, "func_door_rotating")))
+			CBaseEntity *Ent = t->Entity;
+			if (!Ent)
 				continue;
 
-			if (t == ent)
+			// doors fire area portals in a specific way
+			if (!Q_stricmp(Ent->gameEntity->classname, "func_areaportal") &&
+				(!Q_stricmp(Ent->gameEntity->classname, "func_door") || !Q_stricmp(Ent->gameEntity->classname, "func_door_rotating")))
+				continue;
+
+			if (Ent == ent)
 				DebugPrintf ("WARNING: Entity used itself.\n");
-			else if (t->use)
-				t->use (t, ent, activator);
-			if (!ent->inUse)
+			else if (Ent->EntityFlags & ENT_USABLE)
+				(dynamic_cast<CUsableEntity*>(Ent))->Use (ent, activator);
+			if (!ent->IsInUse())
 			{
 				DebugPrintf("entity was removed while using targets\n");
 				return;
@@ -227,7 +247,6 @@ void G_UseTargets (edict_t *ent, edict_t *activator)
 		}
 	}
 }
-#endif
 
 void G_SetMovedir (vec3f &angles, vec3f &movedir)
 {
