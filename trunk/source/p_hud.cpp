@@ -28,9 +28,9 @@ INTERMISSION
 ======================================================================
 */
 
-void BeginIntermission (edict_t *targ)
+void BeginIntermission (CBaseEntity *targ)
 {
-	edict_t	*ent;
+	CBaseEntity	*ent;
 
 	if (level.intermissiontime)
 		return;		// already activated
@@ -55,7 +55,7 @@ void BeginIntermission (edict_t *targ)
 	}
 
 	level.intermissiontime = level.framenum;
-	level.changemap = targ->map;
+	level.changemap = targ->gameEntity->map;
 
 	if (strstr(level.changemap, "*"))
 	{
@@ -89,26 +89,26 @@ void BeginIntermission (edict_t *targ)
 	level.exitintermission = 0;
 
 	// find an intermission spot
-	ent = G_Find (NULL, FOFS(classname), "info_player_intermission");
+	ent = CC_Find (NULL, FOFS(classname), "info_player_intermission");
 	if (!ent)
 	{	// the map creator forgot to put in an intermission point...
-		ent = G_Find (NULL, FOFS(classname), "info_player_start");
+		ent = CC_Find (NULL, FOFS(classname), "info_player_start");
 		if (!ent)
-			ent = G_Find (NULL, FOFS(classname), "info_player_deathmatch");
+			ent = CC_Find (NULL, FOFS(classname), "info_player_deathmatch");
 	}
 	else
 	{	// chose one of four spots
 		int i = rand() & 3;
 		while (i--)
 		{
-			ent = G_Find (ent, FOFS(classname), "info_player_intermission");
+			ent = CC_Find (ent, FOFS(classname), "info_player_intermission");
 			if (!ent)	// wrap around the list
-				ent = G_Find (ent, FOFS(classname), "info_player_intermission");
+				ent = CC_Find (ent, FOFS(classname), "info_player_intermission");
 		}
 	}
 
-	Vec3Copy (ent->state.origin, level.intermission_origin);
-	Vec3Copy (ent->state.angles, level.intermission_angle);
+	ent->State.GetOrigin (level.intermission_origin);
+	ent->State.GetAngles (level.intermission_angle);
 
 	// move all clients to the intermission point
 	for (int i=0 ; i<game.maxclients ; i++)

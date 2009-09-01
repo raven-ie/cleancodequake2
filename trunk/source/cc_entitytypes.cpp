@@ -110,29 +110,32 @@ CTrace CPhysicsEntity::PushEntity (vec3_t push)
 	vec3f		Start = State.GetOrigin();
 	vec3f		End = Start + vec3f(push);
 
-retry:
-	if (gameEntity->clipMask)
-		mask = gameEntity->clipMask;
-	else
-		mask = CONTENTS_MASK_SOLID;
-
-	Trace = CTrace (State.GetOrigin(), GetMins(), GetMaxs(), End, gameEntity, mask);
-	
-	State.SetOrigin (Trace.endPos);
-	Link();
-
-	if (Trace.fraction != 1.0)
+	while (true)
 	{
-		Impact (&Trace);
+		if (gameEntity->clipMask)
+			mask = gameEntity->clipMask;
+		else
+			mask = CONTENTS_MASK_SOLID;
 
-		// if the pushed entity went away and the pusher is still there
-		if (!Trace.ent->inUse && IsInUse())
+		Trace = CTrace (State.GetOrigin(), GetMins(), GetMaxs(), End, gameEntity, mask);
+		
+		State.SetOrigin (Trace.endPos);
+		Link();
+
+		if (Trace.fraction != 1.0)
 		{
-			// move the pusher back and try again
-			State.SetOrigin (Start);
-			Link ();
-			goto retry;
+			Impact (&Trace);
+
+			// if the pushed entity went away and the pusher is still there
+			if (!Trace.ent->inUse && IsInUse())
+			{
+				// move the pusher back and try again
+				State.SetOrigin (Start);
+				Link ();
+				continue;
+			}
 		}
+		break;
 	}
 
 	if (IsInUse())
@@ -932,7 +935,6 @@ bool CPushPhysics::Run ()
 	// make sure all team slaves can move before commiting
 	// any moves or calling any think functions
 	// if the move is blocked, all moved objects will be backed out
-//retry:
 	pushed_p = pushed;
 	for (part = gameEntity ; part ; part=part->teamchain)
 	{
@@ -970,11 +972,6 @@ bool CPushPhysics::Run ()
 		// otherwise, just stay in place until the obstacle is gone
 		if (part->Entity && (part->Entity->EntityFlags & ENT_BLOCKABLE) && obstacle->Entity)
 			(dynamic_cast<CBlockableEntity*>(part->Entity))->Blocked (obstacle->Entity);
-#if 0
-		// if the pushed entity went away and the pusher is still there
-		if (!obstacle->inUse && part->inUse)
-			goto retry;
-#endif
 	}
 	else
 	{

@@ -465,8 +465,6 @@ CStepPhysics(),
 CTossProjectile(),
 CHurtableEntity()
 {
-	EntityFlags |= ENT_MONSTER;
-	PhysicsType = PHYSICS_STEP;
 };
 
 CMonsterEntity::CMonsterEntity (int Index) :
@@ -474,6 +472,10 @@ CBaseEntity(Index),
 CStepPhysics(Index),
 CTossProjectile(Index),
 CHurtableEntity(Index)
+{
+};
+
+void CMonsterEntity::Spawn ()
 {
 	EntityFlags |= ENT_MONSTER;
 	PhysicsType = PHYSICS_STEP;
@@ -632,23 +634,25 @@ bool CMonster::CheckBottom ()
 // if all of the points under the corners are solid world, don't bother
 // with the tougher checks
 // the corners must be within 16 of the midpoint
+	bool gotOutEasy = false;
 	start[2] = mins[2] - 1;
-	for	(x=0 ; x<=1 ; x++)
+	for	(x=0 ; x<=1, !gotOutEasy; x++)
 	{
-		for	(y=0 ; y<=1 ; y++)
+		for	(y=0 ; y<=1, !gotOutEasy; y++)
 		{
 			start.X = x ? maxs.X : mins.X;
 			start.Y = y ? maxs.Y : mins.Y;
 
 			vec3_t startVec = {start.X, start.Y, start.Z};
 			if (PointContents (startVec) != CONTENTS_SOLID)
-				goto realcheck;
+				gotOutEasy = true;
 		}
+
 	}
 
-	return true;		// we got out easy
+	if (gotOutEasy)
+		return true;		// we got out easy
 
-realcheck:
 //
 // check it for real...
 //
@@ -1122,11 +1126,11 @@ void CMonster::MonsterStartGo ()
 	if (Entity->gameEntity->target)
 	{
 		bool		notcombat = false, fixup = false;
-		edict_t		*target = NULL;
+		CBaseEntity		*target = NULL;
 
-		while ((target = G_Find (target, FOFS(targetname), Entity->gameEntity->target)) != NULL)
+		while ((target = CC_Find (target, FOFS(targetname), Entity->gameEntity->target)) != NULL)
 		{
-			if (strcmp(target->classname, "point_combat") == 0)
+			if (strcmp(target->gameEntity->classname, "point_combat") == 0)
 			{
 				Entity->gameEntity->combattarget = Entity->gameEntity->target;
 				fixup = true;
@@ -1144,12 +1148,10 @@ void CMonster::MonsterStartGo ()
 	// validate combattarget
 	if (Entity->gameEntity->combattarget)
 	{
-		edict_t		*target;
-
-		target = NULL;
-		while ((target = G_Find (target, FOFS(targetname), Entity->gameEntity->combattarget)) != NULL)
+		CBaseEntity		*target = NULL;
+		while ((target = CC_Find (target, FOFS(targetname), Entity->gameEntity->combattarget)) != NULL)
 		{
-			if (strcmp(target->classname, "point_combat") != 0)
+			if (strcmp(target->gameEntity->classname, "point_combat") != 0)
 				MapPrint (MAPPRINT_WARNING, Entity, Entity->State.GetOrigin(), "Has a bad combattarget (\"%s\")\n", Entity->gameEntity->combattarget);
 		}
 	}
@@ -3507,7 +3509,7 @@ bool CMonster::FindTarget()
 		}
 		else
 		{
-			if (!gi.inPHS(origin, level.NoiseNode->Origin))
+			if (!InHearableArea(origin, level.NoiseNode->Origin))
 				return false;
 		}
 
@@ -3547,7 +3549,7 @@ bool CMonster::FindTarget()
 				}
 				else
 				{
-					if (!gi.inPHS(origin, temp))
+					if (!InHearableArea(origin, temp))
 						return false;
 				}
 
@@ -3696,7 +3698,7 @@ bool CMonster::FindTarget()
 		}
 		else
 		{
-			if (!gi.inPHS(origin, temp))
+			if (!InHearableArea(origin, temp))
 				return false;
 		}
 

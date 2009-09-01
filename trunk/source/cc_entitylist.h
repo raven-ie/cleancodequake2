@@ -73,6 +73,7 @@ CBaseEntity *ResolveMapEntity (edict_t *ent);
 	CMapEntity *LINK_RESOLVE_CLASSNAME(DLLClassName, _Spawn) (int Index) \
 	{ \
 		DLLClassName *newClass = QNew (com_levelPool, 0) DLLClassName(Index); \
+		newClass->Spawn (); \
 		return newClass; \
 	} \
 	CClassnameToClassIndex LINK_RESOLVE_CLASSNAME(DLLClassName, _Linker) \

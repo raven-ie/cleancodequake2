@@ -79,9 +79,9 @@ class CPlayerEntity;
 #include "cc_ctfmenu.h"
 #endif
 #include "cc_entitylist.h"
+extern dmFlagsConfig dmFlags;
 #include "cc_utils.h"
 
-extern dmFlagsConfig dmFlags;
 
 #if 0
 void DrawNewton ();

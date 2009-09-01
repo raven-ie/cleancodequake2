@@ -400,8 +400,6 @@ inline void Vec3Subtract (const vec3_t a, const vec3_t b, vec3_t c)
 }
 
 // vec4_t routines
-
-// vec2_t manipulation
 inline float Dot4Product (const vec4_t x, const vec4_t y)
 {
 	return DotxProduct<vec4_t, 4>(x, y);

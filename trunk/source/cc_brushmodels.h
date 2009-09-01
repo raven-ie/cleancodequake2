@@ -343,6 +343,32 @@ public:
 	void Spawn ();
 };
 
+class CWorldEntity : public CBrushModel
+{
+public:
+	CWorldEntity ();
+	CWorldEntity (int Index);
+
+	bool Run ();
+	void Spawn ();
+};
+
+class CRotatingBrush : public CMapEntity, public CBrushModel, public CUsableEntity, public CBlockableEntity, public CTouchableEntity
+{
+public:
+	bool Blockable;
+
+	CRotatingBrush ();
+	CRotatingBrush (int Index);
+
+	void Use (CBaseEntity *other, CBaseEntity *activator);
+	void Blocked (CBaseEntity *other);
+	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
+
+	bool Run ();
+	void Spawn ();
+};
+
 #else
 FILE_WARNING
 #endif

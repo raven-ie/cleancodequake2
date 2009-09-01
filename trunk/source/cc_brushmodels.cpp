@@ -375,7 +375,6 @@ CBlockableEntity(),
 CUsableEntity(),
 CBrushModel()
 {
-	Spawn ();
 };
 
 CPlatForm::CPlatForm(int Index) :
@@ -385,7 +384,6 @@ CBlockableEntity(Index),
 CUsableEntity(Index),
 CBrushModel(Index)
 {
-	Spawn ();
 };
 
 bool CPlatForm::Run ()
@@ -635,7 +633,6 @@ CUsableEntity(),
 CHurtableEntity(),
 CTouchableEntity()
 {
-	Spawn ();
 };
 
 CDoor::CDoor(int Index) :
@@ -647,7 +644,6 @@ CUsableEntity(Index),
 CHurtableEntity(Index),
 CTouchableEntity(Index)
 {
-	Spawn ();
 };
 
 bool CDoor::Run ()
@@ -657,15 +653,15 @@ bool CDoor::Run ()
 
 void CDoor::UseAreaPortals (bool isOpen)
 {
-	edict_t	*t = NULL;
+	CBaseEntity	*t = NULL;
 
 	if (!gameEntity->target)
 		return;
 
-	while ((t = G_Find (t, FOFS(targetname), gameEntity->target)) != NULL)
+	while ((t = CC_Find (t, FOFS(targetname), gameEntity->target)) != NULL)
 	{
-		if (Q_stricmp(t->classname, "func_areaportal") == 0)
-			gi.SetAreaPortalState (t->style, isOpen);
+		if (Q_stricmp(t->gameEntity->classname, "func_areaportal") == 0)
+			gi.SetAreaPortalState (t->gameEntity->style, isOpen);
 	}
 }
 
@@ -1527,7 +1523,6 @@ CUsableEntity(),
 CHurtableEntity(),
 CTouchableEntity()
 {
-	Spawn ();
 };
 
 CButton::CButton(int Index) :
@@ -1538,7 +1533,6 @@ CUsableEntity(Index),
 CHurtableEntity(Index),
 CTouchableEntity(Index)
 {
-	Spawn ();
 };
 
 bool CButton::Run ()
@@ -1714,7 +1708,6 @@ CBrushModel(),
 CBlockableEntity(),
 CUsableEntity()
 {
-	Spawn ();
 };
 
 CTrainBase::CTrainBase(int Index) :
@@ -1724,7 +1717,6 @@ CBrushModel(Index),
 CBlockableEntity(Index),
 CUsableEntity(Index)
 {
-	Spawn ();
 };
 
 bool CTrainBase::Run ()
@@ -1799,34 +1791,37 @@ void CTrainBase::Next ()
 {
 	bool		first = true;
 
-	first; // Shut up compiler.
-again:
-	if (!gameEntity->target)
-		return;
-
-	CBaseEntity *ent = CC_PickTarget (gameEntity->target);
-	if (!ent)
+	CBaseEntity *ent = NULL;
+	while (true)
 	{
-		DebugPrintf ("train_next: bad target %s\n", gameEntity->target);
-		return;
-	}
+		if (!gameEntity->target)
+			return;
 
-	gameEntity->target = ent->gameEntity->target;
-
-	// check for a teleport path_corner
-	if (ent->gameEntity->spawnflags & 1)
-	{
-		if (!first)
+		ent = CC_PickTarget (gameEntity->target);
+		if (!ent)
 		{
-			DebugPrintf ("connected teleport path_corners, see %s at (%f %f %f)\n", ent->gameEntity->classname, ent->State.GetOrigin().X, ent->State.GetOrigin().Y, ent->State.GetOrigin().Z);
+			DebugPrintf ("train_next: bad target %s\n", gameEntity->target);
 			return;
 		}
-		first = false;
-		State.SetOrigin (ent->State.GetOrigin() - GetMins());
-		State.SetOldOrigin (State.GetOrigin());
-		State.SetEvent (EV_OTHER_TELEPORT);
-		Link ();
-		goto again;
+
+		gameEntity->target = ent->gameEntity->target;
+
+		// check for a teleport path_corner
+		if (ent->gameEntity->spawnflags & 1)
+		{
+			if (!first)
+			{
+				DebugPrintf ("connected teleport path_corners, see %s at (%f %f %f)\n", ent->gameEntity->classname, ent->State.GetOrigin().X, ent->State.GetOrigin().Y, ent->State.GetOrigin().Z);
+				return;
+			}
+			first = false;
+			State.SetOrigin (ent->State.GetOrigin() - GetMins());
+			State.SetOldOrigin (State.GetOrigin());
+			State.SetEvent (EV_OTHER_TELEPORT);
+			Link ();
+			continue;
+		}
+		break;
 	}
 
 	Wait = ent->gameEntity->wait;
@@ -2006,7 +2001,6 @@ CMapEntity (),
 CThinkableEntity (),
 CUsableEntity ()
 {
-	Spawn ();
 };
 
 CTriggerElevator::CTriggerElevator (int Index) :
@@ -2015,7 +2009,6 @@ CMapEntity (Index),
 CThinkableEntity (Index),
 CUsableEntity (Index)
 {
-	Spawn ();
 };
 
 void CTriggerElevator::Use (CBaseEntity *other, CBaseEntity *activator)
@@ -2078,3 +2071,297 @@ void CTriggerElevator::Spawn ()
 LINK_CLASSNAME_TO_CLASS ("trigger_elevator", CTriggerElevator);
 
 #pragma endregion Train
+
+#pragma region World
+CWorldEntity::CWorldEntity () : 
+CBaseEntity(),
+CBrushModel()
+{
+};
+
+CWorldEntity::CWorldEntity (int Index) : 
+CBaseEntity(Index),
+CBrushModel()
+{
+};
+
+bool CWorldEntity::Run ()
+{
+	return CBrushModel::Run();
+};
+
+void CreateDMStatusbar ();
+void CreateSPStatusbar ();
+void SetItemNames ();
+void Init_Junk();
+
+void CWorldEntity::Spawn ()
+{
+	ClearList(); // Do this before ANYTHING
+	// Seed the random number generator
+	srand (time(NULL));
+
+	PhysicsType = MOVETYPE_PUSH;
+	SetSolid (SOLID_BSP);
+	SetInUse (true);			// since the world doesn't use G_Spawn()
+	State.SetModelIndex (1);		// world model is always index 1
+
+	// reserve some spots for dead player bodies for coop / deathmatch
+	BodyQueue_Init ();
+	Init_Junk();
+
+	if (st.nextmap)
+		Q_strncpyz (level.nextmap, st.nextmap, sizeof(level.nextmap));
+
+	// make some data visible to the server
+	if (gameEntity->message && gameEntity->message[0])
+	{
+		ConfigString (CS_NAME, gameEntity->message);
+		Q_strncpyz (level.level_name, gameEntity->message, sizeof(level.level_name));
+	}
+	else
+		Q_strncpyz (level.level_name, level.mapname, sizeof(level.level_name));
+
+	if (st.sky && st.sky[0])
+		ConfigString (CS_SKY, st.sky);
+	else
+		ConfigString (CS_SKY, "unit1_");
+
+	ConfigString (CS_SKYROTATE, Q_VarArgs ("%f", st.skyrotate) );
+
+	ConfigString (CS_SKYAXIS, Q_VarArgs ("%f %f %f",
+		st.skyaxis[0], st.skyaxis[1], st.skyaxis[2]) );
+
+	ConfigString (CS_CDTRACK, Q_VarArgs ("%i", gameEntity->sounds) );
+
+	ConfigString (CS_MAXCLIENTS, maxclients->String() );
+
+	// status bar program
+	if (game.mode & GAME_DEATHMATCH)
+	{
+#ifdef CLEANCTF_ENABLED
+//ZOID
+		if (game.mode & GAME_CTF)
+		{
+			CreateCTFStatusbar();
+
+			//precaches
+			ImageIndex("i_ctf1");
+			ImageIndex("i_ctf2");
+			ImageIndex("i_ctf1d");
+			ImageIndex("i_ctf2d");
+			ImageIndex("i_ctf1t");
+			ImageIndex("i_ctf2t");
+			ImageIndex("i_ctfj");
+		}
+		else
+//ZOID
+#endif
+		CreateDMStatusbar();
+	}
+	else
+		CreateSPStatusbar();
+
+	//---------------
+	SetItemNames();
+
+	CCvar *gravity = QNew (com_levelPool, 0) CCvar ("gravity", "800", 0);
+	if (!st.gravity)
+		gravity->Set("800");
+	else
+		gravity->Set(st.gravity);
+
+	SoundIndex ("player/lava1.wav");
+	SoundIndex ("player/lava2.wav");
+
+	SoundIndex ("misc/pc_up.wav");
+	SoundIndex ("misc/talk1.wav");
+
+	SoundIndex ("misc/udeath.wav");
+
+	SoundIndex ("items/respawn1.wav");
+
+	DoWeaponVweps ();
+	//-------------------
+
+	SoundIndex ("player/gasp1.wav");		// gasping for air
+	SoundIndex ("player/gasp2.wav");		// head breaking surface, not gasping
+	SoundIndex ("player/watr_in.wav");	// feet hitting water
+	SoundIndex ("player/watr_out.wav");	// feet leaving water
+	SoundIndex ("player/watr_un.wav");	// head going underwater
+	SoundIndex ("player/u_breath1.wav");
+	SoundIndex ("player/u_breath2.wav");
+	SoundIndex ("world/land.wav");		// landing thud
+	SoundIndex ("misc/h2ohit1.wav");		// landing splash
+	SoundIndex ("weapons/noammo.wav");
+	SoundIndex ("infantry/inflies1.wav");
+
+	InitGameMedia ();
+
+//
+// Setup light animation tables. 'a' is total darkness, 'z' is doublebright.
+//
+
+	// 0 normal
+	ConfigString(CS_LIGHTS+0, "m");
+	
+	// 1 FLICKER (first variety)
+	ConfigString(CS_LIGHTS+1, "mmnmmommommnonmmonqnmmo");
+	
+	// 2 SLOW STRONG PULSE
+	ConfigString(CS_LIGHTS+2, "abcdefghijklmnopqrstuvwxyzyxwvutsrqponmlkjihgfedcba");
+	
+	// 3 CANDLE (first variety)
+	ConfigString(CS_LIGHTS+3, "mmmmmaaaaammmmmaaaaaabcdefgabcdefg");
+	
+	// 4 FAST STROBE
+	ConfigString(CS_LIGHTS+4, "mamamamamama");
+	
+	// 5 GENTLE PULSE 1
+	ConfigString(CS_LIGHTS+5,"jklmnopqrstuvwxyzyxwvutsrqponmlkj");
+	
+	// 6 FLICKER (second variety)
+	ConfigString(CS_LIGHTS+6, "nmonqnmomnmomomno");
+	
+	// 7 CANDLE (second variety)
+	ConfigString(CS_LIGHTS+7, "mmmaaaabcdefgmmmmaaaammmaamm");
+	
+	// 8 CANDLE (third variety)
+	ConfigString(CS_LIGHTS+8, "mmmaaammmaaammmabcdefaaaammmmabcdefmmmaaaa");
+	
+	// 9 SLOW STROBE (fourth variety)
+	ConfigString(CS_LIGHTS+9, "aaaaaaaazzzzzzzz");
+	
+	// 10 FLUORESCENT FLICKER
+	ConfigString(CS_LIGHTS+10, "mmamammmmammamamaaamammma");
+
+	// 11 SLOW PULSE NOT FADE TO BLACK
+	ConfigString(CS_LIGHTS+11, "abcdefghijklmnopqrrqponmlkjihgfedcba");
+	
+	// styles 32-62 are assigned by the light program for switchable lights
+
+	// 63 testing
+	ConfigString(CS_LIGHTS+63, "a");
+
+	dmFlags.UpdateFlags(dmflags->Integer());
+};
+
+void SpawnWorld ()
+{
+	(dynamic_cast<CWorldEntity*>(g_edicts[0].Entity))->Spawn ();
+};
+#pragma endregion World
+
+/*QUAKED func_rotating (0 .5 .8) ? START_ON REVERSE X_AXIS Y_AXIS TOUCH_PAIN STOP ANIMATED ANIMATED_FAST
+You need to have an origin brush as part of this entity.  The center of that brush will be
+the point around which it is rotated. It will rotate around the Z axis by default.  You can
+check either the X_AXIS or Y_AXIS box to change that.
+
+"speed" determines how fast it moves; default value is 100.
+"dmg"	damage to inflict when blocked (2 default)
+
+REVERSE will cause the it to rotate in the opposite direction.
+STOP mean it will stop moving instead of pushing entities
+*/
+
+CRotatingBrush::CRotatingBrush () :
+	CBaseEntity(),
+	CMapEntity(),
+	CBrushModel(),
+	CUsableEntity(),
+	CBlockableEntity(),
+	CTouchableEntity()
+{
+};
+
+CRotatingBrush::CRotatingBrush (int Index) :
+	CBaseEntity(Index),
+	CMapEntity(Index),
+	CBrushModel(Index),
+	CUsableEntity(Index),
+	CBlockableEntity(Index),
+	CTouchableEntity(Index)
+{
+};
+
+bool CRotatingBrush::Run ()
+{
+	return CBrushModel::Run ();
+};
+
+void CRotatingBrush::Blocked (CBaseEntity *other)
+{
+	if (!Blockable)
+		return;
+
+	T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, other->State.GetOrigin(), vec3Origin, gameEntity->dmg, 1, 0, MOD_CRUSH);
+}
+
+void CRotatingBrush::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
+{
+	if (gameEntity->avelocity[0] || gameEntity->avelocity[1] || gameEntity->avelocity[2])
+		T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, other->State.GetOrigin(), vec3Origin, gameEntity->dmg, 1, 0, MOD_CRUSH);
+}
+
+void CRotatingBrush::Use (CBaseEntity *other, CBaseEntity *activator)
+{
+	if (!Vec3Compare (gameEntity->avelocity, vec3Origin))
+	{
+		State.SetSound (0);
+		Vec3Clear (gameEntity->avelocity);
+		Touchable = false;
+	}
+	else
+	{
+		State.SetSound (SoundMiddle);
+		Vec3Scale (gameEntity->movedir, gameEntity->speed, gameEntity->avelocity);
+		if (gameEntity->spawnflags & 16)
+			Touchable = true;
+	}
+}
+
+void CRotatingBrush::Spawn ()
+{
+	Touchable = false;
+
+	SetSolid (SOLID_BSP);
+	if (gameEntity->spawnflags & 32)
+		PhysicsType = PHYSICS_STOP;
+	else
+		PhysicsType = PHYSICS_PUSH;
+
+	// set the axis of rotation
+	Vec3Clear(gameEntity->movedir);
+	if (gameEntity->spawnflags & 4)
+		gameEntity->movedir[2] = 1.0;
+	else if (gameEntity->spawnflags & 8)
+		gameEntity->movedir[0] = 1.0;
+	else // Z_AXIS
+		gameEntity->movedir[1] = 1.0;
+
+	// check for reverse rotation
+	if (gameEntity->spawnflags & 2)
+		Vec3Negate (gameEntity->movedir, gameEntity->movedir);
+
+	if (!gameEntity->speed)
+		gameEntity->speed = 100;
+	if (!gameEntity->dmg)
+		gameEntity->dmg = 2;
+
+	Blockable = false;
+	if (gameEntity->dmg)
+		Blockable = true;
+
+	if (gameEntity->spawnflags & 1)
+		Use (NULL, NULL);
+
+	if (gameEntity->spawnflags & 64)
+		State.AddEffects (EF_ANIM_ALL);
+	if (gameEntity->spawnflags & 128)
+		State.AddEffects (EF_ANIM_ALLFAST);
+
+	SetModel (gameEntity, gameEntity->model);
+	Link ();
+}
+
+LINK_CLASSNAME_TO_CLASS ("func_rotating", CRotatingBrush);

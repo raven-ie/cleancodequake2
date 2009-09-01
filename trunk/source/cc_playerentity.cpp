@@ -1646,45 +1646,46 @@ inline void CPlayerEntity::SetClientFrame (float xyspeed)
 {
 	bool		duck = (Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED);
 	bool		run = !!(xyspeed);
+	bool		isNewAnim = false;
 
 	if (State.GetModelIndex() != 255)
 		return;		// not in the player model
 
 	// check for stand/duck and stop/go transitions
-	if (duck != Client.anim_duck && Client.anim_priority < ANIM_DEATH)
-		goto newanim;
-	if (run != Client.anim_run && Client.anim_priority == ANIM_BASIC)
-		goto newanim;
-	if (!gameEntity->groundentity && Client.anim_priority <= ANIM_WAVE)
-		goto newanim;
+	if ((duck != Client.anim_duck && Client.anim_priority < ANIM_DEATH) ||
+		(run != Client.anim_run && Client.anim_priority == ANIM_BASIC) ||
+		(!gameEntity->groundentity && Client.anim_priority <= ANIM_WAVE))
+		isNewAnim = true;
 
-	if(Client.anim_priority == ANIM_REVERSE)
+	if (!isNewAnim)
 	{
-		if(State.GetFrame() > Client.anim_end)
+		if(Client.anim_priority == ANIM_REVERSE)
 		{
-			State.SetFrame (State.GetFrame() - 1);
+			if(State.GetFrame() > Client.anim_end)
+			{
+				State.SetFrame (State.GetFrame() - 1);
+				return;
+			}
+		}
+		else if (State.GetFrame() < Client.anim_end)
+		{	// continue an animation
+			State.SetFrame (State.GetFrame() + 1);
+			return;
+		}
+
+		if (Client.anim_priority == ANIM_DEATH)
+			return;		// stay there
+		if (Client.anim_priority == ANIM_JUMP)
+		{
+			if (!gameEntity->groundentity)
+				return;		// stay there
+			Client.anim_priority = ANIM_WAVE;
+			State.SetFrame (FRAME_jump3);
+			Client.anim_end = FRAME_jump6;
 			return;
 		}
 	}
-	else if (State.GetFrame() < Client.anim_end)
-	{	// continue an animation
-		State.SetFrame (State.GetFrame() + 1);
-		return;
-	}
 
-	if (Client.anim_priority == ANIM_DEATH)
-		return;		// stay there
-	if (Client.anim_priority == ANIM_JUMP)
-	{
-		if (!gameEntity->groundentity)
-			return;		// stay there
-		Client.anim_priority = ANIM_WAVE;
-		State.SetFrame (FRAME_jump3);
-		Client.anim_end = FRAME_jump6;
-		return;
-	}
-
-newanim:
 	// return to either a running or standing frame
 	Client.anim_priority = ANIM_BASIC;
 	Client.anim_duck = duck;
@@ -2368,7 +2369,7 @@ void CPlayerEntity::SetCTFStats()
 {
 	int i;
 	int p1, p2;
-	edict_t *e;
+	CFlagEntity *e;
 
 	if (ctfgame.match > MATCH_NONE)
 		Client.PlayerState.SetStat(STAT_CTF_MATCH, CONFIG_CTF_MATCH);
@@ -2418,10 +2419,10 @@ void CPlayerEntity::SetCTFStats()
 	//   flag taken
 	//   flag dropped
 	p1 = ImageIndex ("i_ctf1");
-	e = G_Find(NULL, FOFS(classname), "item_flag_team1");
+	e = dynamic_cast<CFlagEntity*>(CC_Find(NULL, FOFS(classname), "item_flag_team1"));
 	if (e != NULL)
 	{
-		if (e->solid == SOLID_NOT)
+		if (e->GetSolid() == SOLID_NOT)
 		{
 			int i;
 
@@ -2441,14 +2442,14 @@ void CPlayerEntity::SetCTFStats()
 				}
 			}
 		}
-		else if (e->spawnflags & DROPPED_ITEM)
+		else if (e->gameEntity->spawnflags & DROPPED_ITEM)
 			p1 = ImageIndex ("i_ctf1d"); // must be dropped
 	}
 	p2 = ImageIndex ("i_ctf2");
-	e = G_Find(NULL, FOFS(classname), "item_flag_team2");
+	e = dynamic_cast<CFlagEntity*>(CC_Find(NULL, FOFS(classname), "item_flag_team2"));
 	if (e != NULL)
 	{
-		if (e->solid == SOLID_NOT)
+		if (e->GetSolid() == SOLID_NOT)
 		{
 			int i;
 
@@ -2468,7 +2469,7 @@ void CPlayerEntity::SetCTFStats()
 				}
 			}
 		}
-		else if (e->spawnflags & DROPPED_ITEM)
+		else if (e->gameEntity->spawnflags & DROPPED_ITEM)
 			p2 = ImageIndex ("i_ctf2d"); // must be dropped
 	}
 
@@ -2520,42 +2521,35 @@ void CPlayerEntity::SetCTFStats()
 		CTFSetIDView();
 }
 
-bool loc_CanSee (edict_t *targ, edict_t *inflictor);
+bool loc_CanSee (CBaseEntity *targ, CBaseEntity *inflictor);
 void CPlayerEntity::CTFSetIDView()
 {
-	vec3_t	forward, dir;
-	CTrace	tr;
-	CPlayerEntity	*who, *best;
-	float	bd = 0, d;
-	int i;
-
 	Client.PlayerState.SetStat(STAT_CTF_ID_VIEW, 0);
 
-	Angles_Vectors(Client.v_angle, forward, NULL, NULL);
-	Vec3Scale(forward, 1024, forward);
-	vec3_t origin;
-	State.GetOrigin (origin);
-	Vec3Add(origin, forward, forward);
-	tr = CTrace(origin, forward, gameEntity, CONTENTS_MASK_SOLID);
+	vec3f forward, oldForward;
+	vec3f(Client.v_angle).ToVectors(&forward, NULL, NULL);
+	oldForward = forward;
+	forward.Scale (1024);
+	forward += State.GetOrigin();
+	CTrace tr (State.GetOrigin(), forward, gameEntity, CONTENTS_MASK_SOLID);
 	if (tr.fraction < 1 && tr.ent && ((tr.ent - g_edicts) >= 1 && (tr.ent - g_edicts) <= game.maxclients))
 	{
 		Client.PlayerState.SetStat(STAT_CTF_ID_VIEW, CS_PLAYERSKINS + (State.GetNumber()-1));
 		return;
 	}
 
-	Angles_Vectors(Client.v_angle, forward, NULL, NULL);
-	best = NULL;
-	for (i = 1; i <= game.maxclients; i++)
+	forward = oldForward;
+	CPlayerEntity *best = NULL;
+	float bd = 0;
+	for (int i = 1; i <= game.maxclients; i++)
 	{
-		who = dynamic_cast<CPlayerEntity*>((g_edicts + i)->Entity);
+		CPlayerEntity *who = dynamic_cast<CPlayerEntity*>((g_edicts + i)->Entity);
 		if (!who->IsInUse() || who->GetSolid() == SOLID_NOT)
 			continue;
-		vec3_t whoOrigin;
-		who->State.GetOrigin (whoOrigin);
-		Vec3Subtract(whoOrigin, origin, dir);
-		VectorNormalizeFastf(dir);
-		d = Dot3Product(forward, dir);
-		if (d > bd && loc_CanSee(gameEntity, who->gameEntity))
+		vec3f dir = who->State.GetOrigin() - State.GetOrigin();
+		dir.NormalizeFast ();
+		float d = forward.Dot(dir);
+		if (d > bd && loc_CanSee(this, who))
 		{
 			bd = d;
 			best = who;
@@ -3110,28 +3104,24 @@ void CPlayerEntity::SaveClientData ()
 	}
 }
 
-edict_t *CPlayerEntity::SelectCoopSpawnPoint ()
+CBaseEntity *CPlayerEntity::SelectCoopSpawnPoint ()
 {
-	int		index;
-	edict_t	*spot = NULL;
-	char	*target;
-
-	index = State.GetNumber()-1;
+	int index = State.GetNumber()-1;
 
 	// player 0 starts in normal player spawn point
 	if (!index)
 		return NULL;
 
-	spot = NULL;
+	CBaseEntity *spot = NULL;
 
 	// assume there are four coop spots at each spawnpoint
 	while (1)
 	{
-		spot = G_Find (spot, FOFS(classname), "info_player_coop");
+		spot = CC_Find (spot, FOFS(classname), "info_player_coop");
 		if (!spot)
 			return NULL;	// we didn't have enough...
 
-		target = spot->targetname;
+		char *target = spot->gameEntity->targetname;
 		if (!target)
 			target = "";
 		if ( Q_stricmp(game.spawnpoint, target) == 0 )
@@ -3152,32 +3142,29 @@ SelectSpawnPoint
 Chooses a player start, deathmatch start, coop start, etc
 ============
 */
-edict_t *SelectDeathmatchSpawnPoint (void);
 void	CPlayerEntity::SelectSpawnPoint (vec3_t origin, vec3_t angles)
 {
-	edict_t	*spot = NULL;
+	CBaseEntity	*spot = NULL;
 
-	if (game.mode & GAME_DEATHMATCH)
+	if (!(game.mode & GAME_SINGLEPLAYER))
 		spot = 
 #ifdef CLEANCTF_ENABLED
 		(game.mode & GAME_CTF) ? SelectCTFSpawnPoint() :
 #endif
-		SelectDeathmatchSpawnPoint ();
-	else if (game.mode & GAME_COOPERATIVE)
-		spot = SelectCoopSpawnPoint ();
+		(game.mode & GAME_DEATHMATCH) ? SelectDeathmatchSpawnPoint () : SelectCoopSpawnPoint ();
 
 	// find a single player start spot
 	if (!spot)
 	{
-		while ((spot = G_Find (spot, FOFS(classname), "info_player_start")) != NULL)
+		while ((spot = CC_Find (spot, FOFS(classname), "info_player_start")) != NULL)
 		{
-			if (!game.spawnpoint[0] && !spot->targetname)
+			if (!game.spawnpoint[0] && !spot->gameEntity->targetname)
 				break;
 
-			if (!game.spawnpoint[0] || !spot->targetname)
+			if (!game.spawnpoint[0] || !spot->gameEntity->targetname)
 				continue;
 
-			if (Q_stricmp(game.spawnpoint, spot->targetname) == 0)
+			if (Q_stricmp(game.spawnpoint, spot->gameEntity->targetname) == 0)
 				break;
 		}
 
@@ -3185,10 +3172,10 @@ void	CPlayerEntity::SelectSpawnPoint (vec3_t origin, vec3_t angles)
 		{
 			// There wasn't a spawnpoint without a target, so use any
 			if (!game.spawnpoint[0]) {
-				spot = G_Find (spot, FOFS(classname), "info_player_start");
+				spot = CC_Find (spot, FOFS(classname), "info_player_start");
 
 				if (!spot)
-					spot = G_Find (spot, FOFS(classname), "info_player_deathmatch");
+					spot = CC_Find (spot, FOFS(classname), "info_player_deathmatch");
 			}
 			// FIXME: Remove.
 			if (!spot)
@@ -3196,9 +3183,9 @@ void	CPlayerEntity::SelectSpawnPoint (vec3_t origin, vec3_t angles)
 		}
 	}
 
-	Vec3Copy (spot->state.origin, origin);
+	spot->State.GetOrigin (origin);
 	origin[2] += 9;
-	Vec3Copy (spot->state.angles, angles);
+	spot->State.GetAngles (angles);
 }
 
 #ifdef CLEANCTF_ENABLED
@@ -3210,24 +3197,16 @@ go to a ctf point, but NOT the two points closest
 to other players
 ================
 */
-edict_t *SelectRandomDeathmatchSpawnPoint (void);
-edict_t *SelectFarthestDeathmatchSpawnPoint (void);
-float	PlayersRangeFromSpot (edict_t *spot);
-edict_t *CPlayerEntity::SelectCTFSpawnPoint ()
+CBaseEntity *CPlayerEntity::SelectCTFSpawnPoint ()
 {
-	edict_t	*spot, *spot1, *spot2;
+	CBaseEntity	*spot = NULL, *spot1 = NULL, *spot2 = NULL;
 	int		count = 0;
 	int		selection;
-	float	range, range1, range2;
+	float	range, range1 = 99999, range2 = 99999;
 	char	*cname;
 
 	if (Client.resp.ctf_state)
-	{
-		if ( dmFlags.dfSpawnFarthest)
-			return SelectFarthestDeathmatchSpawnPoint ();
-		else
-			return SelectRandomDeathmatchSpawnPoint ();
-	}
+		return (dmFlags.dfSpawnFarthest) ? SelectFarthestDeathmatchSpawnPoint () : SelectRandomDeathmatchSpawnPoint ();
 
 	Client.resp.ctf_state++;
 
@@ -3243,11 +3222,7 @@ edict_t *CPlayerEntity::SelectCTFSpawnPoint ()
 		return SelectRandomDeathmatchSpawnPoint();
 	}
 
-	spot = NULL;
-	range1 = range2 = 99999;
-	spot1 = spot2 = NULL;
-
-	while ((spot = G_Find (spot, FOFS(classname), cname)) != NULL)
+	while ((spot = CC_Find (spot, FOFS(classname), cname)) != NULL)
 	{
 		count++;
 		range = PlayersRangeFromSpot(spot);
@@ -3276,7 +3251,7 @@ edict_t *CPlayerEntity::SelectCTFSpawnPoint ()
 	spot = NULL;
 	do
 	{
-		spot = G_Find (spot, FOFS(classname), cname);
+		spot = CC_Find (spot, FOFS(classname), cname);
 		if (spot == spot1 || spot == spot2)
 			selection++;
 	} while(selection--);

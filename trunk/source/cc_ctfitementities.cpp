@@ -172,12 +172,10 @@ public:
 	CDroppedFlagEntity() :
 	CFlagEntity()
 	{
-		Red = false;
 	};
 	CDroppedFlagEntity(int Index) :
 	CFlagEntity(Index)
 	{
-		Red = false;
 	};
 
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
@@ -202,6 +200,11 @@ public:
 			BroadcastPrintf(PRINT_HIGH, "The %s flag has returned!\n",
 				CTFTeamName(CTF_TEAM2));
 		}
+	};
+
+	void Spawn ()
+	{
+		Red = false;
 	};
 };
 

@@ -46,11 +46,12 @@ public:
 	CFlagEntity ();
 	CFlagEntity (int Index);
 
-	virtual void Spawn (CBaseItem *item);
 	void Think ();
 
 	bool Run ();
 	virtual void BecomeExplosion (bool grenade) {};
+
+	virtual void Spawn (CBaseItem *item);
 };
 
 class CRedFlagEntity : public CFlagEntity

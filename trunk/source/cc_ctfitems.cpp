@@ -74,28 +74,27 @@ bool CTech::Pickup (class CItemEntity *ent, CPlayerEntity *other)
 	return true;
 }
 
-edict_t *SelectRandomDeathmatchSpawnPoint (void);
-static edict_t *FindTechSpawn(void)
+static CBaseEntity *FindTechSpawn(void)
 {
 	return SelectRandomDeathmatchSpawnPoint();
 }
 
-void SpawnTech(CBaseItem *item, edict_t *spot);
+void SpawnTech(CBaseItem *item, CBaseEntity *spot);
 class CTechEntity : public CItemEntity
 {
 public:
 	bool AvoidOwner;
 
 	CTechEntity() :
-	  CItemEntity ()
+	  CItemEntity (),
+	  AvoidOwner(true)
 	  {
-		AvoidOwner = true;
 	  };
 
 	  CTechEntity (int Index) :
-	  CItemEntity(Index)
+	  CItemEntity(Index),
+	  AvoidOwner(true)
 	  {
-		AvoidOwner = true;
 	  };
 
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
@@ -108,7 +107,7 @@ public:
 
 	void Think ()
 	{
-		edict_t *spot;
+		CBaseEntity *spot;
 
 		if ((spot = FindTechSpawn()) != NULL)
 		{
@@ -128,6 +127,11 @@ public:
 	void BecomeExplosion (bool grenade)
 	{
 		Respawn(); // this frees self!
+	};
+
+	void Spawn ()
+	{
+		AvoidOwner = true;
 	};
 };
 
@@ -179,7 +183,6 @@ CItemEntity *CTech::DropItem (CBaseEntity *ent)
 	return dropped;
 }
 
-static void TechThink(edict_t *tech);
 void CTech::Drop (CPlayerEntity *ent)
 {
 	CItemEntity *tech = DropItem(ent);
@@ -189,23 +192,6 @@ void CTech::Drop (CPlayerEntity *ent)
 }
 
 void SpawnTech(CBaseItem *item, edict_t *spot);
-
-static void TechThink(edict_t *tech)
-{
-	edict_t *spot;
-
-	if ((spot = FindTechSpawn()) != NULL)
-	{
-		SpawnTech(tech->item, spot);
-		G_FreeEdict(tech);
-	}
-	else
-	{
-		tech->nextthink = level.framenum + CTF_TECH_TIMEOUT;
-		tech->think = TechThink;
-	}
-}
-
 
 void CTFDeadDropTech(CPlayerEntity *ent)
 {
@@ -223,7 +209,7 @@ void CTFDeadDropTech(CPlayerEntity *ent)
 	ent->Client.pers.Tech = NULL;
 }
 
-void SpawnTech(CBaseItem *item, edict_t *spot)
+void SpawnTech(CBaseItem *item, CBaseEntity *spot)
 {
 	CTechEntity *ent = QNew (com_levelPool, 0) CTechEntity ();
 
@@ -241,9 +227,7 @@ void SpawnTech(CBaseItem *item, edict_t *spot)
 	vec3f forward;
 	vec3f(0, rand()%360, 0).ToVectors(&forward, NULL, NULL);
 
-	vec3f origin = spot->state.origin;
-	origin.Z += 16;
-	ent->State.SetOrigin (origin);
+	ent->State.SetOrigin (spot->State.GetOrigin() + vec3f(0,0,16));
 	forward.Scale (100);
 	ent->gameEntity->velocity[0] = forward[0];
 	ent->gameEntity->velocity[1] = forward[1];

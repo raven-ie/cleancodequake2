@@ -206,13 +206,6 @@ enum
 #include "cc_playerentity.h"
 #include "cc_weaponentities.h"
 
-class CWorldEntity : public CBaseEntity
-{
-public:
-	CWorldEntity ();
-	CWorldEntity (int Index);
-};
-
 // An entity that can be seen via a map.
 // Just to bypass the damn abstractness I did.
 class CMapEntity : public virtual CBaseEntity
@@ -222,6 +215,8 @@ public:
 
 	CMapEntity ();
 	CMapEntity (int Index);
+
+	virtual void Spawn() = 0;
 };
 
 // An entity completely privatized.

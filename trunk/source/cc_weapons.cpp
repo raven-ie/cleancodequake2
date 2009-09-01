@@ -72,7 +72,7 @@ VWepModel(VWepModel)
 bool CheckAutoSwitch (CPlayerEntity *other)
 {
 	int val = atoi(Info_ValueForKey (other->Client.pers.userinfo, "cc_autoswitch"));
-	return (val == 0);
+	return (val == 1);
 }
 #endif
 
@@ -117,22 +117,11 @@ bool CWeaponItem::Pickup (class CItemEntity *ent, CPlayerEntity *other)
 		Ammo->AddAmmo (other, ent->gameEntity->count);
 
 	if (Weapon)
-	{
-		if (!(other->Client.pers.Weapon != Weapon && (other->Client.pers.Inventory.Has(this) == 1)))
-			return true;
-
-		if (game.mode & GAME_DEATHMATCH)
-		{
-			if ((other->Client.pers.Weapon && ((other->Client.pers.Weapon->WeaponItem == NItems::Blaster) 
-#ifndef NO_AUTOSWITCH
-				|| !CheckAutoSwitch(other)))
-#endif
-				)
-				other->Client.NewWeapon = Weapon;
-		}
-		else
+		if (other->Client.pers.Weapon != Weapon && 
+			(other->Client.pers.Inventory.Has(this) == 1) &&
+			( !(game.mode & GAME_DEATHMATCH) || (other->Client.pers.Weapon && other->Client.pers.Weapon->WeaponItem == NItems::Blaster) ) )
 			other->Client.NewWeapon = Weapon;
-	}
+
 
 	return true;
 }

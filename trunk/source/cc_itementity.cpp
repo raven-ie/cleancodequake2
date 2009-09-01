@@ -42,6 +42,7 @@ CTouchableEntity(),
 CThinkableEntity(),
 NoPhysics(false)
 {
+	Spawn ();
 };
 
 CItemEntity::CItemEntity (int Index) :

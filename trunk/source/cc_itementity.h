@@ -64,6 +64,8 @@ public:
 	virtual void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
 
 	bool Run ();
+
+	void Spawn () {}; // Just to fill CMapEntity
 };
 
 #define LINK_ITEM_TO_CLASS(mapClassName,DLLClassName) \

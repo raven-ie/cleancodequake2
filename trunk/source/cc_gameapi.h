@@ -54,6 +54,29 @@ int BoxEdicts (vec3f &mins, vec3f &maxs, edict_t **list, int maxCount, bool trig
 void ConfigString (int configStringIndex, char *configStringValue, CPlayerEntity *Audience = NULL);
 void GameError (char *fmt, ...);
 
+_CC_DISABLE_DEPRECATION
+// Hearable false = PVS, otherwise PHS
+inline bool InArea (bool Hearable, vec3_t p1, vec3_t p2)
+{
+	if (Hearable)
+		return (gi.inPHS (p1, p2) == 1);
+	return (gi.inPVS (p1, p2) == 1);
+}
+
+inline bool InArea (bool Hearable, vec3f &p1, vec3f &p2)
+{
+	if (Hearable)
+		return (gi.inPHS (p1, p2) == 1);
+	return (gi.inPVS (p1, p2) == 1);
+}
+
+inline bool InHearableArea (vec3_t p1, vec3_t p2) { return InArea (true, p1, p2); }
+inline bool InHearableArea (vec3f &p1, vec3f &p2) { return InArea (true, p1, p2); }
+inline bool InVisibleArea (vec3_t p1, vec3_t p2) { return InArea (false, p1, p2); }
+inline bool InVisibleArea (vec3f &p1, vec3f &p2) { return InArea (false, p1, p2); }
+
+_CC_ENABLE_DEPRECATION
+
 #else
 FILE_WARNING
 #endif

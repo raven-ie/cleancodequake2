@@ -222,7 +222,7 @@ static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channe
 		if (usePHS)
 		{
 			// Not hearable from here
-			if (!gi.inPHS (client->state.origin, origin))
+			if (!InHearableArea (client->state.origin, origin))
 				continue;
 		}
 

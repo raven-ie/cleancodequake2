@@ -54,9 +54,12 @@
 				Optimization="0"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
 				MinimalRebuild="false"
-				ExceptionHandling="0"
+				ExceptionHandling="1"
+				BasicRuntimeChecks="3"
+				SmallerTypeCheck="false"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="true"
+				EnableFunctionLevelLinking="true"
 				FloatingPointExceptions="true"
 				DefaultCharIsUnsigned="true"
 				UsePrecompiledHeader="0"
@@ -271,7 +274,9 @@
 				InlineFunctionExpansion="1"
 				PreprocessorDefinitions="WIN32;_WINDOWS"
 				StringPooling="true"
-				ExceptionHandling="0"
+				ExceptionHandling="1"
+				BasicRuntimeChecks="3"
+				SmallerTypeCheck="true"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
@@ -1214,6 +1219,14 @@
 				</File>
 				<File
 					RelativePath=".\..\..\source\cc_entitytypes.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\source\cc_infoentities.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\source\cc_infoentities.h"
 					>
 				</File>
 				<File

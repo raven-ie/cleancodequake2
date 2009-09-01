@@ -294,7 +294,7 @@ void use_target_changelevel (edict_t *self, edict_t *other, edict_t *activator)
 	if (strstr(self->map, "*"))	
 		game.serverflags &= ~(SFL_CROSS_TRIGGER_MASK);
 
-	BeginIntermission (self);
+	BeginIntermission (NULL);
 }
 
 void SP_target_changelevel (edict_t *ent)
