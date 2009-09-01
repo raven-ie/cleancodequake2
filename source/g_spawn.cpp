@@ -125,30 +125,6 @@ void SP_turret_base (edict_t *self);
 void SP_monster_boss3_stand (edict_t *self);
 
 spawn_t	spawns[] = {
-	/*{"item_health", SP_item_health},
-	{"item_health_small", SP_item_health_small},
-	{"item_health_large", SP_item_health_large},
-	{"item_health_mega", SP_item_health_mega},*/
-
-	{"info_player_start", SP_info_player_start},
-	{"info_player_deathmatch", SP_info_player_deathmatch},
-	{"info_player_coop", SP_info_player_coop},
-	{"info_player_intermission", SP_info_player_intermission},
-#ifdef CLEANCTF_ENABLED
-//ZOID
-	{"info_player_team1", SP_info_player_team1},
-	{"info_player_team2", SP_info_player_team2},
-//ZOID
-#endif
-
-//	{"func_plat", SP_func_plat},
-//	{"func_button", SP_func_button},
-//	{"func_door", SP_func_door},
-//	{"func_door_secret", SP_func_door_secret},
-//	{"func_door_rotating", SP_func_door_rotating},
-	{"func_rotating", SP_func_rotating},
-//	{"func_train", SP_func_train},
-//	{"func_water", SP_func_water},
 	{"func_conveyor", SP_func_conveyor},
 	{"func_areaportal", SP_func_areaportal},
 	{"func_clock", SP_func_clock},
@@ -166,15 +142,8 @@ spawn_t	spawns[] = {
 	{"trigger_hurt", SP_trigger_hurt},
 	{"trigger_key", SP_trigger_key},
 	{"trigger_counter", SP_trigger_counter},
-//	{"trigger_elevator", SP_trigger_elevator},
 	{"trigger_gravity", SP_trigger_gravity},
 	{"trigger_monsterjump", SP_trigger_monsterjump},
-#ifdef CLEANCTF_ENABLED
-//ZOID
-	{"trigger_teleport", SP_trigger_teleport},
-	{"info_teleport_destination", SP_info_teleport_destination},
-//ZOID
-#endif
 
 	{"target_temp_entity", SP_target_temp_entity},
 	{"target_speaker", SP_target_speaker},
@@ -197,7 +166,6 @@ spawn_t	spawns[] = {
 	{"target_character", SP_target_character},
 	{"target_string", SP_target_string},
 
-	{"worldspawn", SP_worldspawn},
 	{"viewthing", SP_viewthing},
 
 	{"light", SP_light},
@@ -206,24 +174,17 @@ spawn_t	spawns[] = {
 	{"info_null", SP_info_null},
 	{"func_group", SP_info_null},
 	{"info_notnull", SP_info_notnull},
-	{"path_corner", SP_path_corner},
 	{"point_combat", SP_point_combat},
 
-	//{"misc_explobox", SP_misc_explobox},
 	{"misc_banner", SP_misc_banner},
 	{"misc_satellite_dish", SP_misc_satellite_dish},
 	//{"misc_actor", SP_misc_actor},
 	{"misc_gib_arm", SP_misc_gib_arm},
 	{"misc_gib_leg", SP_misc_gib_leg},
 	{"misc_gib_head", SP_misc_gib_head},
-	//{"misc_insane", SP_misc_insane},
 	{"misc_deadsoldier", SP_misc_deadsoldier},
-//	{"misc_viper", SP_misc_viper},
 	{"misc_viper_bomb", SP_misc_viper_bomb},
 	{"misc_bigviper", SP_misc_bigviper},
-//	{"misc_strogg_ship", SP_misc_strogg_ship},
-	{"misc_teleporter", SP_misc_teleporter},
-	{"misc_teleporter_dest", SP_misc_teleporter_dest},
 	{"misc_blackhole", SP_misc_blackhole},
 	{"misc_eastertank", SP_misc_eastertank},
 	{"misc_easterchick", SP_misc_easterchick},
@@ -236,31 +197,6 @@ spawn_t	spawns[] = {
 //ZOID
 #endif
 
-/*	{"monster_berserk", SP_monster_berserk},
-	{"monster_gladiator", SP_monster_gladiator},
-	{"monster_gunner", SP_monster_gunner},
-	{"monster_infantry", SP_monster_infantry},
-	{"monster_soldier_light", SP_monster_soldier_light},
-	{"monster_soldier", SP_monster_soldier},
-	{"monster_soldier_ss", SP_monster_soldier_ss},
-	{"monster_tank", SP_monster_tank},
-	{"monster_tank_commander", SP_monster_tank},
-	{"monster_medic", SP_monster_medic},
-	{"monster_flipper", SP_monster_flipper},
-	{"monster_chick", SP_monster_chick},
-	{"monster_parasite", SP_monster_parasite},
-	{"monster_flyer", SP_monster_flyer},
-	{"monster_brain", SP_monster_brain},
-	{"monster_floater", SP_monster_floater},
-	{"monster_hover", SP_monster_hover},
-	{"monster_mutant", SP_monster_mutant},
-	{"monster_supertank", SP_monster_supertank},
-	{"monster_boss2", SP_monster_boss2},
-	{"monster_boss3_stand", SP_monster_boss3_stand},
-	{"monster_jorg", SP_monster_jorg},
-	{"monster_makron", SP_monster_makron},
-
-	{"monster_commander_body", SP_monster_commander_body},*/
 	{"monster_boss3_stand", SP_monster_boss3_stand},
 
 	{"turret_breach", SP_turret_breach},
@@ -521,6 +457,7 @@ parsing textual entity definitions out of an ent file.
 */
 extern int entityNumber;
 #include "cc_exceptionhandler.h"
+#include "cc_brushmodels.h"
 
 void InitEntities ()
 {
@@ -689,170 +626,3 @@ __try
 
 
 //===================================================================
-
-/*QUAKED worldspawn (0 0 0) ?
-
-Only used for the world.
-"sky"	environment map name
-"skyaxis"	vector axis for rotating sky
-"skyrotate"	speed of rotation in degrees/second
-"sounds"	music cd track number
-"gravity"	800 is default gravity
-"message"	text to print at user logon
-*/
-void CreateDMStatusbar ();
-void CreateSPStatusbar ();
-void SetItemNames ();
-void Init_Junk();
-
-void SP_worldspawn (edict_t *ent)
-{
-	ClearList(); // Do this before ANYTHING
-	// Seed the random number generator
-	srand (time(NULL));
-
-	ent->Entity->gameEntity->movetype = MOVETYPE_PUSH;
-	ent->Entity->SetSolid (SOLID_BSP);
-	ent->Entity->SetInUse (true);			// since the world doesn't use G_Spawn()
-	ent->Entity->State.SetModelIndex (1);		// world model is always index 1
-
-	// reserve some spots for dead player bodies for coop / deathmatch
-	BodyQueue_Init ();
-	Init_Junk();
-
-	if (st.nextmap)
-		Q_strncpyz (level.nextmap, st.nextmap, sizeof(level.nextmap));
-
-	// make some data visible to the server
-	if (ent->message && ent->message[0])
-	{
-		ConfigString (CS_NAME, ent->message);
-		Q_strncpyz (level.level_name, ent->message, sizeof(level.level_name));
-	}
-	else
-		Q_strncpyz (level.level_name, level.mapname, sizeof(level.level_name));
-
-	if (st.sky && st.sky[0])
-		ConfigString (CS_SKY, st.sky);
-	else
-		ConfigString (CS_SKY, "unit1_");
-
-	ConfigString (CS_SKYROTATE, Q_VarArgs ("%f", st.skyrotate) );
-
-	ConfigString (CS_SKYAXIS, Q_VarArgs ("%f %f %f",
-		st.skyaxis[0], st.skyaxis[1], st.skyaxis[2]) );
-
-	ConfigString (CS_CDTRACK, Q_VarArgs ("%i", ent->sounds) );
-
-	ConfigString (CS_MAXCLIENTS, maxclients->String() );
-
-	// status bar program
-	if (game.mode & GAME_DEATHMATCH)
-	{
-#ifdef CLEANCTF_ENABLED
-//ZOID
-		if (game.mode & GAME_CTF)
-		{
-			CreateCTFStatusbar();
-
-			//precaches
-			ImageIndex("i_ctf1");
-			ImageIndex("i_ctf2");
-			ImageIndex("i_ctf1d");
-			ImageIndex("i_ctf2d");
-			ImageIndex("i_ctf1t");
-			ImageIndex("i_ctf2t");
-			ImageIndex("i_ctfj");
-		}
-		else
-//ZOID
-#endif
-		CreateDMStatusbar();
-	}
-	else
-		CreateSPStatusbar();
-
-	//---------------
-	SetItemNames();
-
-	CCvar *gravity = QNew (com_levelPool, 0) CCvar ("gravity", "800", 0);
-	if (!st.gravity)
-		gravity->Set("800");
-	else
-		gravity->Set(st.gravity);
-
-	SoundIndex ("player/lava1.wav");
-	SoundIndex ("player/lava2.wav");
-
-	SoundIndex ("misc/pc_up.wav");
-	SoundIndex ("misc/talk1.wav");
-
-	SoundIndex ("misc/udeath.wav");
-
-	SoundIndex ("items/respawn1.wav");
-
-	DoWeaponVweps ();
-	//-------------------
-
-	SoundIndex ("player/gasp1.wav");		// gasping for air
-	SoundIndex ("player/gasp2.wav");		// head breaking surface, not gasping
-	SoundIndex ("player/watr_in.wav");	// feet hitting water
-	SoundIndex ("player/watr_out.wav");	// feet leaving water
-	SoundIndex ("player/watr_un.wav");	// head going underwater
-	SoundIndex ("player/u_breath1.wav");
-	SoundIndex ("player/u_breath2.wav");
-	SoundIndex ("world/land.wav");		// landing thud
-	SoundIndex ("misc/h2ohit1.wav");		// landing splash
-	SoundIndex ("weapons/noammo.wav");
-	SoundIndex ("infantry/inflies1.wav");
-
-	InitGameMedia ();
-
-//
-// Setup light animation tables. 'a' is total darkness, 'z' is doublebright.
-//
-
-	// 0 normal
-	ConfigString(CS_LIGHTS+0, "m");
-	
-	// 1 FLICKER (first variety)
-	ConfigString(CS_LIGHTS+1, "mmnmmommommnonmmonqnmmo");
-	
-	// 2 SLOW STRONG PULSE
-	ConfigString(CS_LIGHTS+2, "abcdefghijklmnopqrstuvwxyzyxwvutsrqponmlkjihgfedcba");
-	
-	// 3 CANDLE (first variety)
-	ConfigString(CS_LIGHTS+3, "mmmmmaaaaammmmmaaaaaabcdefgabcdefg");
-	
-	// 4 FAST STROBE
-	ConfigString(CS_LIGHTS+4, "mamamamamama");
-	
-	// 5 GENTLE PULSE 1
-	ConfigString(CS_LIGHTS+5,"jklmnopqrstuvwxyzyxwvutsrqponmlkj");
-	
-	// 6 FLICKER (second variety)
-	ConfigString(CS_LIGHTS+6, "nmonqnmomnmomomno");
-	
-	// 7 CANDLE (second variety)
-	ConfigString(CS_LIGHTS+7, "mmmaaaabcdefgmmmmaaaammmaamm");
-	
-	// 8 CANDLE (third variety)
-	ConfigString(CS_LIGHTS+8, "mmmaaammmaaammmabcdefaaaammmmabcdefmmmaaaa");
-	
-	// 9 SLOW STROBE (fourth variety)
-	ConfigString(CS_LIGHTS+9, "aaaaaaaazzzzzzzz");
-	
-	// 10 FLUORESCENT FLICKER
-	ConfigString(CS_LIGHTS+10, "mmamammmmammamamaaamammma");
-
-	// 11 SLOW PULSE NOT FADE TO BLACK
-	ConfigString(CS_LIGHTS+11, "abcdefghijklmnopqrrqponmlkjihgfedcba");
-	
-	// styles 32-62 are assigned by the light program for switchable lights
-
-	// 63 testing
-	ConfigString(CS_LIGHTS+63, "a");
-
-	dmFlags.UpdateFlags(dmflags->Integer());
-}
-

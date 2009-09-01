@@ -57,24 +57,27 @@ char *Com_Parse(char **dataPtr)
 	}
 		
 	// Skip whitespace
-skipwhite:
-	while ((c = *data) <= ' ')
+	while (true)
 	{
-		if (c == 0)
+		while ((c = *data) <= ' ')
 		{
-			*dataPtr = NULL;
-			return "";
-		}
+			if (c == 0)
+			{
+				*dataPtr = NULL;
+				return "";
+			}
 
-		data++;
-	}
-	
-	// Skip // comments
-	if (c == '/' && data[1] == '/')
-	{
-		while (*data && *data != '\n')
 			data++;
-		goto skipwhite;
+		}
+		
+		// Skip // comments
+		if (c == '/' && data[1] == '/')
+		{
+			while (*data && *data != '\n')
+				data++;
+			continue;
+		}
+		break;
 	}
 
 	// Handle quoted strings specially

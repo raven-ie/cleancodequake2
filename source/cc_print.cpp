@@ -66,11 +66,10 @@ void ClientPrintf (edict_t *ent, EGamePrintLevel printLevel, char *fmt, ...)
 {
 	char		msg[MAX_COMPRINT];
 	va_list		argptr;
-	int			n = 0;
 
 	if (ent)
 	{
-		n = ent - g_edicts;
+		int n = ent - g_edicts;
 		if (n < 1 || n > game.maxclients)
 		{
 			Com_Printf (0, "CleanCode Warning: ClientPrintf to a non-client\n");

@@ -463,16 +463,6 @@ void	CBaseEntity::PlayPositionedSound (vec3_t origin, EEntSndChannel channel, Me
 };
 
 
-CWorldEntity::CWorldEntity () : 
-CBaseEntity()
-{
-};
-
-CWorldEntity::CWorldEntity (int Index) : 
-CBaseEntity(Index)
-{
-};
-
 CMapEntity::CMapEntity () : 
 CBaseEntity()
 {

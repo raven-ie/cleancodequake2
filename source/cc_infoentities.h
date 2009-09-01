@@ -27,31 +27,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_utils.h
-// g_utils, CleanCode style
+// cc_infoentities.h
+// Info_ and some Target_ entities
 //
 
-#if !defined(__CC_UTILS_H__) || !defined(INCLUDE_GUARDS)
-#define __CC_UTILS_H__
-
-void	G_TouchTriggers (CBaseEntity *ent);
-void	G_TouchSolids (CBaseEntity *ent);
-void G_SetMovedir (vec3f &angles, vec3f &movedir);
-bool KillBox (CBaseEntity *ent);
-CBaseEntity *GetRandomTeamMember (CBaseEntity *Entity, CBaseEntity *Master);
-CBaseEntity *CC_PickTarget (char *targetname);
-void G_UseTargets (CBaseEntity *ent, CBaseEntity *activator);
-CBaseEntity *CC_Find (CBaseEntity *from, int fieldofs, char *match);
-
-CBaseEntity *SelectFarthestDeathmatchSpawnPoint ();
-CBaseEntity *SelectRandomDeathmatchSpawnPoint ();
-float	PlayersRangeFromSpot (CBaseEntity *spot);
-
-inline CBaseEntity *SelectDeathmatchSpawnPoint ()
-{
-	return (dmFlags.dfSpawnFarthest) ? SelectFarthestDeathmatchSpawnPoint () : SelectRandomDeathmatchSpawnPoint ();
-}
-
-#else
-FILE_WARNING
-#endif

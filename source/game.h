@@ -180,7 +180,13 @@ typedef struct gameImport_s
 	_CC_INSECURE_DEPRECATE (PointContents)
 #endif
 	int			(*pointcontents) (vec3_t point);
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (InArea)
+#endif
 	BOOL		(*inPVS) (vec3_t p1, vec3_t p2);
+#ifndef USE_EXTENDED_GAME_IMPORTS
+	_CC_INSECURE_DEPRECATE (InArea)
+#endif
 	BOOL		(*inPHS) (vec3_t p1, vec3_t p2);
 	void		(*SetAreaPortalState) (int portalNum, BOOL open);
 	BOOL		(*AreasConnected) (int area1, int area2);
@@ -323,6 +329,10 @@ typedef struct gameImport_s
 
 	void	(*DebugGraph) (float value, int color);
 } gameImport_t;
+
+#ifdef GAME_INCLUDE
+extern	gameImport_t	gi;
+#endif
 
 //
 // functions exported by the game subsystem

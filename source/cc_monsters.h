@@ -182,6 +182,8 @@ public:
 	bool			Run ();
 
 	void			ThrowHead (MediaIndex gibIndex, int damage, int type);
+
+	void Spawn ();
 };
 
 class CMonster

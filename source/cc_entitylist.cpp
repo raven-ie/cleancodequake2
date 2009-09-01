@@ -69,6 +69,7 @@ void CEntityList::AddToList (CClassnameToClassIndex *const Entity)
 	numEntities++;
 };
 
+void SpawnWorld ();
 CBaseEntity *CEntityList::Resolve (edict_t *ent)
 {
 	CClassnameToClassIndex *Entity;
@@ -79,6 +80,13 @@ CBaseEntity *CEntityList::Resolve (edict_t *ent)
 		if (Q_stricmp(Entity->Classname, ent->classname) == 0)
 			return Entity->Spawn(ent->state.number);
 	}
+
+	if (Q_stricmp(ent->classname, "worldspawn") == 0)
+	{
+		SpawnWorld ();
+		return g_edicts[0].Entity;
+	}
+
 	return NULL;
 }
 

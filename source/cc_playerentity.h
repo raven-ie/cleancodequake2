@@ -354,10 +354,10 @@ public:
 	void			InitResp ();
 	static void		SaveClientData ();
 	void			SelectSpawnPoint (vec3_t origin, vec3_t angles);
-	edict_t			*SelectCoopSpawnPoint ();
+	CBaseEntity		*SelectCoopSpawnPoint ();
 #ifdef CLEANCTF_ENABLED
 
-	edict_t			*SelectCTFSpawnPoint ();
+	CBaseEntity		*SelectCTFSpawnPoint ();
 	void			CTFAssignTeam ();
 	void CTFAssignSkin (char *s);
 	bool CTFStart ();

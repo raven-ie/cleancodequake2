@@ -99,16 +99,14 @@ CBaseEntity *CC_PickTarget (char *targetname)
 	if (!targetname)
 		return NULL;
 
-	edict_t *ent = NULL;
+	CBaseEntity *ent = NULL;
 	while(1)
 	{
-		ent = G_Find (ent, FOFS(targetname), targetname);
+		ent = CC_Find (ent, FOFS(targetname), targetname);
 		if (!ent)
 			break;
-		if (!ent->Entity)
-			continue;
 
-		choice[num_choices++] = ent->Entity;
+		choice[num_choices++] = ent;
 		if (num_choices == MAXCHOICES)
 			break;
 	}
@@ -129,13 +127,15 @@ public:
 
 	CDelayedUse () :
 	  CBaseEntity (),
-	  CThinkableEntity ()
+	  CThinkableEntity (),
+	  Activator(NULL)
 	  {
 	  };
 
 	CDelayedUse (int Index) :
 	  CBaseEntity (Index),
-	  CThinkableEntity (Index)
+	  CThinkableEntity (Index),
+	  Activator(NULL)
 	  {
 	  };
 
@@ -202,13 +202,10 @@ void G_UseTargets (CBaseEntity *ent, CBaseEntity *activator)
 //
 	if (ent->gameEntity->killtarget)
 	{
-		edict_t *t = NULL;
-		while ((t = G_Find (t, FOFS(targetname), ent->gameEntity->killtarget)) != NULL)
+		CBaseEntity *t = NULL;
+		while ((t = CC_Find (t, FOFS(targetname), ent->gameEntity->killtarget)) != NULL)
 		{
-			if (!t->Entity)
-				G_FreeEdict (t);
-			else
-				t->Entity->Free ();
+			t->Free ();
 
 			if (!ent->IsInUse())
 			{
@@ -223,10 +220,9 @@ void G_UseTargets (CBaseEntity *ent, CBaseEntity *activator)
 //
 	if (ent->gameEntity->target)
 	{
-		edict_t *t = NULL;
-		while ((t = G_Find (t, FOFS(targetname), ent->gameEntity->target)) != NULL)
+		CBaseEntity *Ent = NULL;
+		while ((Ent = CC_Find (Ent, FOFS(targetname), ent->gameEntity->target)) != NULL)
 		{
-			CBaseEntity *Ent = t->Entity;
 			if (!Ent)
 				continue;
 
@@ -414,4 +410,162 @@ CBaseEntity *GetRandomTeamMember (CBaseEntity *Entity, CBaseEntity *Master)
 	}
 
 	return Member;
+}
+
+/*
+=============
+CC_Find
+
+Searches all active entities for the next one that holds
+the matching string at fieldofs (use the FOFS() macro) in the structure.
+
+Searches beginning at the edict after from, or the beginning if NULL
+NULL will be returned if the end of the list is reached.
+
+=============
+*/
+CBaseEntity *CC_Find (CBaseEntity *from, int fieldofs, char *match)
+{
+	edict_t *gameEnt;
+	if (!from)
+		gameEnt = g_edicts;
+	else
+	{
+		gameEnt = from->gameEntity;
+		gameEnt++;
+	}
+
+	for ( ; gameEnt < &g_edicts[globals.numEdicts] ; gameEnt++)
+	{
+		if (!gameEnt->inUse)
+			continue;
+		if (!gameEnt->Entity)
+			continue;
+
+		char *s = *(char **) ((byte *)gameEnt + fieldofs);
+		if (!s)
+			continue;
+		if (!Q_stricmp (s, match))
+			return gameEnt->Entity;
+	}
+
+	return NULL;
+}
+
+/*
+=======================================================================
+
+  SelectSpawnPoint
+
+=======================================================================
+*/
+
+/*
+================
+PlayersRangeFromSpot
+
+Returns the distance to the nearest player from the given spot
+================
+*/
+float	PlayersRangeFromSpot (CBaseEntity *spot)
+{
+	float	bestplayerdistance = 9999999;
+
+	for (int n = 1; n <= game.maxclients; n++)
+	{
+		CPlayerEntity *player = dynamic_cast<CPlayerEntity*>(g_edicts[n].Entity);
+
+		if (!player->IsInUse())
+			continue;
+
+		if (player->gameEntity->health <= 0)
+			continue;
+
+		float length = (spot->State.GetOrigin() - player->State.GetOrigin()).Length();
+		if (length < bestplayerdistance)
+			bestplayerdistance = length;
+	}
+
+	return bestplayerdistance;
+}
+
+/*
+================
+SelectRandomDeathmatchSpawnPoint
+
+go to a random point, but NOT the two points closest
+to other players
+================
+*/
+CBaseEntity *SelectRandomDeathmatchSpawnPoint ()
+{
+	CBaseEntity *spot = NULL, *spot1 = NULL, *spot2 = NULL;
+	float range1 = 99999, range2 = 99999;
+
+	int count = 0;
+	while ((spot = CC_Find (spot, FOFS(classname), "info_player_deathmatch")) != NULL)
+	{
+		count++;
+		float range = PlayersRangeFromSpot(spot);
+		if (range < range1)
+		{
+			range1 = range;
+			spot1 = spot;
+		}
+		else if (range < range2)
+		{
+			range2 = range;
+			spot2 = spot;
+		}
+	}
+
+	if (!count)
+		return NULL;
+
+	if (count <= 2)
+		spot1 = spot2 = NULL;
+	else
+		count -= 2;
+
+	int selection = rand() % count;
+	spot = NULL;
+
+	do
+	{
+		spot = CC_Find (spot, FOFS(classname), "info_player_deathmatch");
+		if (spot == spot1 || spot == spot2)
+			selection++;
+	} while(selection--);
+
+	return spot;
+}
+
+/*
+================
+SelectFarthestDeathmatchSpawnPoint
+
+================
+*/
+CBaseEntity *SelectFarthestDeathmatchSpawnPoint ()
+{
+	CBaseEntity	*bestspot = NULL, *spot = NULL;
+	float		bestdistance = 0;
+
+	while ((spot = CC_Find (spot, FOFS(classname), "info_player_deathmatch")) != NULL)
+	{
+		float bestplayerdistance = PlayersRangeFromSpot (spot);
+
+		if (bestplayerdistance > bestdistance)
+		{
+			bestspot = spot;
+			bestdistance = bestplayerdistance;
+		}
+	}
+
+	if (bestspot)
+		return bestspot;
+
+	// if there is a player just spawned on each and every start spot
+	// we have no choice to turn one into a telefrag meltdown
+	return CC_Find (NULL, FOFS(classname), "info_player_deathmatch");
 }

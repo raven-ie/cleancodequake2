@@ -118,102 +118,11 @@ void BecomeExplosion1 (edict_t *self)
 	G_FreeEdict (self);
 }
 
-
 void BecomeExplosion2 (edict_t *self)
 {
 	CTempEnt_Explosions::GrenadeExplosion (self->state.origin, self);
 	G_FreeEdict (self);
 }
-
-
-/*QUAKED path_corner (.5 .3 0) (-8 -8 -8) (8 8 8) TELEPORT
-Target: next path corner
-Pathtarget: gets used when an entity that has
-	this path_corner targeted touches it
-*/
-
-void path_corner_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *surf)
-{
-	vec3_t		v;
-	edict_t		*next;
-
-	if (other->movetarget != self)
-		return;
-	
-	if (other->enemy)
-		return;
-
-	if (self->pathtarget)
-	{
-		char *savetarget;
-
-		savetarget = self->target;
-		self->target = self->pathtarget;
-		G_UseTargets (self, other);
-		self->target = savetarget;
-	}
-
-	if (self->target)
-		next = G_PickTarget(self->target);
-	else
-		next = NULL;
-
-	if ((next) && (next->spawnflags & 1))
-	{
-		Vec3Copy (next->state.origin, v);
-		v[2] += next->mins[2];
-		v[2] -= other->mins[2];
-		Vec3Copy (v, other->state.origin);
-		next = G_PickTarget(next->target);
-		other->state.event = EV_OTHER_TELEPORT;
-	}
-
-	other->goalentity = other->movetarget = next;
-
-	if (self->wait)
-	{
-		if (other->Entity->EntityFlags & ENT_MONSTER)
-		{
-			// Backcompat
-			(dynamic_cast<CMonsterEntity*>(other->Entity))->Monster->PauseTime = level.framenum + (self->wait * 10);
-			(dynamic_cast<CMonsterEntity*>(other->Entity))->Monster->Stand();
-		}
-		return;
-	}
-
-	if (!other->movetarget)
-	{
-		if (other->Entity->EntityFlags & ENT_MONSTER)
-		{
-			(dynamic_cast<CMonsterEntity*>(other->Entity))->Monster->PauseTime = level.framenum + 100000000;
-			(dynamic_cast<CMonsterEntity*>(other->Entity))->Monster->Stand ();
-		}
-	}
-	else
-	{
-		Vec3Subtract (other->goalentity->state.origin, other->state.origin, v);
-		other->ideal_yaw = VecToYaw (v);
-	}
-}
-
-void SP_path_corner (edict_t *self)
-{
-	if (!self->targetname)
-	{
-		//gi.dprintf ("path_corner with no targetname at (%f %f %f)\n", self->state.origin[0], self->state.origin[1], self->state.origin[2]);
-		MapPrint (MAPPRINT_ERROR, self, self->state.origin, "No targetname\n");
-		G_FreeEdict (self);
-		return;
-	}
-
-	self->solid = SOLID_TRIGGER;
-	self->touch = path_corner_touch;
-	Vec3Set (self->mins, -8, -8, -8);
-	Vec3Set (self->maxs, 8, 8, 8);
-	self->svFlags |= SVF_NOCLIENT;
-	gi.linkentity (self);
-}
-
 
 /*QUAKED point_combat (0.5 0.3 0) (-8 -8 -8) (8 8 8) Hold
 Makes this the target of a monster and it will head here
@@ -1123,6 +1032,7 @@ void SP_misc_bigviper (edict_t *ent)
 /*QUAKED misc_viper_bomb (1 0 0) (-8 -8 -8) (8 8 8)
 "dmg"	how much boom should the bomb make?
 */
+/*
 void misc_viper_bomb_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *surf)
 {
 	G_UseTargets (self, self->activator);
@@ -1169,7 +1079,7 @@ void misc_viper_bomb_use (edict_t *self, edict_t *other, edict_t *activator)
 
 	self->timestamp = level.framenum;
 	Vec3Copy (viper->moveinfo.dir, self->moveinfo.dir);
-}
+}*/
 
 void SP_misc_viper_bomb (edict_t *self)
 {
@@ -1183,7 +1093,7 @@ void SP_misc_viper_bomb (edict_t *self)
 	if (!self->dmg)
 		self->dmg = 1000;
 
-	self->use = misc_viper_bomb_use;
+	//self->use = misc_viper_bomb_use;
 	self->svFlags |= SVF_NOCLIENT;
 
 	gi.linkentity (self);
@@ -1515,7 +1425,7 @@ void SP_func_clock (edict_t *self)
 
 	func_clock_reset (self);
 
-	self->message = QNew (com_levelPool, 0) char[CLOCK_MESSAGE_SIZE];//(char*)gi.TagMalloc (CLOCK_MESSAGE_SIZE, TAG_LEVEL);
+	self->message = QNew (com_levelPool, 0) char[CLOCK_MESSAGE_SIZE];
 
 	self->think = func_clock_think;
 
@@ -1530,120 +1440,5 @@ void SP_func_clock (edict_t *self)
 void SP_misc_model (edict_t *ent)
 {
 	G_FreeEdict (ent);
-}
-
-//=================================================================================
-
-void teleporter_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *surf)
-{
-	edict_t		*dest;
-
-	dest = G_Find (NULL, FOFS(targetname), self->target);
-	if (!dest)
-	{
-		DebugPrintf ("Couldn't find destination\n");
-		return;
-	}
-
-	CPlayerEntity	*Player = NULL;
-	if (other->Entity)
-		Player = dynamic_cast<CPlayerEntity*>(other->Entity);
-
-#ifdef CLEANCTF_ENABLED
-	//ZOID
-	if (Player)
-		CGrapple::PlayerResetGrapple(Player);
-	//ZOID
-#endif
-
-	// unlink to make sure it can't possibly interfere with KillBox
-	gi.unlinkentity (other);
-
-	Vec3Copy (dest->state.origin, other->state.origin);
-	Vec3Copy (dest->state.origin, other->state.oldOrigin);
-	other->state.origin[2] += 10;
-
-	// clear the velocity and hold them in place briefly
-	Vec3Clear (other->velocity);
-	if (Player)
-	{
-		Player->Client.PlayerState.GetPMove()->pmTime = 160>>3;		// hold time
-		Player->Client.PlayerState.GetPMove()->pmFlags |= PMF_TIME_TELEPORT;
-	}
-
-	// draw the teleport splash at source and on the player
-	if (Player)
-		other->state.event = EV_PLAYER_TELEPORT;
-	else
-		other->state.event = EV_OTHER_TELEPORT;
-
-	// set angles
-	if (other->client)
-	{
-		for (int i=0 ; i<3 ; i++)
-			Player->Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(dest->state.angles[i] - Player->Client.resp.cmd_angles[i]);
-	}
-
-	Vec3Clear (other->state.angles);
-	if (Player)
-	{
-		Player->Client.PlayerState.SetViewAngles (vec3Origin);
-		Vec3Clear (Player->Client.v_angle);
-	}
-
-	// kill anything at the destination
-	KillBox (other);
-
-	gi.linkentity (other);
-}
-
-/*QUAKED misc_teleporter (1 0 0) (-32 -32 -24) (32 32 -16)
-Stepping onto this disc will teleport players to the targeted misc_teleporter_dest object.
-*/
-void SP_misc_teleporter (edict_t *ent)
-{
-	edict_t		*trig;
-
-	if (!ent->target)
-	{
-		//gi.dprintf ("teleporter without a target.\n");
-		MapPrint (MAPPRINT_ERROR, ent, ent->state.origin, "No target\n");
-		G_FreeEdict (ent);
-		return;
-	}
-
-	ent->state.modelIndex = ModelIndex("models/objects/dmspot/tris.md2");
-	ent->state.skinNum = 1;
-	ent->state.effects = EF_TELEPORTER;
-	ent->state.sound = SoundIndex ("world/amb10.wav");
-	ent->solid = SOLID_BBOX;
-
-	Vec3Set (ent->mins, -32, -32, -24);
-	Vec3Set (ent->maxs, 32, 32, -16);
-	gi.linkentity (ent);
-
-	trig = G_Spawn ();
-	trig->touch = teleporter_touch;
-	trig->solid = SOLID_TRIGGER;
-	trig->target = ent->target;
-	trig->owner = ent;
-	Vec3Copy (ent->state.origin, trig->state.origin);
-	Vec3Set (trig->mins, -8, -8, 8);
-	Vec3Set (trig->maxs, 8, 8, 24);
-	gi.linkentity (trig);
-	
-}
-
-/*QUAKED misc_teleporter_dest (1 0 0) (-32 -32 -24) (32 32 -16)
-Point teleporters at these.
-*/
-void SP_misc_teleporter_dest (edict_t *ent)
-{
-	ent->state.modelIndex = ModelIndex("models/objects/dmspot/tris.md2");
-	ent->state.skinNum = 0;
-	ent->solid = SOLID_BBOX;
-	Vec3Set (ent->mins, -32, -32, -24);
-	Vec3Set (ent->maxs, 32, 32, -16);
-	gi.linkentity (ent);
 }
 

@@ -172,71 +172,68 @@ Returns entities that have origins within a spherical area
 findradius (origin, radius)
 =================
 */
-static edict_t *loc_findradius (edict_t *from, vec3_t org, float rad)
+static CBaseEntity *loc_findradius (CBaseEntity *from, vec3f org, float rad)
 {
-	vec3_t	eorg;
-	int		j;
-
+	edict_t *fromEnt;
 	if (!from)
-		from = g_edicts;
+		fromEnt = g_edicts;
 	else
-		from++;
-	for ( ; from < &g_edicts[globals.numEdicts]; from++)
 	{
-		if (!from->inUse)
+		fromEnt = from->gameEntity;
+		fromEnt++;
+	}
+	for ( ; fromEnt < &g_edicts[globals.numEdicts]; fromEnt++)
+	{
+		if (!fromEnt->inUse)
+			continue;
+		if (!fromEnt->Entity)
 			continue;
 #if 0
 		if (from->solid == SOLID_NOT)
 			continue;
 #endif
-		for (j=0 ; j<3 ; j++)
-			eorg[j] = org[j] - (from->state.origin[j] + (from->mins[j] + from->maxs[j])*0.5);
-		if (Vec3Length(eorg) > rad)
+
+		if ((org - (from->State.GetOrigin() + (from->GetMins() + from->GetMaxs()) * 0.5)).Length() > rad)
 			continue;
-		return from;
+		return fromEnt->Entity;
 	}
 
 	return NULL;
 }
 
-static void loc_buildboxpoints(vec3_t p[8], vec3_t org, vec3_t mins, vec3_t maxs)
+static void loc_buildboxpoints(vec3f p[8], vec3f org, vec3f mins, vec3f maxs)
 {
-	Vec3Add(org, mins, p[0]);
-	Vec3Copy(p[0], p[1]);
-	p[1][0] -= mins[0];
-	Vec3Copy(p[0], p[2]);
-	p[2][1] -= mins[1];
-	Vec3Copy(p[0], p[3]);
-	p[3][0] -= mins[0];
-	p[3][1] -= mins[1];
-	Vec3Add(org, maxs, p[4]);
-	Vec3Copy(p[4], p[5]);
-	p[5][0] -= maxs[0];
-	Vec3Copy(p[0], p[6]);
-	p[6][1] -= maxs[1];
-	Vec3Copy(p[0], p[7]);
-	p[7][0] -= maxs[0];
-	p[7][1] -= maxs[1];
+	p[0] = org + mins;
+	p[1] = p[0];
+	p[1].X -= mins.X;
+	p[2] = p[0];
+	p[2].Y -= mins.Y;
+	p[3] = p[0];
+	p[3].X -= mins.X;
+	p[3].Y -= mins.Y;
+
+	p[4] = org + maxs;
+	p[5] = p[4];
+	p[5].X -= maxs.X;
+	p[6] = p[0];
+	p[6].Y -= maxs.Y;
+	p[7] = p[0];
+	p[7].X -= mins.X;
+	p[7].Y -= mins.Y;
 }
 
-bool loc_CanSee (edict_t *targ, edict_t *inflictor)
+bool loc_CanSee (CBaseEntity *targ, CBaseEntity *inflictor)
 {
-	CTrace	trace;
-	vec3_t	targpoints[8];
-	int i;
-	vec3_t viewpoint;
-
-// bmodels need special checking because their origin is 0,0,0
-	if (targ->movetype == MOVETYPE_PUSH)
+	// bmodels need special checking because their origin is 0,0,0
+	if ((targ->EntityFlags & ENT_PHYSICS) && (dynamic_cast<CPhysicsEntity*>(targ))->PhysicsType == MOVETYPE_PUSH)
 		return false; // bmodels not supported
 
-	loc_buildboxpoints(targpoints, targ->state.origin, targ->mins, targ->maxs);
+	vec3f	targpoints[8];
+	loc_buildboxpoints(targpoints, targ->State.GetOrigin(), targ->GetMins(), targ->GetMaxs());
 	
-	Vec3Copy(inflictor->state.origin, viewpoint);
-	viewpoint[2] += inflictor->viewheight;
-
-	for (i = 0; i < 8; i++) {
-		trace = CTrace (viewpoint, targpoints[i], inflictor, CONTENTS_MASK_SOLID);
+	vec3f viewpoint = inflictor->State.GetOrigin() + vec3f(0,0,inflictor->gameEntity->viewheight);
+	for (int i = 0; i < 8; i++) {
+		CTrace trace (viewpoint, targpoints[i], inflictor->gameEntity, CONTENTS_MASK_SOLID);
 		if (trace.fraction == 1.0)
 			return true;
 	}
@@ -306,13 +303,6 @@ int CTFOtherTeam(int team)
 	return -1; // invalid value
 }
 
-/*--------------------------------------------------------------------------*/
-
-edict_t *SelectRandomDeathmatchSpawnPoint (void);
-edict_t *SelectFarthestDeathmatchSpawnPoint (void);
-float	PlayersRangeFromSpot (edict_t *spot);
-
-
 /*------------------------------------------------------------------------*/
 /*
 CTFFragBonuses
@@ -326,9 +316,8 @@ void CTFFragBonuses(CPlayerEntity *targ, CPlayerEntity *attacker)
 	int i;
 	CBaseItem *flag_item, *enemy_flag_item;
 	int otherteam;
-	edict_t *flag;
 	char *c;
-	vec3_t v1, v2;
+	vec3f v1, v2;
 
 	if (attacker->Client.resp.ghost && (attacker != targ))
 		attacker->Client.resp.ghost->kills++;
@@ -381,7 +370,6 @@ void CTFFragBonuses(CPlayerEntity *targ, CPlayerEntity *attacker)
 	}
 
 	// flag and flag carrier area defense bonuses
-
 	// we have to find the flag and carrier entities
 
 	// find the flag
@@ -396,10 +384,10 @@ void CTFFragBonuses(CPlayerEntity *targ, CPlayerEntity *attacker)
 		return;
 	}
 
-	flag = NULL;
-	while ((flag = G_Find (flag, FOFS(classname), c)) != NULL)
+	CFlagEntity *flag = NULL;
+	while ((flag = dynamic_cast<CFlagEntity*>(CC_Find (flag, FOFS(classname), c))) != NULL)
 	{
-		if (!(flag->spawnflags & DROPPED_ITEM))
+		if (!(flag->gameEntity->spawnflags & DROPPED_ITEM))
 			break;
 	}
 
@@ -420,20 +408,17 @@ void CTFFragBonuses(CPlayerEntity *targ, CPlayerEntity *attacker)
 	// ok we have the attackers flag and a pointer to the carrier
 
 	// check to see if we are defending the base's flag
-	vec3_t origin;
-	targ->State.GetOrigin (origin);
-	Vec3Subtract(origin, flag->state.origin, v1);
-	attacker->State.GetOrigin (origin);
-	Vec3Subtract(origin, flag->state.origin, v2);
+	v1 = targ->State.GetOrigin() - flag->State.GetOrigin();
+	v2 = attacker->State.GetOrigin() - flag->State.GetOrigin();
 
-	if ((Vec3Length(v1) < CTF_TARGET_PROTECT_RADIUS ||
-		Vec3Length(v2) < CTF_TARGET_PROTECT_RADIUS ||
-		loc_CanSee(flag, targ->gameEntity) || loc_CanSee(flag, attacker->gameEntity)) &&
+	if ((v1.Length() < CTF_TARGET_PROTECT_RADIUS ||
+		v2.Length() < CTF_TARGET_PROTECT_RADIUS ||
+		loc_CanSee(flag, targ) || loc_CanSee(flag, attacker)) &&
 		attacker->Client.resp.ctf_team != targ->Client.resp.ctf_team)
 	{
 		// we defended the base flag
 		attacker->Client.resp.score += CTF_FLAG_DEFENSE_BONUS;
-		if (flag->solid == SOLID_NOT)
+		if (flag->GetSolid() == SOLID_NOT)
 			BroadcastPrintf(PRINT_MEDIUM, "%s defends the %s base.\n",
 				attacker->Client.pers.netname, 
 				CTFTeamName(attacker->Client.resp.ctf_team));
@@ -448,16 +433,12 @@ void CTFFragBonuses(CPlayerEntity *targ, CPlayerEntity *attacker)
 
 	if (carrier && carrier != attacker)
 	{
-		targ->State.GetOrigin (origin);
-		carrier->State.GetOrigin (v1);
-		Vec3Subtract(origin, v1, v1);
-		attacker->State.GetOrigin (origin);
-		carrier->State.GetOrigin (v2);
-		Vec3Subtract(origin, v2, v2);
+		v1 = (targ->State.GetOrigin() - carrier->State.GetOrigin());
+		v2 = (attacker->State.GetOrigin() - carrier->State.GetOrigin());
 
 		if (Vec3Length(v1) < CTF_ATTACKER_PROTECT_RADIUS ||
 			Vec3Length(v2) < CTF_ATTACKER_PROTECT_RADIUS ||
-			loc_CanSee(carrier->gameEntity, targ->gameEntity) || loc_CanSee(carrier->gameEntity, attacker->gameEntity))
+			loc_CanSee(carrier, targ) || loc_CanSee(carrier, attacker))
 		{
 			attacker->Client.resp.score += CTF_CARRIER_PROTECT_BONUS;
 			BroadcastPrintf(PRINT_MEDIUM, "%s defends the %s's flag carrier.\n",
@@ -490,7 +471,6 @@ void CTFCheckHurtCarrier(CPlayerEntity *targ, CPlayerEntity *attacker)
 void CTFResetFlag(int ctf_team)
 {
 	char *c;
-	edict_t *ent;
 
 	switch (ctf_team) {
 	case CTF_TEAM1:
@@ -503,19 +483,17 @@ void CTFResetFlag(int ctf_team)
 		return;
 	}
 
-	ent = NULL;
-	while ((ent = G_Find (ent, FOFS(classname), c)) != NULL)
+	CFlagEntity *ent = NULL;
+	while ((ent = dynamic_cast<CFlagEntity*>(CC_Find (ent, FOFS(classname), c))) != NULL)
 	{
-		CFlagEntity *Flag = dynamic_cast<CFlagEntity*>(ent->Entity);
-
-		if (Flag->gameEntity->spawnflags & DROPPED_ITEM)
-			Flag->Free ();
+		if (ent->gameEntity->spawnflags & DROPPED_ITEM)
+			ent->Free ();
 		else
 		{
-			Flag->SetSvFlags(Flag->GetSvFlags() & ~SVF_NOCLIENT);
-			Flag->SetSolid (SOLID_TRIGGER);
-			Flag->Link ();
-			Flag->State.SetEvent (EV_ITEM_RESPAWN);
+			ent->SetSvFlags(ent->GetSvFlags() & ~SVF_NOCLIENT);
+			ent->SetSolid (SOLID_TRIGGER);
+			ent->Link ();
+			ent->State.SetEvent (EV_ITEM_RESPAWN);
 		}
 	}
 }
@@ -562,20 +540,6 @@ void CTFID_f (CPlayerEntity *ent)
 }
 
 /*------------------------------------------------------------------------*/
-
-/*QUAKED info_player_team1 (1 0 0) (-16 -16 -24) (16 16 32)
-potential team1 spawning position for ctf games
-*/
-void SP_info_player_team1(edict_t *self)
-{
-}
-
-/*QUAKED info_player_team2 (0 0 1) (-16 -16 -24) (16 16 32)
-potential team2 spawning position for ctf games
-*/
-void SP_info_player_team2(edict_t *self)
-{
-}
 
 void CTFTeam_f (CPlayerEntity *ent)
 {
@@ -691,37 +655,35 @@ struct {
 
 static inline void CTFSay_Team_Location(CPlayerEntity *who, char *buf, size_t bufSize)
 {
-	edict_t *what = NULL;
-	edict_t *hot = NULL;
+	CBaseEntity *hot = NULL;
 	float hotdist = 999999, newdist;
-	vec3_t v;
 	int hotindex = 999;
 	int i;
 	CBaseItem *item;
 	int nearteam = -1;
-	edict_t *flag1, *flag2;
+	CFlagEntity *flag1, *flag2;
 	bool hotsee = false;
 	bool cansee;
+	CBaseEntity *what = NULL;
 
-	vec3_t origin;
-	who->State.GetOrigin(origin);
+	vec3f origin = who->State.GetOrigin();
 	while ((what = loc_findradius(what, origin, 1024)) != NULL)
 	{
 		// find what in loc_classnames
 		for (i = 0; loc_names[i].classname; i++)
-			if (strcmp(what->classname, loc_names[i].classname) == 0)
+			if (strcmp(what->gameEntity->classname, loc_names[i].classname) == 0)
 				break;
 		if (!loc_names[i].classname)
 			continue;
 		// something we can see get priority over something we can't
-		cansee = loc_CanSee(what, who->gameEntity);
+		cansee = loc_CanSee(what, who);
 		if (cansee && !hotsee)
 		{
 			hotsee = true;
 			hotindex = loc_names[i].priority;
 			hot = what;
-			Vec3Subtract(what->state.origin, origin, v);
-			hotdist = Vec3Length(v);
+
+			hotdist = (what->State.GetOrigin() - origin).Length();
 			continue;
 		}
 		// if we can't see this, but we have something we can see, skip it
@@ -729,15 +691,15 @@ static inline void CTFSay_Team_Location(CPlayerEntity *who, char *buf, size_t bu
 			continue;
 		if (hotsee && hotindex < loc_names[i].priority)
 			continue;
-		Vec3Subtract(what->state.origin, origin, v);
-		newdist = Vec3Length(v);
+
+		newdist = (what->State.GetOrigin() - origin).Length();
 		if (newdist < hotdist || 
 			(cansee && loc_names[i].priority < hotindex))
 		{
 			hot = what;
 			hotdist = newdist;
 			hotindex = i;
-			hotsee = loc_CanSee(hot, who->gameEntity);
+			hotsee = loc_CanSee(hot, who);
 		}
 	}
 
@@ -751,19 +713,17 @@ static inline void CTFSay_Team_Location(CPlayerEntity *who, char *buf, size_t bu
 	// see if there's more than one in the map, if so
 	// we need to determine what team is closest
 	what = NULL;
-	while ((what = G_Find(what, FOFS(classname), hot->classname)) != NULL)
+	while ((what = CC_Find(what, FOFS(classname), hot->gameEntity->classname)) != NULL)
 	{
 		if (what == hot)
 			continue;
 		// if we are here, there is more than one, find out if hot
 		// is closer to red flag or blue flag
-		if ((flag1 = G_Find(NULL, FOFS(classname), "item_flag_team1")) != NULL &&
-			(flag2 = G_Find(NULL, FOFS(classname), "item_flag_team2")) != NULL)
+		if ((flag1 = dynamic_cast<CFlagEntity*>(CC_Find(NULL, FOFS(classname), "item_flag_team1"))) != NULL &&
+			(flag2 = dynamic_cast<CFlagEntity*>(CC_Find(NULL, FOFS(classname), "item_flag_team2"))) != NULL)
 		{
-			Vec3Subtract(hot->state.origin, flag1->state.origin, v);
-			hotdist = Vec3Length(v);
-			Vec3Subtract(hot->state.origin, flag2->state.origin, v);
-			newdist = Vec3Length(v);
+			hotdist = (hot->State.GetOrigin() - flag1->State.GetOrigin()).Length();
+			newdist = (hot->State.GetOrigin() - flag2->State.GetOrigin()).Length();
 			if (hotdist < newdist)
 				nearteam = CTF_TEAM1;
 			else if (hotdist > newdist)
@@ -772,7 +732,7 @@ static inline void CTFSay_Team_Location(CPlayerEntity *who, char *buf, size_t bu
 		break;
 	}
 
-	if ((item = FindItemByClassname(hot->classname)) == NULL)
+	if ((item = FindItemByClassname(hot->gameEntity->classname)) == NULL)
 	{
 		Q_strncpyz(buf, "nowhere", bufSize);
 		return;
@@ -785,12 +745,14 @@ static inline void CTFSay_Team_Location(CPlayerEntity *who, char *buf, size_t bu
 		*buf = 0;
 
 	// near or above
-	Vec3Subtract(origin, hot->state.origin, v);
-	if (Q_fabs(v[2]) > Q_fabs(v[0]) && Q_fabs(v[2]) > Q_fabs(v[1]))
-		if (v[2] > 0)
+	vec3f v = origin - hot->State.GetOrigin();
+	if (Q_fabs(v.Z) > Q_fabs(v.X) && Q_fabs(v.Z) > Q_fabs(v.Y))
+	{
+		if (v.Z > 0)
 			Q_strcatz(buf, "above ", bufSize);
 		else
 			Q_strcatz(buf, "below ", bufSize);
+	}
 	else
 		Q_strcatz(buf, "near ", bufSize);
 
@@ -872,7 +834,7 @@ static inline void CTFSay_Team_Sight(CPlayerEntity *who, char *buf, size_t bufSi
 		CPlayerEntity *targ = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
 		if (!targ->IsInUse() || 
 			targ == who ||
-			!loc_CanSee(targ->gameEntity, who->gameEntity))
+			!loc_CanSee(targ, who))
 			continue;
 		if (*s2)
 		{
@@ -1552,47 +1514,6 @@ bool CTFCheckRules(void)
 		return true;
 	}
 	return false;
-}
-
-/*QUAKED trigger_teleport (0.5 0.5 0.5) ?
-Players touching this will be teleported
-*/
-void teleporter_touch (edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
-
-void SP_trigger_teleport (edict_t *ent)
-{
-	edict_t *s;
-	int i;
-
-	if (!ent->target)
-	{
-		DebugPrintf ("teleporter without a target.\n");
-		G_FreeEdict (ent);
-		return;
-	}
-
-	ent->svFlags |= SVF_NOCLIENT;
-	ent->solid = SOLID_TRIGGER;
-	ent->touch = teleporter_touch;
-	SetModel (ent, ent->model);
-	gi.linkentity (ent);
-
-	// noise maker and splash effect dude
-	s = G_Spawn();
-	ent->enemy = s;
-	for (i = 0; i < 3; i++)
-		s->state.origin[i] = ent->mins[i] + (ent->maxs[i] - ent->mins[i])/2;
-	s->state.sound = SoundIndex ("world/hum1.wav");
-	gi.linkentity(s);
-	
-}
-
-/*QUAKED info_teleport_destination (0.5 0.5 0.5) (-16 -16 -24) (16 16 32)
-Point trigger_teleports at these.
-*/
-void SP_info_teleport_destination (edict_t *ent)
-{
-	ent->state.origin[2] += 16;
 }
 
 /*----------------------------------------------------------------*/

@@ -217,7 +217,6 @@ void ClientEndServerFrames (void)
 	}
 
 }
-
 /*
 =================
 CreateTargetChangeLevel
@@ -225,17 +224,18 @@ CreateTargetChangeLevel
 Returns the created target changelevel
 =================
 */
-edict_t *CreateTargetChangeLevel(char *map)
+CBaseEntity *CreateTargetChangeLevel(char *map)
 {
+	/*
 	edict_t *ent;
 
 	ent = G_Spawn ();
 	ent->classname = "target_changelevel";
 	Q_snprintfz(level.nextmap, sizeof(level.nextmap), "%s", map);
-	ent->map = level.nextmap;
-	return ent;
+	ent->map = level.nextmap;*/
+	// FIXME
+	return NULL;
 }
-
 /*
 =================
 EndDMLevel
@@ -245,7 +245,6 @@ The timelimit or fraglimit has been exceeded
 */
 void EndDMLevel (void)
 {
-	edict_t		*ent;
 	char *s, *t, *f;
 	static const char *seps = " ,\n\r";
 #ifdef CRT_USE_UNDEPRECATED_FUNCTIONS
@@ -305,8 +304,9 @@ void EndDMLevel (void)
 
 	if (level.nextmap[0]) // go to a specific map
 		BeginIntermission (CreateTargetChangeLevel (level.nextmap) );
-	else {	// search for a changelevel
-		ent = G_Find (NULL, FOFS(classname), "target_changelevel");
+	else
+	{	// search for a changelevel
+		CBaseEntity *ent = CC_Find (NULL, FOFS(classname), "target_changelevel");
 		if (!ent)
 		{	// the map designer didn't include a changelevel,
 			// so create a fake ent that goes back to the same level

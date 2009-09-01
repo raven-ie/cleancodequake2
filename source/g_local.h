@@ -322,7 +322,6 @@ enum
 
 extern	game_locals_t	game;
 extern	level_locals_t	level;
-extern	gameImport_t	gi;
 extern	gameExport_t	globals;
 extern	spawn_temp_t	st;
 
@@ -548,7 +547,7 @@ edict_t	*PlayerTrail_LastSpot (void);
 //
 // g_client.c
 //
-void BeginIntermission (edict_t *targ);
+void BeginIntermission (CBaseEntity *targ);
 void InitClientResp (gclient_t *client);
 void InitBodyQue (void);
 

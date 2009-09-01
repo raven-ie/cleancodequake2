@@ -77,24 +77,6 @@ public:
 	CHurtableEntity (),
 	CStepPhysics()
 	{
-		SetSolid (SOLID_BBOX);
-
-		State.SetModelIndex (ModelIndex ("models/objects/barrels/tris.md2"));
-
-		SetMins (vec3f(-16, -16, 0));
-		SetMaxs (vec3f(16, 16, 40));
-
-		if (!gameEntity->mass)
-			gameEntity->mass = 400;
-		if (!gameEntity->health)
-			gameEntity->health = 10;
-		if (!gameEntity->dmg)
-			gameEntity->dmg = 150;
-
-		gameEntity->takedamage = true;
-		NextThink = level.framenum + FRAMETIME;
-
-		Link ();
 	};
 
 	CMiscExploBox (int Index) : 
@@ -105,24 +87,6 @@ public:
 	CHurtableEntity(Index),
 	CStepPhysics(Index)
 	{
-		SetSolid (SOLID_BBOX);
-
-		State.SetModelIndex (ModelIndex ("models/objects/barrels/tris.md2"));
-
-		SetMins (vec3f(-16, -16, 0));
-		SetMaxs (vec3f(16, 16, 40));
-
-		if (!gameEntity->mass)
-			gameEntity->mass = 400;
-		if (!gameEntity->health)
-			gameEntity->health = 10;
-		if (!gameEntity->dmg)
-			gameEntity->dmg = 150;
-
-		gameEntity->takedamage = true;
-		NextThink = level.framenum + FRAMETIME;
-
-		Link ();
 	};
 
 #define BARREL_STEPSIZE 8
@@ -217,6 +181,28 @@ public:
 	bool Run ()
 	{
 		return CStepPhysics::Run ();
+	};
+
+	void Spawn ()
+	{
+		SetSolid (SOLID_BBOX);
+
+		State.SetModelIndex (ModelIndex ("models/objects/barrels/tris.md2"));
+
+		SetMins (vec3f(-16, -16, 0));
+		SetMaxs (vec3f(16, 16, 40));
+
+		if (!gameEntity->mass)
+			gameEntity->mass = 400;
+		if (!gameEntity->health)
+			gameEntity->health = 10;
+		if (!gameEntity->dmg)
+			gameEntity->dmg = 150;
+
+		gameEntity->takedamage = true;
+		NextThink = level.framenum + FRAMETIME;
+
+		Link ();
 	};
 };
 
