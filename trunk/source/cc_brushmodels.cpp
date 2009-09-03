@@ -348,7 +348,7 @@ void CBrushModel::ThinkAccelMove ()
 		return;
 	}
 
-	Vec3Scale (Dir, CurrentSpeed*10, gameEntity->velocity);
+	Vec3Scale (Dir, CurrentSpeed, gameEntity->velocity);
 	NextThink = level.framenum + FRAMETIME;
 	ThinkType = BRUSHTHINK_MOVEACCEL;
 }
@@ -2333,11 +2333,11 @@ void CRotatingBrush::Spawn ()
 	// set the axis of rotation
 	Vec3Clear(gameEntity->movedir);
 	if (gameEntity->spawnflags & 4)
-		gameEntity->movedir[2] = 1.0;
+		gameEntity->movedir[2] = 0.1f;
 	else if (gameEntity->spawnflags & 8)
-		gameEntity->movedir[0] = 1.0;
+		gameEntity->movedir[0] = 0.1f;
 	else // Z_AXIS
-		gameEntity->movedir[1] = 1.0;
+		gameEntity->movedir[1] = 0.1f;
 
 	// check for reverse rotation
 	if (gameEntity->spawnflags & 2)
@@ -2742,7 +2742,7 @@ void CFuncExplosive::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dam
 		mass = 75;
 
 	// big chunks
-	if (mass >= 100)
+	/*if (mass >= 100)
 	{
 		int count = mass / 100;
 		if (count > 8)
@@ -2756,7 +2756,7 @@ void CFuncExplosive::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dam
 	if (count > 16)
 		count = 16;
 	while(count--)
-		ThrowDebris (gameEntity, "models/objects/debris2/tris.md2", 2, vec3f (origin + (crandom() * size)));
+		ThrowDebris (gameEntity, "models/objects/debris2/tris.md2", 2, vec3f (origin + (crandom() * size)));*/
 
 	G_UseTargets (this, attacker);
 

@@ -359,7 +359,7 @@ void CRocket::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 
 	if (other->gameEntity->takedamage)
 		T_Damage (other->gameEntity, gameEntity, gameEntity->owner, gameEntity->velocity, origin, plane->normal, Damage, 0, 0, MOD_ROCKET);
-	else
+/*	else
 	{
 		// don't throw any debris in net games
 		if (game.mode == GAME_SINGLEPLAYER)
@@ -370,7 +370,7 @@ void CRocket::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 					ThrowDebris (gameEntity, "models/objects/debris2/tris.md2", 2, origin);
 			}
 		}
-	}
+	}*/
 
 	// calculate position for the explosion entity
 	Vec3MA (origin, -0.02f, gameEntity->velocity, origin);

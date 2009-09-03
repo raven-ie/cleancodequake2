@@ -868,3 +868,117 @@ public:
 };
 
 LINK_CLASSNAME_TO_CLASS ("light", CLight);
+
+/*QUAKED target_lightramp (0 .5 .8) (-8 -8 -8) (8 8 8) TOGGLE
+speed		How many seconds the ramping will take
+message		two letters; starting lightlevel and ending lightlevel
+*/
+class CTargetLightRamp : public CMapEntity, public CThinkableEntity, public CUsableEntity
+{
+public:
+	int32			Message[3];
+	int32			TimeStamp;
+	CLight			*Light;
+
+	CTargetLightRamp () :
+	  CBaseEntity (),
+	  CMapEntity (),
+	  CThinkableEntity (),
+	  CUsableEntity (),
+	  Light (NULL)
+	{
+	};
+
+	CTargetLightRamp (int Index) :
+	  CBaseEntity (Index),
+	  CMapEntity (Index),
+	  CThinkableEntity (Index),
+	  CUsableEntity (Index),
+	  Light (NULL)
+	{
+	};
+
+	bool Run ()
+	{
+		return CBaseEntity::Run();
+	};
+
+	void Think ()
+	{
+		char	style[2] = {'a' + Message[0] + (level.framenum - TimeStamp) / 0.1f * Message[2], 0};
+		ConfigString (CS_LIGHTS+Light->gameEntity->style, style);
+
+		if ((level.framenum - TimeStamp) < gameEntity->speed)
+			NextThink = level.framenum + FRAMETIME;
+		else if (gameEntity->spawnflags & 1)
+		{
+			char temp = Message[0];
+			Message[0] = Message[1];
+			Message[1] = temp;
+			Message[2] *= -1;
+		}
+	};
+
+	void Use (CBaseEntity *other, CBaseEntity *activator)
+	{
+		if (!Light)
+		{
+			// check all the targets
+			CLight *e = NULL;
+			while (1)
+			{
+				e = dynamic_cast<CLight*>(CC_Find (e, FOFS(targetname), gameEntity->target));
+				if (!e)
+					break;
+				if (strcmp(e->gameEntity->classname, "light") != 0)
+					MapPrint (MAPPRINT_WARNING, this, State.GetOrigin(), "Target \"%s\" is not a light\n", gameEntity->target);
+				else
+					Light = e;
+			}
+
+			if (!Light)
+			{
+				//gi.dprintf("%s target %s not found at (%f %f %f)\n", self->classname, self->target, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
+				MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "Target \"%s\" not found\n", gameEntity->target);
+				Free ();
+				return;
+			}
+		}
+
+		TimeStamp = level.framenum;
+		Think ();
+	};
+
+	void Spawn ()
+	{
+		if (!gameEntity->message || strlen(gameEntity->message) != 2 || gameEntity->message[0] < 'a' || gameEntity->message[0] > 'z' || gameEntity->message[1] < 'a' || gameEntity->message[1] > 'z' || gameEntity->message[0] == gameEntity->message[1])
+		{
+			//gi.dprintf("target_lightramp has bad ramp (%s) at (%f %f %f)\n", self->message, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
+			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "Bad ramp (%s)\n", gameEntity->message);
+			Free ();
+			return;
+		}
+
+		if (game.mode & GAME_DEATHMATCH)
+		{
+			Free ();
+			return;
+		}
+
+		if (!gameEntity->target)
+		{
+			//gi.dprintf("%s with no target at (%f %f %f)\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
+			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No target\n");
+			Free ();
+			return;
+		}
+
+		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
+
+		Message[0] = gameEntity->message[0] - 'a';
+		Message[1] = gameEntity->message[1] - 'a';
+		Message[2] = (Message[1] - Message[0]) / (gameEntity->speed / 0.1f);
+	};
+};
+
+LINK_CLASSNAME_TO_CLASS ("target_lightramp", CTargetLightRamp);

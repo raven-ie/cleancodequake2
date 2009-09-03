@@ -866,3 +866,153 @@ public:
 };
 
 LINK_CLASSNAME_TO_CLASS ("target_laser", CTargetLaser);
+
+/*QUAKED target_help (1 0 1) (-16 -16 -24) (16 16 24) help1
+When fired, the "message" key becomes the current personal computer string, and the message light will be set on all clients status bars.
+*/
+class CTargeHelp : public CMapEntity, public CUsableEntity
+{
+public:
+	CTargeHelp () :
+	  CBaseEntity (),
+	  CMapEntity (),
+	  CUsableEntity ()
+	{
+	};
+
+	CTargeHelp (int Index) :
+	  CBaseEntity (Index),
+	  CMapEntity (Index),
+	  CUsableEntity (Index)
+	{
+	};
+
+	bool Run ()
+	{
+		return CBaseEntity::Run();
+	};
+
+	void Use (CBaseEntity *other, CBaseEntity *activator)
+	{
+		Q_strncpyz ((gameEntity->spawnflags & 1) ? game.helpmessage1 : game.helpmessage2, gameEntity->message, sizeof(game.helpmessage1)-1);
+		game.helpchanged++;
+	};
+
+	void Spawn ()
+	{
+		if (game.mode & GAME_DEATHMATCH)
+		{	// auto-remove for deathmatch
+			Free ();
+			return;
+		}
+
+		if (!gameEntity->message)
+		{
+			//gi.dprintf ("%s with no message at (%f %f %f)\n", ent->classname, ent->state.origin[0], ent->state.origin[1], ent->state.origin[2]);
+			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No message\n");
+			Free ();
+			return;
+		}
+	};
+};
+
+LINK_CLASSNAME_TO_CLASS ("target_help", CTargeHelp);
+
+//==========================================================
+
+/*QUAKED target_earthquake (1 0 0) (-8 -8 -8) (8 8 8)
+When triggered, this initiates a level-wide earthquake.
+All players and monsters are affected.
+"speed"		severity of the quake (default:200)
+"count"		duration of the quake (default:5)
+*/
+class CTargetEarthquake : public CMapEntity, public CThinkableEntity, public CUsableEntity
+{
+public:
+	int32		LastShakeTime;
+	int32		TimeStamp;
+
+	CTargetEarthquake () :
+	  CBaseEntity (),
+	  CMapEntity (),
+	  CThinkableEntity (),
+	  CUsableEntity (),
+	  LastShakeTime (0)
+	{
+	};
+
+	CTargetEarthquake (int Index) :
+	  CBaseEntity (Index),
+	  CMapEntity (Index),
+	  CThinkableEntity (Index),
+	  CUsableEntity (Index),
+	  LastShakeTime (0)
+	{
+	};
+
+	bool Run ()
+	{
+		return CBaseEntity::Run();
+	};
+
+	void Think ()
+	{
+		int		i;
+		edict_t	*e;
+
+		if (LastShakeTime < level.framenum)
+		{
+			PlayPositionedSound (State.GetOrigin(), CHAN_AUTO, gameEntity->noise_index, 1.0, ATTN_NONE);
+			LastShakeTime = level.framenum + 5;
+		}
+
+		for (i=1, e=g_edicts+i; i < globals.numEdicts; i++,e++)
+		{
+			if (!e->inUse)
+				continue;
+			if (!e->Entity)
+				continue;
+			if (!e->groundentity)
+				continue;
+
+			CBaseEntity *Entity = e->Entity;
+			if (!(Entity->EntityFlags & ENT_PLAYER))
+				continue;
+
+			Entity->gameEntity->groundentity = NULL;
+			Entity->gameEntity->velocity[0] += crandom()* 150;
+			Entity->gameEntity->velocity[1] += crandom()* 150;
+			Entity->gameEntity->velocity[2] = gameEntity->speed * (100.0 / Entity->gameEntity->mass);
+		}
+
+		if (level.framenum < TimeStamp)
+			NextThink = level.framenum + FRAMETIME;
+	};
+
+	void Use (CBaseEntity *other, CBaseEntity *activator)
+	{
+		// Paril, Backwards compatibility
+		TimeStamp = level.framenum + (gameEntity->count * 10);
+		NextThink = level.framenum + FRAMETIME;
+		LastShakeTime = 0;
+	};
+
+	void Spawn ()
+	{
+		if (!gameEntity->targetname)
+			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No targetname\n");
+			//gi.dprintf("untargeted %s at (%f %f %f)\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
+
+		if (!gameEntity->count)
+			gameEntity->count = 5;
+
+		if (!gameEntity->speed)
+			gameEntity->speed = 200;
+
+		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
+
+		gameEntity->noise_index = SoundIndex ("world/quake.wav");
+	};
+};
+
+LINK_CLASSNAME_TO_CLASS ("target_earthquake", CTargetEarthquake);

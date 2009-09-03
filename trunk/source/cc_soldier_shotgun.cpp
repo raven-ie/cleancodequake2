@@ -50,8 +50,8 @@ void CSoldierShotgun::Attack ()
 
 	float r = random();
 	if ((!(AIFlags & (AI_BLOCKED|AI_STAND_GROUND))) &&
-		(range(Entity->gameEntity, Entity->gameEntity->enemy) >= RANGE_NEAR) && 
-		(r < (skill->Integer()*0.25)))
+		(range(Entity->gameEntity, Entity->gameEntity->enemy) == RANGE_MID) && 
+		(r < (skill->Integer()*0.05))) // Very low chance for shotty soldier
 		CurrentMove = &SoldierMoveAttack6;
 	else
 #endif

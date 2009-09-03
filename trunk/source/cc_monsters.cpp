@@ -352,20 +352,33 @@ In coop games, sight_client will cycle between the clients.
 */
 void AI_SetSightClient (void)
 {
-	edict_t	*ent;
+	int		start, check;
 
-	for (int i = 1; i <= game.maxclients; i++)
+	if (level.sight_client == NULL)
+		start = 1;
+	else
+		start = level.sight_client->State.GetNumber();
+
+	check = start;
+	while (1)
 	{
-		ent = &g_edicts[i];
-		if (ent->inUse
-			&& ent->health > 0
-			&& !(ent->flags & FL_NOTARGET) && (level.sight_client != dynamic_cast<CPlayerEntity*>(ent->Entity)))
+		check++;
+		if (check > game.maxclients)
+			check = 1;
+		CPlayerEntity *ent = dynamic_cast<CPlayerEntity*>(g_edicts[check].Entity);
+		if (ent->IsInUse()
+			&& ent->gameEntity->health > 0
+			&& !(ent->gameEntity->flags & FL_NOTARGET) )
 		{
-			level.sight_client = dynamic_cast<CPlayerEntity*>(ent->Entity);
+			level.sight_client = ent;
 			return;		// got one
 		}
+		if (check == start)
+		{
+			level.sight_client = NULL;
+			return;		// nobody to see
+		}
 	}
-	level.sight_client = NULL;
 }
 
 /*
@@ -1391,7 +1404,7 @@ void CMonster::AlertNearbyStroggs ()
 		{
 			FoundStrogg->Monster->P_CurrentNode = GetClosestNodeTo(strogg->state.origin);
 			FoundStrogg->Monster->P_CurrentGoalNode = GetClosestNodeTo(Entity->gameEntity->enemy->state.origin);
-			FoundStrogg->gameEntity->enemy = Entity->gameEntity->enemy;
+			//FoundStrogg->gameEntity->enemy = Entity->gameEntity->enemy;
 			FoundStrogg->Monster->FoundPath ();
 		}
 		else
@@ -3640,7 +3653,7 @@ bool CMonster::FindTarget()
 	if (!client->IsInUse())
 		return false;
 
-	if (visible(Entity->gameEntity, client->gameEntity) && client->gameEntity == Entity->gameEntity->enemy)
+	if (visible(Entity->gameEntity, client->gameEntity) && (client->gameEntity == Entity->gameEntity->enemy))
 		return true;	// JDC false;
 
 	if (client)
@@ -3739,7 +3752,7 @@ bool CMonster::FindTarget()
 	AlertNearbyStroggs ();
 #endif
 
-	if ((Entity->gameEntity->enemy != old) && MonsterFlags & MF_HAS_SIGHT)
+	if ((Entity->gameEntity->enemy != old) && (MonsterFlags & MF_HAS_SIGHT))
 		Sight ();
 
 	return true;
