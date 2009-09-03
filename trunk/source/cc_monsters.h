@@ -160,7 +160,7 @@ enum EAttackState
 #endif
 };
 
-class CMonsterEntity : public CMapEntity, public CStepPhysics, public CTossProjectile, public CHurtableEntity, public CThinkableEntity, public CTouchableEntity
+class CMonsterEntity : public CMapEntity, public CStepPhysics, public CTossProjectile, public CPushPhysics, public CHurtableEntity, public CThinkableEntity, public CTouchableEntity
 {
 public:
 	bool			TossPhysics;
@@ -180,7 +180,6 @@ public:
 	virtual void	Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf); // Empty
 
 	bool			Run ();
-
 	void			ThrowHead (MediaIndex gibIndex, int damage, int type);
 
 	void Spawn ();
@@ -297,7 +296,7 @@ public:
 
 	virtual void		ReactToDamage	(edict_t *attacker);
 
-	void				MonsterThink	();
+	virtual void		MonsterThink	();
 
 	void AI_Charge (float Dist);
 	void AI_Move (float Dist);

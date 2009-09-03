@@ -369,6 +369,95 @@ public:
 	void Spawn ();
 };
 
+class CConveyor : public CMapEntity, public CBrushModel, public CUsableEntity
+{
+public:
+	CConveyor ();
+	CConveyor (int Index);
+
+	void Use (CBaseEntity *other, CBaseEntity *activator);
+
+	bool Run ();
+	void Spawn ();
+};
+
+class CAreaPortal : public CMapEntity, public CUsableEntity
+{
+public:
+	CAreaPortal ();
+	CAreaPortal (int Index);
+
+	void Use (CBaseEntity *other, CBaseEntity *activator);
+
+	bool Run ();
+	void Spawn ();
+};
+
+class CFuncWall : public CMapEntity, public CBrushModel, public CUsableEntity
+{
+public:
+	bool Usable;
+
+	CFuncWall ();
+	CFuncWall (int Index);
+
+	void Use (CBaseEntity *other, CBaseEntity *activator);
+
+	bool Run ();
+	void Spawn ();
+};
+
+class CFuncObject : public CMapEntity, public CBrushModel, public CTossProjectile, public CTouchableEntity, public CUsableEntity
+{
+public:
+	bool Usable;
+
+	CFuncObject ();
+	CFuncObject (int Index);
+
+	void Think ();
+	void Use (CBaseEntity *other, CBaseEntity *activator);
+	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
+
+	bool Run ();
+	void Spawn ();
+};
+
+class CFuncExplosive : public CMapEntity, public CBrushModel, public CUsableEntity, public CHurtableEntity
+{
+public:
+	enum EFuncExplosiveUseType
+	{
+		FUNCEXPLOSIVE_USE_NONE,
+		FUNCEXPLOSIVE_USE_SPAWN,
+		FUNCEXPLOSIVE_USE_EXPLODE
+	};
+
+	EFuncExplosiveUseType	UseType;
+
+	CFuncExplosive ();
+	CFuncExplosive (int Index);
+
+	void DoSpawn ();
+
+	void Use (CBaseEntity *other, CBaseEntity *activator);
+	void Pain (CBaseEntity *other, float kick, int damage);
+	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
+
+	bool Run ();
+	void Spawn ();
+};
+
+class CKillbox : public CMapEntity, public CUsableEntity
+{
+public:
+	CKillbox ();
+	CKillbox (int Index);
+
+	void Use (CBaseEntity *other, CBaseEntity *activator);
+	void Spawn ();
+};
+
 #else
 FILE_WARNING
 #endif

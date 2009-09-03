@@ -296,6 +296,11 @@ edict_t *G_Spawn (void)
 		// freeing and allocating, so relax the replacement policy
 		if (!e->inUse && ( e->freetime < 20 || level.framenum - e->freetime > 5 ) )
 		{
+			if (e->Entity && e->Entity->Freed)
+			{
+				QDelete e->Entity;
+				e->Entity = NULL;
+			}
 			G_InitEdict (e);
 			//DebugPrintf ("Entity %i reused\n", i);
 			return e;

@@ -54,7 +54,6 @@ public:
 
 	CInfantry ();
 
-	void Attack ();
 #ifndef MONSTER_USE_ROGUE_AI
 	void Dodge (edict_t *attacker, float eta);
 	void Duck_Down ();
@@ -64,12 +63,13 @@ public:
 	void Duck (float eta);
 	void SideStep ();
 #endif
-	void Idle ();
-	void Run ();
-	void Sight ();
-	void Stand ();
-	void Walk ();
-	void Melee ();
+	virtual void Attack ();
+	virtual void Idle ();
+	virtual void Run ();
+	virtual void Sight ();
+	virtual void Stand ();
+	virtual void Walk ();
+	virtual void Melee ();
 
 	void CockGun ();
 	void Fire ();
@@ -78,10 +78,10 @@ public:
 	void MachineGun ();
 
 	void Dead ();
-	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
-	void Pain (CBaseEntity *other, float kick, int damage);
+	virtual void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
+	virtual void Pain (CBaseEntity *other, float kick, int damage);
 
-	void Spawn ();
+	virtual void Spawn ();
 };
 
 #else

@@ -538,6 +538,12 @@ public:
 	}
 };
 
+// Global vector operations
+inline vec3f operator * (const float &l, const vec3f &r)
+{
+	return (r * l);
+};
+
 /*
 ==============================================================================
 

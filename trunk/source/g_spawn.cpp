@@ -125,29 +125,7 @@ void SP_turret_base (edict_t *self);
 void SP_monster_boss3_stand (edict_t *self);
 
 spawn_t	spawns[] = {
-	{"func_conveyor", SP_func_conveyor},
-	{"func_areaportal", SP_func_areaportal},
-	{"func_clock", SP_func_clock},
-	{"func_wall", SP_func_wall},
-	{"func_object", SP_func_object},
-	{"func_timer", SP_func_timer},
-	{"func_explosive", SP_func_explosive},
-	{"func_killbox", SP_func_killbox},
-
-	{"trigger_always", SP_trigger_always},
-	{"trigger_once", SP_trigger_once},
-	{"trigger_multiple", SP_trigger_multiple},
-	{"trigger_relay", SP_trigger_relay},
-	{"trigger_push", SP_trigger_push},
-	{"trigger_hurt", SP_trigger_hurt},
-	{"trigger_key", SP_trigger_key},
-	{"trigger_counter", SP_trigger_counter},
-	{"trigger_gravity", SP_trigger_gravity},
-	{"trigger_monsterjump", SP_trigger_monsterjump},
-
 	{"target_temp_entity", SP_target_temp_entity},
-	{"target_speaker", SP_target_speaker},
-	{"target_explosion", SP_target_explosion},
 	{"target_changelevel", SP_target_changelevel},
 	{"target_secret", SP_target_secret},
 	{"target_goal", SP_target_goal},
@@ -163,18 +141,11 @@ spawn_t	spawns[] = {
 	{"target_location", SP_target_location},
 	{"target_position", SP_target_position},
 	{"target_earthquake", SP_target_earthquake},
-	{"target_character", SP_target_character},
-	{"target_string", SP_target_string},
 
-	{"viewthing", SP_viewthing},
+//	{"viewthing", SP_viewthing},
 
-	{"light", SP_light},
 	{"light_mine1", SP_light_mine1},
 	{"light_mine2", SP_light_mine2},
-	{"info_null", SP_info_null},
-	{"func_group", SP_info_null},
-	{"info_notnull", SP_info_notnull},
-	{"point_combat", SP_point_combat},
 
 	{"misc_banner", SP_misc_banner},
 	{"misc_satellite_dish", SP_misc_satellite_dish},
@@ -189,7 +160,6 @@ spawn_t	spawns[] = {
 	{"misc_eastertank", SP_misc_eastertank},
 	{"misc_easterchick", SP_misc_easterchick},
 	{"misc_easterchick2", SP_misc_easterchick2},
-	{"misc_model", SP_misc_model},
 #ifdef CLEANCTF_ENABLED
 //ZOID
 	{"misc_ctf_banner", SP_misc_ctf_banner},
@@ -198,10 +168,6 @@ spawn_t	spawns[] = {
 #endif
 
 	{"monster_boss3_stand", SP_monster_boss3_stand},
-
-	{"turret_breach", SP_turret_breach},
-	{"turret_base", SP_turret_base},
-	//{"turret_driver", SP_turret_driver},
 
 	{NULL, NULL}
 };

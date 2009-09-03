@@ -412,6 +412,13 @@ CBaseEntity *GetRandomTeamMember (CBaseEntity *Entity, CBaseEntity *Master)
 	return Member;
 }
 
+// Calls the callback for each member of the team in "ent"
+void ForEachTeamChain (CBaseEntity *Master, CForEachTeamChainCallback *Callback)
+{
+	for (CBaseEntity *e = Master->gameEntity->teammaster->Entity; e; e = e->gameEntity->teamchain->Entity)
+		Callback->Callback (e);
+}
+
 /*
 =============
 CC_Find

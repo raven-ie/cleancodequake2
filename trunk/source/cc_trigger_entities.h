@@ -8,7 +8,7 @@ of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 See the GNU General Public License for more details.
 
@@ -27,61 +27,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_media.h
-// Storage for constant media
+// cc_trigger_entities.h
+// 
 //
 
-#if !defined(__CC_MEDIA_H__) || !defined(INCLUDE_GUARDS)
-#define __CC_MEDIA_H__
-
-typedef struct SPlayerMedia_s
-{
-	MediaIndex		Death[4];
-	MediaIndex		Fall[2];
-	MediaIndex		Gurp[2];
-	MediaIndex		Jump;
-	MediaIndex		Pain[4][2];
-} SPlayerMedia_t;
-
-typedef struct SHudMedia_s
-{
-	MediaIndex	HealthPic;
-	MediaIndex	PowerShieldPic;
-	MediaIndex	QuadPic;
-	MediaIndex	InvulPic;
-	MediaIndex	EnviroPic;
-	MediaIndex	RebreatherPic;
-	MediaIndex	SilencerPic;
-	MediaIndex	HelpPic;
-} SHudMedia_t;
-
-typedef struct SGameMedia_s
-{
-	// Player media
-	SPlayerMedia_t	Player;
-	// HUD Media
-	SHudMedia_t		Hud;
-
-	// Gibs
-	MediaIndex		Gib_SmallMeat;
-	MediaIndex		Gib_SmallMetal;
-	MediaIndex		Gib_Arm;
-	MediaIndex		Gib_Leg;
-	MediaIndex		Gib_Gear;
-	MediaIndex		Gib_Bone[2];
-	MediaIndex		Gib_Chest;
-	MediaIndex		Gib_Skull;
-	MediaIndex		Gib_Head[2];
-
-	// World stuff
-	MediaIndex		FrySound;
-	MediaIndex		FlySound;
-} SGameMedia_t;
-
-extern SGameMedia_t gMedia;
-
-void InitGameMedia ();
-
-#else
-FILE_WARNING
-#endif

@@ -657,3 +657,223 @@ public:
 };
 
 LINK_CLASSNAME_TO_CLASS ("path_corner", CPathCorner);
+
+/*QUAKED point_combat (0.5 0.3 0) (-8 -8 -8) (8 8 8) Hold
+Makes this the target of a monster and it will head here
+when first activated before going after the activator.  If
+hold is selected, it will stay here.
+*/
+class CPathCombat : public CPathCorner
+{
+public:
+	CPathCombat () :
+	  CBaseEntity (),
+	  CPathCorner ()
+	  {
+	  };
+
+	CPathCombat (int Index) :
+	  CBaseEntity (Index),
+	  CPathCorner (Index)
+	  {
+	  };
+
+	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
+	{
+		if (!other->gameEntity->movetarget || other->gameEntity->movetarget->Entity != this)
+			return;
+
+		if (gameEntity->target)
+		{
+			other->gameEntity->target = gameEntity->target;
+			other->gameEntity->goalentity = other->gameEntity->movetarget = CC_PickTarget(other->gameEntity->target)->gameEntity;
+			if (!other->gameEntity->goalentity)
+			{
+				DebugPrintf("%s at (%f %f %f) target %s does not exist\n", gameEntity->classname, State.GetOrigin().X, State.GetOrigin().Y, State.GetOrigin().Z, gameEntity->target);
+				other->gameEntity->movetarget = gameEntity;
+			}
+			gameEntity->target = NULL;
+		}
+		else if ((gameEntity->spawnflags & 1) && !(other->gameEntity->flags & (FL_SWIM|FL_FLY)))
+		{
+			if (other->EntityFlags & ENT_MONSTER)
+			{
+				CMonster *Monster = (dynamic_cast<CMonsterEntity*>(other))->Monster;
+
+				Monster->PauseTime = level.framenum + 100000000;
+				Monster->AIFlags |= AI_STAND_GROUND;
+				Monster->Stand ();
+			}
+		}
+
+		if (other->gameEntity->movetarget == gameEntity)
+		{
+			other->gameEntity->target = NULL;
+			other->gameEntity->movetarget = NULL;
+			other->gameEntity->goalentity = other->gameEntity->enemy;
+
+			if (other->EntityFlags & ENT_MONSTER)
+				(dynamic_cast<CMonsterEntity*>(other))->Monster->AIFlags &= ~AI_COMBAT_POINT;
+		}
+
+		if (gameEntity->pathtarget)
+		{
+			char *savetarget;
+			edict_t *activator;
+
+			savetarget = gameEntity->target;
+			gameEntity->target = gameEntity->pathtarget;
+			if (other->gameEntity->enemy && (other->gameEntity->enemy->Entity->EntityFlags & ENT_PLAYER))
+				activator = other->gameEntity->enemy;
+			else if (other->gameEntity->oldenemy && (other->gameEntity->oldenemy->Entity->EntityFlags & ENT_PLAYER))
+				activator = other->gameEntity->oldenemy;
+			else if (other->gameEntity->activator && (other->gameEntity->activator->Entity->EntityFlags & ENT_PLAYER))
+				activator = other->gameEntity->activator;
+			else
+				activator = other->gameEntity;
+			G_UseTargets (this, activator->Entity);
+			gameEntity->target = savetarget;
+		}
+	};
+
+	void Spawn ()
+	{
+		if (game.mode & GAME_DEATHMATCH)
+		{
+			Free ();
+			return;
+		}
+		SetSolid (SOLID_TRIGGER);
+		Touchable = true;
+		SetMins (vec3f(-8, -8, -16));
+		SetMaxs (vec3f(8, 8, 16));
+		SetSvFlags (SVF_NOCLIENT);
+		Link ();
+	};
+};
+
+LINK_CLASSNAME_TO_CLASS ("point_combat", CPathCombat);
+
+/*QUAKED info_null (0 0.5 0) (-4 -4 -4) (4 4 4)
+Used as a positional target for spotlights, etc.
+*/
+class CInfoNull : public CMapEntity
+{
+public:
+	CInfoNull (int Index) :
+	  CBaseEntity (),
+	  CMapEntity ()
+	  {
+	  };
+
+	void Spawn ()
+	{
+		Free ();
+	};
+};
+
+LINK_CLASSNAME_TO_CLASS ("info_null", CInfoNull);
+
+/*QUAKED func_group (0 0 0) ?
+Used to group brushes together just for editor convenience.
+*/
+class CFuncGroup : public CInfoNull
+{
+public:
+	CFuncGroup (int Index) :
+	  CBaseEntity (Index),
+	  CInfoNull (Index)
+	  {
+	  };
+};
+
+LINK_CLASSNAME_TO_CLASS ("func_group", CFuncGroup);
+
+/*QUAKED info_notnull (0 0.5 0) (-4 -4 -4) (4 4 4)
+Used as a positional target for lightning.
+*/
+class CInfoNotNull : public CMapEntity
+{
+public:
+	CInfoNotNull (int Index) :
+	  CBaseEntity (),
+	  CMapEntity ()
+	  {
+	  };
+
+	void Spawn ()
+	{
+		SetAbsMin(State.GetOrigin());
+		SetAbsMax(State.GetOrigin());
+	};
+};
+
+LINK_CLASSNAME_TO_CLASS ("info_notnull", CInfoNotNull);
+
+/*QUAKED light (0 1 0) (-8 -8 -8) (8 8 8) START_OFF
+Non-displayed light.
+Default light value is 300.
+Default style is 0.
+If targeted, will toggle between on and off.
+Default _cone value is 10 (used to set size of light for spotlights)
+*/
+
+#define START_OFF	1
+
+class CLight : public CMapEntity, public CUsableEntity
+{
+public:
+	bool Usable;
+
+	CLight (int Index) :
+	  CBaseEntity (Index),
+	  CMapEntity (Index),
+	  CUsableEntity (Index),
+	  Usable(false)
+	  {
+	  };
+
+	void Use (CBaseEntity *other, CBaseEntity *activator)
+	{
+		if (!Usable)
+			return;
+
+		if (gameEntity->spawnflags & START_OFF)
+		{
+			ConfigString (CS_LIGHTS+gameEntity->style, "m");
+			gameEntity->spawnflags &= ~START_OFF;
+		}
+		else
+		{
+			ConfigString (CS_LIGHTS+gameEntity->style, "a");
+			gameEntity->spawnflags |= START_OFF;
+		}
+	};
+
+	void Spawn ()
+	{
+		// no targeted lights in deathmatch, because they cause global messages
+		if (!gameEntity->targetname || (game.mode & GAME_DEATHMATCH))
+		{
+			Free ();
+			return;
+		}
+
+		if (gameEntity->style >= 32)
+		{
+			Usable = true;
+			ConfigString (CS_LIGHTS+gameEntity->style, (gameEntity->spawnflags & START_OFF) ? "a" : "m");
+		}
+	};
+};
+
+//LINK_CLASSNAME_TO_CLASS ("light", CLight);
+
+CMapEntity *CLight_Spawn (int Index)
+{
+	CLight *newClass = QNew (com_levelPool, 0) CLight(Index);
+	newClass->Spawn ();
+	return newClass;
+}
+CClassnameToClassIndex CLight_Linker 
+(CLight_Spawn, "light");

@@ -34,16 +34,6 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_local.h"
 #include "cc_brushmodels.h"
 
-#define PLAT_LOW_TRIGGER	1
-
-#define DOOR_START_OPEN		1
-#define DOOR_REVERSE		2
-#define DOOR_CRUSHER		4
-#define DOOR_NOMONSTER		8
-#define DOOR_TOGGLE			32
-#define DOOR_X_AXIS			64
-#define DOOR_Y_AXIS			128
-
 #pragma region Brush_Model
 void CBrushModel::Think ()
 {
@@ -80,10 +70,7 @@ void CBrushModel::Think ()
 
 bool CBrushModel::Run ()
 {
-	if (PhysicsType == PHYSICS_STOP)
-		return CStopPhysics::Run();
-	else
-		return CPushPhysics::Run();
+	return (PhysicsType == PHYSICS_STOP) ? CStopPhysics::Run() : CPushPhysics::Run();
 }
 
 CBrushModel::CBrushModel () :
@@ -366,7 +353,9 @@ void CBrushModel::ThinkAccelMove ()
 	ThinkType = BRUSHTHINK_MOVEACCEL;
 }
 #pragma endregion Brush_Model
+
 #pragma region Platforms
+#define PLAT_LOW_TRIGGER	1
 
 CPlatForm::CPlatForm() :
 CBaseEntity(),
@@ -624,6 +613,16 @@ LINK_CLASSNAME_TO_CLASS ("func_plat", CPlatForm);
 
 #pragma region Doors
 #pragma region Base Door
+
+#define DOOR_START_OPEN		1
+#define DOOR_REVERSE		2
+#define DOOR_CRUSHER		4
+#define DOOR_NOMONSTER		8
+#define DOOR_TOGGLE			32
+#define DOOR_X_AXIS			64
+#define DOOR_Y_AXIS			128
+
+
 CDoor::CDoor() :
 CBaseEntity(),
 CMapEntity(),
@@ -2252,6 +2251,7 @@ void SpawnWorld ()
 };
 #pragma endregion World
 
+#pragma region Rotating Brush
 /*QUAKED func_rotating (0 .5 .8) ? START_ON REVERSE X_AXIS Y_AXIS TOUCH_PAIN STOP ANIMATED ANIMATED_FAST
 You need to have an origin brush as part of this entity.  The center of that brush will be
 the point around which it is rotated. It will rotate around the Z axis by default.  You can
@@ -2365,3 +2365,541 @@ void CRotatingBrush::Spawn ()
 }
 
 LINK_CLASSNAME_TO_CLASS ("func_rotating", CRotatingBrush);
+#pragma endregion Rotating Brush
+
+#pragma region Conveyor
+/*QUAKED func_conveyor (0 .5 .8) ? START_ON TOGGLE
+Conveyors are stationary brushes that move what's on them.
+The brush should be have a surface with at least one current content enabled.
+speed	default 100
+*/
+
+CConveyor::CConveyor () :
+	CBaseEntity (),
+	CMapEntity (),
+	CBrushModel (),
+	CUsableEntity ()
+	{
+	};
+
+CConveyor::CConveyor (int Index) :
+	CBaseEntity (Index),
+	CMapEntity (Index),
+	CBrushModel (Index),
+	CUsableEntity (Index)
+	{
+	};
+
+void CConveyor::Use (CBaseEntity *other, CBaseEntity *activator)
+{
+	if (gameEntity->spawnflags & 1)
+	{
+		gameEntity->speed = 0;
+		gameEntity->spawnflags &= ~1;
+	}
+	else
+	{
+		gameEntity->speed = gameEntity->count;
+		gameEntity->spawnflags |= 1;
+	}
+
+	if (!(gameEntity->spawnflags & 2))
+		gameEntity->count = 0;
+}
+
+bool CConveyor::Run ()
+{
+	return CBrushModel::Run ();
+}
+
+void CConveyor::Spawn ()
+{
+	if (!gameEntity->speed)
+		gameEntity->speed = 100;
+
+	if (!(gameEntity->spawnflags & 1))
+	{
+		gameEntity->count = gameEntity->speed;
+		gameEntity->speed = 0;
+	}
+
+	SetModel (gameEntity, gameEntity->model);
+	SetSolid (SOLID_BSP);
+	Link ();
+}
+
+LINK_CLASSNAME_TO_CLASS ("func_conveyor", CConveyor);
+#pragma endregion Conveyor
+
+#pragma region Area Portal
+/*QUAKED func_areaportal (0 0 0) ?
+
+This is a non-visible object that divides the world into
+areas that are seperated when this portal is not activated.
+Usually enclosed in the middle of a door.
+*/
+CAreaPortal::CAreaPortal () :
+	CBaseEntity (),
+	CMapEntity (),
+	CUsableEntity ()
+	{
+	};
+
+CAreaPortal::CAreaPortal (int Index) :
+	CBaseEntity (Index),
+	CMapEntity (Index),
+	CUsableEntity (Index)
+	{
+	};
+
+
+void CAreaPortal::Use (CBaseEntity *other, CBaseEntity *activator)
+{
+	gameEntity->count ^= 1;		// toggle state
+	gi.SetAreaPortalState (gameEntity->style, (gameEntity->count != 0));
+}
+
+bool CAreaPortal::Run ()
+{
+	return CBaseEntity::Run ();
+}
+
+void CAreaPortal::Spawn ()
+{
+	gameEntity->count = 0;		// always start closed;
+}
+
+LINK_CLASSNAME_TO_CLASS ("func_areaportal", CAreaPortal);
+
+#pragma endregion Area Portal
+
+#pragma region Wall
+/*QUAKED func_wall (0 .5 .8) ? TRIGGER_SPAWN TOGGLE START_ON ANIMATED ANIMATED_FAST
+This is just a solid wall if not inhibited
+
+TRIGGER_SPAWN	the wall will not be present until triggered
+				it will then blink in to existance; it will
+				kill anything that was in it's way
+
+TOGGLE			only valid for TRIGGER_SPAWN walls
+				this allows the wall to be turned on and off
+
+START_ON		only valid for TRIGGER_SPAWN walls
+				the wall will initially be present
+*/
+
+CFuncWall::CFuncWall () :
+	CBaseEntity (),
+	CMapEntity (),
+	CBrushModel (),
+	CUsableEntity (),
+	Usable(true)
+	{
+	};
+
+CFuncWall::CFuncWall (int Index) :
+	CBaseEntity (Index),
+	CMapEntity (Index),
+	CBrushModel (Index),
+	CUsableEntity (Index),
+	Usable(true)
+	{
+	};
+
+void CFuncWall::Use (CBaseEntity *other, CBaseEntity *activator)
+{
+	if (!Usable)
+		return;
+
+	if (GetSolid() == SOLID_NOT)
+	{
+		SetSolid (SOLID_BSP);
+		SetSvFlags (GetSvFlags() & ~SVF_NOCLIENT);
+		KillBox (this);
+	}
+	else
+	{
+		SetSolid (SOLID_NOT);
+		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
+	}
+	Link ();
+
+	if (!(gameEntity->spawnflags & 2))
+		Usable = false;
+}
+
+bool CFuncWall::Run ()
+{
+	return CBrushModel::Run ();
+}
+
+void CFuncWall::Spawn ()
+{
+	PhysicsType = PHYSICS_PUSH;
+	SetModel (gameEntity, gameEntity->model);
+
+	if (gameEntity->spawnflags & 8)
+		State.AddEffects (EF_ANIM_ALL);
+	if (gameEntity->spawnflags & 16)
+		State.AddEffects (EF_ANIM_ALLFAST);
+
+	// just a wall
+	if ((gameEntity->spawnflags & 7) == 0)
+	{
+		SetSolid (SOLID_BSP);
+		Link ();
+		return;
+	}
+
+	// it must be TRIGGER_SPAWN
+	if (!(gameEntity->spawnflags & 1))
+		gameEntity->spawnflags |= 1;
+
+	// yell if the spawnflags are odd
+	if (gameEntity->spawnflags & 4)
+	{
+		if (!(gameEntity->spawnflags & 2))
+		{
+			//gi.dprintf("func_wall START_ON without TOGGLE\n");
+			MapPrint (MAPPRINT_WARNING, this, GetAbsMin(), "Invalid spawnflags: START_ON without TOGGLE\n");
+			gameEntity->spawnflags |= 2;
+		}
+	}
+
+	SetSolid ((gameEntity->spawnflags & 4) ? SOLID_BSP : SOLID_NOT);
+	if (!(gameEntity->spawnflags & 4))
+		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
+
+	Link ();
+}
+
+LINK_CLASSNAME_TO_CLASS ("func_wall", CFuncWall);
+
+#pragma endregion Wall
+
+#pragma region Object
+/*QUAKED func_object (0 .5 .8) ? TRIGGER_SPAWN ANIMATED ANIMATED_FAST
+This is solid bmodel that will fall if it's support it removed.
+*/
+
+CFuncObject::CFuncObject () :
+	CBaseEntity (),
+	CMapEntity (),
+	CBrushModel (),
+	CTouchableEntity (),
+	CUsableEntity (),
+	CTossProjectile (),
+	Usable(true)
+	{
+	};
+
+CFuncObject::CFuncObject (int Index) :
+	CBaseEntity (Index),
+	CMapEntity (Index),
+	CBrushModel (Index),
+	CTouchableEntity (Index),
+	CUsableEntity (Index),
+	CTossProjectile (Index),
+	Usable(true)
+	{
+	};
+
+bool CFuncObject::Run ()
+{
+	switch (PhysicsType)
+	{
+	case PHYSICS_TOSS:
+		return CTossProjectile::Run ();
+	default:
+		return CBrushModel::Run ();
+	};
+};
+
+void CFuncObject::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
+{
+	// only squash thing we fall on top of
+	if (!plane)
+		return;
+	if (plane->normal[2] < 1.0)
+		return;
+	if (other->gameEntity->takedamage == false)
+		return;
+	T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, State.GetOrigin(), vec3Origin, gameEntity->dmg, 1, 0, MOD_CRUSH);
+};
+
+void CFuncObject::Think ()
+{
+	PhysicsType = PHYSICS_TOSS;
+	Touchable = true;
+};
+
+void CFuncObject::Use (CBaseEntity *other, CBaseEntity *activator)
+{
+	SetSolid (SOLID_BSP);
+	SetSvFlags (GetSvFlags() & ~SVF_NOCLIENT);
+	Usable = false;
+	KillBox (this);
+	Think (); // release us
+}
+
+void CFuncObject::Spawn ()
+{
+	Touchable = false;
+	SetModel (gameEntity, gameEntity->model);
+
+	SetMins (GetMins() + vec3f(1,1,1));
+	SetMaxs (GetMaxs() - vec3f(1,1,1));
+
+	if (!gameEntity->dmg)
+		gameEntity->dmg = 100;
+
+	if (gameEntity->spawnflags == 0)
+	{
+		SetSolid (SOLID_BSP);
+		PhysicsType = PHYSICS_PUSH;
+		NextThink = level.framenum + 2;
+	}
+	else
+	{
+		SetSolid (SOLID_NOT);
+		PhysicsType = PHYSICS_PUSH;
+		Usable = true;
+		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
+	}
+
+	if (gameEntity->spawnflags & 2)
+		State.AddEffects (EF_ANIM_ALL);
+	if (gameEntity->spawnflags & 4)
+		State.AddEffects (EF_ANIM_ALLFAST);
+
+	SetClipmask (CONTENTS_MASK_MONSTERSOLID);
+	Link ();
+}
+#pragma endregion Object
+
+#pragma region Explosive
+/*QUAKED func_explosive (0 .5 .8) ? Trigger_Spawn ANIMATED ANIMATED_FAST
+Any brush that you want to explode or break apart.  If you want an
+ex0plosion, set dmg and it will do a radius explosion of that amount
+at the center of the bursh.
+
+If targeted it will not be shootable.
+
+health defaults to 100.
+
+mass defaults to 75.  This determines how much debris is emitted when
+it explodes.  You get one large chunk per 100 of mass (up to 8) and
+one small chunk per 25 of mass (up to 16).  So 800 gives the most.
+*/
+
+CFuncExplosive::CFuncExplosive () :
+	CBaseEntity (),
+	CMapEntity (),
+	CBrushModel (),
+	CUsableEntity (),
+	CHurtableEntity (),
+	UseType(FUNCEXPLOSIVE_USE_NONE)
+	{
+	};
+
+CFuncExplosive::CFuncExplosive (int Index) :
+	CBaseEntity (Index),
+	CMapEntity (Index),
+	CBrushModel (Index),
+	CUsableEntity (Index),
+	CHurtableEntity (Index),
+	UseType(FUNCEXPLOSIVE_USE_NONE)
+	{
+	};
+
+void CFuncExplosive::Pain (CBaseEntity *other, float kick, int damage)
+{
+};
+
+void CFuncExplosive::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+{
+	// bmodel origins are (0 0 0), we need to adjust that here
+	vec3f size = vec3f(gameEntity->size);
+	size.Scale (0.5f);
+	vec3f origin = GetAbsMin() + size;
+	State.SetOrigin (origin);
+
+	gameEntity->takedamage = false;
+
+	if (gameEntity->dmg)
+		T_RadiusDamage (gameEntity, attacker->gameEntity, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_EXPLOSIVE);
+
+	vec3f velocity = State.GetOrigin() - inflictor->State.GetOrigin();
+	velocity.Normalize ();
+	velocity.Scale (150);
+	Vec3Copy (velocity, gameEntity->velocity);
+
+	// start chunks towards the center
+	size.Scale (0.5f);
+
+	float mass = gameEntity->mass;
+	if (!mass)
+		mass = 75;
+
+	// big chunks
+	if (mass >= 100)
+	{
+		int count = mass / 100;
+		if (count > 8)
+			count = 8;
+		while(count--)
+			ThrowDebris (gameEntity, "models/objects/debris1/tris.md2", 1, vec3f (origin + (crandom() * size)));
+	}
+
+	// small chunks
+	int count = mass / 25;
+	if (count > 16)
+		count = 16;
+	while(count--)
+		ThrowDebris (gameEntity, "models/objects/debris2/tris.md2", 2, vec3f (origin + (crandom() * size)));
+
+	G_UseTargets (this, attacker);
+
+	if (gameEntity->dmg)
+		BecomeExplosion (true);
+	else
+		Free ();
+}
+
+void CFuncExplosive::Use (CBaseEntity *other, CBaseEntity *activator)
+{
+	switch (UseType)
+	{
+	case FUNCEXPLOSIVE_USE_EXPLODE:
+		Die (this, other, gameEntity->health, vec3Origin);
+		break;
+	case FUNCEXPLOSIVE_USE_SPAWN:
+		DoSpawn ();
+		break;
+	default:
+		break;
+	}
+}
+
+void CFuncExplosive::DoSpawn ()
+{
+	SetSolid (SOLID_BSP);
+	SetSvFlags (GetSvFlags() & ~SVF_NOCLIENT);
+	UseType = FUNCEXPLOSIVE_USE_NONE;
+	KillBox (this);
+	Link ();
+}
+
+bool CFuncExplosive::Run ()
+{
+	return CBrushModel::Run ();
+}
+
+void CFuncExplosive::Spawn ()
+{
+	if (game.mode & GAME_DEATHMATCH)
+	{	// auto-remove for deathmatch
+		Free ();
+		return;
+	}
+
+	PhysicsType = PHYSICS_PUSH;
+
+	ModelIndex ("models/objects/debris1/tris.md2");
+	ModelIndex ("models/objects/debris2/tris.md2");
+
+	if (gameEntity->spawnflags & 1)
+	{
+		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
+		SetSolid (SOLID_NOT);
+		UseType = FUNCEXPLOSIVE_USE_SPAWN;
+	}
+	else
+	{
+		SetSolid (SOLID_BSP);
+		if (gameEntity->targetname)
+			UseType = FUNCEXPLOSIVE_USE_EXPLODE;
+	}
+
+	SetModel (gameEntity, gameEntity->model);
+
+	if (gameEntity->spawnflags & 2)
+		State.AddEffects (EF_ANIM_ALL);
+	if (gameEntity->spawnflags & 4)
+		State.AddEffects (EF_ANIM_ALLFAST);
+
+	if (UseType != FUNCEXPLOSIVE_USE_EXPLODE)
+	{
+		if (!gameEntity->health)
+			gameEntity->health = 100;
+		gameEntity->takedamage = true;
+	}
+
+	Link ();
+};
+
+LINK_CLASSNAME_TO_CLASS ("func_explosive", CFuncExplosive);
+
+#pragma endregion Explosive
+
+#pragma region Killbox
+/*QUAKED func_killbox (1 0 0) ?
+Kills everything inside when fired, irrespective of protection.
+*/
+CKillbox::CKillbox () :
+	CBaseEntity (),
+	CMapEntity (),
+	CUsableEntity ()
+	{
+	};
+
+CKillbox::CKillbox (int Index) :
+	CBaseEntity (Index),
+	CMapEntity (Index),
+	CUsableEntity (Index)
+	{
+	};
+
+void CKillbox::Use (CBaseEntity *other, CBaseEntity *activator)
+{
+	KillBox (this);
+}
+
+void CKillbox::Spawn ()
+{
+	SetModel (gameEntity, gameEntity->model);
+	SetSvFlags (SVF_NOCLIENT);
+}
+
+LINK_CLASSNAME_TO_CLASS ("func_killbox", CKillbox);
+
+#pragma endregion Killbox
+
+class CTriggerRelay : public CMapEntity, public CUsableEntity
+{
+public:
+	CTriggerRelay () :
+	  CBaseEntity (),
+	  CMapEntity (),
+	  CUsableEntity ()
+	  {
+	  };
+
+	CTriggerRelay (int Index) :
+	  CBaseEntity (Index),
+	  CMapEntity (Index),
+	  CUsableEntity (Index)
+	  {
+	  };
+
+	void Use (CBaseEntity *other, CBaseEntity *activator)
+	{
+		G_UseTargets (this, activator);
+	};
+
+	void Spawn ()
+	{
+	};
+};
+
+LINK_CLASSNAME_TO_CLASS ("trigger_relay", CTriggerRelay);
