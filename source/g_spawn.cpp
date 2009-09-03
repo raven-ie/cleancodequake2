@@ -125,12 +125,7 @@ void SP_turret_base (edict_t *self);
 void SP_monster_boss3_stand (edict_t *self);
 
 spawn_t	spawns[] = {
-	{"target_help", SP_target_help},
 	//{"target_actor", SP_target_actor},
-	{"target_lightramp", SP_target_lightramp},
-	{"target_location", SP_target_location},
-	{"target_position", SP_target_position},
-	{"target_earthquake", SP_target_earthquake},
 
 //	{"viewthing", SP_viewthing},
 

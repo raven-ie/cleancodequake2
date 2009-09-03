@@ -400,6 +400,9 @@ void CSoldierBase::Attack1_Refire1 ()
 	if (Entity->gameEntity->enemy->health <= 0)
 		return;
 
+	if (!EnemyVis)
+		return;
+
 	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (range(Entity->gameEntity, Entity->gameEntity->enemy) == RANGE_MELEE) )
 		NextFrame = FRAME_attak102;
 	else
@@ -412,6 +415,9 @@ void CSoldierBase::Attack1_Refire2 ()
 		return;
 
 	if (Entity->gameEntity->enemy->health <= 0)
+		return;
+
+	if (!EnemyVis)
 		return;
 
 	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (range(Entity->gameEntity, Entity->gameEntity->enemy) == RANGE_MELEE) )
@@ -450,6 +456,9 @@ void CSoldierBase::Attack2_Refire1 ()
 	if (Entity->gameEntity->enemy->health <= 0)
 		return;
 
+	if (!EnemyVis)
+		return;
+
 	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (range(Entity->gameEntity, Entity->gameEntity->enemy) == RANGE_MELEE) )
 		NextFrame = FRAME_attak204;
 	else
@@ -462,6 +471,9 @@ void CSoldierBase::Attack2_Refire2 ()
 		return;
 
 	if (Entity->gameEntity->enemy->health <= 0)
+		return;
+
+	if (!EnemyVis)
 		return;
 
 	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (range(Entity->gameEntity, Entity->gameEntity->enemy) == RANGE_MELEE) )
@@ -505,6 +517,9 @@ void CSoldierBase::Fire3 ()
 
 void CSoldierBase::Attack3_Refire ()
 {
+	if (!EnemyVis)
+		return;
+
 #ifdef MONSTER_USE_ROGUE_AI
 	if ((level.framenum + 4) < DuckWaitTime)
 #else
@@ -579,7 +594,7 @@ void CSoldierBase::Attack6_Refire ()
 	if (!EnemyVis)
 		return;
 
-	if (((skill->Integer() == 3 && Entity->State.GetSkinNum() > 1) || ((random() < (0.25*((float)skill->Integer()))))))
+	if (((skill->Integer() == 3 && (Entity->State.GetSkinNum() < 2)) || ((random() < (0.09*((float)skill->Integer()))))))
 		NextFrame = FRAME_runs03;
 }
 
@@ -667,7 +682,8 @@ void CSoldierBase::Sight ()
 
 	if ((skill->Integer() > 0) && (range(Entity->gameEntity, Entity->gameEntity->enemy) >= RANGE_NEAR))
 	{
-		if ((random() > 0.75) && (Entity->State.GetSkinNum() <= 3))
+		// Only do run-shoot off the bat if we're not a shotgun soldier (too cheap)
+		if ((random() > 0.75) && (Entity->State.GetSkinNum() < 2))
 			CurrentMove = &SoldierMoveAttack6;
 	}
 }
