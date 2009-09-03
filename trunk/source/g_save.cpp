@@ -19,6 +19,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 #include "g_local.h"
+#include "cc_exceptionhandler.h"
 
 #define Function(f) {#f, f}
 
@@ -260,6 +261,10 @@ void G_Register ()
 
 void InitGame (void)
 {
+#ifdef CC_USE_EXCEPTION_HANDLER
+__try
+{
+#endif
 	Mem_Init ();
 	DebugPrintf ("==== InitGame ====\n");
 	DebugPrintf ("Running CleanCode Quake2, built on %s (%s %s)\nInitializing game...", __TIMESTAMP__, BUILDSTRING, CPUSTRING);
@@ -303,6 +308,13 @@ void InitGame (void)
 	Mem_Register ();
 
 	DebugPrintf ("\nGame initialized in %ums.\n", Sys_Milliseconds()-start);
+#ifdef CC_USE_EXCEPTION_HANDLER
+}
+__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
+{
+	return;
+}
+#endif
 }
 
 //=========================================================
@@ -616,6 +628,10 @@ last save position.
 */
 void WriteGame (char *filename, BOOL autosave)
 {
+#ifdef CC_USE_EXCEPTION_HANDLER
+__try
+{
+#endif
 	fileHandle_t f;
 	int		i;
 	char	str[16];
@@ -643,10 +659,21 @@ void WriteGame (char *filename, BOOL autosave)
 		WriteClient (f, dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity));
 
 	FS_CloseFile (f);
+#ifdef CC_USE_EXCEPTION_HANDLER
+}
+__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
+{
+	return;
+}
+#endif
 }
 
 void ReadGame (char *filename)
 {
+#ifdef CC_USE_EXCEPTION_HANDLER
+__try
+{
+#endif
 	FILE	*f;
 	int		i;
 	char	str[16];
@@ -678,6 +705,13 @@ void ReadGame (char *filename)
 		ReadClient (f, dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity));
 
 	fclose (f);
+#ifdef CC_USE_EXCEPTION_HANDLER
+}
+__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
+{
+	return;
+}
+#endif
 }
 
 //==========================================================
@@ -809,6 +843,10 @@ WriteLevel
 */
 void WriteLevel (char *filename)
 {
+#ifdef CC_USE_EXCEPTION_HANDLER
+__try
+{
+#endif
 	int		i;
 	edict_t	*ent;
 	FILE	*f;
@@ -847,6 +885,13 @@ void WriteLevel (char *filename)
 	fwrite (&i, sizeof(i), 1, f);
 
 	fclose (f);
+#ifdef CC_USE_EXCEPTION_HANDLER
+}
+__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
+{
+	return;
+}
+#endif
 }
 
 
@@ -868,6 +913,10 @@ No clients are connected yet.
 */
 void ReadLevel (char *filename)
 {
+#ifdef CC_USE_EXCEPTION_HANDLER
+__try
+{
+#endif
 	int		entNum;
 	FILE	*f;
 	int		i;
@@ -969,4 +1018,11 @@ void ReadLevel (char *filename)
 				// backwards compatoh you get the picture
 				ent->nextthink = level.framenum + (ent->delay * 10);
 	}
+#ifdef CC_USE_EXCEPTION_HANDLER
+}
+__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
+{
+	return;
+}
+#endif
 }

@@ -867,13 +867,4 @@ public:
 	};
 };
 
-//LINK_CLASSNAME_TO_CLASS ("light", CLight);
-
-CMapEntity *CLight_Spawn (int Index)
-{
-	CLight *newClass = QNew (com_levelPool, 0) CLight(Index);
-	newClass->Spawn ();
-	return newClass;
-}
-CClassnameToClassIndex CLight_Linker 
-(CLight_Spawn, "light");
+LINK_CLASSNAME_TO_CLASS ("light", CLight);
