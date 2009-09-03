@@ -36,7 +36,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_infantry.h"
 #include "cc_turret_entities.h"
 
-void AnglesNormalize(vec3f vec)
+void AnglesNormalize(vec3f &vec)
 {
 	while(vec.X > 360)
 		vec.X -= 360;
@@ -210,16 +210,16 @@ void CTurretBreach::Think ()
 			delta.Y -= 360;
 		delta.Z = 0;
 
-		if (delta.X > gameEntity->speed * 0.1f)
-			delta.X = gameEntity->speed * 0.1f;
-		if (delta.X < -1 * gameEntity->speed * 0.1f)
-			delta.X = -1 * gameEntity->speed * 0.1f;
-		if (delta.Y > gameEntity->speed * 0.1f)
-			delta.Y = gameEntity->speed * 0.1f;
-		if (delta.Y < -1 * gameEntity->speed * 0.1f)
-			delta.Y = -1 * gameEntity->speed * 0.1f;
+		if (delta.X > gameEntity->speed * 1)
+			delta.X = gameEntity->speed * 1;
+		if (delta.X < -1 * gameEntity->speed * 1)
+			delta.X = -1 * gameEntity->speed * 1;
+		if (delta.Y > gameEntity->speed * 1)
+			delta.Y = gameEntity->speed * 1;
+		if (delta.Y < -1 * gameEntity->speed * 1)
+			delta.Y = -1 * gameEntity->speed * 1;
 
-		Vec3Scale (delta, 0.1f, gameEntity->avelocity);
+		Vec3Scale (delta, 1, gameEntity->avelocity);
 
 		NextThink = level.framenum + FRAMETIME;
 
@@ -248,15 +248,15 @@ void CTurretBreach::Think ()
 			target.Z = gameEntity->owner->state.origin[2];
 
 			dir = target - gameEntity->owner->Entity->State.GetOrigin();
-			gameEntity->owner->velocity[0] = dir.X * 1.0 / 0.1f;
-			gameEntity->owner->velocity[1] = dir.Y * 1.0 / 0.1f;
+			gameEntity->owner->velocity[0] = dir.X * 1.0 / 1;
+			gameEntity->owner->velocity[1] = dir.Y * 1.0 / 1;
 
 			// z
 			angle = State.GetAngles().X * (M_PI*2 / 360);
 			target_z = SnapToEights(State.GetOrigin().Z + gameEntity->owner->move_origin[0] * tan(angle) + gameEntity->owner->move_origin[2]);
 
 			diff = target_z - gameEntity->owner->state.origin[2];
-			gameEntity->owner->velocity[2] = diff * 1.0 / 0.1f;
+			gameEntity->owner->velocity[2] = diff * 1.0 / 1;
 
 			if (gameEntity->spawnflags & 65536)
 			{
@@ -289,6 +289,8 @@ void CTurretBreach::Spawn ()
 	gameEntity->pos1[YAW]   = st.minyaw;
 	gameEntity->pos2[PITCH] = -1 * st.maxpitch;
 	gameEntity->pos2[YAW]   = st.maxyaw;
+
+	gameEntity->move_angles[YAW] = State.GetAngles().Y;
 
 	NextThink = level.framenum + FRAMETIME;
 	Link ();
@@ -392,9 +394,12 @@ void CTurretDriver::TurretThink ()
 	}
 
 	// let the turret know where we want it to aim
-	vec3f dir = (Entity->gameEntity->enemy->Entity->State.GetOrigin() +
+	/*vec3f dir = (Entity->gameEntity->enemy->Entity->State.GetOrigin() +
 		vec3f(0, 0, Entity->gameEntity->enemy->viewheight)) -
-		Entity->gameEntity->target_ent->Entity->State.GetOrigin();
+		Entity->gameEntity->target_ent->Entity->State.GetOrigin();*/
+	vec3f target = Entity->gameEntity->enemy->Entity->State.GetOrigin();
+	target.Z += Entity->gameEntity->enemy->viewheight;
+	vec3f dir = target - Entity->gameEntity->target_ent->Entity->State.GetOrigin();
 
 	vec3f ang = dir.ToAngles ();
 	Vec3Copy (ang, Entity->gameEntity->target_ent->move_angles);
@@ -403,11 +408,11 @@ void CTurretDriver::TurretThink ()
 	if (level.framenum < AttackFinished)
 		return;
 
-	float reaction_time = (3 - skill->Float()) * 10;
-	if ((level.framenum - TrailTime) < reaction_time)
+	float reaction_time = (3 - skill->Integer()) * 1.0;
+	if ((level.framenum - TrailTime) < (reaction_time * 10))
 		return;
 
-	AttackFinished = level.framenum + reaction_time + 10;
+	AttackFinished = level.framenum + ((reaction_time + 1.0) * 20);
 
 	Entity->gameEntity->target_ent->spawnflags |= 65536;
 }

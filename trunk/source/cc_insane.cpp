@@ -545,7 +545,6 @@ void CInsane::Dead ()
 	{
 		Entity->SetMins (vec3f(-16, -16, -24));
 		Entity->SetMaxs (vec3f(16, 16, -8));
-		Entity->TossPhysics = true;
 		Entity->PhysicsType = PHYSICS_TOSS;
 	}
 	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);

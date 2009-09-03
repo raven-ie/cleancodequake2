@@ -606,7 +606,6 @@ void CIcarus::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 	if (Entity->gameEntity->deadflag == DEAD_DEAD)
 		return;
 
-	Entity->TossPhysics = true;
 	Entity->PhysicsType = PHYSICS_TOSS;
 // regular death
 	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundDeath1 : SoundDeath2);

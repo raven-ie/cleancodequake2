@@ -163,8 +163,6 @@ enum EAttackState
 class CMonsterEntity : public CMapEntity, public CStepPhysics, public CTossProjectile, public CPushPhysics, public CHurtableEntity, public CThinkableEntity, public CTouchableEntity
 {
 public:
-	bool			TossPhysics;
-	bool			BouncePhysics;
 	bool			IsHead;
 
 	class CMonster	*Monster;

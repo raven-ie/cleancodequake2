@@ -193,9 +193,10 @@ static CBaseEntity *loc_findradius (CBaseEntity *from, vec3f org, float rad)
 			continue;
 #endif
 
+		from = fromEnt->Entity;
 		if ((org - (from->State.GetOrigin() + (from->GetMins() + from->GetMaxs()) * 0.5)).Length() > rad)
 			continue;
-		return fromEnt->Entity;
+		return from;
 	}
 
 	return NULL;
@@ -952,45 +953,84 @@ void GCTFSay_Team (CPlayerEntity *ent)
 The origin is the bottom of the banner.
 The banner is 248 tall.
 */
-static void misc_ctf_banner_think (edict_t *ent)
+class CMiscCTFBanner : public CMapEntity, public CThinkableEntity
 {
-	ent->state.frame = (ent->state.frame + 1) % 16;
-	ent->nextthink = level.framenum + FRAMETIME;
-}
+public:
+	CMiscCTFBanner () :
+	  CBaseEntity (),
+	  CMapEntity (),
+	  CThinkableEntity ()
+	{
+	};
 
-void SP_misc_ctf_banner (edict_t *ent)
-{
-	ent->movetype = MOVETYPE_NONE;
-	ent->solid = SOLID_NOT;
-	ent->state.modelIndex = ModelIndex ("models/ctf/banner/tris.md2");
-	if (ent->spawnflags & 1) // team2
-		ent->state.skinNum = 1;
+	CMiscCTFBanner (int Index) :
+	  CBaseEntity (Index),
+	  CMapEntity (Index),
+	  CThinkableEntity (Index)
+	{
+	};
 
-	ent->state.frame = rand() % 16;
-	gi.linkentity (ent);
+	bool Run ()
+	{
+		return CBaseEntity::Run();
+	};
 
-	ent->think = misc_ctf_banner_think;
-	ent->nextthink = level.framenum + FRAMETIME;
-}
+	void Think ()
+	{
+		State.SetFrame ((State.GetFrame() + 1) % 16);
+		NextThink = level.framenum + FRAMETIME;
+	};
+
+	virtual void Spawn ()
+	{
+		SetSolid (SOLID_NOT);
+		State.SetModelIndex (ModelIndex ("models/ctf/banner/tris.md2"));
+		if (gameEntity->spawnflags & 1) // team2
+			State.SetSkinNum (1);
+
+		State.SetFrame (rand() % 16);
+		Link ();
+
+		NextThink = level.framenum + FRAMETIME;
+	};
+};
+
+LINK_CLASSNAME_TO_CLASS ("misc_ctf_banner", CMiscCTFBanner);
 
 /*QUAKED misc_ctf_small_banner (1 .5 0) (-4 -32 0) (4 32 124) TEAM2
 The origin is the bottom of the banner.
 The banner is 124 tall.
 */
-void SP_misc_ctf_small_banner (edict_t *ent)
+class CMiscCTFBannerSmall : public CMiscCTFBanner
 {
-	ent->movetype = MOVETYPE_NONE;
-	ent->solid = SOLID_NOT;
-	ent->state.modelIndex = ModelIndex ("models/ctf/banner/small.md2");
-	if (ent->spawnflags & 1) // team2
-		ent->state.skinNum = 1;
+public:
+	CMiscCTFBannerSmall () :
+	  CBaseEntity (),
+	  CMiscCTFBanner ()
+	{
+	};
 
-	ent->state.frame = rand() % 16;
-	gi.linkentity (ent);
+	CMiscCTFBannerSmall (int Index) :
+	  CBaseEntity (Index),
+	  CMiscCTFBanner (Index)
+	{
+	};
 
-	ent->think = misc_ctf_banner_think;
-	ent->nextthink = level.framenum + FRAMETIME;
-}
+	void Spawn ()
+	{
+		SetSolid (SOLID_NOT);
+		State.SetModelIndex (ModelIndex ("models/ctf/banner/small.md2"));
+		if (gameEntity->spawnflags & 1) // team2
+			State.SetSkinNum (1);
+
+		State.SetFrame (rand() % 16);
+		Link ();
+
+		NextThink = level.framenum + FRAMETIME;
+	};
+};
+
+LINK_CLASSNAME_TO_CLASS ("misc_ctf_banner_small", CMiscCTFBannerSmall);
 
 /* ELECTIONS */
 

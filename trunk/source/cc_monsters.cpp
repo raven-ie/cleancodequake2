@@ -462,27 +462,29 @@ bool infront (edict_t *self, edict_t *other)
 CMonsterEntity::CMonsterEntity () :
 CBaseEntity(),
 CMapEntity(),
-CStepPhysics(),
 CTossProjectile(),
 CPushPhysics(),
 CHurtableEntity(),
 CThinkableEntity(),
+CStepPhysics(),
 CTouchableEntity()
 {
 	EntityFlags |= ENT_MONSTER;
+	PhysicsType = PHYSICS_STEP;
 };
 
 CMonsterEntity::CMonsterEntity (int Index) :
 CBaseEntity(Index),
 CMapEntity(Index),
-CStepPhysics(Index),
 CTossProjectile(Index),
 CPushPhysics(Index),
 CHurtableEntity(Index),
 CThinkableEntity(Index),
+CStepPhysics(Index),
 CTouchableEntity(Index)
 {
 	EntityFlags |= ENT_MONSTER;
+	PhysicsType = PHYSICS_STEP;
 };
 
 void CMonsterEntity::Spawn ()
@@ -540,14 +542,12 @@ void CMonsterEntity::ThrowHead (MediaIndex gibIndex, int damage, int type)
 
 	if (type == GIB_ORGANIC)
 	{
-		TossPhysics = true;
 		PhysicsType = PHYSICS_TOSS;
 		vscale = 0.5;
 	}
 	else
 	{
 		PhysicsType = PHYSICS_BOUNCE;
-		BouncePhysics = true;
 		vscale = 1.0;
 	}
 
@@ -582,17 +582,18 @@ void CMonsterEntity::ThrowHead (MediaIndex gibIndex, int damage, int type)
 
 bool CMonsterEntity::Run ()
 {
-	if (TossPhysics)
-		return CTossProjectile::Run();
-	else if (BouncePhysics)
+	switch (PhysicsType)
 	{
+	case PHYSICS_TOSS:
+		return CTossProjectile::Run();
+	case PHYSICS_BOUNCE:
 		backOff = 1.5f;
 		return CBounceProjectile::Run ();
-	}
-	else if (PhysicsType == PHYSICS_PUSH)
+	case PHYSICS_PUSH:
 		return CPushPhysics::Run ();
-	else
-		return CStepPhysics::Run();
+	default:
+		return CStepPhysics::Run ();
+	};
 }
 
 void CMonster::ChangeYaw ()

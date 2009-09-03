@@ -502,7 +502,6 @@ void CBoss2::Dead ()
 {
 	Entity->SetMins (vec3f(-56, -56, 0));
 	Entity->SetMaxs (vec3f(56, 56, 80));
-	Entity->TossPhysics = true;
 	Entity->PhysicsType = PHYSICS_TOSS;
 	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
 	Entity->NextThink = 0;

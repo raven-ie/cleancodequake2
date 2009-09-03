@@ -235,17 +235,17 @@ CreateTargetChangeLevel
 Returns the created target changelevel
 =================
 */
-CBaseEntity *CreateTargetChangeLevel(char *map)
+#include "cc_target_entities.h"
+// FIXME: Remove. This sucks.
+CTargetChangeLevel *CreateTargetChangeLevel(char *map)
 {
-	/*
-	edict_t *ent;
+	CTargetChangeLevel *Temp = QNew (com_levelPool, 0) CTargetChangeLevel;
+	Temp->gameEntity->classname = "target_changelevel";
 
-	ent = G_Spawn ();
-	ent->classname = "target_changelevel";
-	Q_snprintfz(level.nextmap, sizeof(level.nextmap), "%s", map);
-	ent->map = level.nextmap;*/
-	// FIXME
-	return NULL;
+	Q_snprintfz (level.nextmap, sizeof(level.nextmap), "%s", map);
+	Temp->gameEntity->map = level.nextmap;
+
+	return Temp;
 }
 /*
 =================
@@ -317,7 +317,7 @@ void EndDMLevel (void)
 		BeginIntermission (CreateTargetChangeLevel (level.nextmap) );
 	else
 	{	// search for a changelevel
-		CBaseEntity *ent = CC_Find (NULL, FOFS(classname), "target_changelevel");
+		CTargetChangeLevel *ent = dynamic_cast<CTargetChangeLevel*>(CC_Find (NULL, FOFS(classname), "target_changelevel"));
 		if (!ent)
 		{	// the map designer didn't include a changelevel,
 			// so create a fake ent that goes back to the same level
@@ -502,6 +502,9 @@ __try
 		}*/
 		if (ent->Entity)
 		{
+			if (!ent->Entity->Freed && (ent->Entity->EntityFlags & ENT_THINKABLE)) 
+				dynamic_cast<CThinkableEntity*>(ent->Entity)->PreThink ();
+
 			ent->Entity->Run ();
 
 			if (!ent->Entity->Freed && (ent->Entity->EntityFlags & ENT_THINKABLE))
