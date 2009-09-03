@@ -1780,7 +1780,7 @@ void CPlayerEntity::EndServerFrame ()
 		vec4_t blend;
 		Client.PlayerState.GetViewBlend (blend);
 
-		blend[4] = 0;
+		blend[3] = 0;
 		Client.PlayerState.SetViewBlend (blend);
 
 		Client.PlayerState.SetFov (90);
