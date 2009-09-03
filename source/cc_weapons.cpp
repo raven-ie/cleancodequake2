@@ -117,10 +117,18 @@ bool CWeaponItem::Pickup (class CItemEntity *ent, CPlayerEntity *other)
 		Ammo->AddAmmo (other, ent->gameEntity->count);
 
 	if (Weapon)
+	{
 		if (other->Client.pers.Weapon != Weapon && 
-			(other->Client.pers.Inventory.Has(this) == 1) &&
+#ifndef NO_AUTOSWITCH
+			(CheckAutoSwitch(other) || 
+#endif
+			((other->Client.pers.Inventory.Has(this) == 1)) &&
 			( !(game.mode & GAME_DEATHMATCH) || (other->Client.pers.Weapon && other->Client.pers.Weapon->WeaponItem == NItems::Blaster) ) )
+#ifndef NO_AUTOSWITCH
+			)
+#endif
 			other->Client.NewWeapon = Weapon;
+	}
 
 
 	return true;

@@ -56,7 +56,7 @@
 				MinimalRebuild="false"
 				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
-				SmallerTypeCheck="false"
+				SmallerTypeCheck="true"
 				RuntimeLibrary="3"
 				BufferSecurityCheck="true"
 				EnableFunctionLevelLinking="true"
@@ -1003,10 +1003,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\StdAfx.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\todo.txt"
 				>
 			</File>
@@ -1222,6 +1218,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\source\cc_func_entities.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\source\cc_func_entities.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\source\cc_infoentities.cpp"
 					>
 				</File>
@@ -1259,6 +1263,30 @@
 				</File>
 				<File
 					RelativePath=".\..\..\source\cc_playerentity.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\source\cc_target_entities.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\source\cc_target_entities.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\source\cc_trigger_entities.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\source\cc_trigger_entities.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\source\cc_turret_entities.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\source\cc_turret_entities.h"
 					>
 				</File>
 				<File
@@ -1898,10 +1926,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\..\..\source\g_func.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\source\g_local.h"
 				>
 			</File>
@@ -1927,10 +1951,6 @@
 			</File>
 			<File
 				RelativePath=".\..\..\source\g_target.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\..\..\source\g_trigger.cpp"
 				>
 			</File>
 			<File

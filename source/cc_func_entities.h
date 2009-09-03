@@ -8,7 +8,7 @@ of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 See the GNU General Public License for more details.
 
@@ -27,61 +27,59 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_media.h
-// Storage for constant media
+// cc_func_entities.h
+// Func_ entities that aren't brush models
 //
 
-#if !defined(__CC_MEDIA_H__) || !defined(INCLUDE_GUARDS)
-#define __CC_MEDIA_H__
-
-typedef struct SPlayerMedia_s
+class CFuncTimer : public CMapEntity, public CThinkableEntity, public CUsableEntity
 {
-	MediaIndex		Death[4];
-	MediaIndex		Fall[2];
-	MediaIndex		Gurp[2];
-	MediaIndex		Jump;
-	MediaIndex		Pain[4][2];
-} SPlayerMedia_t;
+public:
+	CFuncTimer ();
+	CFuncTimer (int Index);
 
-typedef struct SHudMedia_s
+	void Think ();
+	void Use (CBaseEntity *other, CBaseEntity *activator);
+
+	bool Run ();
+	void Spawn ();
+};
+
+class CTargetCharacter : public CMapEntity, public CBrushModel
 {
-	MediaIndex	HealthPic;
-	MediaIndex	PowerShieldPic;
-	MediaIndex	QuadPic;
-	MediaIndex	InvulPic;
-	MediaIndex	EnviroPic;
-	MediaIndex	RebreatherPic;
-	MediaIndex	SilencerPic;
-	MediaIndex	HelpPic;
-} SHudMedia_t;
+public:
+	CTargetCharacter ();
+	CTargetCharacter (int Index);
 
-typedef struct SGameMedia_s
+	bool Run ();
+	void Spawn ();
+};
+
+class CTargetString : public CMapEntity, public CUsableEntity
 {
-	// Player media
-	SPlayerMedia_t	Player;
-	// HUD Media
-	SHudMedia_t		Hud;
+public:
+	CTargetString ();
+	CTargetString (int Index);
 
-	// Gibs
-	MediaIndex		Gib_SmallMeat;
-	MediaIndex		Gib_SmallMetal;
-	MediaIndex		Gib_Arm;
-	MediaIndex		Gib_Leg;
-	MediaIndex		Gib_Gear;
-	MediaIndex		Gib_Bone[2];
-	MediaIndex		Gib_Chest;
-	MediaIndex		Gib_Skull;
-	MediaIndex		Gib_Head[2];
+	void Use (CBaseEntity *other, CBaseEntity *activator);
+	void Spawn ();
+};
 
-	// World stuff
-	MediaIndex		FrySound;
-	MediaIndex		FlySound;
-} SGameMedia_t;
+class CFuncClock : public CMapEntity, public CUsableEntity, public CThinkableEntity
+{
+public:
+	int				Seconds;
+	CTargetString	*String;
+	bool			Usable;
 
-extern SGameMedia_t gMedia;
+	CFuncClock ();
+	CFuncClock (int Index);
 
-void InitGameMedia ();
+	void Think ();
+	void Use (CBaseEntity *other, CBaseEntity *activator);
 
-#else
-FILE_WARNING
-#endif
+	void FormatCountdown ();
+	void Reset ();
+
+	bool Run ();
+	void Spawn ();
+};

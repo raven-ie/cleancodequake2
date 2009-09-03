@@ -105,8 +105,90 @@ void SvCmd_RunCommand (char *commandName)
 		Com_Printf (0, "Unknown server command \"%s\"\n", commandName);
 }
 
+typedef struct SServerEntityListIndex_s
+{
+	const char	*className;
+	uint32		Num;
+	bool		Old;
+
+	struct SServerEntityListIndex_s	*hashNext;
+	uint32							hashValue;
+
+	SServerEntityListIndex_s (const char *name) :
+		className(name),
+		hashValue (Com_HashGeneric(className, MAX_CS_EDICTS)),
+		Num (0),
+		Old (true)
+	{
+	};
+} SServerEntityListIndex;
+
+class CServerEntityList
+{
+public:
+	SServerEntityListIndex		*List[MAX_CS_EDICTS];
+	SServerEntityListIndex		*HashedList[MAX_CS_EDICTS];
+	uint32						NumInList;
+
+	CServerEntityList () :
+		NumInList (0)
+	{
+		memset (List, 0, sizeof(List));
+		memset (HashedList, 0, sizeof(HashedList));
+	};
+
+	~CServerEntityList ()
+	{
+		for (uint32 i = 0; i < NumInList; i++)
+			QDelete List[i];
+	};
+
+	SServerEntityListIndex *Exists (const char *className)
+	{
+		uint32 Hash = Com_HashGeneric (className, MAX_CS_EDICTS);
+
+		for (SServerEntityListIndex *Index = HashedList[Hash]; Index; Index = Index->hashNext)
+		{
+			if (Q_stricmp(Index->className, className) == 0)
+				return Index;
+		}
+		return NULL;
+	};
+
+	SServerEntityListIndex *AddToList (const char *className)
+	{
+		SServerEntityListIndex *Ind = new SServerEntityListIndex(className);
+		List[NumInList] = Ind;
+		List[NumInList]->hashNext = HashedList[List[NumInList]->hashValue];
+		HashedList[List[NumInList]->hashValue] = List[NumInList];
+		NumInList++;
+
+		return Ind;
+	};
+
+	void Search ()
+	{
+		for (int i = 0; i < globals.numEdicts; i++)
+		{
+			edict_t *e = (&g_edicts[i]);
+			if (!e->inUse)
+				continue;
+			
+			SServerEntityListIndex *Index = Exists(e->classname);
+			if (!Index)
+			{
+				Index = AddToList (e->classname);
+				if (e->Entity)
+					Index->Old = false;
+			}
+
+			Index->Num++;
+		}
+	};
+};
 void SvCmd_EntList_f ()
 {
+	/*
 	int numOld = 0, numNew = 0;
 	for (int i = 0; i < globals.numEdicts; i++)
 	{
@@ -119,7 +201,33 @@ void SvCmd_EntList_f ()
 		else
 			numNew++;
 	}
-	DebugPrintf ("Clean Entities: %i\nOld Entities: %i\nTotal Entities: %i\n", numNew, numOld, numOld+numNew);
+	int newPerc = (int)((float)(numNew) / ((float)numOld + (float)numNew) * 100);
+	int oldPerc = 100 - newPerc;
+	DebugPrintf ("Clean Entities: %i (%i%%)\nOld Entities: %i (%i%%)\nTotal Entities: %i\n", numNew, newPerc, numOld, oldPerc, numOld+numNew);
+	*/
+	CServerEntityList tmp;
+	tmp.Search ();
+
+	DebugPrintf ("Entity Stats\n"
+			"      old        amount       classname\n"
+			"----  ---        ------       --------------------------\n");
+
+	uint32 oldCount = 0, newCount = 0;
+	for (uint32 i = 0; i < tmp.NumInList; i++)
+	{
+		DebugPrintf (
+			"#%3u  %s         %5u       %s\n",
+			i, (tmp.List[i]->Old) ? "Yes" : "No ", tmp.List[i]->Num, tmp.List[i]->className);
+
+		if (tmp.List[i]->Old)
+			oldCount += tmp.List[i]->Num;
+		else
+			newCount += tmp.List[i]->Num;
+	}
+
+	DebugPrintf ("----  ---        ------       --------------------------\n");
+	DebugPrintf ("Tally Old:       %5u          %5.0f%%\n", oldCount, (!oldCount) ? 0 : (float)oldCount / ((float)(oldCount + newCount)) * 100);
+	DebugPrintf ("Tally New:       %5u          %5.0f%%\n", newCount, (!newCount) ? 0 : (float)newCount / ((float)(oldCount + newCount)) * 100);
 }
 
 extern char *gEntString;

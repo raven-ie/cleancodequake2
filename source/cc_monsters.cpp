@@ -461,23 +461,32 @@ bool infront (edict_t *self, edict_t *other)
 
 CMonsterEntity::CMonsterEntity () :
 CBaseEntity(),
+CMapEntity(),
 CStepPhysics(),
 CTossProjectile(),
-CHurtableEntity()
+CPushPhysics(),
+CHurtableEntity(),
+CThinkableEntity(),
+CTouchableEntity()
 {
+	EntityFlags |= ENT_MONSTER;
 };
 
 CMonsterEntity::CMonsterEntity (int Index) :
 CBaseEntity(Index),
+CMapEntity(Index),
 CStepPhysics(Index),
 CTossProjectile(Index),
-CHurtableEntity(Index)
+CPushPhysics(Index),
+CHurtableEntity(Index),
+CThinkableEntity(Index),
+CTouchableEntity(Index)
 {
+	EntityFlags |= ENT_MONSTER;
 };
 
 void CMonsterEntity::Spawn ()
 {
-	EntityFlags |= ENT_MONSTER;
 	PhysicsType = PHYSICS_STEP;
 };
 
@@ -571,18 +580,17 @@ void CMonsterEntity::ThrowHead (MediaIndex gibIndex, int damage, int type)
 	Link();
 }
 
-
 bool CMonsterEntity::Run ()
 {
 	if (TossPhysics)
-	{
 		return CTossProjectile::Run();
-	}
 	else if (BouncePhysics)
 	{
 		backOff = 1.5f;
 		return CBounceProjectile::Run ();
 	}
+	else if (PhysicsType == PHYSICS_PUSH)
+		return CPushPhysics::Run ();
 	else
 		return CStepPhysics::Run();
 }
@@ -636,9 +644,9 @@ bool CMonster::CheckBottom ()
 // the corners must be within 16 of the midpoint
 	bool gotOutEasy = false;
 	start[2] = mins[2] - 1;
-	for	(x=0 ; x<=1, !gotOutEasy; x++)
+	for	(x=0 ; x<=1 && !gotOutEasy; x++)
 	{
-		for	(y=0 ; y<=1, !gotOutEasy; y++)
+		for	(y=0 ; y<=1 && !gotOutEasy; y++)
 		{
 			start.X = x ? maxs.X : mins.X;
 			start.Y = y ? maxs.Y : mins.Y;

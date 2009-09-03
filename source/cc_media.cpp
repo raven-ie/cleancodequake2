@@ -75,6 +75,7 @@ void InitGameMedia ()
 	gMedia.Gib_Leg			=	ModelIndex ("models/objects/gibs/leg/tris.md2");
 
 	gMedia.FrySound			=	SoundIndex ("player/fry.wav");
+	gMedia.FrySound			=	SoundIndex ("misc/windfly.wav");
 
 	// Hud stuff
 	gMedia.Hud.HealthPic		=	ImageIndex ("i_health");

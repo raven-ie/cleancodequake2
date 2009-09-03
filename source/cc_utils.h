@@ -52,6 +52,14 @@ inline CBaseEntity *SelectDeathmatchSpawnPoint ()
 	return (dmFlags.dfSpawnFarthest) ? SelectFarthestDeathmatchSpawnPoint () : SelectRandomDeathmatchSpawnPoint ();
 }
 
+class CForEachTeamChainCallback abstract
+{
+public:
+	virtual void Callback (CBaseEntity *Entity) = 0;
+};
+
+void ForEachTeamChain (CBaseEntity *Master, CForEachTeamChainCallback *Callback);
+
 #else
 FILE_WARNING
 #endif
