@@ -19,6 +19,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 #include "g_local.h"
+#include "cc_exceptionhandler.h"
 
 game_locals_t	game;
 level_locals_t	level;
@@ -95,9 +96,12 @@ void G_RunFrame (void);
 
 //===================================================================
 
-
 void ShutdownGame (void)
 {
+#ifdef CC_USE_EXCEPTION_HANDLER
+__try
+{
+#endif
 	DebugPrintf ("==== ShutdownGame ====\n");
 
 	Cmd_RemoveCommands ();
@@ -107,6 +111,13 @@ void ShutdownGame (void)
 	size_t freedLevel = Mem_FreePool (com_levelPool);
 
 	DebugPrintf ("Freed %u bytes of game memory and %u bytes of level memory.\n", freedGame, freedLevel);
+#ifdef CC_USE_EXCEPTION_HANDLER
+}
+__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
+{
+	return;
+}
+#endif
 }
 
 
@@ -433,7 +444,6 @@ G_RunFrame
 Advances the world by 0.1 seconds
 ================
 */
-#include "cc_exceptionhandler.h"
 
 void PlayEntitySounds (CBaseEntity *Entity);
 void G_RunFrame (void)

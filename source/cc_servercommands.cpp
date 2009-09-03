@@ -261,10 +261,22 @@ The game can issue gi.argc() / gi.argv() commands to get the rest
 of the parameters
 =================
 */
+#include "cc_exceptionhandler.h"
 void ServerCommand (void)
 {
+#ifdef CC_USE_EXCEPTION_HANDLER
+__try
+{
+#endif
 	InitArg ();
 	SvCmd_RunCommand (ArgGets(1));
 	EndArg ();
+#ifdef CC_USE_EXCEPTION_HANDLER
+}
+__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
+{
+	return;
+}
+#endif
 }
 

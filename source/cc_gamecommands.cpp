@@ -478,12 +478,25 @@ void Cmd_Register ()
 ClientCommand
 =================
 */
+#include "cc_exceptionhandler.h"
 void ClientCommand (edict_t *ent)
 {
+#ifdef CC_USE_EXCEPTION_HANDLER
+__try
+{
+#endif
 	if (!ent->client)
 		return;		// not fully in game yet
 
 	InitArg ();
 	Cmd_RunCommand (ArgGets(0), dynamic_cast<CPlayerEntity*>(ent->Entity));
 	EndArg ();
+#ifdef CC_USE_EXCEPTION_HANDLER
+}
+__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
+{
+	EndArg ();
+	return;
+}
+#endif
 }

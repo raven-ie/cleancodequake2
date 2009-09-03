@@ -19,6 +19,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "g_local.h"
 #include "m_player.h"
+#include "cc_exceptionhandler.h"
 
 void ClientUserinfoChanged (edict_t *ent, char *userinfo);
 
@@ -424,8 +425,11 @@ to be placed into the game.  This will happen every level load.
 */
 void ClientBegin (edict_t *ent)
 {
+#ifdef CC_USE_EXCEPTION_HANDLER
+__try
+{
+#endif
 	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(ent->Entity);
-
 	ent->client = game.clients + (Player->State.GetNumber()-1);
 
 	if (game.mode & GAME_DEATHMATCH)
@@ -472,6 +476,13 @@ void ClientBegin (edict_t *ent)
 
 	// make sure all view stuff is valid
 	Player->EndServerFrame ();
+#ifdef CC_USE_EXCEPTION_HANDLER
+}
+__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
+{
+	return;
+}
+#endif
 }
 
 /*
@@ -486,7 +497,18 @@ The game can override any of the settings in place
 */
 void ClientUserinfoChanged (edict_t *ent, char *userinfo)
 {
+#ifdef CC_USE_EXCEPTION_HANDLER
+__try
+{
+#endif
 	(dynamic_cast<CPlayerEntity*>(ent->Entity))->UserinfoChanged (userinfo);
+#ifdef CC_USE_EXCEPTION_HANDLER
+}
+__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
+{
+	return;
+}
+#endif
 }
 
 
@@ -523,6 +545,10 @@ IPAddress CopyIP (const char *val)
 
 BOOL ClientConnect (edict_t *ent, char *userinfo)
 {
+#ifdef CC_USE_EXCEPTION_HANDLER
+__try
+{
+#endif
 	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(ent->Entity);
 	char	*value;
 
@@ -615,6 +641,13 @@ BOOL ClientConnect (edict_t *ent, char *userinfo)
 	ent->svFlags = 0; // make sure we start with known default
 	Player->Client.pers.state = SVCS_CONNECTED;
 	return true;
+#ifdef CC_USE_EXCEPTION_HANDLER
+}
+__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
+{
+	return true;
+}
+#endif
 }
 
 /*
