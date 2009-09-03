@@ -579,7 +579,7 @@ void CSoldierBase::Attack6_Refire ()
 	if (!EnemyVis)
 		return;
 
-	if ((skill->Integer() == 3) || ((random() < (0.25*((float)skill->Integer())))))
+	if (((skill->Integer() == 3 && Entity->State.GetSkinNum() > 1) || ((random() < (0.25*((float)skill->Integer()))))))
 		NextFrame = FRAME_runs03;
 }
 
