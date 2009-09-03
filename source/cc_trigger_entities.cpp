@@ -677,3 +677,138 @@ public:
 };
 
 LINK_CLASSNAME_TO_CLASS ("trigger_gravity", CTriggerGravity);
+
+/*
+==============================================================================
+
+trigger_key
+
+==============================================================================
+*/
+
+/*QUAKED trigger_key (.5 .5 .5) (-8 -8 -8) (8 8 8)
+A relay trigger that only fires it's targets if player has the proper key.
+Use "item" to specify the required key, for example "key_data_cd"
+*/
+class CTriggerKey : public CMapEntity, public CUsableEntity
+{
+public:
+	bool		Usable;
+	CBaseItem	*Item;
+
+	CTriggerKey () :
+	  CBaseEntity (),
+	  CMapEntity (),
+	  CUsableEntity (),
+	  Usable(true)
+	{
+	};
+
+	CTriggerKey (int Index) :
+	  CBaseEntity (Index),
+	  CMapEntity (Index),
+	  CUsableEntity (Index),
+	  Usable(true)
+	{
+	};
+
+	bool Run ()
+	{
+		return CBaseEntity::Run();
+	};
+
+	void Use (CBaseEntity *other, CBaseEntity *activator)
+	{
+		if (!Usable)
+			return;
+		if (!Item)
+			return;
+		if (!(activator->EntityFlags & ENT_PLAYER))
+			return;
+
+		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(activator);
+
+		int index = Item->GetIndex();
+		if (!Player->Client.pers.Inventory.Has(index))
+		{
+			if (level.framenum < gameEntity->touch_debounce_time)
+				return;
+			gameEntity->touch_debounce_time = level.framenum + 50;
+			Player->PrintToClient (PRINT_CENTER, "You need the %s", Item->Name);
+			Player->PlaySound (CHAN_AUTO, SoundIndex ("misc/keytry.wav"));
+			return;
+		}
+
+		Player->PlaySound (CHAN_AUTO, SoundIndex ("misc/keyuse.wav"));
+		if (game.mode == GAME_COOPERATIVE)
+		{
+			if (Item == NItems::PowerCube)
+			{
+				int	cube;
+				for (cube = 0; cube < 8; cube++)
+				{
+					if (Player->Client.pers.power_cubes & (1 << cube))
+						break;
+				}
+
+				for (int player = 1; player <= game.maxclients; player++)
+				{
+					CPlayerEntity *ent = dynamic_cast<CPlayerEntity*>(g_edicts[player].Entity);
+					if (!ent->IsInUse())
+						continue;
+					if (ent->Client.pers.power_cubes & (1 << cube))
+					{
+						ent->Client.pers.Inventory -= index;
+						ent->Client.pers.power_cubes &= ~(1 << cube);
+					}
+				}
+			}
+			else
+			{
+				for (int player = 1; player <= game.maxclients; player++)
+				{
+					CPlayerEntity *ent = dynamic_cast<CPlayerEntity*>(g_edicts[player].Entity);
+					if (!ent->IsInUse())
+						continue;
+					ent->Client.pers.Inventory.Set(index, 0);
+				}
+			}
+		}
+		else
+			Player->Client.pers.Inventory -= index;
+
+		G_UseTargets (this, activator);
+
+		Usable = false;
+	};
+
+	void Spawn ()
+	{
+		if (!st.item)
+		{
+			//gi.dprintf("no key item for trigger_key at (%f %f %f)\n", self->state.origin[0], self->state.origin[1], self->state.origin[2]);
+			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No key item\n");
+			return;
+		}
+		Item = FindItemByClassname (st.item);
+
+		if (!Item)
+		{
+			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "Item \"%s\" not found\n", st.item);
+			//gi.dprintf("item %s not found for trigger_key at (%f %f %f)\n", st.item, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
+			return;
+		}
+
+		if (!gameEntity->target)
+		{
+			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No target\n");
+			//gi.dprintf("%s at (%f %f %f) has no target\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
+			return;
+		}
+
+		SoundIndex ("misc/keytry.wav");
+		SoundIndex ("misc/keyuse.wav");
+	};
+};
+
+LINK_CLASSNAME_TO_CLASS ("trigger_key", CTriggerKey);

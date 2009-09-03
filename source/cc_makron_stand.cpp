@@ -34,46 +34,72 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_local.h"
 #include "m_boss32.h"
 
-void Use_Boss3 (edict_t *ent, edict_t *other, edict_t *activator)
-{
-	CTempEnt::BossTeleport (ent->state.origin);
-	G_FreeEdict (ent);
-}
-
-void Think_Boss3Stand (edict_t *ent)
-{
-	if (ent->state.frame == FRAME_stand260)
-		ent->state.frame = FRAME_stand201;
-	else
-		ent->state.frame++;
-	ent->nextthink = level.framenum + FRAMETIME;
-}
-
 /*QUAKED monster_boss3_stand (1 .5 0) (-32 -32 0) (32 32 90)
 
 Just stands and cycles in one place until targeted, then teleports away.
 */
-void SP_monster_boss3_stand (edict_t *self)
+class CMonsterBoss3Stand : public CMapEntity, public CThinkableEntity, public CUsableEntity, public CStepPhysics
 {
-	if (game.mode & GAME_DEATHMATCH)
+public:
+	CMonsterBoss3Stand () :
+	  CBaseEntity (),
+	  CMapEntity (),
+	  CThinkableEntity (),
+	  CUsableEntity (),
+	  CStepPhysics ()
 	{
-		G_FreeEdict (self);
-		return;
-	}
+	};
 
-	self->movetype = MOVETYPE_STEP;
-	self->solid = SOLID_BBOX;
-	self->model = "models/monsters/boss3/rider/tris.md2";
-	self->state.modelIndex = ModelIndex (self->model);
-	self->state.frame = FRAME_stand201;
+	CMonsterBoss3Stand (int Index) :
+	  CBaseEntity (Index),
+	  CMapEntity (Index),
+	  CThinkableEntity (Index),
+	  CUsableEntity (Index),
+	  CStepPhysics (Index)
+	{
+	};
 
-	SoundIndex ("misc/bigtele.wav");
+	bool Run ()
+	{
+		return CStepPhysics::Run();
+	};
 
-	Vec3Set (self->mins, -32, -32, 0);
-	Vec3Set (self->maxs, 32, 32, 90);
+	void Think ()
+	{
+		if (State.GetFrame() == FRAME_stand260)
+			State.SetFrame (FRAME_stand201);
+		else
+			State.SetFrame (State.GetFrame() + 1);
+		NextThink = level.framenum + FRAMETIME;
+	};
 
-	self->use = Use_Boss3;
-	self->think = Think_Boss3Stand;
-	self->nextthink = level.framenum + FRAMETIME;
-	gi.linkentity (self);
-}
+	void Use (CBaseEntity *other, CBaseEntity *activator)
+	{
+		CTempEnt::BossTeleport (State.GetOrigin());
+		Free ();
+	};
+
+	void Spawn ()
+	{
+		if (game.mode & GAME_DEATHMATCH)
+		{
+			Free ();
+			return;
+		}
+
+		PhysicsType = PHYSICS_STEP;
+		SetSolid (SOLID_BBOX);
+		State.SetModelIndex (ModelIndex ("models/monsters/boss3/rider/tris.md2"));
+		State.SetFrame (FRAME_stand201);
+
+		SoundIndex ("misc/bigtele.wav");
+
+		SetMins (vec3f(-32, -32, 0));
+		SetMaxs (vec3f(32, 32, 90));
+
+		NextThink = level.framenum + FRAMETIME;
+		Link ();
+	};
+};
+
+LINK_CLASSNAME_TO_CLASS ("monster_boss3_stand", CMonsterBoss3Stand);

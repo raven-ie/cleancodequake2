@@ -31,3 +31,15 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // 
 //
 
+class CTargetChangeLevel : public CMapEntity, public CUsableEntity
+{
+public:
+	CTargetChangeLevel ();
+	CTargetChangeLevel (int Index);
+
+	bool Run ();
+
+	void Use (CBaseEntity *other, CBaseEntity *activator);
+
+	void Spawn ();
+};

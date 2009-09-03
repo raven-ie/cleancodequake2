@@ -660,7 +660,6 @@ void CMakron::Dead ()
 {
 	Entity->SetMins (vec3f(-60, -60, 0));
 	Entity->SetMaxs (vec3f(60, 60, 72));
-	Entity->TossPhysics = true;
 	Entity->PhysicsType = PHYSICS_TOSS;
 	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
 	Entity->NextThink = 0;

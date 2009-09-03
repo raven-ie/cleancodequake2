@@ -125,16 +125,6 @@ void SP_turret_base (edict_t *self);
 void SP_monster_boss3_stand (edict_t *self);
 
 spawn_t	spawns[] = {
-	{"target_temp_entity", SP_target_temp_entity},
-	{"target_changelevel", SP_target_changelevel},
-	{"target_secret", SP_target_secret},
-	{"target_goal", SP_target_goal},
-	{"target_splash", SP_target_splash},
-	{"target_spawner", SP_target_spawner},
-	{"target_blaster", SP_target_blaster},
-	{"target_crosslevel_trigger", SP_target_crosslevel_trigger},
-	{"target_crosslevel_target", SP_target_crosslevel_target},
-	{"target_laser", SP_target_laser},
 	{"target_help", SP_target_help},
 	//{"target_actor", SP_target_actor},
 	{"target_lightramp", SP_target_lightramp},
@@ -144,30 +134,7 @@ spawn_t	spawns[] = {
 
 //	{"viewthing", SP_viewthing},
 
-	{"light_mine1", SP_light_mine1},
-	{"light_mine2", SP_light_mine2},
-
-	{"misc_banner", SP_misc_banner},
-	{"misc_satellite_dish", SP_misc_satellite_dish},
 	//{"misc_actor", SP_misc_actor},
-	{"misc_gib_arm", SP_misc_gib_arm},
-	{"misc_gib_leg", SP_misc_gib_leg},
-	{"misc_gib_head", SP_misc_gib_head},
-	{"misc_deadsoldier", SP_misc_deadsoldier},
-	{"misc_viper_bomb", SP_misc_viper_bomb},
-	{"misc_bigviper", SP_misc_bigviper},
-	{"misc_blackhole", SP_misc_blackhole},
-	{"misc_eastertank", SP_misc_eastertank},
-	{"misc_easterchick", SP_misc_easterchick},
-	{"misc_easterchick2", SP_misc_easterchick2},
-#ifdef CLEANCTF_ENABLED
-//ZOID
-	{"misc_ctf_banner", SP_misc_ctf_banner},
-	{"misc_ctf_small_banner", SP_misc_ctf_small_banner},
-//ZOID
-#endif
-
-	{"monster_boss3_stand", SP_monster_boss3_stand},
 
 	{NULL, NULL}
 };

@@ -547,7 +547,7 @@ edict_t	*PlayerTrail_LastSpot (void);
 //
 // g_client.c
 //
-void BeginIntermission (CBaseEntity *targ);
+void BeginIntermission (class CTargetChangeLevel *targ);
 void InitClientResp (gclient_t *client);
 void InitBodyQue (void);
 

@@ -607,7 +607,7 @@ public:
 			other->State.SetEvent (EV_OTHER_TELEPORT);
 		}
 
-		other->gameEntity->goalentity = other->gameEntity->movetarget = next->gameEntity;
+		other->gameEntity->goalentity = other->gameEntity->movetarget = (next) ? next->gameEntity : NULL;
 
 		if (gameEntity->wait)
 		{
@@ -761,8 +761,8 @@ class CInfoNull : public CMapEntity
 {
 public:
 	CInfoNull (int Index) :
-	  CBaseEntity (),
-	  CMapEntity ()
+	  CBaseEntity (Index),
+	  CMapEntity (Index)
 	  {
 	  };
 
@@ -796,8 +796,8 @@ class CInfoNotNull : public CMapEntity
 {
 public:
 	CInfoNotNull (int Index) :
-	  CBaseEntity (),
-	  CMapEntity ()
+	  CBaseEntity (Index),
+	  CMapEntity (Index)
 	  {
 	  };
 

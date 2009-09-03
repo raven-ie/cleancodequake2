@@ -89,6 +89,7 @@ public:
 
 	void			RunThink ();
 	virtual void	Think () = 0;
+	virtual void	PreThink () {};
 };
 
 // Touchable entity

@@ -27,8 +27,8 @@ INTERMISSION
 
 ======================================================================
 */
-
-void BeginIntermission (CBaseEntity *targ)
+#include "cc_target_entities.h"
+void BeginIntermission (CTargetChangeLevel *targ)
 {
 	CBaseEntity	*ent;
 

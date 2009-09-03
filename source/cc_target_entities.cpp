@@ -32,6 +32,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 //
 
 #include "cc_local.h"
+#include "cc_target_entities.h"
 
 /*QUAKED target_speaker (1 0 0) (-8 -8 -8) (8 8 8) looped-on looped-off reliable
 "noise"		wav file to play
@@ -170,37 +171,33 @@ public:
 
 LINK_CLASSNAME_TO_CLASS ("target_explosion", CTargetExplosion);
 
-/*
-==============================================================================
+/*QUAKED target_spawner (1 0 0) (-8 -8 -8) (8 8 8)
+Set target to the type of entity you want spawned.
+Useful for spawning monsters and gibs in the factory levels.
 
-trigger_key
+For monsters:
+	Set direction to the facing you want it to have.
 
-==============================================================================
+For gibs:
+	Set direction if you want it moving and
+	speed how fast it should be moving otherwise it
+	will just be dropped
 */
-
-/*QUAKED trigger_key (.5 .5 .5) (-8 -8 -8) (8 8 8)
-A relay trigger that only fires it's targets if player has the proper key.
-Use "item" to specify the required key, for example "key_data_cd"
-*/
-class CTriggerKey : public CMapEntity, public CUsableEntity
+void ED_CallSpawn (edict_t *ent);
+class CTargetSpawner : public CMapEntity, public CUsableEntity
 {
 public:
-	bool		Usable;
-	CBaseItem	*Item;
-
-	CTriggerKey () :
+	CTargetSpawner () :
 	  CBaseEntity (),
 	  CMapEntity (),
-	  CUsableEntity (),
-	  Usable(true)
+	  CUsableEntity ()
 	{
 	};
 
-	CTriggerKey (int Index) :
+	CTargetSpawner (int Index) :
 	  CBaseEntity (Index),
 	  CMapEntity (Index),
-	  CUsableEntity (Index),
-	  Usable(true)
+	  CUsableEntity (Index)
 	{
 	};
 
@@ -211,96 +208,661 @@ public:
 
 	void Use (CBaseEntity *other, CBaseEntity *activator)
 	{
-		if (!Usable)
-			return;
-		if (!Item)
-			return;
-		if (!(activator->EntityFlags & ENT_PLAYER))
-			return;
+		edict_t *ent = G_Spawn();
+		ent->classname = gameEntity->target;
+		Vec3Copy (State.GetOrigin(), ent->state.origin);
+		Vec3Copy (State.GetAngles(), ent->state.angles);
+		ED_CallSpawn (ent);
 
-		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(activator);
+		CBaseEntity *Entity = ent->Entity;
+		Entity->Unlink ();
+		KillBox (Entity);
+		Entity->Link ();
 
-		int index = Item->GetIndex();
-		if (!Player->Client.pers.Inventory.Has(index))
-		{
-			if (level.framenum < gameEntity->touch_debounce_time)
-				return;
-			gameEntity->touch_debounce_time = level.framenum + 50;
-			Player->PrintToClient (PRINT_CENTER, "You need the %s", Item->Name);
-			Player->PlaySound (CHAN_AUTO, SoundIndex ("misc/keytry.wav"));
-			return;
-		}
-
-		Player->PlaySound (CHAN_AUTO, SoundIndex ("misc/keyuse.wav"));
-		if (game.mode == GAME_COOPERATIVE)
-		{
-			if (Item == NItems::PowerCube)
-			{
-				int	cube;
-				for (cube = 0; cube < 8; cube++)
-				{
-					if (Player->Client.pers.power_cubes & (1 << cube))
-						break;
-				}
-
-				for (int player = 1; player <= game.maxclients; player++)
-				{
-					CPlayerEntity *ent = dynamic_cast<CPlayerEntity*>(g_edicts[player].Entity);
-					if (!ent->IsInUse())
-						continue;
-					if (ent->Client.pers.power_cubes & (1 << cube))
-					{
-						ent->Client.pers.Inventory -= index;
-						ent->Client.pers.power_cubes &= ~(1 << cube);
-					}
-				}
-			}
-			else
-			{
-				for (int player = 1; player <= game.maxclients; player++)
-				{
-					CPlayerEntity *ent = dynamic_cast<CPlayerEntity*>(g_edicts[player].Entity);
-					if (!ent->IsInUse())
-						continue;
-					ent->Client.pers.Inventory.Set(index, 0);
-				}
-			}
-		}
-		else
-			Player->Client.pers.Inventory -= index;
-
-		G_UseTargets (this, activator);
-
-		Usable = false;
+		if (gameEntity->speed)
+			Vec3Copy (gameEntity->movedir, ent->velocity);
 	};
 
 	void Spawn ()
 	{
-		if (!st.item)
+		SetSvFlags (SVF_NOCLIENT);
+		if (gameEntity->speed)
 		{
-			//gi.dprintf("no key item for trigger_key at (%f %f %f)\n", self->state.origin[0], self->state.origin[1], self->state.origin[2]);
-			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No key item\n");
-			return;
+			vec3f md;
+			G_SetMovedir (State.GetAngles(), md);
+			md.Scale (gameEntity->speed);
+			Vec3Copy (md, gameEntity->movedir);
 		}
-		Item = FindItemByClassname (st.item);
-
-		if (!Item)
-		{
-			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "Item \"%s\" not found\n", st.item);
-			//gi.dprintf("item %s not found for trigger_key at (%f %f %f)\n", st.item, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
-			return;
-		}
-
-		if (!gameEntity->target)
-		{
-			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No target\n");
-			//gi.dprintf("%s at (%f %f %f) has no target\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
-			return;
-		}
-
-		SoundIndex ("misc/keytry.wav");
-		SoundIndex ("misc/keyuse.wav");
 	};
 };
 
-LINK_CLASSNAME_TO_CLASS ("trigger_key", CTriggerKey);
+LINK_CLASSNAME_TO_CLASS ("target_spawner", CTargetSpawner);
+
+/*QUAKED target_splash (1 0 0) (-8 -8 -8) (8 8 8)
+Creates a particle splash effect when used.
+
+Set "sounds" to one of the following:
+  1) sparks
+  2) blue water
+  3) brown water
+  4) slime
+  5) lava
+  6) blood
+
+"count"	how many pixels in the splash
+"dmg"	if set, does a radius damage at this location when it splashes
+		useful for lava/sparks
+*/
+class CTargetSplash : public CMapEntity, public CUsableEntity
+{
+public:
+	vec3f MoveDir;
+
+	CTargetSplash () :
+	  CBaseEntity (),
+	  CMapEntity (),
+	  CUsableEntity ()
+	{
+	};
+
+	CTargetSplash (int Index) :
+	  CBaseEntity (Index),
+	  CMapEntity (Index),
+	  CUsableEntity (Index)
+	{
+	};
+
+	bool Run ()
+	{
+		return CBaseEntity::Run();
+	};
+
+	void Use (CBaseEntity *other, CBaseEntity *activator)
+	{
+		CTempEnt_Splashes::Splash (State.GetOrigin(), MoveDir, (CTempEnt_Splashes::ESplashType)gameEntity->sounds, gameEntity->count);
+
+		if (gameEntity->dmg)
+			T_RadiusDamage (gameEntity, activator->gameEntity, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_SPLASH);
+	};
+
+	void Spawn ()
+	{
+		G_SetMovedir (State.GetAngles(), MoveDir);
+
+		if (!gameEntity->count)
+			gameEntity->count = 32;
+
+		SetSvFlags (SVF_NOCLIENT);
+	};
+};
+
+LINK_CLASSNAME_TO_CLASS ("target_splash", CTargetSplash);
+
+/*QUAKED target_temp_entity (1 0 0) (-8 -8 -8) (8 8 8)
+Fire an origin based temp entity event to the clients.
+"style"		type byte
+*/
+class CTargetTempEntity : public CMapEntity, public CUsableEntity
+{
+public:
+	CTargetTempEntity () :
+	  CBaseEntity (),
+	  CMapEntity (),
+	  CUsableEntity ()
+	{
+	};
+
+	CTargetTempEntity (int Index) :
+	  CBaseEntity (Index),
+	  CMapEntity (Index),
+	  CUsableEntity (Index)
+	{
+	};
+
+	bool Run ()
+	{
+		return CBaseEntity::Run();
+	};
+
+	void Use (CBaseEntity *other, CBaseEntity *activator)
+	{
+		WriteByte (SVC_TEMP_ENTITY);
+		WriteByte (gameEntity->style);
+		WritePosition (State.GetOrigin());
+		Cast (CASTFLAG_PVS, State.GetOrigin());
+	};
+
+	void Spawn ()
+	{
+	};
+};
+
+LINK_CLASSNAME_TO_CLASS ("target_temp_entity", CTargetTempEntity);
+
+/*QUAKED target_changelevel (1 0 0) (-8 -8 -8) (8 8 8)
+Changes level to "map" when fired
+*/
+CTargetChangeLevel::CTargetChangeLevel () :
+	CBaseEntity (),
+	CMapEntity (),
+	CUsableEntity ()
+{
+};
+
+CTargetChangeLevel::CTargetChangeLevel (int Index) :
+	CBaseEntity (Index),
+	CMapEntity (Index),
+	CUsableEntity (Index)
+{
+};
+
+bool CTargetChangeLevel::Run ()
+{
+	return CBaseEntity::Run ();
+};
+
+void CTargetChangeLevel::Use (CBaseEntity *other, CBaseEntity *activator)
+{
+	if (level.intermissiontime)
+		return;		// already activated
+
+	if (game.mode == GAME_SINGLEPLAYER)
+	{
+		if (g_edicts[1].health <= 0)
+			return;
+	}
+
+	// if noexit, do a ton of damage to other
+	if ((game.mode & GAME_DEATHMATCH) && !dmFlags.dfAllowExit && (other != world->Entity))
+	{
+		T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, other->State.GetOrigin(), vec3Origin, 10 * other->gameEntity->max_health, 1000, 0, MOD_EXIT);
+		return;
+	}
+
+	// if multiplayer, let everyone know who hit the exit
+	if (game.mode & GAME_DEATHMATCH)
+	{
+		if (activator && (activator->EntityFlags & ENT_PLAYER))
+		{
+			CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(activator);
+			BroadcastPrintf (PRINT_HIGH, "%s exited the level.\n", Player->Client.pers.netname);
+		}
+	}
+
+	// if going to a new unit, clear cross triggers
+	if (strstr(gameEntity->map, "*"))	
+		game.serverflags &= ~(SFL_CROSS_TRIGGER_MASK);
+
+	BeginIntermission (this);
+};
+
+void CTargetChangeLevel::Spawn ()
+{
+	if (!gameEntity->map)
+	{
+		//gi.dprintf("target_changelevel with no map at (%f %f %f)\n", ent->state.origin[0], ent->state.origin[1], ent->state.origin[2]);
+		MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No map\n");
+		Free ();
+		return;
+	}
+
+	// ugly hack because *SOMEBODY* screwed up their map
+   if((Q_stricmp(level.mapname, "fact1") == 0) && (Q_stricmp(gameEntity->map, "fact3") == 0))
+	   gameEntity->map = "fact3$secret1";
+
+	SetSvFlags (SVF_NOCLIENT);
+};
+
+LINK_CLASSNAME_TO_CLASS ("target_changelevel", CTargetChangeLevel);
+
+/*QUAKED target_crosslevel_trigger (.5 .5 .5) (-8 -8 -8) (8 8 8) trigger1 trigger2 trigger3 trigger4 trigger5 trigger6 trigger7 trigger8
+Once this trigger is touched/used, any trigger_crosslevel_target with the same trigger number is automatically used when a level is started within the same unit.  It is OK to check multiple triggers.  Message, delay, target, and killtarget also work.
+*/
+class CCTargetCrossLevelTrigger : public CMapEntity, public CUsableEntity
+{
+public:
+	CCTargetCrossLevelTrigger () :
+	  CBaseEntity (),
+	  CMapEntity (),
+	  CUsableEntity ()
+	{
+	};
+
+	CCTargetCrossLevelTrigger (int Index) :
+	  CBaseEntity (Index),
+	  CMapEntity (Index),
+	  CUsableEntity (Index)
+	{
+	};
+
+	bool Run ()
+	{
+		return CBaseEntity::Run();
+	};
+
+	void Use (CBaseEntity *other, CBaseEntity *activator)
+	{
+		game.serverflags |= gameEntity->spawnflags;
+		Free ();
+	};
+
+	void Spawn ()
+	{
+		SetSvFlags (SVF_NOCLIENT);
+	};
+};
+
+LINK_CLASSNAME_TO_CLASS ("target_crosslevel_trigger", CCTargetCrossLevelTrigger);
+
+/*QUAKED target_crosslevel_target (.5 .5 .5) (-8 -8 -8) (8 8 8) trigger1 trigger2 trigger3 trigger4 trigger5 trigger6 trigger7 trigger8
+Triggered by a trigger_crosslevel elsewhere within a unit.  If multiple triggers are checked, all must be true.  Delay, target and
+killtarget also work.
+
+"delay"		delay before using targets if the trigger has been activated (default 1)
+*/
+class CTargetCrossLevelTarget : public CMapEntity, public CThinkableEntity
+{
+public:
+	CTargetCrossLevelTarget () :
+	  CBaseEntity (),
+	  CMapEntity (),
+	  CThinkableEntity ()
+	{
+	};
+
+	CTargetCrossLevelTarget (int Index) :
+	  CBaseEntity (Index),
+	  CMapEntity (Index),
+	  CThinkableEntity (Index)
+	{
+	};
+
+	bool Run ()
+	{
+		return CBaseEntity::Run();
+	};
+
+	void Think ()
+	{
+		if (gameEntity->spawnflags == (game.serverflags & SFL_CROSS_TRIGGER_MASK & gameEntity->spawnflags))
+		{
+			G_UseTargets (this, this);
+			Free ();
+		}
+	};
+
+	void Spawn ()
+	{
+		if (!gameEntity->delay)
+			gameEntity->delay = 1;
+		SetSvFlags (SVF_NOCLIENT);
+		
+		// Paril: backwards compatibility
+		NextThink = level.framenum + (gameEntity->delay * 10);
+	};
+};
+
+LINK_CLASSNAME_TO_CLASS ("target_crosslevel_target", CTargetCrossLevelTarget);
+
+/*QUAKED target_secret (1 0 1) (-8 -8 -8) (8 8 8)
+Counts a secret found.
+These are single use targets.
+*/
+class CTargetSecret : public CMapEntity, public CUsableEntity
+{
+public:
+	CTargetSecret () :
+	  CBaseEntity (),
+	  CMapEntity (),
+	  CUsableEntity ()
+	{
+	};
+
+	CTargetSecret (int Index) :
+	  CBaseEntity (Index),
+	  CMapEntity (Index),
+	  CUsableEntity (Index)
+	{
+	};
+
+	bool Run ()
+	{
+		return CBaseEntity::Run();
+	};
+
+	void Use (CBaseEntity *other, CBaseEntity *activator)
+	{
+		PlaySound (CHAN_VOICE, gameEntity->noise_index);
+
+		level.found_secrets++;
+
+		G_UseTargets (this, activator);
+		Free ();
+	};
+
+	void Spawn ()
+	{
+		if (game.mode & GAME_DEATHMATCH)
+		{	// auto-remove for deathmatch
+			Free ();
+			return;
+		}
+
+		if (!st.noise)
+			st.noise = "misc/secret.wav";
+		gameEntity->noise_index = SoundIndex (st.noise);
+		SetSvFlags (SVF_NOCLIENT);
+		level.total_secrets++;
+		// map bug hack
+		if (!Q_stricmp(level.mapname, "mine3") && (State.GetOrigin().X == 280 && State.GetOrigin().Y == -2048 && State.GetOrigin().Z == -624))
+			gameEntity->message = "You have found a secret area.";
+	};
+};
+
+LINK_CLASSNAME_TO_CLASS ("target_secret", CTargetSecret);
+
+/*QUAKED target_goal (1 0 1) (-8 -8 -8) (8 8 8)
+Counts a goal completed.
+These are single use targets.
+*/
+class CTargetGoal : public CMapEntity, public CUsableEntity
+{
+public:
+	CTargetGoal () :
+	  CBaseEntity (),
+	  CMapEntity (),
+	  CUsableEntity ()
+	{
+	};
+
+	CTargetGoal (int Index) :
+	  CBaseEntity (Index),
+	  CMapEntity (Index),
+	  CUsableEntity (Index)
+	{
+	};
+
+	bool Run ()
+	{
+		return CBaseEntity::Run();
+	};
+
+	void Use (CBaseEntity *other, CBaseEntity *activator)
+	{
+		PlaySound (CHAN_VOICE, gameEntity->noise_index);
+
+		level.found_goals++;
+
+		if (level.found_goals == level.total_goals)
+			ConfigString (CS_CDTRACK, "0");
+
+		G_UseTargets (this, activator);
+		Free ();
+	};
+
+	void Spawn ()
+	{
+		if (game.mode & GAME_DEATHMATCH)
+		{	// auto-remove for deathmatch
+			Free ();
+			return;
+		}
+
+		if (!st.noise)
+			st.noise = "misc/secret.wav";
+		gameEntity->noise_index = SoundIndex (st.noise);
+		SetSvFlags (SVF_NOCLIENT);
+		level.total_goals++;
+	};
+};
+
+LINK_CLASSNAME_TO_CLASS ("target_goal", CTargetGoal);
+
+/*QUAKED target_blaster (1 0 0) (-8 -8 -8) (8 8 8) NOTRAIL NOEFFECTS
+Fires a blaster bolt in the set direction when triggered.
+
+dmg		default is 15
+speed	default is 1000
+*/
+class CTargetBlaster : public CMapEntity, public CUsableEntity
+{
+public:
+	vec3f MoveDir;
+
+	CTargetBlaster () :
+	  CBaseEntity (),
+	  CMapEntity (),
+	  CUsableEntity ()
+	{
+	};
+
+	CTargetBlaster (int Index) :
+	  CBaseEntity (Index),
+	  CMapEntity (Index),
+	  CUsableEntity (Index)
+	{
+	};
+
+	bool Run ()
+	{
+		return CBaseEntity::Run();
+	};
+
+	void Use (CBaseEntity *other, CBaseEntity *activator)
+	{
+		CBlasterProjectile::Spawn (this, State.GetOrigin(), MoveDir, gameEntity->dmg, gameEntity->speed, (gameEntity->spawnflags & 2) ? 0 : ((gameEntity->spawnflags & 1) ? EF_HYPERBLASTER : EF_BLASTER), true);
+		PlaySound (CHAN_VOICE, gameEntity->noise_index);
+	};
+
+	void Spawn ()
+	{
+		G_SetMovedir (State.GetAngles(), MoveDir);
+		gameEntity->noise_index = SoundIndex ("weapons/laser2.wav");
+
+		if (!gameEntity->dmg)
+			gameEntity->dmg = 15;
+		if (!gameEntity->speed)
+			gameEntity->speed = 1000;
+
+		SetSvFlags (SVF_NOCLIENT);
+	};
+};
+
+LINK_CLASSNAME_TO_CLASS ("target_blaster", CTargetBlaster);
+
+#define	START_ON		1
+#define	RED				2
+#define	GREEN			4
+#define	BLUE			8
+#define	YELLOW			16
+#define	ORANGE			32
+#define	FAT				64
+
+/*QUAKED target_laser (0 .5 .8) (-8 -8 -8) (8 8 8) START_ON RED GREEN BLUE YELLOW ORANGE FAT
+When triggered, fires a laser.  You can either set a target
+or a direction.
+*/
+class CTargetLaser : public CMapEntity, public CThinkableEntity, public CUsableEntity
+{
+public:
+	bool StartLaser;
+	bool Usable;
+	vec3f MoveDir;
+
+	CTargetLaser () :
+	  CBaseEntity (),
+	  CMapEntity (),
+	  CThinkableEntity (),
+	  CUsableEntity (),
+	  StartLaser(true),
+	  Usable(false)
+	{
+	};
+
+	CTargetLaser (int Index) :
+	  CBaseEntity (Index),
+	  CMapEntity (Index),
+	  CThinkableEntity (Index),
+	  CUsableEntity (Index),
+	  StartLaser(true),
+	  Usable(false)
+	{
+	};
+
+	bool Run ()
+	{
+		return CBaseEntity::Run();
+	};
+
+	void Think ()
+	{
+		if (StartLaser)
+		{
+			Start ();
+			return;
+		}
+
+		edict_t	*ignore;
+		vec3f	start;
+		vec3f	end;
+
+		if (gameEntity->enemy)
+		{
+			vec3f last_movedir = MoveDir;
+			vec3f point = gameEntity->enemy->Entity->GetAbsMin().MultiplyAngles (0.5f, gameEntity->enemy->Entity->GetSize());
+
+			MoveDir = point - State.GetOrigin();
+			MoveDir.Normalize ();
+			if (MoveDir != last_movedir)
+				gameEntity->spawnflags |= 0x80000000;
+		}
+
+		ignore = gameEntity;
+		start = State.GetOrigin();
+		end = start.MultiplyAngles (2048, MoveDir);
+		CTrace tr;
+		while(1)
+		{
+			tr = CTrace (start, end, ignore, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_DEADMONSTER);
+
+			if (!tr.ent)
+				break;
+			if (!tr.ent->Entity)
+				break;
+
+			CBaseEntity *Entity = tr.ent->Entity;
+			// hurt it if we can
+			if ((Entity->gameEntity->takedamage) && !(Entity->gameEntity->flags & FL_IMMUNE_LASER))
+				T_Damage (Entity->gameEntity, gameEntity, gameEntity->activator, MoveDir, tr.endPos, vec3Origin, gameEntity->dmg, 1, DAMAGE_ENERGY, MOD_TARGET_LASER);
+
+			// if we hit something that's not a monster or player or is immune to lasers, we're done
+			if (!(Entity->EntityFlags & ENT_MONSTER) && (!(Entity->EntityFlags & ENT_PLAYER)))
+			{
+				if (gameEntity->spawnflags & 0x80000000)
+				{
+					gameEntity->spawnflags &= ~0x80000000;
+					CTempEnt_Splashes::Sparks (tr.EndPos,
+						tr.Plane.normal, 
+						CTempEnt_Splashes::STLaserSparks,
+						(CTempEnt_Splashes::ESplashType)(State.GetSkinNum() & 255),
+						(gameEntity->spawnflags & 0x80000000) ? 8 : 4);
+				}
+				break;
+			}
+
+			ignore = tr.ent;
+			start = tr.EndPos;
+		}
+
+		State.SetOldOrigin (tr.EndPos);
+		NextThink = level.framenum + FRAMETIME;
+	};
+
+	void Use (CBaseEntity *other, CBaseEntity *activator)
+	{
+		if (!Usable)
+			return;
+
+		gameEntity->activator = activator->gameEntity;
+		if (gameEntity->spawnflags & 1)
+			Off ();
+		else
+			On ();
+	};
+
+	void On ()
+	{
+		if (!gameEntity->activator)
+			gameEntity->activator = gameEntity;
+		gameEntity->spawnflags |= 0x80000001;
+		SetSvFlags (GetSvFlags() & ~SVF_NOCLIENT);
+		Think ();
+	};
+	void Off ()
+	{
+		gameEntity->spawnflags &= ~1;
+		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
+		NextThink = 0;
+	};
+	void Start ()
+	{
+		SetSolid (SOLID_NOT);
+		State.AddRenderEffects (RF_BEAM|RF_TRANSLUCENT);
+		State.SetModelIndex (1);			// must be non-zero
+
+		// set the beam diameter
+		if (gameEntity->spawnflags & FAT)
+			State.SetFrame (16);
+		else
+			State.SetFrame (4);
+
+		// set the color
+		if (gameEntity->spawnflags & RED)
+			State.SetSkinNum (Color_RGBAToHex (NSColor::PatriotRed, NSColor::PatriotRed, NSColor::Red, NSColor::Red));
+		else if (gameEntity->spawnflags & GREEN)
+			State.SetSkinNum (Color_RGBAToHex (NSColor::Green, NSColor::Lime, NSColor::FireSpeechGreen, NSColor::Harlequin));
+		else if (gameEntity->spawnflags & BLUE)
+			State.SetSkinNum (Color_RGBAToHex (NSColor::PatriotBlue, NSColor::PatriotBlue, NSColor::NeonBlue, NSColor::NeonBlue));
+		else if (gameEntity->spawnflags & YELLOW)
+			State.SetSkinNum (Color_RGBAToHex (NSColor::ParisDaisy, NSColor::Gorse, NSColor::Lemon, NSColor::Gold));
+		else if (gameEntity->spawnflags & ORANGE)
+			State.SetSkinNum (Color_RGBAToHex (NSColor::HarvestGold, NSColor::RobRoy, NSColor::TulipTree, NSColor::FireBush));
+
+		if (!gameEntity->enemy)
+		{
+			if (gameEntity->target)
+			{
+				CBaseEntity *ent = CC_Find (NULL, FOFS(targetname), gameEntity->target);
+				if (!ent)
+					//gi.dprintf ("%s at (%f %f %f): %s is a bad target\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2], self->target);
+					MapPrint (MAPPRINT_WARNING, this, State.GetOrigin(), "\"%s\" is a bad target\n", gameEntity->target);
+				gameEntity->enemy = ent->gameEntity;
+			}
+			else
+				G_SetMovedir (State.GetAngles(), MoveDir);
+		}
+
+		Usable = true;
+		StartLaser = false;
+
+		if (!gameEntity->dmg)
+			gameEntity->dmg = 1;
+
+		SetMins (vec3f(-8, -8, -8));
+		SetMaxs (vec3f(8, 8, 8));
+		Link ();
+
+		if (gameEntity->spawnflags & START_ON)
+			On ();
+		else
+			Off ();
+	};
+
+	void Spawn ()
+	{
+		// let everything else get spawned before we start firing
+		NextThink = level.framenum + 10;
+	};
+};
+
+LINK_CLASSNAME_TO_CLASS ("target_laser", CTargetLaser);

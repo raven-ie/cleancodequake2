@@ -937,7 +937,7 @@ inline void CPlayerEntity::DamageFeedback (vec3_t forward, vec3_t right, vec3_t 
 	}
 
 	// the total alpha of the blend is always proportional to count
-	byte Alpha = Client.damage_blend.A + count*3;
+	int Alpha = Client.damage_blend.A + count*3;
 	if (Alpha < 51)
 		Alpha = 51;
 	if (Alpha > 153)
