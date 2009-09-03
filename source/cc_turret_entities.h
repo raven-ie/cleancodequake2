@@ -79,7 +79,7 @@ public:
 	void Melee () {};
 
 	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
-	void Pain (CBaseEntity *other, float kick, int damage)  {};
+	void Pain (CBaseEntity *other, float kick, int damage);
 
 	void TurretThink ();
 	void TurretLink ();

@@ -942,8 +942,8 @@ bool CPushPhysics::Run ()
 			part->avelocity[0] || part->avelocity[1] || part->avelocity[2]
 			)
 		{	// object is moving
-			Vec3Scale (part->velocity, 0.1f, move);
-			Vec3Scale (part->avelocity, 0.1f, amove);
+			Vec3Scale (part->velocity, 1, move);
+			Vec3Scale (part->avelocity, 1, amove);
 
 			if (!Push (part->Entity, move, amove))
 				break;

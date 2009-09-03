@@ -99,7 +99,7 @@ void CBrushModel::MoveFinal ()
 		return;
 	}
 
-	Vec3Scale (Dir, RemainingDistance / 0.1f, gameEntity->velocity);
+	Vec3Scale (Dir, RemainingDistance, gameEntity->velocity);
 
 	ThinkType = BRUSHTHINK_MOVEDONE;
 	NextThink = level.framenum + FRAMETIME;
@@ -112,7 +112,7 @@ void CBrushModel::MoveBegin ()
 		MoveFinal ();
 		return;
 	}
-	Vec3Scale (Dir, Speed, gameEntity->velocity);
+	Vec3Scale (Dir, Speed/10, gameEntity->velocity);
 	float frames = floor((RemainingDistance / Speed) / 0.1f);
 	RemainingDistance -= ((frames * Speed) / 10);
 	NextThink = level.framenum + frames;

@@ -210,14 +210,14 @@ void CTurretBreach::Think ()
 			delta.Y -= 360;
 		delta.Z = 0;
 
-		if (delta.X > gameEntity->speed * 1)
-			delta.X = gameEntity->speed * 1;
-		if (delta.X < -1 * gameEntity->speed * 1)
-			delta.X = -1 * gameEntity->speed * 1;
-		if (delta.Y > gameEntity->speed * 1)
-			delta.Y = gameEntity->speed * 1;
-		if (delta.Y < -1 * gameEntity->speed * 1)
-			delta.Y = -1 * gameEntity->speed * 1;
+		if (delta.X > gameEntity->speed * 0.1f)
+			delta.X = gameEntity->speed * 0.1f;
+		if (delta.X < -1 * gameEntity->speed * 0.1f)
+			delta.X = -1 * gameEntity->speed * 0.1f;
+		if (delta.Y > gameEntity->speed * 0.1f)
+			delta.Y = gameEntity->speed * 0.1f;
+		if (delta.Y < -1 * gameEntity->speed * 0.1f)
+			delta.Y = -1 * gameEntity->speed * 0.1f;
 
 		Vec3Scale (delta, 1, gameEntity->avelocity);
 
@@ -362,6 +362,18 @@ void CTurretDriver::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 	CInfantry::Die (inflictor, attacker, damage, point);
 }
 
+void CTurretDriver::Pain (CBaseEntity *other, float kick, int damage)
+{
+	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+		Entity->State.SetSkinNum(1);
+
+	if (level.framenum < Entity->gameEntity->pain_debounce_time)
+		return;
+
+	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
+	Entity->PlaySound (CHAN_VOICE, (rand() % 2 == 0) ? SoundPain1 : SoundPain2);
+}
+
 void CTurretDriver::TurretThink ()
 {
 	Entity->NextThink = level.framenum + FRAMETIME;
@@ -394,12 +406,9 @@ void CTurretDriver::TurretThink ()
 	}
 
 	// let the turret know where we want it to aim
-	/*vec3f dir = (Entity->gameEntity->enemy->Entity->State.GetOrigin() +
+	vec3f dir = (Entity->gameEntity->enemy->Entity->State.GetOrigin() +
 		vec3f(0, 0, Entity->gameEntity->enemy->viewheight)) -
-		Entity->gameEntity->target_ent->Entity->State.GetOrigin();*/
-	vec3f target = Entity->gameEntity->enemy->Entity->State.GetOrigin();
-	target.Z += Entity->gameEntity->enemy->viewheight;
-	vec3f dir = target - Entity->gameEntity->target_ent->Entity->State.GetOrigin();
+		Entity->gameEntity->target_ent->Entity->State.GetOrigin();
 
 	vec3f ang = dir.ToAngles ();
 	Vec3Copy (ang, Entity->gameEntity->target_ent->move_angles);
@@ -467,7 +476,10 @@ void CTurretDriver::Spawn ()
 	Entity->gameEntity->mass = 200;
 	Entity->gameEntity->viewheight = 24;
 
-
+	SoundPain1 = SoundIndex ("infantry/infpain1.wav");
+	SoundPain2 = SoundIndex ("infantry/infpain2.wav");
+	SoundDie1 = SoundIndex ("infantry/infdeth1.wav");
+	SoundDie2 = SoundIndex ("infantry/infdeth2.wav");
 
 	Entity->gameEntity->flags |= FL_NO_KNOCKBACK;
 
