@@ -171,7 +171,7 @@ void CBrushModel::AngleMoveFinal ()
 		return;
 	}
 
-	Vec3Scale (move, 0.1f, gameEntity->avelocity);
+	Vec3Scale (move, 1, gameEntity->avelocity);
 
 	ThinkType = BRUSHTHINK_AMOVEDONE;
 	NextThink = level.framenum + FRAMETIME;
@@ -195,16 +195,16 @@ void CBrushModel::AngleMoveBegin ()
 	// divide by speed to get time to reach dest
 	traveltime = len / Speed;
 
-	if (traveltime < FRAMETIME)
+	if (traveltime < 0.1f)
 	{
 		AngleMoveFinal ();
 		return;
 	}
 
-	int32 frames = (traveltime / 0.1f);
+	float frames = floor(traveltime / 0.1f);
 
 	// scale the destdelta vector by the time spent traveling to get velocity
-	Vec3Scale (destdelta, 1.0 / traveltime, gameEntity->avelocity);
+	Vec3Scale (destdelta, 1.0 / (traveltime * 10), gameEntity->avelocity);
 
 	// set nextthink to trigger a think when dest is reached
 	NextThink = level.framenum + frames;
@@ -901,7 +901,7 @@ void CDoor::Blocked (CBaseEntity *other)
 		if (MoveState == STATE_DOWN)
 		{
 			for (edict_t *ent = gameEntity->teammaster ; ent ; ent = ent->teamchain)
-				(dynamic_cast<CDoor*>(ent->Entity))->GoUp (gameEntity->activator->Entity);
+				(dynamic_cast<CDoor*>(ent->Entity))->GoUp ((gameEntity->activator) ? gameEntity->activator->Entity : NULL);
 		}
 		else
 		{
@@ -1132,11 +1132,11 @@ void CRotatingDoor::Spawn ()
 	// set the axis of rotation
 	Vec3Clear(gameEntity->movedir);
 	if (gameEntity->spawnflags & DOOR_X_AXIS)
-		gameEntity->movedir[2] = 1.0;
+		gameEntity->movedir[2] = 0.1f;
 	else if (gameEntity->spawnflags & DOOR_Y_AXIS)
-		gameEntity->movedir[0] = 1.0;
+		gameEntity->movedir[0] = 0.1f;
 	else // Z_AXIS
-		gameEntity->movedir[1] = 1.0;
+		gameEntity->movedir[1] = 0.1f;
 
 	// check for reverse rotation
 	if (gameEntity->spawnflags & DOOR_REVERSE)
@@ -1206,8 +1206,8 @@ void CRotatingDoor::Spawn ()
 	Wait = gameEntity->wait;
 	State.GetOrigin (StartOrigin);
 	State.GetOrigin (EndOrigin);
-	Vec3Copy (gameEntity->pos1, StartAngles);
-	Vec3Copy (gameEntity->pos2, EndAngles);
+	Vec3Scale (gameEntity->pos1, 10, StartAngles);
+	Vec3Scale (gameEntity->pos2, 10, EndAngles);
 
 	if (gameEntity->spawnflags & 16)
 		State.AddEffects (EF_ANIM_ALL);

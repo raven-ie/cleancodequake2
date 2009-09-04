@@ -497,7 +497,7 @@ void T_RadiusDamage (edict_t *inflictor, edict_t *attacker, float damage, edict_
 	vec3f org = inflictor->Entity->State.GetOrigin();
 	while ((ent = FindRadius<CHurtableEntity, ENT_HURTABLE> (ent, org, radius)) != NULL)
 	{
-		if (ent == ignore->Entity)
+		if (ignore && (ent == ignore->Entity))
 			continue;
 		if (!ent->gameEntity->takedamage)
 			continue;
