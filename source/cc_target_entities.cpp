@@ -228,10 +228,11 @@ public:
 		SetSvFlags (SVF_NOCLIENT);
 		if (gameEntity->speed)
 		{
-			vec3f md;
-			G_SetMovedir (State.GetAngles(), md);
+			vec3f md, angles = State.GetAngles();
+			G_SetMovedir (angles, md);
 			md.Scale (gameEntity->speed);
 			Vec3Copy (md, gameEntity->movedir);
+			State.SetAngles (angles);
 		}
 	};
 };
@@ -287,7 +288,9 @@ public:
 
 	void Spawn ()
 	{
-		G_SetMovedir (State.GetAngles(), MoveDir);
+		vec3f angles = State.GetAngles();
+		G_SetMovedir (angles, MoveDir);
+		State.SetAngles (angles);
 
 		if (!gameEntity->count)
 			gameEntity->count = 32;
@@ -656,7 +659,10 @@ public:
 
 	void Spawn ()
 	{
-		G_SetMovedir (State.GetAngles(), MoveDir);
+		vec3f ang = State.GetAngles();
+		G_SetMovedir (ang, MoveDir);
+		State.SetAngles (ang);
+
 		gameEntity->noise_index = SoundIndex ("weapons/laser2.wav");
 
 		if (!gameEntity->dmg)
@@ -839,7 +845,11 @@ public:
 				gameEntity->enemy = ent->gameEntity;
 			}
 			else
-				G_SetMovedir (State.GetAngles(), MoveDir);
+			{
+				vec3f angles = State.GetAngles ();
+				G_SetMovedir (angles, MoveDir);
+				State.SetAngles (angles);
+			}
 		}
 
 		Usable = true;

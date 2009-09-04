@@ -299,6 +299,10 @@ class CPlayerEntity : public CHurtableEntity
 {
 public:
 	CClient		Client;
+	bool		NoClip;
+	bool		TossPhysics;
+	int32		FlySoundDebounceTime;
+	int32		AirFinished;
 
 	CPlayerEntity (int Index);
 	bool Run ();

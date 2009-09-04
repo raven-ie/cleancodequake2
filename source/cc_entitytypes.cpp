@@ -745,11 +745,79 @@ typedef struct
 	vec3_t	angles;
 	float	deltayaw;
 } pushed_t;
-extern pushed_t	pushed[MAX_CS_EDICTS], *pushed_p;
+pushed_t	pushed[MAX_CS_EDICTS], *pushed_p;
 
-extern edict_t	*obstacle;
+edict_t	*obstacle;
 
-edict_t	*SV_TestEntityPosition (edict_t *ent);
+/*
+============
+SV_AddGravity
+
+============
+*/
+void SV_AddGravity (edict_t *ent)
+{
+	ent->velocity[2] -= ent->gravity * sv_gravity->Float() * 0.1f;
+}
+
+/*
+============
+SV_TestEntityPosition
+
+============
+*/
+edict_t	*SV_TestEntityPosition (edict_t *ent)
+{
+	CTrace	trace;
+	int			mask;
+
+	if (ent->clipMask)
+		mask = ent->clipMask;
+	else
+		mask = CONTENTS_MASK_SOLID;
+	trace = CTrace (ent->state.origin, ent->mins, ent->maxs, ent->state.origin, ent, mask);
+	
+	if (trace.startSolid)
+		return g_edicts;
+		
+	return NULL;
+}
+
+/*
+==================
+ClipVelocity
+
+Slide off of the impacting object
+returns the blocked flags (1 = floor, 2 = step / wall)
+==================
+*/
+#define STOP_EPSILON	0.1
+
+int ClipVelocity (vec3_t in, vec3_t normal, vec3_t out, float overbounce)
+{
+	float	backoff;
+	float	change;
+	int		i, blocked;
+	
+	blocked = 0;
+	if (normal[2] > 0)
+		blocked |= 1;		// floor
+	if (!normal[2])
+		blocked |= 2;		// step
+	
+	backoff = Dot3Product (in, normal) * overbounce;
+
+	for (i=0 ; i<3 ; i++)
+	{
+		change = normal[i]*backoff;
+		out[i] = in[i] - change;
+		if (out[i] > -STOP_EPSILON && out[i] < STOP_EPSILON)
+			out[i] = 0;
+	}
+
+	return blocked;
+}
+
 bool Push (CBaseEntity *Entity, vec3_t move, vec3_t amove)
 {
 	int			i, e;
@@ -918,7 +986,7 @@ bool Push (CBaseEntity *Entity, vec3_t move, vec3_t amove)
 //FIXME: is there a better way to handle this?
 	// see if anything we moved has touched a trigger
 	for (p=pushed_p-1 ; p>=pushed ; p--)
-		G_TouchTriggers (p->ent);
+		G_TouchTriggers (p->ent->Entity);
 
 	return true;
 }
@@ -957,8 +1025,6 @@ bool CPushPhysics::Run ()
 		// the move failed, bump all nextthink times and back out moves
 		for (mv = gameEntity ; mv ; mv=mv->teamchain)
 		{
-			//if (mv->nextthink > 0)
-			//	mv->nextthink += FRAMETIME;
 			if (mv->Entity && (mv->Entity->EntityFlags & ENT_THINKABLE))
 			{
 				CThinkableEntity *Thinkable = dynamic_cast<CThinkableEntity*>(mv->Entity);

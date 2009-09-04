@@ -35,12 +35,11 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #define __CC_UTILS_H__
 
 void	G_TouchTriggers (CBaseEntity *ent);
-void	G_TouchSolids (CBaseEntity *ent);
 void G_SetMovedir (vec3f &angles, vec3f &movedir);
-bool KillBox (CBaseEntity *ent);
 CBaseEntity *GetRandomTeamMember (CBaseEntity *Entity, CBaseEntity *Master);
 CBaseEntity *CC_PickTarget (char *targetname);
 void G_UseTargets (CBaseEntity *ent, CBaseEntity *activator);
+bool KillBox (CBaseEntity *ent);
 CBaseEntity *CC_Find (CBaseEntity *from, int fieldofs, char *match);
 
 CBaseEntity *SelectFarthestDeathmatchSpawnPoint ();

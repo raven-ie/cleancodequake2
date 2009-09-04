@@ -48,12 +48,13 @@ enum
 };
 
 // Item entity
-class CItemEntity : public CMapEntity, public CTossProjectile, public CTouchableEntity, public CThinkableEntity
+class CItemEntity : public CMapEntity, public CTossProjectile, public CTouchableEntity, public CThinkableEntity, public CUsableEntity
 {
 public:
 	bool			NoPhysics;
 	bool			NoTouch;
 	EItemThinkState ThinkState;
+	bool			Usable;
 
 	CItemEntity ();
 	CItemEntity (int Index);
@@ -62,6 +63,8 @@ public:
 
 	virtual void Think ();
 	virtual void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
+
+	virtual void Use (CBaseEntity *other, CBaseEntity *activator);
 
 	bool Run ();
 

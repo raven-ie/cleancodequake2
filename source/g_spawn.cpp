@@ -20,120 +20,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
-typedef struct
-{
-	char	*name;
-	void	(*spawn)(edict_t *ent);
-} spawn_t;
-
-
-/*void SP_item_health (edict_t *self);
-void SP_item_health_small (edict_t *self);
-void SP_item_health_large (edict_t *self);
-void SP_item_health_mega (edict_t *self);*/
-
-void SP_info_player_start (edict_t *ent);
-void SP_info_player_deathmatch (edict_t *ent);
-void SP_info_player_coop (edict_t *ent);
-void SP_info_player_intermission (edict_t *ent);
-
-void SP_func_plat (edict_t *ent);
-void SP_func_rotating (edict_t *ent);
-void SP_func_button (edict_t *ent);
-void SP_func_door (edict_t *ent);
-void SP_func_door_secret (edict_t *ent);
-void SP_func_door_rotating (edict_t *ent);
-void SP_func_water (edict_t *ent);
-void SP_func_train (edict_t *ent);
-void SP_func_conveyor (edict_t *self);
-void SP_func_wall (edict_t *self);
-void SP_func_object (edict_t *self);
-void SP_func_explosive (edict_t *self);
-void SP_func_timer (edict_t *self);
-void SP_func_areaportal (edict_t *ent);
-void SP_func_clock (edict_t *ent);
-void SP_func_killbox (edict_t *ent);
-
-void SP_trigger_always (edict_t *ent);
-void SP_trigger_once (edict_t *ent);
-void SP_trigger_multiple (edict_t *ent);
-void SP_trigger_relay (edict_t *ent);
-void SP_trigger_push (edict_t *ent);
-void SP_trigger_hurt (edict_t *ent);
-void SP_trigger_key (edict_t *ent);
-void SP_trigger_counter (edict_t *ent);
-void SP_trigger_elevator (edict_t *ent);
-void SP_trigger_gravity (edict_t *ent);
-void SP_trigger_teleport (edict_t *ent);
-void SP_trigger_monsterjump (edict_t *ent);
-
-void SP_target_temp_entity (edict_t *ent);
-void SP_target_speaker (edict_t *ent);
-void SP_target_explosion (edict_t *ent);
-void SP_target_changelevel (edict_t *ent);
-void SP_target_secret (edict_t *ent);
-void SP_target_goal (edict_t *ent);
-void SP_target_splash (edict_t *ent);
-void SP_target_spawner (edict_t *ent);
-void SP_target_blaster (edict_t *ent);
-void SP_target_crosslevel_trigger (edict_t *ent);
-void SP_target_crosslevel_target (edict_t *ent);
-void SP_target_laser (edict_t *self);
-void SP_target_help (edict_t *self);
-void SP_target_actor (edict_t *self);
-void SP_target_location (edict_t *self);
-void SP_target_position (edict_t *self);
-void SP_target_lightramp (edict_t *self);
-void SP_target_earthquake (edict_t *ent);
-void SP_target_character (edict_t *ent);
-void SP_target_string (edict_t *ent);
-
-void SP_worldspawn (edict_t *ent);
-void SP_viewthing (edict_t *ent);
-
-void SP_light (edict_t *self);
-void SP_light_mine1 (edict_t *ent);
-void SP_light_mine2 (edict_t *ent);
-void SP_info_null (edict_t *self);
-void SP_info_notnull (edict_t *self);
-void SP_path_corner (edict_t *self);
-void SP_point_combat (edict_t *self);
-
-void SP_misc_banner (edict_t *self);
-void SP_misc_satellite_dish (edict_t *self);
-void SP_misc_actor (edict_t *self);
-void SP_misc_gib_arm (edict_t *self);
-void SP_misc_gib_leg (edict_t *self);
-void SP_misc_gib_head (edict_t *self);
-void SP_misc_insane (edict_t *self);
-void SP_misc_deadsoldier (edict_t *self);
-void SP_misc_viper (edict_t *self);
-void SP_misc_viper_bomb (edict_t *self);
-void SP_misc_bigviper (edict_t *self);
-void SP_misc_strogg_ship (edict_t *self);
-void SP_misc_teleporter (edict_t *self);
-void SP_misc_teleporter_dest (edict_t *self);
-void SP_misc_blackhole (edict_t *self);
-void SP_misc_eastertank (edict_t *self);
-void SP_misc_easterchick (edict_t *self);
-void SP_misc_easterchick2 (edict_t *self);
-void SP_misc_model (edict_t *self);
-
-void SP_turret_breach (edict_t *self);
-void SP_turret_base (edict_t *self);
-//void SP_turret_driver (edict_t *self);
-void SP_monster_boss3_stand (edict_t *self);
-
-spawn_t	spawns[] = {
-	//{"target_actor", SP_target_actor},
-
-//	{"viewthing", SP_viewthing},
-
-	//{"misc_actor", SP_misc_actor},
-
-	{NULL, NULL}
-};
-
 /*
 ===============
 ED_CallSpawn
@@ -143,7 +29,6 @@ Finds the spawn function for the entity and calls it
 */
 void ED_CallSpawn (edict_t *ent)
 {
-	spawn_t	*s;
 	if (!ent->classname)
 	{
 		//gi.dprintf ("ED_CallSpawn: NULL classname\n");
@@ -151,37 +36,11 @@ void ED_CallSpawn (edict_t *ent)
 		return;
 	}
 
-	// check item spawn functions
-//	if (ItemExists(ent))
-//		return;
-
-/*
-	if ((ent->Monster = FindMonster(ent->classname)) != NULL)
-	{
-		ent->Monster->Allocate(ent);
-		ent->Monster->Init (ent);
-		return;
-	}
-	else
-		ent->Monster = NULL;
-*/
-
 	// Check CleanCode stuff
 	CBaseEntity *MapEntity = ResolveMapEntity(ent);
-	if (MapEntity != NULL)
-		return;
 
-	// check normal spawn functions
-	for (s=spawns ; s->name ; s++)
-	{
-		if (!strcmp(s->name, ent->classname))
-		{	// found it
-			s->spawn (ent);
-			return;
-		}
-	}
-	//gi.dprintf ("%s doesn't have a spawn function\n", ent->classname);
-	MapPrint (MAPPRINT_ERROR, ent, ent->state.origin, "Invalid entity (no spawn function)\n");
+	if (!MapEntity)
+		MapPrint (MAPPRINT_ERROR, ent, ent->state.origin, "Invalid entity (no spawn function)\n");
 }
 
 /*

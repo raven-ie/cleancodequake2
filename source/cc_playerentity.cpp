@@ -284,7 +284,9 @@ void CClient::Clear ()
 CPlayerEntity::CPlayerEntity (int Index) :
 CBaseEntity(Index),
 CHurtableEntity(Index),
-Client(&game.clients[State.GetNumber()-1])
+Client(&game.clients[State.GetNumber()-1]),
+NoClip(false),
+TossPhysics(false)
 {
 	EntityFlags |= ENT_PLAYER;
 };
@@ -360,7 +362,7 @@ void CPlayerEntity::Respawn ()
 	if (game.mode != GAME_SINGLEPLAYER)
 	{
 		// spectator's don't leave bodies
-		if (gameEntity->movetype != MOVETYPE_NOCLIP)
+		if (!NoClip)
 			CopyToBodyQueue (this);
 		SetSvFlags (GetSvFlags() & ~SVF_NOCLIENT);
 		PutInServer ();
@@ -537,18 +539,17 @@ void CPlayerEntity::PutInServer ()
 	//Client = CClient(&game.clients[index]);
 	//ent->client = &game.clients[index];
 	gameEntity->takedamage = true;
-	gameEntity->movetype = MOVETYPE_WALK;
+	NoClip = false;
+	TossPhysics = false;
 	gameEntity->viewheight = 22;
 	SetInUse (true);
 	gameEntity->classname = "player";
 	gameEntity->mass = 200;
 	SetSolid (SOLID_BBOX);
 	gameEntity->deadflag = DEAD_NO;
-	gameEntity->air_finished = level.framenum + 120;
+	AirFinished = level.framenum + 120;
 	SetClipmask (CONTENTS_MASK_PLAYERSOLID);
 	gameEntity->model = "players/male/tris.md2";
-	gameEntity->pain = player_pain;
-	gameEntity->die = player_die;
 	gameEntity->waterlevel = 0;
 	gameEntity->watertype = 0;
 	gameEntity->flags &= ~FL_NO_KNOCKBACK;
@@ -622,7 +623,7 @@ void CPlayerEntity::PutInServer ()
 
 		Client.resp.spectator = true;
 
-		gameEntity->movetype = MOVETYPE_NOCLIP;
+		NoClip = true;
 		SetSolid (SOLID_NOT);
 		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
 		Client.PlayerState.SetGunIndex (0);
@@ -824,7 +825,7 @@ bool CPlayerEntity::CTFStart ()
 	{
 		// start as 'observer'
 		Client.resp.ctf_team = CTF_NOTEAM;
-		gameEntity->movetype = MOVETYPE_NOCLIP;
+		NoClip = true;
 		SetSolid (SOLID_NOT);
 		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
 		Client.PlayerState.SetGunIndex (0);
@@ -1288,7 +1289,7 @@ inline void CPlayerEntity::FallingDamage ()
 	if (State.GetModelIndex() != 255)
 		return;		// not in the player model
 
-	if (gameEntity->movetype == MOVETYPE_NOCLIP)
+	if (NoClip)
 		return;
 
 #ifdef CLEANCTF_ENABLED
@@ -1378,9 +1379,9 @@ inline void CPlayerEntity::WorldEffects ()
 	vec3_t origin;
 	State.GetOrigin(origin);
 
-	if (gameEntity->movetype == MOVETYPE_NOCLIP)
+	if (NoClip)
 	{
-		gameEntity->air_finished = level.framenum + 120;	// don't need air
+		AirFinished = level.framenum + 120;	// don't need air
 		return;
 	}
 
@@ -1430,12 +1431,12 @@ inline void CPlayerEntity::WorldEffects ()
 	//
 	if (old_waterlevel == 3 && waterlevel != 3)
 	{
-		if (gameEntity->air_finished < level.framenum)
+		if (AirFinished < level.framenum)
 		{	// gasp for air
 			PlaySoundFrom (gameEntity, CHAN_VOICE, SoundIndex("player/gasp1.wav"));
 			PlayerNoise(this, origin, PNOISE_SELF);
 		}
-		else  if (gameEntity->air_finished < level.framenum + 110) // just break surface
+		else  if (AirFinished < level.framenum + 110) // just break surface
 			PlaySoundFrom (gameEntity, CHAN_VOICE, SoundIndex("player/gasp2.wav"));
 	}
 
@@ -1447,7 +1448,7 @@ inline void CPlayerEntity::WorldEffects ()
 		// breather or envirosuit give air
 		if (breather || envirosuit)
 		{
-			gameEntity->air_finished = level.framenum + 100;
+			AirFinished = level.framenum + 100;
 
 			if (((int)(Client.breather_framenum - level.framenum) % 25) == 0)
 			{
@@ -1458,7 +1459,7 @@ inline void CPlayerEntity::WorldEffects ()
 		}
 
 		// if out of air, start drowning
-		if (gameEntity->air_finished < level.framenum)
+		if (AirFinished < level.framenum)
 		{	// drown!
 			if (Client.next_drown_time < level.framenum 
 				&& gameEntity->health > 0)
@@ -1484,7 +1485,7 @@ inline void CPlayerEntity::WorldEffects ()
 	}
 	else
 	{
-		gameEntity->air_finished = level.framenum + 120;
+		AirFinished = level.framenum + 120;
 		gameEntity->dmg = 2;
 	}
 
@@ -2867,7 +2868,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 	// set up for pmove
 	memset (&pm, 0, sizeof(pm));
 
-	if (gameEntity->movetype == MOVETYPE_NOCLIP)
+	if (NoClip)
 		Client.PlayerState.GetPMove()->pmType = PMT_SPECTATOR;
 	else if (State.GetModelIndex() != 255)
 		Client.PlayerState.GetPMove()->pmType = PMT_GIB;
@@ -2953,7 +2954,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 
 	Link ();
 
-	if (gameEntity->movetype != MOVETYPE_NOCLIP)
+	if (!NoClip)
 		G_TouchTriggers (this);
 
 	// touch other objects
@@ -2971,9 +2972,6 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 			}
 			continue;
 		}
-		if (!other->touch)
-			continue;
-		other->touch (other, gameEntity, NULL, NULL);
 	}
 
 	int oldbuttons = Client.buttons;
@@ -3308,7 +3306,7 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 	Vec3Clear (gameEntity->avelocity);
 
 	gameEntity->takedamage = true;
-	gameEntity->movetype = MOVETYPE_TOSS;
+	TossPhysics = true;
 
 	State.SetModelIndex (0, 2);	// remove linked weapon model
 	State.SetModelIndex (0, 3);	// remove linked ctf flag

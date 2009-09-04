@@ -177,7 +177,7 @@ void G_UseTargets (CBaseEntity *ent, CBaseEntity *activator)
 		t->NextThink = level.framenum + (ent->gameEntity->delay * 10);
 		t->Activator = activator;
 		if (!activator)
-			DebugPrintf ("Think_Delay with no activator\n");
+			DebugPrintf ("DelayedUse with no activator\n");
 		t->gameEntity->message = ent->gameEntity->message;
 		t->gameEntity->target = ent->gameEntity->target;
 		t->gameEntity->killtarget = ent->gameEntity->killtarget;
@@ -293,44 +293,6 @@ void	G_TouchTriggers (CBaseEntity *ent)
 			break;
 	}
 }
-
-/*
-============
-G_TouchSolids
-
-Call after linking a new trigger in during gameplay
-to force all entities it covers to immediately touch it
-============
-*/
-void	G_TouchSolids (CBaseEntity *ent)
-{
-	edict_t		*touch[MAX_CS_EDICTS];
-
-	int num = BoxEdicts (ent->GetAbsMin(), ent->GetAbsMax(), touch, MAX_CS_EDICTS, false);
-
-	// be careful, it is possible to have an entity in this
-	// list removed before we get to it (killtriggered)
-	for (int i=0 ; i<num ; i++)
-	{
-		edict_t *hit = touch[i];
-		CBaseEntity *Entity = hit->Entity;
-
-		if (!Entity || !Entity->IsInUse())
-			continue;
-
-		if (Entity->EntityFlags & ENT_TOUCHABLE)
-		{
-			(dynamic_cast<CTouchableEntity*>(Entity))->Touch (ent, NULL, NULL);
-			continue;
-		}
-
-		if (!ent->IsInUse())
-			break;
-	}
-}
-
-
-
 
 /*
 ==============================================================================

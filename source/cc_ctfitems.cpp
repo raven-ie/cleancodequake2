@@ -238,6 +238,51 @@ void SpawnTech(CBaseItem *item, CBaseEntity *spot)
 	ent->Link ();
 }
 
+// frees the passed edict!
+void CTFRespawnTech(edict_t *ent)
+{
+	SpawnTech(ent->item, FindTechSpawn());
+	G_FreeEdict(ent);
+}
+
+class CTechSpawner : public CThinkableEntity
+{
+public:
+	CTechSpawner () :
+	  CBaseEntity (),
+	  CThinkableEntity ()
+	{
+		Spawn ();
+	};
+
+	CTechSpawner (int Index) :
+	  CBaseEntity (Index),
+	  CThinkableEntity (Index)
+	{
+		Spawn ();
+	};
+
+	bool Run ()
+	{
+		return CBaseEntity::Run();
+	};
+
+	void Think ()
+	{
+		SpawnTech (NItems::Regeneration, FindTechSpawn());
+		SpawnTech (NItems::Haste, FindTechSpawn());
+		SpawnTech (NItems::Strength, FindTechSpawn());
+		SpawnTech (NItems::Resistance, FindTechSpawn());
+
+		Free ();
+	};
+
+	void Spawn ()
+	{
+		NextThink = level.framenum + 20;
+	};
+};
+
 static void SpawnTechs(edict_t *ent)
 {
 	SpawnTech (NItems::Regeneration, FindTechSpawn());
@@ -249,23 +294,12 @@ static void SpawnTechs(edict_t *ent)
 		G_FreeEdict(ent);
 }
 
-// frees the passed edict!
-void CTFRespawnTech(edict_t *ent)
-{
-	SpawnTech(ent->item, FindTechSpawn());
-	G_FreeEdict(ent);
-}
-
 void CTFSetupTechSpawn(void)
 {
-	edict_t *ent;
-
 	if (dmFlags.dfCtfNoTech || !(game.mode & GAME_CTF))
 		return;
 
-	ent = G_Spawn();
-	ent->nextthink = level.framenum + 20;
-	ent->think = SpawnTechs;
+	QNew (com_levelPool, 0) CTechSpawner;
 }
 
 void CTFResetTech(void)

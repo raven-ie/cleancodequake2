@@ -158,7 +158,6 @@ gameExport_t *GetGameAPI (gameImport_t *import)
 	globals.ServerCommand = ServerCommand;
 
 	globals.edictSize = sizeof(edict_t);
-
 	return &globals;
 }
 #endif
@@ -517,8 +516,6 @@ __try
 				QDelete ent->Entity;
 			continue;
 		}
-
-		G_RunEntity (ent);
 	}
 
 	// see if it is time to end a deathmatch

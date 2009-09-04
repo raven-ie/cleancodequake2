@@ -40,19 +40,22 @@ CMapEntity(),
 CTossProjectile(),
 CTouchableEntity(),
 CThinkableEntity(),
+CUsableEntity(),
 NoPhysics(false)
 {
-	Spawn ();
+	EntityFlags |= ENT_ITEM;
 };
 
 CItemEntity::CItemEntity (int Index) :
 CBaseEntity(Index),
 CMapEntity(Index),
-CTossProjectile(),
+CTossProjectile(Index),
 CTouchableEntity(Index),
 CThinkableEntity(Index),
+CUsableEntity(Index),
 NoPhysics(false)
 {
+	EntityFlags |= ENT_ITEM;
 };
 
 void CItemEntity::Touch(CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
@@ -117,7 +120,25 @@ bool CItemEntity::Run ()
 	return CTossProjectile::Run();
 }
 
-void Use_Item (edict_t *ent, edict_t *other, edict_t *activator);
+void CItemEntity::Use (CBaseEntity *other, CBaseEntity *activator)
+{
+	SetSvFlags (GetSvFlags() & ~SVF_NOCLIENT);
+	Usable = false;
+
+	if (gameEntity->spawnflags & ITEM_NO_TOUCH)
+	{
+		SetSolid (SOLID_BBOX);
+		Touchable = false;
+	}
+	else
+	{
+		SetSolid (SOLID_TRIGGER);
+		Touchable = true;
+	}
+
+	Link ();
+}
+
 void CItemEntity::Think ()
 {
 	switch (ThinkState)
@@ -172,7 +193,7 @@ void CItemEntity::Think ()
 			{
 				SetSvFlags(GetSvFlags() | SVF_NOCLIENT);
 				SetSolid (SOLID_NOT);
-				gameEntity->use = Use_Item;
+				Usable = true;
 			}
 
 			Link ();

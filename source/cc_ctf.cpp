@@ -226,7 +226,7 @@ static void loc_buildboxpoints(vec3f p[8], vec3f org, vec3f mins, vec3f maxs)
 bool loc_CanSee (CBaseEntity *targ, CBaseEntity *inflictor)
 {
 	// bmodels need special checking because their origin is 0,0,0
-	if ((targ->EntityFlags & ENT_PHYSICS) && (dynamic_cast<CPhysicsEntity*>(targ))->PhysicsType == MOVETYPE_PUSH)
+	if ((targ->EntityFlags & ENT_PHYSICS) && (dynamic_cast<CPhysicsEntity*>(targ))->PhysicsType == PHYSICS_PUSH)
 		return false; // bmodels not supported
 
 	vec3f	targpoints[8];
@@ -600,7 +600,7 @@ void CTFTeam_f (CPlayerEntity *ent)
 	}
 
 	ent->gameEntity->health = 0;
-	player_die (ent->gameEntity, ent->gameEntity, ent->gameEntity, 100000, vec3Origin);
+	ent->Die (ent, ent, 100000, vec3fOrigin);
 	// don't even bother waiting for death frames
 	ent->gameEntity->deadflag = DEAD_DEAD;
 	ent->Respawn ();
@@ -1082,8 +1082,6 @@ bool CTFBeginElection(CPlayerEntity *ent, elect_t type, char *msg)
 	return true;
 }
 
-void DoRespawn (edict_t *ent);
-
 void CTFResetAllPlayers(void)
 {
 	for (int i = 1; i <= game.maxclients; i++)
@@ -1115,15 +1113,16 @@ void CTFResetAllPlayers(void)
 
 	for (int i = game.maxclients; i < globals.numEdicts; i++)
 	{
-		edict_t *ent = &g_edicts[i];
+		CBaseEntity *ent = g_edicts[i].Entity;
 
-		if (ent->inUse && !ent->client)
+		if (ent && ent->IsInUse() && (ent->EntityFlags & ENT_ITEM))
 		{
-			if (ent->solid == SOLID_NOT && (ent->think == DoRespawn) &&
-				ent->nextthink >= level.framenum)
+			CItemEntity *Item = dynamic_cast<CItemEntity*>(ent);
+			if (Item->GetSolid() == SOLID_NOT && Item->ThinkState == ITS_RESPAWN &&
+				Item->NextThink >= level.framenum)
 			{
-				ent->nextthink = 0;
-				DoRespawn(ent);
+				Item->NextThink = 0;
+				Item->Think ();
 			}
 		}
 	}
@@ -1167,7 +1166,7 @@ void CTFStartMatch(void)
 			ent->State.SetFrame (FRAME_death308-1);
 			ent->Client.anim_end = FRAME_death308;
 			ent->gameEntity->deadflag = DEAD_DEAD;
-			ent->gameEntity->movetype = MOVETYPE_NOCLIP;
+			ent->NoClip = true;
 			ent->Client.PlayerState.SetGunIndex(0);
 			ent->Link ();
 		}
@@ -1437,7 +1436,7 @@ bool CTFMatchOn(void)
 void CTFObserver(CPlayerEntity *ent)
 {
 	// start as 'observer'
-	if (ent->gameEntity->movetype == MOVETYPE_NOCLIP)
+	if (ent->NoClip)
 	{
 		ent->PrintToClient (PRINT_HIGH, "You are already an observer.\n");
 		return;
@@ -1447,7 +1446,7 @@ void CTFObserver(CPlayerEntity *ent)
 	CTFDeadDropFlag(ent);
 	CTFDeadDropTech(ent);
 
-	ent->gameEntity->movetype = MOVETYPE_NOCLIP;
+	ent->NoClip = true;
 	ent->SetSolid(SOLID_NOT);
 	ent->SetSvFlags (ent->GetSvFlags() | SVF_NOCLIENT);
 	ent->Client.resp.ctf_team = CTF_NOTEAM;

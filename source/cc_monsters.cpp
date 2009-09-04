@@ -137,8 +137,10 @@ void CMonster::MoveToPath (float Dist)
 			switch (P_CurrentNode->Type)
 			{
 			case NODE_DOOR:
-					if (P_CurrentNode->LinkedEntity->use)
-						P_CurrentNode->LinkedEntity->use (P_CurrentNode->LinkedEntity, Entity->gameEntity, Entity->gameEntity);
+					{
+						CDoor *Door = dynamic_cast<CDoor*>(P_CurrentNode->LinkedEntity->Entity); // get the plat
+						Door->Use (Entity, Entity);
+					}
 					Stand (); // We stand, and wait.
 				break;
 			case NODE_PLATFORM:
@@ -480,7 +482,9 @@ CPushPhysics(),
 CHurtableEntity(),
 CThinkableEntity(),
 CStepPhysics(),
-CTouchableEntity()
+CTouchableEntity(),
+CUsableEntity(),
+UseState(MONSTERENTITY_THINK_NONE)
 {
 	EntityFlags |= ENT_MONSTER;
 	PhysicsType = PHYSICS_STEP;
@@ -494,7 +498,9 @@ CPushPhysics(Index),
 CHurtableEntity(Index),
 CThinkableEntity(Index),
 CStepPhysics(Index),
-CTouchableEntity(Index)
+CTouchableEntity(Index),
+CUsableEntity(Index),
+UseState(MONSTERENTITY_THINK_NONE)
 {
 	EntityFlags |= ENT_MONSTER;
 	PhysicsType = PHYSICS_STEP;
@@ -1240,8 +1246,8 @@ void CMonster::MonsterStart ()
 	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_MONSTER);
 	Entity->State.AddRenderEffects (RF_FRAMELERP);
 	Entity->gameEntity->takedamage = true;
-	Entity->gameEntity->air_finished = level.framenum + 120;
-	Entity->gameEntity->use = &CMonster::MonsterUse;
+	Entity->AirFinished = level.framenum + 120;
+	Entity->UseState = MONSTERENTITY_THINK_USE;
 	Entity->gameEntity->max_health = Entity->gameEntity->health;
 	Entity->gameEntity->clipMask = CONTENTS_MASK_MONSTERSOLID;
 
@@ -1276,36 +1282,38 @@ void CMonster::MonsterTriggeredStart ()
 	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_NOCLIENT);
 	Entity->NextThink = 0;
 	Think = NULL;
-	Entity->gameEntity->use = &CMonster::MonsterTriggeredSpawnUse;
+	Entity->UseState = MONSTERENTITY_THINK_TRIGGEREDSPAWNUSE;
 }
 
-void _cdecl CMonster::MonsterUse (edict_t *self, edict_t *other, edict_t *activator)
+void CMonsterEntity::Use (CBaseEntity *other, CBaseEntity *activator)
 {
-	if (self->enemy || !(self->Entity && (self->Entity->EntityFlags & ENT_MONSTER)))
-		return;
-	if (self->health <= 0)
-		return;
-	if (activator->flags & FL_NOTARGET)
-		return;
-	if (!(activator->client) && !((dynamic_cast<CMonsterEntity*>(self->Entity))->Monster->AIFlags & AI_GOOD_GUY))
-		return;
-	
-// delay reaction so if the monster is teleported, its sound is still heard
-	self->enemy = activator;
-	(dynamic_cast<CMonsterEntity*>(self->Entity))->Monster->FoundTarget ();
-}
-
-void _cdecl CMonster::MonsterTriggeredSpawnUse (edict_t *self, edict_t *other, edict_t *activator)
-{
-	if (!(self->Entity && (self->Entity->EntityFlags & ENT_MONSTER)))
-		return;
-
-	// we have a one frame delay here so we don't telefrag the guy who activated us
-	(dynamic_cast<CMonsterEntity*>(self->Entity))->Monster->Think = &CMonster::MonsterTriggeredSpawn;
-	(dynamic_cast<CMonsterEntity*>(self->Entity))->Monster->Entity->NextThink = level.framenum + FRAMETIME;
-	if (activator->client)
-		self->enemy = activator;
-	self->use = &CMonster::MonsterUse;
+	switch (UseState)
+	{
+	case MONSTERENTITY_THINK_NONE:
+		break;
+	case MONSTERENTITY_THINK_USE:
+		if (gameEntity->enemy)
+			return;
+		if (gameEntity->health <= 0)
+			return;
+		if (activator->gameEntity->flags & FL_NOTARGET)
+			return;
+		if (!(activator->EntityFlags & ENT_PLAYER) && !(Monster->AIFlags & AI_GOOD_GUY))
+			return;
+		
+	// delay reaction so if the monster is teleported, its sound is still heard
+		gameEntity->enemy = activator->gameEntity;
+		Monster->FoundTarget ();
+		break;
+	case MONSTERENTITY_THINK_TRIGGEREDSPAWNUSE:
+		// we have a one frame delay here so we don't telefrag the guy who activated us
+		Monster->Think = &CMonster::MonsterTriggeredSpawn;
+		NextThink = level.framenum + FRAMETIME;
+		if (activator->EntityFlags & ENT_PLAYER)
+			gameEntity->enemy = activator->gameEntity;
+		UseState = MONSTERENTITY_THINK_USE;
+		break;
+	};
 }
 
 void CMonster::MonsterTriggeredSpawn ()
@@ -1318,7 +1326,7 @@ void CMonster::MonsterTriggeredSpawn ()
 	Entity->SetSolid (SOLID_BBOX);
 	Entity->PhysicsDisabled = false;
 	Entity->SetSvFlags (Entity->GetSvFlags() & ~SVF_NOCLIENT);
-	Entity->gameEntity->air_finished = level.framenum + 120;
+	Entity->AirFinished = level.framenum + 120;
 	Entity->Link ();
 
 	MonsterStartGo ();
@@ -1357,7 +1365,7 @@ Alerts nearby Stroggs of possible enemy targets
 void CMonster::AlertNearbyStroggs ()
 {
 	float dist;
-	edict_t		*strogg = NULL;
+	CMonsterEntity		*strogg = NULL;
 
 	if (Entity->gameEntity->enemy->flags & FL_NOTARGET)
 		return;
@@ -1380,38 +1388,33 @@ void CMonster::AlertNearbyStroggs ()
 	if (dist > 2400)
 		dist = 2400;
 
-	vec3_t origin;
-	Entity->State.GetOrigin (origin);
-	while ( (strogg = findradius (strogg, origin, dist)) != NULL)
+	vec3f origin = Entity->State.GetOrigin ();
+	while ( (strogg = FindRadius<CMonsterEntity, ENT_MONSTER>(strogg, origin, dist)) != NULL)
 	{
-		if (strogg->health < 1 || !(strogg->takedamage))
+		if (strogg->gameEntity->health < 1 || !(strogg->gameEntity->takedamage))
 			continue;
-
-		if (strogg == Entity->gameEntity)
+		if (strogg == Entity)
 			continue;
-
-		if (strogg->client || !(strogg->Entity && (strogg->Entity->EntityFlags & ENT_MONSTER)))
+		if (!(strogg->EntityFlags & ENT_MONSTER))
 			continue;
-
-		if (strogg->enemy)
+		if (strogg->gameEntity->enemy)
 			continue;
 		
 #ifdef MONSTERS_USE_PATHFINDING
 		// Set us up for pathing
 		// Revision: if we aren't visible, that is.
-		CMonsterEntity *FoundStrogg = dynamic_cast<CMonsterEntity*>(strogg->Entity); 
-		if (!visible(strogg, Entity->gameEntity->enemy))
+		if (!visible(strogg->gameEntity, Entity->gameEntity->enemy))
 		{
-			FoundStrogg->Monster->P_CurrentNode = GetClosestNodeTo(strogg->state.origin);
-			FoundStrogg->Monster->P_CurrentGoalNode = GetClosestNodeTo(Entity->gameEntity->enemy->state.origin);
+			strogg->Monster->P_CurrentNode = GetClosestNodeTo(strogg->State.GetOrigin());
+			strogg->Monster->P_CurrentGoalNode = GetClosestNodeTo(Entity->gameEntity->enemy->state.origin);
 			//FoundStrogg->gameEntity->enemy = Entity->gameEntity->enemy;
-			FoundStrogg->Monster->FoundPath ();
+			strogg->Monster->FoundPath ();
 		}
 		else
 		{
-			FoundStrogg->gameEntity->enemy = Entity->gameEntity->enemy;
-			FoundStrogg->Monster->FoundTarget ();
-			FoundStrogg->Monster->Sight ();
+			strogg->gameEntity->enemy = Entity->gameEntity->enemy;
+			strogg->Monster->FoundTarget ();
+			strogg->Monster->Sight ();
 		}
 #else
 		//strogg->enemy = Entity->gameEntity->enemy;
@@ -2803,7 +2806,8 @@ void CMonster::AI_Stand (float Dist)
 		// Assuming we got here because we're waiting for something.
 		if (P_CurrentNode->Type == NODE_DOOR)
 		{
-			if (P_CurrentNode->LinkedEntity->moveinfo.state == 0)
+			CDoor *Door = dynamic_cast<CDoor*>(P_CurrentNode->LinkedEntity->Entity);
+			if (Door->MoveState == STATE_TOP)
 				Run(); // We can go again!
 		}
 		else
@@ -2865,7 +2869,8 @@ void CMonster::AI_Stand (float Dist)
 		// Assuming we got here because we're waiting for something.
 		if (P_CurrentNode->Type == NODE_DOOR || P_CurrentNode->Type == NODE_PLATFORM)
 		{
-			if (P_CurrentNode->LinkedEntity->moveinfo.state == STATE_TOP)
+			CDoor *Door = dynamic_cast<CDoor*>(P_CurrentNode->LinkedEntity->Entity);
+			if (Door->MoveState == STATE_TOP)
 				Run(); // We can go again!
 		}
 		// In two goals, do we reach the platform node?
@@ -3330,12 +3335,12 @@ void CMonster::WorldEffects()
 		if (!(Entity->gameEntity->flags & FL_SWIM))
 		{
 			if (Entity->gameEntity->waterlevel < 3)
-				Entity->gameEntity->air_finished = level.framenum + 120;
-			else if (Entity->gameEntity->air_finished < level.framenum)
+				Entity->AirFinished = level.framenum + 120;
+			else if (Entity->AirFinished < level.framenum)
 			{
 				if (Entity->gameEntity->pain_debounce_time < level.framenum)
 				{
-					int dmg = 2 + 2 * (level.framenum - Entity->gameEntity->air_finished);
+					int dmg = 2 + 2 * (level.framenum - Entity->AirFinished);
 					if (dmg > 15)
 						dmg = 15;
 					T_Damage (Entity->gameEntity, world, world, vec3Origin, origin, vec3Origin, dmg, 0, DAMAGE_NO_ARMOR, MOD_WATER);
@@ -3346,12 +3351,12 @@ void CMonster::WorldEffects()
 		else
 		{
 			if (Entity->gameEntity->waterlevel > 0)
-				Entity->gameEntity->air_finished = level.framenum + 90;
-			else if (Entity->gameEntity->air_finished < level.framenum)
+				Entity->AirFinished = level.framenum + 90;
+			else if (Entity->AirFinished < level.framenum)
 			{	// suffocate!
 				if (Entity->gameEntity->pain_debounce_time < level.framenum)
 				{
-					int dmg = 2 + 2 * (level.framenum - Entity->gameEntity->air_finished);
+					int dmg = 2 + 2 * (level.framenum - Entity->AirFinished);
 					if (dmg > 15)
 						dmg = 15;
 					T_Damage (Entity->gameEntity, world, world, vec3Origin, origin, vec3Origin, dmg, 0, DAMAGE_NO_ARMOR, MOD_WATER);

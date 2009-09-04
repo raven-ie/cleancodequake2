@@ -71,16 +71,6 @@ field_t fields[] = {
 	{"target_ent", FOFS(target_ent), F_EDICT, FFL_NOSPAWN},
 	{"chain", FOFS(chain), F_EDICT, FFL_NOSPAWN},
 
-	{"prethink", FOFS(prethink), F_FUNCTION, FFL_NOSPAWN},
-	{"think", FOFS(think), F_FUNCTION, FFL_NOSPAWN},
-	{"blocked", FOFS(blocked), F_FUNCTION, FFL_NOSPAWN},
-	{"touch", FOFS(touch), F_FUNCTION, FFL_NOSPAWN},
-	{"use", FOFS(use), F_FUNCTION, FFL_NOSPAWN},
-	{"pain", FOFS(pain), F_FUNCTION, FFL_NOSPAWN},
-	{"die", FOFS(die), F_FUNCTION, FFL_NOSPAWN},
-
-	{"endfunc", FOFS(moveinfo.endfunc), F_FUNCTION, FFL_NOSPAWN},
-
 	// temp spawn vars -- only valid when the spawn function is called
 	{"lip", STOFS(lip), F_INT, FFL_SPAWNTEMP},
 	{"distance", STOFS(distance), F_INT, FFL_SPAWNTEMP},
@@ -1016,7 +1006,9 @@ __try
 		if (ent->classname)
 			if (strcmp(ent->classname, "target_crosslevel_target") == 0)
 				// backwards compatoh you get the picture
-				ent->nextthink = level.framenum + (ent->delay * 10);
+			{
+				dynamic_cast<CThinkableEntity*>(ent->Entity)->NextThink = level.framenum + (ent->delay * 10);
+			}
 	}
 #ifdef CC_USE_EXCEPTION_HANDLER
 }
