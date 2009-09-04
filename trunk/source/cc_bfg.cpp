@@ -81,8 +81,6 @@ void CBFG::Fire (CPlayerEntity *ent)
 
 void CBFG::MuzzleEffect (CPlayerEntity *ent)
 {
-	vec3_t origin;
-	ent->State.GetOrigin (origin);
 	// send muzzle flash
 	Muzzle (ent, MZ_BFG);
 
@@ -91,9 +89,12 @@ void CBFG::MuzzleEffect (CPlayerEntity *ent)
 
 void CBFG::FireBFG (CPlayerEntity *ent)
 {
-	vec3_t	offset, start;
-	vec3_t	forward, right;
-	int		damage = (game.mode & GAME_DEATHMATCH) ? 200 : 500;
+	vec3f	offset (8, 8, ent->gameEntity->viewheight-8), start;
+	vec3f	forward, right;
+	const int		damage = (game.mode & GAME_DEATHMATCH) ?
+					(isQuad) ? 800 : 200
+					:
+					(isQuad) ? 2000 : 500;
 
 	// cells can go down during windup (from power armor hits), so
 	// check again and abort firing if we don't have enough now
@@ -104,28 +105,24 @@ void CBFG::FireBFG (CPlayerEntity *ent)
 	}
 
 	FireAnimation (ent);
+	ent->Client.ViewAngle.ToVectors (&forward, &right, NULL);
 
-	if (isQuad)
-		damage *= 4;
-
-	Angles_Vectors (ent->Client.v_angle, forward, right, NULL);
-
-	Vec3Scale (forward, -2, ent->Client.kick_origin);
+	vec3f kickOrigin = forward;
+	kickOrigin.Scale (-2);
+	Vec3Copy (kickOrigin, ent->Client.kick_origin);
 
 	// make a big pitch kick with an inverse fall
 	ent->Client.v_dmg_pitch = -40;
 	ent->Client.v_dmg_roll = crandom()*8;
 	ent->Client.v_dmg_time = level.framenum + DAMAGE_TIME;
 
-	Vec3Set (offset, 8, 8, ent->gameEntity->viewheight-8);
-	P_ProjectSource (ent, offset, forward, right, start);
-	//fire_bfg (ent->gameEntity, start, forward, damage, 400, damage_radius);
+	ent->P_ProjectSource (offset, forward, right, start);
 	CBFGBolt::Spawn (ent, start, forward, damage, 400, 1000);
-	AttackSound (ent);
 
+	AttackSound (ent);
 	ent->Client.PlayerState.SetGunFrame (ent->Client.PlayerState.GetGunFrame()+1);
 
-	PlayerNoise(ent, start, PNOISE_WEAPON);
+	ent->PlayerNoiseAt (start, PNOISE_WEAPON);
 
 	if (!dmFlags.dfInfiniteAmmo)
 		DepleteAmmo (ent, 50);

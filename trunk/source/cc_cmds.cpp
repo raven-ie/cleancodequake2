@@ -48,7 +48,7 @@ void CCmd::Run (CPlayerEntity *ent)
 
 CCmd::CCmd (char *name, void (*Func)(CPlayerEntity *ent), ECmdTypeFlags Flags)
 {
-	cmdName = QNew (com_gamePool, 0) char[strlen(name)+1];//(char*)gi.TagMalloc(strlen(name)+1, TAG_GAME);
+	cmdName = QNew (com_gamePool, 0) char[strlen(name)+1];
 	Q_snprintfz (cmdName, strlen(name)+1, "%s", name);
 	hashValue = Com_HashGeneric(name, MAX_CMD_HASH);
 	CmdFlags = Flags;

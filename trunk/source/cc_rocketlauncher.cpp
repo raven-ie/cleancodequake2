@@ -67,36 +67,27 @@ bool CRocketLauncher::CanStopFidgetting (CPlayerEntity *ent)
 
 void CRocketLauncher::Fire (CPlayerEntity *ent)
 {
-	vec3_t	offset, start;
-	vec3_t	forward, right;
-	int		damage;
-	float	damage_radius;
-	int		radius_damage;
+	vec3f	offset (8, 8, ent->gameEntity->viewheight-8), start;
+	vec3f	forward, right;
+	const int	damage = (isQuad) ? (400 + (int)(random() * 80.0)) : (100 + (int)(random() * 20.0));
+	const float	damage_radius = 120;
+	const int	radius_damage = (isQuad) ? 480 : 120;
 
-	damage = 100 + (int)(random() * 20.0);
-	radius_damage = 120;
-	damage_radius = 120;
-	if (isQuad)
-	{
-		damage *= 4;
-		radius_damage *= 4;
-	}
+	ent->Client.ViewAngle.ToVectors (&forward, &right, NULL);
 
-	Angles_Vectors (ent->Client.v_angle, forward, right, NULL);
-
-	Vec3Scale (forward, -2, ent->Client.kick_origin);
+	vec3f kickOrigin = forward;
+	kickOrigin.Scale (-2);
+	Vec3Copy (kickOrigin, ent->Client.kick_origin);
 	ent->Client.kick_angles[0] = -1;
 
-	Vec3Set (offset, 8, 8, ent->gameEntity->viewheight-8);
-	P_ProjectSource (ent, offset, forward, right, start);
-	//fire_rocket (ent->gameEntity, start, forward, damage, 650, damage_radius, radius_damage);
+	ent->P_ProjectSource (offset, forward, right, start);
 	CRocket::Spawn (ent, start, forward, damage, 650, damage_radius, radius_damage);
 
 	// send muzzle flash
 	Muzzle (ent, MZ_ROCKET);
 	AttackSound (ent);
 
-	PlayerNoise(ent, start, PNOISE_WEAPON);
+	ent->PlayerNoiseAt (start, PNOISE_WEAPON);
 	FireAnimation (ent);
 
 	if (!dmFlags.dfInfiniteAmmo)

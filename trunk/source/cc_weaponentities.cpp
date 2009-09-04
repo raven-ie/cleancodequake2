@@ -1353,19 +1353,16 @@ bool CMeleeWeapon::Fire(CBaseEntity *Entity, vec3f aim, int damage, int kick)
 	dir = point - origin;
 
 	// do the damage
-	vec3_t odir = {dir.X, dir.Y, dir.Z};
-	vec3_t opoint = {point.X, point.Y, point.Z};
-	T_Damage (tr.ent, Entity->gameEntity, Entity->gameEntity, odir, opoint, vec3Origin, damage, kick/2, DAMAGE_NO_KNOCKBACK, MOD_HIT);
+	T_Damage (tr.ent, Entity->gameEntity, Entity->gameEntity, dir, point, vec3Origin, damage, kick/2, DAMAGE_NO_KNOCKBACK, MOD_HIT);
 
 	if (!(tr.ent->svFlags & SVF_MONSTER) && (!tr.ent->client))
 		return false;
 
 	// do our special form of knockback here
-	vec3_t tempv;
-	Vec3MA (Entity->gameEntity->enemy->absMin, 0.5, Entity->gameEntity->enemy->size, tempv);
-	v = vec3f(tempv) - point;
-	v.Normalize();
-	Vec3Set (tempv, v.X, v.Y, v.Z);
+	vec3f tempv = Entity->gameEntity->enemy->Entity->GetAbsMin ().MultiplyAngles (0.5f, Entity->gameEntity->enemy->Entity->GetSize());
+	tempv = tempv - point;
+	tempv.Normalize();
+
 	Vec3MA (Entity->gameEntity->enemy->velocity, kick, tempv, Entity->gameEntity->enemy->velocity);
 	if (Entity->gameEntity->enemy->velocity[2] > 0)
 		Entity->gameEntity->enemy->groundentity = NULL;
@@ -1393,7 +1390,7 @@ void CGrappleEntity::GrappleDrawCable()
 	vec3f	start, end, f, r;
 
 	vec3f origin = Player->State.GetOrigin ();
-	vec3f(Player->Client.v_angle).ToVectors (&f, &r, NULL);
+	Player->Client.ViewAngle.ToVectors (&f, &r, NULL);
 	Player->P_ProjectSource (vec3f(16, 16, Player->gameEntity->viewheight-8), f, r, start);
 
 	vec3f offset = start - origin;
@@ -1463,7 +1460,7 @@ void CGrappleEntity::GrapplePull()
 		// that velociy in the direction of the point
 		vec3f forward, up;
 
-		vec3f(Player->Client.v_angle).ToVectors (&forward, &up, NULL);
+		Player->Client.ViewAngle.ToVectors (&forward, &up, NULL);
 		vec3f v = Player->State.GetOrigin ();
 		v.Z += Player->gameEntity->viewheight;
 		vec3f hookdir = State.GetOrigin() - v;

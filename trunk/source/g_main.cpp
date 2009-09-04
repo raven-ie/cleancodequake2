@@ -96,6 +96,10 @@ void G_RunFrame (void);
 
 //===================================================================
 
+void ShutdownBodyQueue ();
+void Shutdown_Junk ();
+void Mem_Stats_f(CPlayerEntity *ent);
+
 void ShutdownGame (void)
 {
 #ifdef CC_USE_EXCEPTION_HANDLER
@@ -107,10 +111,14 @@ __try
 	Cmd_RemoveCommands ();
 	SvCmd_RemoveCommands ();
 
+	ShutdownBodyQueue ();
+	Shutdown_Junk ();
+
 	size_t freedGame = Mem_FreePool (com_gamePool);
 	size_t freedLevel = Mem_FreePool (com_levelPool);
+	size_t freedGeneric = Mem_FreePool (com_genericPool);
 
-	DebugPrintf ("Freed %u bytes of game memory and %u bytes of level memory.\n", freedGame, freedLevel);
+	DebugPrintf ("Freed %u bytes of game memory, %u bytes of level memory and %u bytes of generic memory.\n", freedGame, freedLevel, freedGeneric);
 #ifdef CC_USE_EXCEPTION_HANDLER
 }
 __except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))

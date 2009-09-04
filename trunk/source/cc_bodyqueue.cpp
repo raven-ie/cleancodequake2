@@ -204,9 +204,14 @@ CBodyQueue::CBodyQueue (int MaxSize)
 
 void BodyQueue_Init ()
 {
+	BodyQueue = QNew (com_levelPool, 0) CBodyQueue (BODY_QUEUE_SIZE);
+}
+
+void ShutdownBodyQueue ()
+{
 	if (BodyQueue)
 		QDelete BodyQueue;
-	BodyQueue = QNew (com_levelPool, 0) CBodyQueue (BODY_QUEUE_SIZE);
+	BodyQueue = NULL;
 }
 
 void CopyToBodyQueue (CPlayerEntity *Player)

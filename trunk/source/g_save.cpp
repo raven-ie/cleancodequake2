@@ -925,6 +925,7 @@ __try
 	// free any dynamic memory allocated by loading the level
 	// base state
 	Mem_FreePool (com_levelPool);
+	Mem_FreePool (com_genericPool);
 
 	// wipe all the entities
 	// Save client pointers

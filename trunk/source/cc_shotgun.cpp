@@ -66,39 +66,29 @@ bool CShotgun::CanStopFidgetting (CPlayerEntity *ent)
 
 void CShotgun::Fire (CPlayerEntity *ent)
 {
-	vec3_t		start;
-	vec3_t		forward, right;
-	vec3_t		offset;
-	int			damage = 4;
-	int			kick = 8;
+	vec3f		start;
+	vec3f		forward, right;
+	vec3f		offset (0, 8,  ent->gameEntity->viewheight-8);
+	const int	damage = (isQuad) ? 16 : 4;
+	const int	kick = (isQuad) ? 32 : 8;
 
-	Angles_Vectors (ent->Client.v_angle, forward, right, NULL);
+	ent->Client.ViewAngle.ToVectors (&forward, &right, NULL);
 
-	Vec3Scale (forward, -2, ent->Client.kick_origin);
+	vec3f kickOrigin = forward;
+	kickOrigin.Scale (-2);
+	Vec3Copy (kickOrigin, ent->Client.kick_origin);
 	ent->Client.kick_angles[0] = -2;
 
-	Vec3Set (offset, 0, 8,  ent->gameEntity->viewheight-8);
-	P_ProjectSource (ent, offset, forward, right, start);
+	ent->P_ProjectSource (offset, forward, right, start);
 
-	if (isQuad)
-	{
-		damage *= 4;
-		kick *= 4;
-	}
-
-	/*if (game.mode & GAME_DEATHMATCH)
-		fire_shotgun (ent->gameEntity, start, forward, damage, kick, 500, 500, DEFAULT_DEATHMATCH_SHOTGUN_COUNT, MOD_SHOTGUN);
-	else
-		fire_shotgun (ent->gameEntity, start, forward, damage, kick, 500, 500, DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);*/
-	CShotgunPellets::Fire (ent, start, forward, damage, kick, DEFAULT_SHOTGUN_HSPREAD, DEFAULT_SHOTGUN_VSPREAD, 
-		(game.mode & GAME_DEATHMATCH) ? DEFAULT_DEATHMATCH_SHOTGUN_COUNT : DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);
+	CShotgunPellets::Fire (ent, start, forward, damage, kick, DEFAULT_SHOTGUN_HSPREAD, DEFAULT_SHOTGUN_VSPREAD, DEFAULT_SHOTGUN_COUNT, MOD_SHOTGUN);
 
 	// send muzzle flash
 	Muzzle (ent, MZ_SHOTGUN);
 	AttackSound (ent);
 
 	ent->Client.PlayerState.SetGunFrame(ent->Client.PlayerState.GetGunFrame() + 1);
-	PlayerNoise(ent, start, PNOISE_WEAPON);
+	ent->PlayerNoiseAt (start, PNOISE_WEAPON);
 	FireAnimation (ent);
 
 	if (!dmFlags.dfInfiniteAmmo)

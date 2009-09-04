@@ -242,7 +242,7 @@ public:
 	float		fall_value;		// for view drop on fall
 	byte		bonus_alpha;
 	colorb		damage_blend;
-	vec3_t		v_angle;			// aiming direction
+	vec3f		ViewAngle;			// aiming direction
 	float		bobtime;			// so off-ground doesn't change it
 	vec3_t		oldviewangles;
 	vec3_t		oldvelocity;

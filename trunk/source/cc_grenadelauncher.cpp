@@ -66,32 +66,28 @@ bool CGrenadeLauncher::CanStopFidgetting (CPlayerEntity *ent)
 
 void CGrenadeLauncher::Fire (CPlayerEntity *ent)
 {
-	vec3_t	offset;
-	vec3_t	forward, right;
-	vec3_t	start;
-	int		damage = 120;
-	float	radius;
-
-	radius = damage+40;
-	if (isQuad)
-		damage *= 4;
+	vec3f	offset (8, 8, ent->gameEntity->viewheight-8);
+	vec3f	forward, right;
+	vec3f	start;
+	const int	damage = (isQuad) ? 480 : 120;
+	const float	radius = 160;
 
 	FireAnimation (ent);
 
-	Vec3Set (offset, 8, 8, ent->gameEntity->viewheight-8);
-	Angles_Vectors (ent->Client.v_angle, forward, right, NULL);
-	P_ProjectSource (ent, offset, forward, right, start);
+	ent->Client.ViewAngle.ToVectors (&forward, &right, NULL);
+	ent->P_ProjectSource (offset, forward, right, start);
 
-	Vec3Scale (forward, -2, ent->Client.kick_origin);
+	vec3f kickOrigin = forward;
+	kickOrigin.Scale (-2);
+	Vec3Copy (kickOrigin, ent->Client.kick_origin);
 	ent->Client.kick_angles[0] = -1;
 
-	//fire_grenade (ent->gameEntity, start, forward, damage, 600, 2.5, radius);
 	CGrenade::Spawn (ent, start, forward, damage, 600, 2.5f, radius);
 
 	Muzzle (ent, MZ_GRENADE);
 	AttackSound (ent);
 
-	PlayerNoise(ent, start, PNOISE_WEAPON);
+	ent->PlayerNoiseAt (start, PNOISE_WEAPON);
 
 	if (!dmFlags.dfInfiniteAmmo)
 		DepleteAmmo(ent, 1);
