@@ -199,14 +199,15 @@ public:
 		SetMaxs (vec3f(32, 32, -16));
 		Link ();
 
-		CTeleporterTrigger *trig = QNew (com_levelPool, 0) CTeleporterTrigger;
+		CTeleporterTrigger *trig = QNew (com_gamePool, 0) CTeleporterTrigger;
 		trig->Touchable = true;
 		trig->SetSolid (SOLID_TRIGGER);
 		trig->gameEntity->target = gameEntity->target;
+		trig->SetOwner (this);
 		trig->State.SetOrigin (State.GetOrigin());
 		trig->SetMins (vec3f(-8, -8, 8));
 		trig->SetMaxs (vec3f(8, 8, 24));
-		Link ();
+		trig->Link ();
 	};
 };
 
