@@ -197,6 +197,7 @@ enum
 	ENT_PHYSICS		=	BIT(6), // Can be casted to CPhysicsEntity
 	ENT_BLOCKABLE	=	BIT(7), // Can be casted to CBlockableEntity
 	ENT_USABLE		=	BIT(8), // Can be casted to CUsableEntity
+	ENT_ITEM		=	BIT(9), // Can be casted to CItemEntity
 };
 
 // Base classes

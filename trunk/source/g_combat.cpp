@@ -35,7 +35,7 @@ bool CanDamage (edict_t *targ, edict_t *inflictor)
 	CTrace	trace;
 
 // bmodels need special checking because their origin is 0,0,0
-	if (targ->movetype == MOVETYPE_PUSH)
+	if ((targ->Entity && (targ->Entity->EntityFlags & ENT_PHYSICS)) && ((dynamic_cast<CPhysicsEntity*>(targ->Entity))->PhysicsType == PHYSICS_PUSH))
 	{
 		Vec3Add (targ->absMin, targ->absMax, dest);
 		Vec3Scale (dest, 0.5, dest);
@@ -112,15 +112,14 @@ void Killed (edict_t *targ, edict_t *inflictor, edict_t *attacker, int damage, v
 	if (//!(targ->movetype == MOVETYPE_PUSH || targ->movetype == MOVETYPE_STOP || targ->movetype == MOVETYPE_NONE) && 
 		(targ->svFlags & SVF_MONSTER) && (targ->deadflag != DEAD_DEAD))
 	{
-		targ->touch = NULL;
+		if (targ->Entity && (targ->Entity->EntityFlags & ENT_TOUCHABLE))
+			(dynamic_cast<CTouchableEntity*>(targ->Entity))->Touchable = false;
 		if (targ->Entity && (targ->Entity->EntityFlags & ENT_MONSTER))
 			(dynamic_cast<CMonsterEntity*>(targ->Entity))->Monster->MonsterDeathUse();
 	}
 
 	if (targ->Entity && (targ->Entity->EntityFlags & ENT_HURTABLE) && inflictor->Entity && attacker->Entity)
 		(dynamic_cast<CHurtableEntity*>(targ->Entity))->Die (inflictor->Entity, attacker->Entity, damage, point);
-	else if (targ->die)
-		targ->die (targ, inflictor, attacker, damage, point);
 }
 
 /*
@@ -468,20 +467,8 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 				targ->pain_debounce_time = level.framenum + 50;
 		}
 	}
-	/*else if (client)
-	{
-		if (!(targ->flags & FL_GODMODE) && (take))
-			targ->pain (targ, attacker, knockback, take);
-	}
-	else if (take)
-	{
-		if (targ->pain)
-			targ->pain (targ, attacker, knockback, take);
-	}*/
 	else if (take && targ->Entity && (targ->Entity->EntityFlags & ENT_HURTABLE) && attacker->Entity)
 		(dynamic_cast<CHurtableEntity*>(targ->Entity))->Pain (attacker->Entity, knockback, take);
-	else if (targ->pain && take)
-		targ->pain (targ, attacker, knockback, take);
 
 	// add to the damage inflicted on a player this frame
 	// the total will be turned into screen blends and view angle kicks
@@ -505,31 +492,26 @@ T_RadiusDamage
 */
 void T_RadiusDamage (edict_t *inflictor, edict_t *attacker, float damage, edict_t *ignore, float radius, int mod)
 {
-	float	points;
-	edict_t	*ent = NULL;
-	vec3_t	v;
-	vec3_t	dir;
+	CHurtableEntity	*ent = NULL;
 
-	while ((ent = findradius(ent, inflictor->state.origin, radius)) != NULL)
+	vec3f org = inflictor->Entity->State.GetOrigin();
+	while ((ent = FindRadius<CHurtableEntity, ENT_HURTABLE> (ent, org, radius)) != NULL)
 	{
-		if (ent == ignore)
+		if (ent == ignore->Entity)
 			continue;
-		if (!ent->takedamage)
+		if (!ent->gameEntity->takedamage)
 			continue;
 
-		Vec3Add (ent->mins, ent->maxs, v);
-		Vec3MA (ent->state.origin, 0.5, v, v);
-		Vec3Subtract (inflictor->state.origin, v, v);
-		points = damage - 0.5 * Vec3Length (v);
-		if (ent == attacker)
-			points = points * 0.5;
-		if (points > 0)
+		vec3f v = ent->GetMins() + ent->GetMaxs();
+		v = ent->State.GetOrigin().MultiplyAngles (0.5f, v);
+		v = inflictor->Entity->State.GetOrigin() - v;
+		float points = damage - 0.5 * v.Length();
+		if (ent == attacker->Entity)
+			points *= 0.5;
+		if (points > 0 && CanDamage (ent->gameEntity, inflictor))
 		{
-			if (CanDamage (ent, inflictor))
-			{
-				Vec3Subtract (ent->state.origin, inflictor->state.origin, dir);
-				T_Damage (ent, inflictor, attacker, dir, inflictor->state.origin, vec3Origin, (int)points, (int)points, DAMAGE_RADIUS, mod);
-			}
+			vec3f dir = ent->State.GetOrigin() - inflictor->Entity->State.GetOrigin();
+			T_Damage (ent->gameEntity, inflictor, attacker, dir, inflictor->Entity->State.GetOrigin(), vec3Origin, (int)points, (int)points, DAMAGE_RADIUS, mod);
 		}
 	}
 }

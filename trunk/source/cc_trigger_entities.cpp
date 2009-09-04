@@ -164,9 +164,10 @@ public:
 	{
 		if (State.GetAngles() != vec3fOrigin)
 		{
-			vec3f md;
-			G_SetMovedir (State.GetAngles(), md);
+			vec3f md, angles = State.GetAngles();
+			G_SetMovedir (angles, md);
 			Vec3Copy (md, gameEntity->movedir);
+			State.SetAngles (angles);
 		}
 
 		SetSolid (SOLID_TRIGGER);
@@ -268,9 +269,10 @@ public:
 
 		if (State.GetAngles() != vec3fOrigin)
 		{
-			vec3f md;
-			G_SetMovedir (State.GetAngles(), md);
+			vec3f md, angles = State.GetAngles();
+			G_SetMovedir (angles, md);
 			Vec3Copy (md, gameEntity->movedir);
+			State.SetAngles (angles);
 		}
 
 		SetModel (gameEntity, gameEntity->model);
@@ -449,9 +451,9 @@ public:
 					CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(other);
 					// don't take falling damage immediately from this
 					Vec3Copy (other->gameEntity->velocity, Player->Client.oldvelocity);
-					if (other->gameEntity->fly_sound_debounce_time < level.framenum)
+					if (Player->FlySoundDebounceTime < level.framenum)
 					{
-						other->gameEntity->fly_sound_debounce_time = level.framenum + 15;
+						Player->FlySoundDebounceTime = level.framenum + 15;
 						other->PlaySound (CHAN_AUTO, gMedia.FlySound);
 					}
 				}
@@ -695,12 +697,14 @@ class CTriggerKey : public CMapEntity, public CUsableEntity
 public:
 	bool		Usable;
 	CBaseItem	*Item;
+	int32		TouchDebounce;
 
 	CTriggerKey () :
 	  CBaseEntity (),
 	  CMapEntity (),
 	  CUsableEntity (),
-	  Usable(true)
+	  Usable(true),
+	  TouchDebounce(0)
 	{
 	};
 
@@ -708,7 +712,8 @@ public:
 	  CBaseEntity (Index),
 	  CMapEntity (Index),
 	  CUsableEntity (Index),
-	  Usable(true)
+	  Usable(true),
+	  TouchDebounce(0)
 	{
 	};
 
@@ -731,9 +736,9 @@ public:
 		int index = Item->GetIndex();
 		if (!Player->Client.pers.Inventory.Has(index))
 		{
-			if (level.framenum < gameEntity->touch_debounce_time)
+			if (level.framenum < TouchDebounce)
 				return;
-			gameEntity->touch_debounce_time = level.framenum + 50;
+			TouchDebounce = level.framenum + 50;
 			Player->PrintToClient (PRINT_CENTER, "You need the %s", Item->Name);
 			Player->PlaySound (CHAN_AUTO, SoundIndex ("misc/keytry.wav"));
 			return;

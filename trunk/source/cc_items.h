@@ -150,8 +150,14 @@ public:
 
 	virtual void	SetRespawn (class CItemEntity *ent, int32 delay);
 
-	inline int		GetIndex ();
-	inline int		GetConfigStringNumber ();
+	inline int		GetIndex ()
+	{
+		return Index;
+	};
+	inline int		GetConfigStringNumber ()
+	{
+		return CS_ITEMS+Index;
+	};
 
 	virtual void	Add (CPlayerEntity *ent, int quantity);
 };

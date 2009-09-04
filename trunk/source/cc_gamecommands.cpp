@@ -75,8 +75,8 @@ argv(0) noclip
 */
 void Cmd_Noclip_f (CPlayerEntity *ent)
 {
-	ent->gameEntity->movetype = (ent->gameEntity->movetype == MOVETYPE_NOCLIP) ? MOVETYPE_WALK : MOVETYPE_NOCLIP;
-	ent->PrintToClient (PRINT_HIGH, "Noclip %s\n", (ent->gameEntity->movetype == MOVETYPE_NOCLIP) ? "on" : "off");
+	ent->NoClip = !ent->NoClip;
+	ent->PrintToClient (PRINT_HIGH, "Noclip %s\n", ent->NoClip ? "on" : "off");
 }
 
 /*
@@ -97,7 +97,7 @@ void Cmd_Kill_f (CPlayerEntity *ent)
 	ent->gameEntity->flags &= ~FL_GODMODE;
 	ent->gameEntity->health = 0;
 	meansOfDeath = MOD_SUICIDE;
-	player_die (ent->gameEntity, ent->gameEntity, ent->gameEntity, 100000, vec3Origin);
+	ent->Die (ent, ent, 100000, vec3fOrigin);
 }
 
 /*

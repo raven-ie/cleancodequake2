@@ -143,22 +143,6 @@ enum
 	PNOISE_IMPACT
 };
 
-// edict->movetype values
-enum
-{
-	MOVETYPE_NONE,			// never moves
-	MOVETYPE_NOCLIP,		// origin and angles change with no interaction
-	MOVETYPE_PUSH,			// no clip to world, push on box contact
-	MOVETYPE_STOP,			// no clip to world, stops on box contact
-
-	MOVETYPE_WALK,			// gravity
-	MOVETYPE_STEP,			// gravity, special edge handling
-	MOVETYPE_FLY,
-	MOVETYPE_TOSS,			// gravity
-	MOVETYPE_FLYMISSILE,	// extra size to monsters
-	MOVETYPE_BOUNCE
-};
-
 //
 // this structure is left intact through an entire game
 // it should be initialized at dll load time, and read/written to
@@ -277,37 +261,6 @@ typedef struct
 	float		minpitch;
 	float		maxpitch;
 } spawn_temp_t;
-
-
-typedef struct
-{
-	// fixed data
-	vec3_t		start_origin;
-	vec3_t		start_angles;
-	vec3_t		end_origin;
-	vec3_t		end_angles;
-
-	int			sound_start;
-	int			sound_middle;
-	int			sound_end;
-
-	float		accel;
-	float		speed;
-	float		decel;
-	float		distance;
-
-	float		wait;
-
-	// state data
-	int			state;
-	vec3_t		dir;
-	float		current_speed;
-	float		move_speed;
-	float		next_speed;
-	float		remaining_distance;
-	float		decel_distance;
-	void		(*endfunc)(edict_t *);
-} moveinfo_t;
 
 typedef int EFuncState;
 enum
@@ -457,21 +410,12 @@ void Cmd_Score_f (CPlayerEntity *ent);
 //
 // g_utils.c
 //
-bool	KillBox (edict_t *ent);
 void	G_ProjectSource (vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result);
 void	G_ProjectSource (vec3f &point, vec3f &distance, vec3f &forward, vec3f &right, vec3f &result);
-edict_t *G_Find (edict_t *from, int fieldofs, char *match);
-edict_t *findradius (edict_t *from, vec3_t org, float rad);
-edict_t *G_PickTarget (char *targetname);
-void	G_UseTargets (edict_t *ent, edict_t *activator);
-void	G_SetMovedir (vec3_t angles, vec3_t movedir);
 
 void	G_InitEdict (edict_t *e);
 edict_t	*G_Spawn (void);
 void	G_FreeEdict (edict_t *e);
-
-void	G_TouchTriggers (edict_t *ent);
-void	G_TouchSolids (edict_t *ent);
 
 // Changed to int, rarely used as a float..
 CBaseEntity *FindRadius (CBaseEntity *From, vec3f &org, int Radius, uint32 EntityFlags);
@@ -548,12 +492,6 @@ edict_t	*PlayerTrail_LastSpot (void);
 void BeginIntermission (class CTargetChangeLevel *targ);
 void InitClientResp (gclient_t *client);
 void InitBodyQue (void);
-
-//
-// g_player.c
-//
-void player_pain (edict_t *self, edict_t *other, float kick, int damage);
-void player_die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
 
 //
 // p_view.c
@@ -649,7 +587,6 @@ struct edict_s
 	// EXPECTS THE FIELDS IN THAT ORDER!
 
 	//================================
-	int			movetype;
 	int			flags;
 
 	char		*model;
@@ -681,29 +618,14 @@ struct edict_s
 	vec3_t		velocity;
 	vec3_t		avelocity;
 	int			mass;
-	int32		air_finished;
 	float		gravity;		// per entity gravity multiplier (1.0 is normal)
 								// use for lowgrav artifact, flares
 
 	edict_t		*goalentity;
 	edict_t		*movetarget;
-	float		yaw_speed;
-	float		ideal_yaw;
 
-	int32		nextthink;
-	void		(*prethink) (edict_t *ent);
-	void		(*think)(edict_t *self);
-	void		(*blocked)(edict_t *self, edict_t *other);	//move to moveinfo?
-	void		(*touch)(edict_t *self, edict_t *other, plane_t *plane, cmBspSurface_t *surf);
-	void		(*use)(edict_t *self, edict_t *other, edict_t *activator);
-	void		(*pain)(edict_t *self, edict_t *other, float kick, int damage);
-	void		(*die)(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
-
-	int32		touch_debounce_time;		// are all these legit?  do we need more/less of them?
 	int32		pain_debounce_time;
 	int32		damage_debounce_time;
-	int32		fly_sound_debounce_time;	//move to clientinfo
-	int32		last_move_time;
 
 	int			health;
 	int			max_health;
@@ -755,9 +677,6 @@ struct edict_s
 
 	int			light_level;
 	int			style;			// also used as areaportal number
-
-	// common data blocks
-	moveinfo_t		moveinfo;
 
 	// Paril
 	CBaseItem		*item;

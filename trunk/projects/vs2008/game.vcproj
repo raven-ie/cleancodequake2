@@ -1933,10 +1933,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\source\g_phys.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\..\..\source\g_save.cpp"
 					>
 				</File>

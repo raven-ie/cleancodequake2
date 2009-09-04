@@ -160,10 +160,19 @@ enum EAttackState
 #endif
 };
 
-class CMonsterEntity : public CMapEntity, public CStepPhysics, public CTossProjectile, public CPushPhysics, public CHurtableEntity, public CThinkableEntity, public CTouchableEntity
+enum
+{
+	MONSTERENTITY_THINK_NONE,
+	MONSTERENTITY_THINK_USE,
+	MONSTERENTITY_THINK_TRIGGEREDSPAWNUSE
+};
+
+class CMonsterEntity : public CMapEntity, public CStepPhysics, public CTossProjectile, public CPushPhysics, public CHurtableEntity, public CThinkableEntity, public CTouchableEntity, public CUsableEntity
 {
 public:
 	bool			IsHead;
+	uint8			UseState;
+	int32			AirFinished;
 
 	class CMonster	*Monster;
 
@@ -176,6 +185,7 @@ public:
 	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
 
 	virtual void	Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf); // Empty
+	void	Use (CBaseEntity *other, CBaseEntity *activator);
 
 	bool			Run ();
 	void			ThrowHead (MediaIndex gibIndex, int damage, int type);

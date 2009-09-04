@@ -435,37 +435,32 @@ void CBFGBolt::Think ()
 	// bfg_explode
 	if (Exploded)
 	{
-		edict_t	*ent;
-		vec3_t	origin;
-
-		State.GetOrigin (origin);
-
 		if (State.GetFrame() == 0)
 		{
+			vec3f origin = State.GetOrigin ();
 			// the BFG effect
-			ent = NULL;
-			while ((ent = findradius(ent, origin, DamageRadius)) != NULL)
+			CHurtableEntity *ent = NULL;
+			while ((ent = FindRadius<CHurtableEntity, ENT_HURTABLE> (ent, origin, DamageRadius)) != NULL)
 			{
-				if (!ent->takedamage)
+				if (!ent->gameEntity->takedamage)
 					continue;
-				if (ent == gameEntity->owner)
+				if (ent == GetOwner())
 					continue;
-				if (!CanDamage (ent, gameEntity))
+				if (!CanDamage (ent->gameEntity, gameEntity))
 					continue;
-				if (!CanDamage (ent, gameEntity->owner))
+				if (!CanDamage (ent->gameEntity, gameEntity->owner))
 					continue;
 
-				vec3_t v;
-				Vec3Add (ent->mins, ent->maxs, v);
-				Vec3MA (ent->state.origin, 0.5, v, v);
-				Vec3Subtract (origin, v, v);
-				float dist = Vec3Length(v);
+				vec3f v = ent->GetMins() + ent->GetMaxs();
+				v = ent->State.GetOrigin().MultiplyAngles (0.5f, v);
+				v = origin - v;
+				float dist = v.Length();
 				float points = Damage * (1.0f - sqrtf(dist/DamageRadius));
-				if (ent == gameEntity->owner)
+				if (ent == GetOwner())
 					points = points * 0.5;
 
-				CTempEnt_Explosions::BFGExplosion (ent->state.origin);
-				T_Damage (ent, gameEntity, gameEntity->owner, gameEntity->velocity, ent->state.origin, vec3Origin, (int)points, 0, DAMAGE_ENERGY, MOD_BFG_EFFECT);
+				CTempEnt_Explosions::BFGExplosion (ent->State.GetOrigin());
+				T_Damage (ent->gameEntity, gameEntity, gameEntity->owner, gameEntity->velocity, ent->State.GetOrigin(), vec3Origin, (int)points, 0, DAMAGE_ENERGY, MOD_BFG_EFFECT);
 			}
 		}
 
@@ -484,81 +479,72 @@ void CBFGBolt::Think ()
 			return;
 		}
 
-		edict_t	*ent;
+		CHurtableEntity	*ent = NULL;
 		edict_t	*ignore;
-		vec3_t	point;
-		vec3_t	dir;
-		vec3_t	start;
-		vec3_t	end;
-		int		dmg;
-		CTrace	tr;
-		vec3_t	origin;
 
-		State.GetOrigin (origin);
+		vec3f origin = State.GetOrigin ();
+		const int dmg = (game.mode & GAME_DEATHMATCH) ? 5 : 10;
 
-		if (game.mode & GAME_DEATHMATCH)
-			dmg = 5;
-		else
-			dmg = 10;
-
-		ent = NULL;
-		while ((ent = findradius(ent, origin, 256)) != NULL)
+		while ((ent = FindRadius<CHurtableEntity, ENT_HURTABLE> (ent, origin, 256)) != NULL)
 		{
-			if (ent == gameEntity)
+			if (ent == gameEntity->Entity) // Stupid...
 				continue;
 
-			if (ent == gameEntity->owner)
+			if (ent == GetOwner())
 				continue;
 
-			if (!ent->takedamage)
+			if (!ent->gameEntity->takedamage)
 				continue;
 
-			if (!(ent->svFlags & SVF_MONSTER) && (!ent->client))
-				continue;
+			//if (!(ent->svFlags & SVF_MONSTER) && (!ent->client))
+			//	continue;
 
 	#ifdef CLEANCTF_ENABLED
 	//ZOID
 			//don't target players in CTF
-			if ((game.mode & GAME_CTF) && ent->Entity && (ent->Entity->EntityFlags & ENT_PLAYER) &&
-				gameEntity->owner->client)
+			if ((game.mode & GAME_CTF) && (ent->EntityFlags & ENT_PLAYER) &&
+				(GetOwner() && (GetOwner()->EntityFlags & ENT_PLAYER)))
 			{
-				if ((dynamic_cast<CPlayerEntity*>(ent->Entity))->Client.resp.ctf_team == (dynamic_cast<CPlayerEntity*>(gameEntity->owner->Entity))->Client.resp.ctf_team)
-				continue;
+				if ((dynamic_cast<CPlayerEntity*>(ent))->Client.resp.ctf_team == (dynamic_cast<CPlayerEntity*>(GetOwner()))->Client.resp.ctf_team)
+					continue;
 			}
 	//ZOID
 	#endif
 
-			Vec3MA (ent->absMin, 0.5, ent->size, point);
+			vec3f point = ent->GetAbsMin().MultiplyAngles (0.5f, ent->GetSize());
 
-			Vec3Subtract (point, origin, dir);
-			VectorNormalizef (dir, dir);
+			vec3f dir = point - origin;
+			dir.Normalize ();
 
 			ignore = gameEntity;
-			Vec3Copy (origin, start);
-			Vec3MA (start, 2048, dir, end);
+			vec3f start = origin;
+			vec3f end = start.MultiplyAngles (2048, dir);
+			CTrace tr;
 			while(1)
 			{
 				tr = CTrace (start, end, ignore, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_DEADMONSTER);
 
-				if (!tr.ent)
+				if (!tr.ent || !tr.ent->Entity)
 					break;
 
 				// hurt it if we can
-				if ((tr.ent->takedamage) && !(tr.ent->flags & FL_IMMUNE_LASER) && (tr.ent != gameEntity->owner))
+				//if ((tr.ent->takedamage) && !(tr.ent->flags & FL_IMMUNE_LASER) && (tr.ent != gameEntity->owner))
+				if ((tr.ent->Entity->EntityFlags & ENT_HURTABLE) && !(tr.ent->Entity->gameEntity->flags & FL_IMMUNE_LASER) && (tr.ent->Entity != GetOwner()))
 					T_Damage (tr.ent, gameEntity, gameEntity->owner, dir, tr.endPos, vec3Origin, dmg, 1, DAMAGE_ENERGY, MOD_BFG_LASER);
 
 				// if we hit something that's not a monster or player we're done
-				if (!(tr.ent->svFlags & SVF_MONSTER) && (!tr.ent->client))
+				//if (!(tr.ent->svFlags & SVF_MONSTER) && (!tr.ent->client))
+				if (!(tr.ent->Entity->EntityFlags & ENT_MONSTER) && !(tr.ent->Entity->EntityFlags & ENT_PLAYER))
 				{
-					CTempEnt_Splashes::Sparks (tr.endPos, tr.plane.normal, CTempEnt_Splashes::STLaserSparks, (CTempEnt_Splashes::ESplashType)gameEntity->state.skinNum, 4);
+					CTempEnt_Splashes::Sparks (tr.EndPos, tr.Plane.normal, CTempEnt_Splashes::STLaserSparks, (CTempEnt_Splashes::ESplashType)State.GetSkinNum(), 4);
 					break;
 				}
 
 				ignore = tr.ent;
-				Vec3Copy (tr.endPos, start);
+				start = tr.EndPos;
 			}
 
-			CTempEnt_Trails::BFGLaser(origin, tr.endPos);
+			CTempEnt_Trails::BFGLaser(origin, tr.EndPos);
 		}
 
 		NextThink = level.framenum + FRAMETIME;

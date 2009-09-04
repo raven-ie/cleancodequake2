@@ -264,24 +264,26 @@ void InitNodes ()
 
 edict_t *PlayerNearby (vec3_t origin, int distance)
 {
-	edict_t *ent = NULL;
+	CPlayerEntity *ent = NULL;
 
-	while ((ent = findradius(ent, origin, distance)) != NULL)
+	vec3f org = origin;
+	while ((ent = FindRadius <CPlayerEntity, ENT_PLAYER> (ent, org, distance)) != NULL)
 	{
-		if (ent && ent->client)
-			return ent;
+		if (ent->IsInUse())
+			return ent->gameEntity;
 	}
 	return NULL;
 }
 
 void PrintVerboseNodes (vec3_t origin, uint32 numNode)
 {
-	edict_t *ent = NULL;
+	CPlayerEntity *ent = NULL;
 
-	while ((ent = findradius(ent, origin, 25)) != NULL)
+	vec3f org = origin;
+	while ((ent = FindRadius <CPlayerEntity, ENT_PLAYER>(ent, org, 25)) != NULL)
 	{
-		if (ent && ent->client)
-			ClientPrintf (ent, PRINT_HIGH, "You are very close to node %i\n", numNode);
+		if (ent->IsInUse())
+			ent->PrintToClient (PRINT_HIGH, "You are very close to node %i\n", numNode);
 	}
 }
 

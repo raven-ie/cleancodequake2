@@ -798,9 +798,9 @@ void CDoor::CDoorTrigger::Touch (CBaseEntity *other, plane_t *plane, cmBspSurfac
 	if ((gameEntity->owner->spawnflags & DOOR_NOMONSTER) && (other->EntityFlags & ENT_MONSTER))
 		return;
 
-	if (level.framenum < gameEntity->touch_debounce_time)
+	if (level.framenum < TouchDebounce)
 		return;
-	gameEntity->touch_debounce_time = level.framenum + 10;
+	TouchDebounce = level.framenum + 10;
 
 	(dynamic_cast<CDoor*>(gameEntity->owner->Entity))->Use (other, other);
 }
@@ -931,10 +931,10 @@ void CDoor::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	if (!(other->EntityFlags & ENT_PLAYER))
 		return;
 
-	if (level.framenum < gameEntity->touch_debounce_time)
+	if (level.framenum < TouchDebounce)
 		return;
 
-	gameEntity->touch_debounce_time = level.framenum + 50;
+	TouchDebounce = level.framenum + 50;
 
 	(dynamic_cast<CPlayerEntity*>(other))->PrintToClient (PRINT_CENTER, "%s", gameEntity->message);
 	other->PlaySound (CHAN_AUTO, SoundIndex ("misc/talk1.wav"));
@@ -980,10 +980,11 @@ void CDoor::Spawn ()
 		SoundEnd = SoundIndex  ("doors/dr1_end.wav");
 	}
 
-	vec3_t angles;
-	State.GetAngles(angles);
-	G_SetMovedir (angles, gameEntity->movedir);
+	vec3f md;
+	vec3f angles = State.GetAngles();
+	G_SetMovedir (angles, md);
 	State.SetAngles(angles);
+	Vec3Copy (md, gameEntity->movedir);
 	PhysicsType = PHYSICS_PUSH;
 	SetSolid (SOLID_BSP);
 	SetModel (gameEntity, gameEntity->model);
@@ -1242,10 +1243,11 @@ CDoor(Index)
 
 void CMovableWater::Spawn ()
 {
-	vec3_t angles;
-	State.GetAngles(angles);
-	G_SetMovedir (angles, gameEntity->movedir);
+	vec3f md;
+	vec3f angles = State.GetAngles();
+	G_SetMovedir (angles, md);
 	State.SetAngles(angles);
+	Vec3Copy (md, gameEntity->movedir);
 	PhysicsType = PHYSICS_PUSH;
 	SetSolid (SOLID_BSP);
 	SetModel (gameEntity, gameEntity->model);
@@ -1407,9 +1409,9 @@ void CDoorSecret::Blocked (CBaseEntity *other)
 		return;
 	}
 
-	if (level.framenum < gameEntity->touch_debounce_time)
+	if (level.framenum < TouchDebounce)
 		return;
-	gameEntity->touch_debounce_time = level.framenum + 5;
+	TouchDebounce = level.framenum + 5;
 
 	T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, State.GetOrigin(), vec3Origin, gameEntity->dmg, 1, 0, MOD_CRUSH);
 }
@@ -1624,10 +1626,11 @@ void CButton::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 
 void CButton::Spawn ()
 {
-	vec3_t angles;
-	State.GetAngles(angles);
-	G_SetMovedir (angles, gameEntity->movedir);
+	vec3f md;
+	vec3f angles = State.GetAngles();
+	G_SetMovedir (angles, md);
 	State.SetAngles(angles);
+	Vec3Copy (md, gameEntity->movedir);
 
 	PhysicsType = PHYSICS_STOP;
 	SetSolid (SOLID_BSP);
@@ -1735,12 +1738,12 @@ void CTrainBase::Blocked (CBaseEntity *other)
 		return;
 	}
 
-	if (level.framenum < gameEntity->touch_debounce_time)
+	if (level.framenum < TouchDebounce)
 		return;
 
 	if (!gameEntity->dmg)
 		return;
-	gameEntity->touch_debounce_time = level.framenum + 5;
+	TouchDebounce = level.framenum + 5;
 	T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, other->State.GetOrigin(), vec3Origin, gameEntity->dmg, 1, 0, MOD_CRUSH);
 }
 
@@ -2100,7 +2103,7 @@ void CWorldEntity::Spawn ()
 	// Seed the random number generator
 	srand (time(NULL));
 
-	PhysicsType = MOVETYPE_PUSH;
+	PhysicsType = PHYSICS_PUSH;
 	SetSolid (SOLID_BSP);
 	SetInUse (true);			// since the world doesn't use G_Spawn()
 	State.SetModelIndex (1);		// world model is always index 1
