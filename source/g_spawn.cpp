@@ -246,13 +246,8 @@ extern int entityNumber;
 #include "cc_exceptionhandler.h"
 #include "cc_brushmodels.h"
 
-void InitEntities ()
+void InitPlayers ()
 {
-	// Set up the world
-	edict_t *theWorld = &g_edicts[0];
-	if (!theWorld->Entity)
-		theWorld->Entity = QNew (com_levelPool, 0) CWorldEntity(0);
-
 	// Set up the client entities
 	for (int i = 1; i <= game.maxclients; i++)
 	{
@@ -261,6 +256,16 @@ void InitEntities ()
 		if (!ent->Entity)
 			ent->Entity = QNew (com_levelPool, 0) CPlayerEntity(i);
 	}
+}
+
+void InitEntities ()
+{
+	// Set up the world
+	edict_t *theWorld = &g_edicts[0];
+	if (!theWorld->Entity)
+		theWorld->Entity = QNew (com_levelPool, 0) CWorldEntity(0);
+
+	InitPlayers();
 }
 
 extern clientPersistent_t *SavedClients;

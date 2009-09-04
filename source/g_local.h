@@ -554,7 +554,6 @@ struct gclient_s
 	int				ping;
 };
 
-
 struct edict_s
 {
 	entityStateOld_t	state;
