@@ -133,9 +133,14 @@ CJunkList *JunkList;
 
 void Init_Junk()
 {
+	JunkList = QNew (com_levelPool, 0) CJunkList;
+}
+
+void Shutdown_Junk ()
+{
 	if (JunkList)
 		QDelete JunkList;
-	JunkList = QNew (com_levelPool, 0) CJunkList;
+	JunkList = NULL;
 }
 
 CJunkEntity::CJunkEntity () :

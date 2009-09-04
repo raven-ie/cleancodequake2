@@ -70,19 +70,18 @@ bool CBlaster::AttemptToFire (CPlayerEntity *ent)
 
 void CBlaster::Fire (CPlayerEntity *ent)
 {
-	int Damage = deathmatch->Integer() ? 15 : 10;
-	vec3f	Forward, Start, Right, Offset;
+	const int Damage = deathmatch->Integer() ? 
+			(isQuad) ? 60 : 15
+			:
+			(isQuad) ? 40 : 10;
+	vec3f	Forward, Start, Right, Offset (24, 8, ent->gameEntity->viewheight - 8);
 
-	if (isQuad)
-		Damage *= 4;
-
-	vec3f(ent->Client.v_angle).ToVectors (&Forward, &Right, NULL);
-	Offset.Set (24, 8, ent->gameEntity->viewheight - 8);
+	ent->Client.ViewAngle.ToVectors (&Forward, &Right, NULL);
 	ent->P_ProjectSource (Offset, Forward, Right, Start);
 
-	ent->Client.kick_origin[0] = Forward.X * -2;
-	ent->Client.kick_origin[1] = Forward.Y * -2;
-	ent->Client.kick_origin[2] = Forward.Z * -2;
+	vec3f kickOrigin = Forward;
+	kickOrigin.Scale (-2);
+	Vec3Copy (kickOrigin, ent->Client.kick_origin);
 	ent->Client.kick_angles[0] = -1;
 
 	CBlasterProjectile::Spawn (ent, Start, Forward, Damage, 1000, EF_BLASTER, false);

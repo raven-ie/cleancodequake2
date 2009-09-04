@@ -47,6 +47,7 @@ bool		trail_active = false;
 
 void PlayerTrail_Init (void)
 {
+#if 0
 	int		n;
 
 	if (game.mode & GAME_DEATHMATCH)
@@ -60,11 +61,13 @@ void PlayerTrail_Init (void)
 
 	trail_head = 0;
 	trail_active = true;
+#endif
 }
 
 
 void PlayerTrail_Add (vec3_t spot)
 {
+#if 0
 	vec3_t	temp;
 
 	if (!trail_active)
@@ -78,21 +81,25 @@ void PlayerTrail_Add (vec3_t spot)
 	trail[trail_head]->state.angles[1] = VecToYaw (temp);
 
 	trail_head = NEXT(trail_head);
+#endif
 }
 
 
 void PlayerTrail_New (vec3_t spot)
 {
+#if 0
 	if (!trail_active)
 		return;
 
 	PlayerTrail_Init ();
 	PlayerTrail_Add (spot);
+#endif
 }
 
 
 edict_t *PlayerTrail_PickFirst (CMonsterEntity *Self)
 {
+#if 0
 	int		marker;
 	int		n;
 
@@ -114,10 +121,14 @@ edict_t *PlayerTrail_PickFirst (CMonsterEntity *Self)
 		return trail[PREV(marker)];
 
 	return trail[marker];
+#else
+	return NULL;
+#endif
 }
 
 edict_t *PlayerTrail_PickNext (CMonsterEntity *Self)
 {
+#if 0
 	int		marker;
 	int		n;
 
@@ -133,9 +144,16 @@ edict_t *PlayerTrail_PickNext (CMonsterEntity *Self)
 	}
 
 	return trail[marker];
+#else
+	return NULL;
+#endif
 }
 
 edict_t *PlayerTrail_LastSpot (void)
 {
+#if 0
 	return trail[PREV(trail_head)];
+#else
+	return NULL;
+#endif
 }

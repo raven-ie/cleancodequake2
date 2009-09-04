@@ -81,14 +81,6 @@ void CMachinegun::FireAnimation (CPlayerEntity *ent)
 
 void CMachinegun::Fire (CPlayerEntity *ent)
 {
-	int	i;
-	vec3_t		start;
-	vec3_t		forward, right;
-	vec3_t		angles;
-	int			damage = 8;
-	int			kick = 2;
-	vec3_t		offset;
-
 	if (!(ent->Client.buttons & BUTTON_ATTACK))
 	{
 		ent->Client.machinegun_shots = 0;
@@ -109,13 +101,10 @@ void CMachinegun::Fire (CPlayerEntity *ent)
 		return;
 	}
 
-	if (isQuad)
-	{
-		damage *= 4;
-		kick *= 4;
-	}
+	const int		damage = (isQuad) ? 32 : 8;
+	const int		kick = (isQuad) ? 8 : 2;
 
-	for (i=1 ; i<3 ; i++)
+	for (int i=1 ; i<3 ; i++)
 	{
 		ent->Client.kick_origin[i] = crandom() * 0.35;
 		ent->Client.kick_angles[i] = crandom() * 0.7;
@@ -131,18 +120,21 @@ void CMachinegun::Fire (CPlayerEntity *ent)
 			ent->Client.machinegun_shots = 9;
 	}
 
+	vec3f		start;
+	vec3f		forward, right;
+	vec3f		offset (0, 8, ent->gameEntity->viewheight-8);
+
 	// get start / end positions
-	Vec3Add (ent->Client.v_angle, ent->Client.kick_angles, angles);
-	Angles_Vectors (angles, forward, right, NULL);
-	Vec3Set (offset, 0, 8, ent->gameEntity->viewheight-8);
-	P_ProjectSource (ent, offset, forward, right, start);
-	//fire_bullet (ent->gameEntity, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN);
+	vec3f angles = ent->Client.ViewAngle + vec3f(ent->Client.kick_angles);
+	angles.ToVectors (&forward, &right, NULL);
+	ent->P_ProjectSource (offset, forward, right, start);
+
 	CBullet::Fire (ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_MACHINEGUN);
 
 	Muzzle (ent, MZ_MACHINEGUN);
 	AttackSound (ent);
 
-	PlayerNoise(ent, start, PNOISE_WEAPON);
+	ent->PlayerNoiseAt (start, PNOISE_WEAPON);
 
 	if (!dmFlags.dfInfiniteAmmo)
 		DepleteAmmo(ent, 1);

@@ -672,8 +672,9 @@ void Cmd_Node_f (CPlayerEntity *ent)
 
 		CPathNode *Node = NodeList[ArgGeti(2)];
 
-		vec3_t end, forward;
-		Angles_Vectors (ent->Client.v_angle, forward, NULL, NULL);
+		vec3f forward;
+		vec3_t end;
+		ent->Client.ViewAngle.ToVectors (&forward, NULL, NULL);
 		Vec3MA (origin, 8192, forward, end);
 
 		CTrace trace = CTrace(origin, end, ent->gameEntity, CONTENTS_MASK_ALL);
@@ -686,8 +687,9 @@ void Cmd_Node_f (CPlayerEntity *ent)
 	}
 	else if (Q_stricmp(cmd, "monstergoal") == 0)
 	{
-		vec3_t end, forward;
-		Angles_Vectors (ent->Client.v_angle, forward, NULL, NULL);
+		vec3_t end;
+		vec3f forward;
+		ent->Client.ViewAngle.ToVectors (&forward, NULL, NULL);
 		Vec3MA (origin, 8192, forward, end);
 
 		CTrace trace = CTrace(origin, end, ent->gameEntity, CONTENTS_MASK_ALL);

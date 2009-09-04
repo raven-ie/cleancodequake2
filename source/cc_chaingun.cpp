@@ -79,14 +79,15 @@ void CChaingun::FireAnimation (CPlayerEntity *ent)
 
 void CChaingun::Fire (CPlayerEntity *ent)
 {
-	int			i;
 	int			shots;
-	vec3_t		start;
-	vec3_t		forward, right, up;
-	float		r, u;
-	vec3_t		offset;
-	int			damage = (game.mode & GAME_DEATHMATCH) ? 6 : 8;
-	int			kick = 2;
+	vec3f		start;
+	vec3f		forward, right, up;
+	vec3f		offset;
+	const int	damage = (game.mode & GAME_DEATHMATCH) ?
+				(isQuad) ? 24 : 6
+				:
+				(isQuad) ? 32 : 8;
+	const int	kick = (isQuad) ? 8 : 2;
 
 	if (ent->Client.PlayerState.GetGunFrame() == 5)
 		PlaySoundFrom(ent->gameEntity, CHAN_AUTO, SoundIndex("weapons/chngnu1a.wav"));
@@ -137,28 +138,19 @@ void CChaingun::Fire (CPlayerEntity *ent)
 		return;
 	}
 
-	if (isQuad)
-	{
-		damage *= 4;
-		kick *= 4;
-	}
-
-	for (i=0 ; i<3 ; i++)
+	for (int i=0 ; i<3 ; i++)
 	{
 		ent->Client.kick_origin[i] = crandom() * 0.35;
 		ent->Client.kick_angles[i] = crandom() * 0.7;
 	}
 
-	for (i=0 ; i<shots ; i++)
+	for (int i=0 ; i<shots ; i++)
 	{
 		// get start / end positions
-		Angles_Vectors (ent->Client.v_angle, forward, right, up);
-		r = 7 + crandom()*4;
-		u = crandom()*4;
-		Vec3Set (offset, 0, r, u + ent->gameEntity->viewheight-8);
-		P_ProjectSource (ent, offset, forward, right, start);
+		ent->Client.ViewAngle.ToVectors (&forward, &right, &up);
+		offset.Set (0, 7 + crandom()*4, crandom()*4 + ent->gameEntity->viewheight-8);
+		ent->P_ProjectSource (offset, forward, right, start);
 
-		//fire_bullet (ent->gameEntity, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_CHAINGUN);
 		CBullet::Fire (ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_CHAINGUN);
 	}
 
@@ -166,7 +158,7 @@ void CChaingun::Fire (CPlayerEntity *ent)
 	Muzzle (ent, MZ_CHAINGUN1 + shots - 1);
 	AttackSound (ent);
 
-	PlayerNoise(ent, start, PNOISE_WEAPON);
+	ent->PlayerNoiseAt (start, PNOISE_WEAPON);
 
 	if (!dmFlags.dfInfiniteAmmo)
 		DepleteAmmo (ent, shots);

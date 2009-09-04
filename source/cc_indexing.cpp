@@ -35,6 +35,11 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 CIndexList	ModelList, SoundList, ImageList;
 
+CIndex::~CIndex ()
+{
+	Mem_Free (Name);
+};
+
 CIndexList::CIndexList () :
 numIndexes(0)
 {
@@ -118,6 +123,11 @@ _CC_ENABLE_DEPRECATION
 
 void CIndexList::Clear ()
 {
+	for (byte i = 0; i < numIndexes; i++)
+	{
+		delete List[i];
+	}
+
 	numIndexes = 0;
 	memset (List, 0, sizeof(CIndex*) * MAX_INDEXES);
 	memset (HashList, 0, sizeof(CIndex*) * MAX_INDEXES);

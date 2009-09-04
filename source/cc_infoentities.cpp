@@ -150,7 +150,7 @@ public:
 		if (Player)
 		{
 			Player->Client.PlayerState.SetViewAngles (vec3Origin);
-			Vec3Clear (Player->Client.v_angle);
+			Player->Client.ViewAngle.Clear ();
 		}
 
 		// kill anything at the destination
@@ -199,7 +199,7 @@ public:
 		SetMaxs (vec3f(32, 32, -16));
 		Link ();
 
-		CTeleporterTrigger *trig = QNew (com_gamePool, 0) CTeleporterTrigger;
+		CTeleporterTrigger *trig = QNew (com_levelPool, 0) CTeleporterTrigger;
 		trig->Touchable = true;
 		trig->SetSolid (SOLID_TRIGGER);
 		trig->gameEntity->target = gameEntity->target;

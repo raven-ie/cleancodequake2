@@ -86,26 +86,21 @@ void CHandGrenade::Hold (CPlayerEntity *ent)
 
 void CHandGrenade::FireGrenade (CPlayerEntity *ent, bool inHand)
 {
-	vec3_t	offset;
-	vec3_t	forward, right;
-	vec3_t	start;
-	int		damage = 125;
-
-	float radius = damage+40;
-	if (isQuad)
-		damage *= 4;
+	vec3f	offset (8, 8, ent->gameEntity->viewheight-8);
+	vec3f	forward, right;
+	vec3f	start;
+	const int		damage = (isQuad) ? 500 : 125;
+	const float		radius = 165;
 
 	ent->Client.grenade_thrown = true;
 
-	Vec3Set (offset, 8, 8, ent->gameEntity->viewheight-8);
-	Angles_Vectors (ent->Client.v_angle, forward, right, NULL);
-	P_ProjectSource (ent, offset, forward, right, start);
+	ent->Client.ViewAngle.ToVectors (&forward, &right, NULL);
+	ent->P_ProjectSource (offset, forward, right, start);
 
 	float timer = (float)(ent->Client.grenade_time - level.framenum) / 10;
-	int speed = (ent->Client.pers.Weapon) ? 
+	const int speed = (ent->Client.pers.Weapon) ? 
 		(GRENADE_MINSPEED + ((GRENADE_TIMER/10) - timer) * ((GRENADE_MAXSPEED - GRENADE_MINSPEED) / (GRENADE_TIMER/10)))
 		: 25; // If we're dead, don't toss it 5 yards.
-	//fire_grenade2 (ent->gameEntity, start, forward, damage, speed, timer, radius, inHand);
 	CGrenade::Spawn (ent, start, forward, damage, speed, timer, radius, true, inHand);
 
 #ifdef CLEANCTF_ENABLED

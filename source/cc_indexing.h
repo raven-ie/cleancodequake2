@@ -44,6 +44,8 @@ public:
 
 	CIndex		*HashNext;
 	uint32		HashValue;
+
+	~CIndex ();
 };
 
 #define MAX_INDEXES 256

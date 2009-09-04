@@ -80,29 +80,26 @@ void CGrapple::PlayerResetGrapple(CPlayerEntity *ent)
 
 void CGrapple::Fire (CPlayerEntity *Player)
 {
-	vec3_t	forward, right;
-	vec3_t	start;
-	vec3_t	offset;
-	float volume = 1.0;
+	vec3f	forward, right;
+	vec3f	start;
+	vec3f	offset (24, 8, Player->gameEntity->viewheight-6);
 
 	if (Player->Client.ctf_grapplestate > CTF_GRAPPLE_STATE_FLY)
 		return; // it's already out
 
-	Angles_Vectors (Player->Client.v_angle, forward, right, NULL);
-	Vec3Set(offset, 24, 8, Player->gameEntity->viewheight-8+2);
-	P_ProjectSource (Player, offset, forward, right, start);
+	Player->Client.ViewAngle.ToVectors (&forward, &right, NULL);
+	Player->P_ProjectSource (offset, forward, right, start);
 
-	Vec3Scale (forward, -2, Player->Client.kick_origin);
+	vec3f kickOrigin = forward;
+	kickOrigin.Scale (-2);
+	Vec3Copy (kickOrigin, Player->Client.kick_origin);
 	Player->Client.kick_angles[0] = -1;
 
-	if (Player->Client.silencer_shots)
-		volume = 0.2f;
-
-	PlaySoundFrom (Player->gameEntity, CHAN_WEAPON, SoundIndex("weapons/grapple/grfire.wav"), volume, ATTN_NORM, 0);
-	//FireGrapple (Player, start, forward, 10, CTF_GRAPPLE_SPEED, 0);
+	const float volume = (Player->Client.silencer_shots) ? 0.2f : 1.0f;
+	Player->PlaySound (CHAN_WEAPON, SoundIndex("weapons/grapple/grfire.wav"), volume);
 	CGrappleEntity::Spawn (Player, start, forward, 10, CTF_GRAPPLE_SPEED);
 		
-	PlayerNoise(Player, start, PNOISE_WEAPON);
+	Player->PlayerNoiseAt (start, PNOISE_WEAPON);
 	FireAnimation(Player);
 
 	Player->Client.PlayerState.SetGunFrame (Player->Client.PlayerState.GetGunFrame() + 1);

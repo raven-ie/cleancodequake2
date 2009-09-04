@@ -344,7 +344,11 @@ void CPlayerEntity::BeginServerFrame ()
 	}
 
 	// add player trail so monsters can follow
-	if (!(game.mode & GAME_DEATHMATCH))
+	if (
+#if 1
+		0 && 
+#endif
+		!(game.mode & GAME_DEATHMATCH))
 	{
 		if (!visible (gameEntity, PlayerTrail_LastSpot() ) )
 		{
@@ -607,7 +611,7 @@ void CPlayerEntity::PutInServer ()
 
 	State.SetAngles (vec3f(0, spawn_angles[YAW], 0));
 	Client.PlayerState.SetViewAngles (State.GetAngles());
-	Vec3Copy (State.GetAngles(), Client.v_angle);
+	Client.ViewAngle = State.GetAngles();
 
 #ifdef CLEANCTF_ENABLED
 //ZOID
@@ -1789,8 +1793,8 @@ void CPlayerEntity::EndServerFrame ()
 		return;
 	}
 
-	vec3_t forward, right, up;
-	Angles_Vectors (Client.v_angle, forward, right, up);
+	vec3f forward, right, up;
+	Client.ViewAngle.ToVectors (&forward, &right, &up);
 
 	// burn from lava, etc
 	WorldEffects ();
@@ -1800,8 +1804,8 @@ void CPlayerEntity::EndServerFrame ()
 	// the world can tell which direction you are looking
 	//
 	State.SetAngles (vec3f(
-		(Client.v_angle[PITCH] > 180) ? (-360 + Client.v_angle[PITCH])/3 : Client.v_angle[PITCH]/3,
-		Client.v_angle[YAW],
+		(Client.ViewAngle.X > 180) ? (-360 + Client.ViewAngle.X)/3 : Client.ViewAngle.X/3,
+		Client.ViewAngle.Y,
 		CalcRoll (gameEntity->state.angles, gameEntity->velocity, right)*4));
 
 	//
@@ -2528,7 +2532,7 @@ void CPlayerEntity::CTFSetIDView()
 	Client.PlayerState.SetStat(STAT_CTF_ID_VIEW, 0);
 
 	vec3f forward, oldForward;
-	vec3f(Client.v_angle).ToVectors(&forward, NULL, NULL);
+	Client.ViewAngle.ToVectors(&forward, NULL, NULL);
 	oldForward = forward;
 	forward.Scale (1024);
 	forward += State.GetOrigin();
@@ -2809,9 +2813,9 @@ void CPlayerEntity::TossClientWeapon ()
 
 	if (Item)
 	{
-		Client.v_angle[YAW] -= spread;
+		Client.ViewAngle.Y -= spread;
 		CItemEntity *drop = Item->DropItem (this);
-		Client.v_angle[YAW] += spread;
+		Client.ViewAngle.Y += spread;
 		drop->gameEntity->spawnflags |= DROPPED_PLAYER_ITEM;
 		if (Client.pers.Weapon->WeaponItem)
 			drop->gameEntity->count = Client.pers.Weapon->WeaponItem->Ammo->Quantity;
@@ -2821,9 +2825,9 @@ void CPlayerEntity::TossClientWeapon ()
 
 	if (quad)
 	{
-		Client.v_angle[YAW] += spread;
+		Client.ViewAngle.Y += spread;
 		CItemEntity *drop = NItems::Quad->DropItem (this);
-		Client.v_angle[YAW] -= spread;
+		Client.ViewAngle.Y -= spread;
 		drop->gameEntity->spawnflags |= DROPPED_PLAYER_ITEM;
 
 		drop->NextThink = level.framenum + (Client.quad_framenum - level.framenum);
@@ -2941,7 +2945,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 		Client.PlayerState.SetViewAngles (vec3f(40, -15, Client.killer_yaw));
 	else
 	{
-		Vec3Copy (pm.viewAngles, Client.v_angle);
+		Client.ViewAngle.Set (pm.viewAngles);
 		Client.PlayerState.SetViewAngles (pm.viewAngles);
 	}
 
@@ -3079,26 +3083,30 @@ be mirrored out to the client structure before all the
 edicts are wiped.
 ==================
 */
-CPlayerEntity **SavedClients;
+clientPersistent_t *SavedClients;
+
 void CPlayerEntity::SaveClientData ()
 {
-	SavedClients = QNew (com_gamePool, 0) CPlayerEntity*[game.maxclients];
+	SavedClients = QNew (com_gamePool, 0) clientPersistent_t[game.maxclients];
 	for (int i=0 ; i<game.maxclients ; i++)
 	{
-		SavedClients[i] = NULL;
+		memset (&SavedClients[i], 0, sizeof(clientPersistent_t));
 		if (!g_edicts[1+i].Entity)
 			return; // Not set up
 
 		CPlayerEntity *ent = dynamic_cast<CPlayerEntity*>(g_edicts[1+i].Entity);
 		if (!ent->IsInUse())
 			continue;
-		ent->Client.pers.health = ent->gameEntity->health;
+		/*ent->Client.pers.health = ent->gameEntity->health;
 		ent->Client.pers.max_health = ent->gameEntity->max_health;
 		ent->Client.pers.savedFlags = (ent->gameEntity->flags & (FL_GODMODE|FL_NOTARGET|FL_POWER_ARMOR));
 		if (game.mode == GAME_COOPERATIVE)
-			ent->Client.pers.score = ent->Client.resp.score;
-
-		SavedClients[i] = ent;
+			ent->Client.pers.score = ent->Client.resp.score;*/
+		SavedClients[i].health = ent->gameEntity->health;
+		SavedClients[i].max_health = ent->gameEntity->max_health;
+		SavedClients[i].savedFlags = (ent->gameEntity->flags & (FL_GODMODE|FL_NOTARGET|FL_POWER_ARMOR));
+		if (game.mode & GAME_COOPERATIVE)
+			SavedClients[i].score = ent->Client.resp.score;
 	}
 }
 
@@ -3478,7 +3486,7 @@ void CPlayerEntity::UpdateChaseCam()
 
 	ownerv[2] += targ->gameEntity->viewheight;
 
-	Vec3Copy(targ->Client.v_angle, angles);
+	Vec3Copy(targ->Client.ViewAngle, angles);
 	if (angles[PITCH] > 56)
 		angles[PITCH] = 56;
 	Angles_Vectors (angles, forward, right, NULL);
@@ -3526,14 +3534,14 @@ void CPlayerEntity::UpdateChaseCam()
 
 	State.SetOrigin(goal);
 	for (i=0 ; i<3 ; i++)
-		Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(targ->Client.v_angle[i] - Client.resp.cmd_angles[i]);
+		Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(targ->Client.ViewAngle[i] - Client.resp.cmd_angles[i]);
 
 	if (targ->gameEntity->deadflag)
 		Client.PlayerState.SetViewAngles (vec3f(40, -15, targ->Client.killer_yaw));
 	else
 	{
-		Client.PlayerState.SetViewAngles(targ->Client.v_angle);
-		Vec3Copy(targ->Client.v_angle, Client.v_angle);
+		Client.PlayerState.SetViewAngles(targ->Client.ViewAngle);
+		Client.ViewAngle = targ->Client.ViewAngle;
 	}
 
 	gameEntity->viewheight = 0;

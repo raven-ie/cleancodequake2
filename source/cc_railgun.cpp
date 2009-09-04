@@ -64,37 +64,26 @@ bool CRailgun::CanStopFidgetting (CPlayerEntity *ent)
 
 void CRailgun::Fire (CPlayerEntity *ent)
 {
-	vec3_t		start;
-	vec3_t		forward, right;
-	vec3_t		offset;
-	int			damage;
-	int			kick;
+	vec3f		start;
+	vec3f		forward, right;
+	vec3f		offset(0, 7,  ent->gameEntity->viewheight-8);
 
-	if (game.mode & GAME_DEATHMATCH)
-	{	// normal damage is too extreme in dm
-		damage = 100;
-		kick = 200;
-	}
-	else
-	{
-		damage = 150;
-		kick = 250;
-	}
+	const int	damage = (game.mode & GAME_DEATHMATCH) ? // normal damage is too extreme in dm
+				(isQuad) ? 400 : 100
+				:
+				(isQuad) ? 600 : 150;
+	const int	kick = (game.mode & GAME_DEATHMATCH) ?
+				(isQuad) ? 800 : 200 
+				:
+				(isQuad) ? 1000 : 250;
 
-	if (isQuad)
-	{
-		damage *= 4;
-		kick *= 4;
-	}
-
-	Angles_Vectors (ent->Client.v_angle, forward, right, NULL);
-
-	Vec3Scale (forward, -3, ent->Client.kick_origin);
+	ent->Client.ViewAngle.ToVectors (&forward, &right, NULL);
+	vec3f kickOrigin = forward;
+	kickOrigin.Scale (-3);
+	Vec3Copy (kickOrigin, ent->Client.kick_origin);
 	ent->Client.kick_angles[0] = -3;
 
-	Vec3Set (offset, 0, 7,  ent->gameEntity->viewheight-8);
-	P_ProjectSource (ent, offset, forward, right, start);
-	//fire_rail (ent->gameEntity, start, forward, damage, kick);
+	ent->P_ProjectSource (offset, forward, right, start);
 	CRailGunShot::Fire (ent, start, forward, damage, kick);
 
 	// send muzzle flash
@@ -103,7 +92,7 @@ void CRailgun::Fire (CPlayerEntity *ent)
 	AttackSound (ent);
 
 	ent->Client.PlayerState.SetGunFrame(ent->Client.PlayerState.GetGunFrame()+1);
-	PlayerNoise(ent, start, PNOISE_WEAPON);
+	ent->PlayerNoiseAt (start, PNOISE_WEAPON);
 
 	if (!dmFlags.dfInfiniteAmmo)
 		DepleteAmmo(ent, 1);

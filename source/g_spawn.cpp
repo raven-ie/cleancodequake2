@@ -259,11 +259,11 @@ void InitEntities ()
 		edict_t *ent = &g_edicts[i];
 
 		if (!ent->Entity)
-			ent->Entity = QNew (com_gamePool, 0) CPlayerEntity(i);
+			ent->Entity = QNew (com_levelPool, 0) CPlayerEntity(i);
 	}
 }
 
-extern CPlayerEntity **SavedClients;
+extern clientPersistent_t *SavedClients;
 
 char *gEntString;
 void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
@@ -293,6 +293,7 @@ __try
 	CPlayerEntity::SaveClientData ();
 
 	Mem_FreePool (com_levelPool);
+	Mem_FreePool (com_genericPool);
 	gEntString = Mem_PoolStrDup(entities, com_levelPool, 0);
 
 	entities = CC_ParseSpawnEntities (mapname, entities);
@@ -307,17 +308,20 @@ __try
 	Q_strncpyz (level.mapname, mapname, sizeof(level.mapname)-1);
 	Q_strncpyz (game.spawnpoint, spawnpoint, sizeof(game.spawnpoint)-1);
 
+	InitEntities ();
+
 	// set client fields on player ents
 	for (i=0 ; i<game.maxclients ; i++)
 	{
 		// Reset the entity states
-		g_edicts[i+1].Entity = SavedClients[i];
+		//g_edicts[i+1].Entity = SavedClients[i];
+		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity);
+		memcpy (&Player->Client.pers, &SavedClients[i], sizeof(clientPersistent_t));
 		g_edicts[i+1].client = game.clients + i;
 	}
 
 	QDelete[] SavedClients;
-
-	InitEntities ();
+	SavedClients = NULL;
 
 	ent = NULL;
 	inhibit = 0;

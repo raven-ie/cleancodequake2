@@ -105,8 +105,6 @@ public:
 	void	NoAmmoWeaponChange (CPlayerEntity *ent);
 };
 
-extern void P_ProjectSource (CPlayerEntity *Player, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result);
-
 #include "cc_blaster.h"
 #include "cc_shotgun.h"
 #include "cc_supershotgun.h"

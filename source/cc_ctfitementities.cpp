@@ -229,7 +229,7 @@ CItemEntity *CFlag::DropItem (CBaseEntity *ent)
 		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(ent);
 		CTrace	trace;
 
-		vec3f (Player->Client.v_angle).ToVectors (&forward, &right, NULL);
+		Player->Client.ViewAngle.ToVectors (&forward, &right, NULL);
 		vec3f offset (24, 0, -16);
 
 		vec3f result;

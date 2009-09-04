@@ -524,19 +524,13 @@ void *_Mem_Alloc(size_t size, struct memPool_s *pool, const int tagNum, const ch
 		return NULL;
 	}
 	if (size > MEM_MAX_ALLOC)
-	{
 		Com_Error (ERR_FATAL, "Mem_Alloc: Attempted allocation of '%i' bytes!\n" "alloc: %s:#%i\n", size, fileName, fileLine);
-	}
 
 	// Try to allocate in a puddle
 	if (Mem_PuddleWorthy(size))
-	{
 		mem = Mem_PuddleAlloc(size);
-	}
 	else
-	{
 		mem = NULL;
-	}
 
 	if (!mem)
 	{
@@ -839,7 +833,7 @@ static void Mem_Check_f(CPlayerEntity *ent)
 Mem_Stats_f
 ========================
 */
-static void Mem_Stats_f(CPlayerEntity *ent)
+void Mem_Stats_f(CPlayerEntity *ent)
 {
 	Com_Printf(0, "Memory stats:\n");
 	Com_Printf(0, "    blocks size                  puddle name\n");

@@ -54,14 +54,14 @@ bool CHyperBlaster::CanStopFidgetting (CPlayerEntity *ent)
 	return false;
 }
 
-vec3_t hyperblasterOffsetTable[] =
+vec3f hyperblasterOffsetTable[] =
 {
-	{ -3.46f, 0, 2.0f	},
-	{ -3.46f, 0, -2.0f	},
-	{ 0, 0, -4.0f		},
-	{ 3.46f, 0, -2.0f	},
-	{ 3.46f, 0, 2.0f	},
-	{ 0, 0, 4.0f		}
+	vec3f( -3.46f, 0, 2.0f	),
+	vec3f( -3.46f, 0, -2.0f	),
+	vec3f( 0, 0, -4.0f		),
+	vec3f( 3.46f, 0, -2.0f	),
+	vec3f( 3.46f, 0, 2.0f	),
+	vec3f( 0, 0, 4.0f		)
 };
 
 void CHyperBlaster::Fire (CPlayerEntity *ent)
@@ -79,37 +79,34 @@ void CHyperBlaster::Fire (CPlayerEntity *ent)
 		}
 		else
 		{
-			vec3_t	offset;
-
 			// I replaced this part with a table because they are constant.
-			Vec3Copy (hyperblasterOffsetTable[ent->Client.PlayerState.GetGunFrame() - 6], offset);
+			vec3f offset = hyperblasterOffsetTable[ent->Client.PlayerState.GetGunFrame() - 6];
 
-			int effect = ((ent->Client.PlayerState.GetGunFrame() == 6) || (ent->Client.PlayerState.GetGunFrame() == 9)) ? EF_HYPERBLASTER : 0;
-			int damage = (game.mode & GAME_DEATHMATCH) ? 15 : 20;
+			const int effect = ((ent->Client.PlayerState.GetGunFrame() == 6) || (ent->Client.PlayerState.GetGunFrame() == 9)) ? EF_HYPERBLASTER : 0;
+			const int damage = (game.mode & GAME_DEATHMATCH) ?
+				(isQuad) ? 60 : 15
+				:
+				(isQuad) ? 80 : 20;
 
-			vec3_t	forward, right;
-			vec3_t	start;
-			vec3_t	noffset;
+			vec3f	forward, right;
+			vec3f	start;
 
-			if (isQuad)
-				damage *= 4;
+			ent->Client.ViewAngle.ToVectors (&forward, &right, NULL);
+			vec3f noffset = vec3f(24, 8, ent->gameEntity->viewheight-8) + offset;
+			ent->P_ProjectSource (noffset, forward, right, start);
 
-			Angles_Vectors (ent->Client.v_angle, forward, right, NULL);
-			Vec3Set (noffset, 24, 8, ent->gameEntity->viewheight-8);
-			Vec3Add (noffset, offset, noffset);
-			P_ProjectSource (ent, noffset, forward, right, start);
-
-			Vec3Scale (forward, -2, ent->Client.kick_origin);
+			vec3f kickOrigin = forward;
+			kickOrigin.Scale (-2);
+			Vec3Copy (kickOrigin, ent->Client.kick_origin);
 			ent->Client.kick_angles[0] = -1;
 
-			//fire_blaster (ent->gameEntity, start, forward, damage, 1000, effect, true);
 			CBlasterProjectile::Spawn (ent, start, forward, damage, 1000, effect, true);
 
 			// send muzzle flash
 			Muzzle (ent, MZ_HYPERBLASTER);
 			AttackSound (ent);
 
-			PlayerNoise(ent, start, PNOISE_WEAPON);
+			ent->PlayerNoiseAt (start, PNOISE_WEAPON);
 
 			if (!dmFlags.dfInfiniteAmmo)
 				DepleteAmmo (ent, 1);

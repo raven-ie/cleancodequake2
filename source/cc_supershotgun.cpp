@@ -65,37 +65,29 @@ bool CSuperShotgun::CanStopFidgetting (CPlayerEntity *ent)
 }
 
 void CSuperShotgun::Fire (CPlayerEntity *ent)
-{	vec3_t		start;
-	vec3_t		forward, right;
-	vec3_t		offset;
-	vec3_t		v;
-	int			damage = 6;
-	int			kick = 12;
+{
+	vec3f		start;
+	vec3f		forward, right;
+	vec3f		offset = vec3f(0, 8, ent->gameEntity->viewheight-8);
+	const int	damage = (isQuad) ? 24 : 6;
+	const int	kick = (isQuad) ? 48 : 12;
 
-	Angles_Vectors (ent->Client.v_angle, forward, right, NULL);
+	ent->Client.ViewAngle.ToVectors (&forward, &right, NULL);
 
-	Vec3Scale (forward, -2, ent->Client.kick_origin);
+	vec3f kickorigin = forward;
+	kickorigin.Scale (-2);
+	Vec3Copy (kickorigin, ent->Client.kick_origin);
 	ent->Client.kick_angles[0] = -2;
+	ent->P_ProjectSource (offset, forward, right, start);
 
-	Vec3Set (offset, 0, 8,  ent->gameEntity->viewheight-8);
-	P_ProjectSource (ent, offset, forward, right, start);
-
-	if (isQuad)
-	{
-		damage *= 4;
-		kick *= 4;
-	}
-
-	v[PITCH] = ent->Client.v_angle[PITCH];
-	v[YAW]   = ent->Client.v_angle[YAW] - 5;
-	v[ROLL]  = ent->Client.v_angle[ROLL];
-	Angles_Vectors (v, forward, NULL, NULL);
+	vec3f v = ent->Client.ViewAngle;
+	v.Y -= 5;
+	v.ToVectors (&forward, NULL, NULL);
 	CShotgunPellets::Fire (ent, start, forward, damage, kick, DEFAULT_SHOTGUN_HSPREAD, DEFAULT_SHOTGUN_VSPREAD, DEFAULT_SSHOTGUN_COUNT/2, MOD_SSHOTGUN);
-	//fire_shotgun (ent->gameEntity, start, forward, damage, kick, DEFAULT_SHOTGUN_HSPREAD, DEFAULT_SHOTGUN_VSPREAD, DEFAULT_SSHOTGUN_COUNT/2, MOD_SSHOTGUN);
-	v[YAW]   = ent->Client.v_angle[YAW] + 5;
-	Angles_Vectors (v, forward, NULL, NULL);
+
+	v.Y += 10;
+	v.ToVectors (&forward, NULL, NULL);
 	CShotgunPellets::Fire (ent, start, forward, damage, kick, DEFAULT_SHOTGUN_HSPREAD, DEFAULT_SHOTGUN_VSPREAD, DEFAULT_SSHOTGUN_COUNT/2, MOD_SSHOTGUN);
-	//fire_shotgun (ent->gameEntity, start, forward, damage, kick, DEFAULT_SHOTGUN_HSPREAD, DEFAULT_SHOTGUN_VSPREAD, DEFAULT_SSHOTGUN_COUNT/2, MOD_SSHOTGUN);
 
 	// send muzzle flash
 	Muzzle (ent, MZ_SSHOTGUN);
@@ -104,7 +96,7 @@ void CSuperShotgun::Fire (CPlayerEntity *ent)
 	AttackSound (ent);
 
 	ent->Client.PlayerState.SetGunFrame(ent->Client.PlayerState.GetGunFrame() + 1);
-	PlayerNoise(ent, start, PNOISE_WEAPON);
+	ent->PlayerNoiseAt (start, PNOISE_WEAPON);
 
 	if (!dmFlags.dfInfiniteAmmo)
 		DepleteAmmo(ent, 2);
