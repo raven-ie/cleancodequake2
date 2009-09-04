@@ -162,7 +162,7 @@ FS_CopyFile
 */
 void FS_CopyFile(char *src, char *dst)
 {
-	if (fs_developer->Integer())
+	if (fs_developer && fs_developer->Integer())
 		Com_Printf(0, "FS_CopyFile (%s, %s)\n", src, dst);
 
 	FILE *f1;
@@ -313,7 +313,7 @@ size_t FS_Read(void *buffer, const size_t len, fileHandle_t fileNum)
 					tried = true;
 				else
 				{
-					if (fs_developer->Integer())
+					if (fs_developer && fs_developer->Integer())
 						Com_Printf(0, "FS_Read: 0 bytes read from \"%s\"", handle->name);
 					return len - remaining;
 				}
@@ -374,7 +374,7 @@ size_t FS_Write(void *buffer, const size_t size, fileHandle_t fileNum)
 			switch(write)
 			{
 			case 0:
-				if (fs_developer->Integer())
+				if (fs_developer && fs_developer->Integer())
 					Com_Printf(PRNT_ERROR, "FS_Write: 0 bytes written to %s\n", handle->name);
 				return size - remaining;
 
@@ -435,10 +435,14 @@ void FS_Seek(fileHandle_t fileNum, const long offset, const EFSSeekOrigin seekOr
 FS_OpenFileAppend
 ==============
 */
-static int FS_OpenFileAppend(fsHandleIndex_t *handle, bool binary)
+static int FS_OpenFileAppend(fsHandleIndex_t *handle, bool binary, bool addGameDir)
 {
 	char path[MAX_OSPATH];
-	Q_snprintfz(path, sizeof(path), "%s/%s", fs_gameDir, handle->name);
+
+	if (addGameDir)
+		Q_snprintfz(path, sizeof(path), "%s/%s", fs_gameDir, handle->name);
+	else
+		Q_snprintfz(path, sizeof(path), "%s", handle->name);
 
 	// Create the path if it doesn't exist
 	FS_CreatePath(path);
@@ -449,13 +453,13 @@ static int FS_OpenFileAppend(fsHandleIndex_t *handle, bool binary)
 	// Return length
 	if (handle->regFile)
 	{
-		if (fs_developer->Integer())
+		if (fs_developer && fs_developer->Integer())
 			Com_Printf(0, "FS_OpenFileAppend: \"%s\"", path);
 		return __FileLen(handle->regFile);
 	}
 
 	// Failed to open
-	if (fs_developer->Integer())
+	if (fs_developer && fs_developer->Integer())
 		Com_Printf(0, "FS_OpenFileAppend: couldn't open \"%s\"", path);
 	return -1;
 }
@@ -466,10 +470,14 @@ static int FS_OpenFileAppend(fsHandleIndex_t *handle, bool binary)
 FS_OpenFileWrite
 ==============
 */
-static int FS_OpenFileWrite(fsHandleIndex_t *handle, bool binary)
+static int FS_OpenFileWrite(fsHandleIndex_t *handle, bool binary, bool addGameDir)
 {
 	char path[MAX_OSPATH];
-	Q_snprintfz(path, sizeof(path), "%s/%s", fs_gameDir, handle->name);
+
+	if (addGameDir)
+		Q_snprintfz(path, sizeof(path), "%s/%s", fs_gameDir, handle->name);
+	else
+		Q_snprintfz(path, sizeof(path), "%s", handle->name);
 
 	// Create the path if it doesn't exist
 	FS_CreatePath(path);
@@ -480,13 +488,13 @@ static int FS_OpenFileWrite(fsHandleIndex_t *handle, bool binary)
 	// Return length
 	if (handle->regFile)
 	{
-		if (fs_developer->Integer())
+		if (fs_developer && fs_developer->Integer())
 			Com_Printf(0, "FS_OpenFileWrite: \"%s\"", path);
 		return 0;
 	}
 
 	// Failed to open
-	if (fs_developer->Integer())
+	if (fs_developer && fs_developer->Integer())
 		Com_Printf(0, "FS_OpenFileWrite: couldn't open \"%s\"", path);
 	return -1;
 }
@@ -543,7 +551,7 @@ static int FS_OpenFileRead(fsHandleIndex_t *handle)
 			fopen_s(&handle->regFile, netPath, "rb");
 
 			// Return length
-			if (fs_developer->Integer())
+			if (fs_developer && fs_developer->Integer())
 				Com_Printf(0, "FS_OpenFileRead: link file: %s\n", netPath);
 			if (handle->regFile)
 				return __FileLen(handle->regFile);
@@ -564,13 +572,13 @@ static int FS_OpenFileRead(fsHandleIndex_t *handle)
 		if (handle->regFile)
 		{
 			// Found it!
-			if (fs_developer->Integer())
+			if (fs_developer && fs_developer->Integer())
 				Com_Printf(0, "FS_OpenFileRead: %s\n", netPath);
 			return __FileLen(handle->regFile);
 		}
 	}
 
-	if (fs_developer->Integer())
+	if (fs_developer && fs_developer->Integer())
 		Com_Printf(0, "FS_OpenFileRead: can't find %s\n", handle->name);
 
 	return -1;
@@ -582,7 +590,7 @@ static int FS_OpenFileRead(fsHandleIndex_t *handle)
 FS_OpenFile
 ===========
 */
-int FS_OpenFile(const char *fileName, fileHandle_t *fileNum, const EFSOpenMode openMode)
+int FS_OpenFile(const char *fileName, fileHandle_t *fileNum, const EFSOpenMode openMode, bool addGameDir)
 {
 	fsHandleIndex_t	*handle;
 	int				fileSize = -1;
@@ -596,10 +604,10 @@ int FS_OpenFile(const char *fileName, fileHandle_t *fileNum, const EFSOpenMode o
 	switch(openMode)
 	{
 	case FS_MODE_APPEND_BINARY:
-		fileSize = FS_OpenFileAppend(handle, true);
+		fileSize = FS_OpenFileAppend(handle, true, addGameDir);
 		break;
 	case FS_MODE_APPEND_TEXT:
-		fileSize = FS_OpenFileAppend(handle, false);
+		fileSize = FS_OpenFileAppend(handle, false, addGameDir);
 		break;
 
 	case FS_MODE_READ_BINARY:
@@ -607,10 +615,10 @@ int FS_OpenFile(const char *fileName, fileHandle_t *fileNum, const EFSOpenMode o
 		break;
 
 	case FS_MODE_WRITE_BINARY:
-		fileSize = FS_OpenFileWrite(handle, true);
+		fileSize = FS_OpenFileWrite(handle, true, addGameDir);
 		break;
 	case FS_MODE_WRITE_TEXT:
-		fileSize = FS_OpenFileWrite(handle, false);
+		fileSize = FS_OpenFileWrite(handle, false, addGameDir);
 		break;
 
 	default:
@@ -927,7 +935,7 @@ static void FS_AddGameDirectory (char *dir, char *gamePath)
 {
 	fsPath_t	*search;
 
-	if (fs_developer->Integer())
+	if (fs_developer && fs_developer->Integer())
 		Com_Printf (0, "FS_AddGameDirectory: adding \"%s\"\n", dir);
 
 	// Set as game directory

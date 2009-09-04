@@ -309,7 +309,8 @@ __except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
 
 //=========================================================
 
-void WriteField1 (FILE *f, field_t *field, byte *base)
+#if 0
+void WriteField1 (fileHandle_t f, field_t *field, byte *base)
 {
 	void		*p;
 	size_t		len;
@@ -384,7 +385,7 @@ void WriteField1 (FILE *f, field_t *field, byte *base)
 }
 
 
-void WriteField2 (FILE *f, field_t *field, byte *base)
+void WriteField2 (fileHandle_t f, field_t *field, byte *base)
 {
 	size_t		len;
 	void		*p;
@@ -399,13 +400,13 @@ void WriteField2 (FILE *f, field_t *field, byte *base)
 		if ( *(char **)p )
 		{
 			len = strlen(*(char **)p) + 1;
-			fwrite (*(char **)p, len, 1, f);
+			FS_Write (*(char **)p, len, f);
 		}
 		break;
 	}
 }
 
-void ReadField (FILE *f, field_t *field, byte *base)
+void ReadField (fileHandle_t f, field_t *field, byte *base)
 {
 	void		*p;
 	int			len;
@@ -431,7 +432,7 @@ void ReadField (FILE *f, field_t *field, byte *base)
 		else
 		{
 			*(char **)p = QNew (com_levelPool, 0) char[len];//(char*)gi.TagMalloc (len, TAG_LEVEL);
-			fread (*(char **)p, len, 1, f);
+			FS_Read (*(char **)p, len, f);
 		}
 		break;
 	case F_EDICT:
@@ -526,20 +527,14 @@ ReadClient
 All pointer variables (except function pointers) must be handled specially.
 ==============
 */
-void ReadClient (FILE *f, CPlayerEntity *Player)
+void ReadClient (fileHandle_t f, CPlayerEntity *Player)
 {
-//	field_t		*field;
+	FS_Read (&Player->Client, sizeof(CClient), f);
 
-	fread (&Player->Client, sizeof(CClient), 1, f);
-
-	/*for (field=clientfields ; field->name ; field++)
-	{
-		ReadField (f, field, (byte *)client);
-	}*/
 	int pwIndex, nwIndex, lwIndex;
-	fread (&pwIndex, sizeof(int), 1, f);
-	fread (&lwIndex, sizeof(int), 1, f);
-	fread (&nwIndex, sizeof(int), 1, f);
+	FS_Read (&pwIndex, sizeof(int), f);
+	FS_Read (&lwIndex, sizeof(int), f);
+	FS_Read (&nwIndex, sizeof(int), f);
 
 	if (pwIndex != -1)
 	{
@@ -601,6 +596,7 @@ void ReadClient (FILE *f, CPlayerEntity *Player)
 	else
 		Player->Client.NewWeapon = NULL;
 }
+#endif
 
 /*
 ============
@@ -618,6 +614,7 @@ last save position.
 */
 void WriteGame (char *filename, BOOL autosave)
 {
+#if 0
 #ifdef CC_USE_EXCEPTION_HANDLER
 __try
 {
@@ -629,7 +626,7 @@ __try
 	if (!autosave)
 		CPlayerEntity::SaveClientData ();
 
-	FS_OpenFile (filename, &f, FS_MODE_WRITE_BINARY);
+	FS_OpenFile (filename, &f, FS_MODE_WRITE_BINARY, false);
 
 	if (!f)
 	{
@@ -656,45 +653,44 @@ __except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
 	return;
 }
 #endif
+#endif
 }
 
+void InitPlayers ();
 void ReadGame (char *filename)
 {
+#if 0
 #ifdef CC_USE_EXCEPTION_HANDLER
 __try
 {
 #endif
-	FILE	*f;
-	int		i;
+	fileHandle_t	f;
 	char	str[16];
 
-	Mem_FreePool (com_gamePool);
+	//Mem_FreePool (com_gamePool);
+	FS_OpenFile (filename, &f, FS_MODE_READ_BINARY, false);
 
-#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
-	f = fopen (filename, "rb");
-#else
-	int errorVal = fopen_s(&f, filename, "rb");
-#endif
-
-	if (!f || errorVal)
+	if (!f)
 		GameError ("Couldn't open %s", filename);
 
-	fread (str, sizeof(str), 1, f);
+	FS_Read (str, sizeof(str), f);
 	if (strcmp (str, __DATE__))
 	{
-		fclose (f);
+		FS_CloseFile (f);
 		GameError ("Savegame from an older version.\n");
+		return;
 	}
 
-	g_edicts = QNew (com_gamePool, 0) edict_t[game.maxentities];//(edict_t*)gi.TagMalloc (game.maxentities * sizeof(g_edicts[0]), TAG_GAME);
+	g_edicts = QNew (com_gamePool, 0) edict_t[game.maxentities];
 	globals.edicts = g_edicts;
 
-	fread (&game, sizeof(game), 1, f);
-	game.clients = QNew (com_gamePool, 0) gclient_t[game.maxclients];//(gclient_t*)gi.TagMalloc (game.maxclients * sizeof(game.clients[0]), TAG_GAME);
-	for (i=0 ; i<game.maxclients ; i++)
+	FS_Read (&game, sizeof(game), f);
+	game.clients = QNew (com_gamePool, 0) gclient_t[game.maxclients];
+	InitPlayers();
+	for (int i=0 ; i<game.maxclients ; i++)
 		ReadClient (f, dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity));
 
-	fclose (f);
+	FS_CloseFile (f);
 #ifdef CC_USE_EXCEPTION_HANDLER
 }
 __except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
@@ -702,11 +698,13 @@ __except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
 	return;
 }
 #endif
+#endif
 }
 
 //==========================================================
 
 
+#if 0
 /*
 ==============
 WriteEdict
@@ -714,7 +712,7 @@ WriteEdict
 All pointer variables (except function pointers) must be handled specially.
 ==============
 */
-void WriteEdict (FILE *f, edict_t *ent)
+void WriteEdict (fileHandle_t f, edict_t *ent)
 {
 	field_t		*field;
 	edict_t		temp;
@@ -724,28 +722,28 @@ void WriteEdict (FILE *f, edict_t *ent)
 
 	// change the pointers to lengths or indexes
 	for (field=fields ; field->name ; field++)
-	{
 		WriteField1 (f, field, (byte *)&temp);
-	}
 
 	// write the block
-	fwrite (&temp, sizeof(temp), 1, f);
+	FS_Write (&temp, sizeof(temp), f);
 
 	// now write any allocated data following the edict
 	for (field=fields ; field->name ; field++)
-	{
 		WriteField2 (f, field, (byte *)ent);
-	}
 
 	// Write the entity, if one
 	bool hasEntity = false;
 	if (ent->Entity)
 		hasEntity = true;
 
-	fwrite (&hasEntity, sizeof(bool), 1, f);
+	FS_Write (&hasEntity, sizeof(bool), f);
 
 	if (hasEntity)
-		fwrite (ent->Entity, sizeof(ent->Entity), 1, f);
+	{
+		size_t sz = sizeof(*ent->Entity);
+		FS_Write (&sz, sizeof(sz), f);
+		FS_Write (ent->Entity, sizeof(*ent->Entity), f);
+	}
 }
 
 /*
@@ -755,7 +753,7 @@ WriteLevelLocals
 All pointer variables (except function pointers) must be handled specially.
 ==============
 */
-void WriteLevelLocals (FILE *f)
+void WriteLevelLocals (fileHandle_t f)
 {
 	field_t		*field;
 	level_locals_t		temp;
@@ -765,18 +763,14 @@ void WriteLevelLocals (FILE *f)
 
 	// change the pointers to lengths or indexes
 	for (field=levelfields ; field->name ; field++)
-	{
 		WriteField1 (f, field, (byte *)&temp);
-	}
 
 	// write the block
-	fwrite (&temp, sizeof(temp), 1, f);
+	FS_Write (&temp, sizeof(temp), f);
 
 	// now write any allocated data following the edict
 	for (field=levelfields ; field->name ; field++)
-	{
 		WriteField2 (f, field, (byte *)&level);
-	}
 }
 
 
@@ -787,23 +781,29 @@ ReadEdict
 All pointer variables (except function pointers) must be handled specially.
 ==============
 */
-void ReadEdict (FILE *f, edict_t *ent)
+void ReadEdict (fileHandle_t f, edict_t *ent)
 {
 	field_t		*field;
 
-	fread (ent, sizeof(*ent), 1, f);
+	FS_Read (ent, sizeof(*ent), f);
 
 	for (field=fields ; field->name ; field++)
-	{
 		ReadField (f, field, (byte *)ent);
-	}
 
 	bool hasEntity = false;
 
-	fread (&hasEntity, sizeof(bool), 1, f);
+	FS_Read (&hasEntity, sizeof(bool), f);
 
 	if (hasEntity)
-		fread (ent->Entity, sizeof(ent->Entity), 1, f);
+	{
+		size_t sz;
+		FS_Read (&sz, sizeof(sz), f);
+		FS_Read (ent->Entity, sz, f);
+
+		ent->Entity->gameEntity = ent;
+	}
+	else
+		ent->Entity = NULL;
 }
 
 /*
@@ -813,17 +813,16 @@ ReadLevelLocals
 All pointer variables (except function pointers) must be handled specially.
 ==============
 */
-void ReadLevelLocals (FILE *f)
+void ReadLevelLocals (fileHandle_t f)
 {
 	field_t		*field;
 
-	fread (&level, sizeof(level), 1, f);
+	FS_Read (&level, sizeof(level), f);
 
 	for (field=levelfields ; field->name ; field++)
-	{
 		ReadField (f, field, (byte *)&level);
-	}
 }
+#endif
 
 /*
 =================
@@ -833,31 +832,28 @@ WriteLevel
 */
 void WriteLevel (char *filename)
 {
+#if 0
 #ifdef CC_USE_EXCEPTION_HANDLER
 __try
 {
 #endif
 	int		i;
 	edict_t	*ent;
-	FILE	*f;
+	fileHandle_t	f;
 	void	*base;
 
-#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
-	f = fopen (filename, "wb");
-#else
-	int errorVal = fopen_s(&f, filename, "wb");
-#endif
+	FS_OpenFile (filename, &f, FS_MODE_WRITE_BINARY, false);
 
-	if (!f || errorVal)
+	if (!f)
 		GameError ("Couldn't open %s", filename);
 
 	// write out edict size for checking
 	i = sizeof(edict_t);
-	fwrite (&i, sizeof(i), 1, f);
+	FS_Write (&i, sizeof(i), f);
 
 	// write out a function pointer for checking
 	base = (void *)InitGame;
-	fwrite (&base, sizeof(base), 1, f);
+	FS_Write (&base, sizeof(base), f);
 
 	// write out level_locals_t
 	WriteLevelLocals (f);
@@ -868,19 +864,20 @@ __try
 		ent = &g_edicts[i];
 		if (!ent->inUse)
 			continue;
-		fwrite (&i, sizeof(i), 1, f);
+		FS_Write (&i, sizeof(i), f);
 		WriteEdict (f, ent);
 	}
 	i = -1;
-	fwrite (&i, sizeof(i), 1, f);
+	FS_Write (&i, sizeof(i), f);
 
-	fclose (f);
+	FS_CloseFile (f);
 #ifdef CC_USE_EXCEPTION_HANDLER
 }
 __except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
 {
 	return;
 }
+#endif
 #endif
 }
 
@@ -903,23 +900,20 @@ No clients are connected yet.
 */
 void ReadLevel (char *filename)
 {
+#if 0
 #ifdef CC_USE_EXCEPTION_HANDLER
 __try
 {
 #endif
 	int		entNum;
-	FILE	*f;
+	fileHandle_t	f;
 	int		i;
 	void	*base;
 	edict_t	*ent;
 
-#ifndef CRT_USE_UNDEPRECATED_FUNCTIONS
-	f = fopen (filename, "rb");
-#else
-	int errorVal = fopen_s(&f, filename, "rb");
-#endif
+	FS_OpenFile (filename, &f, FS_MODE_READ_BINARY, false);
 
-	if (!f || errorVal)
+	if (!f)
 		GameError ("Couldn't open %s", filename);
 
 	// free any dynamic memory allocated by loading the level
@@ -928,29 +922,24 @@ __try
 	Mem_FreePool (com_genericPool);
 
 	// wipe all the entities
-	// Save client pointers
-	CPlayerEntity **EntityPointers = QNew (com_genericPool, 0) CPlayerEntity*[game.maxclients];
-
-	for (i = 0; i < game.maxclients; i++)
-		EntityPointers[i] = dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity);
 	memset (g_edicts, 0, game.maxentities*sizeof(g_edicts[0]));
 	globals.numEdicts = game.maxclients+1;
 
 	// check edict size
-	fread (&i, sizeof(i), 1, f);
+	FS_Read (&i, sizeof(i), f);
 	if (i != sizeof(edict_t))
 	{
-		fclose (f);
+		FS_CloseFile (f);
 		GameError ("ReadLevel: mismatched edict size");
 	}
 
 	// check function pointer base address
-	fread (&base, sizeof(base), 1, f);
+	FS_Read (&base, sizeof(base), f);
 #ifdef _WIN32
 	if (base != (void *)InitGame)
 	{
-		fclose (f);
-		GameError ("ReadLevel: function pointers have moved");
+		//FS_CloseFile (f);
+		//GameError ("ReadLevel: function pointers have moved");
 	}
 #else
 	gi.dprintf("Function offsets %d\n", ((byte *)base) - ((byte *)InitGame));
@@ -962,9 +951,9 @@ __try
 	// load all the entities
 	while (1)
 	{
-		if (fread (&entNum, sizeof(entNum), 1, f) != 1)
+		if (FS_Read (&entNum, sizeof(entNum), f) == 0)
 		{
-			fclose (f);
+			FS_CloseFile (f);
 			GameError ("ReadLevel: failed to read entNum");
 		}
 		if (entNum == -1)
@@ -980,16 +969,14 @@ __try
 		gi.linkentity (ent);
 	}
 
-	fclose (f);
+	FS_CloseFile (f);
 
+	InitPlayers ();
 	// mark all clients as unconnected
 	for (i=0 ; i<game.maxclients ; i++)
 	{
 		ent = &g_edicts[i+1];
 		ent->client = game.clients + i;
-		//if (!ent->Entity)
-		//	ent->Entity = QNew (com_gamePool, 0) CPlayerEntity(i);
-		ent->Entity = EntityPointers[i];
 
 		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(ent->Entity);
 		Player->Client.pers.state = SVCS_FREE;
@@ -1017,5 +1004,6 @@ __except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
 {
 	return;
 }
+#endif
 #endif
 }

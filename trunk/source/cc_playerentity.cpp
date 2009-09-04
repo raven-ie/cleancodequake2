@@ -3097,11 +3097,8 @@ void CPlayerEntity::SaveClientData ()
 		CPlayerEntity *ent = dynamic_cast<CPlayerEntity*>(g_edicts[1+i].Entity);
 		if (!ent->IsInUse())
 			continue;
-		/*ent->Client.pers.health = ent->gameEntity->health;
-		ent->Client.pers.max_health = ent->gameEntity->max_health;
-		ent->Client.pers.savedFlags = (ent->gameEntity->flags & (FL_GODMODE|FL_NOTARGET|FL_POWER_ARMOR));
-		if (game.mode == GAME_COOPERATIVE)
-			ent->Client.pers.score = ent->Client.resp.score;*/
+
+		memcpy (&SavedClients[i], &ent->Client.pers, sizeof(clientPersistent_t));
 		SavedClients[i].health = ent->gameEntity->health;
 		SavedClients[i].max_health = ent->gameEntity->max_health;
 		SavedClients[i].savedFlags = (ent->gameEntity->flags & (FL_GODMODE|FL_NOTARGET|FL_POWER_ARMOR));

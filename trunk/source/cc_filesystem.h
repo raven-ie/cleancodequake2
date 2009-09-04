@@ -47,7 +47,7 @@ int FS_Tell(fileHandle_t fileNum);
 size_t FS_Read(void *buffer, const size_t len, fileHandle_t fileNum);
 size_t FS_Write(void *buffer, const size_t size, fileHandle_t fileNum);
 void FS_Seek(fileHandle_t fileNum, const long offset, const EFSSeekOrigin seekOrigin);
-int FS_OpenFile(const char *fileName, fileHandle_t *fileNum, const EFSOpenMode openMode);
+int FS_OpenFile(const char *fileName, fileHandle_t *fileNum, const EFSOpenMode openMode, bool addGameDir = true);
 void FS_CloseFile(fileHandle_t fileNum);
 
 int FS_LoadFile(const char *path, void **buffer, bool const terminate);
