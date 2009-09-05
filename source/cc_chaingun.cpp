@@ -80,17 +80,15 @@ void CChaingun::FireAnimation (CPlayerEntity *ent)
 void CChaingun::Fire (CPlayerEntity *ent)
 {
 	int			shots;
-	vec3f		start;
-	vec3f		forward, right, up;
-	vec3f		offset;
+	vec3f		start, forward, right, up, offset;
 	const int	damage = (game.mode & GAME_DEATHMATCH) ?
 				(isQuad) ? 24 : 6
 				:
-				(isQuad) ? 32 : 8;
-	const int	kick = (isQuad) ? 8 : 2;
+				(isQuad) ? 32 : 8,
+				kick = (isQuad) ? 8 : 2;
 
 	if (ent->Client.PlayerState.GetGunFrame() == 5)
-		PlaySoundFrom(ent->gameEntity, CHAN_AUTO, SoundIndex("weapons/chngnu1a.wav"));
+		ent->PlaySound (CHAN_AUTO, SoundIndex("weapons/chngnu1a.wav"));
 
 	if ((ent->Client.PlayerState.GetGunFrame() == 14) && !(ent->Client.buttons & BUTTON_ATTACK))
 	{
@@ -109,7 +107,7 @@ void CChaingun::Fire (CPlayerEntity *ent)
 	if (ent->Client.PlayerState.GetGunFrame() == 22)
 	{
 		ent->Client.weapon_sound = 0;
-		PlaySoundFrom(ent->gameEntity, CHAN_AUTO, SoundIndex("weapons/chngnd1a.wav"));
+		ent->PlaySound (CHAN_AUTO, SoundIndex("weapons/chngnd1a.wav"));
 	}
 	else
 		ent->Client.weapon_sound = SoundIndex("weapons/chngnl1a.wav");
@@ -140,8 +138,8 @@ void CChaingun::Fire (CPlayerEntity *ent)
 
 	for (int i=0 ; i<3 ; i++)
 	{
-		ent->Client.kick_origin[i] = crandom() * 0.35;
-		ent->Client.kick_angles[i] = crandom() * 0.7;
+		ent->Client.KickOrigin[i] = crandom() * 0.35;
+		ent->Client.KickAngles[i] = crandom() * 0.7;
 	}
 
 	for (int i=0 ; i<shots ; i++)

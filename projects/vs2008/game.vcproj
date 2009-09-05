@@ -1925,10 +1925,6 @@
 				Name="CPP"
 				>
 				<File
-					RelativePath=".\..\..\source\g_combat.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\..\..\source\g_main.cpp"
 					>
 				</File>
@@ -1938,10 +1934,6 @@
 				</File>
 				<File
 					RelativePath=".\..\..\source\g_spawn.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\..\..\source\g_utils.cpp"
 					>
 				</File>
 				<File

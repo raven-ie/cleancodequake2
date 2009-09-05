@@ -325,30 +325,23 @@ mmove_t flyer_move_bankleft = {FRAME_bankl01, FRAME_bankl07, flyer_frames_bankle
 
 void CFlyer::Fire (int FlashNumber)
 {
-	vec3_t	start;
-	vec3_t	forward, right;
-	vec3_t	end;
-	vec3_t	dir;
-	int		effect;
+	vec3f	start, forward, right, end, dir;
+	int effect;
 
 	if (!Entity->gameEntity->enemy)
 		return;
-
-	vec3_t angles, origin;
-	Entity->State.GetAngles(angles);
-	Entity->State.GetOrigin(origin);
 
 	if ((Entity->State.GetFrame() == FRAME_attak204) || (Entity->State.GetFrame() == FRAME_attak207) || (Entity->State.GetFrame() == FRAME_attak210))
 		effect = EF_HYPERBLASTER;
 	else
 		effect = 0;
-	Angles_Vectors (angles, forward, right, NULL);
 
-	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[FlashNumber], forward, right, start);
+	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
+	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[FlashNumber], forward, right, start);
 	
-	Vec3Copy (Entity->gameEntity->enemy->state.origin, end);
-	end[2] += Entity->gameEntity->enemy->viewheight;
-	Vec3Subtract (end, start, dir);
+	end = Entity->gameEntity->enemy->state.origin;
+	end.Z += Entity->gameEntity->enemy->viewheight;
+	dir = end - start;
 
 	MonsterFireBlaster (start, dir, 1, 1000, FlashNumber, effect);
 }

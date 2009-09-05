@@ -158,19 +158,14 @@ void CGladiator::Melee ()
 
 void CGladiator::FireRail ()
 {
-	vec3_t	start;
-	vec3_t	dir;
-	vec3_t	forward, right;
+	vec3f	start, dir, forward, right;
 
-	vec3_t angles, origin;
-	Entity->State.GetAngles(angles);
-	Entity->State.GetOrigin(origin);
-	Angles_Vectors (angles, forward, right, NULL);
-	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_GLADIATOR_RAILGUN_1], forward, right, start);
+	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
+	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_GLADIATOR_RAILGUN_1], forward, right, start);
 
 	// calc direction to where we targted
-	Vec3Subtract (Entity->gameEntity->pos1, start, dir);
-	VectorNormalizef (dir, dir);
+	dir = vec3f(Entity->gameEntity->pos1) - start;
+	dir.Normalize ();
 
 	MonsterFireRailgun (start, dir, 50, 100, MZ2_GLADIATOR_RAILGUN_1);
 }

@@ -277,6 +277,7 @@ extern	gameExport_t	globals;
 extern	spawn_temp_t	st;
 
 // means of death
+typedef uint32	EMeansOfDeath;
 enum // EMeansOfDeath
 {
 	MOD_UNKNOWN,
@@ -320,7 +321,7 @@ enum // EMeansOfDeath
 	MOD_FRIENDLY_FIRE		=	512
 };
 
-extern	int	meansOfDeath;
+extern	EMeansOfDeath	meansOfDeath;
 
 extern	edict_t			*g_edicts;
 
@@ -333,6 +334,7 @@ extern	edict_t			*g_edicts;
 #define crandom()	(2.0 * (random() - 0.5))
 
 #define world	(&g_edicts[0])
+#define World	(g_edicts[0].Entity)
 
 // Spawnflags
 // 6 bits reserved for editor flags
@@ -410,8 +412,7 @@ void Cmd_Score_f (CPlayerEntity *ent);
 //
 // g_utils.c
 //
-void	G_ProjectSource (vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result);
-void	G_ProjectSource (vec3f &point, vec3f &distance, vec3f &forward, vec3f &right, vec3f &result);
+void	G_ProjectSource (const vec3f &point, const vec3f &distance, const vec3f &forward, const vec3f &right, vec3f &result);
 
 void	G_InitEdict (edict_t *e);
 edict_t	*G_Spawn (void);
@@ -435,10 +436,9 @@ inline CBaseEntity *FindRadius (CBaseEntity *From, vec3f &org, int Radius)
 //
 // g_combat.c
 //
-bool OnSameTeam (edict_t *ent1, edict_t *ent2);
-bool CanDamage (edict_t *targ, edict_t *inflictor);
+bool CanDamage (CBaseEntity *targ, CBaseEntity *inflictor);
 void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir, vec3_t point, vec3_t normal, int damage, int knockback, int dflags, int mod);
-void T_RadiusDamage (edict_t *inflictor, edict_t *attacker, float damage, edict_t *ignore, float radius, int mod);
+void T_RadiusDamage (CBaseEntity *inflictor, CBaseEntity *attacker, float damage, CBaseEntity *ignore, float radius, EMeansOfDeath mod);
 
 // damage flags
 enum

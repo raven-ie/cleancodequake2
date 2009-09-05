@@ -281,7 +281,6 @@ bool CParasite::DrainAttackOK (vec3f &start, vec3f &end)
 
 void CParasite::DrainAttack ()
 {
-
 	vec3f f, r;
 	Entity->State.GetAngles().ToVectors (&f, &r, NULL);
 	vec3f offset(24, 0, 6);
@@ -308,17 +307,15 @@ void CParasite::DrainAttack ()
 
 	int damage = (Entity->State.GetFrame() == FRAME_drain03) ? 5 : 2;
 	if (Entity->State.GetFrame() == FRAME_drain03)
-		PlaySoundFrom (Entity->gameEntity->enemy, CHAN_AUTO, SoundImpact, 1, ATTN_NORM, 0);
+		Entity->gameEntity->enemy->Entity->PlaySound (CHAN_AUTO, SoundImpact);
 	else if (Entity->State.GetFrame() == FRAME_drain04)
 		Entity->PlaySound (CHAN_WEAPON, SoundSuck, 1, ATTN_NORM, 0);
 
 	CTempEnt_Trails::FleshCable (start, end, Entity->State.GetNumber());
 
-	vec3_t dir;
-	dir[0] = start.X - end.X;
-	dir[1] = start.Y - end.Y;
-	dir[2] = start.Z - end.Z;
-	T_Damage (Entity->gameEntity->enemy, Entity->gameEntity, Entity->gameEntity, dir, Entity->gameEntity->enemy->state.origin, vec3Origin, damage, 0, DAMAGE_NO_KNOCKBACK, MOD_UNKNOWN);
+	vec3f dir = start - end;
+	if (Entity->gameEntity->enemy)
+		dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->TakeDamage (Entity, Entity, dir, Entity->gameEntity->enemy->Entity->State.GetOrigin(), vec3fOrigin, damage, 0, DAMAGE_NO_KNOCKBACK, MOD_UNKNOWN);
 }
 
 CFrame ParasiteFramesDrain [] =

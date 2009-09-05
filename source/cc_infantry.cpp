@@ -233,58 +233,53 @@ void CInfantry::Pain (CBaseEntity *other, float kick, int damage)
 #endif
 }
 
-vec3_t	DeathAimAngles[] =
+static const vec3f	DeathAimAngles[] =
 {
-	0.0, 5.0, 0.0,
-	10.0, 15.0, 0.0,
-	20.0, 25.0, 0.0,
-	25.0, 35.0, 0.0,
-	30.0, 40.0, 0.0,
-	30.0, 45.0, 0.0,
-	25.0, 50.0, 0.0,
-	20.0, 40.0, 0.0,
-	15.0, 35.0, 0.0,
-	40.0, 35.0, 0.0,
-	70.0, 35.0, 0.0,
-	90.0, 35.0, 0.0
+	vec3f(0.0, 5.0, 0.0),
+	vec3f(10.0, 15.0, 0.0),
+	vec3f(20.0, 25.0, 0.0),
+	vec3f(25.0, 35.0, 0.0),
+	vec3f(30.0, 40.0, 0.0),
+	vec3f(30.0, 45.0, 0.0),
+	vec3f(25.0, 50.0, 0.0),
+	vec3f(20.0, 40.0, 0.0),
+	vec3f(15.0, 35.0, 0.0),
+	vec3f(40.0, 35.0, 0.0),
+	vec3f(70.0, 35.0, 0.0),
+	vec3f(90.0, 35.0, 0.0)
 };
 
 void CInfantry::MachineGun ()
 {
-	vec3_t	start;
-	vec3_t	forward, right;
+	vec3f	start, forward, right;
 	int		flash_number;
 
-	vec3_t angles, origin;
-	Entity->State.GetAngles (angles);
-	Entity->State.GetOrigin (origin);
 	if (Entity->State.GetFrame() == FRAME_attak111)
 	{
 		flash_number = MZ2_INFANTRY_MACHINEGUN_1;
-		Angles_Vectors (angles, forward, right, NULL);
-		G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
+		Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
+		G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
 		if (Entity->gameEntity->enemy)
 		{
-			vec3_t target;
-			Vec3MA (Entity->gameEntity->enemy->state.origin, -0.2f, Entity->gameEntity->enemy->velocity, target);
-			target[2] += Entity->gameEntity->enemy->viewheight;
-			Vec3Subtract (target, start, forward);
-			VectorNormalizef (forward, forward);
+			vec3f target = Entity->gameEntity->enemy->state.origin;
+			target = target.MultiplyAngles (-0.2f, Entity->gameEntity->enemy->velocity);
+			target.Z += Entity->gameEntity->enemy->viewheight;
+
+			forward = target - start;
+			forward.NormalizeFast ();
 		}
 		else
-			Angles_Vectors (angles, forward, right, NULL);
+			Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
 	}
 	else
 	{
 		flash_number = MZ2_INFANTRY_MACHINEGUN_2 + (Entity->State.GetFrame() - FRAME_death211);
 
-		Angles_Vectors (angles, forward, right, NULL);
-		G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
+		Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
+		G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
-		vec3_t vec;
-		Vec3Subtract (angles, DeathAimAngles[flash_number-MZ2_INFANTRY_MACHINEGUN_2], vec);
-		Angles_Vectors (vec, forward, NULL, NULL);
+		(Entity->State.GetAngles() - DeathAimAngles[flash_number-MZ2_INFANTRY_MACHINEGUN_2]).ToVectors (&forward, NULL, NULL);
 	}
 
 	MonsterFireBullet (start, forward, 3, 4, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, flash_number);
@@ -321,7 +316,7 @@ CFrame InfantryFramesDeath1 [] =
 	CFrame (&CMonster::AI_Move, 3),
 	CFrame (&CMonster::AI_Move, 1),
 	CFrame (&CMonster::AI_Move, 1),
-	CFrame (&CMonster::AI_Move, -20),
+	CFrame (&CMonster::AI_Move, -2),
 	CFrame (&CMonster::AI_Move, 2),
 	CFrame (&CMonster::AI_Move, 2),
 	CFrame (&CMonster::AI_Move, 9),
@@ -551,7 +546,7 @@ void CInfantry::Swing ()
 
 void CInfantry::Smack ()
 {
-	vec3_t	aim = {80, 0, 0};
+	static vec3f	aim (MELEE_DISTANCE, 0, 0);
 	if (CMeleeWeapon::Fire (Entity, aim, (5 + (rand() % 5)), 50))
 		Entity->PlaySound (CHAN_WEAPON, SoundPunchHit);
 }

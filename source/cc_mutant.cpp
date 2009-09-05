@@ -314,22 +314,18 @@ void CMutant::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 		return;
 	}
 
-	if (other->gameEntity->takedamage)
+	if (other->EntityFlags & ENT_HURTABLE)
 	{
 		if (Vec3Length(Entity->gameEntity->velocity) > 400)
 		{
-			vec3_t	point;
-			vec3_t	normal;
+			vec3f	normal (Entity->gameEntity->velocity);
+			normal.Normalize();
 
-			Vec3Copy (Entity->gameEntity->velocity, normal);
-			VectorNormalizeFastf(normal);
-
-			vec3_t origin;
-			Entity->State.GetOrigin ();
-			Vec3MA (origin, Entity->GetMaxs().X, normal, point);
+			vec3f origin = Entity->State.GetOrigin();
+			vec3f point = origin.MultiplyAngles (Entity->GetMaxs().X, normal);
 
 			int damage = 40 + 10 * random();
-			T_Damage (other->gameEntity, Entity->gameEntity, Entity->gameEntity, Entity->gameEntity->velocity, point, normal, damage, damage, 0, MOD_UNKNOWN);
+			dynamic_cast<CHurtableEntity*>(other)->TakeDamage (Entity, Entity, Entity->gameEntity->velocity, point, normal, damage, damage, 0, MOD_UNKNOWN);
 		}
 	}
 

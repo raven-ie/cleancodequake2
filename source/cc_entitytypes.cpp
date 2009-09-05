@@ -45,6 +45,408 @@ CBaseEntity(Index)
 	EntityFlags |= ENT_HURTABLE;
 };
 
+char *ClientTeam (CPlayerEntity *ent)
+{
+	char		*p;
+	static char	value[512];
+
+	value[0] = 0;
+
+	Q_strncpyz(value, Info_ValueForKey (ent->Client.pers.userinfo, "skin"), sizeof(value));
+	p = strchr(value, '/');
+	if (!p)
+		return value;
+
+	if (dmFlags.dfModelTeams)
+	{
+		*p = 0;
+		return value;
+	}
+
+	// if ((int)(dmflags->value) & DF_SKINTEAMS)
+	return ++p;
+}
+
+bool OnSameTeam (CPlayerEntity *ent1, CPlayerEntity *ent2)
+{
+	char	ent1Team [512];
+	char	ent2Team [512];
+
+	if (!(dmFlags.dfSkinTeams || dmFlags.dfModelTeams))
+		return false;
+
+	Q_strncpyz (ent1Team, ClientTeam (ent1), sizeof(ent1Team));
+	Q_strncpyz (ent2Team, ClientTeam (ent2), sizeof(ent2Team));
+
+	if (strcmp(ent1Team, ent2Team) == 0)
+		return true;
+	return false;
+}
+
+bool CHurtableEntity::CanDamage (CBaseEntity *inflictor)
+{
+// bmodels need special checking because their origin is 0,0,0
+	if ((EntityFlags & ENT_PHYSICS) && ((dynamic_cast<CPhysicsEntity*>(this))->PhysicsType == PHYSICS_PUSH))
+	{
+		vec3f dest = GetAbsMin() + GetAbsMax();
+		dest.Scale (0.5f);
+		CTrace trace (inflictor->State.GetOrigin(), dest, inflictor->gameEntity, CONTENTS_MASK_SOLID);
+		if (trace.fraction == 1.0 || trace.Ent == this)
+			return true;
+		return false;
+	}
+	
+	static const vec3f additions[] = 
+	{
+		vec3f(0, 0, 0),
+		vec3f(15, 15, 0),
+		vec3f(15, -15, 0),
+		vec3f(-15, 15, 0),
+		vec3f(-15, -15, 0)
+	};
+
+	for (int i = 0; i < 5; i++)
+	{
+		CTrace trace (inflictor->State.GetOrigin(), State.GetOrigin() + additions[i], inflictor->gameEntity, CONTENTS_MASK_SOLID);
+		if (trace.fraction == 1.0)
+			return true;
+	};
+
+	return false;
+}
+
+bool CHurtableEntity::CheckTeamDamage (CBaseEntity *attacker)
+{
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	if ((game.mode & GAME_CTF) && (EntityFlags & ENT_PLAYER) && (attacker->EntityFlags & ENT_PLAYER))
+	{
+		CPlayerEntity *Targ = dynamic_cast<CPlayerEntity*>(this);
+		CPlayerEntity *Attacker = dynamic_cast<CPlayerEntity*>(attacker);
+		if (Targ->Client.resp.ctf_team == Attacker->Client.resp.ctf_team &&
+			(this != attacker))
+			return true;
+	}
+//ZOID
+#endif
+
+	return false;
+}
+
+int CHurtableEntity::CheckPowerArmor (vec3f &point, vec3f &normal, int damage, int dflags)
+{
+	if (!damage)
+		return 0;
+
+	if (dflags & DAMAGE_NO_ARMOR)
+		return 0;
+
+	static const int	index = NItems::Cells->GetIndex();
+
+	int			power_armor_type, damagePerCell, pa_te_type, power = 0, power_used;
+
+	bool		IsClient = !!(EntityFlags & ENT_PLAYER),
+				IsMonster = !!(EntityFlags & ENT_MONSTER);
+	CPlayerEntity	*Player = (IsClient) ? dynamic_cast<CPlayerEntity*>(this) : NULL;
+	CMonsterEntity	*Monster = (IsMonster) ? dynamic_cast<CMonsterEntity*>(this) : NULL;
+
+	if (IsClient)
+	{
+		power_armor_type = Player->PowerArmorType ();
+		if (power_armor_type != POWER_ARMOR_NONE)
+			power = Player->Client.pers.Inventory.Has(index);
+	}
+	else if (IsMonster)
+	{
+		power_armor_type = Monster->Monster->PowerArmorType;
+		power = Monster->Monster->PowerArmorPower;
+	}
+	else
+		return 0;
+
+	if (!power)
+		return 0;
+
+	switch (power_armor_type)
+	{
+	case POWER_ARMOR_NONE:
+	default:
+		return 0;
+	case POWER_ARMOR_SCREEN:
+		{
+			vec3f		vec, forward;
+
+			// only works if damage point is in front
+			State.GetAngles().ToVectors(&forward, NULL, NULL);
+			vec = point - State.GetOrigin();
+			vec.Normalize ();
+			if (vec.Dot (forward) <= 0.3)
+				return 0;
+
+			damagePerCell = 1;
+			pa_te_type = TE_SCREEN_SPARKS;
+			damage = damage / 3;
+		}
+		break;
+	case POWER_ARMOR_SHIELD:
+		damagePerCell = 2;
+		pa_te_type = TE_SHIELD_SPARKS;
+		damage = (2 * damage) / 3;
+		break;
+	};
+
+	int save = power * damagePerCell;
+	if (!save)
+		return 0;
+	if (save > damage)
+		save = damage;
+
+	CTempEnt_Splashes::ShieldSparks (point, normal, (pa_te_type == TE_SCREEN_SPARKS) ? true : false);
+	gameEntity->powerarmor_time = level.framenum + 2;
+
+	power_used = save / damagePerCell;
+	if (!power_used)
+		power_used = 1;
+
+	if (IsClient)
+		Player->Client.pers.Inventory.Remove(index, power_used);
+	else if (IsMonster)
+		Monster->Monster->PowerArmorPower -= power_used;
+	return save;
+}
+
+void CHurtableEntity::Killed (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
+{
+	if (gameEntity->health < -999)
+		gameEntity->health = -999;
+
+	gameEntity->enemy = attacker->gameEntity;
+
+	if ((gameEntity->deadflag != DEAD_DEAD) && (EntityFlags & ENT_MONSTER))
+	{
+		if (!((dynamic_cast<CMonsterEntity*>(this))->Monster->AIFlags & AI_GOOD_GUY))
+		{
+			level.killed_monsters++;
+			if ((game.mode == GAME_COOPERATIVE) && (attacker->EntityFlags & ENT_PLAYER))
+				(dynamic_cast<CPlayerEntity*>(attacker))->Client.resp.score++;
+			// medics won't heal monsters that they kill themselves
+			if (strcmp(attacker->gameEntity->classname, "monster_medic") == 0)
+				SetOwner (attacker);
+		}
+	}
+
+	if ((EntityFlags & ENT_MONSTER) && (gameEntity->deadflag != DEAD_DEAD))
+	{
+		if (EntityFlags & ENT_TOUCHABLE)
+			(dynamic_cast<CTouchableEntity*>(this))->Touchable = false;
+		if (EntityFlags & ENT_MONSTER)
+			(dynamic_cast<CMonsterEntity*>(this))->Monster->MonsterDeathUse();
+	}
+
+	// Too much checking?
+	if ((EntityFlags & ENT_HURTABLE) && inflictor && attacker)
+		(dynamic_cast<CHurtableEntity*>(this))->Die (inflictor, attacker, damage, point);
+}
+
+void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
+								vec3f dir, vec3f point, vec3f normal, int damage,
+								int knockback, int dflags, EMeansOfDeath mod)
+{
+	int			take;
+	int			save;
+	int			asave = 0;
+	int			psave = 0;
+
+	// Needed?
+	if (!gameEntity->takedamage)
+		return;
+
+	// friendly fire avoidance
+	// if enabled you can't hurt teammates (but you can hurt yourself)
+	// knockback still occurs
+	if ((this != attacker) && ((game.mode & GAME_DEATHMATCH) && (dmFlags.dfSkinTeams || dmFlags.dfModelTeams) || game.mode == GAME_COOPERATIVE))
+	{
+		if ((EntityFlags & ENT_PLAYER) && (attacker->EntityFlags & ENT_PLAYER))
+		{
+			if (OnSameTeam (dynamic_cast<CPlayerEntity*>(this), dynamic_cast<CPlayerEntity*>(attacker)))
+			{
+				if (dmFlags.dfNoFriendlyFire)
+					damage = 0;
+				else
+					mod |= MOD_FRIENDLY_FIRE;
+			}
+		}
+	}
+	meansOfDeath = mod;
+
+	// easy mode takes half damage
+	if (skill->Integer() == 0 && !(game.mode & GAME_DEATHMATCH) && (EntityFlags & ENT_PLAYER))
+	{
+		damage *= 0.5;
+		if (!damage)
+			damage = 1;
+	}
+
+	bool isClient = !!(EntityFlags & ENT_PLAYER);
+	CClient *Client = (isClient) ? &(dynamic_cast<CPlayerEntity*>(this)->Client) : NULL;
+
+	dir.Normalize ();
+
+// bonus damage for suprising a monster
+	if (!(dflags & DAMAGE_RADIUS) && (EntityFlags & ENT_MONSTER) && (attacker->EntityFlags & ENT_PLAYER) && (!gameEntity->enemy) && (gameEntity->health > 0))
+		damage *= 2;
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+//strength tech
+	if ((game.mode & GAME_CTF) && (attacker->EntityFlags & ENT_PLAYER))
+		damage = (dynamic_cast<CPlayerEntity*>(attacker))->CTFApplyStrength(damage);
+//ZOID
+#endif
+
+	if (gameEntity->flags & FL_NO_KNOCKBACK)
+		knockback = 0;
+
+// figure momentum add
+	if (knockback && !(dflags & DAMAGE_NO_KNOCKBACK))
+	{
+		vec3f	kvel = dir;
+		const float	mass = Clamp<float> (gameEntity->mass, 50.0f, gameEntity->mass);
+
+		if (isClient && (attacker == this))
+			kvel.Scale (1600.0 * (float)knockback / mass); // the rocket jump hack...
+		else
+			kvel.Scale (500.0 * (float)knockback / mass);
+
+		Vec3Add (gameEntity->velocity, kvel, gameEntity->velocity);
+	}
+
+	take = damage;
+	save = 0;
+
+	// check for godmode
+	if ( (gameEntity->flags & FL_GODMODE) && !(dflags & DAMAGE_NO_PROTECTION) )
+	{
+		take = 0;
+		save = damage;
+		CTempEnt_Splashes::Sparks (point, normal, (dflags & DAMAGE_BULLET) ? CTempEnt_Splashes::STBulletSparks : CTempEnt_Splashes::STSparks, CTempEnt_Splashes::SPTSparks);
+	}
+
+	// check for invincibility
+	if ((isClient && (Client->invincible_framenum > level.framenum) ) && !(dflags & DAMAGE_NO_PROTECTION))
+	{
+		if (gameEntity->pain_debounce_time < level.framenum)
+		{
+			PlaySound (CHAN_ITEM, SoundIndex("items/protect4.wav"), 1, ATTN_NORM);
+			gameEntity->pain_debounce_time = level.framenum + 20;
+		}
+		take = 0;
+		save = damage;
+	}
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+//team armor protect
+	if ((game.mode & GAME_CTF) && isClient && (attacker->EntityFlags & ENT_PLAYER) &&
+		(Client->resp.ctf_team == (dynamic_cast<CPlayerEntity*>(attacker))->Client.resp.ctf_team) &&
+		(this != attacker) && dmFlags.dfCtfArmorProtect)
+		psave = asave = 0;
+	else
+	{
+//ZOID
+#endif
+		psave = CheckPowerArmor (point, normal, take, dflags);
+		take -= psave;
+
+		if (isClient)
+		{
+			if (Client->pers.Armor)
+			{
+				asave = Client->pers.Armor->CheckArmor (dynamic_cast<CPlayerEntity*>(this), point, normal, take, dflags);
+				take -= asave;
+			}
+		}
+#ifdef CLEANCTF_ENABLED
+	}
+#endif
+
+	//treat cheat/powerup savings the same as armor
+	asave += save;
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+//resistance tech
+	if (isClient && (game.mode & GAME_CTF))
+		take = (dynamic_cast<CPlayerEntity*>(this))->CTFApplyResistance(take);
+//ZOID
+#endif
+
+	// team damage avoidance
+	if (!(dflags & DAMAGE_NO_PROTECTION) && CheckTeamDamage (attacker))
+		return;
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	if ((game.mode & GAME_CTF) && (isClient && (attacker->EntityFlags & ENT_PLAYER)))
+		CTFCheckHurtCarrier((dynamic_cast<CPlayerEntity*>(this)), (dynamic_cast<CPlayerEntity*>(attacker)));
+//ZOID
+#endif
+
+// do the damage
+	if (take)
+	{
+		if ((EntityFlags & ENT_MONSTER) || (isClient))
+			CTempEnt_Splashes::Blood (point, normal);
+		else
+			CTempEnt_Splashes::Sparks (point, normal, (dflags & DAMAGE_BULLET) ? CTempEnt_Splashes::STBulletSparks : CTempEnt_Splashes::STSparks, CTempEnt_Splashes::SPTSparks);
+
+		gameEntity->health -= take;
+			
+		if (gameEntity->health <= 0)
+		{
+			if ((EntityFlags & ENT_MONSTER) || (isClient))
+				gameEntity->flags |= FL_NO_KNOCKBACK;
+			Killed (inflictor, attacker, take, point);
+			return;
+		}
+	}
+
+	if ((EntityFlags & ENT_MONSTER))
+	{
+		CMonster *Monster = (dynamic_cast<CMonsterEntity*>(this))->Monster;
+		Monster->ReactToDamage (attacker);
+		if (!(Monster->AIFlags & AI_DUCKED) && take)
+		{
+			Pain (attacker, knockback, take);
+			if (skill->Integer() == 3)
+				gameEntity->pain_debounce_time = level.framenum + 50;
+		}
+	}
+	else if (take)
+		Pain (attacker, knockback, take);
+
+	// add to the damage inflicted on a player this frame
+	// the total will be turned into screen blends and view angle kicks
+	// at the end of the frame
+	if (isClient)
+	{
+		Client->damage_parmor += psave;
+		Client->damage_armor += asave;
+		Client->damage_blood += take;
+		Client->damage_knockback += knockback;
+		Client->DamageFrom = point;
+	}
+}
+	
+void CHurtableEntity::TakeDamage (CBaseEntity *targ, CBaseEntity *inflictor,
+								CBaseEntity *attacker, vec3f dir, vec3f point,
+								vec3f normal, int damage, int knockback,
+								int dflags, EMeansOfDeath mod)
+{
+	if (targ->EntityFlags & ENT_HURTABLE)
+		(dynamic_cast<CHurtableEntity*>(targ))->TakeDamage (inflictor, attacker, dir, point, normal, damage, knockback, dflags, mod);
+}
+
 CThinkableEntity::CThinkableEntity () :
 CBaseEntity()
 {
@@ -720,7 +1122,7 @@ bool CStepPhysics::Run ()
 			return false;
 
 		if (gameEntity->groundentity && !wasonground && hitsound)
-			PlaySoundFrom (gameEntity, CHAN_AUTO, SoundIndex("world/land.wav"));
+			PlaySound (CHAN_AUTO, SoundIndex("world/land.wav"));
 	}
 	return true;
 }

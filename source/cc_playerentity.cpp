@@ -938,11 +938,11 @@ inline void CPlayerEntity::DamageFeedback (vec3_t forward, vec3_t right, vec3_t 
 		gameEntity->pain_debounce_time = level.framenum + 7;
 
 		int l = Clamp<int>(((floorf((Max<>(0, gameEntity->health-1)) / 25))), 0, 3);
-		PlaySoundFrom (gameEntity, CHAN_VOICE, gMedia.Player.Pain[l][(rand()&1)]);
+		PlaySound (CHAN_VOICE, gMedia.Player.Pain[l][(rand()&1)]);
 	}
 
 	// the total alpha of the blend is always proportional to count
-	int Alpha = Client.damage_blend.A + count*3;
+	int Alpha = Client.DamageBlend.A + count*3;
 	if (Alpha < 51)
 		Alpha = 51;
 	if (Alpha > 153)
@@ -950,7 +950,7 @@ inline void CPlayerEntity::DamageFeedback (vec3_t forward, vec3_t right, vec3_t 
 
 	// the color of the blend will vary based on how much was absorbed
 	// by different armors
-	Client.damage_blend.Set (
+	Client.DamageBlend.Set (
 							(BloodColor.R * ((float)Client.damage_blood/(float)realcount)) + (ArmorColor.R * ((float)Client.damage_armor/(float)realcount)) + (PowerColor.R * ((float)Client.damage_parmor/(float)realcount)),
 							(BloodColor.G * ((float)Client.damage_blood/(float)realcount)) + (ArmorColor.G * ((float)Client.damage_armor/(float)realcount)) + (PowerColor.G * ((float)Client.damage_parmor/(float)realcount)),
 							(BloodColor.B * ((float)Client.damage_blood/(float)realcount)) + (ArmorColor.B * ((float)Client.damage_armor/(float)realcount)) + (PowerColor.B * ((float)Client.damage_parmor/(float)realcount)),
@@ -962,24 +962,23 @@ inline void CPlayerEntity::DamageFeedback (vec3_t forward, vec3_t right, vec3_t 
 	float kick = abs(Client.damage_knockback);
 	if (kick && (gameEntity->health > 0))	// kick of 0 means no view adjust at all
 	{
-		vec3_t v;
+		vec3f v;
 		float side;
 
-		kick = kick * 100 / gameEntity->health;
+		kick *= 100 / gameEntity->health;
 
 		if (kick < count*0.5)
 			kick = count*0.5;
 		if (kick > 50)
 			kick = 50;
 
-		State.GetOrigin (v);
-		Vec3Subtract (Client.damage_from, v, v);
-		VectorNormalizef (v, v);
+		v = Client.DamageFrom - State.GetOrigin ();
+		v.Normalize ();
 		
-		side = Dot3Product (v, right);
+		side = v.Dot (right);
 		Client.v_dmg_roll = kick*side*0.3;
 		
-		side = -Dot3Product (v, forward);
+		side = -v.Dot (forward);
 		Client.v_dmg_pitch = kick*side*0.3;
 
 		Client.v_dmg_time = level.framenum + DAMAGE_TIME;
@@ -1003,8 +1002,8 @@ inline void CPlayerEntity::CalcViewOffset (vec3_t forward, vec3_t right, vec3_t 
 {
 	float		bob;
 	float		ratio;
-	vec3_t		v = {0,0,0};
-	vec3_t		angles = {0,0,0};
+	vec3f		v (0, 0, 0);
+	vec3f		angles (0, 0, 0);
 
 	// if dead, fix the angle and don't add any kick
 	if (gameEntity->deadflag)
@@ -1015,7 +1014,7 @@ inline void CPlayerEntity::CalcViewOffset (vec3_t forward, vec3_t right, vec3_t 
 	else
 	{
 		// Base angles
-		Vec3Copy (Client.kick_angles, angles);
+		angles = Client.KickAngles;
 
 		// add angles based on damage kick
 		ratio = (float)(Client.v_dmg_time - level.framenum) / DAMAGE_TIME;
@@ -1025,34 +1024,34 @@ inline void CPlayerEntity::CalcViewOffset (vec3_t forward, vec3_t right, vec3_t 
 			Client.v_dmg_pitch = 0;
 			Client.v_dmg_roll = 0;
 		}
-		angles[PITCH] += ratio * Client.v_dmg_pitch;
-		angles[ROLL] += ratio * Client.v_dmg_roll;
+		angles.X += ratio * Client.v_dmg_pitch;
+		angles.Z += ratio * Client.v_dmg_roll;
 
 		// add pitch based on fall kick
 		ratio = (float)(Client.fall_time - level.framenum) / FALL_TIME;
 		if (ratio < 0)
 			ratio = 0;
-		angles[PITCH] += ratio * Client.fall_value;
+		angles.X += ratio * Client.fall_value;
 
 		// add angles based on velocity
 		float delta = Dot3Product (gameEntity->velocity, forward);
-		angles[PITCH] += delta*run_pitch->Float();
+		angles.X += delta*run_pitch->Float();
 		
 		delta = Dot3Product (gameEntity->velocity, right);
-		angles[ROLL] += delta*run_roll->Float();
+		angles.Z += delta*run_roll->Float();
 
 		// add angles based on bob
 
 		delta = bobfracsin * bob_pitch->Float() * xyspeed;
 		if (Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED)
 			delta *= 6;		// crouching
-		angles[PITCH] += delta;
+		angles.X += delta;
 		delta = bobfracsin * bob_roll->Float() * xyspeed;
 		if (Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED)
 			delta *= 6;		// crouching
 		if (bobcycle & 1)
 			delta = -delta;
-		angles[ROLL] += delta;
+		angles.Z += delta;
 
 		Client.PlayerState.SetKickAngles(angles);
 	}
@@ -1060,37 +1059,37 @@ inline void CPlayerEntity::CalcViewOffset (vec3_t forward, vec3_t right, vec3_t 
 //===================================
 
 	// add view height
-	v[2] += gameEntity->viewheight;
+	v.Z += gameEntity->viewheight;
 
 	// add fall height
 	ratio = (float)(Client.fall_time - level.framenum) / FALL_TIME;
 	if (ratio < 0)
 		ratio = 0;
-	v[2] -= ratio * Client.fall_value * 0.4;
+	v.Z -= ratio * Client.fall_value * 0.4;
 
 	// add bob height
 	bob = bobfracsin * xyspeed * bob_up->Float();
 	if (bob > 6)
 		bob = 6;
-	v[2] += bob;
+	v.Z += bob;
 
 	// add kick offset
-	Vec3Add (v, Client.kick_origin, v);
+	v += Client.KickOrigin;
 
 	// absolutely bound offsets
 	// so the view can never be outside the player box
-	if (v[0] < -14)
-		v[0] = -14;
-	else if (v[0] > 14)
-		v[0] = 14;
-	if (v[1] < -14)
-		v[1] = -14;
-	else if (v[1] > 14)
-		v[1] = 14;
-	if (v[2] < -22)
-		v[2] = -22;
-	else if (v[2] > 30)
-		v[2] = 30;
+	if (v.X < -14)
+		v.X = -14;
+	else if (v.X > 14)
+		v.X = 14;
+	if (v.Y < -14)
+		v.Y = -14;
+	else if (v.Y > 14)
+		v.Y = 14;
+	if (v.Z < -22)
+		v.Z = -22;
+	else if (v.Z > 30)
+		v.Z = 30;
 
 	Client.PlayerState.SetViewOffset(v);
 }
@@ -1207,7 +1206,7 @@ inline void CPlayerEntity::CalcBlend ()
 		int remaining = Client.quad_framenum - level.framenum;
 
 		if (remaining == 30)	// beginning to fade
-			PlaySoundFrom(gameEntity, CHAN_ITEM, SoundIndex("items/damage2.wav"));
+			PlaySound (CHAN_ITEM, SoundIndex("items/damage2.wav"));
 
 		if (remaining > 30 || (remaining & 4) )
 			SV_AddBlend (QuadColor, Client.pers.viewBlend);
@@ -1217,7 +1216,7 @@ inline void CPlayerEntity::CalcBlend ()
 		int remaining = Client.invincible_framenum - level.framenum;
 
 		if (remaining == 30)	// beginning to fade
-			PlaySoundFrom(gameEntity, CHAN_ITEM, SoundIndex("items/protect2.wav"));
+			PlaySound (CHAN_ITEM, SoundIndex("items/protect2.wav"));
 
 		if (remaining > 30 || (remaining & 4) )
 			SV_AddBlend (InvulColor, Client.pers.viewBlend);
@@ -1227,7 +1226,7 @@ inline void CPlayerEntity::CalcBlend ()
 		int remaining = Client.enviro_framenum - level.framenum;
 
 		if (remaining == 30)	// beginning to fade
-			PlaySoundFrom(gameEntity, CHAN_ITEM, SoundIndex("items/airout.wav"));
+			PlaySound (CHAN_ITEM, SoundIndex("items/airout.wav"));
 
 		if (remaining > 30 || (remaining & 4) )
 			SV_AddBlend (EnviroColor, Client.pers.viewBlend);
@@ -1237,23 +1236,23 @@ inline void CPlayerEntity::CalcBlend ()
 		int remaining = Client.breather_framenum - level.framenum;
 
 		if (remaining == 30)	// beginning to fade
-			PlaySoundFrom(gameEntity, CHAN_ITEM, SoundIndex("items/airout.wav"));
+			PlaySound (CHAN_ITEM, SoundIndex("items/airout.wav"));
 
 		if (remaining > 30 || (remaining & 4) )
 			SV_AddBlend (BreatherColor, Client.pers.viewBlend);
 	}
 
 	// add for damage
-	if (Client.damage_blend.A)
-		SV_AddBlend (Client.damage_blend, Client.pers.viewBlend);
+	if (Client.DamageBlend.A)
+		SV_AddBlend (Client.DamageBlend, Client.pers.viewBlend);
 
 	// drop the damage value
-	if (Client.damage_blend.A)
+	if (Client.DamageBlend.A)
 	{
-		if (Client.damage_blend.A < 15)
-			Client.damage_blend.A = 0;
+		if (Client.DamageBlend.A < 15)
+			Client.DamageBlend.A = 0;
 		else
-			Client.damage_blend.A -= 15;
+			Client.DamageBlend.A -= 15;
 	}
 
 	// add bonus and drop the value
@@ -1353,15 +1352,10 @@ inline void CPlayerEntity::FallingDamage ()
 		if (damage < 1)
 			damage = 1;
 
-		vec3_t dir;
-		Vec3Set (dir, 0, 0, 1);
+		static vec3f dir (0, 0, 1);
 
 		if (!dmFlags.dfNoFallingDamage )
-		{
-			vec3_t origin;
-			State.GetOrigin(origin);
-			T_Damage (gameEntity, world, world, dir, origin, vec3Origin, damage, 0, 0, MOD_FALLING);
-		}
+			TakeDamage (World, World, dir, State.GetOrigin(), vec3Origin, damage, 0, 0, MOD_FALLING);
 	}
 	else
 	{
@@ -1403,11 +1397,11 @@ inline void CPlayerEntity::WorldEffects ()
 	{
 		PlayerNoise(this, origin, PNOISE_SELF);
 		if (gameEntity->watertype & CONTENTS_LAVA)
-			PlaySoundFrom (gameEntity, CHAN_BODY, SoundIndex("player/lava_in.wav"));
+			PlaySound (CHAN_BODY, SoundIndex("player/lava_in.wav"));
 		else if (gameEntity->watertype & CONTENTS_SLIME)
-			PlaySoundFrom (gameEntity, CHAN_BODY, SoundIndex("player/watr_in.wav"));
+			PlaySound (CHAN_BODY, SoundIndex("player/watr_in.wav"));
 		else if (gameEntity->watertype & CONTENTS_WATER)
-			PlaySoundFrom (gameEntity, CHAN_BODY, SoundIndex("player/watr_in.wav"));
+			PlaySound (CHAN_BODY, SoundIndex("player/watr_in.wav"));
 		gameEntity->flags |= FL_INWATER;
 
 		// clear damage_debounce, so the pain sound will play immediately
@@ -1420,7 +1414,7 @@ inline void CPlayerEntity::WorldEffects ()
 	if (old_waterlevel && ! waterlevel)
 	{
 		PlayerNoise(this, origin, PNOISE_SELF);
-		PlaySoundFrom (gameEntity, CHAN_BODY, SoundIndex("player/watr_out.wav"));
+		PlaySound (CHAN_BODY, SoundIndex("player/watr_out.wav"));
 		gameEntity->flags &= ~FL_INWATER;
 	}
 
@@ -1428,7 +1422,7 @@ inline void CPlayerEntity::WorldEffects ()
 	// check for head just going under water
 	//
 	if (old_waterlevel != 3 && waterlevel == 3)
-		PlaySoundFrom (gameEntity, CHAN_BODY, SoundIndex("player/watr_un.wav"));
+		PlaySound (CHAN_BODY, SoundIndex("player/watr_un.wav"));
 
 	//
 	// check for head just coming out of water
@@ -1437,11 +1431,11 @@ inline void CPlayerEntity::WorldEffects ()
 	{
 		if (AirFinished < level.framenum)
 		{	// gasp for air
-			PlaySoundFrom (gameEntity, CHAN_VOICE, SoundIndex("player/gasp1.wav"));
+			PlaySound (CHAN_VOICE, SoundIndex("player/gasp1.wav"));
 			PlayerNoise(this, origin, PNOISE_SELF);
 		}
 		else  if (AirFinished < level.framenum + 110) // just break surface
-			PlaySoundFrom (gameEntity, CHAN_VOICE, SoundIndex("player/gasp2.wav"));
+			PlaySound (CHAN_VOICE, SoundIndex("player/gasp2.wav"));
 	}
 
 	//
@@ -1456,7 +1450,7 @@ inline void CPlayerEntity::WorldEffects ()
 
 			if (((int)(Client.breather_framenum - level.framenum) % 25) == 0)
 			{
-				PlaySoundFrom (gameEntity, CHAN_AUTO, SoundIndex((!Client.breather_sound) ? "player/u_breath1.wav" : "player/u_breath2.wav"));
+				PlaySound (CHAN_AUTO, SoundIndex((!Client.breather_sound) ? "player/u_breath1.wav" : "player/u_breath2.wav"));
 				Client.breather_sound = !Client.breather_sound;
 				PlayerNoise(this, origin, PNOISE_SELF);
 			}
@@ -1477,13 +1471,13 @@ inline void CPlayerEntity::WorldEffects ()
 
 				// play a gurp sound instead of a normal pain sound
 				if (gameEntity->health <= gameEntity->dmg)
-					PlaySoundFrom (gameEntity, CHAN_VOICE, SoundIndex("player/drown1.wav"));
+					PlaySound (CHAN_VOICE, SoundIndex("player/drown1.wav"));
 				else
-					PlaySoundFrom (gameEntity, CHAN_VOICE, gMedia.Player.Gurp[(rand()&1)]);
+					PlaySound (CHAN_VOICE, gMedia.Player.Gurp[(rand()&1)]);
 
 				gameEntity->pain_debounce_time = level.framenum;
 
-				T_Damage (gameEntity, world, world, vec3Origin, origin, vec3Origin, gameEntity->dmg, 0, DAMAGE_NO_ARMOR, MOD_WATER);
+				TakeDamage (World, World, vec3fOrigin, origin, vec3fOrigin, gameEntity->dmg, 0, DAMAGE_NO_ARMOR, MOD_WATER);
 			}
 		}
 	}
@@ -1504,18 +1498,18 @@ inline void CPlayerEntity::WorldEffects ()
 				&& gameEntity->pain_debounce_time <= level.framenum
 				&& Client.invincible_framenum < level.framenum)
 			{
-				PlaySoundFrom (gameEntity, CHAN_VOICE, SoundIndex((rand()&1) ? "player/burn1.wav" : "player/burn2.wav"));
+				PlaySound (CHAN_VOICE, SoundIndex((rand()&1) ? "player/burn1.wav" : "player/burn2.wav"));
 				gameEntity->pain_debounce_time = level.framenum + 10;
 			}
 
 			// take 1/3 damage with envirosuit
-			T_Damage (gameEntity, world, world, vec3Origin, origin, vec3Origin, (envirosuit) ? 1*waterlevel : 3*waterlevel, 0, 0, MOD_LAVA);
+			TakeDamage (World, World, vec3fOrigin, origin, vec3fOrigin, (envirosuit) ? 1*waterlevel : 3*waterlevel, 0, 0, MOD_LAVA);
 		}
 
 		if (gameEntity->watertype & CONTENTS_SLIME)
 		{
 			if (!envirosuit) // no damage from slime with envirosuit
-				T_Damage (gameEntity, world, world, vec3Origin, origin, vec3Origin, 1*waterlevel, 0, 0, MOD_SLIME);
+				TakeDamage (World, World, vec3fOrigin, origin, vec3fOrigin, 1*waterlevel, 0, 0, MOD_SLIME);
 		}
 	}
 }
@@ -1629,7 +1623,7 @@ inline void CPlayerEntity::SetClientSound ()
 	if (Client.pers.helpchanged && Client.pers.helpchanged <= 3 && !(level.framenum&63) )
 	{
 		Client.pers.helpchanged++;
-		PlaySoundFrom (gameEntity, CHAN_VOICE, SoundIndex ("misc/pc_up.wav"), 1, ATTN_STATIC);
+		PlaySound (CHAN_VOICE, SoundIndex ("misc/pc_up.wav"), 1, ATTN_STATIC);
 	}
 
 	if (gameEntity->waterlevel && (gameEntity->watertype & (CONTENTS_LAVA|CONTENTS_SLIME)))
@@ -1899,8 +1893,8 @@ void CPlayerEntity::EndServerFrame ()
 	Vec3Copy (viewAngles, Client.oldviewangles);
 
 	// clear weapon kicks
-	Vec3Clear (Client.kick_origin);
-	Vec3Clear (Client.kick_angles);
+	Client.KickOrigin.Clear();
+	Client.KickAngles.Clear();
 
 	// if the scoreboard is up, update it
 	if (Client.showscores && !(level.framenum & 31) )
@@ -2227,7 +2221,7 @@ void CPlayerEntity::SetStats ()
 		if (cells == 0)
 		{	// ran out of cells for power armor
 			gameEntity->flags &= ~FL_POWER_ARMOR;
-			PlaySoundFrom(gameEntity, CHAN_ITEM, SoundIndex("misc/power2.wav"));
+			PlaySound (CHAN_ITEM, SoundIndex("misc/power2.wav"));
 			power_armor_type = 0;
 		}
 	}
@@ -2663,9 +2657,9 @@ bool CPlayerEntity::CTFApplyStrengthSound()
 		{
 			Client.ctf_techsndtime = level.framenum + 10;
 			if (Client.quad_framenum > level.framenum)
-				PlaySoundFrom(gameEntity, CHAN_ITEM, SoundIndex("ctf/tech2x.wav"), volume, ATTN_NORM, 0);
+				PlaySound (CHAN_ITEM, SoundIndex("ctf/tech2x.wav"), volume);
 			else
-				PlaySoundFrom(gameEntity, CHAN_ITEM, SoundIndex("ctf/tech2.wav"), volume, ATTN_NORM, 0);
+				PlaySound (CHAN_ITEM, SoundIndex("ctf/tech2.wav"), volume);
 		}
 		return true;
 	}
@@ -2691,7 +2685,7 @@ void CPlayerEntity::CTFApplyHasteSound()
 		Client.ctf_techsndtime < level.framenum)
 	{
 		Client.ctf_techsndtime = level.framenum + 10;
-		PlaySoundFrom(gameEntity, CHAN_ITEM, SoundIndex("ctf/tech3.wav"), volume, ATTN_NORM, 0);
+		PlaySound (CHAN_ITEM, SoundIndex("ctf/tech3.wav"), volume);
 	}
 }
 
@@ -2730,7 +2724,7 @@ void CPlayerEntity::CTFApplyRegeneration()
 			if (Client.silencer_shots)
 				volume = 0.2f;
 
-			PlaySoundFrom(gameEntity, CHAN_ITEM, SoundIndex("ctf/tech4.wav"), volume, ATTN_NORM, 0);
+			PlaySound (CHAN_ITEM, SoundIndex("ctf/tech4.wav"), volume);
 		}
 	}
 }
@@ -2752,7 +2746,7 @@ int CPlayerEntity::CTFApplyResistance(int dmg)
 	if (dmg && (Client.pers.Tech == NItems::Resistance))
 	{
 		// make noise
-	   	PlaySoundFrom(gameEntity, CHAN_ITEM, SoundIndex("ctf/tech1.wav"), volume, ATTN_NORM, 0);
+	   	PlaySound (CHAN_ITEM, SoundIndex("ctf/tech1.wav"), volume);
 		return dmg / 2;
 	}
 	return dmg;
@@ -2930,7 +2924,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 	State.GetOrigin (origin);
 	if (gameEntity->groundentity && !pm.groundEntity && (pm.cmd.upMove >= 10) && (pm.waterLevel == 0))
 	{
-		PlaySoundFrom(gameEntity, CHAN_VOICE, gMedia.Player.Jump);
+		PlaySound (CHAN_VOICE, gMedia.Player.Jump);
 		PlayerNoise(this, origin, PNOISE_SELF);
 	}
 
@@ -3389,7 +3383,7 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 
 	if (gameEntity->health < -40)
 	{	// gib
-		PlaySoundFrom (gameEntity, CHAN_BODY, SoundIndex ("misc/udeath.wav"));
+		PlaySound (CHAN_BODY, SoundIndex ("misc/udeath.wav"));
 		for (int n = 0; n < 4; n++)
 			CGibEntity::Spawn (this, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 		TossHead (damage);
@@ -3432,7 +3426,7 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 					break;
 				}
 			}
-			PlaySoundFrom (gameEntity, CHAN_VOICE, gMedia.Player.Death[(rand()%4)]);
+			PlaySound (CHAN_VOICE, gMedia.Player.Death[(rand()%4)]);
 		}
 	}
 

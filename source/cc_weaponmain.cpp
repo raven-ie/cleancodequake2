@@ -247,7 +247,7 @@ void CWeapon::OutOfAmmo (CPlayerEntity *Player)
 	// Doesn't affect pain anymore!
 	if (level.framenum >= Player->gameEntity->damage_debounce_time)
 	{
-		PlaySoundFrom(Player->gameEntity, CHAN_AUTO, SoundIndex("weapons/noammo.wav"));
+		Player->PlaySound (CHAN_AUTO, SoundIndex("weapons/noammo.wav"));
 		Player->gameEntity->damage_debounce_time = level.framenum + 10;
 	}
 }
@@ -377,10 +377,10 @@ void CWeapon::AttackSound(CPlayerEntity *Player)
 		Player->CTFApplyHasteSound();
 
 		if (!Player->CTFApplyStrengthSound() && isQuad)
-			PlaySoundFrom(Player->gameEntity, CHAN_ITEM, SoundIndex("items/damage3.wav"));
+			Player->PlaySound (CHAN_ITEM, SoundIndex("items/damage3.wav"));
 	}
 	else if (isQuad)
-		PlaySoundFrom(Player->gameEntity, CHAN_ITEM, SoundIndex("items/damage3.wav"));
+		Player->PlaySound (CHAN_ITEM, SoundIndex("items/damage3.wav"));
 //ZOID
 #endif
 }

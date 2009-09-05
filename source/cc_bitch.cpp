@@ -548,57 +548,44 @@ void CMaiden::Slash ()
 void CMaiden::Rocket ()
 {
 #ifdef MONSTER_USE_ROGUE_AI
-	vec3_t	forward, right;
-	vec3_t	start;
-	vec3_t	dir;
-	vec3_t	vec;
-	int		rocketSpeed;
-	vec3_t	target;
+	vec3f	forward, right, start, dir, vec, target;
 	bool blindfire = (AIFlags & AI_MANUAL_STEERING) ? true : false;
 
-	vec3_t angles, origin;
-	Entity->State.GetAngles(angles);
-	Entity->State.GetOrigin(origin);
-	Angles_Vectors (angles, forward, right, NULL);
-	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_CHICK_ROCKET_1], forward, right, start);
+	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
+	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_CHICK_ROCKET_1], forward, right, start);
 
-	rocketSpeed = 500 + (100 * skill->Integer());	// PGM rock & roll.... :)
+	int rocketSpeed = 500 + (100 * skill->Integer());	// PGM rock & roll.... :)
 
-	if (blindfire)
-		Vec3Copy (BlindFireTarget, target);
-	else
-		Vec3Copy (Entity->gameEntity->enemy->state.origin, target);
-
+	target = (blindfire) ? BlindFireTarget : Entity->gameEntity->enemy->state.origin;
 	if (blindfire)
 	{
-		Vec3Copy (target, vec);
-		Vec3Subtract (vec, start, dir);
+		vec = target;
+		dir = vec - start;
 	}
 	// pmm
 	// don't shoot at feet if they're above where i'm shooting from.
 	else if(random() < 0.33 || (start[2] < Entity->gameEntity->enemy->absMin[2]))
 	{
-		Vec3Copy (target, vec);
-		vec[2] += Entity->gameEntity->enemy->viewheight;
-		Vec3Subtract (vec, start, dir);
+		vec = target;
+		vec.Z += Entity->gameEntity->enemy->viewheight;
+		dir = vec - start;
 	}
 	else
 	{
-		Vec3Copy (target, vec);
-		vec[2] = Entity->gameEntity->enemy->absMin[2];
-		Vec3Subtract (vec, start, dir);
+		vec = target;
+		vec.Z = Entity->gameEntity->enemy->absMin[2];
+		dir = vec - start;
 	}
 
 	// Lead target  (not when blindfiring)
 	// 20, 35, 50, 65 chance of leading
 	if((!blindfire) && ((random() < (0.2 + ((3 - skill->Integer()) * 0.15)))))
 	{
-		Vec3MA(vec, Vec3Length (dir)/rocketSpeed, Entity->gameEntity->enemy->velocity, vec);
-		Vec3Subtract(vec, start, dir);
+		vec = vec.MultiplyAngles (dir.Length() / rocketSpeed, Entity->gameEntity->enemy->velocity);
+		dir = vec - start;
 	}
 
-
-	VectorNormalizeFastf (dir);
+	dir.Normalize ();
 
 	// pmm blindfire doesn't check target (done in checkattack)
 	// paranoia, make sure we're not shooting a target right next to us
@@ -613,20 +600,20 @@ void CMaiden::Rocket ()
 			// geez, this is bad.  she's avoiding about 80% of her blindfires due to hitting things.
 			// hunt around for a good shot
 			// try shifting the target to the left a little (to help counter her large offset)
-			Vec3Copy (target, vec);
-			Vec3MA (vec, -10, right, vec);
-			Vec3Subtract(vec, start, dir);
-			VectorNormalizeFastf (dir);
+			vec = target;
+			vec = vec.MultiplyAngles (-10, right);
+			dir = vec - start;
+			dir.NormalizeFast();
 			trace = CTrace(start, vec, Entity->gameEntity, CONTENTS_MASK_SHOT);
 			if (!(trace.startSolid || trace.allSolid || (trace.fraction < 0.5)))
 				MonsterFireRocket (start, dir, 50, rocketSpeed, MZ2_CHICK_ROCKET_1);
 			else 
 			{
 				// ok, that failed.  try to the right
-				Vec3Copy (target, vec);
-				Vec3MA (vec, 10, right, vec);
-				Vec3Subtract(vec, start, dir);
-				VectorNormalizeFastf (dir);
+				vec = target;
+				vec = vec.MultiplyAngles (10, right);
+				dir = vec - start;
+				dir.NormalizeFast();
 				trace = CTrace(start, vec, Entity->gameEntity, CONTENTS_MASK_SHOT);
 				if (!(trace.startSolid || trace.allSolid || (trace.fraction < 0.5)))
 					MonsterFireRocket (start, dir, 50, rocketSpeed, MZ2_CHICK_ROCKET_1);
@@ -636,21 +623,15 @@ void CMaiden::Rocket ()
 	else
 		MonsterFireRocket (start, dir, 50, rocketSpeed, MZ2_CHICK_ROCKET_1);
 #else
-	vec3_t	forward, right;
-	vec3_t	start;
-	vec3_t	dir;
-	vec3_t	vec;
+	vec3f	forward, right, start, dir, vec;
 
-	vec3_t angles, origin;
-	Entity->State.GetAngles(angles);
-	Entity->State.GetOrigin(origin);
-	Angles_Vectors (angles, forward, right, NULL);
-	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_CHICK_ROCKET_1], forward, right, start);
+	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
+	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_CHICK_ROCKET_1], forward, right, start);
 
-	Vec3Copy (Entity->gameEntity->enemy->state.origin, vec);
-	vec[2] += Entity->gameEntity->enemy->viewheight;
-	Vec3Subtract (vec, start, dir);
-	VectorNormalizef (dir, dir);
+	vec = Entity->gameEntity->enemy->state.origin;
+	vec.Z += Entity->gameEntity->enemy->viewheight;
+	dir = vec - start;
+	dir.NormalizeFastf ();
 
 	MonsterFireRocket (start, dir, 50, 500, MZ2_CHICK_ROCKET_1);
 #endif

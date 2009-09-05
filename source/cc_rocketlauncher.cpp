@@ -67,18 +67,16 @@ bool CRocketLauncher::CanStopFidgetting (CPlayerEntity *ent)
 
 void CRocketLauncher::Fire (CPlayerEntity *ent)
 {
-	vec3f	offset (8, 8, ent->gameEntity->viewheight-8), start;
-	vec3f	forward, right;
-	const int	damage = (isQuad) ? (400 + (int)(random() * 80.0)) : (100 + (int)(random() * 20.0));
+	vec3f	offset (8, 8, ent->gameEntity->viewheight-8), start, forward, right;
+	const int	damage = (isQuad) ? (400 + (int)(random() * 80.0)) : (100 + (int)(random() * 20.0)),
+				radius_damage = (isQuad) ? 480 : 120;
 	const float	damage_radius = 120;
-	const int	radius_damage = (isQuad) ? 480 : 120;
 
 	ent->Client.ViewAngle.ToVectors (&forward, &right, NULL);
 
-	vec3f kickOrigin = forward;
-	kickOrigin.Scale (-2);
-	Vec3Copy (kickOrigin, ent->Client.kick_origin);
-	ent->Client.kick_angles[0] = -1;
+	ent->Client.KickOrigin = forward;
+	ent->Client.KickOrigin.Scale (-2);
+	ent->Client.KickAngles.X = -1;
 
 	ent->P_ProjectSource (offset, forward, right, start);
 	CRocket::Spawn (ent, start, forward, damage, 650, damage_radius, radius_damage);

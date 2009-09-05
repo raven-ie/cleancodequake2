@@ -73,10 +73,12 @@ void CMedic::AbortHeal (bool ChangeFrame, bool Gib, bool Mark)
 	{
 //		if ((g_showlogic) && (g_showlogic->value))
 //			gi.dprintf ("%s - gibbing bad heal target", self->classname);
+		CBaseEntity *Enemy = Entity->gameEntity->enemy->Entity;
 
-		int hurt = (Entity->gameEntity->enemy->gib_health) ? -Entity->gameEntity->enemy->gib_health : 500;
+		int hurt = (Enemy->gameEntity->gib_health) ? -Enemy->gameEntity->gib_health : 500;
 
-		T_Damage (Entity->gameEntity->enemy, Entity->gameEntity, Entity->gameEntity, vec3Origin, Entity->gameEntity->enemy->state.origin,
+		if (Enemy->EntityFlags & ENT_HURTABLE)
+		dynamic_cast<CHurtableEntity*>(Enemy)->TakeDamage (Entity, Entity, vec3fOrigin, Enemy->State.GetOrigin(),
 					PainNormal, hurt, 0, 0, MOD_UNKNOWN);
 	}
 	// clean up self
@@ -609,7 +611,7 @@ void CMedic::CableAttack ()
 	switch (Entity->State.GetFrame())
 	{
 	case FRAME_attack43:
-		PlaySoundFrom (Entity->gameEntity, CHAN_AUTO, SoundHookHit, 1, ATTN_NORM, 0);
+		Entity->PlaySound (CHAN_AUTO, SoundHookHit);
 		(dynamic_cast<CMonsterEntity*>(Entity->gameEntity->enemy->Entity))->Monster->AIFlags |= AI_RESURRECTING;
 		break;
 	case FRAME_attack50:

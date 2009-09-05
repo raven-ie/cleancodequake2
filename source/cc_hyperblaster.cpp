@@ -79,26 +79,21 @@ void CHyperBlaster::Fire (CPlayerEntity *ent)
 		}
 		else
 		{
-			// I replaced this part with a table because they are constant.
-			vec3f offset = hyperblasterOffsetTable[ent->Client.PlayerState.GetGunFrame() - 6];
-
-			const int effect = ((ent->Client.PlayerState.GetGunFrame() == 6) || (ent->Client.PlayerState.GetGunFrame() == 9)) ? EF_HYPERBLASTER : 0;
-			const int damage = (game.mode & GAME_DEATHMATCH) ?
+			const int	effect = ((ent->Client.PlayerState.GetGunFrame() == 6) || (ent->Client.PlayerState.GetGunFrame() == 9)) ? EF_HYPERBLASTER : 0,
+						damage = (game.mode & GAME_DEATHMATCH) ?
 				(isQuad) ? 60 : 15
 				:
 				(isQuad) ? 80 : 20;
 
-			vec3f	forward, right;
-			vec3f	start;
+			vec3f	forward, right, start;
 
 			ent->Client.ViewAngle.ToVectors (&forward, &right, NULL);
-			vec3f noffset = vec3f(24, 8, ent->gameEntity->viewheight-8) + offset;
-			ent->P_ProjectSource (noffset, forward, right, start);
+			// I replaced this part with a table because they are constant.
+			ent->P_ProjectSource (vec3f(24, 8, ent->gameEntity->viewheight-8) + hyperblasterOffsetTable[ent->Client.PlayerState.GetGunFrame() - 6], forward, right, start);
 
-			vec3f kickOrigin = forward;
-			kickOrigin.Scale (-2);
-			Vec3Copy (kickOrigin, ent->Client.kick_origin);
-			ent->Client.kick_angles[0] = -1;
+			ent->Client.KickOrigin = forward;
+			ent->Client.KickOrigin.Scale (-2);
+			ent->Client.KickAngles.X = -1;
 
 			CBlasterProjectile::Spawn (ent, start, forward, damage, 1000, effect, true);
 
@@ -121,7 +116,7 @@ void CHyperBlaster::Fire (CPlayerEntity *ent)
 
 	if (ent->Client.PlayerState.GetGunFrame() == 12)
 	{
-		PlaySoundFrom(ent->gameEntity, CHAN_AUTO, SoundIndex("weapons/hyprbd1a.wav"));
+		ent->PlaySound (CHAN_AUTO, SoundIndex("weapons/hyprbd1a.wav"));
 		ent->Client.weapon_sound = 0;
 	}
 }

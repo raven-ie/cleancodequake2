@@ -141,7 +141,7 @@ public:
 		vec3f or = State.GetOrigin();
 		CTempEnt_Explosions::RocketExplosion (or, this);
 
-		T_RadiusDamage (gameEntity, gameEntity->activator, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_EXPLOSIVE);
+		T_RadiusDamage (this, gameEntity->activator->Entity, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_EXPLOSIVE);
 
 		float save = gameEntity->delay;
 		gameEntity->delay = 0;
@@ -283,7 +283,7 @@ public:
 		CTempEnt_Splashes::Splash (State.GetOrigin(), MoveDir, (CTempEnt_Splashes::ESplashType)gameEntity->sounds, gameEntity->count);
 
 		if (gameEntity->dmg)
-			T_RadiusDamage (gameEntity, activator->gameEntity, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_SPLASH);
+			T_RadiusDamage (this, activator, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_SPLASH);
 	};
 
 	void Spawn ()
@@ -378,7 +378,8 @@ void CTargetChangeLevel::Use (CBaseEntity *other, CBaseEntity *activator)
 	// if noexit, do a ton of damage to other
 	if ((game.mode & GAME_DEATHMATCH) && !dmFlags.dfAllowExit && (other != world->Entity))
 	{
-		T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, other->State.GetOrigin(), vec3Origin, 10 * other->gameEntity->max_health, 1000, 0, MOD_EXIT);
+		if (other->EntityFlags & ENT_HURTABLE)
+			dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, 10 * other->gameEntity->max_health, 1000, 0, MOD_EXIT);
 		return;
 	}
 
@@ -758,8 +759,8 @@ public:
 
 			CBaseEntity *Entity = tr.ent->Entity;
 			// hurt it if we can
-			if ((Entity->gameEntity->takedamage) && !(Entity->gameEntity->flags & FL_IMMUNE_LASER))
-				T_Damage (Entity->gameEntity, gameEntity, gameEntity->activator, MoveDir, tr.endPos, vec3Origin, gameEntity->dmg, 1, DAMAGE_ENERGY, MOD_TARGET_LASER);
+			if ((Entity->EntityFlags & ENT_HURTABLE) && !(Entity->gameEntity->flags & FL_IMMUNE_LASER))
+				dynamic_cast<CHurtableEntity*>(Entity)->TakeDamage (this, (gameEntity->activator) ? gameEntity->activator->Entity : NULL, MoveDir, tr.EndPos, vec3fOrigin, gameEntity->dmg, 1, DAMAGE_ENERGY, MOD_TARGET_LASER);
 
 			// if we hit something that's not a monster or player or is immune to lasers, we're done
 			if (!(Entity->EntityFlags & ENT_MONSTER) && (!(Entity->EntityFlags & ENT_PLAYER)))

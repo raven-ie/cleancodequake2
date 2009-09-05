@@ -86,9 +86,7 @@ void CHandGrenade::Hold (CPlayerEntity *ent)
 
 void CHandGrenade::FireGrenade (CPlayerEntity *ent, bool inHand)
 {
-	vec3f	offset (8, 8, ent->gameEntity->viewheight-8);
-	vec3f	forward, right;
-	vec3f	start;
+	vec3f	offset (8, 8, ent->gameEntity->viewheight-8), forward, right, start;
 	const int		damage = (isQuad) ? 500 : 125;
 	const float		radius = 165;
 
@@ -164,7 +162,7 @@ bool CHandGrenade::CanFire (CPlayerEntity *ent)
 	switch (ent->Client.PlayerState.GetGunFrame())
 	{
 	case 5:
-		PlaySoundFrom(ent->gameEntity, CHAN_WEAPON, SoundIndex("weapons/hgrena1b.wav"));
+		ent->PlaySound (CHAN_WEAPON, SoundIndex("weapons/hgrena1b.wav"));
 		return false;
 	case 11:
 	case 12:

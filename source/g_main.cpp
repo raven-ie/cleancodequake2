@@ -28,7 +28,7 @@ gameExport_t	globals;
 spawn_temp_t	st;
 
 MediaIndex	snd_fry;
-int meansOfDeath;
+EMeansOfDeath meansOfDeath;
 
 edict_t		*g_edicts;
 

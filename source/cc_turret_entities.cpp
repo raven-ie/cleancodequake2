@@ -81,9 +81,9 @@ bool CTurretEntityBase::Run ()
 
 void CTurretEntityBase::Blocked (CBaseEntity *other)
 {
-	if (other->gameEntity->takedamage)
-		T_Damage (	other->gameEntity, gameEntity, (gameEntity->teammaster->owner) ? gameEntity->teammaster->owner : gameEntity->teammaster,
-					vec3Origin, other->State.GetOrigin(), vec3Origin, gameEntity->teammaster->dmg, 10, 0, MOD_CRUSH);
+	if (other->EntityFlags & ENT_HURTABLE)
+		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, (gameEntity->teammaster->owner) ? gameEntity->teammaster->owner->Entity : ((gameEntity->teammaster) ? gameEntity->teammaster->Entity : NULL),
+					vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, gameEntity->teammaster->dmg, 10, 0, MOD_CRUSH);
 }
 
 /*QUAKED turret_breach (0 0 0) ?

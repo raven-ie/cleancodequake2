@@ -895,7 +895,7 @@ enum
 
 // monster muzzle flashes
 
-extern	vec3_t dumb_and_hacky_monster_MuzzFlashOffset [];
+extern	const vec3_t dumb_and_hacky_monster_MuzzFlashOffset [];
 
 enum
 {
@@ -1548,5 +1548,10 @@ struct playerState_t
 
 	int16			stats[MAX_STATS];	// fast status bar updates
 };
+
+// CleanCode Stuff
+
+// Means of Death definition
+typedef uint32	EMeansOfDeath;
 
 #endif // __SHARED_H__
