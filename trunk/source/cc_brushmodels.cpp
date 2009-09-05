@@ -385,14 +385,17 @@ void CPlatForm::Blocked (CBaseEntity *other)
 	if (!(other->GetSvFlags() & SVF_MONSTER) && !(other->EntityFlags & ENT_PLAYER) )
 	{
 		// give it a chance to go away on it's own terms (like gibs)
-		T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, other->State.GetOrigin(), vec3Origin, 100000, 1, 0, MOD_CRUSH);
+		if (other->EntityFlags & ENT_HURTABLE)
+			dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, 100000, 1, 0, MOD_CRUSH);
+
 		// if it's still there, nuke it
 		if (!other->Freed)
 			other->BecomeExplosion(false);
 		return;
 	}
 
-	T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, other->State.GetOrigin(), vec3Origin, gameEntity->dmg, 1, 0, MOD_CRUSH);
+	if (other->EntityFlags & ENT_HURTABLE)
+		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, gameEntity->dmg, 1, 0, MOD_CRUSH);
 
 	if (MoveState == STATE_UP)
 		GoDown ();
@@ -881,14 +884,17 @@ void CDoor::Blocked (CBaseEntity *other)
 	if (!(other->EntityFlags & ENT_PLAYER) && !(other->EntityFlags & ENT_MONSTER) )
 	{
 		// give it a chance to go away on it's own terms (like gibs)
-		T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, other->State.GetOrigin(), vec3Origin, 100000, 1, 0, MOD_CRUSH);
+		if (other->EntityFlags & ENT_HURTABLE)
+			dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, 100000, 1, 0, MOD_CRUSH);
+
 		// if it's still there, nuke it
 		if (other->IsInUse())
 			other->BecomeExplosion (false);
 		return;
 	}
 
-	T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, other->State.GetOrigin(), vec3Origin, gameEntity->dmg, 1, 0, MOD_CRUSH);
+	if (other->EntityFlags & ENT_HURTABLE)
+		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, gameEntity->dmg, 1, 0, MOD_CRUSH);
 
 	if (gameEntity->spawnflags & DOOR_CRUSHER)
 		return;
@@ -1399,10 +1405,12 @@ void CDoorSecret::Use (CBaseEntity *other, CBaseEntity *activator)
 
 void CDoorSecret::Blocked (CBaseEntity *other)
 {
-	if (!(other->GetSvFlags() & SVF_MONSTER) && (!(other->EntityFlags & ENT_PLAYER)) )
+	if (!(other->EntityFlags & ENT_MONSTER) && (!(other->EntityFlags & ENT_PLAYER)) )
 	{
 		// give it a chance to go away on it's own terms (like gibs)
-		T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, State.GetOrigin(), vec3Origin, 100000, 1, 0, MOD_CRUSH);
+		if (other->EntityFlags & ENT_HURTABLE)
+			dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, State.GetOrigin(), vec3fOrigin, 100000, 1, 0, MOD_CRUSH);
+
 		// if it's still there, nuke it
 		if (other->IsInUse())
 			other->BecomeExplosion(false);
@@ -1413,7 +1421,8 @@ void CDoorSecret::Blocked (CBaseEntity *other)
 		return;
 	TouchDebounce = level.framenum + 5;
 
-	T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, State.GetOrigin(), vec3Origin, gameEntity->dmg, 1, 0, MOD_CRUSH);
+	if (other->EntityFlags & ENT_HURTABLE)
+		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, State.GetOrigin(), vec3fOrigin, gameEntity->dmg, 1, 0, MOD_CRUSH);
 }
 
 void CDoorSecret::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
@@ -1728,10 +1737,12 @@ bool CTrainBase::Run ()
 
 void CTrainBase::Blocked (CBaseEntity *other)
 {
-	if (!(other->GetSvFlags() & SVF_MONSTER) && (!(other->EntityFlags & ENT_PLAYER)) )
+	if (!(other->EntityFlags & ENT_MONSTER) && (!(other->EntityFlags & ENT_PLAYER)) )
 	{
 		// give it a chance to go away on it's own terms (like gibs)
-		T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, other->State.GetOrigin(), vec3Origin, 100000, 1, 0, MOD_CRUSH);
+		if (other->EntityFlags & ENT_HURTABLE)
+			dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, 100000, 1, 0, MOD_CRUSH);
+
 		// if it's still there, nuke it
 		if (other->IsInUse())
 			other->BecomeExplosion (false);
@@ -1744,7 +1755,9 @@ void CTrainBase::Blocked (CBaseEntity *other)
 	if (!gameEntity->dmg)
 		return;
 	TouchDebounce = level.framenum + 5;
-	T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, other->State.GetOrigin(), vec3Origin, gameEntity->dmg, 1, 0, MOD_CRUSH);
+
+	if (other->EntityFlags & ENT_HURTABLE)
+		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, gameEntity->dmg, 1, 0, MOD_CRUSH);
 }
 
 void CTrainBase::TrainWait ()
@@ -2297,13 +2310,14 @@ void CRotatingBrush::Blocked (CBaseEntity *other)
 	if (!Blockable)
 		return;
 
-	T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, other->State.GetOrigin(), vec3Origin, gameEntity->dmg, 1, 0, MOD_CRUSH);
+	if (other->EntityFlags & ENT_HURTABLE)
+		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, gameEntity->dmg, 1, 0, MOD_CRUSH);
 }
 
 void CRotatingBrush::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 {
-	if (gameEntity->avelocity[0] || gameEntity->avelocity[1] || gameEntity->avelocity[2])
-		T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, other->State.GetOrigin(), vec3Origin, gameEntity->dmg, 1, 0, MOD_CRUSH);
+	if ((gameEntity->avelocity[0] || gameEntity->avelocity[1] || gameEntity->avelocity[2]) && (other->EntityFlags & ENT_HURTABLE))
+		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, gameEntity->dmg, 1, 0, MOD_CRUSH);
 }
 
 void CRotatingBrush::Use (CBaseEntity *other, CBaseEntity *activator)
@@ -2625,9 +2639,9 @@ void CFuncObject::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *sur
 		return;
 	if (plane->normal[2] < 1.0)
 		return;
-	if (other->gameEntity->takedamage == false)
+	if (!(other->EntityFlags & ENT_HURTABLE))
 		return;
-	T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, State.GetOrigin(), vec3Origin, gameEntity->dmg, 1, 0, MOD_CRUSH);
+	dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3Origin, State.GetOrigin(), vec3fOrigin, gameEntity->dmg, 1, 0, MOD_CRUSH);
 };
 
 void CFuncObject::Think ()
@@ -2730,7 +2744,7 @@ void CFuncExplosive::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dam
 	gameEntity->takedamage = false;
 
 	if (gameEntity->dmg)
-		T_RadiusDamage (gameEntity, attacker->gameEntity, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_EXPLOSIVE);
+		T_RadiusDamage (this, attacker->gameEntity->Entity, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_EXPLOSIVE);
 
 	vec3f velocity = State.GetOrigin() - inflictor->State.GetOrigin();
 	velocity.Normalize ();

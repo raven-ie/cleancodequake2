@@ -212,6 +212,10 @@ void ClientObituary (CPlayerEntity *self, edict_t *attacker)
 			message = "tried to invade";
 			message2 = (endsInS) ? "' personal space" : "'s personal space";
 			break;
+		case MOD_EXPLOSIVE:
+		case MOD_BARREL:
+			message = "was blown to smithereens by";
+			break;
 #ifdef CLEANCTF_ENABLED
 //ZOID
 		case MOD_GRAPPLE:

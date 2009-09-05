@@ -52,10 +52,7 @@ void CFloater::Idle ()
 
 void CFloater::FireBlaster ()
 {
-	vec3_t	start;
-	vec3_t	forward, right;
-	vec3_t	end;
-	vec3_t	dir;
+	vec3f	start, forward, right, end, dir;
 	int		effect = 0;
 
 	switch (Entity->State.GetFrame())
@@ -66,15 +63,12 @@ void CFloater::FireBlaster ()
 		break;
 	}
 
-	vec3_t angles, origin;
-	Entity->State.GetAngles(angles);
-	Entity->State.GetOrigin(origin);
-	Angles_Vectors (angles, forward, right, NULL);
-	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_FLOAT_BLASTER_1], forward, right, start);
+	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
+	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_FLOAT_BLASTER_1], forward, right, start);
 
-	Vec3Copy (Entity->gameEntity->enemy->state.origin, end);
-	end[2] += Entity->gameEntity->enemy->viewheight;
-	Vec3Subtract (end, start, dir);
+	end = Entity->gameEntity->enemy->state.origin;
+	end.Z += Entity->gameEntity->enemy->viewheight;
+	dir = end - start;
 
 	MonsterFireBlaster (start, dir, 1, 1000, MZ2_FLOAT_BLASTER_1, effect);
 }
@@ -482,30 +476,18 @@ void CFloater::Wham ()
 
 void CFloater::Zap ()
 {
-	vec3_t	forward, right;
-	vec3_t	origin;
-	vec3_t	dir;
-	vec3_t	offset;
+	vec3f	forward, right, origin, dir;
+	static const vec3f offset (18.5f, -0.9f, 10);
+	dir = Entity->gameEntity->enemy->Entity->State.GetOrigin() - Entity->State.GetOrigin();
 
-	vec3_t eOrigin;
-	Entity->State.GetOrigin(eOrigin);
-	Vec3Subtract (Entity->gameEntity->enemy->state.origin, eOrigin, dir);
-
-	vec3_t angles;
-	Entity->State.GetAngles(angles);
-	Angles_Vectors (angles, forward, right, NULL);
-	//FIXME use a flash and replace these two lines with the commented one
-	Vec3Set (offset, 18.5f, -0.9f, 10);
-
-	G_ProjectSource (eOrigin, offset, forward, right, origin);
-//	G_ProjectSource (self->state.origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, origin);
+	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
+	G_ProjectSource (Entity->State.GetOrigin(), offset, forward, right, origin);
 
 	Entity->PlaySound (CHAN_WEAPON, SoundAttack2);
-
-	//FIXME use the flash, Luke
 	CTempEnt_Splashes::Splash (origin, vec3Origin, CTempEnt_Splashes::SPTSparks, 32);
 
-	T_Damage (Entity->gameEntity->enemy, Entity->gameEntity, Entity->gameEntity, vec3Origin, Entity->gameEntity->enemy->state.origin, vec3Origin, 5 + rand() % 6, -10, DAMAGE_ENERGY, MOD_UNKNOWN);
+	if (Entity->gameEntity->enemy && (Entity->gameEntity->enemy->Entity->EntityFlags & ENT_HURTABLE))
+		dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->TakeDamage (Entity, Entity, vec3fOrigin, Entity->gameEntity->enemy->Entity->State.GetOrigin(), vec3fOrigin, 5 + rand() % 6, -10, DAMAGE_ENERGY, MOD_UNKNOWN);
 }
 
 void CFloater::Attack()

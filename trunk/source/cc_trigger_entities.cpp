@@ -526,7 +526,7 @@ public:
 
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
-		if (!other->gameEntity->takedamage)
+		if (!(other->EntityFlags & ENT_HURTABLE))
 			return;
 
 		if (NextHurt > level.framenum)
@@ -539,7 +539,9 @@ public:
 				other->PlaySound (CHAN_AUTO, gameEntity->noise_index);
 		}
 
-		T_Damage (other->gameEntity, gameEntity, gameEntity, vec3Origin, other->State.GetOrigin(), vec3Origin, gameEntity->dmg, gameEntity->dmg, (gameEntity->spawnflags & 8) ? DAMAGE_NO_PROTECTION : 0, MOD_TRIGGER_HURT);
+		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(),
+															vec3fOrigin, gameEntity->dmg, gameEntity->dmg,
+															(gameEntity->spawnflags & 8) ? DAMAGE_NO_PROTECTION : 0, MOD_TRIGGER_HURT);
 	};
 
 	void Use (CBaseEntity *other, CBaseEntity *activator)

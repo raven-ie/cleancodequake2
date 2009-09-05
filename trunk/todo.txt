@@ -18,3 +18,8 @@ how or what's going into it. A must would be voice chat, but besides that, we're
 You could run an exe that responds to hotkeys that tell it when to check the server for
 CCE support, or have an engine that supports CCE built right in, which probably won't be
 many.
+- A "smart entity" feature (single player/coop only) where entities in areas not yet explored (entities being
+anything that doesn't do anything; items, weapons, certain doors and platforms) are pushed in a special list
+and a temporary trigger is spawned in an area deemed "the beginning" of an area. Once the trigger is touched, the
+entities that were stored away will be spawned. This won't lower overflows since it's out of your PVS, however this
+could speed up gameplay since you're only acting on entities that you can physically be near.

@@ -66,39 +66,41 @@ void CSoldierShotgun::Attack ()
 static int ShotgunFlash [] = {MZ2_SOLDIER_SHOTGUN_1, MZ2_SOLDIER_SHOTGUN_2, MZ2_SOLDIER_SHOTGUN_3, MZ2_SOLDIER_SHOTGUN_4, MZ2_SOLDIER_SHOTGUN_5, MZ2_SOLDIER_SHOTGUN_6, MZ2_SOLDIER_SHOTGUN_7, MZ2_SOLDIER_SHOTGUN_8};
 void CSoldierShotgun::FireGun (int FlashNumber)
 {
-	vec3_t	start;
-	vec3_t	forward, right;
-	vec3_t	aim;
+	vec3f	start, forward, right, aim;
 	int		flashIndex = ShotgunFlash[FlashNumber];
 
-	vec3_t angles, origin;
-	Entity->State.GetAngles(angles);
-	Entity->State.GetOrigin(origin);
-	Angles_Vectors (angles, forward, right, NULL);
-	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[flashIndex], forward, right, start);
+	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
+	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[flashIndex], forward, right, start);
 
-	if (FlashNumber == 5 || FlashNumber == 6)
-		Vec3Copy (forward, aim);
-	else
+	switch (FlashNumber)
 	{
-		vec3_t end;
-		Vec3Copy (Entity->gameEntity->enemy->state.origin, end);
-		end[2] += Entity->gameEntity->enemy->viewheight;
-		Vec3Subtract (end, start, aim);
+	case 5:
+	case 6:
+		aim = forward;
+		break;
+	default:
+		{
+			CBaseEntity *Enemy = Entity->gameEntity->enemy->Entity;
+			vec3f end;
 
-		vec3_t dir;
-		VecToAngles (aim, dir);
+			end = Enemy->State.GetOrigin() + vec3f(0, 0, Enemy->gameEntity->viewheight);
+			aim = (end - start);
 
-		vec3_t up;
-		Angles_Vectors (dir, forward, right, up);
+			vec3f dir;
+			dir = aim.ToAngles ();
 
-		Vec3MA (start, 8192, forward, end);
-		Vec3MA (end, crandom()*1000, right, end);
-		Vec3MA (end, crandom()*500, up, end);
+			vec3f up;
+			dir.ToVectors (&forward, &right, &up);
 
-		Vec3Subtract (end, start, aim);
-		VectorNormalizef (aim, aim);
-	}
+			end = start.MultiplyAngles (8192, forward);
+			end = end.MultiplyAngles (crandom() * 1000, right);
+			end = end.MultiplyAngles (crandom() * 500, up);
+
+			aim = end - start;
+			aim.Normalize ();
+		}
+		break;
+	};
 
 	MonsterFireShotgun (start, aim, 2, 1, DEFAULT_SHOTGUN_HSPREAD, DEFAULT_SHOTGUN_VSPREAD, DEFAULT_SHOTGUN_COUNT, flashIndex);
 }

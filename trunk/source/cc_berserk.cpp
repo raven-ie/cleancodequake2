@@ -167,7 +167,7 @@ void CBerserker::Run ()
 
 void CBerserker::AttackSpike ()
 {
-	static	vec3_t	aim = {MELEE_DISTANCE, 0, -24};
+	static	vec3f	aim (MELEE_DISTANCE, 0, -24);
 	CMeleeWeapon::Fire (Entity, aim, (15 + (rand() % 6)), 400);		//	Faster attack -- upwards and backwards
 }
 
@@ -191,7 +191,7 @@ CAnim BerserkMoveAttackSpike (FRAME_att_c1, FRAME_att_c8, BerserkFramesAttackSpi
 
 void CBerserker::AttackClub ()
 {
-	vec3_t	aim = {MELEE_DISTANCE, Entity->GetMins().X, -4};
+	vec3f	aim (MELEE_DISTANCE, Entity->GetMins().X, -4);
 	CMeleeWeapon::Fire (Entity, aim, (5 + (rand() % 6)), 400);		// Slower attack
 }
 

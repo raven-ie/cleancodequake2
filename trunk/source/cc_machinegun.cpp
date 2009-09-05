@@ -101,16 +101,16 @@ void CMachinegun::Fire (CPlayerEntity *ent)
 		return;
 	}
 
-	const int		damage = (isQuad) ? 32 : 8;
-	const int		kick = (isQuad) ? 8 : 2;
+	const int		damage = (isQuad) ? 32 : 8,
+					kick = (isQuad) ? 8 : 2;
 
 	for (int i=1 ; i<3 ; i++)
 	{
-		ent->Client.kick_origin[i] = crandom() * 0.35;
-		ent->Client.kick_angles[i] = crandom() * 0.7;
+		ent->Client.KickOrigin[i] = crandom() * 0.35;
+		ent->Client.KickAngles[i] = crandom() * 0.7;
 	}
-	ent->Client.kick_origin[0] = crandom() * 0.35;
-	ent->Client.kick_angles[0] = ent->Client.machinegun_shots * -1.5;
+	ent->Client.KickOrigin.X = crandom() * 0.35;
+	ent->Client.KickAngles.X = ent->Client.machinegun_shots * -1.5;
 
 	// raise the gun as it is firing
 	if (!(game.mode & GAME_DEATHMATCH))
@@ -120,12 +120,9 @@ void CMachinegun::Fire (CPlayerEntity *ent)
 			ent->Client.machinegun_shots = 9;
 	}
 
-	vec3f		start;
-	vec3f		forward, right;
-	vec3f		offset (0, 8, ent->gameEntity->viewheight-8);
-
 	// get start / end positions
-	vec3f angles = ent->Client.ViewAngle + vec3f(ent->Client.kick_angles);
+	vec3f start, forward, right, offset (0, 8, ent->gameEntity->viewheight-8), 
+		angles = ent->Client.ViewAngle + ent->Client.KickAngles;
 	angles.ToVectors (&forward, &right, NULL);
 	ent->P_ProjectSource (offset, forward, right, start);
 

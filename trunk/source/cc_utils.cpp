@@ -33,7 +33,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 
-void G_ProjectSource (vec3f &point, vec3f &distance, vec3f &forward, vec3f &right, vec3f &result)
+void G_ProjectSource (const vec3f &point, const vec3f &distance, const vec3f &forward, const vec3f &right, vec3f &result)
 {
 	result.Set (point.X + forward.X * distance.X + right.X * distance.Y,
 				point.Y + forward.Y * distance.X + right.Y * distance.Y,
@@ -317,11 +317,15 @@ bool KillBox (CBaseEntity *ent)
 	while (1)
 	{
 		tr = CTrace (ent->State.GetOrigin(), ent->GetMins(), ent->GetMaxs(), ent->State.GetOrigin(), NULL, CONTENTS_MASK_PLAYERSOLID);
-		if (!tr.ent)
+		if (!tr.ent || !tr.Ent)
 			break;
 
-		// nail it
-		T_Damage (tr.ent, ent->gameEntity, ent->gameEntity, vec3Origin, ent->State.GetOrigin(), vec3Origin, 100000, 0, DAMAGE_NO_PROTECTION, MOD_TELEFRAG);
+		if (tr.Ent->EntityFlags & ENT_HURTABLE)
+		{
+			// nail it
+			dynamic_cast<CHurtableEntity*>(tr.Ent)->TakeDamage (ent, ent, vec3fOrigin, ent->State.GetOrigin(),
+																vec3fOrigin, 100000, 0, DAMAGE_NO_PROTECTION, MOD_TELEFRAG);
+		}
 
 		// if we didn't kill it, fail
 		if (tr.ent->solid)
@@ -550,4 +554,32 @@ CBaseEntity *SelectFarthestDeathmatchSpawnPoint ()
 	// if there is a player just spawned on each and every start spot
 	// we have no choice to turn one into a telefrag meltdown
 	return CC_Find (NULL, FOFS(classname), "info_player_deathmatch");
+}
+
+/*
+============
+T_RadiusDamage
+============
+*/
+void T_RadiusDamage (CBaseEntity *inflictor, CBaseEntity *attacker, float damage, CBaseEntity *ignore, float radius, EMeansOfDeath mod)
+{
+	CHurtableEntity	*ent = NULL;
+	vec3f org = inflictor->State.GetOrigin();
+
+	while ((ent = FindRadius<CHurtableEntity, ENT_HURTABLE> (ent, org, radius)) != NULL)
+	{
+		if (ent == ignore)
+			continue;
+		if (!ent->gameEntity->takedamage)
+			continue;
+
+		vec3f v = ent->GetMins() + ent->GetMaxs();
+		v = inflictor->State.GetOrigin() - ent->State.GetOrigin().MultiplyAngles (0.5f, v);
+
+		float points = damage - 0.5 * v.Length();
+		if (ent == attacker)
+			points *= 0.5;
+		if ((points > 0) && ent->CanDamage (inflictor))
+			ent->TakeDamage (inflictor, attacker, ent->State.GetOrigin() - inflictor->State.GetOrigin(), inflictor->State.GetOrigin(), vec3fOrigin, (int)points, (int)points, DAMAGE_RADIUS, mod);
+	}
 }

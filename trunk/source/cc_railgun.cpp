@@ -64,24 +64,21 @@ bool CRailgun::CanStopFidgetting (CPlayerEntity *ent)
 
 void CRailgun::Fire (CPlayerEntity *ent)
 {
-	vec3f		start;
-	vec3f		forward, right;
-	vec3f		offset(0, 7,  ent->gameEntity->viewheight-8);
-
+	vec3f		start, forward, right, offset(0, 7,  ent->gameEntity->viewheight-8);
 	const int	damage = (game.mode & GAME_DEATHMATCH) ? // normal damage is too extreme in dm
 				(isQuad) ? 400 : 100
 				:
-				(isQuad) ? 600 : 150;
-	const int	kick = (game.mode & GAME_DEATHMATCH) ?
+				(isQuad) ? 600 : 150,
+				kick = (game.mode & GAME_DEATHMATCH) ?
 				(isQuad) ? 800 : 200 
 				:
 				(isQuad) ? 1000 : 250;
 
 	ent->Client.ViewAngle.ToVectors (&forward, &right, NULL);
-	vec3f kickOrigin = forward;
-	kickOrigin.Scale (-3);
-	Vec3Copy (kickOrigin, ent->Client.kick_origin);
-	ent->Client.kick_angles[0] = -3;
+
+	ent->Client.KickOrigin = forward;
+	ent->Client.KickOrigin.Scale (-3);
+	ent->Client.KickAngles.X = -3;
 
 	ent->P_ProjectSource (offset, forward, right, start);
 	CRailGunShot::Fire (ent, start, forward, damage, kick);

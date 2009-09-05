@@ -120,7 +120,7 @@ public:
 	ThroughAndThrough(throughAndThrough) {};
 
 	virtual inline CTrace	DoTrace		(vec3f &start, vec3f &end, CBaseEntity *ignore, int mask);
-	virtual inline bool		DoDamage	(CBaseEntity *Attacker, CBaseEntity *Target, vec3f &dir, vec3f &point, vec3f &normal);
+	virtual inline bool		DoDamage	(CBaseEntity *Attacker, CHurtableEntity *Target, vec3f &dir, vec3f &point, vec3f &normal);
 	virtual inline void		DoEffect	(vec3f &start, vec3f &end, bool water);
 	virtual inline void		DoSolidHit	(CTrace *Trace);
 	virtual inline void		DoWaterHit	(CTrace *Trace);
@@ -135,7 +135,7 @@ public:
 	CRailGunShot (int damage, int kick) :
 	CHitScan (damage, kick, true) {};
 
-	inline bool		DoDamage (CBaseEntity *Attacker, CBaseEntity *Target, vec3f &dir, vec3f &point, vec3f &normal);
+	inline bool		DoDamage (CBaseEntity *Attacker, CHurtableEntity *Target, vec3f &dir, vec3f &point, vec3f &normal);
 	inline void		DoEffect (vec3f &start, vec3f &end, bool water);
 
 	static void		Fire		(CBaseEntity *Entity, vec3f start, vec3f aimdir, int damage, int kick);
@@ -144,7 +144,7 @@ public:
 class CBullet : public CHitScan
 {
 public:
-	int MeansOfDeath;
+	EMeansOfDeath MeansOfDeath;
 	int vSpread, hSpread;
 
 	CBullet (int damage, int kick, int hSpread, int vSpread, int mod) :
@@ -153,7 +153,7 @@ public:
 	hSpread(hSpread),
 	MeansOfDeath(mod) {};
 
-	inline bool				DoDamage (CBaseEntity *Attacker, CBaseEntity *Target, vec3f &dir, vec3f &point, vec3f &normal);
+	inline bool				DoDamage (CBaseEntity *Attacker, CHurtableEntity *Target, vec3f &dir, vec3f &point, vec3f &normal);
 	virtual inline void		DoSolidHit	(CTrace *Trace);
 	inline void				DoWaterHit	(CTrace *Trace);
 	bool					ModifyEnd (vec3f &aimDir, vec3f &start, vec3f &end);

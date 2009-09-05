@@ -295,7 +295,7 @@ void CQuadDamage::Use (CPlayerEntity *ent)
 
 	ent->Client.pers.Inventory -= this;
 
-	PlaySoundFrom(ent->gameEntity, CHAN_ITEM, SoundIndex("items/damage.wav"));
+	ent->PlaySound (CHAN_ITEM, SoundIndex("items/damage.wav"));
 }
 
 void CInvulnerability::DoPickup (class CItemEntity *ent, CPlayerEntity *other)
@@ -318,7 +318,7 @@ void CInvulnerability::Use (CPlayerEntity *ent)
 	else
 		ent->Client.invincible_framenum = level.framenum + 300;
 
-	PlaySoundFrom(ent->gameEntity, CHAN_ITEM, SoundIndex("items/protect.wav"));
+	ent->PlaySound (CHAN_ITEM, SoundIndex("items/protect.wav"));
 }
 
 void CSilencer::DoPickup (class CItemEntity *ent, CPlayerEntity *other)
@@ -435,7 +435,7 @@ void CPowerShield::Use (CPlayerEntity *ent)
 	if (ent->gameEntity->flags & FL_POWER_ARMOR)
 	{
 		ent->gameEntity->flags &= ~FL_POWER_ARMOR;
-		PlaySoundFrom(ent->gameEntity, CHAN_AUTO, SoundIndex("misc/power2.wav"));
+		ent->PlaySound (CHAN_AUTO, SoundIndex("misc/power2.wav"));
 	}
 	else
 	{
@@ -445,7 +445,7 @@ void CPowerShield::Use (CPlayerEntity *ent)
 			return;
 		}
 		ent->gameEntity->flags |= FL_POWER_ARMOR;
-		PlaySoundFrom(ent->gameEntity, CHAN_AUTO, SoundIndex("misc/power1.wav"));
+		ent->PlaySound (CHAN_AUTO, SoundIndex("misc/power1.wav"));
 	}
 }
 

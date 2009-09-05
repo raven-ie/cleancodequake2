@@ -303,6 +303,7 @@ public:
 	virtual bool		CheckAttack		();
 
 	virtual void		ReactToDamage	(edict_t *attacker);
+	virtual void		ReactToDamage	(CBaseEntity *attacker);
 
 	virtual void		MonsterThink	();
 
@@ -337,13 +338,13 @@ public:
 
 	void MonsterDeathUse ();
 
-	void MonsterFireBfg (vec3_t start, vec3_t aimdir, int damage, int speed, int kick, float damage_radius, int flashtype);
-	void MonsterFireBlaster (vec3_t start, vec3_t dir, int damage, int speed, int flashtype, int effect);
-	void MonsterFireGrenade (vec3_t start, vec3_t aimdir, int damage, int speed, int flashtype);
-	void MonsterFireRailgun (vec3_t start, vec3_t aimdir, int damage, int kick, int flashtype);
-	void MonsterFireShotgun (vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int count, int flashtype);
-	void MonsterFireBullet (vec3_t start, vec3_t dir, int damage, int kick, int hspread, int vspread, int flashtype);
-	void MonsterFireRocket (vec3_t start, vec3_t dir, int damage, int speed, int flashtype);
+	void MonsterFireBfg (vec3f start, vec3f aimdir, int damage, int speed, int kick, float damage_radius, int flashtype);
+	void MonsterFireBlaster (vec3f start, vec3f dir, int damage, int speed, int flashtype, int effect);
+	void MonsterFireGrenade (vec3f start, vec3f aimdir, int damage, int speed, int flashtype);
+	void MonsterFireRailgun (vec3f start, vec3f aimdir, int damage, int kick, int flashtype);
+	void MonsterFireShotgun (vec3f start, vec3f aimdir, int damage, int kick, int hspread, int vspread, int count, int flashtype);
+	void MonsterFireBullet (vec3f start, vec3f dir, int damage, int kick, int hspread, int vspread, int flashtype);
+	void MonsterFireRocket (vec3f start, vec3f dir, int damage, int speed, int flashtype);
 
 #ifdef MONSTERS_ARENT_STUPID
 	void AlertNearbyStroggs ();

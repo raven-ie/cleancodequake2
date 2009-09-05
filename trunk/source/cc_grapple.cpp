@@ -80,9 +80,7 @@ void CGrapple::PlayerResetGrapple(CPlayerEntity *ent)
 
 void CGrapple::Fire (CPlayerEntity *Player)
 {
-	vec3f	forward, right;
-	vec3f	start;
-	vec3f	offset (24, 8, Player->gameEntity->viewheight-6);
+	vec3f	forward, right, start, offset (24, 8, Player->gameEntity->viewheight-6);
 
 	if (Player->Client.ctf_grapplestate > CTF_GRAPPLE_STATE_FLY)
 		return; // it's already out
@@ -90,10 +88,9 @@ void CGrapple::Fire (CPlayerEntity *Player)
 	Player->Client.ViewAngle.ToVectors (&forward, &right, NULL);
 	Player->P_ProjectSource (offset, forward, right, start);
 
-	vec3f kickOrigin = forward;
-	kickOrigin.Scale (-2);
-	Vec3Copy (kickOrigin, Player->Client.kick_origin);
-	Player->Client.kick_angles[0] = -1;
+	Player->Client.KickOrigin = forward;
+	Player->Client.KickOrigin.Scale (-2);
+	Player->Client.KickAngles.X = -1;
 
 	const float volume = (Player->Client.silencer_shots) ? 0.2f : 1.0f;
 	Player->PlaySound (CHAN_WEAPON, SoundIndex("weapons/grapple/grfire.wav"), volume);
@@ -130,7 +127,7 @@ void CGrapple::WeaponGeneric (CPlayerEntity *Player)
 		if (Player->Client.ctf_grapplestate == CTF_GRAPPLE_STATE_HANG+1)
 		{
 			Player->Client.ctf_grapplestate = CTF_GRAPPLE_STATE_FLY;
-			PlaySoundFrom (Player->gameEntity, CHAN_WEAPON, SoundIndex("weapons/grapple/grreset.wav"), (Player->Client.silencer_shots) ? 0.2f : 1.0, ATTN_NORM, 0);
+			Player->PlaySound (CHAN_WEAPON, SoundIndex("weapons/grapple/grreset.wav"), (Player->Client.silencer_shots) ? 0.2f : 1.0);
 		}
 		if (Player->Client.NewWeapon && Player->Client.NewWeapon != this)
 		{

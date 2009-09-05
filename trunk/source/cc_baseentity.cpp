@@ -225,6 +225,78 @@ void	CEntityState::SetEvent			(int value)
 	state->event = value;
 }
 
+void G_InitEdict (edict_t *e)
+{
+	e->inUse = true;
+	e->classname = "noclass";
+	e->gravity = 1.0;
+	e->state.number = e - g_edicts;
+}
+
+/*
+=================
+G_Spawn
+
+Either finds a free edict, or allocates a new one.
+Try to avoid reusing an entity that was recently freed, because it
+can cause the client to think the entity morphed into something else
+instead of being removed and recreated, which can cause interpolated
+angles and bad trails.
+=================
+*/
+edict_t *G_Spawn (void)
+{
+	int			i;
+	edict_t		*e;
+
+	e = &g_edicts[game.maxclients+1];
+	for ( i=game.maxclients+1 ; i<globals.numEdicts ; i++, e++)
+	{
+		// the first couple seconds of server time can involve a lot of
+		// freeing and allocating, so relax the replacement policy
+		if (!e->inUse && ( e->freetime < 20 || level.framenum - e->freetime > 5 ) )
+		{
+			if (e->Entity && e->Entity->Freed)
+			{
+				QDelete e->Entity;
+				e->Entity = NULL;
+			}
+			G_InitEdict (e);
+			//DebugPrintf ("Entity %i reused\n", i);
+			return e;
+		}
+	}
+	
+	if (i == game.maxentities)
+		GameError ("ED_Alloc: no free edicts");
+		
+	//DebugPrintf ("Entity %i allocated\n", i);
+	globals.numEdicts++;
+	G_InitEdict (e);
+	return e;
+}
+
+/*
+=================
+G_FreeEdict
+
+Marks the edict as free
+=================
+*/
+void G_FreeEdict (edict_t *ed)
+{
+	gi.unlinkentity (ed);		// unlink from world
+
+	// Paril, hack
+	CBaseEntity *Entity = ed->Entity;
+	memset (ed, 0, sizeof(*ed));
+	ed->Entity = Entity;
+	ed->classname = "freed";
+	ed->freetime = level.framenum;
+	ed->inUse = false;
+}
+
+
 // Creating a new entity via constructor.
 CBaseEntity::CBaseEntity ()
 {

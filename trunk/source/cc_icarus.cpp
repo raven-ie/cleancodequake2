@@ -451,20 +451,14 @@ void CIcarus::ReAttack ()
 
 void CIcarus::FireBlaster ()
 {
-	vec3_t	start;
-	vec3_t	forward, right;
-	vec3_t	end;
-	vec3_t	dir;
+	vec3f	start, forward, right, end, dir;
 
-	vec3_t angles, origin;
-	Entity->State.GetAngles(angles);
-	Entity->State.GetOrigin(origin);
-	Angles_Vectors (angles, forward, right, NULL);
-	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_HOVER_BLASTER_1], forward, right, start);
+	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
+	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_HOVER_BLASTER_1], forward, right, start);
 
-	Vec3Copy (Entity->gameEntity->enemy->state.origin, end);
-	end[2] += Entity->gameEntity->enemy->viewheight;
-	Vec3Subtract (end, start, dir);
+	end = vec3f(Entity->gameEntity->enemy->state.origin);
+	end.Z += Entity->gameEntity->enemy->viewheight;
+	dir = end - start;
 
 	MonsterFireBlaster (start, dir, 1, 1000, MZ2_HOVER_BLASTER_1, (Entity->State.GetFrame() == FRAME_attak104) ? EF_HYPERBLASTER : 0);
 }

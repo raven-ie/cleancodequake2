@@ -46,6 +46,7 @@ void CTrace::Copy (cmTrace_t tr)
 
 	memcpy (&Plane, &plane, sizeof(Plane));
 	memcpy (EndPos, endPos, sizeof(EndPos));
+	Ent = ent->Entity;
 };
 
 CTrace::CTrace ()

@@ -66,18 +66,16 @@ bool CSuperShotgun::CanStopFidgetting (CPlayerEntity *ent)
 
 void CSuperShotgun::Fire (CPlayerEntity *ent)
 {
-	vec3f		start;
-	vec3f		forward, right;
-	vec3f		offset = vec3f(0, 8, ent->gameEntity->viewheight-8);
-	const int	damage = (isQuad) ? 24 : 6;
-	const int	kick = (isQuad) ? 48 : 12;
+	vec3f		start, forward, right, offset = vec3f(0, 8, ent->gameEntity->viewheight-8);
+	const int	damage = (isQuad) ? 24 : 6,
+				kick = (isQuad) ? 48 : 12;
 
 	ent->Client.ViewAngle.ToVectors (&forward, &right, NULL);
 
-	vec3f kickorigin = forward;
-	kickorigin.Scale (-2);
-	Vec3Copy (kickorigin, ent->Client.kick_origin);
-	ent->Client.kick_angles[0] = -2;
+	ent->Client.KickOrigin = forward;
+	ent->Client.KickOrigin.Scale (-2);
+	ent->Client.KickAngles.X = -2;
+
 	ent->P_ProjectSource (offset, forward, right, start);
 
 	vec3f v = ent->Client.ViewAngle;

@@ -132,7 +132,7 @@ public:
 			Link();
 			return;
 		}
-		T_RadiusDamage (gameEntity, gameEntity->activator, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_BARREL);
+		T_RadiusDamage (this, gameEntity->activator->Entity, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_BARREL);
 
 		vec3_t origin;
 		State.GetOrigin (origin);
@@ -857,7 +857,7 @@ public:
 		G_UseTargets (this, gameEntity->activator->Entity);
 
 		State.SetOrigin (vec3f(State.GetOrigin().X, State.GetOrigin().Y, GetAbsMin().Z + 1));
-		T_RadiusDamage (gameEntity, gameEntity, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_BOMB);
+		T_RadiusDamage (this, this, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_BOMB);
 		BecomeExplosion (true);
 	};
 

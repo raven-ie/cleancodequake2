@@ -66,18 +66,15 @@ bool CShotgun::CanStopFidgetting (CPlayerEntity *ent)
 
 void CShotgun::Fire (CPlayerEntity *ent)
 {
-	vec3f		start;
-	vec3f		forward, right;
-	vec3f		offset (0, 8,  ent->gameEntity->viewheight-8);
-	const int	damage = (isQuad) ? 16 : 4;
-	const int	kick = (isQuad) ? 32 : 8;
+	vec3f		start, forward, right, offset (0, 8,  ent->gameEntity->viewheight-8);
+	const int	damage = (isQuad) ? 16 : 4,
+				kick = (isQuad) ? 32 : 8;
 
 	ent->Client.ViewAngle.ToVectors (&forward, &right, NULL);
 
-	vec3f kickOrigin = forward;
-	kickOrigin.Scale (-2);
-	Vec3Copy (kickOrigin, ent->Client.kick_origin);
-	ent->Client.kick_angles[0] = -2;
+	ent->Client.KickOrigin = forward;
+	ent->Client.KickOrigin.Scale (-2);
+	ent->Client.KickAngles.X = -2;
 
 	ent->P_ProjectSource (offset, forward, right, start);
 

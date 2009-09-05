@@ -57,6 +57,28 @@ public:
 
 	virtual void Pain (CBaseEntity *other, float kick, int damage) = 0;
 	virtual void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point) = 0;
+
+	virtual bool CanDamage (CBaseEntity *inflictor);
+	virtual bool CheckTeamDamage (CBaseEntity *attacker);
+	virtual int CheckPowerArmor (vec3f &point, vec3f &normal, int damage, int dflags);
+	virtual void Killed (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point);
+
+	// Takes damage.
+	// For this, "this" is target. Use this if the
+	// entity can be casted to CHurtableEntity or is CHurtableEntity
+	// without question.
+	virtual void TakeDamage (	CBaseEntity *inflictor, CBaseEntity *attacker,
+							vec3f dir, vec3f point, vec3f normal, int damage,
+							int knockback, int dflags, EMeansOfDeath mod);
+	
+	// This is a convenient static version.
+	// This will cast targ to CHurtableEntity
+	// and make the necessary damage adjustments if possible.
+	// If "targ" can't take damage, nothing will happen.
+	static void TakeDamage (	CBaseEntity *targ, CBaseEntity *inflictor,
+							CBaseEntity *attacker, vec3f dir, vec3f point,
+							vec3f normal, int damage, int knockback,
+							int dflags, EMeansOfDeath mod);
 };
 
 class CBlockableEntity abstract : public virtual CBaseEntity

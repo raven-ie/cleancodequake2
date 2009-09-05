@@ -201,6 +201,12 @@ protected:
 public:
 	CPlayerState	PlayerState;
 
+	vec3f			KickAngles;	// weapon kicks
+	vec3f			KickOrigin;
+	vec3f			ViewAngle;			// aiming direction
+	vec3f			DamageFrom;		// origin for vector calculation
+	colorb			DamageBlend;
+
 	CClient (gclient_t *client);
 
 	int				GetPing ();
@@ -229,20 +235,15 @@ public:
 	int			damage_parmor;		// damage absorbed by power armor
 	int			damage_blood;		// damage taken out of health
 	int			damage_knockback;	// impact damage
-	vec3_t		damage_from;		// origin for vector calculation
 
 	float		killer_yaw;			// when dead, look at killer
 
 	EWeaponState weaponstate;
-	vec3_t		kick_angles;	// weapon kicks
-	vec3_t		kick_origin;
 	float		v_dmg_roll, v_dmg_pitch;	// damage kicks
 	int32		v_dmg_time;
 	int32		fall_time;
 	float		fall_value;		// for view drop on fall
 	byte		bonus_alpha;
-	colorb		damage_blend;
-	vec3f		ViewAngle;			// aiming direction
 	float		bobtime;			// so off-ground doesn't change it
 	vec3_t		oldviewangles;
 	vec3_t		oldvelocity;

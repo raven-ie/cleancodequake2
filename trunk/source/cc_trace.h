@@ -51,6 +51,7 @@ public:
 	// For vec3f
 	Plane_t				Plane;
 	vec3f				EndPos;
+	CBaseEntity			*Ent;
 
 	CTrace ();
 

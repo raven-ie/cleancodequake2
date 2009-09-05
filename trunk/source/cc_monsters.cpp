@@ -1424,77 +1424,72 @@ void CMonster::AlertNearbyStroggs ()
 }
 #endif
 
-void CMonster::MonsterFireBullet (vec3_t start, vec3_t dir, int damage, int kick, int hspread, int vspread, int flashtype)
+void CMonster::MonsterFireBullet (vec3f start, vec3f dir, int damage, int kick, int hspread, int vspread, int flashtype)
 {
 #ifdef MONSTERS_ARENT_STUPID
 	if (FriendlyInLine (start, dir))
 		return;
 #endif
 
-	//fire_bullet (Entity, start, dir, damage, kick, hspread, vspread, MOD_UNKNOWN);
 	CBullet::Fire (Entity, start, dir, damage, kick, hspread, vspread, MOD_UNKNOWN);
 
 	if (flashtype != -1)
 		CTempEnt::MonsterFlash (start, Entity->State.GetNumber(), flashtype);
 }
 
-void CMonster::MonsterFireShotgun (vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int count, int flashtype)
+void CMonster::MonsterFireShotgun (vec3f start, vec3f aimdir, int damage, int kick, int hspread, int vspread, int count, int flashtype)
 {
 #ifdef MONSTERS_ARENT_STUPID
 	if (FriendlyInLine (start, aimdir))
 		return;
 #endif
 
-	//fire_shotgun (Entity, start, aimdir, damage, kick, hspread, vspread, count, MOD_UNKNOWN);
 	CShotgunPellets::Fire (Entity, start, aimdir, damage, kick, hspread, vspread, count, MOD_UNKNOWN);
 
 	if (flashtype != -1)
 		CTempEnt::MonsterFlash (start, Entity->State.GetNumber(), flashtype);
 }
 
-void CMonster::MonsterFireBlaster (vec3_t start, vec3_t dir, int damage, int speed, int flashtype, int effect)
+void CMonster::MonsterFireBlaster (vec3f start, vec3f dir, int damage, int speed, int flashtype, int effect)
 {
 #ifdef MONSTERS_ARENT_STUPID
 	if (FriendlyInLine (start, dir))
 		return;
 #endif
 
-	//fire_blaster (Entity, start, dir, damage, speed, effect, false);
-	CBlasterProjectile::Spawn (Entity, vec3f(start), vec3f(dir), damage, speed, effect, false);
+	CBlasterProjectile::Spawn (Entity, start, dir, damage, speed, effect, false);
 
 	if (flashtype != -1)
 		CTempEnt::MonsterFlash (start, Entity->State.GetNumber(), flashtype);
 }	
 
-void CMonster::MonsterFireGrenade (vec3_t start, vec3_t aimdir, int damage, int speed, int flashtype)
+void CMonster::MonsterFireGrenade (vec3f start, vec3f aimdir, int damage, int speed, int flashtype)
 {
 #ifdef MONSTERS_ARENT_STUPID
 	if (FriendlyInLine (start, aimdir))
 		return;
 #endif
 
-	//fire_grenade (Entity, start, aimdir, damage, speed, 2.5, damage+40);
 	CGrenade::Spawn (Entity, start, aimdir, damage, speed, 2.5, damage+40);
 
 	if (flashtype != -1)
 		CTempEnt::MonsterFlash (start, Entity->State.GetNumber(), flashtype);
 }
 
-void CMonster::MonsterFireRocket (vec3_t start, vec3_t dir, int damage, int speed, int flashtype)
+void CMonster::MonsterFireRocket (vec3f start, vec3f dir, int damage, int speed, int flashtype)
 {
 #ifdef MONSTERS_ARENT_STUPID
 	if (FriendlyInLine (start, dir))
 		return;
 #endif
 
-	//fire_rocket (Entity, start, dir, damage, speed, damage+20, damage);
 	CRocket::Spawn (Entity, start, dir, damage, speed, damage+20, damage);
 
 	if (flashtype != -1)
 		CTempEnt::MonsterFlash (start, Entity->State.GetNumber(), flashtype);
 }	
 
-void CMonster::MonsterFireRailgun (vec3_t start, vec3_t aimdir, int damage, int kick, int flashtype)
+void CMonster::MonsterFireRailgun (vec3f start, vec3f aimdir, int damage, int kick, int flashtype)
 {
 #ifdef MONSTERS_ARENT_STUPID
 	if (FriendlyInLine (start, aimdir))
@@ -1502,21 +1497,19 @@ void CMonster::MonsterFireRailgun (vec3_t start, vec3_t aimdir, int damage, int 
 #endif
 
 	if (!(PointContents (start) & CONTENTS_MASK_SOLID))
-		//fire_rail (Entity, start, aimdir, damage, kick);
 		CRailGunShot::Fire (Entity, start, aimdir, damage, kick);
 
 	if (flashtype != -1)
 		CTempEnt::MonsterFlash (start, Entity->State.GetNumber(), flashtype);
 }
 
-void CMonster::MonsterFireBfg (vec3_t start, vec3_t aimdir, int damage, int speed, int kick, float damage_radius, int flashtype)
+void CMonster::MonsterFireBfg (vec3f start, vec3f aimdir, int damage, int speed, int kick, float damage_radius, int flashtype)
 {
 #ifdef MONSTERS_ARENT_STUPID
 	if (FriendlyInLine (start, aimdir))
 		return;
 #endif
 
-	//fire_bfg (Entity, start, aimdir, damage, speed, damage_radius);
 	CBFGBolt::Spawn (Entity, start, aimdir, damage, speed, damage_radius);
 
 	if (flashtype != -1)
@@ -2623,27 +2616,25 @@ void CMonster::AI_Run(float Dist)
 			d1 = Vec3Length(v);
 
 			float d2 = d1 * ((center+1)/2);
-			vec3_t angles;
-			vec3_t origin;
+			vec3f angles = Entity->State.GetAngles();
+			vec3f origin = Entity->State.GetOrigin();
 
-			Entity->State.GetOrigin (origin);
-			Entity->State.GetAngles (angles);
-			angles[YAW] = IdealYaw = VecToYaw(v);
+			angles.Y = IdealYaw = VecToYaw(v);
 			Entity->State.SetAngles(angles);
 
-			vec3_t v_forward, v_right;
-			Angles_Vectors(angles, v_forward, v_right, NULL);
+			vec3f v_forward, v_right;
+			angles.ToVectors (&v_forward, &v_right, NULL);
 
-			vec3_t left_target;
-			Vec3Set(v, d2, -16, 0);
-			G_ProjectSource (origin, v, v_forward, v_right, left_target);
-			tr = CTrace(Entity->State.GetOrigin(), Entity->GetMins(), Entity->GetMaxs(), vec3f(left_target), Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
+			vec3f left_target;
+			vec3f offset (d2, -16, 0);
+			G_ProjectSource (origin, offset, v_forward, v_right, left_target);
+			tr = CTrace(origin, Entity->GetMins(), Entity->GetMaxs(), left_target, Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
 			float left = tr.fraction;
 
-			vec3_t right_target;
-			Vec3Set(v, d2, 16, 0);
-			G_ProjectSource (origin, v, v_forward, v_right, right_target);
-			tr = CTrace(Entity->State.GetOrigin(), Entity->GetMins(), Entity->GetMaxs(), vec3f(right_target), Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
+			vec3f right_target;
+			offset = vec3f(d2, 16, 0);
+			G_ProjectSource (origin, offset, v_forward, v_right, right_target);
+			tr = CTrace(origin, Entity->GetMins(), Entity->GetMaxs(), right_target, Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
 			float right = tr.fraction;
 
 			center = (d1*center)/d2;
@@ -2651,8 +2642,8 @@ void CMonster::AI_Run(float Dist)
 			{
 				if (left < 1)
 				{
-					Vec3Set(v, d2 * left * 0.5, -16, 0);
-					G_ProjectSource (origin, v, v_forward, v_right, left_target);
+					offset = vec3f(d2 * left * 0.5, -16, 0);
+					G_ProjectSource (origin, offset, v_forward, v_right, left_target);
 				}
 				Vec3Copy (LastSighting, SavedGoal);
 				AIFlags |= AI_PURSUE_TEMP;
@@ -2667,8 +2658,8 @@ void CMonster::AI_Run(float Dist)
 			{
 				if (right < 1)
 				{
-					Vec3Set(v, d2 * right * 0.5, 16, 0);
-					G_ProjectSource (origin, v, v_forward, v_right, right_target);
+					offset = vec3f(d2 * right * 0.5, 16, 0);
+					G_ProjectSource (origin, offset, v_forward, v_right, right_target);
 				}
 				Vec3Copy (LastSighting, SavedGoal);
 				AIFlags |= AI_PURSUE_TEMP;
@@ -3035,6 +3026,94 @@ void CMonster::ReactToDamage (edict_t *attacker)
 #endif
 }
 
+void CMonster::ReactToDamage (CBaseEntity *attacker)
+{
+	if (!(attacker->EntityFlags & ENT_PLAYER) && !(attacker->EntityFlags & ENT_MONSTER))
+		return;
+
+	if (attacker == Entity || (Entity->gameEntity->enemy && (attacker == Entity->gameEntity->enemy->Entity)))
+		return;
+
+	// if we are a good guy monster and our attacker is a player
+	// or another good guy, do not get mad at them
+	if (AIFlags & AI_GOOD_GUY)
+	{
+		if ((attacker->EntityFlags & ENT_PLAYER) || ((attacker->EntityFlags & ENT_MONSTER) && (dynamic_cast<CMonsterEntity*>(attacker))->Monster->AIFlags & AI_GOOD_GUY))
+			return;
+	}
+
+	// we now know that we are not both good guys
+
+	// if attacker is a client, get mad at them because he's good and we're not
+	if (attacker->EntityFlags & ENT_PLAYER)
+	{
+		AIFlags &= ~AI_SOUND_TARGET;
+
+		// this can only happen in coop (both new and old enemies are clients)
+		// only switch if can't see the current enemy
+		if (Entity->gameEntity->enemy && (Entity->gameEntity->enemy->Entity->EntityFlags & ENT_PLAYER))
+		{
+			if (visible(Entity->gameEntity, Entity->gameEntity->enemy))
+			{
+				Entity->gameEntity->oldenemy = attacker->gameEntity;
+				return;
+			}
+			Entity->gameEntity->oldenemy = Entity->gameEntity->enemy;
+		}
+		Entity->gameEntity->enemy = attacker->gameEntity;
+		if (!(AIFlags & AI_DUCKED))
+			FoundTarget ();
+		return;
+	}
+
+#ifdef MONSTERS_ARENT_STUPID
+	// Help our buddy!
+	if ((attacker->EntityFlags & ENT_MONSTER) && attacker->gameEntity->enemy && attacker->gameEntity->enemy != Entity->gameEntity)
+	{
+		if (Entity->gameEntity->enemy && (Entity->gameEntity->enemy->Entity->EntityFlags & ENT_PLAYER))
+			Entity->gameEntity->oldenemy = Entity->gameEntity->enemy;
+		Entity->gameEntity->enemy = attacker->gameEntity->enemy;
+		if (!(AIFlags & AI_DUCKED))
+			FoundTarget ();
+	}
+	return;
+#else
+	// it's the same base (walk/swim/fly) type and a different classname and it's not a tank
+	// (they spray too much), get mad at them
+	if (((Entity->gameEntity->flags & (FL_FLY|FL_SWIM)) == (attacker->gameEntity->flags & (FL_FLY|FL_SWIM))) &&
+		 (strcmp (Entity->gameEntity->classname, attacker->gameEntity->classname) != 0))// &&
+		 (strcmp(attacker->gameEntity->classname, "monster_tank") != 0) &&
+		 (strcmp(attacker->gameEntity->classname, "monster_supertank") != 0) &&
+		 (strcmp(attacker->gameEntity->classname, "monster_makron") != 0) &&
+		 (strcmp(attacker->gameEntity->classname, "monster_jorg") != 0) )
+	{
+		if (Entity->gameEntity->enemy && (Entity->gameEntity->enemy->Entity->EntityFlags & ENT_PLAYER))
+			Entity->gameEntity->oldenemy = Entity->gameEntity->enemy;
+		Entity->gameEntity->enemy = attacker->gameEntity;
+		if (!(AIFlags & AI_DUCKED))
+			FoundTarget ();
+	}
+	// if they *meant* to shoot us, then shoot back
+	else if (attacker->gameEntity->enemy == Entity->gameEntity)
+	{
+		if (Entity->gameEntity->enemy && (Entity->gameEntity->enemy->Entity->EntityFlags & ENT_PLAYER))
+			Entity->gameEntity->oldenemy = Entity->gameEntity->enemy;
+		Entity->gameEntity->enemy = attacker->gameEntity;
+		if (!(AIFlags & AI_DUCKED))
+			FoundTarget ();
+	}
+	// Help our buddy!
+	else if ((attacker->EntityFlags & ENT_MONSTER)) && attacker->gameEntity->enemy && attacker->gameEntity->enemy != Entity->gameEntity)
+	{
+		if (Entity->gameEntity->enemy && (Entity->gameEntity->enemy->Entity->EntityFlags & ENT_PLAYER))
+			Entity->gameEntity->oldenemy = Entity->gameEntity->enemy;
+		Entity->gameEntity->enemy = attacker->gameEntity->enemy;
+		if (!(AIFlags & AI_DUCKED))
+			FoundTarget ();
+	}
+#endif
+}
+
 void CMonster::AI_Walk(float Dist)
 {
 	MoveToGoal (Dist);
@@ -3328,8 +3407,8 @@ void CMonster::SetEffects()
 
 void CMonster::WorldEffects()
 {
-	vec3_t origin;
-	Entity->State.GetOrigin(origin);
+	vec3f origin = Entity->State.GetOrigin();
+
 	if (Entity->gameEntity->health > 0)
 	{
 		if (!(Entity->gameEntity->flags & FL_SWIM))
@@ -3343,7 +3422,7 @@ void CMonster::WorldEffects()
 					int dmg = 2 + 2 * (level.framenum - Entity->AirFinished);
 					if (dmg > 15)
 						dmg = 15;
-					T_Damage (Entity->gameEntity, world, world, vec3Origin, origin, vec3Origin, dmg, 0, DAMAGE_NO_ARMOR, MOD_WATER);
+					Entity->TakeDamage (World, World, vec3fOrigin, origin, vec3fOrigin, dmg, 0, DAMAGE_NO_ARMOR, MOD_WATER);
 					Entity->gameEntity->pain_debounce_time = level.framenum + 10;
 				}
 			}
@@ -3359,7 +3438,7 @@ void CMonster::WorldEffects()
 					int dmg = 2 + 2 * (level.framenum - Entity->AirFinished);
 					if (dmg > 15)
 						dmg = 15;
-					T_Damage (Entity->gameEntity, world, world, vec3Origin, origin, vec3Origin, dmg, 0, DAMAGE_NO_ARMOR, MOD_WATER);
+					Entity->TakeDamage (World, World, vec3fOrigin, origin, vec3fOrigin, dmg, 0, DAMAGE_NO_ARMOR, MOD_WATER);
 					Entity->gameEntity->pain_debounce_time = level.framenum + 10;
 				}
 			}
@@ -3381,7 +3460,7 @@ void CMonster::WorldEffects()
 		if (Entity->gameEntity->damage_debounce_time < level.framenum)
 		{
 			Entity->gameEntity->damage_debounce_time = level.framenum + 2;
-			T_Damage (Entity->gameEntity, world, world, vec3Origin, origin, vec3Origin, 10*Entity->gameEntity->waterlevel, 0, 0, MOD_LAVA);
+			Entity->TakeDamage (World, World, vec3fOrigin, origin, vec3fOrigin, 10*Entity->gameEntity->waterlevel, 0, 0, MOD_LAVA);
 		}
 	}
 	if ((Entity->gameEntity->watertype & CONTENTS_SLIME) && !(Entity->gameEntity->flags & FL_IMMUNE_SLIME))
@@ -3389,7 +3468,7 @@ void CMonster::WorldEffects()
 		if (Entity->gameEntity->damage_debounce_time < level.framenum)
 		{
 			Entity->gameEntity->damage_debounce_time = level.framenum + 10;
-			T_Damage (Entity->gameEntity, world, world, vec3Origin, origin, vec3Origin, 4*Entity->gameEntity->waterlevel, 0, 0, MOD_SLIME);
+			Entity->TakeDamage (World, World, vec3fOrigin, origin, vec3fOrigin, 4*Entity->gameEntity->waterlevel, 0, 0, MOD_SLIME);
 		}
 	}
 	

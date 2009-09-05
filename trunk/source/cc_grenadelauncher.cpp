@@ -66,9 +66,7 @@ bool CGrenadeLauncher::CanStopFidgetting (CPlayerEntity *ent)
 
 void CGrenadeLauncher::Fire (CPlayerEntity *ent)
 {
-	vec3f	offset (8, 8, ent->gameEntity->viewheight-8);
-	vec3f	forward, right;
-	vec3f	start;
+	vec3f	offset (8, 8, ent->gameEntity->viewheight-8), forward, right, start;
 	const int	damage = (isQuad) ? 480 : 120;
 	const float	radius = 160;
 
@@ -77,10 +75,9 @@ void CGrenadeLauncher::Fire (CPlayerEntity *ent)
 	ent->Client.ViewAngle.ToVectors (&forward, &right, NULL);
 	ent->P_ProjectSource (offset, forward, right, start);
 
-	vec3f kickOrigin = forward;
-	kickOrigin.Scale (-2);
-	Vec3Copy (kickOrigin, ent->Client.kick_origin);
-	ent->Client.kick_angles[0] = -1;
+	ent->Client.KickOrigin = forward;
+	ent->Client.KickOrigin.Scale (-2);
+	ent->Client.KickAngles.X = -1;
 
 	CGrenade::Spawn (ent, start, forward, damage, 600, 2.5f, radius);
 

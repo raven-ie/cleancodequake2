@@ -455,16 +455,14 @@ bool CGunner::GrenadeCheck()
 	if(!Entity->gameEntity->enemy)
 		return false;
 
-	vec3_t		start;
-	vec3_t		forward, right;
-	vec3_t		target, dir;
+	vec3f		start, forward, right, target, dir;
 
 	// if the player is above my head, use machinegun.
 
 	// check for flag telling us that we're blindfiring
 	if (AIFlags & AI_MANUAL_STEERING)
 	{
-		if (Entity->State.GetOrigin().Z+Entity->gameEntity->viewheight < BlindFireTarget[2])
+		if ((Entity->State.GetOrigin().Z + Entity->gameEntity->viewheight) < BlindFireTarget[2])
 			return false;
 	}
 	else if(Entity->GetAbsMax().Z <= Entity->gameEntity->enemy->absMin[2])
@@ -472,22 +470,15 @@ bool CGunner::GrenadeCheck()
 
 	// check to see that we can trace to the player before we start
 	// tossing grenades around.
-	vec3_t angles, origin;
-	Entity->State.GetAngles(angles);
-	Entity->State.GetOrigin(origin);
-	Angles_Vectors (angles, forward, right, NULL);
-	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_GUNNER_GRENADE_1], forward, right, start);
+	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
+	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_GUNNER_GRENADE_1], forward, right, start);
 
 	// pmm - check for blindfire flag
-	if (AIFlags & AI_MANUAL_STEERING)
-		Vec3Copy (BlindFireTarget, target);
-	else
-		Vec3Copy (Entity->gameEntity->enemy->state.origin, target);
+	target = (AIFlags & AI_MANUAL_STEERING) ? BlindFireTarget : Entity->gameEntity->enemy->state.origin;
 
-	// see if we're too close
-	Vec3Subtract (origin, target, dir);
+	dir = Entity->State.GetOrigin() - target;
 
-	if (Vec3Length(dir) < 100)
+	if (dir.Length() < 100)
 		return false;
 
 	CTrace tr = CTrace(start, target, Entity->gameEntity, CONTENTS_MASK_SHOT);
@@ -500,34 +491,27 @@ bool CGunner::GrenadeCheck()
 
 void CGunner::Fire ()
 {
-	vec3_t	start;
-	vec3_t	forward, right;
-	vec3_t	target;
-	vec3_t	aim;
+	vec3f	start, forward, right, target, aim;
 	int		flash_number = MZ2_GUNNER_MACHINEGUN_1 + (Entity->State.GetFrame() - FRAME_attak216);
 
-	vec3_t angles, origin;
-	Entity->State.GetAngles(angles);
-	Entity->State.GetOrigin(origin);
-	Angles_Vectors (angles, forward, right, NULL);
-	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
+	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
+	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
 	// project enemy back a bit and target there
-	Vec3Copy (Entity->gameEntity->enemy->state.origin, target);
-	Vec3MA (target, -0.2f, Entity->gameEntity->enemy->velocity, target);
-	target[2] += Entity->gameEntity->enemy->viewheight;
+	target = Entity->gameEntity->enemy->state.origin;
+	target = target.MultiplyAngles (-0.2f, Entity->gameEntity->enemy->velocity);
+	target.Z += Entity->gameEntity->enemy->viewheight;
 
-	Vec3Subtract (target, start, aim);
-	VectorNormalizef (aim, aim);
+	aim = target - start;
+	aim.NormalizeFast ();
+
 	MonsterFireBullet (start, aim, 3, 4, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, flash_number);
 }
 
 void CGunner::Grenade ()
 {
 #ifndef MONSTER_USE_ROGUE_AI
-	vec3_t	start;
-	vec3_t	forward, right;
-	vec3_t	aim;
+	vec3f	start, forward, right;
 	int		flash_number;
 
 	switch (Entity->State.GetFrame())
@@ -545,32 +529,22 @@ void CGunner::Grenade ()
 		flash_number = MZ2_GUNNER_GRENADE_4;
 		break;
 	}
-	vec3_t angles, origin;
-	Entity->State.GetAngles(angles);
-	Entity->State.GetOrigin(origin);
-	Angles_Vectors (angles, forward, right, NULL);
-	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
-	//FIXME : do a spread -225 -75 75 225 degrees around forward
-	Vec3Copy (forward, aim);
+	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
+	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
-	MonsterFireGrenade (start, aim, 50, 600, flash_number);
+	MonsterFireGrenade (start, forward, 50, 600, flash_number);
 #else
-	vec3_t	start;
-	vec3_t	forward, right, up;
-	vec3_t	aim;
+	vec3f	start, forward, right, up, aim;
 	int		flash_number;
 	float	spread;
 	float	pitch = 0;
 	// PMM
-	vec3_t	target;	
+	vec3f	target;	
 
 	if(!Entity->gameEntity->enemy || !Entity->gameEntity->enemy->inUse)		//PGM
 		return;									//PGM
 
-	vec3_t angles, origin;
-	Entity->State.GetAngles(angles);
-	Entity->State.GetOrigin(origin);
 	switch (Entity->State.GetFrame())
 	{
 	case FRAME_attak105:
@@ -600,29 +574,26 @@ void CGunner::Grenade ()
 		if (Vec3Compare (BlindFireTarget, vec3Origin))
 			return;
 
-		Vec3Copy (BlindFireTarget, target);
+		target = BlindFireTarget;
 	}
 	else
-		Vec3Copy (origin, target);
+		target = Entity->State.GetOrigin();
 	// pmm
 
-	Angles_Vectors (angles, forward, right, up);	//PGM
-	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
+	Entity->State.GetAngles().ToVectors (&forward, &right, &up);	//PGM
+	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
 //PGM
 	if(Entity->gameEntity->enemy)
 	{
-		float	dist;
-
-		Vec3Subtract(target, origin, aim);
-		dist = Vec3Length(aim);
+		aim = target - Entity->State.GetOrigin();
 
 		// aim up if they're on the same level as me and far away.
-		if((dist > 512) && (aim[2] < 64) && (aim[2] > -64))
-			aim[2] += (dist - 512);
+		if((aim.Length() > 512) && (aim.Z < 64) && (aim.Z > -64))
+			aim.Z += (aim.Length() - 512);
 
-		VectorNormalizeFastf (aim);
-		pitch = aim[2];
+		aim.NormalizeFast ();
+		pitch = aim.Z;
 		if(pitch > 0.4f)
 			pitch = 0.4f;
 		else if(pitch < -0.5f)
@@ -630,11 +601,7 @@ void CGunner::Grenade ()
 	}
 //PGM
 
-	//FIXME : do a spread -225 -75 75 225 degrees around forward
-//	VectorCopy (forward, aim);
-	Vec3MA (forward, spread, right, aim);
-	Vec3MA (aim, pitch, up, aim);
-
+	aim = (forward.MultiplyAngles (spread, right)).MultiplyAngles (pitch, up);
 	MonsterFireGrenade (start, aim, 50, 600, flash_number);
 #endif
 }
