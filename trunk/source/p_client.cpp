@@ -92,52 +92,6 @@ void ClientObituary (CPlayerEntity *self, edict_t *attacker)
 			self->Client.resp.score--;
 		BroadcastPrintf (PRINT_MEDIUM, "%s %s.\n", self->Client.pers.netname, message);
 	}
-	else if (attacker == world)
-	{
-		switch (meansOfDeath)
-		{
-		case MOD_SUICIDE:
-			message = "suicides";
-			break;
-		case MOD_FALLING:
-			message = "cratered";
-			break;
-		case MOD_CRUSH:
-			message = "was squished";
-			break;
-		case MOD_WATER:
-			message = "sank like a rock";
-			break;
-		case MOD_SLIME:
-			message = "melted";
-			break;
-		case MOD_LAVA:
-			message = "does a back flip into the lava";
-			break;
-		case MOD_EXPLOSIVE:
-		case MOD_BARREL:
-			message = "blew up";
-			break;
-		case MOD_EXIT:
-			message = "found a way out";
-			break;
-		case MOD_TARGET_LASER:
-			message = "saw the light";
-			break;
-		case MOD_TARGET_BLASTER:
-			message = "got blasted";
-			break;
-		case MOD_BOMB:
-		case MOD_SPLASH:
-		case MOD_TRIGGER_HURT:
-			message = "was in the wrong place";
-			break;
-		}
-
-		if (game.mode & GAME_DEATHMATCH)
-			self->Client.resp.score--;
-		BroadcastPrintf (PRINT_MEDIUM, "%s %s.\n", self->Client.pers.netname, message);
-	}
 	else if (attacker && attacker->client)
 	{
 		CPlayerEntity *Attacker = dynamic_cast<CPlayerEntity*>(attacker->Entity);
@@ -231,7 +185,52 @@ void ClientObituary (CPlayerEntity *self, edict_t *attacker)
 	}
 	else
 	{
-		BroadcastPrintf (PRINT_MEDIUM, "%s died.\n", self->Client.pers.netname);
+		switch (meansOfDeath)
+		{
+		case MOD_SUICIDE:
+			message = "suicides";
+			break;
+		case MOD_FALLING:
+			message = "cratered";
+			break;
+		case MOD_CRUSH:
+			message = "was squished";
+			break;
+		case MOD_WATER:
+			message = "sank like a rock";
+			break;
+		case MOD_SLIME:
+			message = "melted";
+			break;
+		case MOD_LAVA:
+			message = "does a back flip into the lava";
+			break;
+		case MOD_EXPLOSIVE:
+		case MOD_BARREL:
+			message = "blew up";
+			break;
+		case MOD_EXIT:
+			message = "found a way out";
+			break;
+		case MOD_TARGET_LASER:
+			message = "saw the light";
+			break;
+		case MOD_TARGET_BLASTER:
+			message = "got blasted";
+			break;
+		case MOD_BOMB:
+		case MOD_SPLASH:
+		case MOD_TRIGGER_HURT:
+			message = "was in the wrong place";
+			break;
+		default:
+			message = "died";
+			break;
+		}
+
+		if (game.mode & GAME_DEATHMATCH)
+			self->Client.resp.score--;
+		BroadcastPrintf (PRINT_MEDIUM, "%s %s.\n", self->Client.pers.netname, message);
 		if (game.mode & GAME_DEATHMATCH)
 			self->Client.resp.score--;
 	}

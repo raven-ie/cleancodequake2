@@ -115,6 +115,8 @@ LINK_CLASSNAME_TO_CLASS ("target_speaker", CTargetSpeaker);
 class CTargetExplosion : public CMapEntity, public CThinkableEntity, public CUsableEntity
 {
 public:
+	char	*Message;
+
 	CTargetExplosion () :
 	  CBaseEntity (),
 	  CMapEntity (),
@@ -145,7 +147,7 @@ public:
 
 		float save = gameEntity->delay;
 		gameEntity->delay = 0;
-		G_UseTargets (this, gameEntity->activator->Entity);
+		UseTargets (gameEntity->activator->Entity, Message);
 		gameEntity->delay = save;
 	};
 
@@ -166,6 +168,9 @@ public:
 	void Spawn ()
 	{
 		SetSvFlags (SVF_NOCLIENT);
+
+		if (st.message)
+			Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	};
 };
 
@@ -378,7 +383,7 @@ void CTargetChangeLevel::Use (CBaseEntity *other, CBaseEntity *activator)
 	// if noexit, do a ton of damage to other
 	if ((game.mode & GAME_DEATHMATCH) && !dmFlags.dfAllowExit && (other != world->Entity))
 	{
-		if (other->EntityFlags & ENT_HURTABLE)
+		if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
 			dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, 10 * other->gameEntity->max_health, 1000, 0, MOD_EXIT);
 		return;
 	}
@@ -464,9 +469,11 @@ killtarget also work.
 
 "delay"		delay before using targets if the trigger has been activated (default 1)
 */
-class CTargetCrossLevelTarget : public CMapEntity, public CThinkableEntity
+class CTargetCrossLevelTarget : public CMapEntity, public CThinkableEntity, public CUsableEntity
 {
 public:
+	char	*Message;
+
 	CTargetCrossLevelTarget () :
 	  CBaseEntity (),
 	  CMapEntity (),
@@ -481,6 +488,10 @@ public:
 	{
 	};
 
+	void Use (CBaseEntity *, CBaseEntity *)
+	{
+	};
+
 	bool Run ()
 	{
 		return CBaseEntity::Run();
@@ -490,7 +501,7 @@ public:
 	{
 		if (gameEntity->spawnflags == (game.serverflags & SFL_CROSS_TRIGGER_MASK & gameEntity->spawnflags))
 		{
-			G_UseTargets (this, this);
+			UseTargets (this, Message);
 			Free ();
 		}
 	};
@@ -503,6 +514,9 @@ public:
 		
 		// Paril: backwards compatibility
 		NextThink = level.framenum + (gameEntity->delay * 10);
+
+		if (st.message)
+			Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	};
 };
 
@@ -515,6 +529,8 @@ These are single use targets.
 class CTargetSecret : public CMapEntity, public CUsableEntity
 {
 public:
+	char	*Message;
+
 	CTargetSecret () :
 	  CBaseEntity (),
 	  CMapEntity (),
@@ -540,7 +556,7 @@ public:
 
 		level.found_secrets++;
 
-		G_UseTargets (this, activator);
+		UseTargets (activator, Message);
 		Free ();
 	};
 
@@ -558,8 +574,11 @@ public:
 		SetSvFlags (SVF_NOCLIENT);
 		level.total_secrets++;
 		// map bug hack
+
 		if (!Q_stricmp(level.mapname, "mine3") && (State.GetOrigin().X == 280 && State.GetOrigin().Y == -2048 && State.GetOrigin().Z == -624))
-			gameEntity->message = "You have found a secret area.";
+			Message = "You have found a secret area.";
+		else if (st.message)
+			Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	};
 };
 
@@ -572,6 +591,8 @@ These are single use targets.
 class CTargetGoal : public CMapEntity, public CUsableEntity
 {
 public:
+	char	*Message;
+
 	CTargetGoal () :
 	  CBaseEntity (),
 	  CMapEntity (),
@@ -600,7 +621,7 @@ public:
 		if (level.found_goals == level.total_goals)
 			ConfigString (CS_CDTRACK, "0");
 
-		G_UseTargets (this, activator);
+		UseTargets (activator, Message);
 		Free ();
 	};
 
@@ -617,6 +638,9 @@ public:
 		gameEntity->noise_index = SoundIndex (st.noise);
 		SetSvFlags (SVF_NOCLIENT);
 		level.total_goals++;
+
+		if (st.message)
+			Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	};
 };
 
@@ -759,7 +783,7 @@ public:
 
 			CBaseEntity *Entity = tr.ent->Entity;
 			// hurt it if we can
-			if ((Entity->EntityFlags & ENT_HURTABLE) && !(Entity->gameEntity->flags & FL_IMMUNE_LASER))
+			if (((Entity->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(Entity)->CanTakeDamage) && !(Entity->Flags & FL_IMMUNE_LASER))
 				dynamic_cast<CHurtableEntity*>(Entity)->TakeDamage (this, (gameEntity->activator) ? gameEntity->activator->Entity : NULL, MoveDir, tr.EndPos, vec3fOrigin, gameEntity->dmg, 1, DAMAGE_ENERGY, MOD_TARGET_LASER);
 
 			// if we hit something that's not a monster or player or is immune to lasers, we're done
@@ -884,6 +908,8 @@ When fired, the "message" key becomes the current personal computer string, and 
 class CTargeHelp : public CMapEntity, public CUsableEntity
 {
 public:
+	char		*Message;
+
 	CTargeHelp () :
 	  CBaseEntity (),
 	  CMapEntity (),
@@ -905,7 +931,7 @@ public:
 
 	void Use (CBaseEntity *other, CBaseEntity *activator)
 	{
-		Q_strncpyz ((gameEntity->spawnflags & 1) ? game.helpmessage1 : game.helpmessage2, gameEntity->message, sizeof(game.helpmessage1)-1);
+		Q_strncpyz ((gameEntity->spawnflags & 1) ? game.helpmessage1 : game.helpmessage2, Message, sizeof(game.helpmessage1)-1);
 		game.helpchanged++;
 	};
 
@@ -917,13 +943,14 @@ public:
 			return;
 		}
 
-		if (!gameEntity->message)
+		if (!st.message)
 		{
-			//gi.dprintf ("%s with no message at (%f %f %f)\n", ent->classname, ent->state.origin[0], ent->state.origin[1], ent->state.origin[2]);
 			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No message\n");
 			Free ();
 			return;
 		}
+
+		Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	};
 };
 

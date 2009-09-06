@@ -437,7 +437,7 @@ bool CFlag::Pickup(CItemEntity *ent, CPlayerEntity *other)
 	// if it's dropped, it will be removed by the pickup caller
 	if (!(ent->gameEntity->spawnflags & DROPPED_ITEM))
 	{
-		ent->gameEntity->flags |= FL_RESPAWN;
+		ent->Flags |= FL_RESPAWN;
 		ent->SetSvFlags (ent->GetSvFlags() | SVF_NOCLIENT);
 		ent->SetSolid (SOLID_NOT);
 	}

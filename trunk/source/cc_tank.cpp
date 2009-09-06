@@ -870,17 +870,17 @@ void CTank::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3
 			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMetal, damage, GIB_METALLIC);
 		CGibEntity::Spawn (Entity, gMedia.Gib_Chest, damage, GIB_ORGANIC);
 		Entity->ThrowHead (gMedia.Gib_Gear, damage, GIB_METALLIC);
-		Entity->gameEntity->deadflag = DEAD_DEAD;
+		Entity->DeadFlag = true;
 		return;
 	}
 
-	if (Entity->gameEntity->deadflag == DEAD_DEAD)
+	if (Entity->DeadFlag == true)
 		return;
 
 // regular death
 	Entity->PlaySound (CHAN_VOICE, SoundDie);
-	Entity->gameEntity->deadflag = DEAD_DEAD;
-	Entity->gameEntity->takedamage = true;
+	Entity->DeadFlag = true;
+	Entity->CanTakeDamage = true;
 
 	CurrentMove = &TankMoveDeath;
 }

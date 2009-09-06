@@ -452,13 +452,8 @@ Advances the world by 0.1 seconds
 ================
 */
 
-void PlayEntitySounds (CBaseEntity *Entity);
-void G_RunFrame (void)
+void RunFrame ()
 {
-#ifdef CC_USE_EXCEPTION_HANDLER
-__try
-{
-#endif
 	int		i;
 	edict_t	*ent;
 
@@ -492,36 +487,35 @@ __try
 
 		level.current_entity = ent;
 
-		Vec3Copy (ent->state.origin, ent->state.oldOrigin);
-
-		// if the ground entity moved, make sure we are still on it
-		if ((ent->groundentity) && (ent->groundentity->linkCount != ent->groundentity_linkcount))
-		{
-			ent->groundentity = NULL;
-			if ( !(ent->flags & (FL_SWIM|FL_FLY)) && (ent->svFlags & SVF_MONSTER) && ent->Entity && (ent->Entity->EntityFlags & ENT_MONSTER) )
-				(dynamic_cast<CMonsterEntity*>(ent->Entity))->Monster->CheckGround ();
-		}
-
-		/*if (i > 0 && i <= game.maxclients)
-		{
-			ClientBeginServerFrame (ent);
-			continue;
-		}*/
 		if (ent->Entity)
 		{
-			if (!ent->Entity->Freed && (ent->Entity->EntityFlags & ENT_THINKABLE)) 
-				dynamic_cast<CThinkableEntity*>(ent->Entity)->PreThink ();
+			CBaseEntity *Entity = ent->Entity;
+			Entity->State.SetOldOrigin (Entity->State.GetOrigin());
 
-			ent->Entity->Run ();
+			// if the ground entity moved, make sure we are still on it
+			if ((ent->groundentity) && (ent->groundentity->linkCount != ent->groundentity_linkcount))
+			{
+				ent->groundentity = NULL;
+				if ( !(Entity->Flags & (FL_SWIM|FL_FLY)) && (Entity->EntityFlags & ENT_MONSTER))
+					(dynamic_cast<CMonsterEntity*>(Entity))->Monster->CheckGround ();
+			}
 
-			if (!ent->Entity->Freed && (ent->Entity->EntityFlags & ENT_THINKABLE))
-				dynamic_cast<CThinkableEntity*>(ent->Entity)->RunThink ();
+			if (!Entity->Freed && (Entity->EntityFlags & ENT_THINKABLE)) 
+				dynamic_cast<CThinkableEntity*>(Entity)->PreThink ();
+
+			Entity->Run ();
+
+			if (!Entity->Freed && (Entity->EntityFlags & ENT_THINKABLE))
+				dynamic_cast<CThinkableEntity*>(Entity)->RunThink ();
 
 			// Were we freed?
 			// This has to be processed after thinking and running, because
 			// the entity still has to be intact after that
-			if (ent->Entity->Freed)
-				QDelete ent->Entity;
+			if (Entity->Freed)
+			{
+				QDelete Entity;
+				ent->Entity = NULL;
+			}
 			continue;
 		}
 	}
@@ -545,6 +539,15 @@ __try
 #ifdef MONSTERS_USE_PATHFINDING
 	RunNodes();
 #endif
+}
+
+void G_RunFrame (void)
+{
+#ifdef CC_USE_EXCEPTION_HANDLER
+	__try
+	{
+#endif
+	RunFrame ();
 #ifdef CC_USE_EXCEPTION_HANDLER
 	}
 	__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))

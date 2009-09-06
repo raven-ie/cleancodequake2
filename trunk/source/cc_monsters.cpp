@@ -101,7 +101,7 @@ void CMonster::FoundPath ()
 void ForcePlatToGoUp (CBaseEntity *Entity);
 void CMonster::MoveToPath (float Dist)
 {
-	if (!Entity->gameEntity->groundentity && !(Entity->gameEntity->flags & (FL_FLY|FL_SWIM)))
+	if (!Entity->gameEntity->groundentity && !(Entity->Flags & (FL_FLY|FL_SWIM)))
 		return;
 
 	if (FindTarget() && (Entity->gameEntity->enemy && visible(Entity->gameEntity, Entity->gameEntity->enemy))) // Did we find an enemy while going to our path?
@@ -333,7 +333,7 @@ void CMonster::MoveToPath (float Dist)
 		// a valid standing position at all
 
 			if (!CheckBottom ())
-				Entity->gameEntity->flags |= FL_PARTIALGROUND;
+				Entity->Flags |= FL_PARTIALGROUND;
 		}
 	}
 }
@@ -370,7 +370,7 @@ void AI_SetSightClient (void)
 		CPlayerEntity *ent = dynamic_cast<CPlayerEntity*>(g_edicts[check].Entity);
 		if (ent->IsInUse()
 			&& ent->gameEntity->health > 0
-			&& !(ent->gameEntity->flags & FL_NOTARGET) )
+			&& !(ent->Flags & FL_NOTARGET) )
 		{
 			level.sight_client = ent;
 			return;		// got one
@@ -509,6 +509,9 @@ UseState(MONSTERENTITY_THINK_NONE)
 void CMonsterEntity::Spawn ()
 {
 	PhysicsType = PHYSICS_STEP;
+
+	if (st.message)
+		Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 };
 
 void CMonsterEntity::Think ()
@@ -555,9 +558,9 @@ void CMonsterEntity::ThrowHead (MediaIndex gibIndex, int damage, int type)
 	State.AddEffects (EF_GIB);
 	State.RemoveEffects (EF_FLIES);
 	State.SetSound (0);
-	gameEntity->flags |= FL_NO_KNOCKBACK;
+	Flags |= FL_NO_KNOCKBACK;
 	SetSvFlags (GetSvFlags() & ~SVF_MONSTER);
-	gameEntity->takedamage = true;
+	CanTakeDamage = true;
 
 	if (type == GIB_ORGANIC)
 	{
@@ -718,7 +721,7 @@ void CMonster::MoveToGoal (float Dist)
 {
 	edict_t *goal = Entity->gameEntity->goalentity;
 
-	if (!Entity->gameEntity->groundentity && !(Entity->gameEntity->flags & (FL_FLY|FL_SWIM)))
+	if (!Entity->gameEntity->groundentity && !(Entity->Flags & (FL_FLY|FL_SWIM)))
 		return;
 
 // if the next step hits the enemy, return immediately
@@ -737,7 +740,7 @@ bool CMonster::WalkMove (float Yaw, float Dist)
 {
 	vec3_t	move;
 	
-	if (!Entity->gameEntity->groundentity && !(Entity->gameEntity->flags & (FL_FLY|FL_SWIM)))
+	if (!Entity->gameEntity->groundentity && !(Entity->Flags & (FL_FLY|FL_SWIM)))
 		return false;
 
 	Yaw = Yaw*M_PI*2 / 360;
@@ -760,7 +763,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 	Vec3Add (oldorg, move, neworg);
 
 // flying monsters don't step up
-	if ( Entity->gameEntity->flags & (FL_SWIM | FL_FLY) )
+	if ( Entity->Flags & (FL_SWIM | FL_FLY) )
 	{
 	// try one move with vertical motion, then one without
 		for (int i=0 ; i<2 ; i++)
@@ -775,7 +778,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 				{
 					if (dz > 40)
 						neworg[2] -= 8;
-					if (!((Entity->gameEntity->flags & FL_SWIM) && (Entity->gameEntity->waterlevel < 2)))
+					if (!((Entity->Flags & FL_SWIM) && (Entity->gameEntity->waterlevel < 2)))
 						if (dz < 30)
 							neworg[2] += 8;
 				}
@@ -794,7 +797,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 			trace = CTrace(vec3f(oldorg), Entity->GetMins(), Entity->GetMaxs(), vec3f(neworg), Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
 	
 			// fly monsters don't enter water voluntarily
-			if (Entity->gameEntity->flags & FL_FLY)
+			if (Entity->Flags & FL_FLY)
 			{
 				if (!Entity->gameEntity->waterlevel)
 				{
@@ -806,7 +809,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 			}
 
 			// swim monsters don't exit water voluntarily
-			if (Entity->gameEntity->flags & FL_SWIM)
+			if (Entity->Flags & FL_SWIM)
 			{
 				if (Entity->gameEntity->waterlevel < 2)
 				{
@@ -874,7 +877,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 	if (trace.fraction == 1)
 	{
 	// if monster had the ground pulled out, go ahead and fall
-		if ( Entity->gameEntity->flags & FL_PARTIALGROUND )
+		if ( Entity->Flags & FL_PARTIALGROUND )
 		{
 			vec3_t or;
 			Entity->State.GetOrigin(or);
@@ -897,7 +900,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 	
 	if (!CheckBottom ())
 	{
-		if ( Entity->gameEntity->flags & FL_PARTIALGROUND )
+		if ( Entity->Flags & FL_PARTIALGROUND )
 		{	// entity had floor mostly pulled out from underneath it
 			// and is trying to correct
 			if (ReLink)
@@ -932,8 +935,8 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 		}
 	}
 
-	//if ( Entity->gameEntity->flags & FL_PARTIALGROUND )
-	Entity->gameEntity->flags &= ~FL_PARTIALGROUND;
+	//if ( Entity->Flags & FL_PARTIALGROUND )
+	Entity->Flags &= ~FL_PARTIALGROUND;
 
 	Entity->gameEntity->groundentity = trace.ent;
 	Entity->gameEntity->groundentity_linkcount = trace.ent->linkCount;
@@ -1042,7 +1045,7 @@ void CMonster::NewChaseDir (edict_t *Enemy, float Dist)
 // a valid standing position at all
 
 	if (!CheckBottom ())
-		Entity->gameEntity->flags |= FL_PARTIALGROUND;
+		Entity->Flags |= FL_PARTIALGROUND;
 }
 
 bool CMonster::StepDirection (float Yaw, float Dist)
@@ -1118,7 +1121,7 @@ void CMonster::SwimMonsterStartGo ()
 
 void CMonster::SwimMonsterStart ()
 {
-	Entity->gameEntity->flags |= FL_SWIM;
+	Entity->Flags |= FL_SWIM;
 	Think = &CMonster::SwimMonsterStartGo;
 	MonsterStart ();
 }
@@ -1140,7 +1143,7 @@ void CMonster::FlyMonsterStartGo ()
 
 void CMonster::FlyMonsterStart ()
 {
-	Entity->gameEntity->flags |= FL_FLY;
+	Entity->Flags |= FL_FLY;
 	Think = &CMonster::FlyMonsterStartGo;
 	MonsterStart ();
 }
@@ -1245,13 +1248,13 @@ void CMonster::MonsterStart ()
 	Entity->NextThink = level.framenum + FRAMETIME;
 	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_MONSTER);
 	Entity->State.AddRenderEffects (RF_FRAMELERP);
-	Entity->gameEntity->takedamage = true;
+	Entity->CanTakeDamage = true;
 	Entity->AirFinished = level.framenum + 120;
 	Entity->UseState = MONSTERENTITY_THINK_USE;
 	Entity->gameEntity->max_health = Entity->gameEntity->health;
 	Entity->gameEntity->clipMask = CONTENTS_MASK_MONSTERSOLID;
 
-	Entity->gameEntity->deadflag = DEAD_NO;
+	Entity->DeadFlag = false;
 	Entity->SetSvFlags (Entity->GetSvFlags() & ~SVF_DEADMONSTER);
 
 	Entity->State.SetOldOrigin(Entity->State.GetOrigin());
@@ -1296,7 +1299,7 @@ void CMonsterEntity::Use (CBaseEntity *other, CBaseEntity *activator)
 			return;
 		if (gameEntity->health <= 0)
 			return;
-		if (activator->gameEntity->flags & FL_NOTARGET)
+		if (activator->Flags & FL_NOTARGET)
 			return;
 		if (!(activator->EntityFlags & ENT_PLAYER) && !(Monster->AIFlags & AI_GOOD_GUY))
 			return;
@@ -1331,7 +1334,7 @@ void CMonster::MonsterTriggeredSpawn ()
 
 	MonsterStartGo ();
 
-	if (Entity->gameEntity->enemy && !(Entity->gameEntity->spawnflags & 1) && !(Entity->gameEntity->enemy->flags & FL_NOTARGET))
+	if (Entity->gameEntity->enemy && !(Entity->gameEntity->spawnflags & 1) && !(Entity->gameEntity->enemy->Entity->Flags & FL_NOTARGET))
 		FoundTarget ();
 	else
 		Entity->gameEntity->enemy = NULL;
@@ -1367,7 +1370,7 @@ void CMonster::AlertNearbyStroggs ()
 	float dist;
 	CMonsterEntity		*strogg = NULL;
 
-	if (Entity->gameEntity->enemy->flags & FL_NOTARGET)
+	if (Entity->gameEntity->enemy->Entity->Flags & FL_NOTARGET)
 		return;
 
 	switch (skill->Integer())
@@ -1391,7 +1394,7 @@ void CMonster::AlertNearbyStroggs ()
 	vec3f origin = Entity->State.GetOrigin ();
 	while ( (strogg = FindRadius<CMonsterEntity, ENT_MONSTER>(strogg, origin, dist)) != NULL)
 	{
-		if (strogg->gameEntity->health < 1 || !(strogg->gameEntity->takedamage))
+		if (strogg->gameEntity->health < 1 || !(strogg->CanTakeDamage))
 			continue;
 		if (strogg == Entity)
 			continue;
@@ -1594,7 +1597,7 @@ bool CMonster::CheckAttack ()
 		return true;
 	}
 
-	if (Entity->gameEntity->flags & FL_FLY)
+	if (Entity->Flags & FL_FLY)
 	{
 		if (random() < 0.3)
 			AttackState = AS_SLIDING;
@@ -1708,7 +1711,7 @@ bool CMonster::CheckAttack ()
 
 	// PMM -daedalus should strafe more .. this can be done here or in a customized
 	// check_attack code for the hover.
-	if (Entity->gameEntity->flags & FL_FLY)
+	if (Entity->Flags & FL_FLY)
 	{
 		// originally, just 0.3
 		float strafe_chance;
@@ -2760,7 +2763,7 @@ void CMonster::AI_Run_Slide(float Dist)
 		ChangeYaw ();
 
 	// PMM - clamp maximum sideways move for non flyers to make them look less jerky
-	if (!(Entity->gameEntity->flags & FL_FLY))
+	if (!(Entity->Flags & FL_FLY))
 		Dist = Min<> (Dist, 8.0f);
 	if (WalkMove (IdealYaw + ofs, Dist))
 		return;
@@ -3001,7 +3004,7 @@ void CMonster::ReactToDamage (edict_t *attacker)
 #else
 	// it's the same base (walk/swim/fly) type and a different classname and it's not a tank
 	// (they spray too much), get mad at them
-	//if (((Entity->gameEntity->flags & (FL_FLY|FL_SWIM)) == (attacker->flags & (FL_FLY|FL_SWIM))) &&
+	//if (((Entity->Flags & (FL_FLY|FL_SWIM)) == (attacker->flags & (FL_FLY|FL_SWIM))) &&
 	//	 (strcmp (Entity->gameEntity->classname, attacker->classname) != 0))// &&
 		// (strcmp(attacker->classname, "monster_tank") != 0) &&
 		// (strcmp(attacker->classname, "monster_supertank") != 0) &&
@@ -3080,7 +3083,7 @@ void CMonster::ReactToDamage (CBaseEntity *attacker)
 #else
 	// it's the same base (walk/swim/fly) type and a different classname and it's not a tank
 	// (they spray too much), get mad at them
-	if (((Entity->gameEntity->flags & (FL_FLY|FL_SWIM)) == (attacker->gameEntity->flags & (FL_FLY|FL_SWIM))) &&
+	if (((Entity->Flags & (FL_FLY|FL_SWIM)) == (attacker->Flags & (FL_FLY|FL_SWIM))) &&
 		 (strcmp (Entity->gameEntity->classname, attacker->gameEntity->classname) != 0))// &&
 		 (strcmp(attacker->gameEntity->classname, "monster_tank") != 0) &&
 		 (strcmp(attacker->gameEntity->classname, "monster_supertank") != 0) &&
@@ -3185,7 +3188,7 @@ void CMonster::Sight ()
 
 void CMonster::MonsterDeathUse ()
 {
-	Entity->gameEntity->flags &= ~(FL_FLY|FL_SWIM);
+	Entity->Flags &= ~(FL_FLY|FL_SWIM);
 	AIFlags &= AI_GOOD_GUY;
 
 	if (Entity->gameEntity->item)
@@ -3200,7 +3203,7 @@ void CMonster::MonsterDeathUse ()
 	if (!Entity->gameEntity->target)
 		return;
 
-	G_UseTargets (Entity, Entity->gameEntity->enemy->Entity);
+	Entity->UseTargets (Entity->gameEntity->enemy->Entity, Entity->Message);
 }
 
 void CMonster::MonsterThink ()
@@ -3411,7 +3414,7 @@ void CMonster::WorldEffects()
 
 	if (Entity->gameEntity->health > 0)
 	{
-		if (!(Entity->gameEntity->flags & FL_SWIM))
+		if (!(Entity->Flags & FL_SWIM))
 		{
 			if (Entity->gameEntity->waterlevel < 3)
 				Entity->AirFinished = level.framenum + 120;
@@ -3447,32 +3450,32 @@ void CMonster::WorldEffects()
 	
 	if (Entity->gameEntity->waterlevel == 0)
 	{
-		if (Entity->gameEntity->flags & FL_INWATER)
+		if (Entity->Flags & FL_INWATER)
 		{	
 			Entity->PlaySound (CHAN_BODY, SoundIndex("player/watr_out.wav"));
-			Entity->gameEntity->flags &= ~FL_INWATER;
+			Entity->Flags &= ~FL_INWATER;
 		}
 		return;
 	}
 
-	if ((Entity->gameEntity->watertype & CONTENTS_LAVA) && !(Entity->gameEntity->flags & FL_IMMUNE_LAVA))
+	if ((Entity->gameEntity->watertype & CONTENTS_LAVA) && !(Entity->Flags & FL_IMMUNE_LAVA))
 	{
-		if (Entity->gameEntity->damage_debounce_time < level.framenum)
+		if (Entity->DamageDebounceTime < level.framenum)
 		{
-			Entity->gameEntity->damage_debounce_time = level.framenum + 2;
+			Entity->DamageDebounceTime = level.framenum + 2;
 			Entity->TakeDamage (World, World, vec3fOrigin, origin, vec3fOrigin, 10*Entity->gameEntity->waterlevel, 0, 0, MOD_LAVA);
 		}
 	}
-	if ((Entity->gameEntity->watertype & CONTENTS_SLIME) && !(Entity->gameEntity->flags & FL_IMMUNE_SLIME))
+	if ((Entity->gameEntity->watertype & CONTENTS_SLIME) && !(Entity->Flags & FL_IMMUNE_SLIME))
 	{
-		if (Entity->gameEntity->damage_debounce_time < level.framenum)
+		if (Entity->DamageDebounceTime < level.framenum)
 		{
-			Entity->gameEntity->damage_debounce_time = level.framenum + 10;
+			Entity->DamageDebounceTime = level.framenum + 10;
 			Entity->TakeDamage (World, World, vec3fOrigin, origin, vec3fOrigin, 4*Entity->gameEntity->waterlevel, 0, 0, MOD_SLIME);
 		}
 	}
 	
-	if ( !(Entity->gameEntity->flags & FL_INWATER) )
+	if ( !(Entity->Flags & FL_INWATER) )
 	{	
 		if (!(Entity->GetSvFlags() & SVF_DEADMONSTER))
 		{
@@ -3487,8 +3490,8 @@ void CMonster::WorldEffects()
 				Entity->PlaySound (CHAN_BODY, SoundIndex("player/watr_in.wav"));
 		}
 
-		Entity->gameEntity->flags |= FL_INWATER;
-		Entity->gameEntity->damage_debounce_time = 0;
+		Entity->Flags |= FL_INWATER;
+		Entity->DamageDebounceTime = 0;
 	}
 }
 
@@ -3529,7 +3532,7 @@ void CMonster::CheckGround()
 	vec3_t		point;
 	CTrace		trace;
 
-	if (Entity->gameEntity->flags & (FL_SWIM|FL_FLY))
+	if (Entity->Flags & (FL_SWIM|FL_FLY))
 		return;
 
 	if (Entity->gameEntity->velocity[2] > 100)
@@ -3643,7 +3646,7 @@ bool CMonster::FindTarget()
 			{
 				vec3_t	temp;
 
-				if (client->gameEntity->flags & FL_NOTARGET)
+				if (client->Flags & FL_NOTARGET)
 					return false;
 
 				client->State.GetOrigin (temp);
@@ -3742,7 +3745,7 @@ bool CMonster::FindTarget()
 
 	if (client)
 	{
-		if (client->gameEntity->flags & FL_NOTARGET)
+		if (client->Flags & FL_NOTARGET)
 			return false;
 	}
 	else
@@ -4023,7 +4026,7 @@ void CMonster::DuckDown ()
 	vec3f tempMaxs = Entity->GetMaxs();
 	tempMaxs.Z = BaseHeight - 32;
 	Entity->SetMaxs(tempMaxs);
-	Entity->gameEntity->takedamage = true;
+	Entity->CanTakeDamage = true;
 	if (DuckWaitTime < level.framenum)
 		DuckWaitTime = level.framenum + 10;
 	Entity->Link ();
@@ -4048,7 +4051,7 @@ void CMonster::UnDuck ()
 	vec3f tempMaxs = Entity->GetMaxs();
 	tempMaxs.Z = BaseHeight;
 	Entity->SetMaxs(tempMaxs);
-	Entity->gameEntity->takedamage = true;
+	Entity->CanTakeDamage = true;
 	NextDuckTime = level.framenum + 5;
 	Entity->Link ();
 }

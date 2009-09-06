@@ -120,130 +120,6 @@ CBaseEntity *CC_PickTarget (char *targetname)
 	return choice[rand() % num_choices];
 }
 
-class CDelayedUse : public CThinkableEntity
-{
-public:
-	CBaseEntity	*Activator;
-
-	CDelayedUse () :
-	  CBaseEntity (),
-	  CThinkableEntity (),
-	  Activator(NULL)
-	  {
-	  };
-
-	CDelayedUse (int Index) :
-	  CBaseEntity (Index),
-	  CThinkableEntity (Index),
-	  Activator(NULL)
-	  {
-	  };
-
-	void Think ()
-	{
-		G_UseTargets (this, Activator);
-		Free ();
-	}
-};
-
-/*
-==============================
-G_UseTargets
-
-the global "activator" should be set to the entity that initiated the firing.
-
-If self.delay is set, a DelayedUse entity will be created that will actually
-do the SUB_UseTargets after that many seconds have passed.
-
-Centerprints any self.message to the activator.
-
-Search for (string)targetname in all entities that
-match (string)self.target and call their .use function
-
-==============================
-*/
-void G_UseTargets (CBaseEntity *ent, CBaseEntity *activator)
-{
-//
-// check for a delay
-//
-	if (ent->gameEntity->delay)
-	{
-	// create a temp object to fire at a later time
-		CDelayedUse *t = QNew (com_levelPool, 0) CDelayedUse;
-		t->gameEntity->classname = "DelayedUse";
-
-		// Paril: for compatibility
-		t->NextThink = level.framenum + (ent->gameEntity->delay * 10);
-		t->Activator = activator;
-		if (!activator)
-			DebugPrintf ("DelayedUse with no activator\n");
-		t->gameEntity->message = ent->gameEntity->message;
-		t->gameEntity->target = ent->gameEntity->target;
-		t->gameEntity->killtarget = ent->gameEntity->killtarget;
-		return;
-	}
-
-//
-// print the message
-//
-	if ((ent->gameEntity->message) && (activator->EntityFlags & ENT_PLAYER))
-	{
-		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(activator);
-		Player->PrintToClient (PRINT_CENTER, "%s", ent->gameEntity->message);
-		if (ent->gameEntity->noise_index)
-			Player->PlaySound (CHAN_AUTO, ent->gameEntity->noise_index);
-		else
-			Player->PlaySound (CHAN_AUTO, SoundIndex ("misc/talk1.wav"));
-	}
-
-//
-// kill killtargets
-//
-	if (ent->gameEntity->killtarget)
-	{
-		CBaseEntity *t = NULL;
-		while ((t = CC_Find (t, FOFS(targetname), ent->gameEntity->killtarget)) != NULL)
-		{
-			t->Free ();
-
-			if (!ent->IsInUse())
-			{
-				DebugPrintf("entity was removed while using killtargets\n");
-				return;
-			}
-		}
-	}
-
-//
-// fire targets
-//
-	if (ent->gameEntity->target)
-	{
-		CBaseEntity *Ent = NULL;
-		while ((Ent = CC_Find (Ent, FOFS(targetname), ent->gameEntity->target)) != NULL)
-		{
-			if (!Ent)
-				continue;
-
-			// doors fire area portals in a specific way
-			if (!Q_stricmp(Ent->gameEntity->classname, "func_areaportal") &&
-				(!Q_stricmp(Ent->gameEntity->classname, "func_door") || !Q_stricmp(Ent->gameEntity->classname, "func_door_rotating")))
-				continue;
-
-			if (Ent == ent)
-				DebugPrintf ("WARNING: Entity used itself.\n");
-			else if (Ent->EntityFlags & ENT_USABLE)
-				(dynamic_cast<CUsableEntity*>(Ent))->Use (ent, activator);
-			if (!ent->IsInUse())
-			{
-				DebugPrintf("entity was removed while using targets\n");
-				return;
-			}
-		}
-	}
-}
-
 void G_SetMovedir (vec3f &angles, vec3f &movedir)
 {
 	if (angles.Y == -1)
@@ -268,7 +144,7 @@ void	G_TouchTriggers (CBaseEntity *ent)
 	memset(touch, 0, sizeof(touch));
 
 	// dead things don't activate triggers!
-	if ((ent->EntityFlags & ENT_HURTABLE) && (ent->gameEntity->health <= 0))
+	if (((ent->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(ent)->CanTakeDamage) && (ent->gameEntity->health <= 0))
 		return;
 
 	int num = BoxEdicts (ent->GetAbsMin(), ent->GetAbsMax(), touch, MAX_CS_EDICTS, true);
@@ -320,7 +196,7 @@ bool KillBox (CBaseEntity *ent)
 		if (!tr.ent || !tr.Ent)
 			break;
 
-		if (tr.Ent->EntityFlags & ENT_HURTABLE)
+		if ((tr.Ent->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(tr.Ent)->CanTakeDamage)
 		{
 			// nail it
 			dynamic_cast<CHurtableEntity*>(tr.Ent)->TakeDamage (ent, ent, vec3fOrigin, ent->State.GetOrigin(),
@@ -570,7 +446,7 @@ void T_RadiusDamage (CBaseEntity *inflictor, CBaseEntity *attacker, float damage
 	{
 		if (ent == ignore)
 			continue;
-		if (!ent->gameEntity->takedamage)
+		if (!ent->CanTakeDamage)
 			continue;
 
 		vec3f v = ent->GetMins() + ent->GetMaxs();

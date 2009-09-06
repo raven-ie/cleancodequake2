@@ -36,7 +36,6 @@ field_t fields[] = {
 	{"deathtarget", FOFS(deathtarget), F_LSTRING},
 	{"killtarget", FOFS(killtarget), F_LSTRING},
 	{"combattarget", FOFS(combattarget), F_LSTRING},
-	{"message", FOFS(message), F_LSTRING},
 	{"team", FOFS(team), F_LSTRING},
 	{"wait", FOFS(wait), F_FLOAT},
 	{"delay", FOFS(delay), F_FLOAT},
@@ -91,6 +90,7 @@ field_t fields[] = {
 	{"minpitch", STOFS(minpitch), F_FLOAT, FFL_SPAWNTEMP},
 	{"maxpitch", STOFS(maxpitch), F_FLOAT, FFL_SPAWNTEMP},
 	{"nextmap", STOFS(nextmap), F_LSTRING, FFL_SPAWNTEMP},
+	{"message", STOFS(message), F_LSTRING, FFL_SPAWNTEMP},
 
 	{0, 0, F_IGNORE, 0}
 

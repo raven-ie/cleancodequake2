@@ -283,10 +283,23 @@ void CParasite::DrainAttack ()
 {
 	vec3f f, r;
 	Entity->State.GetAngles().ToVectors (&f, &r, NULL);
-	vec3f offset(24, 0, 6);
+	static const vec3f frameOffsets[] =
+	{
+		vec3f(7 + 16.4f, 0, 5),
+		vec3f(7 + 16.4f, 0, 4.4f),
+		vec3f(7 + 16.4f, 0, 3),
+		vec3f(6 + 16.4f, 0, 5),
+		vec3f(4 + 16.4f, 0, 4),
+		vec3f(5 + 16.4f, 0, 7),
+		vec3f(5 + 16.4f, 0, 6),
+		vec3f(4.7f + 16.4f, 0, 8),
+		vec3f(4.3f + 16.4f, 0, 8),
+		vec3f(1 + 16.4f, 0, 10),
+		vec3f(2 + 16.4f, 0, 9)
+	};
 
 	vec3f start;
-	G_ProjectSource (Entity->State.GetOrigin(), offset, f, r, start);
+ 	G_ProjectSource (Entity->State.GetOrigin(), frameOffsets[Entity->State.GetFrame() - 41], f, r, start);
 
 	vec3f end = vec3f(Entity->gameEntity->enemy->state.origin);
 	if (!DrainAttackOK(start, end))
@@ -443,17 +456,17 @@ void CParasite::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, 
 		for (int n= 0; n < 4; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 		Entity->ThrowHead (gMedia.Gib_Head[1], damage, GIB_ORGANIC);
-		Entity->gameEntity->deadflag = DEAD_DEAD;
+		Entity->DeadFlag = true;
 		return;
 	}
 
-	if (Entity->gameEntity->deadflag == DEAD_DEAD)
+	if (Entity->DeadFlag == true)
 		return;
 
 // regular death
 	Entity->PlaySound (CHAN_VOICE, SoundDie, 1, ATTN_NORM, 0);
-	Entity->gameEntity->deadflag = DEAD_DEAD;
-	Entity->gameEntity->takedamage = true;
+	Entity->DeadFlag = true;
+	Entity->CanTakeDamage = true;
 	CurrentMove = &ParasiteMoveDeath;
 }
 

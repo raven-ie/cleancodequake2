@@ -424,7 +424,7 @@ void CJorg::Explode ()
 			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMetal, 500, GIB_METALLIC);
 		CGibEntity::Spawn (Entity, gMedia.Gib_Chest, 500, GIB_ORGANIC);
 		Entity->ThrowHead (gMedia.Gib_Gear, 500, GIB_METALLIC);
-		Entity->gameEntity->deadflag = DEAD_DEAD;
+		Entity->DeadFlag = true;
 		return;
 	}
 
@@ -435,8 +435,8 @@ void CJorg::Explode ()
 void CJorg::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
 	Entity->PlaySound (CHAN_VOICE, SoundDeath, 1, ATTN_NORM, 0);
-	Entity->gameEntity->deadflag = DEAD_DEAD;
-	Entity->gameEntity->takedamage = false;
+	Entity->DeadFlag = true;
+	Entity->CanTakeDamage = false;
 	Entity->State.SetSound (0);
 	Entity->gameEntity->count = 0;
 	CurrentMove = &JorgMoveDeath;
@@ -662,7 +662,7 @@ bool CJorg::CheckAttack ()
 		return true;
 	}
 
-	if (Entity->gameEntity->flags & FL_FLY)
+	if (Entity->Flags & FL_FLY)
 	{
 		if (random() < 0.3)
 			AttackState = AS_SLIDING;
@@ -776,7 +776,7 @@ bool CJorg::CheckAttack ()
 
 	// PMM -daedalus should strafe more .. this can be done here or in a customized
 	// check_attack code for the hover.
-	if (Entity->gameEntity->flags & FL_FLY)
+	if (Entity->Flags & FL_FLY)
 	{
 		// originally, just 0.3
 		float strafe_chance;

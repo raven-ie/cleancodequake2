@@ -91,6 +91,25 @@ public:
 	void	SetEvent			(int value);
 };
 
+// FIXME: merge some of these flags elsewhere?
+typedef uint32 EEdictFlags;
+enum
+{
+	FL_FLY				= BIT(0),
+	FL_SWIM				= BIT(1),
+	FL_IMMUNE_LASER		= BIT(2),
+	FL_INWATER			= BIT(3),
+	FL_GODMODE			= BIT(4),
+	FL_NOTARGET			= BIT(5),
+	FL_IMMUNE_SLIME		= BIT(6),
+	FL_IMMUNE_LAVA		= BIT(7),
+	FL_PARTIALGROUND	= BIT(8),
+	FL_TEAMSLAVE		= BIT(9),
+	FL_NO_KNOCKBACK		= BIT(10),
+	FL_POWER_ARMOR		= BIT(11),
+	FL_RESPAWN			= BIT(12)
+};
+
 // CBaseEntity is abstract.
 // A base entity can't do anything
 class CBaseEntity abstract
@@ -103,6 +122,7 @@ public:
 	bool			Freed;
 	int32			EntityFlags;
 	CEntityState	State;
+	EEdictFlags		Flags;
 
 	CBaseEntity ();
 	CBaseEntity (int Index);

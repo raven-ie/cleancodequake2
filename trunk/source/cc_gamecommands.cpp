@@ -45,8 +45,8 @@ argv(0) god
 */
 void Cmd_God_f (CPlayerEntity *ent)
 {
-	ent->gameEntity->flags ^= FL_GODMODE;
-	ent->PrintToClient (PRINT_HIGH, "God mode %s\n", (!(ent->gameEntity->flags & FL_GODMODE)) ? "off" : "on");
+	ent->Flags ^= FL_GODMODE;
+	ent->PrintToClient (PRINT_HIGH, "God mode %s\n", (!(ent->Flags & FL_GODMODE)) ? "off" : "on");
 }
 
 
@@ -61,8 +61,8 @@ argv(0) notarget
 */
 void Cmd_Notarget_f (CPlayerEntity *ent)
 {
-	ent->gameEntity->flags ^= FL_NOTARGET;
-	ent->PrintToClient (PRINT_HIGH, "Notarget %s\n", (!(ent->gameEntity->flags & FL_NOTARGET)) ? "off" : "on");
+	ent->Flags ^= FL_NOTARGET;
+	ent->PrintToClient (PRINT_HIGH, "Notarget %s\n", (!(ent->Flags & FL_NOTARGET)) ? "off" : "on");
 }
 
 
@@ -94,7 +94,7 @@ void Cmd_Kill_f (CPlayerEntity *ent)
 	if((level.framenum - ent->Client.respawn_time) < 50)
 		return;
 
-	ent->gameEntity->flags &= ~FL_GODMODE;
+	ent->Flags &= ~FL_GODMODE;
 	ent->gameEntity->health = 0;
 	meansOfDeath = MOD_SUICIDE;
 	ent->Die (ent, ent, 100000, vec3fOrigin);

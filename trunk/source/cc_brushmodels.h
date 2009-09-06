@@ -159,6 +159,8 @@ public:
 class CDoor : public CMapEntity, public CBrushModel, public CHurtableEntity, public CBlockableEntity, public CTouchableEntity, public CUsableEntity
 {
 public:
+	char	*Message;
+
 	enum
 	{
 		DOORTHINK_SPAWNDOORTRIGGER = BRUSHTHINK_CUSTOM_START,
@@ -264,6 +266,7 @@ public:
 class CButton : public CMapEntity, public CBrushModel, public CHurtableEntity, public CTouchableEntity, public CUsableEntity
 {
 public:
+	char	*Message;
 	enum
 	{
 		BUTTONTHINK_RETURN = BRUSHTHINK_CUSTOM_START,
@@ -294,6 +297,7 @@ public:
 class CTrainBase : public CMapEntity, public CBrushModel, public CBlockableEntity, public CUsableEntity
 {
 public:
+	char	*Message;
 	enum
 	{
 		TRAINTHINK_FIND = BRUSHTHINK_CUSTOM_START,
@@ -430,6 +434,7 @@ public:
 class CFuncExplosive : public CMapEntity, public CBrushModel, public CUsableEntity, public CHurtableEntity
 {
 public:
+	char	*Message;
 	enum EFuncExplosiveUseType
 	{
 		FUNCEXPLOSIVE_USE_NONE,

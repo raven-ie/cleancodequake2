@@ -360,16 +360,16 @@ void CMaiden::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 		for (n= 0; n < 4; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 		Entity->ThrowHead (gMedia.Gib_Head[1], damage, GIB_ORGANIC);
-		Entity->gameEntity->deadflag = DEAD_DEAD;
+		Entity->DeadFlag = true;
 		return;
 	}
 
-	if (Entity->gameEntity->deadflag == DEAD_DEAD)
+	if (Entity->DeadFlag == true)
 		return;
 
 // regular death
-	Entity->gameEntity->deadflag = DEAD_DEAD;
-	Entity->gameEntity->takedamage = true;
+	Entity->DeadFlag = true;
+	Entity->CanTakeDamage = true;
 
 	n = rand() % 2;
 	CurrentMove = (n == 0) ? &ChickMoveDeath1 : &ChickMoveDeath2;
@@ -385,7 +385,7 @@ void CMaiden::DuckDown ()
 	vec3f maxs = Entity->GetMaxs();
 	maxs.Z -= 32;
 	Entity->SetMaxs (maxs);
-	Entity->gameEntity->takedamage = true;
+	Entity->CanTakeDamage = true;
 	PauseTime = level.framenum + 10;
 	Entity->Link ();
 }
@@ -404,7 +404,7 @@ void CMaiden::DuckUp ()
 	vec3f maxs = Entity->GetMaxs();
 	maxs.Z += 32;
 	Entity->SetMaxs (maxs);
-	Entity->gameEntity->takedamage = true;
+	Entity->CanTakeDamage = true;
 	Entity->Link ();
 }
 
@@ -800,4 +800,4 @@ void CMaiden::Spawn ()
 	WalkMonsterStart ();
 }
 
-LINK_MONSTER_CLASSNAME_TO_CLASS ("monster_bitch", CMaiden);
+LINK_MONSTER_CLASSNAME_TO_CLASS ("monster_chick", CMaiden);

@@ -86,7 +86,7 @@ Precache(Precache)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void CBaseItem::SetRespawn (CItemEntity *ent, int32 delay)
 {
-	ent->gameEntity->flags |= FL_RESPAWN;
+	ent->Flags |= FL_RESPAWN;
 	ent->SetSvFlags (ent->GetSvFlags() | SVF_NOCLIENT);
 	ent->SetSolid (SOLID_NOT);
 	ent->NextThink = level.framenum + delay;

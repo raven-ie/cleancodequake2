@@ -105,12 +105,12 @@ bool CWeaponItem::Pickup (class CItemEntity *ent, CPlayerEntity *other)
 			if (game.mode & GAME_DEATHMATCH)
 			{
 				if (dmFlags.dfWeaponsStay)
-					ent->gameEntity->flags |= FL_RESPAWN;
+					ent->Flags |= FL_RESPAWN;
 				else
 					SetRespawn (ent, 300);
 			}
 			if (game.mode == GAME_COOPERATIVE)
-				ent->gameEntity->flags |= FL_RESPAWN;
+				ent->Flags |= FL_RESPAWN;
 		}
 	}
 	else if (ent->gameEntity->count)

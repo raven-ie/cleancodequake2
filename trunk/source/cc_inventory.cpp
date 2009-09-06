@@ -349,7 +349,7 @@ void Cmd_InvUse_f (CPlayerEntity *ent)
 		ent->Client.resp.MenuState.Select();
 		return;
 	}
-	if (ent->gameEntity->health <= 0 || ent->gameEntity->deadflag)
+	if (ent->gameEntity->health <= 0 || ent->DeadFlag)
 		return;
 
 	ent->Client.pers.Inventory.ValidateSelectedItem ();
@@ -378,7 +378,7 @@ void Cmd_WeapPrev_f (CPlayerEntity *ent)
 {
 	if (!ent->Client.pers.Weapon)
 		return;
-	if (ent->gameEntity->health <= 0 || ent->gameEntity->deadflag)
+	if (ent->gameEntity->health <= 0 || ent->DeadFlag)
 		return;
 
 	int selectedWeaponIndex = ent->Client.pers.Weapon->Item->GetIndex();
@@ -409,7 +409,7 @@ void Cmd_WeapNext_f (CPlayerEntity *ent)
 {
 	if (!ent->Client.pers.Weapon)
 		return;
-	if (ent->gameEntity->health <= 0 || ent->gameEntity->deadflag)
+	if (ent->gameEntity->health <= 0 || ent->DeadFlag)
 		return;
 
 	int selectedWeaponIndex = ent->Client.pers.Weapon->Item->GetIndex();
@@ -457,7 +457,7 @@ Cmd_InvDrop_f
 */
 void Cmd_InvDrop_f (CPlayerEntity *ent)
 {
-	if (ent->gameEntity->health <= 0 || ent->gameEntity->deadflag)
+	if (ent->gameEntity->health <= 0 || ent->DeadFlag)
 		return;
 
 	ent->Client.pers.Inventory.ValidateSelectedItem ();
@@ -480,7 +480,7 @@ void Cmd_InvDrop_f (CPlayerEntity *ent)
 
 void Cmd_SelectNextItem_f (CPlayerEntity *ent)
 {
-	if (ent->gameEntity->health <= 0 || ent->gameEntity->deadflag)
+	if (ent->gameEntity->health <= 0 || ent->DeadFlag)
 		return;
 
 	if (ent->Client.resp.MenuState.InMenu)
@@ -499,7 +499,7 @@ void Cmd_SelectNextItem_f (CPlayerEntity *ent)
 }
 void Cmd_SelectPrevItem_f (CPlayerEntity *ent)
 {
-	if (ent->gameEntity->health <= 0 || ent->gameEntity->deadflag)
+	if (ent->gameEntity->health <= 0 || ent->DeadFlag)
 		return;
 
 	if (ent->Client.resp.MenuState.InMenu)
@@ -518,28 +518,28 @@ void Cmd_SelectPrevItem_f (CPlayerEntity *ent)
 }
 void Cmd_SelectNextWeapon_f (CPlayerEntity *ent)
 {
-	if (ent->gameEntity->health <= 0 || ent->gameEntity->deadflag)
+	if (ent->gameEntity->health <= 0 || ent->DeadFlag)
 		return;
 
 	ent->Client.pers.Inventory.SelectNextItem (ITEMFLAG_WEAPON);
 }
 void Cmd_SelectPrevWeapon_f (CPlayerEntity *ent)
 {
-	if (ent->gameEntity->health <= 0 || ent->gameEntity->deadflag)
+	if (ent->gameEntity->health <= 0 || ent->DeadFlag)
 		return;
 
 	ent->Client.pers.Inventory.SelectPrevItem (ITEMFLAG_WEAPON);
 }
 void Cmd_SelectNextPowerup_f (CPlayerEntity *ent)
 {
-	if (ent->gameEntity->health <= 0 || ent->gameEntity->deadflag)
+	if (ent->gameEntity->health <= 0 || ent->DeadFlag)
 		return;
 
 	ent->Client.pers.Inventory.SelectNextItem (ITEMFLAG_POWERUP);
 }
 void Cmd_SelectPrevPowerup_f (CPlayerEntity *ent)
 {
-	if (ent->gameEntity->health <= 0 || ent->gameEntity->deadflag)
+	if (ent->gameEntity->health <= 0 || ent->DeadFlag)
 		return;
 
 	ent->Client.pers.Inventory.SelectPrevItem (ITEMFLAG_POWERUP);

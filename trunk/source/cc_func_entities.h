@@ -34,6 +34,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 class CFuncTimer : public CMapEntity, public CThinkableEntity, public CUsableEntity
 {
 public:
+	char	*Message;
+
 	CFuncTimer ();
 	CFuncTimer (int Index);
 
@@ -57,6 +59,8 @@ public:
 class CTargetString : public CMapEntity, public CUsableEntity
 {
 public:
+	char	*Message;
+
 	CTargetString ();
 	CTargetString (int Index);
 
@@ -68,6 +72,7 @@ class CFuncClock : public CMapEntity, public CUsableEntity, public CThinkableEnt
 {
 public:
 	int				Seconds;
+	char			*Message;
 	CTargetString	*String;
 	bool			Usable;
 

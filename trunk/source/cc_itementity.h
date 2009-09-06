@@ -55,6 +55,7 @@ public:
 	bool			NoTouch;
 	EItemThinkState ThinkState;
 	bool			Usable;
+	char			*Message;
 
 	CItemEntity ();
 	CItemEntity (int Index);
@@ -68,7 +69,7 @@ public:
 
 	bool Run ();
 
-	void Spawn () {}; // Just to fill CMapEntity
+	void Spawn ();
 };
 
 #define LINK_ITEM_TO_CLASS(mapClassName,DLLClassName) \

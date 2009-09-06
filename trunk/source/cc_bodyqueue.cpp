@@ -96,11 +96,11 @@ void CBody::TossHead (int damage)
 	SetMins (vec3f(-16, -16, 0));
 	SetMaxs (vec3f(16, 16, 16));
 
-	gameEntity->takedamage = false;
+	CanTakeDamage = false;
 	SetSolid (SOLID_NOT);
 	State.SetEffects (EF_GIB);
 	State.SetSound (0);
-	gameEntity->flags |= FL_NO_KNOCKBACK;
+	Flags |= FL_NO_KNOCKBACK;
 
 	backOff = 1.5f;
 	vec3f vd;
@@ -250,15 +250,16 @@ void CBodyQueue::CopyBodyToQueue (CPlayerEntity *Player)
 	Body->SetSize (Player->GetSize());
 	Body->SetSolid (Player->GetSolid());
 	Body->SetClipmask(Player->GetClipmask());
+	Vec3Clear (Body->gameEntity->velocity);
 	CBaseEntity *owner;
 	if ((owner = Player->GetOwner()) != 0)
 		Body->SetOwner (owner);
 
 	Body->backOff = 1.0f;
-	Body->gameEntity->takedamage = true;
+	Body->CanTakeDamage = true;
 
 	// Implied that Player is a dead-head (lol)
-	if (Player->gameEntity->takedamage == false)
+	if (!Player->CanTakeDamage)
 		Body->TossHead (0);
 
 	Body->Link();

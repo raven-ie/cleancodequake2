@@ -580,7 +580,7 @@ void CTFTeam_f (CPlayerEntity *ent)
 
 ////
 	ent->SetSvFlags (0);
-	ent->gameEntity->flags &= ~FL_GODMODE;
+	ent->Flags &= ~FL_GODMODE;
 	ent->Client.resp.ctf_team = desired_team;
 	ent->Client.resp.ctf_state = 0;
 	s = Info_ValueForKey (ent->Client.pers.userinfo, "skin");
@@ -602,7 +602,7 @@ void CTFTeam_f (CPlayerEntity *ent)
 	ent->gameEntity->health = 0;
 	ent->Die (ent, ent, 100000, vec3fOrigin);
 	// don't even bother waiting for death frames
-	ent->gameEntity->deadflag = DEAD_DEAD;
+	ent->DeadFlag = true;
 	ent->Respawn ();
 
 	ent->Client.resp.score = 0;
@@ -1102,8 +1102,8 @@ void CTFResetAllPlayers(void)
 		ent->Client.resp.ctf_team = CTF_NOTEAM;
 		ent->Client.resp.ready = false;
 
-		ent->gameEntity->svFlags = 0;
-		ent->gameEntity->flags &= ~FL_GODMODE;
+		ent->SetSvFlags (0);
+		ent->Flags &= ~FL_GODMODE;
 		ent->PutInServer();
 	}
 
@@ -1158,14 +1158,14 @@ void CTFStartMatch(void)
 			ent->CTFAssignGhost();
 			CGrapple::PlayerResetGrapple(ent);
 			ent->SetSvFlags (SVF_NOCLIENT);
-			ent->gameEntity->flags &= ~FL_GODMODE;
+			ent->Flags &= ~FL_GODMODE;
 
 			ent->Client.respawn_time = level.framenum + 10 + ((rand()%300)/100);
 			ent->Client.PlayerState.GetPMove()->pmType = PMT_DEAD;
 			ent->Client.anim_priority = ANIM_DEATH;
 			ent->State.SetFrame (FRAME_death308-1);
 			ent->Client.anim_end = FRAME_death308;
-			ent->gameEntity->deadflag = DEAD_DEAD;
+			ent->DeadFlag = true;
 			ent->NoClip = true;
 			ent->Client.PlayerState.SetGunIndex(0);
 			ent->Link ();
@@ -1406,7 +1406,7 @@ void CTFGhost(CPlayerEntity *ent)
 			ent->Client.resp.ctf_state = 0;
 			ctfgame.ghosts[i].ent = ent;
 			ent->SetSvFlags(0);
-			ent->gameEntity->flags &= ~FL_GODMODE;
+			ent->Flags &= ~FL_GODMODE;
 			ent->PutInServer();
 			BroadcastPrintf(PRINT_HIGH, "%s has been reinstated to %s team.\n",
 				ent->Client.pers.netname, CTFTeamName(ent->Client.resp.ctf_team));

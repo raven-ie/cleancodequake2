@@ -229,7 +229,7 @@ void CMegaHealth::DoPickup (CItemEntity *ent, CPlayerEntity *other)
 		MegaHealth->MegaHealthThinking = true;
 		MegaHealth->NextThink = level.framenum + 50;
 		MegaHealth->gameEntity->owner = other->gameEntity;
-		MegaHealth->gameEntity->flags |= FL_RESPAWN;
+		MegaHealth->Flags |= FL_RESPAWN;
 		MegaHealth->SetSvFlags (MegaHealth->GetSvFlags() | SVF_NOCLIENT);
 		MegaHealth->SetSolid (SOLID_NOT);
 
@@ -432,9 +432,9 @@ void CPowerShield::DoPickup (class CItemEntity *ent, CPlayerEntity *other)
 
 void CPowerShield::Use (CPlayerEntity *ent)
 {
-	if (ent->gameEntity->flags & FL_POWER_ARMOR)
+	if (ent->Flags & FL_POWER_ARMOR)
 	{
-		ent->gameEntity->flags &= ~FL_POWER_ARMOR;
+		ent->Flags &= ~FL_POWER_ARMOR;
 		ent->PlaySound (CHAN_AUTO, SoundIndex("misc/power2.wav"));
 	}
 	else
@@ -444,14 +444,14 @@ void CPowerShield::Use (CPlayerEntity *ent)
 			ent->PrintToClient (PRINT_HIGH, "No cells for %s.\n", Name);
 			return;
 		}
-		ent->gameEntity->flags |= FL_POWER_ARMOR;
+		ent->Flags |= FL_POWER_ARMOR;
 		ent->PlaySound (CHAN_AUTO, SoundIndex("misc/power1.wav"));
 	}
 }
 
 void CPowerShield::Drop (CPlayerEntity *ent)
 {
-	if ((ent->gameEntity->flags & FL_POWER_ARMOR) && (ent->Client.pers.Inventory.Has(this) == 1))
+	if ((ent->Flags & FL_POWER_ARMOR) && (ent->Client.pers.Inventory.Has(this) == 1))
 		Use (ent);
 	CBasePowerUp::Drop (ent);
 }

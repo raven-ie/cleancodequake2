@@ -100,7 +100,7 @@ void GameError (char *fmt, ...)
 	vsnprintf_s (text, sizeof(text), MAX_COMPRINT, fmt, argptr);
 	va_end (argptr);
 
-#if defined(WIN32)
+#if defined(WIN32) && defined(_DEBUG)
 	// Pipe to visual studio
 	OutputDebugString(text);
 #endif

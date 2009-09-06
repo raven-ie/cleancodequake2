@@ -593,18 +593,18 @@ void CIcarus::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 		for (int n= 0; n < 2; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 		Entity->ThrowHead (gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		Entity->gameEntity->deadflag = DEAD_DEAD;
+		Entity->DeadFlag = true;
 		return;
 	}
 
-	if (Entity->gameEntity->deadflag == DEAD_DEAD)
+	if (Entity->DeadFlag == true)
 		return;
 
 	Entity->PhysicsType = PHYSICS_TOSS;
 // regular death
 	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundDeath1 : SoundDeath2);
-	Entity->gameEntity->deadflag = DEAD_DEAD;
-	Entity->gameEntity->takedamage = true;
+	Entity->DeadFlag = true;
+	Entity->CanTakeDamage = true;
 	CurrentMove = &HoverMoveDeath1;
 }
 

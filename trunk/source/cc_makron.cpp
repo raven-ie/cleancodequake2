@@ -678,17 +678,17 @@ void CMakron::Die(CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec
 		for (int n= 0; n < 4; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMetal, damage, GIB_METALLIC);
 		Entity->ThrowHead (gMedia.Gib_Gear, damage, GIB_METALLIC);
-		Entity->gameEntity->deadflag = DEAD_DEAD;
+		Entity->DeadFlag = true;
 		return;
 	}
 
-	if (Entity->gameEntity->deadflag == DEAD_DEAD)
+	if (Entity->DeadFlag == true)
 		return;
 
 // regular death
 	Entity->PlaySound (CHAN_VOICE, SoundDeath, 1, ATTN_NONE, 0);
-	Entity->gameEntity->deadflag = DEAD_DEAD;
-	Entity->gameEntity->takedamage = true;
+	Entity->DeadFlag = true;
+	Entity->CanTakeDamage = true;
 
 	// Spawn torso
 	CMakronTorso::Spawn (Entity);
@@ -774,7 +774,7 @@ bool CMakron::CheckAttack ()
 		return true;
 	}
 
-	if (Entity->gameEntity->flags & FL_FLY)
+	if (Entity->Flags & FL_FLY)
 	{
 		if (random() < 0.3)
 			AttackState = AS_SLIDING;
@@ -888,7 +888,7 @@ bool CMakron::CheckAttack ()
 
 	// PMM -daedalus should strafe more .. this can be done here or in a customized
 	// check_attack code for the hover.
-	if (Entity->gameEntity->flags & FL_FLY)
+	if (Entity->Flags & FL_FLY)
 	{
 		// originally, just 0.3
 		float strafe_chance;

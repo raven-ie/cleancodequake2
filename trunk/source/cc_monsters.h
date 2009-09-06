@@ -173,6 +173,8 @@ public:
 	bool			IsHead;
 	uint8			UseState;
 	int32			AirFinished;
+	int32			DamageDebounceTime;
+	char			*Message;
 
 	class CMonster	*Monster;
 

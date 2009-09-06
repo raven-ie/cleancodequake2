@@ -109,7 +109,7 @@ void CHandGrenade::FireGrenade (CPlayerEntity *ent, bool inHand)
 	if (!dmFlags.dfInfiniteAmmo)
 		DepleteAmmo(ent, 1);
 
-	if (ent->gameEntity->health <= 0 || ent->gameEntity->deadflag || ent->State.GetModelIndex() != 255) // VWep animations screw up corpses
+	if (ent->gameEntity->health <= 0 || ent->DeadFlag || ent->State.GetModelIndex() != 255) // VWep animations screw up corpses
 		return;
 
 	AttackSound (ent);
@@ -135,7 +135,7 @@ void CHandGrenade::Wait (CPlayerEntity *ent)
 	if (level.framenum < ent->Client.grenade_time)
 		return;
 
-	if (!ent->gameEntity->deadflag)
+	if (!ent->DeadFlag)
 		ent->Client.grenade_thrown = false;
 	ent->Client.PlayerState.SetGunFrame (ent->Client.PlayerState.GetGunFrame()+1);
 }
