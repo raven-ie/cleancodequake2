@@ -321,7 +321,7 @@ void CPlayerEntity::BeginServerFrame ()
 	if (!Client.resp.spectator && Client.pers.Weapon)
 			Client.pers.Weapon->Think (this);
 
-	if (gameEntity->deadflag)
+	if (DeadFlag)
 	{
 		// wait for any button just going down
 		if ( level.framenum > Client.respawn_time)
@@ -542,7 +542,7 @@ void CPlayerEntity::PutInServer ()
 	// FIXME: is this needed?!
 	//Client = CClient(&game.clients[index]);
 	//ent->client = &game.clients[index];
-	gameEntity->takedamage = true;
+	CanTakeDamage = true;
 	NoClip = false;
 	TossPhysics = false;
 	gameEntity->viewheight = 22;
@@ -550,13 +550,13 @@ void CPlayerEntity::PutInServer ()
 	gameEntity->classname = "player";
 	gameEntity->mass = 200;
 	SetSolid (SOLID_BBOX);
-	gameEntity->deadflag = DEAD_NO;
+	DeadFlag = false;
 	AirFinished = level.framenum + 120;
 	SetClipmask (CONTENTS_MASK_PLAYERSOLID);
 	gameEntity->model = "players/male/tris.md2";
 	gameEntity->waterlevel = 0;
 	gameEntity->watertype = 0;
-	gameEntity->flags &= ~FL_NO_KNOCKBACK;
+	Flags &= ~FL_NO_KNOCKBACK;
 	SetSvFlags (GetSvFlags() & ~SVF_DEADMONSTER);
 	if (!Client.resp.MenuState.ent)
 		Client.resp.MenuState = CMenuState(this);
@@ -846,7 +846,7 @@ void CPlayerEntity::FetchEntData ()
 {
 	gameEntity->health = Client.pers.health;
 	gameEntity->max_health = Client.pers.max_health;
-	gameEntity->flags |= Client.pers.savedFlags;
+	Flags |= Client.pers.savedFlags;
 	if (game.mode == GAME_COOPERATIVE)
 		Client.resp.score = Client.pers.score;
 }
@@ -891,7 +891,7 @@ inline void CPlayerEntity::DamageFeedback (vec3_t forward, vec3_t right, vec3_t 
 	Client.PlayerState.SetStat(STAT_FLASHES, 0);
 	if (Client.damage_blood)
 		Client.PlayerState.SetStat (STAT_FLASHES, Client.PlayerState.GetStat(STAT_FLASHES) | 1);
-	if (Client.damage_armor && !(gameEntity->flags & FL_GODMODE) && (Client.invincible_framenum <= level.framenum))
+	if (Client.damage_armor && !(Flags & FL_GODMODE) && (Client.invincible_framenum <= level.framenum))
 		Client.PlayerState.SetStat (STAT_FLASHES, Client.PlayerState.GetStat(STAT_FLASHES) | 2);
 
 	// total points of damage shot at the player this frame
@@ -933,7 +933,7 @@ inline void CPlayerEntity::DamageFeedback (vec3_t forward, vec3_t right, vec3_t 
 		count = 10;	// always make a visible effect
 
 	// play an apropriate pain sound
-	if ((level.framenum > gameEntity->pain_debounce_time) && !(gameEntity->flags & FL_GODMODE) && (Client.invincible_framenum <= level.framenum))
+	if ((level.framenum > gameEntity->pain_debounce_time) && !(Flags & FL_GODMODE) && (Client.invincible_framenum <= level.framenum))
 	{
 		gameEntity->pain_debounce_time = level.framenum + 7;
 
@@ -1006,7 +1006,7 @@ inline void CPlayerEntity::CalcViewOffset (vec3_t forward, vec3_t right, vec3_t 
 	vec3f		angles (0, 0, 0);
 
 	// if dead, fix the angle and don't add any kick
-	if (gameEntity->deadflag)
+	if (DeadFlag)
 	{
 		Client.PlayerState.SetViewAngles (vec3f(-15, Client.killer_yaw, 40));
 		Client.PlayerState.SetKickAngles (vec3Origin);
@@ -1267,7 +1267,7 @@ inline void CPlayerEntity::CalcBlend ()
 			Client.bonus_alpha -= 15;
 	}
 
-	if (contents & (CONTENTS_SOLID|CONTENTS_LAVA))
+	if (contents & (CONTENTS_LAVA))
 		SV_AddBlend (LavaColor, Client.pers.viewBlend);
 	else if (contents & CONTENTS_SLIME)
 		SV_AddBlend (SlimeColor, Client.pers.viewBlend);
@@ -1402,7 +1402,7 @@ inline void CPlayerEntity::WorldEffects ()
 			PlaySound (CHAN_BODY, SoundIndex("player/watr_in.wav"));
 		else if (gameEntity->watertype & CONTENTS_WATER)
 			PlaySound (CHAN_BODY, SoundIndex("player/watr_in.wav"));
-		gameEntity->flags |= FL_INWATER;
+		Flags |= FL_INWATER;
 
 		// clear damage_debounce, so the pain sound will play immediately
 		gameEntity->pain_debounce_time = level.framenum - 1;
@@ -1415,7 +1415,7 @@ inline void CPlayerEntity::WorldEffects ()
 	{
 		PlayerNoise(this, origin, PNOISE_SELF);
 		PlaySound (CHAN_BODY, SoundIndex("player/watr_out.wav"));
-		gameEntity->flags &= ~FL_INWATER;
+		Flags &= ~FL_INWATER;
 	}
 
 	//
@@ -1521,7 +1521,7 @@ G_SetClientEffects
 */
 int CPlayerEntity::PowerArmorType ()
 {
-	if (!(gameEntity->flags & FL_POWER_ARMOR))
+	if (!(Flags & FL_POWER_ARMOR))
 		return POWER_ARMOR_NONE;
 	else if (Client.pers.Inventory.Has(NItems::PowerShield) > 0)
 		return POWER_ARMOR_SHIELD;
@@ -1581,7 +1581,7 @@ inline void CPlayerEntity::SetClientEffects ()
 	}
 
 	// show cheaters!!!
-	if (gameEntity->flags & FL_GODMODE)
+	if (Flags & FL_GODMODE)
 	{
 		State.AddEffects (EF_COLOR_SHELL);
 		State.AddRenderEffects (RF_SHELL_RED|RF_SHELL_GREEN|RF_SHELL_BLUE);
@@ -2220,7 +2220,7 @@ void CPlayerEntity::SetStats ()
 		cells = Client.pers.Inventory.Has(NItems::Cells);
 		if (cells == 0)
 		{	// ran out of cells for power armor
-			gameEntity->flags &= ~FL_POWER_ARMOR;
+			Flags &= ~FL_POWER_ARMOR;
 			PlaySound (CHAN_ITEM, SoundIndex("misc/power2.wav"));
 			power_armor_type = 0;
 		}
@@ -2593,15 +2593,14 @@ void CPlayerEntity::CTFAssignGhost()
 
 void CPlayerEntity::MoveToIntermission ()
 {
-	vec3_t origin;
-	State.GetOrigin (origin);
 	if (game.mode != GAME_SINGLEPLAYER)
 		Client.showscores = true;
-	Vec3Copy (level.intermission_origin, origin);
-	Client.PlayerState.GetPMove()->origin[0] = level.intermission_origin[0]*8;
-	Client.PlayerState.GetPMove()->origin[1] = level.intermission_origin[1]*8;
-	Client.PlayerState.GetPMove()->origin[2] = level.intermission_origin[2]*8;
-	Client.PlayerState.SetViewAngles (level.intermission_angle);
+	State.SetOrigin (level.IntermissionOrigin);
+
+	Client.PlayerState.GetPMove()->origin[0] = level.IntermissionOrigin.X*8;
+	Client.PlayerState.GetPMove()->origin[1] = level.IntermissionOrigin.Y*8;
+	Client.PlayerState.GetPMove()->origin[2] = level.IntermissionOrigin.Z*8;
+	Client.PlayerState.SetViewAngles (level.IntermissionAngles);
 	Client.PlayerState.GetPMove()->pmType = PMT_FREEZE;
 	Client.PlayerState.SetGunIndex (0);
 
@@ -2870,7 +2869,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 		Client.PlayerState.GetPMove()->pmType = PMT_SPECTATOR;
 	else if (State.GetModelIndex() != 255)
 		Client.PlayerState.GetPMove()->pmType = PMT_GIB;
-	else if (gameEntity->deadflag)
+	else if (DeadFlag)
 		Client.PlayerState.GetPMove()->pmType = PMT_DEAD;
 	else
 		Client.PlayerState.GetPMove()->pmType = PMT_NORMAL;
@@ -2935,7 +2934,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 	if (pm.groundEntity)
 		gameEntity->groundentity_linkcount = pm.groundEntity->linkCount;
 
-	if (gameEntity->deadflag)
+	if (DeadFlag)
 		Client.PlayerState.SetViewAngles (vec3f(40, -15, Client.killer_yaw));
 	else
 	{
@@ -3095,7 +3094,7 @@ void CPlayerEntity::SaveClientData ()
 		memcpy (&SavedClients[i], &ent->Client.pers, sizeof(clientPersistent_t));
 		SavedClients[i].health = ent->gameEntity->health;
 		SavedClients[i].max_health = ent->gameEntity->max_health;
-		SavedClients[i].savedFlags = (ent->gameEntity->flags & (FL_GODMODE|FL_NOTARGET|FL_POWER_ARMOR));
+		SavedClients[i].savedFlags = (ent->Flags & (FL_GODMODE|FL_NOTARGET|FL_POWER_ARMOR));
 		if (game.mode & GAME_COOPERATIVE)
 			SavedClients[i].score = ent->Client.resp.score;
 	}
@@ -3280,11 +3279,11 @@ void CPlayerEntity::TossHead (int damage)
 	SetMins (vec3f(-16, -16, 0));
 	SetMaxs (vec3f(16, 16, 16));
 
-	gameEntity->takedamage = false;
+	CanTakeDamage = false;
 	SetSolid (SOLID_NOT);
 	State.SetEffects (EF_GIB);
 	State.SetSound (0);
-	gameEntity->flags |= FL_NO_KNOCKBACK;
+	Flags |= FL_NO_KNOCKBACK;
 
 	vec3f vd;
 	VelocityForDamage (damage, vd);
@@ -3304,7 +3303,7 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 
 	Vec3Clear (gameEntity->avelocity);
 
-	gameEntity->takedamage = true;
+	CanTakeDamage = true;
 	TossPhysics = true;
 
 	State.SetModelIndex (0, 2);	// remove linked weapon model
@@ -3323,7 +3322,7 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 
 	SetSvFlags (GetSvFlags() | SVF_DEADMONSTER);
 
-	if (!gameEntity->deadflag)
+	if (!DeadFlag)
 	{
 		Client.respawn_time = level.framenum + 10;
 		LookAtKiller (inflictor->gameEntity, attacker->gameEntity);
@@ -3379,7 +3378,7 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 	Client.invincible_framenum = 0;
 	Client.breather_framenum = 0;
 	Client.enviro_framenum = 0;
-	gameEntity->flags &= ~FL_POWER_ARMOR;
+	Flags &= ~FL_POWER_ARMOR;
 
 	if (gameEntity->health < -40)
 	{	// gib
@@ -3388,7 +3387,7 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 			CGibEntity::Spawn (this, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 		TossHead (damage);
 
-		gameEntity->takedamage = false;
+		CanTakeDamage = false;
 //ZOID
 		Client.anim_priority = ANIM_DEATH;
 		Client.anim_end = 0;
@@ -3396,7 +3395,7 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 	}
 	else
 	{	// normal death
-		if (!gameEntity->deadflag)
+		if (!DeadFlag)
 		{
 			static int i;
 
@@ -3430,7 +3429,7 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 		}
 	}
 
-	gameEntity->deadflag = DEAD_DEAD;
+	DeadFlag = true;
 
 	Link ();
 };
@@ -3518,7 +3517,7 @@ void CPlayerEntity::UpdateChaseCam()
 		goal[2] += 6;
 	}
 
-	if (targ->gameEntity->deadflag)
+	if (targ->DeadFlag)
 		Client.PlayerState.GetPMove()->pmType = PMT_DEAD;
 	else
 		Client.PlayerState.GetPMove()->pmType = PMT_FREEZE;
@@ -3527,7 +3526,7 @@ void CPlayerEntity::UpdateChaseCam()
 	for (i=0 ; i<3 ; i++)
 		Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(targ->Client.ViewAngle[i] - Client.resp.cmd_angles[i]);
 
-	if (targ->gameEntity->deadflag)
+	if (targ->DeadFlag)
 		Client.PlayerState.SetViewAngles (vec3f(40, -15, targ->Client.killer_yaw));
 	else
 	{

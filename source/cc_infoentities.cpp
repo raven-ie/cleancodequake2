@@ -562,9 +562,11 @@ Pathtarget: gets used when an entity that has
 	this path_corner targeted touches it
 */
 
-class CPathCorner : public CMapEntity, public CTouchableEntity
+class CPathCorner : public CMapEntity, public CTouchableEntity, public CUsableEntity
 {
 public:
+	char	*Message;
+
 	CPathCorner () :
 	  CBaseEntity(),
 	  CMapEntity (),
@@ -578,6 +580,10 @@ public:
 	  CTouchableEntity (Index)
 	  {
 	  };
+
+	void Use (CBaseEntity *, CBaseEntity *)
+	{
+	};
 
 	virtual void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
@@ -596,7 +602,7 @@ public:
 
 			savetarget = gameEntity->target;
 			gameEntity->target = gameEntity->pathtarget;
-			G_UseTargets (this, other);
+			UseTargets (other, Message);
 			gameEntity->target = savetarget;
 		}
 
@@ -654,6 +660,9 @@ public:
 		SetMaxs (vec3f(8, 8, 8));
 		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
 		Link ();
+
+		if (st.message)
+			Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	};
 };
 
@@ -667,6 +676,8 @@ hold is selected, it will stay here.
 class CPathCombat : public CPathCorner
 {
 public:
+	char	*Message;
+
 	CPathCombat () :
 	  CBaseEntity (),
 	  CPathCorner ()
@@ -695,7 +706,7 @@ public:
 			}
 			gameEntity->target = NULL;
 		}
-		else if ((gameEntity->spawnflags & 1) && !(other->gameEntity->flags & (FL_SWIM|FL_FLY)))
+		else if ((gameEntity->spawnflags & 1) && !(other->Flags & (FL_SWIM|FL_FLY)))
 		{
 			if (other->EntityFlags & ENT_MONSTER)
 			{
@@ -732,7 +743,7 @@ public:
 				activator = other->gameEntity->activator;
 			else
 				activator = other->gameEntity;
-			G_UseTargets (this, activator->Entity);
+			UseTargets (activator->Entity, Message);
 			gameEntity->target = savetarget;
 		}
 	};
@@ -750,6 +761,9 @@ public:
 		SetMaxs (vec3f(8, 8, 16));
 		SetSvFlags (SVF_NOCLIENT);
 		Link ();
+
+		if (st.message)
+			Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	};
 };
 
@@ -952,10 +966,10 @@ public:
 
 	void Spawn ()
 	{
-		if (!gameEntity->message || strlen(gameEntity->message) != 2 || gameEntity->message[0] < 'a' || gameEntity->message[0] > 'z' || gameEntity->message[1] < 'a' || gameEntity->message[1] > 'z' || gameEntity->message[0] == gameEntity->message[1])
+		if (!st.message || strlen(st.message) != 2 || st.message[0] < 'a' || st.message[0] > 'z' || st.message[1] < 'a' || st.message[1] > 'z' || st.message[0] == st.message[1])
 		{
 			//gi.dprintf("target_lightramp has bad ramp (%s) at (%f %f %f)\n", self->message, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
-			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "Bad ramp (%s)\n", gameEntity->message);
+			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "Bad ramp (%s)\n", st.message);
 			Free ();
 			return;
 		}
@@ -976,8 +990,8 @@ public:
 
 		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
 
-		Message[0] = gameEntity->message[0] - 'a';
-		Message[1] = gameEntity->message[1] - 'a';
+		Message[0] = st.message[0] - 'a';
+		Message[1] = st.message[1] - 'a';
 		Message[2] = (Message[1] - Message[0]) / (gameEntity->speed / 0.1f);
 	};
 };

@@ -35,20 +35,13 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #define __CC_ENTITYTYPES_H__
 
 // "Hurtable" entity
-enum EDeadFlags
-{
-	DF_ALIVE,
-	DF_DYING,
-	DF_DEAD
-};
-
 class CHurtableEntity abstract : public virtual CBaseEntity
 {
 public:
 	int			Health;
 	int			MaxHealth;
 	int			GibHealth;
-	EDeadFlags	DeadFlag;
+	bool		DeadFlag; // false = false, true = true
 	bool		CanTakeDamage;
 	CBaseEntity	*Enemy;
 
@@ -97,6 +90,7 @@ public:
 	CUsableEntity (int Index);
 
 	virtual void Use (CBaseEntity *other, CBaseEntity *activator) = 0;
+	virtual void UseTargets (CBaseEntity *activator, const char *Message);
 };
 
 // Thinkable entity

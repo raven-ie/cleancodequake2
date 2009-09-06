@@ -38,7 +38,6 @@ void	G_TouchTriggers (CBaseEntity *ent);
 void G_SetMovedir (vec3f &angles, vec3f &movedir);
 CBaseEntity *GetRandomTeamMember (CBaseEntity *Entity, CBaseEntity *Master);
 CBaseEntity *CC_PickTarget (char *targetname);
-void G_UseTargets (CBaseEntity *ent, CBaseEntity *activator);
 bool KillBox (CBaseEntity *ent);
 CBaseEntity *CC_Find (CBaseEntity *from, int fieldofs, char *match);
 

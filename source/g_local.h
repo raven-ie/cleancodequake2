@@ -47,25 +47,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define DAMAGE_TIME		5
 #define FALL_TIME		3
 
-// edict->flags
-typedef int EEdictFlags;
-enum
-{
-	FL_FLY				= BIT(0),
-	FL_SWIM				= BIT(1),
-	FL_IMMUNE_LASER		= BIT(2),
-	FL_INWATER			= BIT(3),
-	FL_GODMODE			= BIT(4),
-	FL_NOTARGET			= BIT(5),
-	FL_IMMUNE_SLIME		= BIT(6),
-	FL_IMMUNE_LAVA		= BIT(7),
-	FL_PARTIALGROUND	= BIT(8),
-	FL_TEAMSLAVE		= BIT(9),
-	FL_NO_KNOCKBACK		= BIT(10),
-	FL_POWER_ARMOR		= BIT(11),
-	FL_RESPAWN			= BIT(12)
-};
-
 #define FRAMETIME		1
 
 // memory tags to allow dynamic memory to be cleaned up
@@ -75,14 +56,6 @@ enum
 #define TAG_CLEAN_LEVEL	TAG_LEVEL		// "Clean" memory
 
 #define MELEE_DISTANCE	80
-
-//deadflag
-typedef int EDeadFlag;
-enum
-{
-	DEAD_NO,
-	DEAD_DEAD
-};
 
 //range
 typedef int ERangeType;
@@ -203,8 +176,8 @@ typedef struct
 	int32		intermissiontime;		// time the intermission was started
 	char		*changemap;
 	int			exitintermission;
-	vec3_t		intermission_origin;
-	vec3_t		intermission_angle;
+	vec3f		IntermissionOrigin;
+	vec3f		IntermissionAngles;
 
 	CPlayerEntity		*sight_client;	// changed once each frame for coop games
 
@@ -247,6 +220,7 @@ typedef struct
 	float		skyrotate;
 	vec3_t		skyaxis;
 	char		*nextmap;
+	char		*message;
 
 	int			lip;
 	int			distance;
@@ -334,7 +308,6 @@ extern	edict_t			*g_edicts;
 #define crandom()	(2.0 * (random() - 0.5))
 
 #define world	(&g_edicts[0])
-#define World	(g_edicts[0].Entity)
 
 // Spawnflags
 // 6 bits reserved for editor flags
@@ -586,15 +559,12 @@ struct edict_s
 	// EXPECTS THE FIELDS IN THAT ORDER!
 
 	//================================
-	int			flags;
-
 	char		*model;
 	int32		freetime;			// sv.time when the object was freed
 	
 	//
 	// only used locally in game, not by server
 	//
-	char		*message;
 	char		*classname;
 	int			spawnflags;
 
@@ -629,7 +599,6 @@ struct edict_s
 	int			health;
 	int			max_health;
 	int			gib_health;
-	int			deadflag;
 	int			show_hostile;
 
 	int32		powerarmor_time;
@@ -637,7 +606,6 @@ struct edict_s
 	char		*map;			// target_changelevel
 
 	int			viewheight;		// height above origin where eyesight is determined
-	bool		takedamage;
 	int			dmg;
 	int			radius_dmg;
 	float		dmg_radius;
@@ -735,6 +703,8 @@ extern	CCvar	*instantweap;
 
 bool CheckTeamDamage (edict_t *targ, edict_t *attacker);
 void	SelectSpawnPoint (edict_t *ent, vec3_t origin, vec3_t angles);
+
+extern CBaseEntity *World;
 
 #else
 FILE_WARNING

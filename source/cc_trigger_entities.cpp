@@ -37,9 +37,11 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 /*QUAKED trigger_always (.5 .5 .5) (-8 -8 -8) (8 8 8)
 This trigger will always fire.  It is activated by the world.
 */
-class CTriggerAlways : public CMapEntity
+class CTriggerAlways : public CMapEntity, public CUsableEntity
 {
 public:
+	char	*Message;
+
 	CTriggerAlways () :
 	  CBaseEntity (),
 	  CMapEntity ()
@@ -49,6 +51,10 @@ public:
 	CTriggerAlways (int Index) :
 	  CBaseEntity (Index),
 	  CMapEntity (Index)
+	{
+	};
+
+	void Use (CBaseEntity *, CBaseEntity *)
 	{
 	};
 
@@ -62,7 +68,11 @@ public:
 		// we must have some delay to make sure our use targets are present
 		if (gameEntity->delay < 0.2f)
 			gameEntity->delay = 0.2f;
-		G_UseTargets(this, this);
+
+		if (st.message)
+			Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
+
+		UseTargets (this, Message);
 	};
 };
 
@@ -71,6 +81,7 @@ LINK_CLASSNAME_TO_CLASS ("trigger_always", CTriggerAlways);
 class CTriggerBase abstract : public CMapEntity, public CThinkableEntity, public CTouchableEntity, public CUsableEntity
 {
 public:
+	char	*Message;
 	enum
 	{
 		TRIGGER_THINK_NONE,
@@ -182,7 +193,7 @@ public:
 		if (NextThink)
 			return;		// already been triggered
 
-		G_UseTargets (this, gameEntity->activator->Entity);
+		UseTargets (gameEntity->activator->Entity, Message);
 
 		if (gameEntity->wait > 0)	
 		{
@@ -259,12 +270,12 @@ public:
 		if (gameEntity->spawnflags & 4)
 		{
 			SetSolid (SOLID_NOT);
-			ActivateUse = false;
+			ActivateUse = true;
 		}
 		else
 		{
 			SetSolid (SOLID_TRIGGER);
-			ActivateUse = true;
+			ActivateUse = false;
 		}
 
 		if (State.GetAngles() != vec3fOrigin)
@@ -277,6 +288,9 @@ public:
 
 		SetModel (gameEntity, gameEntity->model);
 		Link ();
+
+		if (st.message)
+			Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	};
 };
 
@@ -526,7 +540,7 @@ public:
 
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
-		if (!(other->EntityFlags & ENT_HURTABLE))
+		if (!((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage))
 			return;
 
 		if (NextHurt > level.framenum)
@@ -601,7 +615,7 @@ public:
 	{
 		if ( !(other->EntityFlags & ENT_MONSTER))
 			return;
-		if (other->gameEntity->flags & (FL_FLY | FL_SWIM) )
+		if (other->Flags & (FL_FLY | FL_SWIM) )
 			return;
 		if (other->GetSvFlags() & SVF_DEADMONSTER)
 			return;
@@ -700,6 +714,7 @@ public:
 	bool		Usable;
 	CBaseItem	*Item;
 	int32		TouchDebounce;
+	char		*Message;
 
 	CTriggerKey () :
 	  CBaseEntity (),
@@ -741,7 +756,11 @@ public:
 			if (level.framenum < TouchDebounce)
 				return;
 			TouchDebounce = level.framenum + 50;
-			Player->PrintToClient (PRINT_CENTER, "You need the %s", Item->Name);
+
+			if (!Message)
+				Player->PrintToClient (PRINT_CENTER, "You need the %s", Item->Name);
+			else
+				Player->PrintToClient (PRINT_CENTER, "%s", Message);
 			Player->PlaySound (CHAN_AUTO, SoundIndex ("misc/keytry.wav"));
 			return;
 		}
@@ -784,7 +803,7 @@ public:
 		else
 			Player->Client.pers.Inventory -= index;
 
-		G_UseTargets (this, activator);
+		UseTargets (activator, Message);
 
 		Usable = false;
 	};
@@ -815,6 +834,9 @@ public:
 
 		SoundIndex ("misc/keytry.wav");
 		SoundIndex ("misc/keyuse.wav");
+
+		if (st.message)
+			Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	};
 };
 

@@ -143,7 +143,7 @@ public:
 
 	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 	{
-		gameEntity->takedamage = false;
+		CanTakeDamage = false;
 		NextThink = level.framenum + 2;
 		gameEntity->activator = attacker->gameEntity;
 	};
@@ -171,7 +171,7 @@ public:
 		if (!gameEntity->dmg)
 			gameEntity->dmg = 150;
 
-		gameEntity->takedamage = true;
+		CanTakeDamage = true;
 		NextThink = level.framenum + FRAMETIME;
 
 		Link ();
@@ -240,6 +240,9 @@ public:
 		Accel = Decel = Speed = gameEntity->speed;
 
 		Link ();
+
+		if (st.message)
+			Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	};
 };
 
@@ -512,7 +515,7 @@ LINK_CLASSNAME_TO_CLASS ("misc_easterchick2", CMiscEasterChick2);
 Not really a monster, this is the Tank Commander's decapitated body.
 There should be a item_commander_head that has this as it's target.
 */
-class CCommanderBody : public CMapEntity, public CThinkableEntity, public CUsableEntity, public CTossProjectile
+class CCommanderBody : public CMapEntity, public CThinkableEntity, public CUsableEntity, public CTossProjectile, public CHurtableEntity
 {
 public:
 	bool Drop;
@@ -569,6 +572,9 @@ public:
 		PlaySound (CHAN_BODY, SoundIndex ("tank/pain.wav"));
 	};
 
+	void Pain (CBaseEntity *other, float kick, int damage) {};
+	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point) {};
+
 	void Spawn ()
 	{
 		PhysicsType = PHYSICS_NONE;
@@ -576,8 +582,8 @@ public:
 		State.SetModelIndex (ModelIndex ("models/monsters/commandr/tris.md2"));
 		SetMins (vec3f(-32, -32, 0));
 		SetMaxs (vec3f(32, 32, 48));
-		gameEntity->takedamage = true;
-		gameEntity->flags = FL_GODMODE;
+		CanTakeDamage = true;
+		Flags = FL_GODMODE;
 		State.AddRenderEffects (RF_FRAMELERP);
 		Link ();
 
@@ -659,9 +665,9 @@ public:
 		State.AddEffects (EF_GIB);
 		State.RemoveEffects (EF_FLIES);
 		State.SetSound (0);
-		gameEntity->flags |= FL_NO_KNOCKBACK;
+		Flags |= FL_NO_KNOCKBACK;
 		SetSvFlags (GetSvFlags() & ~SVF_MONSTER);
-		gameEntity->takedamage = true;
+		CanTakeDamage = true;
 
 		if (type == GIB_ORGANIC)
 		{
@@ -738,8 +744,8 @@ public:
 
 		SetMins (vec3f(-16, -16, 0));
 		SetMaxs (vec3f(16, 16, 16));
-		gameEntity->deadflag = DEAD_DEAD;
-		gameEntity->takedamage = true;
+		DeadFlag = true;
+		CanTakeDamage = true;
 		SetSvFlags (GetSvFlags() | (SVF_MONSTER|SVF_DEADMONSTER));
 
 		Link ();
@@ -794,6 +800,7 @@ public:
 	vec3f MoveDir;
 	bool Usable;
 	bool Touchable;
+	char *Message;
 
 	CMiscViperBomb () :
 	  CBaseEntity (),
@@ -854,7 +861,7 @@ public:
 
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
-		G_UseTargets (this, gameEntity->activator->Entity);
+		UseTargets (gameEntity->activator->Entity, Message);
 
 		State.SetOrigin (vec3f(State.GetOrigin().X, State.GetOrigin().Y, GetAbsMin().Z + 1));
 		T_RadiusDamage (this, this, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_BOMB);
@@ -901,6 +908,9 @@ public:
 
 		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
 		Link ();
+
+		if (st.message)
+			Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	};
 };
 
@@ -1023,7 +1033,7 @@ LINK_CLASSNAME_TO_CLASS ("light_mine2", CLightMine2);
 /*QUAKED misc_gib_arm (1 0 0) (-8 -8 -8) (8 8 8)
 Intended for use with the target_spawner
 */
-class CMiscGibArm : public CMapEntity, public CThinkableEntity, public CTossProjectile
+class CMiscGibArm : public CMapEntity, public CThinkableEntity, public CTossProjectile, public CHurtableEntity
 {
 public:
 	CMiscGibArm () :
@@ -1052,15 +1062,17 @@ public:
 		Free ();
 	};
 
+	void Pain (CBaseEntity *other, float kick, int damage) {};
+	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point) {};
+
 	void Spawn ()
 	{
 		State.SetModelIndex (gMedia.Gib_Arm);
 		SetSolid (SOLID_NOT);
 		State.AddEffects (EF_GIB);
-		gameEntity->takedamage = true;
+		CanTakeDamage = true;
 		PhysicsType = PHYSICS_TOSS;
 		SetSvFlags (GetSvFlags() | SVF_MONSTER);
-		gameEntity->deadflag = DEAD_DEAD;
 		gameEntity->avelocity[0] = random()*200;
 		gameEntity->avelocity[1] = random()*200;
 		gameEntity->avelocity[2] = random()*200;
@@ -1074,7 +1086,7 @@ LINK_CLASSNAME_TO_CLASS ("misc_gib_arm", CMiscGibArm);
 /*QUAKED misc_gib_leg (1 0 0) (-8 -8 -8) (8 8 8)
 Intended for use with the target_spawner
 */
-class CMiscGibLeg : public CMapEntity, public CThinkableEntity, public CTossProjectile
+class CMiscGibLeg : public CMapEntity, public CThinkableEntity, public CTossProjectile, public CHurtableEntity
 {
 public:
 	CMiscGibLeg () :
@@ -1103,15 +1115,17 @@ public:
 		Free ();
 	};
 
+	void Pain (CBaseEntity *other, float kick, int damage) {};
+	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point) {};
+
 	void Spawn ()
 	{
 		State.SetModelIndex (gMedia.Gib_Leg);
 		SetSolid (SOLID_NOT);
 		State.AddEffects (EF_GIB);
-		gameEntity->takedamage = true;
+		CanTakeDamage = true;
 		PhysicsType = PHYSICS_TOSS;
 		SetSvFlags (GetSvFlags() | SVF_MONSTER);
-		gameEntity->deadflag = DEAD_DEAD;
 		gameEntity->avelocity[0] = random()*200;
 		gameEntity->avelocity[1] = random()*200;
 		gameEntity->avelocity[2] = random()*200;
@@ -1125,7 +1139,7 @@ LINK_CLASSNAME_TO_CLASS ("misc_gib_leg", CMiscGibLeg);
 /*QUAKED misc_gib_head (1 0 0) (-8 -8 -8) (8 8 8)
 Intended for use with the target_spawner
 */
-class CMiscGibHead : public CMapEntity, public CThinkableEntity, public CTossProjectile
+class CMiscGibHead : public CMapEntity, public CThinkableEntity, public CTossProjectile, public CHurtableEntity
 {
 public:
 	CMiscGibHead () :
@@ -1154,15 +1168,17 @@ public:
 		Free ();
 	};
 
+	void Pain (CBaseEntity *other, float kick, int damage) {};
+	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point) {};
+
 	void Spawn ()
 	{
 		State.SetModelIndex (gMedia.Gib_Head[0]);
 		SetSolid (SOLID_NOT);
 		State.AddEffects (EF_GIB);
-		gameEntity->takedamage = true;
+		CanTakeDamage = true;
 		PhysicsType = PHYSICS_TOSS;
 		SetSvFlags (GetSvFlags() | SVF_MONSTER);
-		gameEntity->deadflag = DEAD_DEAD;
 		gameEntity->avelocity[0] = random()*200;
 		gameEntity->avelocity[1] = random()*200;
 		gameEntity->avelocity[2] = random()*200;

@@ -107,8 +107,8 @@ void BeginIntermission (CTargetChangeLevel *targ)
 		}
 	}
 
-	ent->State.GetOrigin (level.intermission_origin);
-	ent->State.GetAngles (level.intermission_angle);
+	level.IntermissionOrigin = ent->State.GetOrigin ();
+	level.IntermissionAngles = ent->State.GetAngles ();
 
 	// move all clients to the intermission point
 	for (int i=0 ; i<game.maxclients ; i++)

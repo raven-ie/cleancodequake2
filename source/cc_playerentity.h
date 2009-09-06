@@ -303,6 +303,7 @@ public:
 	bool		NoClip;
 	bool		TossPhysics;
 	int32		FlySoundDebounceTime;
+	int32		DamageDebounceTime;
 	int32		AirFinished;
 
 	CPlayerEntity (int Index);

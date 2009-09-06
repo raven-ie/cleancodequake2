@@ -297,17 +297,17 @@ void CGladiator::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage,
 		for (int n= 0; n < 4; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 		Entity->ThrowHead (gMedia.Gib_Head[1], damage, GIB_ORGANIC);
-		Entity->gameEntity->deadflag = DEAD_DEAD;
+		Entity->DeadFlag = true;
 		return;
 	}
 
-	if (Entity->gameEntity->deadflag == DEAD_DEAD)
+	if (Entity->DeadFlag == true)
 		return;
 
 // regular death
 	Entity->PlaySound (CHAN_VOICE, SoundDie, 1, ATTN_NORM, 0);
-	Entity->gameEntity->deadflag = DEAD_DEAD;
-	Entity->gameEntity->takedamage = true;
+	Entity->DeadFlag = true;
+	Entity->CanTakeDamage = true;
 
 	CurrentMove = &GladiatorMoveDeath;
 }

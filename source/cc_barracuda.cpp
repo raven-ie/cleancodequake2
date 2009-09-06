@@ -334,17 +334,17 @@ void CBarracudaShark::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int da
 		for (int n= 0; n < 2; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 		Entity->ThrowHead (gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		Entity->gameEntity->deadflag = DEAD_DEAD;
+		Entity->DeadFlag = true;
 		return;
 	}
 
-	if (Entity->gameEntity->deadflag == DEAD_DEAD)
+	if (Entity->DeadFlag == true)
 		return;
 
 // regular death
 	Entity->PlaySound (CHAN_VOICE, SoundDeath);
-	Entity->gameEntity->deadflag = DEAD_DEAD;
-	Entity->gameEntity->takedamage = true;
+	Entity->DeadFlag = true;
+	Entity->CanTakeDamage = true;
 	CurrentMove = &FlipperMoveDeath;
 }
 

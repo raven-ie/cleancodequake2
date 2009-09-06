@@ -58,6 +58,12 @@ NoPhysics(false)
 	EntityFlags |= ENT_ITEM;
 };
 
+void CItemEntity::Spawn ()
+{
+	if (st.message)
+		Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
+} // Just to fill CMapEntity
+
 void CItemEntity::Touch(CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 {
 	if (!other)
@@ -74,7 +80,7 @@ void CItemEntity::Touch(CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf
 
 	if (!(gameEntity->spawnflags & ITEM_TARGETS_USED))
 	{
-		G_UseTargets (this, other);
+		UseTargets (other, Message);
 		gameEntity->spawnflags |= ITEM_TARGETS_USED;
 	}
 
@@ -106,8 +112,8 @@ void CItemEntity::Touch(CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf
 	//if ((game.mode != GAME_COOPERATIVE && (ent->item->Flags & ITEMFLAG_STAY_COOP)) || (ent->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)))
 	if (!((game.mode & GAME_COOPERATIVE) &&  (gameEntity->item->Flags & ITEMFLAG_STAY_COOP)) || (gameEntity->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)))
 	{
-		if (gameEntity->flags & FL_RESPAWN)
-			gameEntity->flags &= ~FL_RESPAWN;
+		if (Flags & FL_RESPAWN)
+			Flags &= ~FL_RESPAWN;
 		else
 			Free ();
 	}
@@ -168,7 +174,7 @@ void CItemEntity::Think ()
 
 			if (gameEntity->team)
 			{
-				gameEntity->flags &= ~FL_TEAMSLAVE;
+				Flags &= ~FL_TEAMSLAVE;
 				gameEntity->chain = gameEntity->teamchain;
 				gameEntity->teamchain = NULL;
 

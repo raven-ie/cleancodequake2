@@ -34,13 +34,15 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_local.h"
 
 CHurtableEntity::CHurtableEntity () :
-CBaseEntity()
+CBaseEntity(),
+CanTakeDamage(false)
 {
 	EntityFlags |= ENT_HURTABLE;
 };
 
 CHurtableEntity::CHurtableEntity (int Index) :
-CBaseEntity(Index)
+CBaseEntity(Index),
+CanTakeDamage(false)
 {
 	EntityFlags |= ENT_HURTABLE;
 };
@@ -222,7 +224,7 @@ void CHurtableEntity::Killed (CBaseEntity *inflictor, CBaseEntity *attacker, int
 
 	gameEntity->enemy = attacker->gameEntity;
 
-	if ((gameEntity->deadflag != DEAD_DEAD) && (EntityFlags & ENT_MONSTER))
+	if ((!DeadFlag) && (EntityFlags & ENT_MONSTER))
 	{
 		if (!((dynamic_cast<CMonsterEntity*>(this))->Monster->AIFlags & AI_GOOD_GUY))
 		{
@@ -235,7 +237,7 @@ void CHurtableEntity::Killed (CBaseEntity *inflictor, CBaseEntity *attacker, int
 		}
 	}
 
-	if ((EntityFlags & ENT_MONSTER) && (gameEntity->deadflag != DEAD_DEAD))
+	if ((EntityFlags & ENT_MONSTER) && (!DeadFlag))
 	{
 		if (EntityFlags & ENT_TOUCHABLE)
 			(dynamic_cast<CTouchableEntity*>(this))->Touchable = false;
@@ -243,8 +245,7 @@ void CHurtableEntity::Killed (CBaseEntity *inflictor, CBaseEntity *attacker, int
 			(dynamic_cast<CMonsterEntity*>(this))->Monster->MonsterDeathUse();
 	}
 
-	// Too much checking?
-	if ((EntityFlags & ENT_HURTABLE) && inflictor && attacker)
+	if (((EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(this)->CanTakeDamage))
 		(dynamic_cast<CHurtableEntity*>(this))->Die (inflictor, attacker, damage, point);
 }
 
@@ -258,7 +259,7 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 	int			psave = 0;
 
 	// Needed?
-	if (!gameEntity->takedamage)
+	if (!CanTakeDamage)
 		return;
 
 	// friendly fire avoidance
@@ -304,7 +305,7 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 //ZOID
 #endif
 
-	if (gameEntity->flags & FL_NO_KNOCKBACK)
+	if (Flags & FL_NO_KNOCKBACK)
 		knockback = 0;
 
 // figure momentum add
@@ -325,7 +326,7 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 	save = 0;
 
 	// check for godmode
-	if ( (gameEntity->flags & FL_GODMODE) && !(dflags & DAMAGE_NO_PROTECTION) )
+	if ( (Flags & FL_GODMODE) && !(dflags & DAMAGE_NO_PROTECTION) )
 	{
 		take = 0;
 		save = damage;
@@ -405,7 +406,7 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 		if (gameEntity->health <= 0)
 		{
 			if ((EntityFlags & ENT_MONSTER) || (isClient))
-				gameEntity->flags |= FL_NO_KNOCKBACK;
+				Flags |= FL_NO_KNOCKBACK;
 			Killed (inflictor, attacker, take, point);
 			return;
 		}
@@ -443,7 +444,7 @@ void CHurtableEntity::TakeDamage (CBaseEntity *targ, CBaseEntity *inflictor,
 								vec3f normal, int damage, int knockback,
 								int dflags, EMeansOfDeath mod)
 {
-	if (targ->EntityFlags & ENT_HURTABLE)
+	if ((targ->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(targ)->CanTakeDamage)
 		(dynamic_cast<CHurtableEntity*>(targ))->TakeDamage (inflictor, attacker, dir, point, normal, damage, knockback, dflags, mod);
 }
 
@@ -609,7 +610,7 @@ bool CBounceProjectile::Run ()
 	vec3_t		old_origin;
 
 	// if not a team captain, so movement will be handled elsewhere
-	if (gameEntity->flags & FL_TEAMSLAVE)
+	if (Flags & FL_TEAMSLAVE)
 		return false;
 
 	if (gameEntity->velocity[2] > 0)
@@ -736,7 +737,7 @@ bool CFlyMissileProjectile::Run ()
 	vec3_t		old_origin;
 
 	// if not a team captain, so movement will be handled elsewhere
-	if (gameEntity->flags & FL_TEAMSLAVE)
+	if (Flags & FL_TEAMSLAVE)
 		return false;
 
 	if (gameEntity->velocity[2] > 0)
@@ -1053,9 +1054,9 @@ bool CStepPhysics::Run ()
 	//   swimming monsters who are in the water
 	if (!wasonground)
 	{
-		if (!(gameEntity->flags & FL_FLY))
+		if (!(Flags & FL_FLY))
 		{
-			if (!((gameEntity->flags & FL_SWIM) && (gameEntity->waterlevel > 2)))
+			if (!((Flags & FL_SWIM) && (gameEntity->waterlevel > 2)))
 			{
 				if (gameEntity->velocity[2] < sv_gravity->Float()*-0.1)
 					hitsound = true;
@@ -1066,7 +1067,7 @@ bool CStepPhysics::Run ()
 	}
 
 	// friction for flying monsters that have been given vertical velocity
-	if ((gameEntity->flags & FL_FLY) && (gameEntity->velocity[2] != 0))
+	if ((Flags & FL_FLY) && (gameEntity->velocity[2] != 0))
 	{
 		speed = Q_fabs(gameEntity->velocity[2]);
 		control = (speed < SV_STOPSPEED) ? SV_STOPSPEED : speed;
@@ -1079,7 +1080,7 @@ bool CStepPhysics::Run ()
 	}
 
 	// friction for flying monsters that have been given vertical velocity
-	if ((gameEntity->flags & FL_SWIM) && (gameEntity->velocity[2] != 0))
+	if ((Flags & FL_SWIM) && (gameEntity->velocity[2] != 0))
 	{
 		speed = Q_fabs(gameEntity->velocity[2]);
 		control = (speed < SV_STOPSPEED) ? SV_STOPSPEED : speed;
@@ -1094,7 +1095,7 @@ bool CStepPhysics::Run ()
 	{
 		// apply friction
 		// let dead monsters who aren't completely onground slide
-		if ((wasonground) || (gameEntity->flags & (FL_SWIM|FL_FLY)) && !(gameEntity->health <= 0.0 && ((EntityFlags & ENT_MONSTER) && !(dynamic_cast<CMonsterEntity*>(this))->Monster->CheckBottom())))
+		if ((wasonground) || (Flags & (FL_SWIM|FL_FLY)) && !(gameEntity->health <= 0.0 && ((EntityFlags & ENT_MONSTER) && !(dynamic_cast<CMonsterEntity*>(this))->Monster->CheckBottom())))
 		{
 			vel = gameEntity->velocity;
 			speed = sqrtf(vel[0]*vel[0] +vel[1]*vel[1]);
@@ -1399,7 +1400,7 @@ bool CPushPhysics::Run ()
 	edict_t		*part, *mv;
 
 	// if not a team captain, so movement will be handled elsewhere
-	if ( gameEntity->flags & FL_TEAMSLAVE)
+	if ( Flags & FL_TEAMSLAVE)
 		return false;
 
 	// make sure all team slaves can move before commiting
@@ -1496,4 +1497,117 @@ CUsableEntity::CUsableEntity (int Index) :
 CBaseEntity (Index)
 {
 	EntityFlags |= ENT_USABLE;
+}
+
+class CDelayedUse : public CThinkableEntity, public CUsableEntity
+{
+public:
+	CBaseEntity	*Activator;
+	const char	*Message;
+
+	CDelayedUse () :
+	  CBaseEntity (),
+	  CThinkableEntity (),
+	  Activator(NULL)
+	  {
+	  };
+
+	CDelayedUse (int Index) :
+	  CBaseEntity (Index),
+	  CThinkableEntity (Index),
+	  Activator(NULL)
+	  {
+	  };
+
+	void Use (CBaseEntity *, CBaseEntity *)
+	{
+	};
+
+	void Think ()
+	{
+		UseTargets (Activator, Message);
+		Free ();
+	}
+};
+
+void CUsableEntity::UseTargets (CBaseEntity *activator, const char *Message)
+{
+//
+// check for a delay
+//
+	if (gameEntity->delay)
+	{
+	// create a temp object to fire at a later time
+		CDelayedUse *t = QNew (com_levelPool, 0) CDelayedUse;
+		t->gameEntity->classname = "DelayedUse";
+
+		// Paril: for compatibility
+		t->NextThink = level.framenum + (gameEntity->delay * 10);
+		t->Activator = activator;
+		if (!activator)
+			DebugPrintf ("DelayedUse with no activator\n");
+		t->Message = Message;
+		t->gameEntity->target = gameEntity->target;
+		t->gameEntity->killtarget = gameEntity->killtarget;
+		return;
+	}
+
+//
+// print the message
+//
+	if ((Message) && (activator->EntityFlags & ENT_PLAYER))
+	{
+		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(activator);
+		Player->PrintToClient (PRINT_CENTER, "%s", Message);
+		if (gameEntity->noise_index)
+			Player->PlaySound (CHAN_AUTO, gameEntity->noise_index);
+		else
+			Player->PlaySound (CHAN_AUTO, SoundIndex ("misc/talk1.wav"));
+	}
+
+//
+// kill killtargets
+//
+	if (gameEntity->killtarget)
+	{
+		CBaseEntity *t = NULL;
+		while ((t = CC_Find (t, FOFS(targetname), gameEntity->killtarget)) != NULL)
+		{
+			t->Free ();
+
+			if (!IsInUse())
+			{
+				DebugPrintf("entity was removed while using killtargets\n");
+				return;
+			}
+		}
+	}
+
+//
+// fire targets
+//
+	if (gameEntity->target)
+	{
+		CBaseEntity *Ent = NULL;
+		while ((Ent = CC_Find (Ent, FOFS(targetname), gameEntity->target)) != NULL)
+		{
+			if (!Ent)
+				continue;
+
+			// doors fire area portals in a specific way
+			if (!Q_stricmp(Ent->gameEntity->classname, "func_areaportal") &&
+				(!Q_stricmp(Ent->gameEntity->classname, "func_door") || !Q_stricmp(Ent->gameEntity->classname, "func_door_rotating")))
+				continue;
+
+			if (Ent == this)
+				DebugPrintf ("WARNING: Entity used itself.\n");
+			else if (Ent->EntityFlags & ENT_USABLE)
+				(dynamic_cast<CUsableEntity*>(Ent))->Use (this, activator);
+			if (!IsInUse())
+			{
+				DebugPrintf("entity was removed while using targets\n");
+				return;
+			}
+		}
+	}
 }

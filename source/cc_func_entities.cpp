@@ -68,8 +68,8 @@ CFuncTimer::CFuncTimer (int Index) :
 
 void CFuncTimer::Think ()
 {
-	G_UseTargets (this, gameEntity->activator->Entity);
-	NextThink = level.framenum + ((gameEntity->wait + crandom() * gameEntity->random) * 10);
+	UseTargets (gameEntity->activator->Entity, Message);
+	NextThink = level.framenum + ((gameEntity->wait + (crandom() * gameEntity->random)) * 10);
 }
 
 bool CFuncTimer::Run ()
@@ -112,11 +112,14 @@ void CFuncTimer::Spawn ()
 	if (gameEntity->spawnflags & 1)
 	{
 		// lots of backwards compatibility
-		NextThink = level.framenum + 10 + (st.pausetime + gameEntity->delay + gameEntity->wait + (crandom() * gameEntity->random) * 10);
+		NextThink = level.framenum + 10 + ((st.pausetime + gameEntity->delay + gameEntity->wait + (crandom() * gameEntity->random))* 10);
 		gameEntity->activator = this->gameEntity;
 	}
 
 	SetSvFlags (SVF_NOCLIENT);
+
+	if (st.message)
+		Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 }
 
 LINK_CLASSNAME_TO_CLASS ("func_timer", CFuncTimer);
@@ -205,16 +208,18 @@ public:
 void CTargetString::Use (CBaseEntity *other, CBaseEntity *activator)
 {
 	CTargetStringForEachCallback cb;
-	cb.StrLen = strlen(gameEntity->message);
-	cb.Message = gameEntity->message;
+	cb.StrLen = strlen(Message);
+	cb.Message = Message;
 
 	ForEachTeamChain (this, &cb);
 }
 
 void CTargetString::Spawn ()
 {
-	if (!gameEntity->message)
-		gameEntity->message = "";
+	if (!st.message)
+		Message = "";
+	else
+		Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 }
 
 LINK_CLASSNAME_TO_CLASS ("target_string", CTargetString);
@@ -281,19 +286,19 @@ void CFuncClock::FormatCountdown ()
 	{
 	case 0:
 	default:
-		Q_snprintfz (gameEntity->message, CLOCK_MESSAGE_SIZE, "%2i", Seconds);
+		Q_snprintfz (Message, CLOCK_MESSAGE_SIZE, "%2i", Seconds);
 		break;
 	case 1:
-		Q_snprintfz(gameEntity->message, CLOCK_MESSAGE_SIZE, "%2i:%2i", Seconds / 60, Seconds % 60);
-		if (gameEntity->message[3] == ' ')
-			gameEntity->message[3] = '0';
+		Q_snprintfz(Message, CLOCK_MESSAGE_SIZE, "%2i:%2i", Seconds / 60, Seconds % 60);
+		if (Message[3] == ' ')
+			Message[3] = '0';
 		break;
 	case 2:
-		Q_snprintfz(gameEntity->message, CLOCK_MESSAGE_SIZE, "%2i:%2i:%2i", Seconds / 3600, (Seconds - (Seconds / 3600) * 3600) / 60, Seconds % 60);
-		if (gameEntity->message[3] == ' ')
-			gameEntity->message[3] = '0';
-		if (gameEntity->message[6] == ' ')
-			gameEntity->message[6] = '0';
+		Q_snprintfz(Message, CLOCK_MESSAGE_SIZE, "%2i:%2i:%2i", Seconds / 3600, (Seconds - (Seconds / 3600) * 3600) / 60, Seconds % 60);
+		if (Message[3] == ' ')
+			Message[3] = '0';
+		if (Message[6] == ' ')
+			Message[6] = '0';
 		break;
 	};
 }
@@ -324,14 +329,16 @@ void CFuncClock::Think ()
 
 		time(&gmtime);
 		localtime_s (&ltime, &gmtime);
-		Q_snprintfz (gameEntity->message, CLOCK_MESSAGE_SIZE, "%2i:%2i:%2i", ltime.tm_hour, ltime.tm_min, ltime.tm_sec);
-		if (gameEntity->message[3] == ' ')
-			gameEntity->message[3] = '0';
-		if (gameEntity->message[6] == ' ')
-			gameEntity->message[6] = '0';
+		Q_snprintfz (Message, CLOCK_MESSAGE_SIZE, "%2i:%2i:%2i", ltime.tm_hour, ltime.tm_min, ltime.tm_sec);
+		if (Message[3] == ' ')
+			Message[3] = '0';
+		if (Message[6] == ' ')
+			Message[6] = '0';
 	}
 
-	String->gameEntity->message = gameEntity->message;
+	if (String->Message)
+		QDelete String->Message; // Already got one, free it first
+	String->Message = Message;
 	String->Use (this, this);
 
 	if (((gameEntity->spawnflags & 1) && (Seconds > gameEntity->wait)) ||
@@ -340,12 +347,12 @@ void CFuncClock::Think ()
 		if (gameEntity->pathtarget)
 		{
 			char *savetarget = gameEntity->target;
-			char *savemessage = gameEntity->message;
+			char *savemessage = Message;
 			gameEntity->target = gameEntity->pathtarget;
-			gameEntity->message = NULL;
-			G_UseTargets (this, gameEntity->activator->Entity);
+			Message = NULL;
+			UseTargets (gameEntity->activator->Entity, Message);
 			gameEntity->target = savetarget;
-			gameEntity->message = savemessage;
+			Message = savemessage;
 		}
 
 		if (!(gameEntity->spawnflags & 8))
@@ -397,7 +404,7 @@ void CFuncClock::Spawn ()
 		gameEntity->count = 60*60;
 
 	Reset ();
-	gameEntity->message = QNew (com_levelPool, 0) char[CLOCK_MESSAGE_SIZE];
+	Message = QNew (com_levelPool, 0) char[CLOCK_MESSAGE_SIZE];
 
 	if (gameEntity->spawnflags & 4)
 		Usable = true;

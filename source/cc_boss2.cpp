@@ -438,7 +438,7 @@ void CBoss2::Explode ()
 			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMetal, 500, GIB_METALLIC);
 		CGibEntity::Spawn (Entity, gMedia.Gib_Chest, 500, GIB_ORGANIC);
 		Entity->ThrowHead (gMedia.Gib_Gear, 500, GIB_METALLIC);
-		Entity->gameEntity->deadflag = DEAD_DEAD;
+		Entity->DeadFlag = true;
 		return;
 	}
 
@@ -511,8 +511,8 @@ void CBoss2::Dead ()
 void CBoss2::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
 	Entity->PlaySound (CHAN_VOICE, SoundDeath, 1, ATTN_NONE, 0);
-	Entity->gameEntity->deadflag = DEAD_DEAD;
-	Entity->gameEntity->takedamage = false;
+	Entity->DeadFlag = true;
+	Entity->CanTakeDamage = false;
 	Entity->gameEntity->count = 0;
 	CurrentMove = &Boss2MoveDeath;
 }
@@ -604,7 +604,7 @@ void CBoss2::Spawn ()
 	Entity->gameEntity->gib_health = -200;
 	Entity->gameEntity->mass = 1000;
 
-	Entity->gameEntity->flags |= FL_IMMUNE_LASER;
+	Entity->Flags |= FL_IMMUNE_LASER;
 	
 	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_SEARCH);
 	Entity->Link ();

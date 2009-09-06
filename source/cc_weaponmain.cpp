@@ -245,10 +245,10 @@ bool CWeapon::AttemptToFire (CPlayerEntity *Player)
 void CWeapon::OutOfAmmo (CPlayerEntity *Player)
 {
 	// Doesn't affect pain anymore!
-	if (level.framenum >= Player->gameEntity->damage_debounce_time)
+	if (level.framenum >= Player->DamageDebounceTime)
 	{
 		Player->PlaySound (CHAN_AUTO, SoundIndex("weapons/noammo.wav"));
-		Player->gameEntity->damage_debounce_time = level.framenum + 10;
+		Player->DamageDebounceTime = level.framenum + 10;
 	}
 }
 
@@ -390,7 +390,7 @@ void CWeapon::AttackSound(CPlayerEntity *Player)
 void CWeapon::NoAmmoWeaponChange (CPlayerEntity *Player)
 {
 	// Dead?
-	if (!Player->Client.pers.Weapon || Player->gameEntity->health <= 0 || Player->gameEntity->deadflag)
+	if (!Player->Client.pers.Weapon || Player->gameEntity->health <= 0 || Player->DeadFlag)
 		return;
 
 	// Collect info on our current state

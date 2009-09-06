@@ -384,16 +384,16 @@ void CInfantry::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, 
 		for (int n= 0; n < 4; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 		Entity->ThrowHead (gMedia.Gib_Head[1], damage, GIB_ORGANIC);
-		Entity->gameEntity->deadflag = DEAD_DEAD;
+		Entity->DeadFlag = true;
 		return;
 	}
 
-	if (Entity->gameEntity->deadflag == DEAD_DEAD)
+	if (Entity->DeadFlag == true)
 		return;
 
 // regular death
-	Entity->gameEntity->deadflag = DEAD_DEAD;
-	Entity->gameEntity->takedamage = true;
+	Entity->DeadFlag = true;
+	Entity->CanTakeDamage = true;
 
 	CAnim *Animation;
 	int pSound;
@@ -426,7 +426,7 @@ void CInfantry::Duck_Down ()
 	vec3f maxs = Entity->GetMaxs();
 	maxs.Z -= 32;
 	Entity->SetMaxs (maxs);
-	Entity->gameEntity->takedamage = true;
+	Entity->CanTakeDamage = true;
 	PauseTime = level.framenum + 10;
 	Entity->Link ();
 }
@@ -445,7 +445,7 @@ void CInfantry::Duck_Up ()
 	vec3f maxs = Entity->GetMaxs();
 	maxs.Z += 32;
 	Entity->SetMaxs (maxs);
-	Entity->gameEntity->takedamage = true;
+	Entity->CanTakeDamage = true;
 	Entity->Link ();
 }
 #endif

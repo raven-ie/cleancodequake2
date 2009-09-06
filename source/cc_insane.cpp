@@ -540,7 +540,7 @@ void CInsane::Stand ()
 void CInsane::Dead ()
 {
 	if (Entity->gameEntity->spawnflags & 8)
-		Entity->gameEntity->flags |= FL_FLY;
+		Entity->Flags |= FL_FLY;
 	else
 	{
 		Entity->SetMins (vec3f(-16, -16, -24));
@@ -563,17 +563,17 @@ void CInsane::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 		for (int n= 0; n < 4; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 		Entity->ThrowHead (gMedia.Gib_Head[1], damage, GIB_ORGANIC);
-		Entity->gameEntity->deadflag = DEAD_DEAD;
+		Entity->DeadFlag = true;
 		return;
 	}
 
-	if (Entity->gameEntity->deadflag == DEAD_DEAD)
+	if (Entity->DeadFlag == true)
 		return;
 
 	Entity->PlaySound (CHAN_VOICE, SoundIndex(Q_VarArgs("player/male/death%i.wav", (rand()%4)+1)), 1, ATTN_IDLE);
 
-	Entity->gameEntity->deadflag = DEAD_DEAD;
-	Entity->gameEntity->takedamage = true;
+	Entity->DeadFlag = true;
+	Entity->CanTakeDamage = true;
 
 	if (Entity->gameEntity->spawnflags & 8)
 		Dead ();
@@ -626,7 +626,7 @@ void CInsane::Spawn ()
 	{
 		Entity->SetMins (vec3f(-16, 0, 0));
 		Entity->SetMaxs (vec3f(16, 8, 32));
-		Entity->gameEntity->flags |= FL_NO_KNOCKBACK;
+		Entity->Flags |= FL_NO_KNOCKBACK;
 		FlyMonsterStart ();
 	}
 	else

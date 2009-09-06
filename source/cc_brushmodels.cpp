@@ -128,7 +128,7 @@ void CBrushModel::MoveCalc (vec3_t dest, uint32 EndFunc)
 
 	if (Speed == Accel && Speed == Decel)
 	{
-		if (level.current_entity == ((gameEntity->flags & FL_TEAMSLAVE) ? gameEntity->teammaster : gameEntity))
+		if (level.current_entity == ((Flags & FL_TEAMSLAVE) ? gameEntity->teammaster : gameEntity))
 			MoveBegin ();
 		else
 		{
@@ -215,7 +215,7 @@ void CBrushModel::AngleMoveCalc (uint32 EndFunc)
 {
 	Vec3Clear (gameEntity->avelocity);
 	this->EndFunc = EndFunc;
-	if (level.current_entity == ((gameEntity->flags & FL_TEAMSLAVE) ? gameEntity->teammaster : gameEntity))
+	if (level.current_entity == ((Flags & FL_TEAMSLAVE) ? gameEntity->teammaster : gameEntity))
 		AngleMoveBegin ();
 	else
 	{
@@ -385,7 +385,7 @@ void CPlatForm::Blocked (CBaseEntity *other)
 	if (!(other->GetSvFlags() & SVF_MONSTER) && !(other->EntityFlags & ENT_PLAYER) )
 	{
 		// give it a chance to go away on it's own terms (like gibs)
-		if (other->EntityFlags & ENT_HURTABLE)
+		if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
 			dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, 100000, 1, 0, MOD_CRUSH);
 
 		// if it's still there, nuke it
@@ -394,7 +394,7 @@ void CPlatForm::Blocked (CBaseEntity *other)
 		return;
 	}
 
-	if (other->EntityFlags & ENT_HURTABLE)
+	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
 		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, gameEntity->dmg, 1, 0, MOD_CRUSH);
 
 	if (MoveState == STATE_UP)
@@ -405,11 +405,14 @@ void CPlatForm::Blocked (CBaseEntity *other)
 
 void CPlatForm::Use (CBaseEntity *other, CBaseEntity *activator)
 {
+	if (ThinkType)
+		return;		// already down
+	GoDown ();
 };
 
 void CPlatForm::HitTop ()
 {
-	if (!(gameEntity->flags & FL_TEAMSLAVE))
+	if (!(Flags & FL_TEAMSLAVE))
 	{
 		if (SoundEnd)
 			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundEnd, 1, ATTN_STATIC);
@@ -423,7 +426,7 @@ void CPlatForm::HitTop ()
 
 void CPlatForm::HitBottom ()
 {
-	if (!(gameEntity->flags & FL_TEAMSLAVE))
+	if (!(Flags & FL_TEAMSLAVE))
 	{
 		if (SoundEnd)
 			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundEnd, 1, ATTN_STATIC);
@@ -447,7 +450,7 @@ void CPlatForm::DoEndFunc ()
 
 void CPlatForm::GoDown ()
 {
-	if (!(gameEntity->flags & FL_TEAMSLAVE))
+	if (!(Flags & FL_TEAMSLAVE))
 	{
 		if (SoundStart)
 			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 1, ATTN_STATIC);
@@ -459,7 +462,7 @@ void CPlatForm::GoDown ()
 
 void CPlatForm::GoUp ()
 {
-	if (!(gameEntity->flags & FL_TEAMSLAVE))
+	if (!(Flags & FL_TEAMSLAVE))
 	{
 		if (SoundStart)
 			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 1, ATTN_STATIC);
@@ -669,7 +672,7 @@ void CDoor::UseAreaPortals (bool isOpen)
 
 void CDoor::HitTop ()
 {
-	if (!(gameEntity->flags & FL_TEAMSLAVE))
+	if (!(Flags & FL_TEAMSLAVE))
 	{
 		if (SoundEnd)
 			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundEnd, 1, ATTN_STATIC);
@@ -687,7 +690,7 @@ void CDoor::HitTop ()
 
 void CDoor::HitBottom ()
 {
-	if (!(gameEntity->flags & FL_TEAMSLAVE))
+	if (!(Flags & FL_TEAMSLAVE))
 	{
 		if (SoundEnd)
 			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundEnd, 1, ATTN_STATIC);
@@ -699,7 +702,7 @@ void CDoor::HitBottom ()
 
 void CDoor::GoDown ()
 {
-	if (!(gameEntity->flags & FL_TEAMSLAVE))
+	if (!(Flags & FL_TEAMSLAVE))
 	{
 		if (SoundStart)
 			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 1, ATTN_STATIC);
@@ -707,7 +710,7 @@ void CDoor::GoDown ()
 	}
 	if (gameEntity->max_health)
 	{
-		gameEntity->takedamage = true;
+		CanTakeDamage = true;
 		gameEntity->health = gameEntity->max_health;
 	}
 	
@@ -730,7 +733,7 @@ void CDoor::GoUp (CBaseEntity *activator)
 		return;
 	}
 	
-	if (!(gameEntity->flags & FL_TEAMSLAVE))
+	if (!(Flags & FL_TEAMSLAVE))
 	{
 		if (SoundStart)
 			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 1, ATTN_STATIC);
@@ -742,13 +745,13 @@ void CDoor::GoUp (CBaseEntity *activator)
 	//else if (strcmp(self->classname, "func_door_rotating") == 0)
 	//	AngleMove_Calc (self, door_hit_top);
 
-	G_UseTargets (this, activator);
+	UseTargets (activator, Message);
 	UseAreaPortals (true);
 }
 
 void CDoor::Use (CBaseEntity *other, CBaseEntity *activator)
 {
-	if (gameEntity->flags & FL_TEAMSLAVE)
+	if (Flags & FL_TEAMSLAVE)
 		return;
 
 	if (gameEntity->spawnflags & DOOR_TOGGLE)
@@ -760,7 +763,10 @@ void CDoor::Use (CBaseEntity *other, CBaseEntity *activator)
 			for (edict_t *ent = gameEntity; ent; ent = ent->teamchain)
 			{
 				CDoor *Door = dynamic_cast<CDoor*>(ent->Entity);
-				Door->gameEntity->message = NULL;
+				
+				if (Door->Message)
+					QDelete Door->Message;
+				Door->Message = NULL;
 				Door->Touchable = false;
 				Door->GoDown();
 			}
@@ -772,7 +778,10 @@ void CDoor::Use (CBaseEntity *other, CBaseEntity *activator)
 	for (edict_t *ent = gameEntity; ent; ent = ent->teamchain)
 	{
 		CDoor *Door = dynamic_cast<CDoor*>(ent->Entity);
-		Door->gameEntity->message = NULL;
+
+		if (Door->Message)
+			QDelete Door->Message;
+		Door->Message = NULL;
 		Door->Touchable = false;
 		Door->GoUp (activator);
 	}
@@ -810,7 +819,7 @@ void CDoor::CDoorTrigger::Touch (CBaseEntity *other, plane_t *plane, cmBspSurfac
 
 void CDoor::CalcMoveSpeed ()
 {
-	if (gameEntity->flags & FL_TEAMSLAVE)
+	if (Flags & FL_TEAMSLAVE)
 		return;		// only the team master does this
 
 	// find the smallest distance any member of the team will be moving
@@ -848,7 +857,7 @@ void CDoor::SpawnDoorTrigger ()
 {
 	vec3_t		mins, maxs;
 
-	if (gameEntity->flags & FL_TEAMSLAVE)
+	if (Flags & FL_TEAMSLAVE)
 		return;		// only the team leader spawns a trigger
 
 	GetAbsMin (mins);
@@ -884,7 +893,7 @@ void CDoor::Blocked (CBaseEntity *other)
 	if (!(other->EntityFlags & ENT_PLAYER) && !(other->EntityFlags & ENT_MONSTER) )
 	{
 		// give it a chance to go away on it's own terms (like gibs)
-		if (other->EntityFlags & ENT_HURTABLE)
+		if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
 			dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, 100000, 1, 0, MOD_CRUSH);
 
 		// if it's still there, nuke it
@@ -893,7 +902,7 @@ void CDoor::Blocked (CBaseEntity *other)
 		return;
 	}
 
-	if (other->EntityFlags & ENT_HURTABLE)
+	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
 		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, gameEntity->dmg, 1, 0, MOD_CRUSH);
 
 	if (gameEntity->spawnflags & DOOR_CRUSHER)
@@ -923,7 +932,7 @@ void CDoor::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3
 	{
 		CDoor *Door = dynamic_cast<CDoor*>(ent->Entity);
 		Door->gameEntity->health = Door->gameEntity->max_health;
-		Door->gameEntity->takedamage = false;
+		Door->CanTakeDamage = false;
 	}
 	(dynamic_cast<CDoor*>(gameEntity->teammaster->Entity))->Use (attacker, attacker);
 }
@@ -942,7 +951,7 @@ void CDoor::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 
 	TouchDebounce = level.framenum + 50;
 
-	(dynamic_cast<CPlayerEntity*>(other))->PrintToClient (PRINT_CENTER, "%s", gameEntity->message);
+	(dynamic_cast<CPlayerEntity*>(other))->PrintToClient (PRINT_CENTER, "%s", Message);
 	other->PlaySound (CHAN_AUTO, SoundIndex ("misc/talk1.wav"));
 }
 
@@ -1036,13 +1045,14 @@ void CDoor::Spawn ()
 	Touchable = false;
 	if (gameEntity->health)
 	{
-		gameEntity->takedamage = true;
+		CanTakeDamage = true;
 		gameEntity->max_health = gameEntity->health;
 	}
-	else if (gameEntity->targetname && gameEntity->message)
+	else if (gameEntity->targetname && st.message)
 	{
 		SoundIndex ("misc/talk.wav");
 		Touchable = true;
+		Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	}
 	
 	Speed = gameEntity->speed;
@@ -1090,7 +1100,7 @@ CDoor(Index)
 
 void CRotatingDoor::GoDown ()
 {
-	if (!(gameEntity->flags & FL_TEAMSLAVE))
+	if (!(Flags & FL_TEAMSLAVE))
 	{
 		if (SoundStart)
 			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 1, ATTN_STATIC);
@@ -1098,7 +1108,7 @@ void CRotatingDoor::GoDown ()
 	}
 	if (gameEntity->max_health)
 	{
-		gameEntity->takedamage = true;
+		CanTakeDamage = true;
 		gameEntity->health = gameEntity->max_health;
 	}
 	
@@ -1118,7 +1128,7 @@ void CRotatingDoor::GoUp (CBaseEntity *activator)
 		return;
 	}
 	
-	if (!(gameEntity->flags & FL_TEAMSLAVE))
+	if (!(Flags & FL_TEAMSLAVE))
 	{
 		if (SoundStart)
 			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 1, ATTN_STATIC);
@@ -1127,7 +1137,7 @@ void CRotatingDoor::GoUp (CBaseEntity *activator)
 	MoveState = STATE_UP;
 	AngleMoveCalc (DOORENDFUNC_HITTOP);
 
-	G_UseTargets (this, activator);
+	UseTargets (activator, Message);
 	UseAreaPortals (true);
 }
 
@@ -1193,14 +1203,15 @@ void CRotatingDoor::Spawn ()
 
 	if (gameEntity->health)
 	{
-		gameEntity->takedamage = true;
+		CanTakeDamage = true;
 		gameEntity->max_health = gameEntity->health;
 	}
 	
-	if (gameEntity->targetname && gameEntity->message)
+	if (gameEntity->targetname && st.message)
 	{
 		SoundIndex ("misc/talk.wav");
 		Touchable = true;
+		Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	}
 	else
 		Touchable = false;
@@ -1352,7 +1363,7 @@ void CDoorSecret::DoEndFunc ()
 			if (!(gameEntity->targetname) || (gameEntity->spawnflags & SECRET_ALWAYS_SHOOT))
 			{
 				gameEntity->health = 0;
-				gameEntity->takedamage = true;
+				CanTakeDamage = true;
 			}
 			UseAreaPortals (false);
 			break;
@@ -1408,7 +1419,7 @@ void CDoorSecret::Blocked (CBaseEntity *other)
 	if (!(other->EntityFlags & ENT_MONSTER) && (!(other->EntityFlags & ENT_PLAYER)) )
 	{
 		// give it a chance to go away on it's own terms (like gibs)
-		if (other->EntityFlags & ENT_HURTABLE)
+		if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
 			dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, State.GetOrigin(), vec3fOrigin, 100000, 1, 0, MOD_CRUSH);
 
 		// if it's still there, nuke it
@@ -1421,13 +1432,13 @@ void CDoorSecret::Blocked (CBaseEntity *other)
 		return;
 	TouchDebounce = level.framenum + 5;
 
-	if (other->EntityFlags & ENT_HURTABLE)
+	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
 		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, State.GetOrigin(), vec3fOrigin, gameEntity->dmg, 1, 0, MOD_CRUSH);
 }
 
 void CDoorSecret::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
-	gameEntity->takedamage = false;
+	CanTakeDamage = false;
 	Use (attacker, attacker);
 }
 
@@ -1444,7 +1455,7 @@ void CDoorSecret::Spawn ()
 	if (!(gameEntity->targetname) || (gameEntity->spawnflags & SECRET_ALWAYS_SHOOT))
 	{
 		gameEntity->health = 0;
-		gameEntity->takedamage = true;
+		CanTakeDamage = true;
 	}
 
 	Touchable = false;
@@ -1481,13 +1492,14 @@ void CDoorSecret::Spawn ()
 
 	if (gameEntity->health)
 	{
-		gameEntity->takedamage = true;
+		CanTakeDamage = true;
 		gameEntity->max_health = gameEntity->health;
 	}
-	else if (gameEntity->targetname && gameEntity->message)
+	else if (gameEntity->targetname && st.message)
 	{
 		SoundIndex ("misc/talk.wav");
 		Touchable = true;
+		Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	}
 	
 	gameEntity->classname = "func_door";
@@ -1568,7 +1580,7 @@ void CButton::DoEndFunc ()
 		State.RemoveEffects (EF_ANIM01);
 		State.AddEffects (EF_ANIM23);
 
-		G_UseTargets (this, gameEntity->activator->Entity);
+		UseTargets (gameEntity->activator->Entity, Message);
 		State.SetFrame (1);
 		if (Wait >= 0)
 		{
@@ -1589,7 +1601,7 @@ void CButton::Think ()
 		State.SetFrame (0);
 
 		if (gameEntity->health)
-			gameEntity->takedamage = true;
+			CanTakeDamage = true;
 		break;
 	default:
 		CBrushModel::Think ();
@@ -1602,7 +1614,7 @@ void CButton::Fire ()
 		return;
 
 	MoveState = STATE_UP;
-	if (SoundStart && !(gameEntity->flags & FL_TEAMSLAVE))
+	if (SoundStart && !(Flags & FL_TEAMSLAVE))
 		PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 1, ATTN_STATIC);
 	MoveCalc (EndOrigin, BUTTONENDFUNC_WAIT);
 }
@@ -1629,7 +1641,7 @@ void CButton::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 {
 	gameEntity->activator = attacker->gameEntity;
 	gameEntity->health = gameEntity->max_health;
-	gameEntity->takedamage = false;
+	CanTakeDamage = false;
 	Fire ();
 }
 
@@ -1674,10 +1686,13 @@ void CButton::Spawn ()
 	if (gameEntity->health)
 	{
 		gameEntity->max_health = gameEntity->health;
-		gameEntity->takedamage = true;
+		CanTakeDamage = true;
 	}
 	else if (!gameEntity->targetname)
 		Touchable = true;
+
+	if (st.message)
+		Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 
 	MoveState = STATE_BOTTOM;
 
@@ -1740,7 +1755,7 @@ void CTrainBase::Blocked (CBaseEntity *other)
 	if (!(other->EntityFlags & ENT_MONSTER) && (!(other->EntityFlags & ENT_PLAYER)) )
 	{
 		// give it a chance to go away on it's own terms (like gibs)
-		if (other->EntityFlags & ENT_HURTABLE)
+		if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
 			dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, 100000, 1, 0, MOD_CRUSH);
 
 		// if it's still there, nuke it
@@ -1756,7 +1771,7 @@ void CTrainBase::Blocked (CBaseEntity *other)
 		return;
 	TouchDebounce = level.framenum + 5;
 
-	if (other->EntityFlags & ENT_HURTABLE)
+	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
 		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, gameEntity->dmg, 1, 0, MOD_CRUSH);
 }
 
@@ -1768,7 +1783,7 @@ void CTrainBase::TrainWait ()
 		CBaseEntity	*ent = gameEntity->target_ent->Entity;
 		savetarget = ent->gameEntity->target;
 		ent->gameEntity->target = ent->gameEntity->pathtarget;
-		G_UseTargets (ent, gameEntity->activator->Entity);
+		UseTargets (gameEntity->activator->Entity, Message);
 		ent->gameEntity->target = savetarget;
 
 		// make sure we didn't get killed by a killtarget
@@ -1791,7 +1806,7 @@ void CTrainBase::TrainWait ()
 			NextThink = 0;
 		}
 
-		if (!(gameEntity->flags & FL_TEAMSLAVE))
+		if (!(Flags & FL_TEAMSLAVE))
 		{
 			if (SoundEnd)
 				PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundEnd, 1, ATTN_STATIC);
@@ -1842,7 +1857,7 @@ void CTrainBase::Next ()
 	Wait = ent->gameEntity->wait;
 	gameEntity->target_ent = ent->gameEntity;
 
-	if (!(gameEntity->flags & FL_TEAMSLAVE))
+	if (!(Flags & FL_TEAMSLAVE))
 	{
 		if (SoundStart)
 			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 1, ATTN_STATIC);
@@ -2003,6 +2018,9 @@ void CTrain::Spawn ()
 		//gi.dprintf ("func_train without a target at (%f %f %f)\n", self->absMin[0], self->absMin[1], self->absMin[2]);
 		MapPrint (MAPPRINT_ERROR, this, GetAbsMin(), "No target\n");
 	}
+
+	if (st.message)
+		Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 }
 
 LINK_CLASSNAME_TO_CLASS ("func_train", CTrain);
@@ -2110,8 +2128,10 @@ void CreateSPStatusbar ();
 void SetItemNames ();
 void Init_Junk();
 
+CBaseEntity *World;
 void CWorldEntity::Spawn ()
 {
+	World = this;
 	ClearList(); // Do this before ANYTHING
 	// Seed the random number generator
 	srand (time(NULL));
@@ -2129,10 +2149,10 @@ void CWorldEntity::Spawn ()
 		Q_strncpyz (level.nextmap, st.nextmap, sizeof(level.nextmap));
 
 	// make some data visible to the server
-	if (gameEntity->message && gameEntity->message[0])
+	if (st.message && st.message[0])
 	{
-		ConfigString (CS_NAME, gameEntity->message);
-		Q_strncpyz (level.level_name, gameEntity->message, sizeof(level.level_name));
+		ConfigString (CS_NAME, st.message);
+		Q_strncpyz (level.level_name, st.message, sizeof(level.level_name));
 	}
 	else
 		Q_strncpyz (level.level_name, level.mapname, sizeof(level.level_name));
@@ -2310,13 +2330,13 @@ void CRotatingBrush::Blocked (CBaseEntity *other)
 	if (!Blockable)
 		return;
 
-	if (other->EntityFlags & ENT_HURTABLE)
+	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
 		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, gameEntity->dmg, 1, 0, MOD_CRUSH);
 }
 
 void CRotatingBrush::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 {
-	if ((gameEntity->avelocity[0] || gameEntity->avelocity[1] || gameEntity->avelocity[2]) && (other->EntityFlags & ENT_HURTABLE))
+	if ((gameEntity->avelocity[0] || gameEntity->avelocity[1] || gameEntity->avelocity[2]) && ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage))
 		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, gameEntity->dmg, 1, 0, MOD_CRUSH);
 }
 
@@ -2641,6 +2661,9 @@ void CFuncObject::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *sur
 		return;
 	if (!(other->EntityFlags & ENT_HURTABLE))
 		return;
+	if (!dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
+		return;
+
 	dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3Origin, State.GetOrigin(), vec3fOrigin, gameEntity->dmg, 1, 0, MOD_CRUSH);
 };
 
@@ -2741,7 +2764,7 @@ void CFuncExplosive::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dam
 	vec3f origin = GetAbsMin() + size;
 	State.SetOrigin (origin);
 
-	gameEntity->takedamage = false;
+	CanTakeDamage = false;
 
 	if (gameEntity->dmg)
 		T_RadiusDamage (this, attacker->gameEntity->Entity, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_EXPLOSIVE);
@@ -2775,7 +2798,7 @@ void CFuncExplosive::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dam
 	while(count--)
 		ThrowDebris (gameEntity, "models/objects/debris2/tris.md2", 2, vec3f (origin + (crandom() * size)));*/
 
-	G_UseTargets (this, attacker);
+	UseTargets (attacker, Message);
 
 	if (gameEntity->dmg)
 		BecomeExplosion (true);
@@ -2849,10 +2872,13 @@ void CFuncExplosive::Spawn ()
 	{
 		if (!gameEntity->health)
 			gameEntity->health = 100;
-		gameEntity->takedamage = true;
+		CanTakeDamage = true;
 	}
 
 	Link ();
+
+	if (st.message)
+		Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 };
 
 LINK_CLASSNAME_TO_CLASS ("func_explosive", CFuncExplosive);
@@ -2895,6 +2921,8 @@ LINK_CLASSNAME_TO_CLASS ("func_killbox", CKillbox);
 class CTriggerRelay : public CMapEntity, public CUsableEntity
 {
 public:
+	char	*Message;
+
 	CTriggerRelay () :
 	  CBaseEntity (),
 	  CMapEntity (),
@@ -2911,11 +2939,13 @@ public:
 
 	void Use (CBaseEntity *other, CBaseEntity *activator)
 	{
-		G_UseTargets (this, activator);
+		UseTargets (activator, Message);
 	};
 
 	void Spawn ()
 	{
+		if (st.message)
+			Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	};
 };
 

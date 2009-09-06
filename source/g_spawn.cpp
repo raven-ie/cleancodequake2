@@ -205,7 +205,7 @@ void G_FindTeams (void)
 			continue;
 		if (!e->team)
 			continue;
-		if (e->flags & FL_TEAMSLAVE)
+		if (e->Entity->Flags & FL_TEAMSLAVE)
 			continue;
 		chain = e;
 		e->teammaster = e;
@@ -217,7 +217,7 @@ void G_FindTeams (void)
 				continue;
 			if (!e2->team)
 				continue;
-			if (e2->flags & FL_TEAMSLAVE)
+			if (e2->Entity->Flags & FL_TEAMSLAVE)
 				continue;
 			if (!strcmp(e->team, e2->team))
 			{
@@ -225,7 +225,7 @@ void G_FindTeams (void)
 				chain->teamchain = e2;
 				e2->teammaster = e;
 				chain = e2;
-				e2->flags |= FL_TEAMSLAVE;
+				e2->Entity->Flags |= FL_TEAMSLAVE;
 			}
 		}
 	}

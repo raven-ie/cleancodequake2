@@ -81,7 +81,7 @@ bool CTurretEntityBase::Run ()
 
 void CTurretEntityBase::Blocked (CBaseEntity *other)
 {
-	if (other->EntityFlags & ENT_HURTABLE)
+	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
 		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, (gameEntity->teammaster->owner) ? gameEntity->teammaster->owner->Entity : ((gameEntity->teammaster) ? gameEntity->teammaster->Entity : NULL),
 					vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, gameEntity->teammaster->dmg, 10, 0, MOD_CRUSH);
 }
@@ -354,7 +354,7 @@ void CTurretDriver::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 		;
 	ent->teamchain = NULL;
 	Entity->gameEntity->teammaster = NULL;
-	Entity->gameEntity->flags &= ~FL_TEAMSLAVE;
+	Entity->Flags &= ~FL_TEAMSLAVE;
 
 	Entity->gameEntity->target_ent->owner = NULL;
 	Entity->gameEntity->target_ent->teammaster->owner = NULL;
@@ -454,7 +454,7 @@ void CTurretDriver::TurretLink ()
 		;
 	ent->teamchain = Entity->gameEntity;
 	Entity->gameEntity->teammaster = Entity->gameEntity->target_ent->teammaster;
-	Entity->gameEntity->flags |= FL_TEAMSLAVE;
+	Entity->Flags |= FL_TEAMSLAVE;
 }
 
 void CTurretDriver::Spawn ()
@@ -481,13 +481,13 @@ void CTurretDriver::Spawn ()
 	SoundDie1 = SoundIndex ("infantry/infdeth1.wav");
 	SoundDie2 = SoundIndex ("infantry/infdeth2.wav");
 
-	Entity->gameEntity->flags |= FL_NO_KNOCKBACK;
+	Entity->Flags |= FL_NO_KNOCKBACK;
 
 	level.total_monsters++;
 
 	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_MONSTER);
 	Entity->State.AddRenderEffects (RF_FRAMELERP);
-	Entity->gameEntity->takedamage = true;
+	Entity->CanTakeDamage = true;
 	Entity->SetClipmask (CONTENTS_MASK_MONSTERSOLID);
 	Entity->State.SetOldOrigin (Entity->State.GetOrigin ());
 	AIFlags |= (AI_STAND_GROUND|AI_DUCKED);

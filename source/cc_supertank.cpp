@@ -767,7 +767,7 @@ void CSuperTank::Explode ()
 			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMetal, 500, GIB_METALLIC);
 		CGibEntity::Spawn (Entity, gMedia.Gib_Chest, 500, GIB_ORGANIC);
 		Entity->ThrowHead (gMedia.Gib_Gear, 500, GIB_METALLIC);
-		Entity->gameEntity->deadflag = DEAD_DEAD;
+		Entity->DeadFlag = true;
 		return;
 	}
 
@@ -780,8 +780,8 @@ void CSuperTank::Explode ()
 void CSuperTank::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
 	Entity->PlaySound (CHAN_VOICE, SoundDeath);
-	Entity->gameEntity->deadflag = DEAD_DEAD;
-	Entity->gameEntity->takedamage = false;
+	Entity->DeadFlag = true;
+	Entity->CanTakeDamage = false;
 	Entity->gameEntity->count = 0;
 	CurrentMove = &SuperTankMoveDeath;
 }
