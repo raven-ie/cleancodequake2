@@ -564,7 +564,7 @@ void CIcarus::Pain (CBaseEntity *other, float kick, int damage)
 
 void CIcarus::DeadThink ()
 {
-	if (!Entity->gameEntity->groundentity && level.framenum < Entity->gameEntity->timestamp)
+	if (!Entity->GroundEntity && level.framenum < Entity->gameEntity->timestamp)
 	{
 		Entity->NextThink = level.framenum + FRAMETIME;
 		return;

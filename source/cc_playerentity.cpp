@@ -538,10 +538,7 @@ void CPlayerEntity::PutInServer ()
 	FetchEntData ();
 
 	// clear entity values
-	gameEntity->groundentity = NULL;
-	// FIXME: is this needed?!
-	//Client = CClient(&game.clients[index]);
-	//ent->client = &game.clients[index];
+	GroundEntity = NULL;
 	CanTakeDamage = true;
 	NoClip = false;
 	TossPhysics = false;
@@ -1306,11 +1303,11 @@ inline void CPlayerEntity::FallingDamage ()
 #endif
 	float	delta;
 
-	if ((Client.oldvelocity[2] < 0) && (gameEntity->velocity[2] > Client.oldvelocity[2]) && (!gameEntity->groundentity))
+	if ((Client.oldvelocity[2] < 0) && (gameEntity->velocity[2] > Client.oldvelocity[2]) && (!GroundEntity))
 		delta = Client.oldvelocity[2];
 	else
 	{
-		if (!gameEntity->groundentity)
+		if (!GroundEntity)
 			return;
 		delta = gameEntity->velocity[2] - Client.oldvelocity[2];
 	}
@@ -1599,7 +1596,7 @@ inline void CPlayerEntity::SetClientEvent (float xyspeed)
 	if (State.GetEvent())
 		return;
 
-	if ( gameEntity->groundentity && xyspeed > 225)
+	if ( GroundEntity && xyspeed > 225)
 	{
 		if ( (int)(Client.bobtime+bobmove) != bobcycle )
 			State.SetEvent (EV_FOOTSTEP);
@@ -1653,7 +1650,7 @@ inline void CPlayerEntity::SetClientFrame (float xyspeed)
 	// check for stand/duck and stop/go transitions
 	if ((duck != Client.anim_duck && Client.anim_priority < ANIM_DEATH) ||
 		(run != Client.anim_run && Client.anim_priority == ANIM_BASIC) ||
-		(!gameEntity->groundentity && Client.anim_priority <= ANIM_WAVE))
+		(!GroundEntity && Client.anim_priority <= ANIM_WAVE))
 		isNewAnim = true;
 
 	if (!isNewAnim)
@@ -1676,7 +1673,7 @@ inline void CPlayerEntity::SetClientFrame (float xyspeed)
 			return;		// stay there
 		if (Client.anim_priority == ANIM_JUMP)
 		{
-			if (!gameEntity->groundentity)
+			if (!GroundEntity)
 				return;		// stay there
 			Client.anim_priority = ANIM_WAVE;
 			State.SetFrame (FRAME_jump3);
@@ -1690,7 +1687,7 @@ inline void CPlayerEntity::SetClientFrame (float xyspeed)
 	Client.anim_duck = duck;
 	Client.anim_run = run;
 
-	if (!gameEntity->groundentity)
+	if (!GroundEntity)
 	{
 #ifdef CLEANCTF_ENABLED
 //ZOID: if on grapple, don't go into jump frame, go into standing
@@ -1813,7 +1810,7 @@ void CPlayerEntity::EndServerFrame ()
 		bobmove = 0;
 		Client.bobtime = 0;	// start at beginning of cycle again
 	}
-	else if (gameEntity->groundentity)
+	else if (GroundEntity)
 	{
 		// so bobbing only cycles when on ground
 		if (xyspeed > 210)
@@ -2836,7 +2833,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 	pMoveNew_t	pm;
 #endif
 
-	level.current_entity = gameEntity;
+	level.CurrentEntity = this;
 
 	if (level.intermissiontime)
 	{
@@ -2921,7 +2918,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 	Client.resp.cmd_angles[2] = SHORT2ANGLE(ucmd->angles[2]);
 
 	State.GetOrigin (origin);
-	if (gameEntity->groundentity && !pm.groundEntity && (pm.cmd.upMove >= 10) && (pm.waterLevel == 0))
+	if (GroundEntity && !pm.groundEntity && (pm.cmd.upMove >= 10) && (pm.waterLevel == 0))
 	{
 		PlaySound (CHAN_VOICE, gMedia.Player.Jump);
 		PlayerNoise(this, origin, PNOISE_SELF);
@@ -2930,9 +2927,9 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 	gameEntity->viewheight = pm.viewHeight;
 	gameEntity->waterlevel = pm.waterLevel;
 	gameEntity->watertype = pm.waterType;
-	gameEntity->groundentity = pm.groundEntity;
-	if (pm.groundEntity)
-		gameEntity->groundentity_linkcount = pm.groundEntity->linkCount;
+	GroundEntity = (pm.groundEntity) ? pm.groundEntity->Entity : NULL;
+	if (GroundEntity)
+		GroundEntityLinkCount = GroundEntity->GetLinkCount();
 
 	if (DeadFlag)
 		Client.PlayerState.SetViewAngles (vec3f(40, -15, Client.killer_yaw));
@@ -3489,7 +3486,7 @@ void CPlayerEntity::UpdateChaseCam()
 		o[2] = temp[2] + 20;
 
 	// jump animation lifts
-	if (!targ->gameEntity->groundentity)
+	if (!targ->GroundEntity)
 		o[2] += 16;
 
 	trace = CTrace (ownerv, vec3Origin, vec3Origin, o, targ->gameEntity, CONTENTS_MASK_SOLID);

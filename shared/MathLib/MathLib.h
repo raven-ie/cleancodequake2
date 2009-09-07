@@ -21,6 +21,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 // ===========================================================================
 
+class vec3f; // forward declaration
+
 extern vec2_t	vec2Origin;
 extern vec3_t	vec3Origin;
 extern vec4_t	vec4Origin;
@@ -551,7 +553,7 @@ void		AddBoundsTo2DBounds (vec2_t inMins, vec2_t inMaxs, vec2_t outMins, vec2_t 
 void		AddPointTo2DBounds (vec2_t v, vec2_t mins, vec2_t maxs);
 void		Clear2DBounds (vec2_t mins, vec2_t maxs);
 
-void		AddPointToBounds (vec3_t v, vec3_t mins, vec3_t maxs);
+void		AddPointToBounds (vec3f v, vec3f &mins, vec3f &maxs);
 bool		BoundsAndSphereIntersect (const vec3_t mins, const vec3_t maxs, const vec3_t centre, float radius);
 bool		BoundsIntersect (const vec3_t mins1, const vec3_t maxs1, const vec3_t mins2, const vec3_t maxs2);
 void		ClearBounds (vec3_t mins, vec3_t maxs);

@@ -485,17 +485,17 @@ void RunFrame ()
 		if (!ent->inUse)
 			continue;
 
-		level.current_entity = ent;
-
 		if (ent->Entity)
 		{
 			CBaseEntity *Entity = ent->Entity;
+			level.CurrentEntity = Entity;
+
 			Entity->State.SetOldOrigin (Entity->State.GetOrigin());
 
 			// if the ground entity moved, make sure we are still on it
-			if ((ent->groundentity) && (ent->groundentity->linkCount != ent->groundentity_linkcount))
+			if ((Entity->GroundEntity) && (Entity->GroundEntity->GetLinkCount() != Entity->GroundEntityLinkCount))
 			{
-				ent->groundentity = NULL;
+				Entity->GroundEntity = NULL;
 				if ( !(Entity->Flags & (FL_SWIM|FL_FLY)) && (Entity->EntityFlags & ENT_MONSTER))
 					(dynamic_cast<CMonsterEntity*>(Entity))->Monster->CheckGround ();
 			}

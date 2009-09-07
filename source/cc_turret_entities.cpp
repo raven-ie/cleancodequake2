@@ -82,8 +82,8 @@ bool CTurretEntityBase::Run ()
 void CTurretEntityBase::Blocked (CBaseEntity *other)
 {
 	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
-		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, (gameEntity->teammaster->owner) ? gameEntity->teammaster->owner->Entity : ((gameEntity->teammaster) ? gameEntity->teammaster->Entity : NULL),
-					vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, gameEntity->teammaster->dmg, 10, 0, MOD_CRUSH);
+		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, (TeamMaster->GetOwner()) ? TeamMaster->GetOwner() : TeamMaster,
+					vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, TeamMaster->gameEntity->dmg, 10, 0, MOD_CRUSH);
 }
 
 /*QUAKED turret_breach (0 0 0) ?
@@ -125,7 +125,7 @@ void CTurretBreach::Fire ()
 	start = start.MultiplyAngles (gameEntity->move_origin[2], u);
 
 	int damage = 100 + random() * 50;
-	CRocket::Spawn (gameEntity->teammaster->owner->Entity, start, f, damage, 550 + 50 * skill->Integer(), 150, damage);
+	CRocket::Spawn (TeamMaster->GetOwner(), start, f, damage, 550 + 50 * skill->Integer(), 150, damage);
 	PlayPositionedSound (start, CHAN_WEAPON, SoundIndex("weapons/rocklf1a.wav"));
 }
 
@@ -161,7 +161,7 @@ void CTurretBreach::Think ()
 			targ->Free();
 		}
 
-		gameEntity->teammaster->dmg = gameEntity->dmg;
+		TeamMaster->gameEntity->dmg = gameEntity->dmg;
 		Think ();
 	}
 	else
@@ -344,20 +344,20 @@ CInfantry ()
 
 void CTurretDriver::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
-	edict_t	*ent;
+	CBaseEntity	*ent;
 
 	// level the gun
 	Entity->gameEntity->target_ent->move_angles[0] = 0;
 
 	// remove the driver from the end of them team chain
-	for (ent = Entity->gameEntity->target_ent->teammaster; ent->teamchain != Entity->gameEntity; ent = ent->teamchain)
+	for (ent = Entity->gameEntity->target_ent->Entity->TeamMaster; ent->TeamChain != Entity; ent = ent->TeamChain)
 		;
-	ent->teamchain = NULL;
-	Entity->gameEntity->teammaster = NULL;
+	ent->TeamChain = NULL;
+	Entity->TeamMaster = NULL;
 	Entity->Flags &= ~FL_TEAMSLAVE;
 
-	Entity->gameEntity->target_ent->owner = NULL;
-	Entity->gameEntity->target_ent->teammaster->owner = NULL;
+	Entity->gameEntity->target_ent->Entity->SetOwner (NULL);
+	Entity->gameEntity->target_ent->Entity->TeamMaster->SetOwner (NULL);
 
 	CInfantry::Die (inflictor, attacker, damage, point);
 }
@@ -428,14 +428,12 @@ void CTurretDriver::TurretThink ()
 
 void CTurretDriver::TurretLink ()
 {
-	edict_t	*ent;
-
 	Think = static_cast<void (__thiscall CMonster::* )(void)>(&CTurretDriver::TurretThink);
 	Entity->NextThink = level.framenum + FRAMETIME;
 
 	Entity->gameEntity->target_ent = CC_PickTarget (Entity->gameEntity->target)->gameEntity;
-	Entity->gameEntity->target_ent->owner = Entity->gameEntity;
-	Entity->gameEntity->target_ent->teammaster->owner = Entity->gameEntity;
+	Entity->gameEntity->target_ent->Entity->SetOwner (Entity);
+	Entity->gameEntity->target_ent->Entity->TeamMaster->SetOwner (Entity);
 	Entity->State.SetAngles (Entity->gameEntity->target_ent->state.angles);
 
 	vec3f vec = (Entity->gameEntity->target_ent->Entity->State.GetOrigin() - Entity->State.GetOrigin());
@@ -450,10 +448,11 @@ void CTurretDriver::TurretLink ()
 	Entity->gameEntity->move_origin[2] = Entity->State.GetOrigin().Z - Entity->gameEntity->target_ent->Entity->State.GetOrigin().Z;
 
 	// add the driver to the end of them team chain
-	for (ent = Entity->gameEntity->target_ent->teammaster; ent->teamchain; ent = ent->teamchain)
+	CBaseEntity	*ent;
+	for (ent = Entity->gameEntity->target_ent->Entity->TeamMaster; ent->TeamChain; ent = ent->TeamChain)
 		;
-	ent->teamchain = Entity->gameEntity;
-	Entity->gameEntity->teammaster = Entity->gameEntity->target_ent->teammaster;
+	ent->TeamChain = Entity;
+	Entity->TeamMaster = Entity->gameEntity->target_ent->Entity->TeamMaster;
 	Entity->Flags |= FL_TEAMSLAVE;
 }
 

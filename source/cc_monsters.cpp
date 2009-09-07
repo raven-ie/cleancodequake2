@@ -101,7 +101,7 @@ void CMonster::FoundPath ()
 void ForcePlatToGoUp (CBaseEntity *Entity);
 void CMonster::MoveToPath (float Dist)
 {
-	if (!Entity->gameEntity->groundentity && !(Entity->Flags & (FL_FLY|FL_SWIM)))
+	if (!Entity->GroundEntity && !(Entity->Flags & (FL_FLY|FL_SWIM)))
 		return;
 
 	if (FindTarget() && (Entity->gameEntity->enemy && visible(Entity->gameEntity, Entity->gameEntity->enemy))) // Did we find an enemy while going to our path?
@@ -191,7 +191,7 @@ void CMonster::MoveToPath (float Dist)
 				Angles_Vectors (sub2, forward, NULL, NULL);
 				Vec3MA (Entity->gameEntity->velocity, 1.5, sub2, Entity->gameEntity->velocity);
 				Entity->gameEntity->velocity[2] = 300;
-				Entity->gameEntity->groundentity = NULL;
+				Entity->GroundEntity = NULL;
 				CheckGround();
 			}
 		}
@@ -721,7 +721,7 @@ void CMonster::MoveToGoal (float Dist)
 {
 	edict_t *goal = Entity->gameEntity->goalentity;
 
-	if (!Entity->gameEntity->groundentity && !(Entity->Flags & (FL_FLY|FL_SWIM)))
+	if (!Entity->GroundEntity && !(Entity->Flags & (FL_FLY|FL_SWIM)))
 		return;
 
 // if the next step hits the enemy, return immediately
@@ -740,7 +740,7 @@ bool CMonster::WalkMove (float Yaw, float Dist)
 {
 	vec3_t	move;
 	
-	if (!Entity->gameEntity->groundentity && !(Entity->Flags & (FL_FLY|FL_SWIM)))
+	if (!Entity->GroundEntity && !(Entity->Flags & (FL_FLY|FL_SWIM)))
 		return false;
 
 	Yaw = Yaw*M_PI*2 / 360;
@@ -888,7 +888,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 				Entity->Link ();
 				G_TouchTriggers (Entity);
 			}
-			Entity->gameEntity->groundentity = NULL;
+			Entity->GroundEntity = NULL;
 			return true;
 		}
 	
@@ -938,8 +938,8 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 	//if ( Entity->Flags & FL_PARTIALGROUND )
 	Entity->Flags &= ~FL_PARTIALGROUND;
 
-	Entity->gameEntity->groundentity = trace.ent;
-	Entity->gameEntity->groundentity_linkcount = trace.ent->linkCount;
+	Entity->GroundEntity = trace.Ent;
+	Entity->GroundEntityLinkCount = trace.Ent->GetLinkCount();
 
 // the move is ok
 	if (ReLink)
@@ -1083,7 +1083,7 @@ void CMonster::WalkMonsterStartGo ()
 	{
 		DropToFloor ();
 
-		if (Entity->gameEntity->groundentity)
+		if (Entity->GroundEntity)
 		{
 			if (!WalkMove (0, 0))
 				MapPrint (MAPPRINT_WARNING, Entity, Entity->State.GetOrigin(), "In solid\n");
@@ -2863,7 +2863,7 @@ void CMonster::AI_Stand (float Dist)
 		// Assuming we got here because we're waiting for something.
 		if (P_CurrentNode->Type == NODE_DOOR || P_CurrentNode->Type == NODE_PLATFORM)
 		{
-			CDoor *Door = dynamic_cast<CDoor*>(P_CurrentNode->LinkedEntity->Entity);
+			CBrushModel *Door = dynamic_cast<CBrushModel*>(P_CurrentNode->LinkedEntity->Entity);
 			if (Door->MoveState == STATE_TOP)
 				Run(); // We can go again!
 		}
@@ -3537,7 +3537,7 @@ void CMonster::CheckGround()
 
 	if (Entity->gameEntity->velocity[2] > 100)
 	{
-		Entity->gameEntity->groundentity = NULL;
+		Entity->GroundEntity = NULL;
 		return;
 	}
 
@@ -3550,15 +3550,15 @@ void CMonster::CheckGround()
 	// check steepness
 	if ( trace.plane.normal[2] < 0.7 && !trace.startSolid)
 	{
-		Entity->gameEntity->groundentity = NULL;
+		Entity->GroundEntity = NULL;
 		return;
 	}
 
 	if (!trace.startSolid && !trace.allSolid)
 	{
 		Entity->State.SetOrigin (trace.endPos);
-		Entity->gameEntity->groundentity = trace.ent;
-		Entity->gameEntity->groundentity_linkcount = trace.ent->linkCount;
+		Entity->GroundEntity = trace.Ent;
+		Entity->GroundEntityLinkCount = trace.Ent->GetLinkCount();
 		Entity->gameEntity->velocity[2] = 0;
 	}
 }

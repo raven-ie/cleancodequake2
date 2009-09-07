@@ -56,11 +56,15 @@ public:
 	EItemThinkState ThinkState;
 	bool			Usable;
 	char			*Message;
+	CBaseEntity		*Chain;
 
 	CItemEntity ();
 	CItemEntity (int Index);
 
 	virtual void Spawn (CBaseItem *item);
+
+	// Returns a random team member of ent
+	CItemEntity *GetRandomTeamMember (CItemEntity *Master);
 
 	virtual void Think ();
 	virtual void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);

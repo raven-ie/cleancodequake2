@@ -124,7 +124,7 @@ void CGrenade::Explode ()
 	T_RadiusDamage(this, GetOwner(), Damage, (gameEntity->enemy) ? gameEntity->enemy->Entity : NULL, RadiusDamage, mod);
 
 	Vec3MA (origin, -0.02f, gameEntity->velocity, origin);
-	if (gameEntity->groundentity)
+	if (GroundEntity)
 		CTempEnt_Explosions::GrenadeExplosion(origin, gameEntity, !!gameEntity->waterlevel);
 	else
 		CTempEnt_Explosions::RocketExplosion(origin, gameEntity, !!gameEntity->waterlevel);
@@ -1352,7 +1352,7 @@ bool CMeleeWeapon::Fire(CBaseEntity *Entity, vec3f aim, int damage, int kick)
 	v = v.MultiplyAngles (kick, v);
 	Vec3Copy (v, Enemy->gameEntity->velocity);
 	if (Enemy->gameEntity->velocity[2] > 0)
-		Enemy->gameEntity->groundentity = NULL;
+		Enemy->GroundEntity = NULL;
 	return true;
 }
 

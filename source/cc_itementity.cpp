@@ -145,6 +145,19 @@ void CItemEntity::Use (CBaseEntity *other, CBaseEntity *activator)
 	Link ();
 }
 
+// Returns a random team member of ent
+CItemEntity *CItemEntity::GetRandomTeamMember (CItemEntity *Master)
+{
+	CItemEntity *Member = Master;
+	int count = 0;
+
+	for (count = 0, Member = Master; Member; Member = dynamic_cast<CItemEntity*>(Member->Chain), count++);
+	int choice = rand() % count;
+	for (count = 0, Member = Master; count < choice; Member = dynamic_cast<CItemEntity*>(Member->Chain), count++);
+
+	return Member;
+}
+
 void CItemEntity::Think ()
 {
 	switch (ThinkState)
@@ -175,12 +188,12 @@ void CItemEntity::Think ()
 			if (gameEntity->team)
 			{
 				Flags &= ~FL_TEAMSLAVE;
-				gameEntity->chain = gameEntity->teamchain;
-				gameEntity->teamchain = NULL;
+				Chain = TeamChain;
+				TeamChain = NULL;
 
 				SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
 				SetSolid (SOLID_NOT);
-				if (gameEntity == gameEntity->teammaster)
+				if (TeamMaster == this)
 				{
 					NextThink = level.framenum + FRAMETIME;
 					ThinkState = ITS_RESPAWN;
@@ -213,7 +226,7 @@ void CItemEntity::Think ()
 			CBaseEntity *RespawnedEntity = this;
 			if (gameEntity->team)
 			{
-				CBaseEntity *Master = gameEntity->teammaster->Entity;
+				CBaseEntity *Master = TeamMaster;
 
 		#ifdef CLEANCTF_ENABLED
 		//ZOID
@@ -226,7 +239,7 @@ void CItemEntity::Think ()
 				else
 		//ZOID
 		#endif
-				RespawnedEntity = GetRandomTeamMember(this, Master);
+				RespawnedEntity = GetRandomTeamMember(dynamic_cast<CItemEntity*>(Master));
 			}
 
 			RespawnedEntity->SetSvFlags (RespawnedEntity->GetSvFlags() & ~SVF_NOCLIENT);

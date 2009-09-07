@@ -193,39 +193,41 @@ All but the last will have the teamchain field set to the next one
 */
 void G_FindTeams (void)
 {
-	edict_t	*e, *e2, *chain;
-	int		i, j;
-	int		c, c2;
+	int		c = 0, c2 = 0;
 
-	c = 0;
-	c2 = 0;
-	for (i=1, e=g_edicts+i ; i < globals.numEdicts ; i++,e++)
+	CBaseEntity *e, *e2;
+	int i, j;
+	for (i = 1, e = g_edicts[i].Entity; i < globals.numEdicts; i++, e = g_edicts[i].Entity)
 	{
-		if (!e->inUse)
+		if (!e->IsInUse())
 			continue;
-		if (!e->team)
+		if (!e->gameEntity->team)
 			continue;
-		if (e->Entity->Flags & FL_TEAMSLAVE)
+		if (e->Flags & FL_TEAMSLAVE)
 			continue;
-		chain = e;
-		e->teammaster = e;
+
+		CBaseEntity *chain = e;
+		e->TeamMaster = e;
+
 		c++;
 		c2++;
-		for (j=i+1, e2=e+1 ; j < globals.numEdicts ; j++,e2++)
+		for (j = i + 1, e2 = g_edicts[j].Entity; j < globals.numEdicts; j++, e2 = g_edicts[j].Entity)
 		{
-			if (!e2->inUse)
+			if (!e2->IsInUse())
 				continue;
-			if (!e2->team)
+			if (!e2->gameEntity->team)
 				continue;
-			if (e2->Entity->Flags & FL_TEAMSLAVE)
+			if (e2->Flags & FL_TEAMSLAVE)
 				continue;
-			if (!strcmp(e->team, e2->team))
+
+			if (!strcmp(e->gameEntity->team, e2->gameEntity->team))
 			{
 				c2++;
-				chain->teamchain = e2;
-				e2->teammaster = e;
+				chain->TeamChain = e2;
+				e2->TeamMaster = e;
+
 				chain = e2;
-				e2->Entity->Flags |= FL_TEAMSLAVE;
+				e2->Flags |= FL_TEAMSLAVE;
 			}
 		}
 	}

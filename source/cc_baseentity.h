@@ -123,6 +123,10 @@ public:
 	int32			EntityFlags;
 	CEntityState	State;
 	EEdictFlags		Flags;
+	CBaseEntity		*TeamChain;
+	CBaseEntity		*TeamMaster;
+	CBaseEntity		*GroundEntity;
+	int				GroundEntityLinkCount;
 
 	CBaseEntity ();
 	CBaseEntity (int Index);

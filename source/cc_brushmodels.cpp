@@ -128,7 +128,7 @@ void CBrushModel::MoveCalc (vec3_t dest, uint32 EndFunc)
 
 	if (Speed == Accel && Speed == Decel)
 	{
-		if (level.current_entity == ((Flags & FL_TEAMSLAVE) ? gameEntity->teammaster : gameEntity))
+		if (level.CurrentEntity == ((Flags & FL_TEAMSLAVE) ? TeamMaster : this))
 			MoveBegin ();
 		else
 		{
@@ -215,7 +215,7 @@ void CBrushModel::AngleMoveCalc (uint32 EndFunc)
 {
 	Vec3Clear (gameEntity->avelocity);
 	this->EndFunc = EndFunc;
-	if (level.current_entity == ((Flags & FL_TEAMSLAVE) ? gameEntity->teammaster : gameEntity))
+	if (level.CurrentEntity == ((Flags & FL_TEAMSLAVE) ? TeamMaster : this))
 		AngleMoveBegin ();
 	else
 	{
@@ -759,11 +759,8 @@ void CDoor::Use (CBaseEntity *other, CBaseEntity *activator)
 		if (MoveState == STATE_UP || MoveState == STATE_TOP)
 		{
 			// trigger all paired doors
-			//for (CDoor *ent = this ; ent ; ent = dynamic_cast<CDoor*>(ent->gameEntity->teamchain->Entity))
-			for (edict_t *ent = gameEntity; ent; ent = ent->teamchain)
+			for (CDoor *Door = this ; Door ; Door = dynamic_cast<CDoor*>(Door->TeamChain))	
 			{
-				CDoor *Door = dynamic_cast<CDoor*>(ent->Entity);
-				
 				if (Door->Message)
 					QDelete Door->Message;
 				Door->Message = NULL;
@@ -775,10 +772,8 @@ void CDoor::Use (CBaseEntity *other, CBaseEntity *activator)
 	}
 	
 	// trigger all paired doors
-	for (edict_t *ent = gameEntity; ent; ent = ent->teamchain)
+	for (CDoor *Door = this; Door; Door = dynamic_cast<CDoor*>(Door->TeamChain))
 	{
-		CDoor *Door = dynamic_cast<CDoor*>(ent->Entity);
-
 		if (Door->Message)
 			QDelete Door->Message;
 		Door->Message = NULL;
@@ -824,9 +819,8 @@ void CDoor::CalcMoveSpeed ()
 
 	// find the smallest distance any member of the team will be moving
 	float min = Q_fabs(Distance);
-	for (edict_t *ent = gameEntity->teamchain; ent; ent = ent->teamchain)
+	for (CDoor *Door = dynamic_cast<CDoor*>(TeamChain); Door; Door = dynamic_cast<CDoor*>(Door->TeamChain))
 	{
-		CDoor *Door = dynamic_cast<CDoor*>(ent->Entity);
 		float dist = Q_fabs(Door->Distance);
 		if (dist < min)
 			min = dist;
@@ -835,10 +829,8 @@ void CDoor::CalcMoveSpeed ()
 	float time = min / Speed;
 
 	// adjust speeds so they will all complete at the same time
-	for (edict_t *ent = gameEntity; ent; ent = ent->teamchain)
+	for (CDoor *Door = this; Door; Door = dynamic_cast<CDoor*>(Door->TeamChain))
 	{
-		CDoor *Door = dynamic_cast<CDoor*>(ent->Entity);
-
 		float newspeed = Q_fabs(Door->Distance) / time;
 		float ratio = newspeed / Door->Speed;
 		if (Door->Accel == Door->Speed)
@@ -855,25 +847,25 @@ void CDoor::CalcMoveSpeed ()
 
 void CDoor::SpawnDoorTrigger ()
 {
-	vec3_t		mins, maxs;
+	vec3f		mins, maxs;
 
 	if (Flags & FL_TEAMSLAVE)
 		return;		// only the team leader spawns a trigger
 
-	GetAbsMin (mins);
-	GetAbsMax (maxs);
+	mins = GetAbsMin ();
+	maxs = GetAbsMax ();
 
-	for (edict_t *other = gameEntity->teamchain ; other ; other=other->teamchain)
+	for (CBaseEntity *other = TeamChain; other; other = other->TeamChain)
 	{
-		AddPointToBounds (other->absMin, mins, maxs);
-		AddPointToBounds (other->absMax, mins, maxs);
+		AddPointToBounds (other->GetAbsMin(), mins, maxs);
+		AddPointToBounds (other->GetAbsMax(), mins, maxs);
 	}
 
 	// expand 
-	mins[0] -= 60;
-	mins[1] -= 60;
-	maxs[0] += 60;
-	maxs[1] += 60;
+	mins.X -= 60;
+	mins.Y -= 60;
+	maxs.X += 60;
+	maxs.Y += 60;
 
 	CDoorTrigger *Trigger = QNew (com_levelPool, 0) CDoorTrigger();
 	Trigger->SetMins (mins);
@@ -915,26 +907,27 @@ void CDoor::Blocked (CBaseEntity *other)
 	{
 		if (MoveState == STATE_DOWN)
 		{
-			for (edict_t *ent = gameEntity->teammaster ; ent ; ent = ent->teamchain)
-				(dynamic_cast<CDoor*>(ent->Entity))->GoUp ((gameEntity->activator) ? gameEntity->activator->Entity : NULL);
+			for (CBaseEntity *ent = TeamMaster ; ent ; ent = ent->TeamChain)
+				(dynamic_cast<CDoor*>(ent))->GoUp ((gameEntity->activator) ? gameEntity->activator->Entity : NULL);
 		}
 		else
 		{
-			for (edict_t *ent = gameEntity->teammaster ; ent ; ent = ent->teamchain)
-				(dynamic_cast<CDoor*>(ent->Entity))->GoDown ();
+			for (CBaseEntity *ent = TeamMaster ; ent ; ent = ent->TeamChain)
+				(dynamic_cast<CDoor*>(ent))->GoDown ();
 		}
 	}
 }
 
 void CDoor::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
-	for (edict_t *ent = gameEntity->teammaster ; ent ; ent = ent->teamchain)
+	for (CBaseEntity *ent = TeamMaster ; ent ; ent = ent->TeamChain)
 	{
-		CDoor *Door = dynamic_cast<CDoor*>(ent->Entity);
+		CDoor *Door = dynamic_cast<CDoor*>(ent);
 		Door->gameEntity->health = Door->gameEntity->max_health;
 		Door->CanTakeDamage = false;
 	}
-	(dynamic_cast<CDoor*>(gameEntity->teammaster->Entity))->Use (attacker, attacker);
+
+	(dynamic_cast<CDoor*>(TeamMaster))->Use (attacker, attacker);
 }
 
 void CDoor::Pain (CBaseEntity *other, float kick, int damage)
@@ -1071,7 +1064,7 @@ void CDoor::Spawn ()
 
 	// to simplify logic elsewhere, make non-teamed doors into a team of one
 	if (!gameEntity->team)
-		gameEntity->teammaster = gameEntity;
+		TeamMaster = this;
 
 	Link ();
 
@@ -1231,7 +1224,7 @@ void CRotatingDoor::Spawn ()
 
 	// to simplify logic elsewhere, make non-teamed doors into a team of one
 	if (!gameEntity->team)
-		gameEntity->teammaster = gameEntity;
+		TeamMaster = this;
 
 	Link ();
 

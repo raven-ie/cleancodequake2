@@ -331,7 +331,7 @@ void CMutant::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 
 	if (!CheckBottom ())
 	{
-		if (Entity->gameEntity->groundentity)
+		if (Entity->GroundEntity)
 		{
 			NextFrame = FRAME_attack02;
 			Jumping = false;
@@ -380,7 +380,7 @@ void CMutant::JumpTakeOff ()
 
 	origin[2] += 1;
 	Entity->State.SetOrigin(origin);
-	Entity->gameEntity->groundentity = NULL;
+	Entity->GroundEntity = NULL;
 	AIFlags |= AI_DUCKED;
 	AttackFinished = level.framenum + 30;
 	Jumping = true;
@@ -388,7 +388,7 @@ void CMutant::JumpTakeOff ()
 
 void CMutant::CheckLanding ()
 {
-	if (Entity->gameEntity->groundentity)
+	if (Entity->GroundEntity)
 	{
 		Entity->PlaySound (CHAN_WEAPON, SoundThud);
 		AttackFinished = 0;
