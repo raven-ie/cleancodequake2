@@ -8,7 +8,7 @@ of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 See the GNU General Public License for more details.
 
@@ -27,47 +27,53 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_icarus.h
-// Icarus
+// cc_property.h
+// A template class for properties. 
 //
 
-#if !defined(__CC_ICARUS_H__) || !defined(INCLUDE_GUARDS)
-#define __CC_ICARUS_H__
-
-class CIcarus : public CMonster
+// Basic class which contains Set, Get, and = operator.
+template <class TType, TType (*Setter) (TType *Left, const TType &Right) = NULL, TType &(*Getter) (const TType *Left) = NULL>
+class CProperty
 {
 public:
-	int32		TimeStamp;
+	TType		Value;
 
-	MediaIndex	SoundPain1;
-	MediaIndex	SoundPain2;
-	MediaIndex	SoundDeath1;
-	MediaIndex	SoundDeath2;
-	MediaIndex	SoundSight;
-	MediaIndex	SoundSearch1;
-	MediaIndex	SoundSearch2;
+	CProperty () :
+	Value()
+	{
+	};
 
-	CIcarus ();
+	CProperty (const TType &Right) :
+	Value(Right)
+	{
+	};
 
-	void ReAttack ();
-	void FireBlaster ();
-	void DeadThink ();
-	void StartAttack ();
+	virtual ~CProperty ()
+	{
+	};
 
-	void Attack ();
-	void Run ();
-	void Sight ();
-	void Stand ();
-	void Walk ();
-	void Search ();
+	inline virtual void Set (const TType &Right)
+	{
+		if (Setter)
+			Value = Setter (&Value, Right);
+		else
+			Value = Right;
+	};
 
-	void Dead ();
-	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
-	void Pain (CBaseEntity *other, float kick, int damage);
+	inline virtual TType &Get ()
+	{
+		if (Getter)
+			return Getter (&Value);
+		return Value;
+	};
 
-	void Spawn ();
+	inline virtual TType &operator = (const TType &Right)
+	{
+		if (Setter)
+			Setter (&Value, Right);
+		else
+			Value = Right;
+
+		return Get ();
+	};
 };
-
-#else
-FILE_WARNING
-#endif

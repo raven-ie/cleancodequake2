@@ -199,6 +199,8 @@ void G_FindTeams (void)
 	int i, j;
 	for (i = 1, e = g_edicts[i].Entity; i < globals.numEdicts; i++, e = g_edicts[i].Entity)
 	{
+		if (!e)
+			continue;
 		if (!e->IsInUse())
 			continue;
 		if (!e->gameEntity->team)
@@ -213,6 +215,8 @@ void G_FindTeams (void)
 		c2++;
 		for (j = i + 1, e2 = g_edicts[j].Entity; j < globals.numEdicts; j++, e2 = g_edicts[j].Entity)
 		{
+			if (!e2)
+				continue;
 			if (!e2->IsInUse())
 				continue;
 			if (!e2->gameEntity->team)
@@ -398,8 +402,6 @@ __try
 #endif
 
 	G_FindTeams ();
-
-	PlayerTrail_Init ();
 
 #ifdef MONSTERS_USE_PATHFINDING
 	LoadNodes();

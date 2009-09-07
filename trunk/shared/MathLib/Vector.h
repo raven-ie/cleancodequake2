@@ -299,6 +299,7 @@ public:
 	inline vec3f(const float Value) : vec3Base(Value) {}
 	inline vec3f(const float Values[3]) : vec3Base(Values) {}
 	inline vec3f(const float InX, const float InY, const float InZ) : vec3Base(InX, InY, InZ) {}
+	inline vec3f(CProperty<vec3f> &Vec) : vec3Base(Vec.Get()) {}
 
  	/**
 	 * Operators

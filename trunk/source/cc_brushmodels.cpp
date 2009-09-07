@@ -1770,10 +1770,10 @@ void CTrainBase::Blocked (CBaseEntity *other)
 
 void CTrainBase::TrainWait ()
 {
-	if (gameEntity->target_ent->pathtarget)
+	if (TargetEntity->gameEntity->pathtarget)
 	{
 		char	*savetarget;
-		CBaseEntity	*ent = gameEntity->target_ent->Entity;
+		CBaseEntity	*ent = TargetEntity;
 		savetarget = ent->gameEntity->target;
 		ent->gameEntity->target = ent->gameEntity->pathtarget;
 		UseTargets (gameEntity->activator->Entity, Message);
@@ -1848,7 +1848,7 @@ void CTrainBase::Next ()
 	}
 
 	Wait = ent->gameEntity->wait;
-	gameEntity->target_ent = ent->gameEntity;
+	TargetEntity = ent;
 
 	if (!(Flags & FL_TEAMSLAVE))
 	{
@@ -1868,12 +1868,9 @@ void CTrainBase::Next ()
 
 void CTrainBase::Resume ()
 {
-	edict_t	*ent;
-	vec3_t	dest;
+	CBaseEntity *ent = TargetEntity;
 
-	ent = gameEntity->target_ent;
-
-	Vec3Subtract (ent->state.origin, GetMins(), dest);
+	vec3f dest = ent->State.GetOrigin() - GetMins();
 	MoveState = STATE_TOP;
 	State.GetOrigin (StartOrigin);
 	Vec3Copy (dest, EndOrigin);
@@ -1925,7 +1922,7 @@ void CTrainBase::Use (CBaseEntity *other, CBaseEntity *activator)
 	}
 	else
 	{
-		if (gameEntity->target_ent)
+		if (TargetEntity)
 			Resume();
 		else
 			Next();
@@ -2058,7 +2055,7 @@ void CTriggerElevator::Use (CBaseEntity *other, CBaseEntity *activator)
 		return;
 	}
 
-	MoveTarget->gameEntity->target_ent = target->gameEntity;
+	MoveTarget->TargetEntity = target;
 	MoveTarget->Resume ();
 }
 

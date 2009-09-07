@@ -46,7 +46,7 @@ public:
 class CTurretBreach : public CTurretEntityBase
 {
 public:
-	bool FinishInit;
+	bool FinishInit, ShouldFire;
 
 	CTurretBreach ();
 	CTurretBreach (int Index);
@@ -69,6 +69,8 @@ public:
 class CTurretDriver : public CInfantry
 {
 public:
+	CTurretBreach		*TargetedBreach;
+
 	CTurretDriver ();
 
 	void Attack () {};

@@ -282,6 +282,7 @@ public:
 
 	CPlayerEntity		*chase_target;		// player we are chasing
 	bool				update_chase;		// need to update chase info?
+	int					chase_mode;
 
 #ifdef CLEANCTF_ENABLED
 //ZOID

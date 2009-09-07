@@ -564,7 +564,7 @@ void CIcarus::Pain (CBaseEntity *other, float kick, int damage)
 
 void CIcarus::DeadThink ()
 {
-	if (!Entity->GroundEntity && level.framenum < Entity->gameEntity->timestamp)
+	if (!Entity->GroundEntity && level.framenum < TimeStamp)
 	{
 		Entity->NextThink = level.framenum + FRAMETIME;
 		return;
@@ -578,7 +578,7 @@ void CIcarus::Dead ()
 	Entity->SetMaxs (vec3f(16, 16, -8));
 	Think = ConvertDerivedFunction(&CIcarus::DeadThink);
 	Entity->NextThink = level.framenum + FRAMETIME;
-	Entity->gameEntity->timestamp = level.framenum + 150;
+	TimeStamp = level.framenum + 150;
 	Entity->Link ();
 }
 
