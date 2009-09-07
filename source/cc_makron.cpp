@@ -666,7 +666,7 @@ void CMakron::Dead ()
 	Entity->Link ();
 }
 
-void CMakron::Die(CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+void CMakron::Die(CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 	Entity->State.SetSound (0);
 	// check for gib

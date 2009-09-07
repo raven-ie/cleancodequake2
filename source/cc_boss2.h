@@ -61,7 +61,7 @@ public:
 	void Explode ();
 
 	void Dead ();
-	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
+	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point);
 	void Pain (CBaseEntity *other, float kick, int damage);
 
 	void Spawn ();

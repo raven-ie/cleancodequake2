@@ -52,7 +52,7 @@ public:
 	void	Use (CPlayerEntity *ent);
 	void	Drop (CPlayerEntity *ent);
 
-	virtual int		CheckArmor (CPlayerEntity *Player, vec3_t point, vec3_t normal, int damage, int dflags);
+	virtual int		CheckArmor (CPlayerEntity *Player, vec3f &point, vec3f &normal, int damage, int dflags);
 };
 
 void AddArmorToList ();

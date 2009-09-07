@@ -3311,11 +3311,6 @@ CBaseEntity *CPlayerEntity::SelectCTFSpawnPoint ()
 }
 #endif
 
-void CPlayerEntity::Pain (CBaseEntity *other, float kick, int damage)
-{
-	//DebugPrintf ("CPlayerEntity::Pain\n");
-};
-
 void VelocityForDamage (int damage, vec3f &v);
 void CPlayerEntity::TossHead (int damage)
 {
@@ -3352,10 +3347,8 @@ void CPlayerEntity::TossHead (int damage)
 }
 
 void ClientObituary (CPlayerEntity *self, edict_t *attacker);
-void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
-	//DebugPrintf ("CPlayerEntity::Die\n");
-
 	Vec3Clear (gameEntity->avelocity);
 
 	CanTakeDamage = true;

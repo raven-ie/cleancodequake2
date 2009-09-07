@@ -409,8 +409,6 @@ inline CBaseEntity *FindRadius (CBaseEntity *From, vec3f &org, int Radius)
 //
 // g_combat.c
 //
-bool CanDamage (CBaseEntity *targ, CBaseEntity *inflictor);
-void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir, vec3_t point, vec3_t normal, int damage, int knockback, int dflags, int mod);
 void T_RadiusDamage (CBaseEntity *inflictor, CBaseEntity *attacker, float damage, CBaseEntity *ignore, float radius, EMeansOfDeath mod);
 
 // damage flags

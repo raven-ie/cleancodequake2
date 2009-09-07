@@ -200,7 +200,7 @@ public:
 
 	virtual void Blocked (CBaseEntity *other);
 	virtual void Use (CBaseEntity *other, CBaseEntity *activator);
-	virtual void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
+	virtual void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point);
 	virtual void Pain (CBaseEntity *other, float kick, int damage);
 	virtual void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
 
@@ -255,7 +255,7 @@ public:
 
 	void Blocked (CBaseEntity *other);
 	void Use (CBaseEntity *other, CBaseEntity *activator);
-	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
+	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point);
 
 	void DoEndFunc ();
 	void Think ();
@@ -287,7 +287,7 @@ public:
 	virtual void Fire ();
 
 	virtual void Use (CBaseEntity *other, CBaseEntity *activator);
-	virtual void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
+	virtual void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point);
 	virtual void Pain (CBaseEntity *other, float kick, int damage);
 	virtual void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
 
@@ -452,7 +452,7 @@ public:
 
 	void Use (CBaseEntity *other, CBaseEntity *activator);
 	void Pain (CBaseEntity *other, float kick, int damage);
-	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
+	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point);
 
 	bool Run ();
 	void Spawn ();

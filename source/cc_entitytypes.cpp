@@ -309,7 +309,21 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 		knockback = 0;
 
 // figure momentum add
-	if (knockback && !(dflags & DAMAGE_NO_KNOCKBACK))
+	bool AddVelocity = true;
+	if (!knockback || (dflags & DAMAGE_NO_KNOCKBACK))
+		AddVelocity = false;
+
+	if (EntityFlags & ENT_PHYSICS)
+	{
+		CPhysicsEntity *Phys = dynamic_cast<CPhysicsEntity*>(this);
+		if (Phys->PhysicsType == PHYSICS_NONE ||
+			Phys->PhysicsType == PHYSICS_BOUNCE ||
+			Phys->PhysicsType == PHYSICS_PUSH ||
+			Phys->PhysicsType == PHYSICS_STOP)
+			AddVelocity = false;
+	}
+
+	if (AddVelocity)
 	{
 		vec3f	kvel = dir;
 		const float	mass = Clamp<float> (gameEntity->mass, 50.0f, gameEntity->mass);
@@ -1282,8 +1296,8 @@ bool Push (CBaseEntity *Entity, vec3_t move, vec3_t amove)
 			|| CheckPhys->PhysicsType == PHYSICS_NOCLIP)
 				continue;
 		}
-		else if (!(Check->EntityFlags & ENT_PLAYER))
-			continue;
+		//else if (!(Check->EntityFlags & ENT_PLAYER))
+		//	continue;
 
 		if (!check->area.prev)
 			continue;		// not linked in anywhere

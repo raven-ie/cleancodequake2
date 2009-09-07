@@ -184,7 +184,7 @@ public:
 	void			Think ();
 
 	void Pain (CBaseEntity *other, float kick, int damage);
-	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
+	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point);
 
 	virtual void	Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf); // Empty
 	void	Use (CBaseEntity *other, CBaseEntity *activator);
@@ -378,7 +378,7 @@ public:
 	bool MoveStep (vec3_t move, bool ReLink);
 
 	virtual void	Spawn () = 0;
-	virtual void	Die(CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point) = 0;
+	virtual void	Die(CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point) = 0;
 	virtual void	Pain(CBaseEntity *other, float kick, int damage) = 0;
 };
 

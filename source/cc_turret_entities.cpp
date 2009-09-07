@@ -343,7 +343,7 @@ TargetedBreach(NULL)
 {
 };
 
-void CTurretDriver::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+void CTurretDriver::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 // check for gib
 	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)

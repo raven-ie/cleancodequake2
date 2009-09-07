@@ -1025,7 +1025,7 @@ CFrame SoldierFramesDeath6 [] =
 };
 CAnim SoldierMoveDeath6 (FRAME_death601, FRAME_death610, SoldierFramesDeath6, ConvertDerivedFunction(&CSoldierBase::Dead));
 
-void CSoldierBase::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+void CSoldierBase::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 // check for gib
 	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)

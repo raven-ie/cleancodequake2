@@ -525,7 +525,7 @@ void CMonsterEntity::Think ()
 	}
 }
 
-void CMonsterEntity::Die(CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+void CMonsterEntity::Die(CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 	Monster->Die (inflictor, attacker, damage, point);
 }

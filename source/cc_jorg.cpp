@@ -432,7 +432,7 @@ void CJorg::Explode ()
 	Entity->NextThink = level.framenum + FRAMETIME;
 }
 
-void CJorg::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+void CJorg::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 	Entity->PlaySound (CHAN_VOICE, SoundDeath, 1, ATTN_NORM, 0);
 	Entity->DeadFlag = true;

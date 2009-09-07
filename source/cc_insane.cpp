@@ -553,7 +553,7 @@ void CInsane::Dead ()
 }
 
 
-void CInsane::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+void CInsane::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
 	{

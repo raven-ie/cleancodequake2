@@ -445,7 +445,7 @@ CFrame ParasiteFramesDeath [] =
 };
 CAnim ParasiteMoveDeath (FRAME_death101, FRAME_death107, ParasiteFramesDeath, ConvertDerivedFunction(&CParasite::Dead));
 
-void CParasite::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+void CParasite::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 // check for gib
 	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)

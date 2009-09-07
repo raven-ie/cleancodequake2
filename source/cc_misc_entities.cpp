@@ -141,7 +141,7 @@ public:
 		Free ();
 	};
 
-	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 	{
 		CanTakeDamage = false;
 		NextThink = level.framenum + 2;
@@ -188,7 +188,7 @@ There must be a path for it to follow once it is activated.
 
 "speed"		How fast the Viper should fly
 */
-class CMiscViper : public CTrainBase
+class CMiscViper : public CTrainBase, public CTouchableEntity
 {
 	bool MyUse;
 public:
@@ -204,6 +204,11 @@ public:
 		CTrainBase(Index),
 		MyUse(true)
 	{
+	};
+
+	bool Run ()
+	{
+		return CTrainBase::Run ();
 	};
 
 	virtual void Use (CBaseEntity *other, CBaseEntity *activator)
@@ -230,6 +235,7 @@ public:
 			gameEntity->speed = 300;
 
 		PhysicsType = PHYSICS_PUSH;
+		Touchable = true;
 		SetSolid (SOLID_NOT);
 		State.SetModelIndex (ModelIndex ("models/ships/viper/tris.md2"));
 		SetMins (vec3f(-16, -16, 0));
@@ -262,6 +268,11 @@ public:
 	  CMiscViper (Index)
 	  {
 	  };
+
+	bool Run ()
+	{
+		return CTrainBase::Run ();
+	};
 
 	void Spawn ()
 	{
@@ -572,9 +583,6 @@ public:
 		PlaySound (CHAN_BODY, SoundIndex ("tank/pain.wav"));
 	};
 
-	void Pain (CBaseEntity *other, float kick, int damage) {};
-	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point) {};
-
 	void Spawn ()
 	{
 		PhysicsType = PHYSICS_NONE;
@@ -635,10 +643,7 @@ public:
 		};
 	};
 
-	void Pain (CBaseEntity *other, float kick, int damage)
-	{
-	};
-	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 	{
 		if (gameEntity->health > -80)
 			return;
@@ -1062,9 +1067,6 @@ public:
 		Free ();
 	};
 
-	void Pain (CBaseEntity *other, float kick, int damage) {};
-	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point) {};
-
 	void Spawn ()
 	{
 		State.SetModelIndex (gMedia.Gib_Arm);
@@ -1115,9 +1117,6 @@ public:
 		Free ();
 	};
 
-	void Pain (CBaseEntity *other, float kick, int damage) {};
-	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point) {};
-
 	void Spawn ()
 	{
 		State.SetModelIndex (gMedia.Gib_Leg);
@@ -1167,9 +1166,6 @@ public:
 	{
 		Free ();
 	};
-
-	void Pain (CBaseEntity *other, float kick, int damage) {};
-	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point) {};
 
 	void Spawn ()
 	{
