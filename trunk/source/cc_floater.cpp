@@ -539,7 +539,7 @@ void CFloater::Pain (CBaseEntity *other, float kick, int damage)
 	CurrentMove = n ? &FloaterMovePain1 : &FloaterMovePain2;
 }
 
-void CFloater::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+void CFloater::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 	Entity->PlaySound (CHAN_VOICE, SoundDeath1);
 	Entity->BecomeExplosion (false);

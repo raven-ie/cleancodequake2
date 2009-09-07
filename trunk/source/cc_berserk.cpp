@@ -362,7 +362,7 @@ CFrame BerserkFramesDeath2 [] =
 };
 CAnim BerserkMoveDeath2 (FRAME_deathc1, FRAME_deathc8, BerserkFramesDeath2, ConvertDerivedFunction(&CBerserker::Dead));
 
-void CBerserker::Die(CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+void CBerserker::Die(CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
 	{

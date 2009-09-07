@@ -777,7 +777,7 @@ void CSuperTank::Explode ()
 }
 
 
-void CSuperTank::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+void CSuperTank::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 	Entity->PlaySound (CHAN_VOICE, SoundDeath);
 	Entity->DeadFlag = true;

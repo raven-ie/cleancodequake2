@@ -48,8 +48,8 @@ public:
 	CHurtableEntity ();
 	CHurtableEntity (int index);
 
-	virtual void Pain (CBaseEntity *other, float kick, int damage) = 0;
-	virtual void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point) = 0;
+	virtual void Pain (CBaseEntity *other, float kick, int damage) {};
+	virtual void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point) {};
 
 	virtual bool CanDamage (CBaseEntity *inflictor);
 	virtual bool CheckTeamDamage (CBaseEntity *attacker);
@@ -89,7 +89,7 @@ public:
 	CUsableEntity ();
 	CUsableEntity (int Index);
 
-	virtual void Use (CBaseEntity *other, CBaseEntity *activator) = 0;
+	virtual void Use (CBaseEntity *other, CBaseEntity *activator) {};
 	virtual void UseTargets (CBaseEntity *activator, const char *Message);
 };
 

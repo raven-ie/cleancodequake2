@@ -118,7 +118,7 @@ void CArmor::Drop (CPlayerEntity *ent)
 {
 }
 
-int CArmor::CheckArmor (CPlayerEntity *Player, vec3_t point, vec3_t normal, int damage, int dflags)
+int CArmor::CheckArmor (CPlayerEntity *Player, vec3f &point, vec3f &normal, int damage, int dflags)
 {
 	if (!damage)
 		return 0;

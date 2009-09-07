@@ -477,7 +477,7 @@ CFrame MedicFramesDeath [] =
 };
 CAnim MedicMoveDeath (FRAME_death1, FRAME_death30, MedicFramesDeath, ConvertDerivedFunction(&CMedic::Dead));
 
-void CMedic::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+void CMedic::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 	// if we had a pending patient, free him up for another medic
 	if ((Entity->gameEntity->enemy) &&

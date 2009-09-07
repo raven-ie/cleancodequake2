@@ -581,10 +581,6 @@ public:
 	  {
 	  };
 
-	void Use (CBaseEntity *, CBaseEntity *)
-	{
-	};
-
 	virtual void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
 		vec3f			v;

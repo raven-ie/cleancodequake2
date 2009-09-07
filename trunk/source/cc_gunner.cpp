@@ -324,7 +324,7 @@ CFrame GunnerFramesDeath [] =
 };
 CAnim GunnerMoveDeath (FRAME_death01, FRAME_death11, GunnerFramesDeath, ConvertDerivedFunction(&CGunner::Dead));
 
-void CGunner::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+void CGunner::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 // check for gib
 	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)

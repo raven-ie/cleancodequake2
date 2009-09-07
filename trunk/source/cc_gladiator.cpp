@@ -286,7 +286,7 @@ CFrame GladiatorFramesDeath [] =
 };
 CAnim GladiatorMoveDeath (FRAME_death1, FRAME_death22, GladiatorFramesDeath, ConvertDerivedFunction(&CGladiator::Dead));
 
-void CGladiator::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+void CGladiator::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 // check for gib
 	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)

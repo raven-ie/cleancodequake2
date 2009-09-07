@@ -673,7 +673,7 @@ CFrame MutantFramesDeath2 [] =
 };
 CAnim MutantMoveDeath2 (FRAME_death201, FRAME_death210, MutantFramesDeath2, ConvertDerivedFunction(&CMutant::Dead));
 
-void CMutant::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+void CMutant::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
 	{

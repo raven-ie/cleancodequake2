@@ -46,7 +46,7 @@ public:
 	void TossHead (int damage);
 
 	void Pain (CBaseEntity *other, float kick, int damage);
-	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
+	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point);
 
 	void Think	(); // Only done if we're a head
 
@@ -149,7 +149,7 @@ void CBody::Think ()
 	SetSvFlags (SVF_NOCLIENT);
 }
 
-void CBody::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+void CBody::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 	if (gameEntity->health < -40)
 	{

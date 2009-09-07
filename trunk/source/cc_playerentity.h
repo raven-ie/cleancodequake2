@@ -370,8 +370,7 @@ public:
 	bool CTFStart ();
 #endif
 
-	void Pain (CBaseEntity *other, float kick, int damage);
-	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
+	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point);
 
 	// Printing routines
 	inline void		PrintToClient (EGamePrintLevel printLevel, char *fmt, ...);

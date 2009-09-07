@@ -78,7 +78,7 @@ public:
 	void MachineGun ();
 
 	void Dead ();
-	virtual void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point);
+	virtual void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point);
 	virtual void Pain (CBaseEntity *other, float kick, int damage);
 
 	virtual void Spawn ();

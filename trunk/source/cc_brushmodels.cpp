@@ -918,7 +918,7 @@ void CDoor::Blocked (CBaseEntity *other)
 	}
 }
 
-void CDoor::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+void CDoor::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 	for (CBaseEntity *ent = TeamMaster ; ent ; ent = ent->TeamChain)
 	{
@@ -1429,7 +1429,7 @@ void CDoorSecret::Blocked (CBaseEntity *other)
 		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, State.GetOrigin(), vec3fOrigin, gameEntity->dmg, 1, 0, MOD_CRUSH);
 }
 
-void CDoorSecret::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+void CDoorSecret::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 	CanTakeDamage = false;
 	Use (attacker, attacker);
@@ -1630,7 +1630,7 @@ void CButton::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	Fire ();
 }
 
-void CButton::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+void CButton::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 	gameEntity->activator = attacker->gameEntity;
 	gameEntity->health = gameEntity->max_health;
@@ -1776,7 +1776,8 @@ void CTrainBase::TrainWait ()
 		CBaseEntity	*ent = TargetEntity;
 		savetarget = ent->gameEntity->target;
 		ent->gameEntity->target = ent->gameEntity->pathtarget;
-		UseTargets (gameEntity->activator->Entity, Message);
+		if (TargetEntity->EntityFlags & ENT_USABLE)
+			dynamic_cast<CUsableEntity*>(TargetEntity)->UseTargets (gameEntity->activator->Entity, Message);
 		ent->gameEntity->target = savetarget;
 
 		// make sure we didn't get killed by a killtarget
@@ -2746,7 +2747,7 @@ void CFuncExplosive::Pain (CBaseEntity *other, float kick, int damage)
 {
 };
 
-void CFuncExplosive::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+void CFuncExplosive::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 	// bmodel origins are (0 0 0), we need to adjust that here
 	vec3f size = vec3f(gameEntity->size);
@@ -2801,7 +2802,7 @@ void CFuncExplosive::Use (CBaseEntity *other, CBaseEntity *activator)
 	switch (UseType)
 	{
 	case FUNCEXPLOSIVE_USE_EXPLODE:
-		Die (this, other, gameEntity->health, vec3Origin);
+		Die (this, other, gameEntity->health, vec3fOrigin);
 		break;
 	case FUNCEXPLOSIVE_USE_SPAWN:
 		DoSpawn ();
