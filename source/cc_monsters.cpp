@@ -2260,27 +2260,6 @@ void CMonster::AI_Run(float Dist)
 			Vec3Copy (SavedGoal, LastSighting);
 			isNew = true;
 		}
-		else if (AIFlags & AI_PURSUIT_LAST_SEEN)
-		{
-			AIFlags &= ~AI_PURSUIT_LAST_SEEN;
-			marker = PlayerTrail_PickFirst (Entity);
-		}
-		else
-			marker = PlayerTrail_PickNext (Entity);
-
-		if (marker)
-		{
-			Vec3Copy (marker->state.origin, LastSighting);
-			TrailTime = marker->timestamp;
-			vec3_t angles;
-			Entity->State.GetAngles(angles);
-			angles[YAW] = IdealYaw = marker->state.angles[YAW];
-			Entity->State.SetAngles(angles);
-//			dprint("heading is "); dprint(ftos(self.ideal_yaw)); dprint("\n");
-
-//			debug_drawline(self.origin, self.last_sighting, 52);
-			isNew = true;
-		}
 	}
 
 	vec3_t origin;
@@ -2379,7 +2358,6 @@ void CMonster::AI_Run(float Dist)
 	edict_t		*tempgoal;
 	edict_t		*save;
 	bool	isNew;
-	edict_t		*marker;
 	//PMM
 	bool	retval;
 	bool	alreadyMoved = false;
@@ -2574,27 +2552,7 @@ void CMonster::AI_Run(float Dist)
 		if (AIFlags & AI_PURSUE_TEMP)
 		{
 			AIFlags &= ~AI_PURSUE_TEMP;
-			marker = NULL;
 			Vec3Copy (SavedGoal, LastSighting);
-			isNew = true;
-		}
-		else if (AIFlags & AI_PURSUIT_LAST_SEEN)
-		{
-			AIFlags &= ~AI_PURSUIT_LAST_SEEN;
-			marker = PlayerTrail_PickFirst (Entity);
-		}
-		else
-			marker = PlayerTrail_PickNext (Entity);
-
-		if (marker)
-		{
-			Vec3Copy (marker->state.origin, LastSighting);
-			TrailTime = marker->timestamp;
-
-			vec3f angles = Entity->State.GetAngles();
-			angles.Y = IdealYaw = marker->state.angles[YAW];
-			Entity->State.SetAngles(angles);
-
 			isNew = true;
 		}
 	}
@@ -2676,10 +2634,11 @@ void CMonster::AI_Run(float Dist)
 	}
 
 	MoveToGoal (Dist);
-	if(!Entity->IsInUse())
-		return;			// PGM - g_touchtrigger free problem
 
 	G_FreeEdict(tempgoal);
+
+	if(!Entity->IsInUse())
+		return;			// PGM - g_touchtrigger free problem
 
 	if (Entity)
 		Entity->gameEntity->goalentity = save;

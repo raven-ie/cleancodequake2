@@ -1910,6 +1910,10 @@
 				Name="Utils"
 				>
 				<File
+					RelativePath="..\..\source\cc_property.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\source\cc_utils.cpp"
 					>
 				</File>
@@ -1947,10 +1951,6 @@
 				</File>
 				<File
 					RelativePath=".\..\..\source\p_hud.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\..\..\source\p_trail.cpp"
 					>
 				</File>
 			</Filter>

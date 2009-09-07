@@ -309,7 +309,10 @@ void CPlayerEntity::BeginServerFrame ()
 	if (level.intermissiontime)
 		return;
 
-	if ((game.mode & GAME_DEATHMATCH) &&
+	if ((game.mode & GAME_DEATHMATCH) && 
+#ifdef CLEANCTF_ENABLED
+		!(game.mode & GAME_CTF) &&
+#endif
 		Client.pers.spectator != Client.resp.spectator &&
 		(level.framenum - Client.respawn_time) >= 50)
 	{
@@ -319,7 +322,12 @@ void CPlayerEntity::BeginServerFrame ()
 
 	// run weapon animations
 	if (!Client.resp.spectator && Client.pers.Weapon)
-			Client.pers.Weapon->Think (this);
+	{
+#ifdef CLEANCTF_ENABLED
+		if (!(game.mode & GAME_CTF) || ((game.mode & GAME_CTF) && !NoClip))
+#endif
+		Client.pers.Weapon->Think (this);
+	}
 
 	if (DeadFlag)
 	{
@@ -341,21 +349,6 @@ void CPlayerEntity::BeginServerFrame ()
 			}
 		}
 		return;
-	}
-
-	// add player trail so monsters can follow
-	if (
-#if 1
-		0 && 
-#endif
-		!(game.mode & GAME_DEATHMATCH))
-	{
-		if (!visible (gameEntity, PlayerTrail_LastSpot() ) )
-		{
-			vec3_t oldOrigin;
-			State.GetOldOrigin (oldOrigin);
-			PlayerTrail_Add (oldOrigin);
-		}
 	}
 
 	Client.latched_buttons = 0;
@@ -1392,7 +1385,7 @@ inline void CPlayerEntity::WorldEffects ()
 	//
 	if (!old_waterlevel && waterlevel)
 	{
-		PlayerNoise(this, origin, PNOISE_SELF);
+		PlayerNoiseAt (origin, PNOISE_SELF);
 		if (gameEntity->watertype & CONTENTS_LAVA)
 			PlaySound (CHAN_BODY, SoundIndex("player/lava_in.wav"));
 		else if (gameEntity->watertype & CONTENTS_SLIME)
@@ -1410,7 +1403,7 @@ inline void CPlayerEntity::WorldEffects ()
 	//
 	if (old_waterlevel && ! waterlevel)
 	{
-		PlayerNoise(this, origin, PNOISE_SELF);
+		PlayerNoiseAt (origin, PNOISE_SELF);
 		PlaySound (CHAN_BODY, SoundIndex("player/watr_out.wav"));
 		Flags &= ~FL_INWATER;
 	}
@@ -1429,7 +1422,7 @@ inline void CPlayerEntity::WorldEffects ()
 		if (AirFinished < level.framenum)
 		{	// gasp for air
 			PlaySound (CHAN_VOICE, SoundIndex("player/gasp1.wav"));
-			PlayerNoise(this, origin, PNOISE_SELF);
+			PlayerNoiseAt (origin, PNOISE_SELF);
 		}
 		else  if (AirFinished < level.framenum + 110) // just break surface
 			PlaySound (CHAN_VOICE, SoundIndex("player/gasp2.wav"));
@@ -1449,7 +1442,7 @@ inline void CPlayerEntity::WorldEffects ()
 			{
 				PlaySound (CHAN_AUTO, SoundIndex((!Client.breather_sound) ? "player/u_breath1.wav" : "player/u_breath2.wav"));
 				Client.breather_sound = !Client.breather_sound;
-				PlayerNoise(this, origin, PNOISE_SELF);
+				PlayerNoiseAt (origin, PNOISE_SELF);
 			}
 		}
 
@@ -1892,6 +1885,14 @@ void CPlayerEntity::EndServerFrame ()
 	// clear weapon kicks
 	Client.KickOrigin.Clear();
 	Client.KickAngles.Clear();
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+//regen tech
+	if (game.mode & GAME_CTF)
+		CTFApplyRegeneration();
+//ZOID
+#endif
 
 	// if the scoreboard is up, update it
 	if (Client.showscores && !(level.framenum & 31) )
@@ -2795,7 +2796,7 @@ void CPlayerEntity::TossClientWeapon ()
 	// Personally, this is dumb.
 	//if (! self->client->pers.Inventory.Has(Item->Ammo) )
 	//	item = NULL;
-	if (!Item->WorldModel)
+	if (Item && !Item->WorldModel)
 		Item = NULL;
 
 	bool quad = (!dmFlags.dfQuadDrop) ? false : (bool)(Client.quad_framenum > (level.framenum + 10));
@@ -2850,11 +2851,46 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 #endif
 
 //ZOID
+	int oldbuttons = Client.buttons;
+	Client.buttons = ucmd->buttons;
+	Client.latched_buttons |= Client.buttons & ~oldbuttons;
+
 	if (Client.chase_target)
 	{
 		Client.resp.cmd_angles[0] = SHORT2ANGLE(ucmd->angles[0]);
 		Client.resp.cmd_angles[1] = SHORT2ANGLE(ucmd->angles[1]);
 		Client.resp.cmd_angles[2] = SHORT2ANGLE(ucmd->angles[2]);
+
+		if (Client.latched_buttons & BUTTON_ATTACK)
+		{
+			if (Client.chase_target)
+				ChaseNext();
+			else
+				GetChaseTarget();
+			Client.latched_buttons &= ~BUTTON_ATTACK;
+		}
+
+		if (ucmd->upMove >= 10)
+		{
+			if (!(Client.PlayerState.GetPMove()->pmFlags & PMF_JUMP_HELD))
+			{
+				Client.PlayerState.GetPMove()->pmFlags |= PMF_JUMP_HELD;
+
+				Client.latched_buttons = 0;
+
+				if (Client.chase_target)
+				{
+					Client.chase_target = NULL;
+					Client.PlayerState.GetPMove()->pmFlags &= ~PMF_NO_PREDICTION;
+					Client.PlayerState.SetGunIndex (0);
+					Client.PlayerState.SetGunFrame (0);
+				}
+				else
+					GetChaseTarget();
+			}
+		}
+		else
+			Client.PlayerState.GetPMove()->pmFlags &= ~PMF_JUMP_HELD;
 		return;
 	}
 //ZOID
@@ -2921,7 +2957,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 	if (GroundEntity && !pm.groundEntity && (pm.cmd.upMove >= 10) && (pm.waterLevel == 0))
 	{
 		PlaySound (CHAN_VOICE, gMedia.Player.Jump);
-		PlayerNoise(this, origin, PNOISE_SELF);
+		PlayerNoiseAt (origin, PNOISE_SELF);
 	}
 
 	gameEntity->viewheight = pm.viewHeight;
@@ -2967,22 +3003,44 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 			continue;
 		}
 	}
-
-	int oldbuttons = Client.buttons;
-	Client.buttons = ucmd->buttons;
-	Client.latched_buttons |= Client.buttons & ~oldbuttons;
-
 	// save light level the player is standing on for
 	// monster sighting AI
 	gameEntity->light_level = ucmd->lightLevel;
 
+	if (Client.resp.spectator
 #ifdef CLEANCTF_ENABLED
-//ZOID
-//regen tech
-	if (game.mode & GAME_CTF)
-		CTFApplyRegeneration();
-//ZOID
-#endif
+		|| ((game.mode & GAME_CTF) && NoClip)
+#endif)
+		)
+	{
+		if (Client.latched_buttons & BUTTON_ATTACK)
+		{
+			if (Client.chase_target)
+				ChaseNext();
+			else
+				GetChaseTarget();
+		}
+
+		if (ucmd->upMove >= 10)
+		{
+			if (!(Client.PlayerState.GetPMove()->pmFlags & PMF_JUMP_HELD))
+			{
+				Client.PlayerState.GetPMove()->pmFlags |= PMF_JUMP_HELD;
+
+				Client.latched_buttons = 0;
+
+				if (Client.chase_target)
+				{
+					Client.chase_target = NULL;
+					Client.PlayerState.GetPMove()->pmFlags &= ~PMF_NO_PREDICTION;
+				}
+				else
+					GetChaseTarget();
+			}
+		}
+		else
+			Client.PlayerState.GetPMove()->pmFlags &= ~PMF_JUMP_HELD;
+	}
 
 	// update chase cam if being followed
 	for (int i = 1; i <= game.maxclients; i++)
@@ -3445,7 +3503,7 @@ void CPlayerEntity::PrintToClient (EGamePrintLevel printLevel, char *fmt, ...)
 
 void CPlayerEntity::UpdateChaseCam()
 {
-	vec3_t o, ownerv, goal;
+/*	vec3_t o, ownerv, goal;
 	vec3_t forward, right;
 	CTrace trace;
 	int i;
@@ -3529,7 +3587,168 @@ void CPlayerEntity::UpdateChaseCam()
 	{
 		Client.PlayerState.SetViewAngles(targ->Client.ViewAngle);
 		Client.ViewAngle = targ->Client.ViewAngle;
+	}*/
+
+	vec3f forward, right, oldgoal, angles, o, ownerv, goal;
+	CTrace trace;
+	CPlayerEntity *targ;
+
+	// is our chase target gone?
+	if (!Client.chase_target->IsInUse()
+		|| Client.chase_target->Client.resp.spectator || Client.chase_target->Client.chase_target)
+	{
+			CPlayerEntity *old = Client.chase_target;
+			ChaseNext();
+			if (Client.chase_target == old)
+			{
+				Client.chase_target = NULL;
+				Client.PlayerState.GetPMove()->pmFlags &= ~PMF_NO_PREDICTION;
+				return;
+			}
 	}
+
+	targ = Client.chase_target;
+
+	if (Client.PlayerState.GetGunIndex())
+		Client.PlayerState.SetGunIndex (0);
+
+	switch (Client.chase_mode)
+	{
+	case 0:
+		ownerv = targ->State.GetOrigin();
+		oldgoal = State.GetOrigin();
+
+		ownerv.Z += targ->gameEntity->viewheight;
+
+		angles = targ->Client.ViewAngle;
+
+		if(angles.X > 56)
+			angles.X = 56;
+
+		angles.ToVectors (&forward, &right, NULL);
+		forward.NormalizeFast ();
+		o = ownerv.MultiplyAngles (-30, forward);
+
+		if(o.Z < targ->State.GetOrigin().Z + 20)
+			o.Z = targ->State.GetOrigin().Z + 20;
+
+		if (!targ->GroundEntity)
+			o.Z += 16;
+
+		trace = CTrace(ownerv, o, targ->gameEntity, CONTENTS_MASK_SOLID);
+
+		goal = trace.EndPos;
+		goal = goal.MultiplyAngles (2, forward);
+
+		o = goal + vec3f(0, 0, 6);
+		trace = CTrace (goal, o, targ->gameEntity, CONTENTS_MASK_SOLID);
+
+		if (trace.fraction < 1)
+			goal = trace.EndPos - vec3f(0, 0, 6);
+
+		o = goal - vec3f(0, 0, 6);
+		trace = CTrace(goal, o, targ->gameEntity, CONTENTS_MASK_SOLID);
+
+		if(trace.fraction < 1)
+			goal = trace.EndPos + vec3f(0, 0, 6);
+
+		if (targ->DeadFlag)
+			Client.PlayerState.GetPMove()->pmType = PMT_DEAD;
+		else
+			Client.PlayerState.GetPMove()->pmType = PMT_FREEZE;
+
+		State.SetOrigin (goal);
+
+		for (int i = 0; i < 3; i++)
+			Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(targ->Client.ViewAngle[i] - Client.resp.cmd_angles[i]);
+
+		if (targ->DeadFlag)
+			Client.PlayerState.SetViewAngles (vec3f(40, -15, targ->Client.killer_yaw));
+		else
+		{
+			angles = targ->Client.ViewAngle + targ->Client.KickAngles;
+			Client.PlayerState.SetViewAngles (angles);
+			Client.ViewAngle = angles;
+		}
+		break;
+	case 1:
+		Client.PlayerState.SetFov (90);
+
+		if(Client.resp.cmd_angles[PITCH] > 89)
+			Client.resp.cmd_angles[PITCH] = 89;
+
+		if(Client.resp.cmd_angles[PITCH] < -89)
+			Client.resp.cmd_angles[PITCH] = -89;
+
+		ownerv = targ->State.GetOrigin() + vec3f(0, 0, targ->gameEntity->viewheight);
+
+		angles = Client.PlayerState.GetViewAngles();
+		angles.ToVectors (&forward, &right, NULL);
+		forward.NormalizeFast ();
+		o = ownerv.MultiplyAngles (-150, forward);
+
+		if (!targ->GroundEntity)
+			o.Z += 16;
+
+		trace = CTrace(ownerv, o, targ->gameEntity, CONTENTS_MASK_SOLID);
+
+		goal = trace.EndPos.MultiplyAngles (2, forward);
+		o = goal + vec3f(0, 0, 6);
+
+		trace = CTrace(goal, o, targ->gameEntity, CONTENTS_MASK_SOLID);
+
+		if(trace.fraction < 1)
+			goal = trace.EndPos - vec3f(0, 0, 6);
+
+		o = goal - vec3f(0, 0, 6);
+
+		trace = CTrace(goal, o, targ->gameEntity, CONTENTS_MASK_SOLID);
+
+		if(trace.fraction < 1)
+			goal = trace.EndPos + vec3f(0, 0, 6);
+
+		if (targ->DeadFlag)
+			Client.PlayerState.GetPMove()->pmType = PMT_DEAD;
+		else
+			Client.PlayerState.GetPMove()->pmType = PMT_FREEZE;
+
+		State.SetOrigin (goal);
+
+		for (int i = 0; i < 3; i++)
+			Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(targ->Client.ViewAngle[i] - Client.resp.cmd_angles[i]);
+
+		Client.PlayerState.SetViewAngles (Client.resp.cmd_angles);
+		break;
+	default:
+		ownerv = targ->State.GetOrigin();
+		angles = targ->Client.ViewAngle;
+
+		angles.ToVectors (&forward, &right, NULL);
+		angles.NormalizeFast ();
+		o = ownerv.MultiplyAngles (16, forward);
+		o.Z += targ->gameEntity->viewheight;
+
+		State.SetOrigin (o);
+		Client.PlayerState.SetFov (targ->Client.PlayerState.GetFov());
+
+		Client.PlayerState.SetGunIndex (targ->Client.PlayerState.GetGunIndex());
+		Client.PlayerState.SetGunAngles (targ->Client.PlayerState.GetGunAngles());
+		Client.PlayerState.SetGunFrame (targ->Client.PlayerState.GetGunFrame());
+		Client.PlayerState.SetGunOffset (targ->Client.PlayerState.GetGunOffset());
+
+		for (int i = 0; i < 3; i++)
+			Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(targ->Client.ViewAngle[i] - Client.resp.cmd_angles[i]);
+
+		if (targ->DeadFlag)
+			Client.PlayerState.SetViewAngles (vec3f(40, -15, targ->Client.killer_yaw));
+		else
+		{
+			angles = targ->Client.ViewAngle + targ->Client.KickAngles;
+			Client.PlayerState.SetViewAngles (angles);
+			Client.ViewAngle = angles;
+		}
+		break;
+	};
 
 	gameEntity->viewheight = 0;
 	Client.PlayerState.GetPMove()->pmFlags |= PMF_NO_PREDICTION;
@@ -3541,7 +3760,7 @@ void CPlayerEntity::UpdateChaseCam()
 	{
 		CStatusBar Chasing;
 		char temp[128];
-		Q_snprintfz (temp, sizeof(temp), "Chasing %s", targ->Client.pers.netname);
+		Q_snprintfz (temp, sizeof(temp), "Chasing %s\n%s", targ->Client.pers.netname, (Client.chase_mode == 0) ? "Tight Chase" : ((Client.chase_mode == 1) ? "Freeform Chase" : "FPS Chase"));
 
 		Chasing.AddVirtualPoint_X (0);
 		Chasing.AddVirtualPoint_Y (-68);
@@ -3557,6 +3776,15 @@ void CPlayerEntity::ChaseNext()
 	if (!Client.chase_target)
 		return;
 
+	switch (Client.chase_mode)
+	{
+	case 0:
+	case 1:
+		Client.chase_mode++;
+		Client.update_chase = true;
+		return;
+	};
+
 	int i = Client.chase_target->State.GetNumber();
 	CPlayerEntity *e;
 	do {
@@ -3566,11 +3794,14 @@ void CPlayerEntity::ChaseNext()
 		e = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
 		if (!e->IsInUse())
 			continue;
+		if (e->NoClip)
+			continue;
 		if (!e->Client.resp.spectator)
 			break;
 	} while (e != Client.chase_target);
 
 	Client.chase_target = e;
+	Client.chase_mode = 0;
 	Client.update_chase = true;
 }
 
@@ -3588,11 +3819,14 @@ void CPlayerEntity::ChasePrev()
 		e = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
 		if (!e->IsInUse())
 			continue;
+		if (e->NoClip)
+			continue;
 		if (!e->Client.resp.spectator)
 			break;
 	} while (e != Client.chase_target);
 
 	Client.chase_target = e;
+	Client.chase_mode = 0;
 	Client.update_chase = true;
 }
 
@@ -3601,10 +3835,11 @@ void CPlayerEntity::GetChaseTarget()
 	for (int i = 1; i <= game.maxclients; i++)
 	{
 		CPlayerEntity *other = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
-		if (other->IsInUse() && !other->Client.resp.spectator)
+		if (other->IsInUse() && !other->Client.resp.spectator && !other->NoClip)
 		{
 			Client.chase_target = other;
 			Client.update_chase = true;
+			Client.chase_mode = 0;
 			UpdateChaseCam();
 			return;
 		}

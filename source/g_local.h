@@ -450,51 +450,9 @@ bool visible (edict_t *self, edict_t *other);
 void ThrowDebris (edict_t *self, char *modelname, float speed, vec3_t origin);
 
 //
-// g_ptrail.c
-//
-void PlayerTrail_Init (void);
-void PlayerTrail_Add (vec3_t spot);
-void PlayerTrail_New (vec3_t spot);
-edict_t *PlayerTrail_PickFirst (CMonsterEntity *Self);
-edict_t *PlayerTrail_PickNext (CMonsterEntity *Self);
-edict_t	*PlayerTrail_LastSpot (void);
-
-//
 // g_client.c
 //
 void BeginIntermission (class CTargetChangeLevel *targ);
-void InitClientResp (gclient_t *client);
-void InitBodyQue (void);
-
-//
-// p_view.c
-//
-void ClientEndServerFrame (edict_t *ent);
-
-//
-// p_hud.c
-//
-void MoveClientToIntermission (edict_t *client);
-void G_SetStats (edict_t *ent);
-void G_SetSpectatorStats (edict_t *ent);
-void G_CheckChaseStats (edict_t *ent);
-void DeathmatchScoreboardMessage (edict_t *ent, edict_t *killer, bool reliable);
-
-//
-// g_pweapon.c
-//
-void PlayerNoise(CPlayerEntity *who, vec3_t where, int type);
-
-//
-// g_phys.c
-//
-void G_RunEntity (edict_t *ent);
-
-//
-// g_main.c
-//
-void SaveClientData (void);
-void FetchClientEntData (edict_t *ent);
 
 //
 // g_chase.c
@@ -578,7 +536,6 @@ struct edict_s
 	char		*pathtarget;
 	char		*deathtarget;
 	char		*combattarget;
-	edict_t		*target_ent;
 
 	float		speed, accel, decel;
 	vec3_t		movedir;

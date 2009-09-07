@@ -334,7 +334,10 @@ CBaseEntity		*CBaseEntity::GetOwner	()
 void			CBaseEntity::SetOwner	(CBaseEntity *ent)
 {
 	if (!ent || !ent->gameEntity)
+	{
+		gameEntity->owner = NULL;
 		return;
+	}
 
 	gameEntity->owner = ent->gameEntity;
 }

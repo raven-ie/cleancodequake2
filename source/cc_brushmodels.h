@@ -297,7 +297,8 @@ public:
 class CTrainBase : public CMapEntity, public CBrushModel, public CBlockableEntity, public CUsableEntity
 {
 public:
-	char	*Message;
+	char		*Message;
+	CBaseEntity	*TargetEntity;
 	enum
 	{
 		TRAINTHINK_FIND = BRUSHTHINK_CUSTOM_START,

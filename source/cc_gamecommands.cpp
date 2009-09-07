@@ -307,11 +307,15 @@ void Cmd_Say_f (CPlayerEntity *ent, bool team, bool arg0)
 		Q_strcatz(text, p, sizeof(text));
 	}
 
+	size_t len = strlen(text);
 	// don't let text be too long for malicious reasons
-	if (strlen(text) > sizeof(text))
+	if (len >= sizeof(text)-1)
+	{
 		text[sizeof(text)-1] = 0;
-
-	Q_strcatz(text, "\n", sizeof(text));
+		text[sizeof(text)-2] = '\n';
+	}
+	else
+		Q_strcatz(text, "\n", sizeof(text));
 
 	if (CheckFlood(ent))
 		return;

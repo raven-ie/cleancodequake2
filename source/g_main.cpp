@@ -493,7 +493,7 @@ void RunFrame ()
 			Entity->State.SetOldOrigin (Entity->State.GetOrigin());
 
 			// if the ground entity moved, make sure we are still on it
-			if ((Entity->GroundEntity) && (Entity->GroundEntity->GetLinkCount() != Entity->GroundEntityLinkCount))
+			if ((Entity->GroundEntity) && ((!Entity->GroundEntity->gameEntity) || (Entity->GroundEntity->GetLinkCount() != Entity->GroundEntityLinkCount)))
 			{
 				Entity->GroundEntity = NULL;
 				if ( !(Entity->Flags & (FL_SWIM|FL_FLY)) && (Entity->EntityFlags & ENT_MONSTER))

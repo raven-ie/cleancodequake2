@@ -431,7 +431,7 @@ void T_RadiusDamage (CBaseEntity *inflictor, CBaseEntity *attacker, float damage
 {
 	CHurtableEntity	*ent = NULL;
 	vec3f org = inflictor->State.GetOrigin();
-	DrawRadiusDebug (org, radius);
+	//DrawRadiusDebug (org, radius);
 
 	while ((ent = FindRadius<CHurtableEntity, ENT_HURTABLE> (ent, org, radius)) != NULL)
 	{

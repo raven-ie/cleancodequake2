@@ -64,7 +64,6 @@ field_t fields[] = {
 	{"owner", FOFS(owner), F_EDICT, FFL_NOSPAWN},
 	{"mynoise", FOFS(mynoise), F_EDICT, FFL_NOSPAWN},
 	{"mynoise2", FOFS(mynoise2), F_EDICT, FFL_NOSPAWN},
-	{"target_ent", FOFS(target_ent), F_EDICT, FFL_NOSPAWN},
 
 	// temp spawn vars -- only valid when the spawn function is called
 	{"lip", STOFS(lip), F_INT, FFL_SPAWNTEMP},

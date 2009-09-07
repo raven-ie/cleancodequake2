@@ -105,14 +105,16 @@ Use "angle" to set the starting angle.
 CTurretBreach::CTurretBreach () :
 CBaseEntity (),
 CTurretEntityBase (),
-FinishInit(true)
+FinishInit(true),
+ShouldFire(false)
 {
 };
 
 CTurretBreach::CTurretBreach (int Index) :
 CBaseEntity (Index),
 CTurretEntityBase (Index),
-FinishInit(true)
+FinishInit(true),
+ShouldFire(false)
 {
 };
 
@@ -154,8 +156,6 @@ void CTurretBreach::Think ()
 		else
 		{
 			CBaseEntity *targ = CC_PickTarget (gameEntity->target);
-			gameEntity->target_ent = targ->gameEntity;
-
 			vec3f moveOrg = (targ->State.GetOrigin() - State.GetOrigin());
 			Vec3Copy (moveOrg, gameEntity->move_origin);
 			targ->Free();
@@ -228,7 +228,7 @@ void CTurretBreach::Think ()
 		ForEachTeamChain (this, &cb);
 
 		// if we have adriver, adjust his velocities
-		if (gameEntity->owner)
+		if (GetOwner())
 		{
 			float	angle;
 			float	target_z;
@@ -258,10 +258,10 @@ void CTurretBreach::Think ()
 			diff = target_z - gameEntity->owner->state.origin[2];
 			gameEntity->owner->velocity[2] = diff * 1.0 / 1;
 
-			if (gameEntity->spawnflags & 65536)
+			if (ShouldFire)
 			{
 				Fire ();
-				gameEntity->spawnflags &= ~65536;
+				ShouldFire = false;
 			}
 		}
 	}
@@ -338,28 +338,47 @@ Instead it must target the turret_breach.
 */
 
 CTurretDriver::CTurretDriver () :
-CInfantry ()
+CInfantry (),
+TargetedBreach(NULL)
 {
 };
 
 void CTurretDriver::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
 {
+// check for gib
+	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
+	{
+		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
+		for (int n= 0; n < 2; n++)
+			CGibEntity::Spawn (Entity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
+		for (int n= 0; n < 4; n++)
+			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		Entity->ThrowHead (gMedia.Gib_Head[1], damage, GIB_ORGANIC);
+		Entity->DeadFlag = true;
+		return;
+	}
+
+	if (Entity->DeadFlag == true)
+		return;
+
 	CBaseEntity	*ent;
 
 	// level the gun
-	Entity->gameEntity->target_ent->move_angles[0] = 0;
+	TargetedBreach->gameEntity->move_angles[0] = 0;
 
 	// remove the driver from the end of them team chain
-	for (ent = Entity->gameEntity->target_ent->Entity->TeamMaster; ent->TeamChain != Entity; ent = ent->TeamChain)
+	for (ent = TargetedBreach->TeamMaster; ent->TeamChain != Entity; ent = ent->TeamChain)
 		;
 	ent->TeamChain = NULL;
 	Entity->TeamMaster = NULL;
 	Entity->Flags &= ~FL_TEAMSLAVE;
 
-	Entity->gameEntity->target_ent->Entity->SetOwner (NULL);
-	Entity->gameEntity->target_ent->Entity->TeamMaster->SetOwner (NULL);
+	TargetedBreach->SetOwner (NULL);
+	TargetedBreach->TeamMaster->SetOwner (NULL);
 
 	CInfantry::Die (inflictor, attacker, damage, point);
+	Think = &CMonster::MonsterThink;
+	Entity->NextThink = level.framenum + FRAMETIME;
 }
 
 void CTurretDriver::Pain (CBaseEntity *other, float kick, int damage)
@@ -408,10 +427,10 @@ void CTurretDriver::TurretThink ()
 	// let the turret know where we want it to aim
 	vec3f dir = (Entity->gameEntity->enemy->Entity->State.GetOrigin() +
 		vec3f(0, 0, Entity->gameEntity->enemy->viewheight)) -
-		Entity->gameEntity->target_ent->Entity->State.GetOrigin();
+		TargetedBreach->State.GetOrigin();
 
 	vec3f ang = dir.ToAngles ();
-	Vec3Copy (ang, Entity->gameEntity->target_ent->move_angles);
+	Vec3Copy (ang, TargetedBreach->gameEntity->move_angles);
 
 	// decide if we should shoot
 	if (level.framenum < AttackFinished)
@@ -421,9 +440,9 @@ void CTurretDriver::TurretThink ()
 	if ((level.framenum - TrailTime) < (reaction_time * 10))
 		return;
 
-	AttackFinished = level.framenum + ((reaction_time + 1.0) * 20);
+	AttackFinished = level.framenum + ((reaction_time + 1.0) * 10);
 
-	Entity->gameEntity->target_ent->spawnflags |= 65536;
+	TargetedBreach->ShouldFire = true;
 }
 
 void CTurretDriver::TurretLink ()
@@ -431,28 +450,28 @@ void CTurretDriver::TurretLink ()
 	Think = static_cast<void (__thiscall CMonster::* )(void)>(&CTurretDriver::TurretThink);
 	Entity->NextThink = level.framenum + FRAMETIME;
 
-	Entity->gameEntity->target_ent = CC_PickTarget (Entity->gameEntity->target)->gameEntity;
-	Entity->gameEntity->target_ent->Entity->SetOwner (Entity);
-	Entity->gameEntity->target_ent->Entity->TeamMaster->SetOwner (Entity);
-	Entity->State.SetAngles (Entity->gameEntity->target_ent->state.angles);
+	TargetedBreach = dynamic_cast<CTurretBreach*>(CC_PickTarget (Entity->gameEntity->target));
+	TargetedBreach->SetOwner (Entity);
+	TargetedBreach->TeamMaster->SetOwner (Entity);
+	Entity->State.SetAngles (TargetedBreach->State.GetAngles());
 
-	vec3f vec = (Entity->gameEntity->target_ent->Entity->State.GetOrigin() - Entity->State.GetOrigin());
+	vec3f vec = (TargetedBreach->State.GetOrigin() - Entity->State.GetOrigin());
 	vec.Z = 0;
 	Entity->gameEntity->move_origin[0] = vec.Length();
 
-	vec = (Entity->State.GetOrigin() - Entity->gameEntity->target_ent->Entity->State.GetOrigin());
+	vec = (Entity->State.GetOrigin() - TargetedBreach->State.GetOrigin());
 	vec = vec.ToAngles();
 	AnglesNormalize(vec);
 	Entity->gameEntity->move_origin[1] = vec.Y;
 
-	Entity->gameEntity->move_origin[2] = Entity->State.GetOrigin().Z - Entity->gameEntity->target_ent->Entity->State.GetOrigin().Z;
+	Entity->gameEntity->move_origin[2] = Entity->State.GetOrigin().Z - TargetedBreach->State.GetOrigin().Z;
 
 	// add the driver to the end of them team chain
 	CBaseEntity	*ent;
-	for (ent = Entity->gameEntity->target_ent->Entity->TeamMaster; ent->TeamChain; ent = ent->TeamChain)
+	for (ent = TargetedBreach->TeamMaster; ent->TeamChain; ent = ent->TeamChain)
 		;
 	ent->TeamChain = Entity;
-	Entity->TeamMaster = Entity->gameEntity->target_ent->Entity->TeamMaster;
+	Entity->TeamMaster = TargetedBreach->TeamMaster;
 	Entity->Flags |= FL_TEAMSLAVE;
 }
 
@@ -470,8 +489,8 @@ void CTurretDriver::Spawn ()
 	Entity->SetMins (vec3f(-16, -16, -24));
 	Entity->SetMaxs (vec3f(16, 16, 32));
 
-	Entity->gameEntity->health = 100;
-	Entity->gameEntity->gib_health = 0;
+	Entity->gameEntity->health = Entity->gameEntity->max_health = 100;
+	Entity->gameEntity->gib_health = -40;
 	Entity->gameEntity->mass = 200;
 	Entity->gameEntity->viewheight = 24;
 
@@ -489,7 +508,7 @@ void CTurretDriver::Spawn ()
 	Entity->CanTakeDamage = true;
 	Entity->SetClipmask (CONTENTS_MASK_MONSTERSOLID);
 	Entity->State.SetOldOrigin (Entity->State.GetOrigin ());
-	AIFlags |= (AI_STAND_GROUND|AI_DUCKED);
+	AIFlags |= (AI_STAND_GROUND);
 
 	if (st.item)
 	{
