@@ -64,7 +64,7 @@ public:
 #define BARREL_STEPSIZE 8
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
-		if ((!other->gameEntity->groundentity) || (other->gameEntity->groundentity == gameEntity))
+		if ((!other->GroundEntity) || (other->GroundEntity == this))
 			return;
 
 		float ratio = (float)other->gameEntity->mass / (float)gameEntity->mass;
@@ -99,11 +99,11 @@ public:
 	// check point traces down for dangling corners
 		State.SetOrigin (trace.endPos);
 
-		gameEntity->groundentity = trace.ent;
-		gameEntity->groundentity_linkcount = trace.ent->linkCount;
+		GroundEntity = trace.Ent;
+		GroundEntityLinkCount = trace.Ent->GetLinkCount();
 
 		if (trace.fraction == 1.0)
-			gameEntity->groundentity = NULL;
+			GroundEntity = NULL;
 
 	// the move is ok
 		Link ();
@@ -842,7 +842,7 @@ public:
 	};
 	void PreThink ()
 	{
-		gameEntity->groundentity = NULL;
+		GroundEntity = NULL;
 
 		float diff = TimeStamp - level.framenum;
 		if (diff < -1.0)

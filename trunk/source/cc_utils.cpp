@@ -211,54 +211,13 @@ bool KillBox (CBaseEntity *ent)
 	return true;		// all clear
 }
 
-// Returns a random team member of ent
-CBaseEntity *GetRandomTeamMember (CBaseEntity *Entity, CBaseEntity *Master)
-{
-	CBaseEntity *Member = Master;
-	int count = 0;
-
-	//for (count = 0, Member = Master; Member->gameEntity; Member = Member->gameEntity->chain->Entity, count++);
-	while (Member)
-	{
-		// Sanity
-		if (!Member->gameEntity)
-			break;
-
-		count++;
-		if (!Member->gameEntity->chain)
-			break;
-		else
-			Member = Member->gameEntity->chain->Entity;
-	}
-
-	int choice = rand() % count;
-	//for (count = 0, Member = Master; count < choice; Member = Member->gameEntity->chain->Entity, count++);
-	count = 0;
-	Member = Master;
-	while (Member)
-	{
-		if (count == choice)
-			break;
-
-		// Sanity
-		if (!Member->gameEntity)
-			break;
-
-		count++;
-		if (!Member->gameEntity->chain)
-			break;
-		else
-			Member = Member->gameEntity->chain->Entity;
-	}
-
-	return Member;
-}
-
 // Calls the callback for each member of the team in "ent"
 void ForEachTeamChain (CBaseEntity *Master, CForEachTeamChainCallback *Callback)
 {
-	//for (CBaseEntity *e = Master->gameEntity->teammaster->Entity; e; e = e->gameEntity->teamchain->Entity)
-	CBaseEntity *e = Master->gameEntity->teammaster->Entity;
+	for (CBaseEntity *e = Master->TeamMaster; e; e = e->TeamChain)
+		Callback->Callback (e);
+
+/*	CBaseEntity *e = Master->gameEntity->teammaster->Entity;
 
 	while (true)
 	{
@@ -267,11 +226,11 @@ void ForEachTeamChain (CBaseEntity *Master, CForEachTeamChainCallback *Callback)
 
 		Callback->Callback (e);
 
-		if (!e->gameEntity->teamchain)
+		if (!e->TeamChain)
 			break;
 
-		e = e->gameEntity->teamchain->Entity;
-	}
+		e = e->TeamChain;
+	}*/
 }
 
 /*
@@ -437,10 +396,42 @@ CBaseEntity *SelectFarthestDeathmatchSpawnPoint ()
 T_RadiusDamage
 ============
 */
+void DebugTrailAll (vec3f &left, vec3f &right)
+{
+	WriteByte (SVC_TEMP_ENTITY);
+	WriteByte (TE_DEBUGTRAIL);
+	WritePosition (left);
+	WritePosition (right);
+	Cast (CASTFLAG_UNRELIABLE, &g_edicts[0]);
+}
+
+void DrawRadiusDebug (vec3f &origin, float radius)
+{
+#define k_segments 12
+	static const float k_increment = 2.0f * M_PI / k_segments;
+	float theta = 0.0f;
+
+	vec3f origins[k_segments];
+
+	vec2f center (origin.X, origin.Y);
+	for (int32 i = 0; i < k_segments; ++i)
+	{
+		vec2f v = center + vec2f(cosf(theta), sinf(theta)) * radius;
+		origins[i] = vec3f(v.X, v.Y, origin.Z + 8);
+		theta += k_increment;
+	}
+
+	for (int i = 0; i < k_segments; i++)
+	{
+		DebugTrailAll (origins[i], origins[((i+1) >= k_segments) ? 0 : i+1]);
+	}
+}
+
 void T_RadiusDamage (CBaseEntity *inflictor, CBaseEntity *attacker, float damage, CBaseEntity *ignore, float radius, EMeansOfDeath mod)
 {
 	CHurtableEntity	*ent = NULL;
 	vec3f org = inflictor->State.GetOrigin();
+	DrawRadiusDebug (org, radius);
 
 	while ((ent = FindRadius<CHurtableEntity, ENT_HURTABLE> (ent, org, radius)) != NULL)
 	{

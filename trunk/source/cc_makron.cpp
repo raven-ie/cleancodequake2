@@ -1023,7 +1023,7 @@ void CMakronJumpTimer::Think ()
 	newClass->gameEntity->velocity[0] = vel.X;
 	newClass->gameEntity->velocity[1] = vel.Y;
 	newClass->gameEntity->velocity[2] = 200;
-	newClass->gameEntity->groundentity = NULL;
+	newClass->GroundEntity = NULL;
 
 	Free ();
 };

@@ -624,10 +624,10 @@ public:
 		other->gameEntity->velocity[0] = gameEntity->movedir[0] * gameEntity->speed;
 		other->gameEntity->velocity[1] = gameEntity->movedir[1] * gameEntity->speed;
 		
-		if (!other->gameEntity->groundentity)
+		if (!other->GroundEntity)
 			return;
 		
-		other->gameEntity->groundentity = NULL;
+		other->GroundEntity = NULL;
 		other->gameEntity->velocity[2] = gameEntity->movedir[2];
 	};
 

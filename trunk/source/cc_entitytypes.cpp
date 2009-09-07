@@ -604,7 +604,6 @@ bool CBounceProjectile::Run ()
 {
 	CTrace	trace;
 	vec3_t		move;
-	edict_t		*slave;
 	bool		wasinwater;
 	bool		isinwater;
 	vec3_t		old_origin;
@@ -614,14 +613,14 @@ bool CBounceProjectile::Run ()
 		return false;
 
 	if (gameEntity->velocity[2] > 0)
-		gameEntity->groundentity = NULL;
+		GroundEntity = NULL;
 
 // check for the groundentity going away
-	if (gameEntity->groundentity && !gameEntity->groundentity->inUse)
-		gameEntity->groundentity = NULL;
+	if (GroundEntity && !GroundEntity->IsInUse())
+		GroundEntity = NULL;
 
 // if onground, return without moving
-	if ( gameEntity->groundentity )
+	if ( GroundEntity )
 		return false;
 
 	State.GetOrigin(old_origin);
@@ -650,8 +649,8 @@ bool CBounceProjectile::Run ()
 		{		
 			if (gameEntity->velocity[2] < 60)
 			{
-				gameEntity->groundentity = trace.ent;
-				gameEntity->groundentity_linkcount = trace.ent->linkCount;
+				GroundEntity = trace.Ent;
+				GroundEntityLinkCount = GroundEntity->GetLinkCount();
 				Vec3Copy (vec3Origin, gameEntity->velocity);
 				Vec3Copy (vec3Origin, gameEntity->avelocity);
 			}
@@ -677,11 +676,10 @@ bool CBounceProjectile::Run ()
 		PlaySoundAt (or, g_edicts, CHAN_AUTO, SoundIndex("misc/h2ohit1.wav"));
 
 // move teamslaves
-	for (slave = gameEntity->teamchain; slave; slave = slave->teamchain)
+	for (CBaseEntity *slave = TeamChain; slave; slave = slave->TeamChain)
 	{
-		// Paril: Fixed a bug (wrong one :P)
-		State.GetOrigin (slave->state.origin);
-		gi.linkentity (slave);
+		slave->State.SetOrigin (State.GetOrigin());
+		slave->Link ();
 	}
 
 	return true;
@@ -731,7 +729,6 @@ bool CFlyMissileProjectile::Run ()
 {
 	CTrace	trace;
 	vec3_t		move;
-	edict_t		*slave;
 	bool		wasinwater;
 	bool		isinwater;
 	vec3_t		old_origin;
@@ -741,14 +738,14 @@ bool CFlyMissileProjectile::Run ()
 		return false;
 
 	if (gameEntity->velocity[2] > 0)
-		gameEntity->groundentity = NULL;
+		GroundEntity = NULL;
 
 // check for the groundentity going away
-	if (gameEntity->groundentity && !gameEntity->groundentity->inUse)
-		gameEntity->groundentity = NULL;
+	if (GroundEntity && !GroundEntity->IsInUse())
+		GroundEntity = NULL;
 
 // if onground, return without moving
-	if ( gameEntity->groundentity )
+	if ( GroundEntity )
 		return false;
 
 	State.GetOrigin(old_origin);
@@ -772,8 +769,8 @@ bool CFlyMissileProjectile::Run ()
 		// stop if on ground
 		if (trace.plane.normal[2] > 0.9)
 		{		
-			gameEntity->groundentity = trace.ent;
-			gameEntity->groundentity_linkcount = trace.ent->linkCount;
+			GroundEntity = trace.Ent;
+			GroundEntityLinkCount = GroundEntity->GetLinkCount();
 			Vec3Copy (vec3Origin, gameEntity->velocity);
 			Vec3Copy (vec3Origin, gameEntity->avelocity);
 		}
@@ -798,11 +795,10 @@ bool CFlyMissileProjectile::Run ()
 		PlaySoundAt (or, g_edicts, CHAN_AUTO, SoundIndex("misc/h2ohit1.wav"));
 
 // move teamslaves
-	for (slave = gameEntity->teamchain; slave; slave = slave->teamchain)
+	for (CBaseEntity *slave = TeamChain; slave; slave = slave->TeamChain)
 	{
-		// Paril: Fixed a bug (wrong one :P)
-		State.GetOrigin (slave->state.origin);
-		gi.linkentity (slave);
+		slave->State.SetOrigin (State.GetOrigin());
+		slave->Link ();
 	}
 
 	return true;
@@ -838,7 +834,7 @@ void CStepPhysics::CheckGround ()
 
 	if (gameEntity->velocity[2] > 100)
 	{
-		gameEntity->groundentity = NULL;
+		GroundEntity = NULL;
 		return;
 	}
 
@@ -851,15 +847,15 @@ void CStepPhysics::CheckGround ()
 	// check steepness
 	if ( trace.plane.normal[2] < 0.7 && !trace.startSolid)
 	{
-		gameEntity->groundentity = NULL;
+		GroundEntity = NULL;
 		return;
 	}
 
 	if (!trace.startSolid && !trace.allSolid)
 	{
-		State.SetOrigin (trace.endPos);
-		gameEntity->groundentity = trace.ent;
-		gameEntity->groundentity_linkcount = trace.ent->linkCount;
+		State.SetOrigin (trace.EndPos);
+		GroundEntity = trace.Ent;
+		GroundEntityLinkCount = trace.Ent->GetLinkCount();
 		gameEntity->velocity[2] = 0;
 	}
 }
@@ -918,7 +914,7 @@ int CStepPhysics::FlyMove (float time, int mask)
 	
 	time_left = time;
 
-	gameEntity->groundentity = NULL;
+	GroundEntity = NULL;
 	for (bumpcount=0 ; bumpcount<numbumps ; bumpcount++)
 	{
 		vec3_t origin;
@@ -951,8 +947,8 @@ int CStepPhysics::FlyMove (float time, int mask)
 			blocked |= 1;		// floor
 			if ( hit->solid == SOLID_BSP)
 			{
-				gameEntity->groundentity = hit;
-				gameEntity->groundentity_linkcount = hit->linkCount;
+				GroundEntity = hit->Entity;
+				GroundEntityLinkCount = GroundEntity->GetLinkCount();
 			}
 		}
 		if (!trace.plane.normal[2])
@@ -1037,14 +1033,12 @@ bool CStepPhysics::Run ()
 		return false;
 
 	// airborn monsters should always check for ground
-	if (!gameEntity->groundentity && (EntityFlags & ENT_MONSTER))
+	if (!GroundEntity && (EntityFlags & ENT_MONSTER))
 		(dynamic_cast<CMonsterEntity*>(this))->Monster->CheckGround ();
 	else
 		CheckGround (); // Specific non-monster checkground
 
-	edict_t *groundentity = gameEntity->groundentity;
-
-	bool wasonground = (groundentity) ? true : false;
+	bool wasonground = (GroundEntity) ? true : false;
 		
 	if (gameEntity->avelocity[0] || gameEntity->avelocity[1] || gameEntity->avelocity[2])
 		AddRotationalFriction ();
@@ -1122,7 +1116,7 @@ bool CStepPhysics::Run ()
 		if (!IsInUse())
 			return false;
 
-		if (gameEntity->groundentity && !wasonground && hitsound)
+		if (GroundEntity && !wasonground && hitsound)
 			PlaySound (CHAN_AUTO, SoundIndex("world/land.wav"));
 	}
 	return true;
@@ -1295,7 +1289,7 @@ bool Push (CBaseEntity *Entity, vec3_t move, vec3_t amove)
 			continue;		// not linked in anywhere
 
 	// if the entity is standing on the pusher, it will definitely be moved
-		if (check->groundentity != Entity->gameEntity)
+		if (Check->GroundEntity != Entity)
 		{
 			// see if the ent needs to be tested
 			if (check->absMin[0] >= maxs[0]
@@ -1311,7 +1305,7 @@ bool Push (CBaseEntity *Entity, vec3_t move, vec3_t amove)
 				continue;
 		}
 
-		if ((dynamic_cast<CPhysicsEntity*>(Entity)->PhysicsType == PHYSICS_PUSH) || (check->groundentity == Entity->gameEntity))
+		if ((dynamic_cast<CPhysicsEntity*>(Entity)->PhysicsType == PHYSICS_PUSH) || (Check->GroundEntity == Entity))
 		{
 			// move this entity
 			pushed_p->ent = check;
@@ -1344,8 +1338,8 @@ bool Push (CBaseEntity *Entity, vec3_t move, vec3_t amove)
 			Vec3Add (check->state.origin, move2, check->state.origin);
 
 			// may have pushed them off an edge
-			if (check->groundentity != Entity->gameEntity)
-				check->groundentity = NULL;
+			if (Check->GroundEntity != Entity)
+				Check->GroundEntity = NULL;
 
 			block = SV_TestEntityPosition (check);
 			if (!block)
@@ -1397,7 +1391,7 @@ bool Push (CBaseEntity *Entity, vec3_t move, vec3_t amove)
 bool CPushPhysics::Run ()
 {
 	vec3_t		move, amove;
-	edict_t		*part, *mv;
+	CBaseEntity		*part;
 
 	// if not a team captain, so movement will be handled elsewhere
 	if ( Flags & FL_TEAMSLAVE)
@@ -1407,16 +1401,16 @@ bool CPushPhysics::Run ()
 	// any moves or calling any think functions
 	// if the move is blocked, all moved objects will be backed out
 	pushed_p = pushed;
-	for (part = gameEntity ; part ; part=part->teamchain)
+	for (part = this; part; part = part->TeamChain)
 	{
-		if (part->velocity[0] || part->velocity[1] || part->velocity[2] ||
-			part->avelocity[0] || part->avelocity[1] || part->avelocity[2]
-			)
-		{	// object is moving
-			Vec3Scale (part->velocity, 1, move);
-			Vec3Scale (part->avelocity, 1, amove);
+		if (part->gameEntity->velocity[0] || part->gameEntity->velocity[1] || part->gameEntity->velocity[2] ||
+			part->gameEntity->avelocity[0] || part->gameEntity->avelocity[1] || part->gameEntity->avelocity[2])
+		{
+			// object is moving
+			Vec3Scale (part->gameEntity->velocity, 1, move);
+			Vec3Scale (part->gameEntity->avelocity, 1, amove);
 
-			if (!Push (part->Entity, move, amove))
+			if (!Push (part, move, amove))
 				break;
 		}
 	}
@@ -1426,11 +1420,11 @@ bool CPushPhysics::Run ()
 	if (part)
 	{
 		// the move failed, bump all nextthink times and back out moves
-		for (mv = gameEntity ; mv ; mv=mv->teamchain)
+		for (CBaseEntity *mv = this; mv; mv = mv->TeamChain)
 		{
-			if (mv->Entity && (mv->Entity->EntityFlags & ENT_THINKABLE))
+			if (mv->EntityFlags & ENT_THINKABLE)
 			{
-				CThinkableEntity *Thinkable = dynamic_cast<CThinkableEntity*>(mv->Entity);
+				CThinkableEntity *Thinkable = dynamic_cast<CThinkableEntity*>(mv);
 
 				if (Thinkable->NextThink > 0)
 					Thinkable->NextThink += FRAMETIME;
@@ -1439,20 +1433,19 @@ bool CPushPhysics::Run ()
 
 		// if the pusher has a "blocked" function, call it
 		// otherwise, just stay in place until the obstacle is gone
-		if (part->Entity && (part->Entity->EntityFlags & ENT_BLOCKABLE) && obstacle->Entity)
-			(dynamic_cast<CBlockableEntity*>(part->Entity))->Blocked (obstacle->Entity);
+		if ((part->EntityFlags & ENT_BLOCKABLE) && obstacle->Entity)
+			(dynamic_cast<CBlockableEntity*>(part))->Blocked (obstacle->Entity);
 	}
 	else
 	{
 		// the move succeeded, so call all think functions
-		for (part = gameEntity ; part ; part=part->teamchain)
+		for (part = this; part; part = part->TeamChain)
 		{
-			if (part->Entity && (part->Entity->EntityFlags & ENT_THINKABLE))
+			if (part->EntityFlags & ENT_THINKABLE)
 			{
-				CThinkableEntity *Thinkable = dynamic_cast<CThinkableEntity*>(part->Entity);
+				CThinkableEntity *Thinkable = dynamic_cast<CThinkableEntity*>(part);
 				Thinkable->RunThink ();
 			}
-//			SV_RunThink (part);
 		}
 	}
 	return true;

@@ -203,7 +203,7 @@ typedef struct
 	int			total_monsters;
 	int			killed_monsters;
 
-	edict_t		*current_entity;	// entity running from G_RunFrame
+	CBaseEntity	*CurrentEntity;	// entity running from G_RunFrame
 	int			body_que;			// dead bodies
 
 	int			power_cubes;		// ugly necessity for coop
@@ -612,14 +612,9 @@ struct edict_s
 	int			sounds;			//make this a spawntemp var?
 	int			count;
 
-	edict_t		*chain;
 	edict_t		*enemy;
 	edict_t		*oldenemy;
 	edict_t		*activator;
-	edict_t		*groundentity;
-	int			groundentity_linkcount;
-	edict_t		*teamchain;
-	edict_t		*teammaster;
 
 	edict_t		*mynoise;		// can go in client only
 	edict_t		*mynoise2;

@@ -1010,14 +1010,16 @@ public:
 				continue;
 			if (!e->Entity)
 				continue;
-			if (!e->groundentity)
-				continue;
 
 			CBaseEntity *Entity = e->Entity;
+
+			if (!Entity->GroundEntity)
+				continue;
+
 			if (!(Entity->EntityFlags & ENT_PLAYER))
 				continue;
 
-			Entity->gameEntity->groundentity = NULL;
+			Entity->GroundEntity = NULL;
 			Entity->gameEntity->velocity[0] += crandom()* 150;
 			Entity->gameEntity->velocity[1] += crandom()* 150;
 			Entity->gameEntity->velocity[2] = gameEntity->speed * (100.0 / Entity->gameEntity->mass);

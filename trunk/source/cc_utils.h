@@ -36,7 +36,6 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 void	G_TouchTriggers (CBaseEntity *ent);
 void G_SetMovedir (vec3f &angles, vec3f &movedir);
-CBaseEntity *GetRandomTeamMember (CBaseEntity *Entity, CBaseEntity *Master);
 CBaseEntity *CC_PickTarget (char *targetname);
 bool KillBox (CBaseEntity *ent);
 CBaseEntity *CC_Find (CBaseEntity *from, int fieldofs, char *match);

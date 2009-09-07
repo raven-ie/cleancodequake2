@@ -61,14 +61,10 @@ field_t fields[] = {
 	{"enemy", FOFS(enemy), F_EDICT, FFL_NOSPAWN},
 	{"oldenemy", FOFS(oldenemy), F_EDICT, FFL_NOSPAWN},
 	{"activator", FOFS(activator), F_EDICT, FFL_NOSPAWN},
-	{"groundentity", FOFS(groundentity), F_EDICT, FFL_NOSPAWN},
-	{"teamchain", FOFS(teamchain), F_EDICT, FFL_NOSPAWN},
-	{"teammaster", FOFS(teammaster), F_EDICT, FFL_NOSPAWN},
 	{"owner", FOFS(owner), F_EDICT, FFL_NOSPAWN},
 	{"mynoise", FOFS(mynoise), F_EDICT, FFL_NOSPAWN},
 	{"mynoise2", FOFS(mynoise2), F_EDICT, FFL_NOSPAWN},
 	{"target_ent", FOFS(target_ent), F_EDICT, FFL_NOSPAWN},
-	{"chain", FOFS(chain), F_EDICT, FFL_NOSPAWN},
 
 	// temp spawn vars -- only valid when the spawn function is called
 	{"lip", STOFS(lip), F_INT, FFL_SPAWNTEMP},
