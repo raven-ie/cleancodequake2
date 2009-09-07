@@ -1296,8 +1296,8 @@ bool Push (CBaseEntity *Entity, vec3_t move, vec3_t amove)
 			|| CheckPhys->PhysicsType == PHYSICS_NOCLIP)
 				continue;
 		}
-		//else if (!(Check->EntityFlags & ENT_PLAYER))
-		//	continue;
+		else if (!(Check->EntityFlags & ENT_PLAYER))
+			continue;
 
 		if (!check->area.prev)
 			continue;		// not linked in anywhere

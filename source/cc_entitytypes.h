@@ -200,7 +200,6 @@ public:
 	CPushPhysics ();
 	CPushPhysics (int Index);
 
-	//bool			Push (vec3_t move, vec3_t amove);
 	bool			Run ();
 };
 

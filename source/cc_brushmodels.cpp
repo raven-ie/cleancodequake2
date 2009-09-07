@@ -809,7 +809,7 @@ void CDoor::CDoorTrigger::Touch (CBaseEntity *other, plane_t *plane, cmBspSurfac
 		return;
 	TouchDebounce = level.framenum + 10;
 
-	(dynamic_cast<CDoor*>(gameEntity->owner->Entity))->Use (other, other);
+	(dynamic_cast<CDoor*>(GetOwner()))->Use (other, other);
 }
 
 void CDoor::CalcMoveSpeed ()
@@ -871,6 +871,7 @@ void CDoor::SpawnDoorTrigger ()
 	Trigger->SetMins (mins);
 	Trigger->SetMaxs (maxs);
 	Trigger->SetOwner (this);
+	Trigger->Touchable = true;
 	Trigger->SetSolid (SOLID_TRIGGER);
 	Trigger->Link ();
 
