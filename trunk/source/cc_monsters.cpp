@@ -1356,7 +1356,6 @@ bool CMonster::FriendlyInLine (vec3_t Origin, vec3_t Direction)
 }
 #endif
 
-#ifdef MONSTERS_ARENT_STUPID
 /*
 =================
 AlertNearbyStroggs
@@ -1420,12 +1419,12 @@ void CMonster::AlertNearbyStroggs ()
 			strogg->Monster->Sight ();
 		}
 #else
-		//strogg->enemy = Entity->gameEntity->enemy;
-		//strogg->Monster->FoundTarget ();
+		strogg->gameEntity->enemy = Entity->gameEntity->enemy;
+		strogg->Monster->FoundTarget ();
+		strogg->Monster->Sight ();
 #endif
 	}
 }
-#endif
 
 void CMonster::MonsterFireBullet (vec3f start, vec3f dir, int damage, int kick, int hspread, int vspread, int flashtype)
 {
@@ -3794,9 +3793,7 @@ bool CMonster::FindTarget()
 // got one
 //
 	FoundTarget ();
-#ifdef MONSTERS_ARENT_STUPID
 	AlertNearbyStroggs ();
-#endif
 
 	if ((Entity->gameEntity->enemy != old) && (MonsterFlags & MF_HAS_SIGHT))
 		Sight ();
