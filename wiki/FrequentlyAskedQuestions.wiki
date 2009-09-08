@@ -1,6 +1,8 @@
 #summary FAQs for CleanCode
 #labels faqs
 
+==Common Project Questions==
+
 ===What is CleanCode?====
 CleanCode is, in summary, a cleaner and stable base for Quake II mods. It provides a fast, C++ interface and remains the cleanest source base to date, even in it's current stage.
 
@@ -37,3 +39,39 @@ Sadly, with new features like object orientation, porting becomes harder and har
 The main programmer, [mailto:jonno.5000@gmail.com Paril], designed and came up with the idea of a clean, object oriented source base. The idea has been passed around in the past, such as with ioquake2, but this time it is becoming a reality.. very quickly!
 
 Several people also aided in testing and porting projects. Everyone that belongs to this project as an owner or member helped out in some way; whether or not they programmed it, they deserve to be remembered as being a part of CleanCode's reality!
+
+==Gameplay Questions==
+
+===I downloaded CleanCode, popped in the game, and went to play some single player.. something's extremely wrong here, the monsters are kicking my ass!===
+CleanCode offers many improvements that make monsters a bit tougher as a challenge - it's probably the only real gameplay change does. CleanCode implements the Rogue mission pack AI and has a bunch of other goodies to make monsters a challenge more than they ever were before, such as pathfinding and fire prediction!
+
+Rogue AI means they can duck smartly, they will sidestep to avoid shots to the legs, and a few monsters have a few new tricks up their sleeves!
+
+(Notes: Infantry's "backwards firing" animation is NOT from Rogue, this is a completely new change that we made and kept the same model! To disable this firing animation, head to cc_infantry.h and remove the definition. Same with SuperTank's grenade launcher.)
+
+Pathfinding means that you could make a few monsters angry and leave the area, they could find their way to you! This makes for interesting gameplay since the monsters may not be "shoot-and-forget" anymore!
+
+These features, however, are not permanent; they can be turned off by recompiling the engine with three definitions in cc_options.h removed:
+
+{{{
+// Global macros
+// Monsters won't attack allies and will try not to hurt allies with shots
+#define MONSTERS_ARENT_STUPID
+
+// Use the Rogue AI instead of regular AI
+#define MONSTER_USE_ROGUE_AI
+
+// Makes pathfinding work.
+#define MONSTERS_USE_PATHFINDING
+}}}
+
+See [Options] for more details on each definition and what they do exactly.
+
+===Does CleanCode support CTF, Tourney, or anything like that?===
+CleanCode has CTF built in (it's known as CleanCTF internally), so that's not a problem. However, tournament modes, class-based gameplay, all of that would have to be done either yourself or wait for an official release that may contain a tourney-like remake (CleanTourney maybe?). All of these gamemodes are entirely possibly, it just takes someone to code it!
+
+===Is CleanCode R1Q2-protocol compliant?===
+CleanCode does and will follow all of R1CH's great little DLL enhancements that link directly to the protocols he develops. I thank him for his time on R1Q2 and hope he takes a look and encourages the use of CleanCode.
+
+===I tried running CleanCode in KMQuake2 or Quake II Evolved and I get a game API error.. what gives?===
+CleanCode runs on a 3.20 base, therefore the engine must use the 3.20 protocol to work. If you want a certain engine supported, [http://code.google.com/p/cleancodequake2/issues/entry create an issue] with the "Type-EngineSupport" tag and we'll see what we can do!
