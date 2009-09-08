@@ -98,7 +98,7 @@ public:
 class CThinkableEntity abstract : public virtual CBaseEntity
 {
 public:
-	int32		NextThink;
+	FrameNumber_t		NextThink;
 
 	CThinkableEntity ();
 	CThinkableEntity (int index);
@@ -120,7 +120,7 @@ public:
 	virtual void	Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
 };
 
-typedef int32 EPhysicsType;
+typedef uint32 EPhysicsType;
 enum
 {
 	PHYSICS_NONE,

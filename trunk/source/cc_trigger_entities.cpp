@@ -522,7 +522,7 @@ NO_PROTECTION	*nothing* stops the damage
 class CTriggerHurt : public CTriggerMultiple
 {
 public:
-	int32		NextHurt;
+	FrameNumber_t		NextHurt;
 
 	CTriggerHurt () :
 	  CBaseEntity (),
@@ -713,7 +713,7 @@ class CTriggerKey : public CMapEntity, public CUsableEntity
 public:
 	bool		Usable;
 	CBaseItem	*Item;
-	int32		TouchDebounce;
+	FrameNumber_t		TouchDebounce;
 	char		*Message;
 
 	CTriggerKey () :

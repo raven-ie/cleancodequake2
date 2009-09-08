@@ -2120,13 +2120,49 @@ void CreateSPStatusbar ();
 void SetItemNames ();
 void Init_Junk();
 
+void SetupLights ()
+{
+	static char *LightTable[] =
+	{
+		"m",														// 0 normal
+		"mmnmmommommnonmmonqnmmo",									// 1 FLICKER (first variety)
+		"abcdefghijklmnopqrstuvwxyzyxwvutsrqponmlkjihgfedcba",		// 2 SLOW STRONG PULSE
+		"mmmmmaaaaammmmmaaaaaabcdefgabcdefg",						// 3 CANDLE (first variety)
+		"mamamamamama",												// 4 FAST STROBE
+		"jklmnopqrstuvwxyzyxwvutsrqponmlkj",						// 5 GENTLE PULSE 1
+		"nmonqnmomnmomomno",										// 6 FLICKER (second variety)
+		"mmmaaaabcdefgmmmmaaaammmaamm",								// 7 CANDLE (second variety)
+		"mmmaaammmaaammmabcdefaaaammmmabcdefmmmaaaa",				// 8 CANDLE (third variety)
+		"aaaaaaaazzzzzzzz",											// 9 SLOW STROBE (fourth variety)
+		"mmamammmmammamamaaamammma",								// 10 FLUORESCENT FLICKER
+		"abcdefghijklmnopqrrqponmlkjihgfedcba",						// 11 SLOW PULSE NOT FADE TO BLACK
+		NULL														// END OF TABLE
+	};
+
+	for (int i = 0; ; i++)
+	{
+		if (!LightTable[i])
+			break;
+
+		if (i >= 32)
+			DebugPrintf ("CleanCode Warning: Mod is assigning a light table value to a switchable light configstring!\n");
+
+		ConfigString(CS_LIGHTS+i, LightTable[i]);
+	}
+
+	// styles 32-62 are assigned by the light program for switchable lights
+	// 63 testing
+	ConfigString(CS_LIGHTS+63, "a");
+}
+
 CBaseEntity *World;
 void CWorldEntity::Spawn ()
 {
 	World = this;
 	ClearList(); // Do this before ANYTHING
+
 	// Seed the random number generator
-	srand (time(NULL));
+	seedMT ((uint32)time(NULL));
 
 	PhysicsType = PHYSICS_PUSH;
 	SetSolid (SOLID_BSP);
@@ -2228,47 +2264,7 @@ void CWorldEntity::Spawn ()
 //
 // Setup light animation tables. 'a' is total darkness, 'z' is doublebright.
 //
-
-	// 0 normal
-	ConfigString(CS_LIGHTS+0, "m");
-	
-	// 1 FLICKER (first variety)
-	ConfigString(CS_LIGHTS+1, "mmnmmommommnonmmonqnmmo");
-	
-	// 2 SLOW STRONG PULSE
-	ConfigString(CS_LIGHTS+2, "abcdefghijklmnopqrstuvwxyzyxwvutsrqponmlkjihgfedcba");
-	
-	// 3 CANDLE (first variety)
-	ConfigString(CS_LIGHTS+3, "mmmmmaaaaammmmmaaaaaabcdefgabcdefg");
-	
-	// 4 FAST STROBE
-	ConfigString(CS_LIGHTS+4, "mamamamamama");
-	
-	// 5 GENTLE PULSE 1
-	ConfigString(CS_LIGHTS+5,"jklmnopqrstuvwxyzyxwvutsrqponmlkj");
-	
-	// 6 FLICKER (second variety)
-	ConfigString(CS_LIGHTS+6, "nmonqnmomnmomomno");
-	
-	// 7 CANDLE (second variety)
-	ConfigString(CS_LIGHTS+7, "mmmaaaabcdefgmmmmaaaammmaamm");
-	
-	// 8 CANDLE (third variety)
-	ConfigString(CS_LIGHTS+8, "mmmaaammmaaammmabcdefaaaammmmabcdefmmmaaaa");
-	
-	// 9 SLOW STROBE (fourth variety)
-	ConfigString(CS_LIGHTS+9, "aaaaaaaazzzzzzzz");
-	
-	// 10 FLUORESCENT FLICKER
-	ConfigString(CS_LIGHTS+10, "mmamammmmammamamaaamammma");
-
-	// 11 SLOW PULSE NOT FADE TO BLACK
-	ConfigString(CS_LIGHTS+11, "abcdefghijklmnopqrrqponmlkjihgfedcba");
-	
-	// styles 32-62 are assigned by the light program for switchable lights
-
-	// 63 testing
-	ConfigString(CS_LIGHTS+63, "a");
+	SetupLights ();
 
 	dmFlags.UpdateFlags(dmflags->Integer());
 };

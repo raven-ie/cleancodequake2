@@ -180,10 +180,10 @@ typedef struct
 //ZOID
 	int			ctf_team;			// CTF team
 	int			ctf_state;
-	int32		ctf_lasthurtcarrier;
-	int32		ctf_lastreturnedflag;
-	int32		ctf_flagsince;
-	int32		ctf_lastfraggedcarrier;
+	FrameNumber_t		ctf_lasthurtcarrier;
+	FrameNumber_t		ctf_lastreturnedflag;
+	FrameNumber_t		ctf_flagsince;
+	FrameNumber_t		ctf_lastfraggedcarrier;
 	bool		id_state;
 	bool		voted; // for elections
 	bool		ready;
@@ -240,8 +240,8 @@ public:
 
 	EWeaponState weaponstate;
 	float		v_dmg_roll, v_dmg_pitch;	// damage kicks
-	int32		v_dmg_time;
-	int32		fall_time;
+	FrameNumber_t		v_dmg_time;
+	FrameNumber_t		fall_time;
 	float		fall_value;		// for view drop on fall
 	byte		bonus_alpha;
 	float		bobtime;			// so off-ground doesn't change it
@@ -261,24 +261,24 @@ public:
 	bool		anim_run;
 
 	// powerup timers
-	int32		quad_framenum;
-	int32		invincible_framenum;
-	int32		breather_framenum;
-	int32		enviro_framenum;
+	FrameNumber_t		quad_framenum;
+	FrameNumber_t		invincible_framenum;
+	FrameNumber_t		breather_framenum;
+	FrameNumber_t		enviro_framenum;
 
 	bool		grenade_blew_up;
 	bool		grenade_thrown;
-	int32		grenade_time;
+	FrameNumber_t		grenade_time;
 	int			silencer_shots;
 	MediaIndex	weapon_sound;
 
-	int32		pickup_msg_time;
+	FrameNumber_t		pickup_msg_time;
 
-	int32		flood_locktill;		// locked from talking
-	int32		flood_when[10];		// when messages were said
+	FrameNumber_t		flood_locktill;		// locked from talking
+	FrameNumber_t		flood_when[10];		// when messages were said
 	int			flood_whenhead;		// head pointer for when said
 
-	int32		respawn_time;		// can respawn when time > this
+	FrameNumber_t		respawn_time;		// can respawn when time > this
 
 	CPlayerEntity		*chase_target;		// player we are chasing
 	bool				update_chase;		// need to update chase info?
@@ -288,10 +288,10 @@ public:
 //ZOID
 	class CGrappleEntity	*ctf_grapple;		// entity of grapple
 	int			ctf_grapplestate;		// true if pulling
-	int32		ctf_grapplereleasetime;	// time of grapple release
-	int32		ctf_regentime;		// regen tech
-	int32		ctf_techsndtime;
-	int32		ctf_lasttechmsg;
+	FrameNumber_t		ctf_grapplereleasetime;	// time of grapple release
+	FrameNumber_t		ctf_regentime;		// regen tech
+	FrameNumber_t		ctf_techsndtime;
+	FrameNumber_t		ctf_lasttechmsg;
 //ZOID
 #endif
 };
@@ -303,9 +303,9 @@ public:
 	CClient		Client;
 	bool		NoClip;
 	bool		TossPhysics;
-	int32		FlySoundDebounceTime;
-	int32		DamageDebounceTime;
-	int32		AirFinished;
+	FrameNumber_t		FlySoundDebounceTime;
+	FrameNumber_t		DamageDebounceTime;
+	FrameNumber_t		AirFinished;
 
 	CPlayerEntity (int Index);
 	bool Run ();

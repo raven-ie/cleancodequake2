@@ -120,7 +120,7 @@ public: // Kept public for now because there are lots of functions that require 
 									// Kept private to make sure no mistakes are made.
 public:
 	bool			Freed;
-	int32			EntityFlags;
+	uint32			EntityFlags;
 	CEntityState	State;
 	EEdictFlags		Flags;
 	CBaseEntity		*TeamChain;

@@ -39,6 +39,8 @@ class CBaseEntity;
 class CPlayerEntity;
 
 // Stand-alone classes
+typedef int64	FrameNumber_t;
+
 #include "cc_conchars.h"
 #include "cc_colors.h"
 #include "cc_indexing.h"

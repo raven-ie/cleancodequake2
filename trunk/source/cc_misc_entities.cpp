@@ -801,7 +801,7 @@ class CMiscViperBomb : public CMapEntity, public CThinkableEntity, public CTouch
 {
 public:
 	bool PreThinkable;
-	int32 TimeStamp;
+	FrameNumber_t TimeStamp;
 	vec3f MoveDir;
 	bool Usable;
 	bool Touchable;

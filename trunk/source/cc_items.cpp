@@ -84,7 +84,7 @@ Precache(Precache)
 /// \param	ent		 - If non-null, the entity to be respawned. 
 /// \param	delay	 - The delay until it's respawned. 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void CBaseItem::SetRespawn (CItemEntity *ent, int32 delay)
+void CBaseItem::SetRespawn (CItemEntity *ent, FrameNumber_t delay)
 {
 	ent->Flags |= FL_RESPAWN;
 	ent->SetSvFlags (ent->GetSvFlags() | SVF_NOCLIENT);

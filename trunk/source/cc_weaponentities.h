@@ -93,7 +93,7 @@ class CBFGBolt : public CFlyMissileProjectile, public CThinkableEntity, public C
 public:
 	bool	Exploded;
 	int		Damage, DamageRadius;
-	int32	FreeTime;
+	FrameNumber_t	FreeTime;
 
 	CBFGBolt ();
 	CBFGBolt (int Index);

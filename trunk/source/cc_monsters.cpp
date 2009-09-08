@@ -230,7 +230,7 @@ void CMonster::MoveToPath (float Dist)
 		P_CurrentPath = NULL;
 		FoundPath ();
 
-		int32 timeOut = level.framenum + 20; // Always at least 2 seconds
+		FrameNumber_t timeOut = level.framenum + 20; // Always at least 2 seconds
 		// Calculate approximate distance and check how long we want this to time out for
 		switch (rangevector(origin, P_CurrentNode->Origin))
 		{
