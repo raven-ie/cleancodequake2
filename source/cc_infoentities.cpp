@@ -888,7 +888,7 @@ class CTargetLightRamp : public CMapEntity, public CThinkableEntity, public CUsa
 {
 public:
 	int32			Message[3];
-	int32			TimeStamp;
+	FrameNumber_t			TimeStamp;
 	CLight			*Light;
 
 	CTargetLightRamp () :

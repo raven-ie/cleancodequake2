@@ -79,7 +79,7 @@ typedef struct ctfgame_s
 {
 	int team1, team2;
 	int total1, total2; // these are only set when going into intermission!
-	int32 last_flag_capture;
+	FrameNumber_t last_flag_capture;
 	int last_capture_team;
 
 	match_t match;		// match state
@@ -91,7 +91,7 @@ typedef struct ctfgame_s
 	char elevel[32];	// for map election, target level
 	int evotes;			// votes so far
 	int needvotes;		// votes needed
-	int32 electtime;	// remaining time until election times out
+	FrameNumber_t electtime;	// remaining time until election times out
 	char emsg[256];		// election name
 
 

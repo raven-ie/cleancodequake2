@@ -165,7 +165,7 @@ typedef struct
 //
 typedef struct
 {
-	int32		framenum;
+	FrameNumber_t	framenum;
 
 	char		level_name[MAX_QPATH];	// the descriptive name (Outer Base, etc)
 	char		mapname[MAX_QPATH];		// the server name (base1, etc)
@@ -173,7 +173,7 @@ typedef struct
 	char		forcemap[MAX_QPATH];	// go here
 
 	// intermission state
-	int32		intermissiontime;		// time the intermission was started
+	FrameNumber_t		intermissiontime;		// time the intermission was started
 	char		*changemap;
 	int			exitintermission;
 	vec3f		IntermissionOrigin;
@@ -304,8 +304,8 @@ extern	edict_t			*g_edicts;
 #define LLOFS(x) (int)&(((level_locals_t *)0)->x)
 #define CLOFS(x) (int)&(((CClient *)0)->x)
 
-#define random()	((rand () & 0x7fff) / ((float)0x7fff))
-#define crandom()	(2.0 * (random() - 0.5))
+#define random()	(frand())
+#define crandom()	(crand())
 
 #define world	(&g_edicts[0])
 
@@ -516,7 +516,7 @@ struct edict_s
 
 	//================================
 	char		*model;
-	int32		freetime;			// sv.time when the object was freed
+	FrameNumber_t		freetime;			// sv.time when the object was freed
 	
 	//
 	// only used locally in game, not by server
@@ -524,7 +524,7 @@ struct edict_s
 	char		*classname;
 	int			spawnflags;
 
-	int32		timestamp;
+	FrameNumber_t		timestamp;
 
 	float		angle;			// set in qe3, -1 = up, -2 = down
 	char		*target;
@@ -548,15 +548,15 @@ struct edict_s
 	edict_t		*goalentity;
 	edict_t		*movetarget;
 
-	int32		pain_debounce_time;
-	int32		damage_debounce_time;
+	FrameNumber_t		pain_debounce_time;
+	FrameNumber_t		damage_debounce_time;
 
 	int			health;
 	int			max_health;
 	int			gib_health;
 	int			show_hostile;
 
-	int32		powerarmor_time;
+	FrameNumber_t		powerarmor_time;
 
 	char		*map;			// target_changelevel
 
@@ -584,7 +584,7 @@ struct edict_s
 	float		delay;			// before firing targets
 	float		random;
 
-	int32		teleport_time;
+	FrameNumber_t		teleport_time;
 
 	int			watertype;
 	int			waterlevel;

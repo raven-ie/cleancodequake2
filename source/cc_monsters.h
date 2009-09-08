@@ -172,8 +172,8 @@ class CMonsterEntity : public CMapEntity, public CStepPhysics, public CTossProje
 public:
 	bool			IsHead;
 	uint8			UseState;
-	int32			AirFinished;
-	int32			DamageDebounceTime;
+	FrameNumber_t			AirFinished;
+	FrameNumber_t			DamageDebounceTime;
 	char			*Message;
 
 	class CMonster	*Monster;
@@ -224,9 +224,9 @@ public:
 	//  not really worth it.  sidestep is an implied abort_duck
 //	void		(*abort_duck)(edict_t *self);
 	float		BaseHeight;
-	int32		NextDuckTime;
-	int32		DuckWaitTime;
-	int32		BlindFireDelay;
+	FrameNumber_t		NextDuckTime;
+	FrameNumber_t		DuckWaitTime;
+	FrameNumber_t		BlindFireDelay;
 	edict_t		*LastPlayerEnemy;
 	vec3_t		BlindFireTarget;
 	// blindfire stuff .. the boolean says whether the monster will do it, and blind_fire_time is the timing
@@ -237,12 +237,12 @@ public:
 
 	int					NextFrame;
 	float				Scale;
-	int32				PauseTime;
-	int32				AttackFinished;
+	FrameNumber_t				PauseTime;
+	FrameNumber_t				AttackFinished;
 	
 	vec3_t				SavedGoal;
-	int32				SearchTime;
-	int32				TrailTime;
+	FrameNumber_t				SearchTime;
+	FrameNumber_t				TrailTime;
 	vec3_t				LastSighting;
 	int					AttackState;
 	bool				Lefty;
@@ -266,8 +266,8 @@ public:
 	CPathNode			*P_CurrentGoalNode;
 	CPathNode			*P_CurrentNode; // Always the current path node
 	int32				P_CurrentNodeIndex;
-	int32				P_NodePathTimeout;
-	int32				P_NodeFollowTimeout;
+	FrameNumber_t				P_NodePathTimeout;
+	FrameNumber_t				P_NodeFollowTimeout;
 	bool				FollowingPath;
 
 	// Pathfinding functions

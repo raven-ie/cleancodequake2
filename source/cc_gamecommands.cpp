@@ -406,6 +406,40 @@ void Cmd_Test_f (CPlayerEntity *ent)
 	//vec3f or = ent->State.GetOrigin();
 	//BroadcastPrintf (PRINT_CENTER, "(%s)\nis at (%.0f %.0f %.0f)", ent->Client.pers.netname, or.X, or.Y, or.Z);
 	//CGibEntity::Spawn (ent, gMedia.Gib_SmallMeat, ArgGeti(1), GIB_ORGANIC);
+/*
+	DebugPrintf (		"random       crandom          frand           crand\n"
+						"------       -------          ------         ------\n");
+	for (int i = 0; i < 12; i++)
+	{
+		DebugPrintf(	"%5.2f        %6.2f            %5.2f          %5.2f\n",
+			random(), crandom(), frand(), crand());
+	}
+
+	uint32 randomtime, crandomtime, frandtime, crandtime;
+	
+	randomtime = Sys_Milliseconds ();
+	for (uint32 i = 0; i < 8000000; i++)
+		random ();
+	randomtime = Sys_Milliseconds () - randomtime;
+		
+	crandomtime = Sys_Milliseconds ();
+	for (uint32 i = 0; i < 8000000; i++)
+		crandom ();
+	crandomtime = Sys_Milliseconds () - crandomtime;
+
+	frandtime = Sys_Milliseconds ();
+	for (uint32 i = 0; i < 8000000; i++)
+		frand ();
+	frandtime = Sys_Milliseconds () - frandtime;
+		
+	crandtime = Sys_Milliseconds ();
+	for (uint32 i = 0; i < 8000000; i++)
+		crand ();
+	crandtime = Sys_Milliseconds () - crandtime;
+
+	DebugPrintf(	"%5u        %6u            %5u          %5u\n",
+		randomtime, crandomtime, frandtime, crandtime);
+		*/
 }
 
 void GCTFSay_Team (CPlayerEntity *ent);

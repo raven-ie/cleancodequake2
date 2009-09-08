@@ -55,7 +55,7 @@ enum
 class CBrushModel : public virtual CBaseEntity, public CThinkableEntity, public CPushPhysics, public CStopPhysics
 {
 public:
-	int32		TouchDebounce;
+	FrameNumber_t		TouchDebounce;
 
 	// fixed data
 	vec3_t		StartOrigin;
@@ -190,7 +190,7 @@ public:
 	class CDoorTrigger : public CTouchableEntity
 	{
 	public:
-		int32		TouchDebounce;
+		FrameNumber_t		TouchDebounce;
 
 		CDoorTrigger::CDoorTrigger ();
 		CDoorTrigger::CDoorTrigger (int Index);

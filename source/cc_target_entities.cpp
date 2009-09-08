@@ -967,8 +967,8 @@ All players and monsters are affected.
 class CTargetEarthquake : public CMapEntity, public CThinkableEntity, public CUsableEntity
 {
 public:
-	int32		LastShakeTime;
-	int32		TimeStamp;
+	FrameNumber_t		LastShakeTime;
+	FrameNumber_t		TimeStamp;
 
 	CTargetEarthquake () :
 	  CBaseEntity (),

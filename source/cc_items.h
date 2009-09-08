@@ -148,7 +148,7 @@ public:
 	virtual	void	Drop (CPlayerEntity *ent) = 0;
 	virtual class CItemEntity	*DropItem (CBaseEntity *ent);
 
-	virtual void	SetRespawn (class CItemEntity *ent, int32 delay);
+	virtual void	SetRespawn (class CItemEntity *ent, FrameNumber_t delay);
 
 	inline int		GetIndex ()
 	{
