@@ -140,6 +140,7 @@ class CPhysicsEntity abstract : public virtual CBaseEntity
 {
 public:
 	EPhysicsType		PhysicsType;
+	vec3f				AngularVelocity;
 
 	bool				PhysicsDisabled;
 	CPhysicsEntity ();

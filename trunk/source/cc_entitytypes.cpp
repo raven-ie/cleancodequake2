@@ -643,10 +643,7 @@ bool CBounceProjectile::Run ()
 	AddGravity ();
 
 // move angles
-	vec3_t angles;
-	State.GetAngles (angles);
-	Vec3MA (angles, 0.1f, gameEntity->avelocity, angles);
-	State.SetAngles (angles);
+	State.SetAngles (State.GetAngles().MultiplyAngles (0.1f, AngularVelocity));
 
 // move origin
 	Vec3Scale (gameEntity->velocity, 0.1f, move);
@@ -666,7 +663,7 @@ bool CBounceProjectile::Run ()
 				GroundEntity = trace.Ent;
 				GroundEntityLinkCount = GroundEntity->GetLinkCount();
 				Vec3Copy (vec3Origin, gameEntity->velocity);
-				Vec3Copy (vec3Origin, gameEntity->avelocity);
+				AngularVelocity = vec3fOrigin;
 			}
 		}
 	}
@@ -765,10 +762,7 @@ bool CFlyMissileProjectile::Run ()
 	State.GetOrigin(old_origin);
 
 // move angles
-	vec3_t angles;
-	State.GetAngles (angles);
-	Vec3MA (angles, 0.1f, gameEntity->avelocity, angles);
-	State.SetAngles (angles);
+	State.SetAngles (State.GetAngles().MultiplyAngles (0.1f, AngularVelocity));
 
 // move origin
 	Vec3Scale (gameEntity->velocity, 0.1f, move);
@@ -786,7 +780,7 @@ bool CFlyMissileProjectile::Run ()
 			GroundEntity = trace.Ent;
 			GroundEntityLinkCount = GroundEntity->GetLinkCount();
 			Vec3Copy (vec3Origin, gameEntity->velocity);
-			Vec3Copy (vec3Origin, gameEntity->avelocity);
+			AngularVelocity = vec3fOrigin;
 		}
 	}
 	
@@ -880,25 +874,22 @@ void CStepPhysics::CheckGround ()
 
 void CStepPhysics::AddRotationalFriction ()
 {
-	vec3_t angles;
-	State.GetAngles (angles);
-	Vec3MA (angles, 0.1f, gameEntity->avelocity, angles);
-	State.SetAngles (angles);
+	State.SetAngles (State.GetAngles().MultiplyAngles (0.1f, AngularVelocity));
 
 	float adjustment = 0.1f * SV_STOPSPEED * SV_FRICTION;
 	for (int n = 0; n < 3; n++)
 	{
-		if (gameEntity->avelocity[n] > 0)
+		if (AngularVelocity[n] > 0)
 		{
-			gameEntity->avelocity[n] -= adjustment;
-			if (gameEntity->avelocity[n] < 0)
-				gameEntity->avelocity[n] = 0;
+			AngularVelocity[n] -= adjustment;
+			if (AngularVelocity[n] < 0)
+				AngularVelocity[n] = 0;
 		}
 		else
 		{
-			gameEntity->avelocity[n] += adjustment;
-			if (gameEntity->avelocity[n] > 0)
-				gameEntity->avelocity[n] = 0;
+			AngularVelocity[n] += adjustment;
+			if (AngularVelocity[n] > 0)
+				AngularVelocity[n] = 0;
 		}
 	}
 }
@@ -1054,7 +1045,7 @@ bool CStepPhysics::Run ()
 
 	bool wasonground = (GroundEntity) ? true : false;
 		
-	if (gameEntity->avelocity[0] || gameEntity->avelocity[1] || gameEntity->avelocity[2])
+	if (AngularVelocity != vec3fOrigin)
 		AddRotationalFriction ();
 
 	// add gravity except:
@@ -1296,7 +1287,7 @@ bool Push (CBaseEntity *Entity, vec3_t move, vec3_t amove)
 			|| CheckPhys->PhysicsType == PHYSICS_NOCLIP)
 				continue;
 		}
-		else if (!(Check->EntityFlags & ENT_PLAYER))
+		else if (Check->GetSolid() != SOLID_BBOX)
 			continue;
 
 		if (!check->area.prev)
@@ -1418,11 +1409,16 @@ bool CPushPhysics::Run ()
 	for (part = this; part; part = part->TeamChain)
 	{
 		if (part->gameEntity->velocity[0] || part->gameEntity->velocity[1] || part->gameEntity->velocity[2] ||
-			part->gameEntity->avelocity[0] || part->gameEntity->avelocity[1] || part->gameEntity->avelocity[2])
+			(AngularVelocity != vec3fOrigin))
 		{
 			// object is moving
-			Vec3Scale (part->gameEntity->velocity, 1, move);
-			Vec3Scale (part->gameEntity->avelocity, 1, amove);
+			if (part->EntityFlags & ENT_PHYSICS)
+			{
+				CPhysicsEntity *Phys = dynamic_cast<CPhysicsEntity*>(part);
+
+				Vec3Scale (part->gameEntity->velocity, 1, move);
+				Vec3Scale (Phys->AngularVelocity, 1, amove);
+			}
 
 			if (!Push (part, move, amove))
 				break;

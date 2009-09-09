@@ -36,6 +36,15 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #ifdef MONSTERS_USE_PATHFINDING
 
+class CNodeEntity : public CBaseEntity
+{
+public:
+	CNodeEntity () :
+	  CBaseEntity ()
+	  {
+	  };
+};
+
 void SpawnNodeEntity (CPathNode *Node);
 void CheckNodeFlags (CPathNode *Node);
 size_t GetNodeIndex (CPathNode *Node);
@@ -126,11 +135,10 @@ void CPath::RemoveFromOpen (CPathNode *Node)
 
 uint32 CPath::DistToGoal (CPathNode *Node)
 {
-	vec3_t sub;
-	Vec3Subtract (Node->Origin, End->Origin, sub);
-	return Vec3Length(sub);
+	return (Node->Origin - End->Origin).Length();
 }
-bool VecInFront (vec3_t angles, vec3_t origin1, vec3_t origin2);
+
+bool VecInFront (vec3f &angles, vec3f &origin1, vec3f &origin2);
 
 void CPath::CreatePath ()
 {
@@ -165,10 +173,8 @@ void CPath::CreatePath ()
 		}
 		for (size_t i = 0; i < n->Children.size(); i++)
 		{
-			vec3_t sub;
 			CPathNode *nl = n->Children[i];
-			Vec3Subtract (nl->Origin, n->Origin, sub);
-			uint32 newg = n->G + Vec3Length(sub);
+			uint32 newg = n->G + (nl->Origin - n->Origin).Length();
 			if (NodeIsOpen(nl))
 			{
 				if (nl->G <= newg)
@@ -262,12 +268,11 @@ void InitNodes ()
 	memset (SavedPaths, 0, sizeof(SavedPaths));
 }
 
-edict_t *PlayerNearby (vec3_t origin, int distance)
+edict_t *PlayerNearby (vec3f origin, int distance)
 {
 	CPlayerEntity *ent = NULL;
 
-	vec3f org = origin;
-	while ((ent = FindRadius <CPlayerEntity, ENT_PLAYER> (ent, org, distance)) != NULL)
+	while ((ent = FindRadius <CPlayerEntity, ENT_PLAYER> (ent, origin, distance)) != NULL)
 	{
 		if (ent->IsInUse())
 			return ent->gameEntity;
@@ -275,12 +280,11 @@ edict_t *PlayerNearby (vec3_t origin, int distance)
 	return NULL;
 }
 
-void PrintVerboseNodes (vec3_t origin, uint32 numNode)
+void PrintVerboseNodes (vec3f origin, uint32 numNode)
 {
 	CPlayerEntity *ent = NULL;
 
-	vec3f org = origin;
-	while ((ent = FindRadius <CPlayerEntity, ENT_PLAYER>(ent, org, 25)) != NULL)
+	while ((ent = FindRadius <CPlayerEntity, ENT_PLAYER>(ent, origin, 25)) != NULL)
 	{
 		if (ent->IsInUse())
 			ent->PrintToClient (PRINT_HIGH, "You are very close to node %i\n", numNode);
@@ -322,10 +326,10 @@ void SpawnNodeEntity (CPathNode *Node)
 	if (!DebugNodes->Integer())
 		return;
 
-	Node->Ent = G_Spawn();
-	Node->Ent->state.modelIndex = ModelIndex("models/objects/grenade2/tris.md2");
-	Vec3Copy (Node->Origin, Node->Ent->state.origin);
-	gi.linkentity(Node->Ent);
+	Node->Ent = new CNodeEntity;
+	Node->Ent->State.SetModelIndex (ModelIndex("models/objects/grenade2/tris.md2"));
+	Node->Ent->State.SetOrigin (Node->Origin);
+	Node->Ent->Link ();
 	CheckNodeFlags (Node);
 }
 
@@ -334,28 +338,28 @@ void CheckNodeFlags (CPathNode *Node)
 	if (!DebugNodes->Integer())
 		return;
 
-	Node->Ent->state.effects = 0;
-	Node->Ent->state.renderFx = 0;
+	Node->Ent->State.SetEffects (0);
+	Node->Ent->State.SetRenderEffects (0);
 
 	switch (Node->Type)
 	{
 	case NODE_DOOR:
-		Node->Ent->state.effects = EF_COLOR_SHELL;
-		Node->Ent->state.renderFx = RF_SHELL_RED;
+		Node->Ent->State.SetEffects (EF_COLOR_SHELL);
+		Node->Ent->State.SetRenderEffects (RF_SHELL_RED);
 		break;
 	case NODE_PLATFORM:
-		Node->Ent->state.effects = EF_COLOR_SHELL;
-		Node->Ent->state.renderFx = RF_SHELL_GREEN;
+		Node->Ent->State.SetEffects (EF_COLOR_SHELL);
+		Node->Ent->State.SetRenderEffects (RF_SHELL_GREEN);
 		break;
 	case NODE_JUMP:
-		Node->Ent->state.effects = EF_COLOR_SHELL;
-		Node->Ent->state.renderFx = RF_SHELL_BLUE;
+		Node->Ent->State.SetEffects (EF_COLOR_SHELL);
+		Node->Ent->State.SetRenderEffects (RF_SHELL_BLUE);
 		break;
 	}
 }
 
 void ConnectNode (CPathNode *Node1, CPathNode *Node2);
-void AddNode (CPlayerEntity *ent, vec3_t origin)
+void AddNode (CPlayerEntity *ent, vec3f origin)
 {
 	NodeList.push_back(QNew (com_levelPool, 0) CPathNode(origin, NODE_REGULAR));
 
@@ -429,7 +433,7 @@ void SaveNodes ()
 		{
 			if (NodeList[i]->LinkedEntity)
 			{
-				int modelNum = atoi(NodeList[i]->LinkedEntity->model+1);
+				int modelNum = atoi(NodeList[i]->LinkedEntity->gameEntity->model+1);
 				FS_Write (&modelNum, sizeof(int), f);
 			}
 		}
@@ -468,7 +472,7 @@ void LinkModelNumberToNode (CPathNode *Node, int modelNum)
 
 		if (strcmp(e->model, tempString) == 0)
 		{
-			Node->LinkedEntity = e;
+			Node->LinkedEntity = e->Entity;
 			return;
 		}
 	}
@@ -510,13 +514,13 @@ void LoadNodes ()
 	for (uint32 i = 0; i < lastId; i++)
 	{
 		ENodeType Type;
-		vec3_t Origin;
+		vec3f Origin;
 		if (version == 1)
 		{
 			uint32 nothing;
 			FS_Read (&nothing, sizeof(uint32), f);
 		}
-		FS_Read (Origin, sizeof(NodeList[i]->Origin), f);
+		FS_Read (&Origin, sizeof(NodeList[i]->Origin), f);
 		FS_Read (&Type, sizeof(NodeList[i]->Type), f);
 
 		NodeList.push_back(QNew (com_levelPool, 0) CPathNode(Origin, Type));
@@ -546,7 +550,7 @@ void LoadNodes ()
 			NodeList[i]->Children.push_back (NodeList[tempId]);
 		}*/
 		for (size_t s = 0; s < num; s++)
-			FS_Read (&tempChildren[i][s+1], sizeof(int), f);
+			FS_Read (&tempChildren[i][s+1], sizeof(uint32), f);
 	}
 	FS_CloseFile (f);
 
@@ -561,47 +565,41 @@ void LoadNodes ()
 	DebugPrintf ("Loaded %u (%u special) nodes\n", numNodes, numSpecialNodes);
 }
 
-bool VecInFront (vec3_t angles, vec3_t origin1, vec3_t origin2)
-{
-	vec3_t	vec;
-	float	dot;
-	vec3_t	forward;
-	
-	Angles_Vectors (angles, forward, NULL, NULL);
-	Vec3Subtract (origin1, origin2, vec);
-	VectorNormalizef (vec, vec);
-	dot = Dot3Product (vec, forward);
-	
-	if (dot > 0.3)
+bool VecInFront (vec3f &angles, vec3f &origin1, vec3f &origin2)
+{	
+	vec3f forward;
+	angles.ToVectors (&forward, NULL, NULL);
+	vec3f vec = origin1 - origin2;
+	vec.Normalize ();
+
+	if (vec.Dot (forward) > 0.3)
 		return true;
 	return false;
 }
 
-CPathNode *GetClosestNodeTo (vec3_t origin)
+CPathNode *GetClosestNodeTo (vec3f origin)
 {
 	CPathNode *Best = NULL;
 	float bestDist = 9999999;
-	vec3_t sub;
+	vec3f sub;
 
 	for (uint32 i = 0; i < NodeList.size(); i++)
 	{
 		CPathNode *Node = NodeList[i];
 
+		sub = Node->Origin - origin;
+		if (sub.Z > 64 || sub.Z < -64)
+			continue;
+
 		if (!Best)
 		{
-			Vec3Subtract (Node->Origin, origin, sub);
-			if (sub[2] > 64 || sub[2] < -64)
-				continue;
-			bestDist = Vec3Length(sub);
+			bestDist = sub.Length();
 			Best = Node;
 
 			continue;
 		}
-		Vec3Subtract (Node->Origin, origin, sub);
-		if (sub[2] > 64 || sub[2] < -64)
-			continue;
-		float temp = Vec3Length(sub);
-		
+
+		float temp = sub.Length();
 		if (temp < bestDist)
 		{
 			Best = Node;
@@ -613,8 +611,7 @@ CPathNode *GetClosestNodeTo (vec3_t origin)
 
 void Cmd_Node_f (CPlayerEntity *ent)
 {
-	vec3_t origin;
-	ent->State.GetOrigin(origin);
+	vec3f origin = ent->State.GetOrigin();
 	char *cmd = ArgGets(1);
 
 	if (Q_stricmp(cmd, "save") == 0)
@@ -647,7 +644,7 @@ void Cmd_Node_f (CPlayerEntity *ent)
 	else if (Q_stricmp(cmd, "clearstate") == 0)
 	{
 		for (uint32 i = 0; i < NodeList.size(); i++)
-			NodeList[i]->Ent->state.modelIndex = ModelIndex("models/objects/grenade2/tris.md2");
+			NodeList[i]->Ent->State.SetModelIndex (ModelIndex("models/objects/grenade2/tris.md2"));
 	}
 	else if (Q_stricmp(cmd, "settype") == 0)
 	{
@@ -673,39 +670,34 @@ void Cmd_Node_f (CPlayerEntity *ent)
 		CPathNode *Node = NodeList[ArgGeti(2)];
 
 		vec3f forward;
-		vec3_t end;
 		ent->Client.ViewAngle.ToVectors (&forward, NULL, NULL);
-		Vec3MA (origin, 8192, forward, end);
+		vec3f end = origin.MultiplyAngles (8192, forward);
 
 		CTrace trace = CTrace(origin, end, ent->gameEntity, CONTENTS_MASK_ALL);
 
 		if (trace.ent && trace.ent->model && trace.ent->model[0] == '*')
 		{
-			Node->LinkedEntity = trace.ent;
+			Node->LinkedEntity = trace.Ent;
 			DebugPrintf ("Linked %u with %s\n", GetNodeIndex(Node), trace.ent->classname);
 		}
 	}
 	else if (Q_stricmp(cmd, "monstergoal") == 0)
 	{
-		vec3_t end;
 		vec3f forward;
 		ent->Client.ViewAngle.ToVectors (&forward, NULL, NULL);
-		Vec3MA (origin, 8192, forward, end);
+		vec3f end = origin.MultiplyAngles (8192, forward);
 
 		CTrace trace = CTrace(origin, end, ent->gameEntity, CONTENTS_MASK_ALL);
 
-		if (trace.ent && trace.ent->Entity && (trace.ent->Entity->EntityFlags & ENT_MONSTER))
+		if (trace.Ent && (trace.Ent->EntityFlags & ENT_MONSTER))
 		{
+			CMonster *Monster = (dynamic_cast<CMonsterEntity*>(trace.Ent))->Monster;
 			if (Q_stricmp(ArgGets(2), "closest") == 0)
-			{
-				vec3_t origin;
-				(dynamic_cast<CMonsterEntity*>(trace.ent->Entity))->Monster->Entity->State.GetOrigin (origin);
-				(dynamic_cast<CMonsterEntity*>(trace.ent->Entity))->Monster->P_CurrentNode = GetClosestNodeTo(origin);
-			}
+				Monster->P_CurrentNode = GetClosestNodeTo(Monster->Entity->State.GetOrigin());
 			else
-				(dynamic_cast<CMonsterEntity*>(trace.ent->Entity))->Monster->P_CurrentNode = NodeList[ArgGeti(2)];
-			(dynamic_cast<CMonsterEntity*>(trace.ent->Entity))->Monster->P_CurrentGoalNode = NodeList[ArgGeti(3)];
-			(dynamic_cast<CMonsterEntity*>(trace.ent->Entity))->Monster->FoundPath ();
+				Monster->P_CurrentNode = NodeList[ArgGeti(2)];
+			Monster->P_CurrentGoalNode = NodeList[ArgGeti(3)];
+			Monster->FoundPath ();
 		}
 	}
 	else if (Q_stricmp(cmd, "kill") == 0)
@@ -732,7 +724,7 @@ void Cmd_Node_f (CPlayerEntity *ent)
 		}
 
 		// Delete node
-		G_FreeEdict(Node->Ent);
+		Node->Ent->Free ();
 		QDelete Node;
 		NodeList.erase(NodeList.begin() + node);
 	}
@@ -743,18 +735,11 @@ void Cmd_Node_f (CPlayerEntity *ent)
 
 		CPathNode *Node = NodeList[ArgGeti(2)];
 
-		float x = ArgGetf(3);
-		float y = ArgGetf(4);
-		float z = ArgGetf(5);
+		vec3f v (ArgGetf(3), ArgGetf(4), ArgGetf(5));
 
-		Node->Origin[0] += x;
-		Node->Origin[1] += y;
-		Node->Origin[2] += z;
-
-		Node->Ent->state.origin[0] += x;
-		Node->Ent->state.origin[1] += y;
-		Node->Ent->state.origin[2] += z;
-		gi.linkentity(Node->Ent);
+		Node->Origin += v;
+		Node->Ent->State.SetOrigin (Node->Ent->State.GetOrigin() + v);
+		Node->Ent->Link ();
 	}
 }
 

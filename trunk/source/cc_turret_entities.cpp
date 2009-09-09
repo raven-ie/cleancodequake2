@@ -138,7 +138,8 @@ public:
 
 	void Callback (CBaseEntity *Entity)
 	{
-		Entity->gameEntity->avelocity[1] = avelYaw;
+		if (Entity->EntityFlags & ENT_PHYSICS)
+			dynamic_cast<CPhysicsEntity*>(Entity)->AngularVelocity[1] = avelYaw;
 	};
 };
 
@@ -219,12 +220,13 @@ void CTurretBreach::Think ()
 		if (delta.Y < -1 * gameEntity->speed * 0.1f)
 			delta.Y = -1 * gameEntity->speed * 0.1f;
 
-		Vec3Scale (delta, 1, gameEntity->avelocity);
+		//Vec3Scale (delta, 1, gameEntity->avelocity);
+		AngularVelocity = delta;
 
 		NextThink = level.framenum + FRAMETIME;
 
 		CAvelocityForEachTeamChainCallback cb;
-		cb.avelYaw = gameEntity->avelocity[1];
+		cb.avelYaw = AngularVelocity.Y;
 		ForEachTeamChain (this, &cb);
 
 		// if we have adriver, adjust his velocities
@@ -237,8 +239,9 @@ void CTurretBreach::Think ()
 			vec3f	dir;
 
 			// angular is easy, just copy ours
-			gameEntity->owner->avelocity[0] = gameEntity->avelocity[0];
-			gameEntity->owner->avelocity[1] = gameEntity->avelocity[1];
+			CPhysicsEntity *Owned = dynamic_cast<CPhysicsEntity*>(GetOwner());
+			Owned->AngularVelocity.X = AngularVelocity.Z;
+			Owned->AngularVelocity.Y = AngularVelocity.Y;
 
 			// x & y
 			angle = State.GetAngles().Y + gameEntity->owner->move_origin[1];

@@ -709,7 +709,7 @@ public:
 		else if (gameEntity->velocity[2] > 500)
 			gameEntity->velocity[2] = 500;
 
-		gameEntity->avelocity[YAW] = crandom()*600;
+		AngularVelocity.Y = crandom()*600;
 
 		NextThink = level.framenum + 100 + random()*100;
 
@@ -1075,9 +1075,7 @@ public:
 		CanTakeDamage = true;
 		PhysicsType = PHYSICS_TOSS;
 		SetSvFlags (GetSvFlags() | SVF_MONSTER);
-		gameEntity->avelocity[0] = random()*200;
-		gameEntity->avelocity[1] = random()*200;
-		gameEntity->avelocity[2] = random()*200;
+		AngularVelocity.Set (random()*200, random()*200, random()*200);
 		NextThink = level.framenum + 300;
 		Link ();
 	};
@@ -1125,9 +1123,7 @@ public:
 		CanTakeDamage = true;
 		PhysicsType = PHYSICS_TOSS;
 		SetSvFlags (GetSvFlags() | SVF_MONSTER);
-		gameEntity->avelocity[0] = random()*200;
-		gameEntity->avelocity[1] = random()*200;
-		gameEntity->avelocity[2] = random()*200;
+		AngularVelocity.Set (random()*200, random()*200, random()*200);
 		NextThink = level.framenum + 300;
 		Link ();
 	};
@@ -1175,9 +1171,7 @@ public:
 		CanTakeDamage = true;
 		PhysicsType = PHYSICS_TOSS;
 		SetSvFlags (GetSvFlags() | SVF_MONSTER);
-		gameEntity->avelocity[0] = random()*200;
-		gameEntity->avelocity[1] = random()*200;
-		gameEntity->avelocity[2] = random()*200;
+		AngularVelocity.Set (random()*200, random()*200, random()*200);
 		NextThink = level.framenum + 300;
 		Link ();
 	};

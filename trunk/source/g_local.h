@@ -540,7 +540,6 @@ struct edict_s
 	vec3_t		pos1, pos2;
 
 	vec3_t		velocity;
-	vec3_t		avelocity;
 	int			mass;
 	float		gravity;		// per entity gravity multiplier (1.0 is normal)
 								// use for lowgrav artifact, flares
@@ -641,6 +640,7 @@ extern	CCvar	*flood_persecond;
 extern	CCvar	*flood_waitdelay;
 
 extern	CCvar	*sv_maplist;
+extern	CCvar	*map_debug;
 
 #ifdef CLEANCTF_ENABLED
 extern	CCvar	*capturelimit;

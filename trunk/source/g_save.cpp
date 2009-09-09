@@ -223,6 +223,7 @@ void G_Register ()
 
 	// dm map list
 	sv_maplist = QNew (com_gamePool, 0) CCvar ("sv_maplist", "", 0);
+	map_debug = QNew (com_gamePool, 0) CCvar ("map_debug", "0", CVAR_LATCH_SERVER);
 
 	SetupArg ();
 	Cmd_Register ();

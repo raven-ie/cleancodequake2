@@ -477,10 +477,10 @@ a deathmatch.
 */
 void CPlayerEntity::PutInServer ()
 {
-	vec3_t					mins = {-16, -16, -24};
-	vec3_t					maxs = {16, 16, 32};
+	vec3f					mins (-16, -16, -2);
+	vec3f					maxs (16, 16, 32);
 	int						index;
-	vec3_t					spawn_origin, spawn_angles;
+	vec3f					spawn_origin, spawn_angles;
 	int						i;
 	clientPersistent_t		saved;
 	clientRespawn_t			resp;
@@ -558,9 +558,9 @@ void CPlayerEntity::PutInServer ()
 	// clear playerstate values
 	Client.PlayerState.Clear ();
 
-	Client.PlayerState.GetPMove()->origin[0] = spawn_origin[0]*8;
-	Client.PlayerState.GetPMove()->origin[1] = spawn_origin[1]*8;
-	Client.PlayerState.GetPMove()->origin[2] = spawn_origin[2]*8;
+	Client.PlayerState.GetPMove()->origin[0] = spawn_origin.X*8;
+	Client.PlayerState.GetPMove()->origin[1] = spawn_origin.Y*8;
+	Client.PlayerState.GetPMove()->origin[2] = spawn_origin.Z*8;
 //ZOID
 	Client.PlayerState.GetPMove()->pmFlags &= ~PMF_NO_PREDICTION;
 //ZOID
@@ -590,9 +590,7 @@ void CPlayerEntity::PutInServer ()
 
 	State.SetFrame (0);
 
-	vec3f tempOrigin(spawn_origin);
-	tempOrigin[2] += 1; // make sure we're off-ground
-	State.SetOrigin (tempOrigin);
+	State.SetOrigin (spawn_origin + vec3f(0,0,1));
 	State.SetOldOrigin (State.GetOrigin());
 
 	// set the delta angle
@@ -853,9 +851,9 @@ float	bobfracsin;		// sin(bobfrac*M_PI)
 CalcRoll
 ===============
 */
-inline float CPlayerEntity::CalcRoll (vec3_t angles, vec3_t velocity, vec3_t right)
+inline float CPlayerEntity::CalcRoll (vec3f &velocity, vec3f &right)
 {
-	float	side = Q_fabs(Dot3Product (velocity, right));
+	float	side = Q_fabs(velocity.Dot (right));
 	float	sign = side < 0 ? -1 : 1;
 
 	if (side < sv_rollspeed->Float())
@@ -871,7 +869,7 @@ inline float CPlayerEntity::CalcRoll (vec3_t angles, vec3_t velocity, vec3_t rig
 DamageFeedback
 ===============
 */
-inline void CPlayerEntity::DamageFeedback (vec3_t forward, vec3_t right, vec3_t up)
+inline void CPlayerEntity::DamageFeedback (vec3f &forward, vec3f &right)
 {
 	static	const colorb	PowerColor = colorb(0, 255, 0, 0);
 	static	const colorb	ArmorColor = colorb(255, 255, 255, 0);
@@ -952,9 +950,6 @@ inline void CPlayerEntity::DamageFeedback (vec3_t forward, vec3_t right, vec3_t 
 	float kick = abs(Client.damage_knockback);
 	if (kick && (gameEntity->health > 0))	// kick of 0 means no view adjust at all
 	{
-		vec3f v;
-		float side;
-
 		kick *= 100 / gameEntity->health;
 
 		if (kick < count*0.5)
@@ -962,10 +957,10 @@ inline void CPlayerEntity::DamageFeedback (vec3_t forward, vec3_t right, vec3_t 
 		if (kick > 50)
 			kick = 50;
 
-		v = Client.DamageFrom - State.GetOrigin ();
+		vec3f v = Client.DamageFrom - State.GetOrigin ();
 		v.Normalize ();
 		
-		side = v.Dot (right);
+		float side = v.Dot (right);
 		Client.v_dmg_roll = kick*side*0.3;
 		
 		side = -v.Dot (forward);
@@ -977,10 +972,7 @@ inline void CPlayerEntity::DamageFeedback (vec3_t forward, vec3_t right, vec3_t 
 	//
 	// clear totals
 	//
-	Client.damage_blood = 0;
-	Client.damage_armor = 0;
-	Client.damage_parmor = 0;
-	Client.damage_knockback = 0;
+	Client.damage_blood = Client.damage_armor = Client.damage_parmor = Client.damage_knockback = 0;
 }
 
 /*
@@ -988,12 +980,11 @@ inline void CPlayerEntity::DamageFeedback (vec3_t forward, vec3_t right, vec3_t 
 SV_CalcViewOffset
 ===============
 */
-inline void CPlayerEntity::CalcViewOffset (vec3_t forward, vec3_t right, vec3_t up, float xyspeed)
+inline void CPlayerEntity::CalcViewOffset (vec3f &forward, vec3f &right, vec3f &up, float xyspeed)
 {
 	float		bob;
 	float		ratio;
 	vec3f		v (0, 0, 0);
-	vec3f		angles (0, 0, 0);
 
 	// if dead, fix the angle and don't add any kick
 	if (DeadFlag)
@@ -1004,7 +995,7 @@ inline void CPlayerEntity::CalcViewOffset (vec3_t forward, vec3_t right, vec3_t 
 	else
 	{
 		// Base angles
-		angles = Client.KickAngles;
+		vec3f angles = Client.KickAngles;
 
 		// add angles based on damage kick
 		ratio = (float)(Client.v_dmg_time - level.framenum) / DAMAGE_TIME;
@@ -1089,22 +1080,19 @@ inline void CPlayerEntity::CalcViewOffset (vec3_t forward, vec3_t right, vec3_t 
 SV_CalcGunOffset
 ==============
 */
-inline void CPlayerEntity::CalcGunOffset (vec3_t forward, vec3_t right, vec3_t up, float xyspeed)
+inline void CPlayerEntity::CalcGunOffset (vec3f &forward, vec3f &right, vec3f &up, float xyspeed)
 {
-	int		i;
-	float	delta;
-	vec3_t	angles, gunAngles;
-
 	// gun angles from bobbing
-	Client.PlayerState.GetGunAngles (gunAngles);
-	angles[ROLL] = (bobcycle & 1) ? (-gunAngles[ROLL]) : (xyspeed * bobfracsin * 0.005);
-	angles[YAW] = (bobcycle & 1) ? (-gunAngles[YAW]) : (xyspeed * bobfracsin * 0.01);
-	angles[PITCH] = xyspeed * bobfracsin * 0.005;
+	vec3f gunAngles = Client.PlayerState.GetGunAngles ();
+	vec3f angles	(	(bobcycle & 1) ? (-gunAngles[ROLL]) : (xyspeed * bobfracsin * 0.005), 
+						(bobcycle & 1) ? (-gunAngles[YAW]) : (xyspeed * bobfracsin * 0.01),
+						xyspeed * bobfracsin * 0.005
+					);
 
 	// gun angles from delta movement
-	for (i=0 ; i<3 ; i++)
+	for (int i = 0; i < 3; i++)
 	{
-		delta = Client.oldviewangles[i] - angles[i];
+		float delta = Client.oldviewangles[i] - angles[i];
 		if (delta > 180)
 			delta -= 360;
 		if (delta < -180)
@@ -1123,14 +1111,12 @@ inline void CPlayerEntity::CalcGunOffset (vec3_t forward, vec3_t right, vec3_t u
 
 	// gun height
 	Client.PlayerState.SetGunOffset (vec3Origin);
-//	ent->ps->gunorigin[2] += bob;
 
-	Vec3Clear (angles);
-
+	angles.Clear ();
 	// gun_x / gun_y / gun_z are development tools
-	for (i=0 ; i<3 ; i++)
+	for (int i = 0; i < 3; i++)
 	{
-		angles[i] += forward[i] *gun_y->Float();
+		angles[i] += forward[i] * gun_y->Float();
 		angles[i] += right[i] * gun_x->Float();
 		angles[i] += up[i] * -gun_z->Float();
 	}
@@ -1787,10 +1773,11 @@ void CPlayerEntity::EndServerFrame ()
 	// set model angles from view angles so other things in
 	// the world can tell which direction you are looking
 	//
+	vec3f vel = vec3f(gameEntity->velocity);
 	State.SetAngles (vec3f(
 		(Client.ViewAngle.X > 180) ? (-360 + Client.ViewAngle.X)/3 : Client.ViewAngle.X/3,
 		Client.ViewAngle.Y,
-		CalcRoll (gameEntity->state.angles, gameEntity->velocity, right)*4));
+		CalcRoll (vel, right)*4));
 
 	//
 	// calculate speed and cycle to be used for
@@ -1826,7 +1813,7 @@ void CPlayerEntity::EndServerFrame ()
 	FallingDamage ();
 
 	// apply all the damage taken this frame
-	DamageFeedback (forward, right, up);
+	DamageFeedback (forward, right);
 
 	// determine the view offsets
 	CalcViewOffset (forward, right, up, xyspeed);
@@ -2826,6 +2813,21 @@ void CPlayerEntity::TossClientWeapon ()
 	}
 }
 
+#ifdef USE_EXTENDED_GAME_IMPORTS
+edict_t	*pm_passent;
+
+// pmove doesn't need to know about passent and contentmask
+cmTrace_t	PM_trace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end)
+{
+_CC_DISABLE_DEPRECATION
+	if (pm_passent->health > 0)
+		return gi.trace(start, mins, maxs, end, pm_passent, CONTENTS_MASK_PLAYERSOLID);
+	else
+		return gi.trace(start, mins, maxs, end, pm_passent, CONTENTS_MASK_DEADSOLID);
+_CC_ENABLE_DEPRECATION
+}
+#endif
+
 void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 {
 #ifdef USE_EXTENDED_GAME_IMPORTS
@@ -3193,7 +3195,7 @@ SelectSpawnPoint
 Chooses a player start, deathmatch start, coop start, etc
 ============
 */
-void	CPlayerEntity::SelectSpawnPoint (vec3_t origin, vec3_t angles)
+void	CPlayerEntity::SelectSpawnPoint (vec3f &origin, vec3f &angles)
 {
 	CBaseEntity	*spot = NULL;
 
@@ -3234,9 +3236,8 @@ void	CPlayerEntity::SelectSpawnPoint (vec3_t origin, vec3_t angles)
 		}
 	}
 
-	spot->State.GetOrigin (origin);
-	origin[2] += 9;
-	spot->State.GetAngles (angles);
+	origin = spot->State.GetOrigin () + vec3f(0, 0, 9);
+	angles = spot->State.GetAngles ();
 }
 
 #ifdef CLEANCTF_ENABLED
@@ -3349,17 +3350,13 @@ void CPlayerEntity::TossHead (int damage)
 void ClientObituary (CPlayerEntity *self, edict_t *attacker);
 void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
-	Vec3Clear (gameEntity->avelocity);
-
 	CanTakeDamage = true;
 	TossPhysics = true;
 
 	State.SetModelIndex (0, 2);	// remove linked weapon model
 	State.SetModelIndex (0, 3);	// remove linked ctf flag
 
-	vec3_t oldAngles;
-	State.GetAngles (oldAngles);
-	State.SetAngles (vec3f(0, oldAngles[1], 0));
+	State.SetAngles (vec3f(0, State.GetAngles().Y, 0));
 
 	State.SetSound (0);
 	Client.weapon_sound = 0;
@@ -3375,7 +3372,7 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 		Client.respawn_time = level.framenum + 10;
 		LookAtKiller (inflictor->gameEntity, attacker->gameEntity);
 		Client.PlayerState.GetPMove()->pmType = PMT_DEAD;
-		ClientObituary (this, attacker->gameEntity);
+		Obituary (attacker);
 
 #ifdef CLEANCTF_ENABLED
 		if (attacker->EntityFlags & ENT_PLAYER)
@@ -3496,92 +3493,6 @@ void CPlayerEntity::PrintToClient (EGamePrintLevel printLevel, char *fmt, ...)
 
 void CPlayerEntity::UpdateChaseCam()
 {
-/*	vec3_t o, ownerv, goal;
-	vec3_t forward, right;
-	CTrace trace;
-	int i;
-	vec3_t oldgoal;
-	vec3_t angles;
-
-	// is our chase target gone?
-	if (!Client.chase_target->IsInUse()
-		|| Client.chase_target->Client.resp.spectator)
-	{
-		CPlayerEntity *old = Client.chase_target;
-		ChaseNext();
-		if (Client.chase_target == old)
-		{
-			Client.chase_target = NULL;
-			Client.PlayerState.GetPMove()->pmFlags &= ~PMF_NO_PREDICTION;
-			return;
-		}
-	}
-
-	CPlayerEntity *targ = Client.chase_target;
-
-	targ->State.GetOrigin (ownerv);
-	State.GetOrigin (oldgoal);
-
-	ownerv[2] += targ->gameEntity->viewheight;
-
-	Vec3Copy(targ->Client.ViewAngle, angles);
-	if (angles[PITCH] > 56)
-		angles[PITCH] = 56;
-	Angles_Vectors (angles, forward, right, NULL);
-	VectorNormalizef (forward, forward);
-	Vec3MA (ownerv, -30, forward, o);
-
-	vec3_t temp;
-	targ->State.GetOrigin (temp);
-	if (o[2] < temp[2] + 20)
-		o[2] = temp[2] + 20;
-
-	// jump animation lifts
-	if (!targ->GroundEntity)
-		o[2] += 16;
-
-	trace = CTrace (ownerv, vec3Origin, vec3Origin, o, targ->gameEntity, CONTENTS_MASK_SOLID);
-
-	Vec3Copy(trace.endPos, goal);
-
-	Vec3MA(goal, 2, forward, goal);
-
-	// pad for floors and ceilings
-	Vec3Copy(goal, o);
-	o[2] += 6;
-	trace = CTrace (goal, vec3Origin, vec3Origin, o, targ->gameEntity, CONTENTS_MASK_SOLID);
-	if (trace.fraction < 1)
-	{
-		Vec3Copy(trace.endPos, goal);
-		goal[2] -= 6;
-	}
-
-	Vec3Copy(goal, o);
-	o[2] -= 6;
-	trace = CTrace (goal, vec3Origin, vec3Origin, o, targ->gameEntity, CONTENTS_MASK_SOLID);
-	if (trace.fraction < 1)
-	{
-		Vec3Copy(trace.endPos, goal);
-		goal[2] += 6;
-	}
-
-	if (targ->DeadFlag)
-		Client.PlayerState.GetPMove()->pmType = PMT_DEAD;
-	else
-		Client.PlayerState.GetPMove()->pmType = PMT_FREEZE;
-
-	State.SetOrigin(goal);
-	for (i=0 ; i<3 ; i++)
-		Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(targ->Client.ViewAngle[i] - Client.resp.cmd_angles[i]);
-
-	if (targ->DeadFlag)
-		Client.PlayerState.SetViewAngles (vec3f(40, -15, targ->Client.killer_yaw));
-	else
-	{
-		Client.PlayerState.SetViewAngles(targ->Client.ViewAngle);
-		Client.ViewAngle = targ->Client.ViewAngle;
-	}*/
-
 	vec3f forward, right, oldgoal, angles, o, ownerv, goal;
 	CTrace trace;
 	CPlayerEntity *targ;
@@ -3857,7 +3768,7 @@ void CPlayerEntity::P_ProjectSource (vec3f distance, vec3f &forward, vec3f &righ
 	G_ProjectSource (State.GetOrigin(), distance, forward, right, result);
 }
 
-void CPlayerEntity::PlayerNoiseAt (vec3_t Where, int type)
+void CPlayerEntity::PlayerNoiseAt (vec3f Where, int type)
 {
 #ifndef MONSTERS_USE_PATHFINDING
 	edict_t		*noise;
@@ -3921,4 +3832,423 @@ void CPlayerEntity::PlayerNoiseAt (vec3_t Where, int type)
 	level.SoundEntityFramenum = level.framenum;
 	level.SoundEntity = this;
 #endif
+}
+
+void CPlayerEntity::BeginDeathmatch ()
+{
+	G_InitEdict (gameEntity);
+	InitResp();
+
+	// locate ent at a spawn point
+	PutInServer();
+
+	if (level.intermissiontime)
+		MoveToIntermission();
+	else
+		// send effect
+		CTempEnt::MuzzleFlash (State.GetOrigin (), State.GetNumber(), MZ_LOGIN);
+
+	BroadcastPrintf (PRINT_HIGH, "%s entered the game\n", Client.pers.netname);
+
+	// make sure all view stuff is valid
+	EndServerFrame();
+}
+
+void CPlayerEntity::Begin ()
+{
+	gameEntity->client = game.clients + (State.GetNumber()-1);
+
+	if (game.mode & GAME_DEATHMATCH)
+	{
+		BeginDeathmatch ();
+		return;
+	}
+
+	// if there is already a body waiting for us (a loadgame), just
+	// take it, otherwise spawn one from scratch
+	if (IsInUse())
+	{
+		// the client has cleared the client side viewangles upon
+		// connecting to the server, which is different than the
+		// state when the game is saved, so we need to compensate
+		// with deltaangles
+		vec3f viewAngles = Client.PlayerState.GetViewAngles();
+		for (int i=0 ; i<3 ; i++)
+			Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(viewAngles[i]);
+	}
+	else
+	{
+		// a spawn point will completely reinitialize the entity
+		// except for the persistant data that was initialized at
+		// ClientConnect() time
+		G_InitEdict (gameEntity);
+		gameEntity->classname = "player";
+		InitResp ();
+		PutInServer ();
+	}
+
+	if (level.intermissiontime)
+		MoveToIntermission ();
+	else
+	{
+		// send effect if in a multiplayer game
+		if (game.maxclients > 1)
+		{
+			CTempEnt::MuzzleFlash (State.GetOrigin(), State.GetNumber(), MZ_LOGIN);
+			BroadcastPrintf (PRINT_HIGH, "%s entered the game\n", Client.pers.netname);
+		}
+	}
+
+	// make sure all view stuff is valid
+	EndServerFrame ();
+}
+
+IPAddress CopyIP (const char *val)
+{
+	// Do we have a :?
+	std::string str (val);
+
+	size_t loc = str.find_first_of (':');
+
+	if (loc != std::string::npos)
+		str = str.substr(0, loc);
+
+	IPAddress Adr;
+	if (str.length() > sizeof(Adr.str))
+		assert (0);
+
+	Q_snprintfz (Adr.str, sizeof(Adr.str), "%s", str.c_str());
+
+	return Adr;
+}
+
+bool CPlayerEntity::Connect (char *userinfo)
+{
+	char	*value;
+
+	// check to see if they are on the banned IP list
+	value = Info_ValueForKey (userinfo, "ip");
+	IPAddress Adr;
+
+	Adr = CopyIP (value);
+	if (Bans.IsBanned(Adr) || Bans.IsBanned(Info_ValueForKey(userinfo, "name")))
+	{
+		Info_SetValueForKey(userinfo, "rejmsg", "Connection refused.");
+		return false;
+	}
+
+	// check for a spectator
+	value = Info_ValueForKey (userinfo, "spectator");
+	if ((game.mode & GAME_DEATHMATCH) && *value && strcmp(value, "0"))
+	{
+		int i, numspec;
+
+		if (Bans.IsBannedFromSpectator(Adr) || Bans.IsBannedFromSpectator(Info_ValueForKey(userinfo, "name")))
+		{
+			Info_SetValueForKey(userinfo, "rejmsg", "Not permitted to enter spectator mode");
+			return false;
+		}
+		if (*spectator_password->String() && 
+			strcmp(spectator_password->String(), "none") && 
+			strcmp(spectator_password->String(), value)) {
+			Info_SetValueForKey(userinfo, "rejmsg", "Spectator password required or incorrect.");
+			return false;
+		}
+
+		// count spectators
+		for (i = numspec = 0; i < game.maxclients; i++)
+		{
+			CPlayerEntity *Ent = dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity);
+			if (Ent->IsInUse() && Ent->Client.pers.spectator)
+				numspec++;
+		}
+
+		if (numspec >= game.maxspectators)
+		{
+			Info_SetValueForKey(userinfo, "rejmsg", "Server spectator limit is full.");
+			return false;
+		}
+	}
+	else
+	{
+		// check for a password
+		value = Info_ValueForKey (userinfo, "password");
+		if (*password->String() && strcmp(password->String(), "none") && 
+			strcmp(password->String(), value))
+		{
+			Info_SetValueForKey(userinfo, "rejmsg", "Password required or incorrect.");
+			return false;
+		}
+	}
+
+
+	// they can connect
+	gameEntity->client = game.clients + (State.GetNumber()-1);
+
+	// if there is already a body waiting for us (a loadgame), just
+	// take it, otherwise spawn one from scratch
+	if (!IsInUse())
+	{
+		// clear the respawning variables
+#ifdef CLEANCTF_ENABLED
+//ZOID -- force team join
+		Client.resp.ctf_team = -1;
+		Client.resp.id_state = false; 
+//ZOID
+#endif
+		InitResp ();
+		if (!game.autosaved || !Client.pers.Weapon)
+			InitPersistent();
+	}
+
+	UserinfoChanged (userinfo);
+	Client.pers.IP = Adr;
+
+	if (game.maxclients > 1)
+	{
+		// Tell the entire game that someone connected
+		BroadcastPrintf (PRINT_MEDIUM, "%s connected\n", Client.pers.netname);
+		
+		// But only tell the server the IP
+		DebugPrintf ("%s@%s connected\n", Client.pers.netname, Info_ValueForKey (userinfo, "ip"));
+	}
+
+	SetSvFlags (0); // make sure we start with known default
+	Client.pers.state = SVCS_CONNECTED;
+	return true;
+}
+
+void CPlayerEntity::Disconnect ()
+{
+	if (!gameEntity->client)
+		return;
+
+	Client.pers.state = SVCS_FREE;
+	BroadcastPrintf (PRINT_HIGH, "%s disconnected\n", Client.pers.netname);
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	if (game.mode & GAME_CTF)
+	{
+		CTFDeadDropFlag(this);
+		CTFDeadDropTech(this);
+	}
+//ZOID
+#endif
+
+	// send effect
+	CTempEnt::MuzzleFlash (State.GetOrigin(), State.GetNumber(), MZ_LOGIN);
+
+	Unlink ();
+	State.SetModelIndex (0);
+	SetSolid (SOLID_NOT);
+	SetInUse (false);
+	gameEntity->classname = "disconnected";
+
+	ConfigString (CS_PLAYERSKINS+(State.GetNumber()-1), "");
+}
+
+void CPlayerEntity::Obituary (CBaseEntity *attacker)
+{
+	char *message = "", *message2 = "";
+	if (attacker == this)
+	{
+		switch (meansOfDeath)
+		{
+		case MOD_HELD_GRENADE:
+			message = "tried to put the pin back in";
+			break;
+		case MOD_HG_SPLASH:
+		case MOD_G_SPLASH:
+			switch (Client.resp.Gender)
+			{
+			case GenderMale:
+				message = "tripped on his own grenade";
+				break;
+			case GenderFemale:
+				message = "tripped on her own grenade";
+				break;
+			default:
+				message = "tripped on its own grenade";
+				break;
+			}
+			break;
+		case MOD_R_SPLASH:
+			switch (Client.resp.Gender)
+			{
+			case GenderMale:
+				message = "blew himself up";
+				break;
+			case GenderFemale:
+				message = "blew herself up";
+				break;
+			default:
+				message = "blew itself up";
+				break;
+			}
+			break;
+		case MOD_BFG_BLAST:
+			message = "should have used a smaller gun";
+			break;
+		default:
+			switch (Client.resp.Gender)
+			{
+			case GenderMale:
+				message = "killed himself";
+				break;
+			case GenderFemale:
+				message = "killed herself";
+				break;
+			default:
+				message = "killed himself";
+				break;
+			}
+			break;
+		}
+		if (game.mode & GAME_DEATHMATCH)
+			Client.resp.score--;
+		BroadcastPrintf (PRINT_MEDIUM, "%s %s.\n", Client.pers.netname, message);
+	}
+	else if (attacker && (attacker->EntityFlags & ENT_PLAYER))
+	{
+		CPlayerEntity *Attacker = dynamic_cast<CPlayerEntity*>(attacker);
+		bool endsInS = (Attacker->Client.pers.netname[strlen(Attacker->Client.pers.netname)] == 's');
+		switch (meansOfDeath)
+		{
+		case MOD_BLASTER:
+			message = "was blasted by";
+			break;
+		case MOD_SHOTGUN:
+			message = "was gunned down by";
+			break;
+		case MOD_SSHOTGUN:
+			message = "was blown away by";
+			message2 = (endsInS) ? "' super shotgun" : "'s super shotgun";
+			break;
+		case MOD_MACHINEGUN:
+			message = "was machinegunned by";
+			break;
+		case MOD_CHAINGUN:
+			message = "was cut in half by";
+			message2 = (endsInS) ? "' chaingun" : "'s chaingun";
+			break;
+		case MOD_GRENADE:
+			message = "was popped by";
+			message2 = (endsInS) ? "' grenade" : "'s grenade";
+			break;
+		case MOD_G_SPLASH:
+			message = "was shredded by";
+			message2 = (endsInS) ? "' shrapnel" : "'s shrapnel";
+			break;
+		case MOD_ROCKET:
+			message = "ate";
+			message2 = (endsInS) ? "' rocket" : "'s rocket";
+			break;
+		case MOD_R_SPLASH:
+			message = "almost dodged";
+			message2 = (endsInS) ? "' rocket" : "'s rocket";
+			break;
+		case MOD_HYPERBLASTER:
+			message = "was melted by";
+			message2 = (endsInS) ? "' hyperblaster" : "'s hyperblaster";
+			break;
+		case MOD_RAILGUN:
+			message = "was railed by";
+			break;
+		case MOD_BFG_LASER:
+			message = "saw the pretty lights from";
+			message2 = (endsInS) ? "' BFG" : "'s BFG";
+			break;
+		case MOD_BFG_BLAST:
+			message = "was disintegrated by";
+			message2 = (endsInS) ? "' BFG blast" : "'s BFG blast";
+			break;
+		case MOD_BFG_EFFECT:
+			message = "couldn't hide from";
+			message2 = (endsInS) ? "' BFG" : "'s BFG";
+			break;
+		case MOD_HANDGRENADE:
+			message = "caught";
+			message2 = (endsInS) ? "' handgrenade" : "'s handgrenade";
+			break;
+		case MOD_HG_SPLASH:
+			message = "didn't see";
+			message2 = (endsInS) ? "' handgrenade" : "'s handgrenade";
+			break;
+		case MOD_HELD_GRENADE:
+			message = "feels";
+			message2 = (endsInS) ? "' pain" : "'s pain";
+			break;
+		case MOD_TELEFRAG:
+			message = "tried to invade";
+			message2 = (endsInS) ? "' personal space" : "'s personal space";
+			break;
+		case MOD_EXPLOSIVE:
+		case MOD_BARREL:
+			message = "was blown to smithereens by";
+			break;
+#ifdef CLEANCTF_ENABLED
+//ZOID
+		case MOD_GRAPPLE:
+			message = "was caught by";
+			message2 = "'s grapple";
+			break;
+//ZOID
+#endif
+		}
+		BroadcastPrintf (PRINT_MEDIUM,"%s %s %s%s\n", Client.pers.netname, message, Attacker->Client.pers.netname, message2);
+		if (game.mode & GAME_DEATHMATCH)
+			Attacker->Client.resp.score++;
+	}
+	else
+	{
+		switch (meansOfDeath)
+		{
+		case MOD_SUICIDE:
+			message = "suicides";
+			break;
+		case MOD_FALLING:
+			message = "cratered";
+			break;
+		case MOD_CRUSH:
+			message = "was squished";
+			break;
+		case MOD_WATER:
+			message = "sank like a rock";
+			break;
+		case MOD_SLIME:
+			message = "melted";
+			break;
+		case MOD_LAVA:
+			message = "does a back flip into the lava";
+			break;
+		case MOD_EXPLOSIVE:
+		case MOD_BARREL:
+			message = "blew up";
+			break;
+		case MOD_EXIT:
+			message = "found a way out";
+			break;
+		case MOD_TARGET_LASER:
+			message = "saw the light";
+			break;
+		case MOD_TARGET_BLASTER:
+			message = "got blasted";
+			break;
+		case MOD_BOMB:
+		case MOD_SPLASH:
+		case MOD_TRIGGER_HURT:
+			message = "was in the wrong place";
+			break;
+		default:
+			message = "died";
+			break;
+		}
+
+		if (game.mode & GAME_DEATHMATCH)
+			Client.resp.score--;
+		BroadcastPrintf (PRINT_MEDIUM, "%s %s.\n", Client.pers.netname, message);
+		if (game.mode & GAME_DEATHMATCH)
+			Client.resp.score--;
+	}
 }

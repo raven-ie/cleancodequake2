@@ -312,6 +312,12 @@ public:
 
 	void BeginServerFrame ();
 
+	void BeginDeathmatch ();
+	void Begin ();
+	bool Connect (char *userinfo);
+	void Disconnect ();
+	void Obituary (CBaseEntity *attacker);
+
 	void SpectatorRespawn ();
 	void Respawn ();
 	void PutInServer ();
@@ -321,10 +327,10 @@ public:
 	void FetchEntData ();
 
 	// EndServerFrame-related functions
-	inline float	CalcRoll (vec3_t angles, vec3_t forward, vec3_t right);
-	inline void		DamageFeedback (vec3_t forward, vec3_t right, vec3_t up);
-	inline void		CalcViewOffset (vec3_t forward, vec3_t right, vec3_t up, float xyspeed);
-	inline void		CalcGunOffset (vec3_t forward, vec3_t right, vec3_t up, float xyspeed);
+	inline float	CalcRoll (vec3f &forward, vec3f &right);
+	inline void		DamageFeedback (vec3f &forward, vec3f &right);
+	inline void		CalcViewOffset (vec3f &forward, vec3f &right, vec3f &up, float xyspeed);
+	inline void		CalcGunOffset (vec3f &forward, vec3f &right, vec3f &up, float xyspeed);
 	inline void		CalcBlend ();
 	inline void		FallingDamage ();
 	inline void		WorldEffects ();
@@ -360,7 +366,7 @@ public:
 
 	void			InitResp ();
 	static void		SaveClientData ();
-	void			SelectSpawnPoint (vec3_t origin, vec3_t angles);
+	void			SelectSpawnPoint (vec3f &origin, vec3f &angles);
 	CBaseEntity		*SelectCoopSpawnPoint ();
 #ifdef CLEANCTF_ENABLED
 
@@ -383,7 +389,7 @@ public:
 	void TossHead (int damage);
 
 	void P_ProjectSource (vec3f distance, vec3f &forward, vec3f &right, vec3f &result);
-	void PlayerNoiseAt (vec3_t Where, int type);
+	void PlayerNoiseAt (vec3f Where, int type);
 };
 
 #else

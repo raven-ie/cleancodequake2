@@ -152,7 +152,7 @@ void CBrushModel::MoveCalc (vec3_t dest, uint32 EndFunc)
 
 void CBrushModel::AngleMoveDone ()
 {
-	Vec3Clear (gameEntity->avelocity);
+	AngularVelocity.Clear ();
 	DoEndFunc ();
 }
 
@@ -171,7 +171,8 @@ void CBrushModel::AngleMoveFinal ()
 		return;
 	}
 
-	Vec3Scale (move, 1, gameEntity->avelocity);
+	//Vec3Scale (move, 1, gameEntity->avelocity);
+	AngularVelocity = move;
 
 	ThinkType = BRUSHTHINK_AMOVEDONE;
 	NextThink = level.framenum + FRAMETIME;
@@ -204,7 +205,9 @@ void CBrushModel::AngleMoveBegin ()
 	float frames = floor(traveltime / 0.1f);
 
 	// scale the destdelta vector by the time spent traveling to get velocity
-	Vec3Scale (destdelta, 1.0 / (traveltime * 10), gameEntity->avelocity);
+	//Vec3Scale (destdelta, 1.0 / (traveltime * 10), gameEntity->avelocity);
+	AngularVelocity = destdelta;
+	AngularVelocity.Scale (1.0 / (traveltime * 10));
 
 	// set nextthink to trigger a think when dest is reached
 	NextThink = level.framenum + frames;
@@ -213,7 +216,7 @@ void CBrushModel::AngleMoveBegin ()
 
 void CBrushModel::AngleMoveCalc (uint32 EndFunc)
 {
-	Vec3Clear (gameEntity->avelocity);
+	AngularVelocity.Clear ();
 	this->EndFunc = EndFunc;
 	if (level.CurrentEntity == ((Flags & FL_TEAMSLAVE) ? TeamMaster : this))
 		AngleMoveBegin ();
@@ -2228,11 +2231,11 @@ void CWorldEntity::Spawn ()
 	//---------------
 	SetItemNames();
 
-	CCvar *gravity = QNew (com_levelPool, 0) CCvar ("gravity", "800", 0);
+	CCvar gravity ("gravity", "800", 0);
 	if (!st.gravity)
-		gravity->Set("800");
+		gravity.Set("800");
 	else
-		gravity->Set(st.gravity);
+		gravity.Set(st.gravity);
 
 	SoundIndex ("player/lava1.wav");
 	SoundIndex ("player/lava2.wav");
@@ -2324,22 +2327,24 @@ void CRotatingBrush::Blocked (CBaseEntity *other)
 
 void CRotatingBrush::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 {
-	if ((gameEntity->avelocity[0] || gameEntity->avelocity[1] || gameEntity->avelocity[2]) && ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage))
+	if ((AngularVelocity != vec3fOrigin) && ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage))
 		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, gameEntity->dmg, 1, 0, MOD_CRUSH);
 }
 
 void CRotatingBrush::Use (CBaseEntity *other, CBaseEntity *activator)
 {
-	if (!Vec3Compare (gameEntity->avelocity, vec3Origin))
+	if (AngularVelocity != vec3fOrigin)
 	{
 		State.SetSound (0);
-		Vec3Clear (gameEntity->avelocity);
+		AngularVelocity.Clear();
 		Touchable = false;
 	}
 	else
 	{
 		State.SetSound (SoundMiddle);
-		Vec3Scale (gameEntity->movedir, gameEntity->speed, gameEntity->avelocity);
+		AngularVelocity = gameEntity->movedir;
+		AngularVelocity.Scale (gameEntity->speed);
+		//Vec3Scale (gameEntity->movedir, gameEntity->speed, gameEntity->avelocity);
 		if (gameEntity->spawnflags & 16)
 			Touchable = true;
 	}

@@ -254,10 +254,8 @@ void CGibEntity::Spawn (CBaseEntity *Owner, MediaIndex gibIndex, int damage, int
 	Junk->gameEntity->velocity[1] = velocity.Y;
 	Junk->gameEntity->velocity[2] = velocity.Z;
 	ClipGibVelocity (Junk);
-	Junk->gameEntity->avelocity[0] = random()*600;
-	Junk->gameEntity->avelocity[1] = random()*600;
-	Junk->gameEntity->avelocity[2] = random()*600;
 
+	Junk->AngularVelocity.Set (crandom()*600, crandom()*600, crandom()*600);
 	Junk->NextThink = level.framenum + 100 + random()*100;
 
 	Junk->Link ();
