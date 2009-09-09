@@ -37,7 +37,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #ifdef MONSTERS_USE_PATHFINDING
 
-bool VecInFront (vec3_t angles, vec3_t origin1, vec3_t origin2);
+bool VecInFront (vec3f &angles, vec3f &origin1, vec3f &origin2);
 int rangevector (vec3_t self, vec3_t other);
 
 void CMonster::FoundPath ()
@@ -65,12 +65,9 @@ void CMonster::FoundPath ()
 
 	// If our first node is behind us and it's not too far away, we can
 	// just skip this node and go to the next one.	
-	vec3_t angles, origin;
-	Entity->State.GetAngles (angles);
-	Entity->State.GetOrigin (origin);
-
 	// Revision: Only do this if we have > 2 nodes (it messes up if we have exactly 2)
-	if (VecInFront(angles, origin, P_CurrentPath->Path[P_CurrentNodeIndex]->Origin) && P_CurrentPath->Path.size() > 2)
+	vec3f a = Entity->State.GetAngles(), origin = Entity->State.GetOrigin();
+	if (VecInFront(a, origin, P_CurrentPath->Path[P_CurrentNodeIndex]->Origin) && P_CurrentPath->Path.size() > 2)
 		P_CurrentNodeIndex--;
 
 	P_CurrentNode = P_CurrentPath->Path[P_CurrentNodeIndex];
@@ -138,14 +135,14 @@ void CMonster::MoveToPath (float Dist)
 			{
 			case NODE_DOOR:
 					{
-						CDoor *Door = dynamic_cast<CDoor*>(P_CurrentNode->LinkedEntity->Entity); // get the plat
+						CDoor *Door = dynamic_cast<CDoor*>(P_CurrentNode->LinkedEntity); // get the plat
 						Door->Use (Entity, Entity);
 					}
 					Stand (); // We stand, and wait.
 				break;
 			case NODE_PLATFORM:
 				{
-					CPlatForm *Plat = dynamic_cast<CPlatForm*>(P_CurrentNode->LinkedEntity->Entity); // get the plat
+					CPlatForm *Plat = dynamic_cast<CPlatForm*>(P_CurrentNode->LinkedEntity); // get the plat
 					// If we reached the node, but the platform isn't down, go back two nodes
 					if (Plat->MoveState != STATE_BOTTOM)
 					{
@@ -177,7 +174,7 @@ void CMonster::MoveToPath (float Dist)
 				// In two goals, do we reach the platform node?
 				if (P_CurrentPath->Path[P_CurrentNodeIndex-1]->Type == NODE_PLATFORM)
 				{
-					CPlatForm *Plat = dynamic_cast<CPlatForm*>(P_CurrentPath->Path[P_CurrentNodeIndex-1]->LinkedEntity->Entity); // get the plat
+					CPlatForm *Plat = dynamic_cast<CPlatForm*>(P_CurrentPath->Path[P_CurrentNodeIndex-1]->LinkedEntity); // get the plat
 					// Is it at bottom?
 					if (Plat->MoveState != STATE_BOTTOM)
 						Stand (); // We wait till it comes down
@@ -595,7 +592,7 @@ void CMonsterEntity::ThrowHead (MediaIndex gibIndex, int damage, int type)
 	else if (gameEntity->velocity[2] > 500)
 		gameEntity->velocity[2] = 500;
 
-	gameEntity->avelocity[YAW] = crandom()*600;
+	AngularVelocity.Y = crandom()*600;
 
 	NextThink = level.framenum + 100 + random()*100;
 
@@ -1224,8 +1221,19 @@ void CMonster::MonsterStartGo ()
 		Stand ();
 	}
 
-	Think = &CMonster::MonsterThink;
-	Entity->NextThink = level.framenum + FRAMETIME;
+	// are we in debug mode?
+	if (map_debug->Integer())
+	{
+		Think = NULL; // Don't think
+		
+		// Make us non-solid
+		Entity->SetSolid (SOLID_NOT);
+	}
+	else
+	{
+		Think = &CMonster::MonsterThink;
+		Entity->NextThink = level.framenum + FRAMETIME;
+	}
 }
 
 void CMonster::MonsterStart ()
@@ -1282,7 +1290,11 @@ void CMonster::MonsterTriggeredStart ()
 {
 	Entity->SetSolid (SOLID_NOT);
 	Entity->PhysicsDisabled = true;
-	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_NOCLIENT);
+
+	if (!map_debug->Integer())
+		Entity->SetSvFlags (Entity->GetSvFlags() | SVF_NOCLIENT);
+	else
+		Entity->State.SetEffects (EF_SPHERETRANS);
 	Entity->NextThink = 0;
 	Think = NULL;
 	Entity->UseState = MONSTERENTITY_THINK_TRIGGEREDSPAWNUSE;
@@ -2821,14 +2833,14 @@ void CMonster::AI_Stand (float Dist)
 		// Assuming we got here because we're waiting for something.
 		if (P_CurrentNode->Type == NODE_DOOR || P_CurrentNode->Type == NODE_PLATFORM)
 		{
-			CBrushModel *Door = dynamic_cast<CBrushModel*>(P_CurrentNode->LinkedEntity->Entity);
+			CBrushModel *Door = dynamic_cast<CBrushModel*>(P_CurrentNode->LinkedEntity);
 			if (Door->MoveState == STATE_TOP)
 				Run(); // We can go again!
 		}
 		// In two goals, do we reach the platform node?
 		else if (P_CurrentPath->Path[P_CurrentNodeIndex-1]->Type == NODE_PLATFORM)
 		{
-			CPlatForm *Plat = dynamic_cast<CPlatForm*>(P_CurrentPath->Path[P_CurrentNodeIndex-1]->LinkedEntity->Entity); // get the plat
+			CPlatForm *Plat = dynamic_cast<CPlatForm*>(P_CurrentPath->Path[P_CurrentNodeIndex-1]->LinkedEntity); // get the plat
 			// Is it at bottom?
 			if (Plat->MoveState == STATE_BOTTOM)
 				Run (); // Go!

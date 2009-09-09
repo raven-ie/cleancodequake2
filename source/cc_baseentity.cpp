@@ -518,6 +518,7 @@ void			CBaseEntity::Free ()
 {
 	Unlink ();
 
+	DebugPrintf ("Freed %s\n", gameEntity->classname);
 	memset (gameEntity, 0, sizeof(*gameEntity));
 	gameEntity->Entity = this;
 	gameEntity->classname = "freed";

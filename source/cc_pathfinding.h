@@ -51,19 +51,19 @@ class CPathNode
 {
 public:
 	ENodeType					Type; // Type of node
-	vec3_t						Origin; // Node's location
-	edict_t						*Ent; // Node entity
+	vec3f						Origin; // Node's location
+	CBaseEntity					*Ent; // Node entity
 
 	std::vector<CPathNode*>		Children;	// Children (connected nodes, basically)
-	edict_t						*LinkedEntity;
+	CBaseEntity					*LinkedEntity;
 	// Testing 2
 	uint32						G, F, H;
 	CPathNode					*Parent;
 
-	CPathNode (vec3_t Origin, ENodeType Type) :
+	CPathNode (vec3f Origin, ENodeType Type) :
+	Origin(Origin),
 	Type(Type)
 	{
-		Vec3Copy (Origin, this->Origin);
 	};
 
 	void AddChild (CPathNode *Node)
@@ -73,9 +73,7 @@ public:
 
 	inline uint32 GetNodeWeight (CPathNode *NodeTwo)
 	{
-		vec3_t temp;
-		Vec3Subtract (Origin, NodeTwo->Origin, temp);
-		return (uint32)Vec3Length(temp);
+		return (uint32)(Origin - NodeTwo->Origin).Length();
 	};
 };
 
@@ -113,7 +111,7 @@ public:
 
 void InitNodes ();
 void RunNodes ();
-CPathNode *GetClosestNodeTo (vec3_t origin);
+CPathNode *GetClosestNodeTo (vec3f origin);
 
 CPath *GetPath (CPathNode *Start, CPathNode *End);
 

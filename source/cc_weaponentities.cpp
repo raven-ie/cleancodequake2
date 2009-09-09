@@ -189,7 +189,7 @@ void CGrenade::Spawn (CBaseEntity *Spawner, vec3f start, vec3f aimdir, int damag
 	Grenade->gameEntity->velocity[1] = velocity.Y;
 	Grenade->gameEntity->velocity[2] = velocity.Z;
 
-	Vec3Set (Grenade->gameEntity->avelocity, 300, 300, 300);
+	Vec3Set (Grenade->AngularVelocity, 300, 300, 300);
 	Grenade->State.SetEffects (EF_GRENADE);
 	Grenade->State.SetModelIndex((!handNade) ? ModelIndex ("models/objects/grenade/tris.md2") : ModelIndex ("models/objects/grenade2/tris.md2"));
 	Grenade->SetOwner(Spawner);

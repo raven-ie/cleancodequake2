@@ -72,6 +72,8 @@ CCvar	*flood_waitdelay;
 
 CCvar	*sv_maplist;
 
+CCvar	*map_debug;
+
 #ifdef CLEANCTF_ENABLED
 //ZOID
 CCvar	*capturelimit;
@@ -80,11 +82,6 @@ CCvar	*instantweap;
 #endif
 
 void SpawnEntities (char *mapname, char *entities, char *spawnpoint);
-void ClientThink (edict_t *ent, userCmd_t *cmd);
-BOOL ClientConnect (edict_t *ent, char *userinfo);
-void ClientUserinfoChanged (edict_t *ent, char *userinfo);
-void ClientDisconnect (edict_t *ent);
-void ClientBegin (edict_t *ent);
 void RunEntity (edict_t *ent);
 void WriteGame (char *filename, BOOL autosave);
 void ReadGame (char *filename);
@@ -130,6 +127,115 @@ __except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
 
 
 #ifndef _FRONTEND
+
+/*
+===========
+ClientBegin
+
+called when a client has finished connecting, and is ready
+to be placed into the game.  This will happen every level load.
+============
+*/
+void ClientBegin (edict_t *ent)
+{
+#ifdef CC_USE_EXCEPTION_HANDLER
+__try
+{
+#endif
+	dynamic_cast<CPlayerEntity*>(ent->Entity)->Begin ();
+#ifdef CC_USE_EXCEPTION_HANDLER
+}
+__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
+{
+	return;
+}
+#endif
+}
+
+/*
+===========
+ClientUserInfoChanged
+
+called whenever the player updates a userinfo variable.
+
+The game can override any of the settings in place
+(forcing skins or names, etc) before copying it off.
+============
+*/
+void ClientUserinfoChanged (edict_t *ent, char *userinfo)
+{
+#ifdef CC_USE_EXCEPTION_HANDLER
+__try
+{
+#endif
+	(dynamic_cast<CPlayerEntity*>(ent->Entity))->UserinfoChanged (userinfo);
+#ifdef CC_USE_EXCEPTION_HANDLER
+}
+__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
+{
+	return;
+}
+#endif
+}
+
+
+/*
+===========
+ClientConnect
+
+Called when a player begins connecting to the server.
+The game can refuse entrance to a client by returning false.
+If the client is allowed, the connection process will continue
+and eventually get to ClientBegin()
+Changing levels will NOT cause this to be called again, but
+loadgames will.
+============
+*/
+BOOL ClientConnect (edict_t *ent, char *userinfo)
+{
+#ifdef CC_USE_EXCEPTION_HANDLER
+__try
+{
+#endif
+	return (dynamic_cast<CPlayerEntity*>(ent->Entity)->Connect(userinfo)) ? 1 : 0;
+#ifdef CC_USE_EXCEPTION_HANDLER
+}
+__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
+{
+	return true;
+}
+#endif
+}
+
+/*
+===========
+ClientDisconnect
+
+Called when a player drops from the server.
+Will not be called between levels.
+============
+*/
+void ClientDisconnect (edict_t *ent)
+{
+	dynamic_cast<CPlayerEntity*>(ent->Entity)->Disconnect();
+}
+
+
+//==============================================================
+
+/*
+==============
+ClientThink
+
+This will be called once for each client frame, which will
+usually be a couple times for each server frame.
+==============
+*/
+void ClientThink (edict_t *ent, userCmd_t *ucmd)
+{
+	(dynamic_cast<CPlayerEntity*>(ent->Entity))->ClientThink (ucmd);
+}
+
 /*
 =================
 GetGameAPI

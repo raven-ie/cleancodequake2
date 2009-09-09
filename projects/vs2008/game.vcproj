@@ -1950,10 +1950,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\source\p_client.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\..\..\source\p_hud.cpp"
 					>
 				</File>
