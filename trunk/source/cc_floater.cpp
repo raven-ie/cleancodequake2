@@ -471,7 +471,7 @@ void CFloater::Wham ()
 {
 	static	vec3_t	aim = {MELEE_DISTANCE, 0, 0};
 	Entity->PlaySound (CHAN_WEAPON, SoundAttack3);
-	CMeleeWeapon::Fire (Entity, aim, 5 + rand() % 6, -50);
+	CMeleeWeapon::Fire (Entity, aim, 5 + randomMT() % 6, -50);
 }
 
 void CFloater::Zap ()
@@ -487,7 +487,7 @@ void CFloater::Zap ()
 	CTempEnt_Splashes::Splash (origin, vec3Origin, CTempEnt_Splashes::SPTSparks, 32);
 
 	if (Entity->gameEntity->enemy && (Entity->gameEntity->enemy->Entity->EntityFlags & ENT_HURTABLE))
-		dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->TakeDamage (Entity, Entity, vec3fOrigin, Entity->gameEntity->enemy->Entity->State.GetOrigin(), vec3fOrigin, 5 + rand() % 6, -10, DAMAGE_ENERGY, MOD_UNKNOWN);
+		dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->TakeDamage (Entity, Entity, vec3fOrigin, Entity->gameEntity->enemy->Entity->State.GetOrigin(), vec3fOrigin, 5 + randomMT() % 6, -10, DAMAGE_ENERGY, MOD_UNKNOWN);
 }
 
 void CFloater::Attack()

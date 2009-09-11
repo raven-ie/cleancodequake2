@@ -304,7 +304,6 @@ __try
 	CPlayerEntity::SaveClientData ();
 
 	Mem_FreePool (com_levelPool);
-	Mem_FreePool (com_genericPool);
 	gEntString = Mem_PoolStrDup(entities, com_levelPool, 0);
 
 	entities = CC_ParseSpawnEntities (mapname, entities);
@@ -387,6 +386,9 @@ __try
 		}
 
 		ED_CallSpawn (ent);
+
+		if (!ent->inUse)
+			inhibit++;
 	}
 
 	DebugPrintf ("%i entities removed\n", inhibit);

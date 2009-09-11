@@ -724,7 +724,7 @@ void CSuperTank::Explode ()
 
 	Think = ConvertDerivedFunction(&CSuperTank::Explode);
 	Entity->State.GetOrigin(org);
-	org[2] += 24 + (rand()&15);
+	org[2] += 24 + (randomMT()&15);
 	switch (Entity->gameEntity->count++)
 	{
 	case 0:

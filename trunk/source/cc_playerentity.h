@@ -347,13 +347,13 @@ public:
 	void			CTFScoreboardMessage (bool reliable);
 	void			CTFAssignGhost ();
 
-	int				CTFApplyStrength(int dmg);
+	//int				CTFApplyStrength(int dmg);
 	bool			CTFApplyStrengthSound();
 	bool			CTFApplyHaste();
 	void			CTFApplyHasteSound();
-	void			CTFApplyRegeneration();
+	//void			CTFApplyRegeneration();
 	bool			CTFHasRegeneration();
-	int				CTFApplyResistance (int dmg);
+	//int				CTFApplyResistance (int dmg);
 #endif
 
 	void			TossClientWeapon ();

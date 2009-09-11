@@ -68,10 +68,10 @@ namespace NItems
 	#ifdef CLEANCTF_ENABLED
 	CWeaponItem	*Grapple;
 
-	CTech *Regeneration;
-	CTech *Haste;
-	CTech *Strength;
-	CTech *Resistance;
+	//CTech *Regeneration;
+	//CTech *Haste;
+	//CTech *Strength;
+	//CTech *Resistance;
 
 	CFlag *RedFlag;
 	CFlag *BlueFlag;

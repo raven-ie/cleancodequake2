@@ -81,7 +81,7 @@ void CBody::Pain (CBaseEntity *other, float kick, int damage)
 void VelocityForDamage (int damage, vec3f &v);
 void CBody::TossHead (int damage)
 {
-	if (rand()&1)
+	if (randomMT()&1)
 	{
 		State.SetModelIndex (gMedia.Gib_Head[1]);
 		State.SetSkinNum (1);		// second skin is player

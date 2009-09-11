@@ -79,8 +79,7 @@ void CBlaster::Fire (CPlayerEntity *ent)
 	ent->Client.ViewAngle.ToVectors (&Forward, &Right, NULL);
 	ent->P_ProjectSource (Offset, Forward, Right, Start);
 
-	ent->Client.KickOrigin = Forward;
-	ent->Client.KickOrigin.Scale (-2);
+	ent->Client.KickOrigin = Forward * -2;
 	ent->Client.KickAngles.X = -1;
 
 	CBlasterProjectile::Spawn (ent, Start, Forward, Damage, 1000, EF_BLASTER, false);

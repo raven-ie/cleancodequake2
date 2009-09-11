@@ -206,8 +206,7 @@ void CBrushModel::AngleMoveBegin ()
 
 	// scale the destdelta vector by the time spent traveling to get velocity
 	//Vec3Scale (destdelta, 1.0 / (traveltime * 10), gameEntity->avelocity);
-	AngularVelocity = destdelta;
-	AngularVelocity.Scale (1.0 / (traveltime * 10));
+	AngularVelocity = vec3f(destdelta) * 1.0 / (traveltime * 10);
 
 	// set nextthink to trigger a think when dest is reached
 	NextThink = level.framenum + frames;
@@ -2164,9 +2163,6 @@ void CWorldEntity::Spawn ()
 	World = this;
 	ClearList(); // Do this before ANYTHING
 
-	// Seed the random number generator
-	seedMT ((uint32)time(NULL));
-
 	PhysicsType = PHYSICS_PUSH;
 	SetSolid (SOLID_BSP);
 	SetInUse (true);			// since the world doesn't use G_Spawn()
@@ -2342,8 +2338,7 @@ void CRotatingBrush::Use (CBaseEntity *other, CBaseEntity *activator)
 	else
 	{
 		State.SetSound (SoundMiddle);
-		AngularVelocity = gameEntity->movedir;
-		AngularVelocity.Scale (gameEntity->speed);
+		AngularVelocity = vec3f(gameEntity->movedir) * gameEntity->speed;
 		//Vec3Scale (gameEntity->movedir, gameEntity->speed, gameEntity->avelocity);
 		if (gameEntity->spawnflags & 16)
 			Touchable = true;
@@ -2752,8 +2747,7 @@ void CFuncExplosive::Pain (CBaseEntity *other, float kick, int damage)
 void CFuncExplosive::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 	// bmodel origins are (0 0 0), we need to adjust that here
-	vec3f size = vec3f(gameEntity->size);
-	size.Scale (0.5f);
+	vec3f size = GetSize() * 0.5f;
 	vec3f origin = GetAbsMin() + size;
 	State.SetOrigin (origin);
 
@@ -2764,11 +2758,11 @@ void CFuncExplosive::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dam
 
 	vec3f velocity = State.GetOrigin() - inflictor->State.GetOrigin();
 	velocity.Normalize ();
-	velocity.Scale (150);
+	velocity *= 150;
 	Vec3Copy (velocity, gameEntity->velocity);
 
 	// start chunks towards the center
-	size.Scale (0.5f);
+	size *= 0.5f;
 
 	float mass = gameEntity->mass;
 	if (!mass)

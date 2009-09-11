@@ -898,7 +898,7 @@ inline void CPlayerEntity::DamageFeedback (vec3f &forward, vec3f &right)
 		}
 		else
 		{
-			switch (rand()%3)
+			switch (randomMT()%3)
 			{
 			case 0:
 				State.SetFrame (FRAME_pain101-1);
@@ -926,7 +926,7 @@ inline void CPlayerEntity::DamageFeedback (vec3f &forward, vec3f &right)
 		gameEntity->pain_debounce_time = level.framenum + 7;
 
 		int l = Clamp<int>(((floorf((Max<>(0, gameEntity->health-1)) / 25))), 0, 3);
-		PlaySound (CHAN_VOICE, gMedia.Player.Pain[l][(rand()&1)]);
+		PlaySound (CHAN_VOICE, gMedia.Player.Pain[l][(randomMT()&1)]);
 	}
 
 	// the total alpha of the blend is always proportional to count
@@ -1449,7 +1449,7 @@ inline void CPlayerEntity::WorldEffects ()
 				if (gameEntity->health <= gameEntity->dmg)
 					PlaySound (CHAN_VOICE, SoundIndex("player/drown1.wav"));
 				else
-					PlaySound (CHAN_VOICE, gMedia.Player.Gurp[(rand()&1)]);
+					PlaySound (CHAN_VOICE, gMedia.Player.Gurp[(randomMT()&1)]);
 
 				gameEntity->pain_debounce_time = level.framenum;
 
@@ -1474,7 +1474,7 @@ inline void CPlayerEntity::WorldEffects ()
 				&& gameEntity->pain_debounce_time <= level.framenum
 				&& Client.invincible_framenum < level.framenum)
 			{
-				PlaySound (CHAN_VOICE, SoundIndex((rand()&1) ? "player/burn1.wav" : "player/burn2.wav"));
+				PlaySound (CHAN_VOICE, SoundIndex((randomMT()&1) ? "player/burn1.wav" : "player/burn2.wav"));
 				gameEntity->pain_debounce_time = level.framenum + 10;
 			}
 
@@ -1876,8 +1876,8 @@ void CPlayerEntity::EndServerFrame ()
 #ifdef CLEANCTF_ENABLED
 //ZOID
 //regen tech
-	if (game.mode & GAME_CTF)
-		CTFApplyRegeneration();
+	if (game.mode & GAME_CTF && (Client.pers.Tech && (Client.pers.Tech->TechType == CTech::TechPassive)))
+		Client.pers.Tech->DoPassiveTech (this);
 //ZOID
 #endif
 
@@ -2513,8 +2513,8 @@ void CPlayerEntity::CTFSetIDView()
 	vec3f forward, oldForward;
 	Client.ViewAngle.ToVectors(&forward, NULL, NULL);
 	oldForward = forward;
-	forward.Scale (1024);
-	forward += State.GetOrigin();
+	forward = (forward * 1024) + State.GetOrigin();
+
 	CTrace tr (State.GetOrigin(), forward, gameEntity, CONTENTS_MASK_SOLID);
 	if (tr.fraction < 1 && tr.ent && ((tr.ent - g_edicts) >= 1 && (tr.ent - g_edicts) <= game.maxclients))
 	{
@@ -2558,7 +2558,7 @@ void CPlayerEntity::CTFAssignGhost()
 	ctfgame.ghosts[ghost].score = 0;
 	for (;;)
 	{
-		ctfgame.ghosts[ghost].code = 10000 + (rand() % 90000);
+		ctfgame.ghosts[ghost].code = 10000 + (randomMT() % 90000);
 		for (i = 0; i < MAX_CS_CLIENTS; i++)
 		{
 			if (i != ghost && ctfgame.ghosts[i].code == ctfgame.ghosts[ghost].code)
@@ -2621,29 +2621,21 @@ void CPlayerEntity::MoveToIntermission ()
 
 #ifdef CLEANCTF_ENABLED
 
-int CPlayerEntity::CTFApplyStrength(int dmg)
+/*int CPlayerEntity::CTFApplyStrength(int dmg)
 {
 	if (dmg && (Client.pers.Tech == NItems::Strength))
 		return dmg * 2;
 	return dmg;
-}
+}*/
 
 bool CPlayerEntity::CTFApplyStrengthSound()
 {
-	float volume = 1.0;
-
-	if (Client.silencer_shots)
-		volume = 0.2f;
-
-	if (Client.pers.Tech == NItems::Strength)
+	if (Client.pers.Tech && (Client.pers.Tech->GetTechNumber() == CTFTECH_STRENGTH_NUMBER))
 	{
 		if (Client.ctf_techsndtime < level.framenum)
 		{
 			Client.ctf_techsndtime = level.framenum + 10;
-			if (Client.quad_framenum > level.framenum)
-				PlaySound (CHAN_ITEM, SoundIndex("ctf/tech2x.wav"), volume);
-			else
-				PlaySound (CHAN_ITEM, SoundIndex("ctf/tech2.wav"), volume);
+			PlaySound (CHAN_AUTO, SoundIndex((Client.quad_framenum > level.framenum) ? "ctf/tech2x.wav" : "ctf/tech2.wav"), (Client.silencer_shots) ? 0.2f : 1.0f);
 		}
 		return true;
 	}
@@ -2653,27 +2645,19 @@ bool CPlayerEntity::CTFApplyStrengthSound()
 
 bool CPlayerEntity::CTFApplyHaste()
 {
-	if (Client.pers.Tech == NItems::Haste)
-		return true;
-	return false;
+	return (Client.pers.Tech && (Client.pers.Tech->GetTechNumber() == CTFTECH_HASTE_NUMBER));
 }
 
 void CPlayerEntity::CTFApplyHasteSound()
 {
-	float volume = 1.0;
-
-	if (Client.silencer_shots)
-		volume = 0.2f;
-
-	if (Client.pers.Tech == NItems::Haste &&
-		Client.ctf_techsndtime < level.framenum)
+	if (Client.pers.Tech && (Client.pers.Tech->GetTechNumber() == CTFTECH_HASTE_NUMBER) && Client.ctf_techsndtime < level.framenum)
 	{
 		Client.ctf_techsndtime = level.framenum + 10;
-		PlaySound (CHAN_ITEM, SoundIndex("ctf/tech3.wav"), volume);
+		PlaySound (CHAN_AUTO, SoundIndex("ctf/tech3.wav"), (Client.silencer_shots) ? 0.2f : 1.0f);
 	}
 }
 
-void CPlayerEntity::CTFApplyRegeneration()
+/*void CPlayerEntity::CTFApplyRegeneration()
 {
 	if (Client.pers.Tech == NItems::Regeneration)
 	{
@@ -2711,16 +2695,14 @@ void CPlayerEntity::CTFApplyRegeneration()
 			PlaySound (CHAN_ITEM, SoundIndex("ctf/tech4.wav"), volume);
 		}
 	}
-}
+}*/
 
 bool CPlayerEntity::CTFHasRegeneration()
 {
-	if (Client.pers.Tech == NItems::Regeneration)
-		return true;
-	return false;
+	return (Client.pers.Tech && (Client.pers.Tech->GetTechNumber() == CTFTECH_REGEN_NUMBER));
 }
 
-int CPlayerEntity::CTFApplyResistance(int dmg)
+/*int CPlayerEntity::CTFApplyResistance(int dmg)
 {
 	float volume = 1.0;
 
@@ -2734,7 +2716,7 @@ int CPlayerEntity::CTFApplyResistance(int dmg)
 		return dmg / 2;
 	}
 	return dmg;
-}
+}*/
 #endif
 
 
@@ -3087,7 +3069,7 @@ void CPlayerEntity::CTFAssignTeam()
 		Client.resp.ctf_team = CTF_TEAM1;
 	else if (team2count < team1count)
 		Client.resp.ctf_team = CTF_TEAM2;
-	else if (rand() & 1)
+	else if (randomMT() & 1)
 		Client.resp.ctf_team = CTF_TEAM1;
 	else
 		Client.resp.ctf_team = CTF_TEAM2;
@@ -3298,7 +3280,7 @@ CBaseEntity *CPlayerEntity::SelectCTFSpawnPoint ()
 	else
 		count -= 2;
 
-	selection = rand() % count;
+	selection = randomMT() % count;
 
 	spot = NULL;
 	do
@@ -3315,7 +3297,7 @@ CBaseEntity *CPlayerEntity::SelectCTFSpawnPoint ()
 void VelocityForDamage (int damage, vec3f &v);
 void CPlayerEntity::TossHead (int damage)
 {
-	if (rand()&1)
+	if (randomMT()&1)
 	{
 		State.SetModelIndex (gMedia.Gib_Head[1]);
 		State.SetSkinNum (1);		// second skin is player
@@ -3470,7 +3452,7 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 					break;
 				}
 			}
-			PlaySound (CHAN_VOICE, gMedia.Player.Death[(rand()%4)]);
+			PlaySound (CHAN_VOICE, gMedia.Player.Death[(randomMT()%4)]);
 		}
 	}
 

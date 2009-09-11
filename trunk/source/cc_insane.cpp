@@ -57,7 +57,7 @@ void CInsane::Moan ()
 
 void CInsane::Scream ()
 {
-	Entity->PlaySound (CHAN_VOICE, SoundScream[rand()%8], 1, ATTN_IDLE);
+	Entity->PlaySound (CHAN_VOICE, SoundScream[randomMT()%8], 1, ATTN_IDLE);
 }
 
 CFrame InsaneFramesStandNormal [] =
@@ -476,7 +476,7 @@ void CInsane::Pain (CBaseEntity *other, float kick, int damage)
 	// until further notice.
 
 	// START SHIT
-	r = 1 + (rand()&1);
+	r = 1 + (randomMT()&1);
 	if (Entity->gameEntity->health < 25)
 		l = 25;
 	else if (Entity->gameEntity->health < 50)
@@ -570,7 +570,7 @@ void CInsane::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 	if (Entity->DeadFlag == true)
 		return;
 
-	Entity->PlaySound (CHAN_VOICE, SoundIndex(Q_VarArgs("player/male/death%i.wav", (rand()%4)+1)), 1, ATTN_IDLE);
+	Entity->PlaySound (CHAN_VOICE, SoundIndex(Q_VarArgs("player/male/death%i.wav", (randomMT()%4)+1)), 1, ATTN_IDLE);
 
 	Entity->DeadFlag = true;
 	Entity->CanTakeDamage = true;
@@ -633,7 +633,7 @@ void CInsane::Spawn ()
 	{
 		WalkMonsterStart ();
 	}
-	Entity->State.SetSkinNum (rand()%3);
+	Entity->State.SetSkinNum (randomMT()%3);
 }
 
 LINK_MONSTER_CLASSNAME_TO_CLASS ("misc_insane", CInsane);

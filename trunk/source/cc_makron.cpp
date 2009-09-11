@@ -44,7 +44,7 @@ CMakron::CMakron ()
 void CMakron::Taunt ()
 {
 	MediaIndex Sound = SoundTaunt1;
-	switch (rand() % 3)
+	switch (randomMT() % 3)
 	{
 	case 0:
 		break;
@@ -584,7 +584,7 @@ void CMakron::Sight()
 
 void CMakron::Attack()
 {
-	switch (rand()%3)
+	switch (randomMT()%3)
 	{
 	case 0:
 		CurrentMove = &MakronMoveAttack3;
@@ -722,7 +722,7 @@ bool CMakron::CheckAttack ()
 	if (EnemyRange == RANGE_MELEE)
 	{
 		// don't always melee in easy mode
-		if (skill->Integer() == 0 && (rand()&3) )
+		if (skill->Integer() == 0 && (randomMT()&3) )
 			return false;
 		if (MonsterFlags & MF_HAS_MELEE)
 			AttackState = AS_MELEE;
@@ -835,7 +835,7 @@ bool CMakron::CheckAttack ()
 	if (EnemyRange == RANGE_MELEE)
 	{
 		// don't always melee in easy mode
-		if (skill->Integer() == 0 && (rand()&3) )
+		if (skill->Integer() == 0 && (randomMT()&3) )
 		{
 			// PMM - fix for melee only monsters & strafing
 			AttackState = AS_STRAIGHT;

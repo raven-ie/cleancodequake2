@@ -223,8 +223,8 @@ void CInfantry::Pain (CBaseEntity *other, float kick, int damage)
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
 
-	CurrentMove = (rand() % 2 == 0) ? &InfantryMovePain1 : &InfantryMovePain2;
-	Entity->PlaySound (CHAN_VOICE, (rand() % 2 == 0) ? SoundPain1 : SoundPain2);
+	CurrentMove = (randomMT() % 2 == 0) ? &InfantryMovePain1 : &InfantryMovePain2;
+	Entity->PlaySound (CHAN_VOICE, (randomMT() % 2 == 0) ? SoundPain1 : SoundPain2);
 
 #ifdef MONSTER_USE_ROGUE_AI
 	// PMM - clear duck flag
@@ -397,7 +397,7 @@ void CInfantry::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, 
 
 	CAnim *Animation;
 	int pSound;
-	switch (rand() % 3)
+	switch (randomMT() % 3)
 	{
 	case 0:
 	default:
@@ -547,7 +547,7 @@ void CInfantry::Swing ()
 void CInfantry::Smack ()
 {
 	static vec3f	aim (MELEE_DISTANCE, 0, 0);
-	if (CMeleeWeapon::Fire (Entity, aim, (5 + (rand() % 5)), 50))
+	if (CMeleeWeapon::Fire (Entity, aim, (5 + (randomMT() % 5)), 50))
 		Entity->PlaySound (CHAN_WEAPON, SoundPunchHit);
 }
 
@@ -566,7 +566,7 @@ CAnim InfantryMoveAttack2 (FRAME_attak201, FRAME_attak208, InfantryFramesAttack2
 
 void CInfantry::Attack ()
 {
-	PauseTime = level.framenum + ((rand() & 15) + 11);
+	PauseTime = level.framenum + ((randomMT() & 15) + 11);
 	CurrentMove = &InfantryMoveAttack1;
 }
 

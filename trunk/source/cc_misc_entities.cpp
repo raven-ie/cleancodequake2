@@ -319,7 +319,7 @@ public:
 	{
 		SetSolid (SOLID_NOT);
 		State.SetModelIndex (ModelIndex ("models/objects/banner/tris.md2"));
-		State.SetFrame (rand() % 16);
+		State.SetFrame (randomMT() % 16);
 		Link ();
 
 		NextThink = level.framenum + FRAMETIME;
@@ -853,8 +853,7 @@ public:
 		if (diff < -1.0)
 			diff = -1.0;
 
-		vec3f v = MoveDir;
-		v.Scale (1.0 + diff);
+		vec3f v = MoveDir * (1.0f + diff);
 		v.Z = diff;
 
 		diff = State.GetAngles().Z;
@@ -889,9 +888,7 @@ public:
 
 		CMiscViper *viper = dynamic_cast<CMiscViper*>(CC_Find (NULL, FOFS(classname), "misc_viper"));
 
-		vec3f vel = viper->Dir;
-		vel.Scale (viper->Speed);
-
+		vec3f vel = vec3f(viper->Dir) * viper->Speed;
 		Vec3Copy (vel, gameEntity->velocity);
 
 		TimeStamp = level.framenum;

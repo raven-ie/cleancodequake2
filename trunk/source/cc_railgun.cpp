@@ -76,8 +76,7 @@ void CRailgun::Fire (CPlayerEntity *ent)
 
 	ent->Client.ViewAngle.ToVectors (&forward, &right, NULL);
 
-	ent->Client.KickOrigin = forward;
-	ent->Client.KickOrigin.Scale (-3);
+	ent->Client.KickOrigin = forward * -3;
 	ent->Client.KickAngles.X = -3;
 
 	ent->P_ProjectSource (offset, forward, right, start);

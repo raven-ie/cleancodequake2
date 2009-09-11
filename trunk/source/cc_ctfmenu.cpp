@@ -306,7 +306,7 @@ int CTFUpdateJoinMenu(edict_t *ent)
 		return CTF_TEAM1;
 	else if (num2 > num1)
 		return CTF_TEAM2;
-	return (rand() & 1) ? CTF_TEAM1 : CTF_TEAM2;
+	return (randomMT() & 1) ? CTF_TEAM1 : CTF_TEAM2;
 }
 
 void CTFOpenJoinMenu(edict_t *ent)

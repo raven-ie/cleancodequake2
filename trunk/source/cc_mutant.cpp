@@ -46,7 +46,7 @@ CMutant::CMutant ()
 
 void CMutant::Step ()
 {
-	switch ((rand() + 1) % 3)
+	switch ((randomMT() + 1) % 3)
 	{
 	case 0:
 	default:
@@ -252,7 +252,7 @@ void CMutant::HitLeft ()
 {
 	static vec3_t	aim = {MELEE_DISTANCE, Entity->GetMins().X, 8};
 
-	if (CMeleeWeapon::Fire (Entity, aim, (10 + (rand() %5)), 100))
+	if (CMeleeWeapon::Fire (Entity, aim, (10 + (randomMT() %5)), 100))
 		Entity->PlaySound (CHAN_WEAPON, SoundHit);
 	else
 		Entity->PlaySound (CHAN_WEAPON, SoundSwing);
@@ -262,7 +262,7 @@ void CMutant::HitRight ()
 {
 	static vec3_t	aim = {MELEE_DISTANCE, Entity->GetMins().X, 8};
 
-	if (CMeleeWeapon::Fire (Entity, aim, (10 + (rand() %5)), 100))
+	if (CMeleeWeapon::Fire (Entity, aim, (10 + (randomMT() %5)), 100))
 		Entity->PlaySound (CHAN_WEAPON, SoundHit2);
 	else
 		Entity->PlaySound (CHAN_WEAPON, SoundSwing);
@@ -611,7 +611,7 @@ void CMutant::Pain (CBaseEntity *other, float kick, int damage)
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
 
-	switch (rand()%3)
+	switch (randomMT()%3)
 	{
 	case 0:
 		Entity->PlaySound (CHAN_VOICE, SoundPain1);

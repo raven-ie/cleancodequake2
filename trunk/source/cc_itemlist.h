@@ -105,10 +105,10 @@ namespace NItems
 	#ifdef CLEANCTF_ENABLED
 	extern CWeaponItem	*Grapple;
 
-	extern CTech *Regeneration;
-	extern CTech *Haste;
-	extern CTech *Strength;
-	extern CTech *Resistance;
+	//extern CTech *Regeneration;
+	//extern CTech *Haste;
+	//extern CTech *Strength;
+	//extern CTech *Resistance;
 
 	extern CFlag *RedFlag;
 	extern CFlag *BlueFlag;

@@ -162,13 +162,6 @@ bool CTFPickup_Tech (edict_t *ent, edict_t *other);
 void CTFDrop_Tech(edict_t *ent, CBaseItem *item);
 void CTFDeadDropTech(CPlayerEntity *ent);
 void CTFSetupTechSpawn(void);
-int CTFApplyResistance(CPlayerEntity *ent, int dmg);
-int CTFApplyStrength(CPlayerEntity *ent, int dmg);
-bool CTFApplyStrengthSound(CPlayerEntity *ent);
-bool CTFApplyHaste(CPlayerEntity *ent);
-void CTFApplyHasteSound(CPlayerEntity *ent);
-void CTFApplyRegeneration(CPlayerEntity *ent);
-bool CTFHasRegeneration(CPlayerEntity *ent);
 void CTFRespawnTech(edict_t *ent);
 void CTFResetTech(void);
 

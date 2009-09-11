@@ -90,7 +90,7 @@ void CSoldierMachinegun::FireGun (int FlashNumber)
 	};
 
 	if (!(AIFlags & AI_HOLD_FRAME))
-		Entity->gameEntity->wait = level.framenum + (3 + rand() % 8);
+		Entity->gameEntity->wait = level.framenum + (3 + randomMT() % 8);
 
 	MonsterFireBullet (start, aim, 2, 4, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, flashIndex);
 

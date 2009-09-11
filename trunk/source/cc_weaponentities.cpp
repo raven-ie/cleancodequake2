@@ -177,7 +177,7 @@ void CGrenade::Spawn (CBaseEntity *Spawner, vec3f start, vec3f aimdir, int damag
 	dir.ToVectors (&forward, &right, &up);
 
 	Grenade->State.SetOrigin (start);
-	aimdir.Scale (speed);
+	aimdir *= speed;
 	Grenade->gameEntity->velocity[0] = aimdir.X;
 	Grenade->gameEntity->velocity[1] = aimdir.Y;
 	Grenade->gameEntity->velocity[2] = aimdir.Z;
@@ -280,8 +280,7 @@ void CBlasterProjectile::Spawn (CBaseEntity *Spawner, vec3f start, vec3f dir,
 	Bolt->State.SetOrigin (start);
 	Bolt->State.SetOldOrigin (start);
 	Bolt->State.SetAngles (dir.ToAngles());
-	vec3f Scaled = dir;
-	Scaled.Scale(speed);
+	vec3f Scaled = dir * speed;
 	Bolt->gameEntity->velocity[0] = Scaled.X;
 	Bolt->gameEntity->velocity[1] = Scaled.Y;
 	Bolt->gameEntity->velocity[2] = Scaled.Z;
@@ -358,7 +357,7 @@ void CRocket::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 		{
 			if ((surf) && !(surf->flags & (SURF_TEXINFO_WARP|SURF_TEXINFO_TRANS33|SURF_TEXINFO_TRANS66|SURF_TEXINFO_FLOWING)))
 			{
-				for (int n = 0; n < rand()%5; n++)
+				for (int n = 0; n < randomMT()%5; n++)
 					ThrowDebris (gameEntity, "models/objects/debris2/tris.md2", 2, origin);
 			}
 		}
@@ -380,8 +379,7 @@ void CRocket::Spawn	(CBaseEntity *Spawner, vec3f start, vec3f dir,
 	Rocket->State.SetOrigin (start);
 
 	Rocket->State.SetAngles (dir.ToAngles());
-	vec3f vel = dir;
-	vel.Scale(speed);
+	vec3f vel = dir * speed;
 	Rocket->gameEntity->velocity[0] = vel.X;
 	Rocket->gameEntity->velocity[1] = vel.Y;
 	Rocket->gameEntity->velocity[2] = vel.Z;
@@ -591,7 +589,7 @@ void CBFGBolt::Spawn	(CBaseEntity *Spawner, vec3f start, vec3f dir,
 	BFG->State.SetAngles (dir.ToAngles());
 	vec3f vel = dir;
 	vel.NormalizeFast();
-	vel.Scale(speed);
+	vel *= speed;
 	BFG->gameEntity->velocity[0] = vel.X;
 	BFG->gameEntity->velocity[1] = vel.Y;
 	BFG->gameEntity->velocity[2] = vel.Z;
@@ -1414,10 +1412,7 @@ void CGrappleEntity::GrapplePull()
 		}
 		if (gameEntity->enemy->solid == SOLID_BBOX)
 		{
-			vec3f v = vec3f(gameEntity->enemy->size);
-			v.Scale(0.5f);
-			v += vec3f(gameEntity->enemy->state.origin);
-			State.SetOrigin (v + vec3f(gameEntity->enemy->mins));
+			State.SetOrigin ((gameEntity->enemy->Entity->GetSize() * 0.5f) + gameEntity->enemy->Entity->State.GetOrigin() + gameEntity->enemy->Entity->GetMins());
 			Link ();
 		}
 		else
@@ -1465,7 +1460,7 @@ void CGrappleEntity::GrapplePull()
 		}
 
 		hookdir.NormalizeFast ();
-		hookdir.Scale(CTF_GRAPPLE_PULL_SPEED);
+		hookdir *= CTF_GRAPPLE_PULL_SPEED;
 		Player->gameEntity->velocity[0] = hookdir.X;
 		Player->gameEntity->velocity[1] = hookdir.Y;
 		Player->gameEntity->velocity[2] = hookdir.Z;
@@ -1493,8 +1488,7 @@ void CGrappleEntity::Spawn (CPlayerEntity *Spawner, vec3f start, vec3f dir, int 
 	Grapple->State.SetOrigin (start);
 	Grapple->State.SetOldOrigin (start);
 	Grapple->State.SetAngles (dir.ToAngles());
-	vec3f vel = dir;
-	vel.Scale (speed);
+	vec3f vel = dir * speed;
 	Grapple->gameEntity->velocity[0] = vel.X;
 	Grapple->gameEntity->velocity[1] = vel.Y;
 	Grapple->gameEntity->velocity[2] = vel.Z;

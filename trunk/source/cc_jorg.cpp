@@ -43,7 +43,7 @@ CJorg::CJorg ()
 
 void CJorg::Search ()
 {
-	switch (rand()%3)
+	switch (randomMT()%3)
 	{
 	case 0:
 		Entity->PlaySound (CHAN_VOICE, SoundSearch1, 1, ATTN_NORM, 0);
@@ -381,7 +381,7 @@ void CJorg::Explode ()
 
 	Think = ConvertDerivedFunction(&CJorg::Explode);
 	Entity->State.GetOrigin(org);
-	org[2] += 24 + (rand()&15);
+	org[2] += 24 + (randomMT()&15);
 	switch (Entity->gameEntity->count++)
 	{
 	case 0:
@@ -610,7 +610,7 @@ bool CJorg::CheckAttack ()
 	if (EnemyRange == RANGE_MELEE)
 	{
 		// don't always melee in easy mode
-		if (skill->Integer() == 0 && (rand()&3) )
+		if (skill->Integer() == 0 && (randomMT()&3) )
 			return false;
 		if (MonsterFlags & MF_HAS_MELEE)
 			AttackState = AS_MELEE;
@@ -723,7 +723,7 @@ bool CJorg::CheckAttack ()
 	if (EnemyRange == RANGE_MELEE)
 	{
 		// don't always melee in easy mode
-		if (skill->Integer() == 0 && (rand()&3) )
+		if (skill->Integer() == 0 && (randomMT()&3) )
 		{
 			// PMM - fix for melee only monsters & strafing
 			AttackState = AS_STRAIGHT;

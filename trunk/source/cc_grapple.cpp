@@ -88,8 +88,7 @@ void CGrapple::Fire (CPlayerEntity *Player)
 	Player->Client.ViewAngle.ToVectors (&forward, &right, NULL);
 	Player->P_ProjectSource (offset, forward, right, start);
 
-	Player->Client.KickOrigin = forward;
-	Player->Client.KickOrigin.Scale (-2);
+	Player->Client.KickOrigin = forward * -2;
 	Player->Client.KickAngles.X = -1;
 
 	const float volume = (Player->Client.silencer_shots) ? 0.2f : 1.0f;
@@ -169,7 +168,7 @@ void CGrapple::WeaponGeneric (CPlayerEntity *Player)
 				newFrame = IdleStart;
 			else
 			{
-				if (CanStopFidgetting(Player) && (rand()&15))
+				if (CanStopFidgetting(Player) && (randomMT()&15))
 					newFrame = Player->Client.PlayerState.GetGunFrame();
 			}
 		}

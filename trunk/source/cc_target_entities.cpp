@@ -235,7 +235,7 @@ public:
 		{
 			vec3f md, angles = State.GetAngles();
 			G_SetMovedir (angles, md);
-			md.Scale (gameEntity->speed);
+			md *= gameEntity->speed;
 			Vec3Copy (md, gameEntity->movedir);
 			State.SetAngles (angles);
 		}

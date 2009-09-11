@@ -438,8 +438,7 @@ public:
 
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
-		vec3f vel = gameEntity->movedir;
-		vel.Scale (gameEntity->speed * 10);
+		vec3f vel = vec3f(gameEntity->movedir) * (gameEntity->speed * 10);
 		if (Q3Touch)
 		{
 			Vec3Copy (vel, other->gameEntity->velocity);

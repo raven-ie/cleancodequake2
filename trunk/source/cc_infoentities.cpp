@@ -297,16 +297,16 @@ LINK_CLASSNAME_TO_CLASS ("info_teleport_destination", CInfoTeleportDest);
 /*QUAKED info_player_deathmatch (1 0 1) (-16 -16 -24) (16 16 32)
 potential spawning position for deathmatch games
 */
-class CDeathmatchStart : public CSpotBase
+class CPlayerDeathmatch : public CSpotBase
 {
 public:
-	CDeathmatchStart () :
+	CPlayerDeathmatch () :
 		CBaseEntity (),
 		CSpotBase ()
 		{
 		};
 
-	CDeathmatchStart (int Index) :
+	CPlayerDeathmatch (int Index) :
 		CBaseEntity (Index),
 		CSpotBase (Index)
 		{
@@ -330,7 +330,7 @@ public:
 	};
 };
 
-LINK_CLASSNAME_TO_CLASS ("info_player_deathmatch", CDeathmatchStart);
+LINK_CLASSNAME_TO_CLASS ("info_player_deathmatch", CPlayerDeathmatch);
 
 /*QUAKED info_player_coop (1 0 1) (-16 -16 -24) (16 16 32)
 potential spawning position for coop games
@@ -993,3 +993,16 @@ public:
 };
 
 LINK_CLASSNAME_TO_CLASS ("target_lightramp", CTargetLightRamp);
+
+typedef float anArray[3];
+
+void TestFunction (anArray left, const anArray right)
+{
+	left[0] += right[0];
+}
+
+void Boo ()
+{
+	anArray one = {0,0,0}, two = {1,0,0};
+	TestFunction (one, two);
+}
