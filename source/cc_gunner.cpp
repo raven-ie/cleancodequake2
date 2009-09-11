@@ -282,7 +282,7 @@ void CGunner::Pain (CBaseEntity *other, float kick, int damage)
 		return;
 
 	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
-	Entity->PlaySound (CHAN_VOICE, (rand()&1) ? SoundPain : SoundPain2);
+	Entity->PlaySound (CHAN_VOICE, (randomMT()&1) ? SoundPain : SoundPain2);
 
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare

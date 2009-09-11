@@ -221,7 +221,7 @@ void CHandGrenade::WeaponGeneric (CPlayerEntity *ent)
 				newFrame = IdleStart;
 			else
 			{
-				if (CanStopFidgetting(ent) && (rand()&15))
+				if (CanStopFidgetting(ent) && (randomMT()&15))
 					newFrame = ent->Client.PlayerState.GetGunFrame();
 			}
 		}

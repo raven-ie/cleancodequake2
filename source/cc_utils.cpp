@@ -117,7 +117,7 @@ CBaseEntity *CC_PickTarget (char *targetname)
 		return NULL;
 	}
 
-	return choice[rand() % num_choices];
+	return choice[randomMT() % num_choices];
 }
 
 void G_SetMovedir (vec3f &angles, vec3f &movedir)
@@ -348,7 +348,7 @@ CBaseEntity *SelectRandomDeathmatchSpawnPoint ()
 	else
 		count -= 2;
 
-	int selection = rand() % count;
+	int selection = randomMT() % count;
 	spot = NULL;
 
 	do

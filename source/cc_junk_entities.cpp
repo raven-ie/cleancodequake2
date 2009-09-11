@@ -186,14 +186,7 @@ Misc functions
 */
 void VelocityForDamage (int damage, vec3f &v)
 {
-	v.X = 100.0 * crandom();
-	v.Y = 100.0 * crandom();
-	v.Z = 200.0 + 100.0 * random();
-
-	if (damage < 50)
-		v.Scale(0.7f);
-	else 
-		v.Scale(1.2f);
+	v = vec3f(100.0f * crandom(), 100.0f * crandom(), 200 + 100 * random()) * (damage < 50) ? 0.7f : 1.2f;
 }
 
 void ClipGibVelocity (CBaseEntity *ent)
@@ -226,8 +219,7 @@ void CGibEntity::Spawn (CBaseEntity *Owner, MediaIndex gibIndex, int damage, int
 {
 	CGibEntity *Junk = JunkList->GetFreeJunk<CGibEntity>();
 
-	vec3f size = Owner->GetSize();
-	size.Scale (0.5f);
+	vec3f size = Owner->GetSize() * 0.5f;
 
 	vec3f origin = Owner->GetAbsMin() + size;
 

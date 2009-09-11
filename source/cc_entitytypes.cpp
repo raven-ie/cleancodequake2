@@ -90,8 +90,7 @@ bool CHurtableEntity::CanDamage (CBaseEntity *inflictor)
 // bmodels need special checking because their origin is 0,0,0
 	if ((EntityFlags & ENT_PHYSICS) && ((dynamic_cast<CPhysicsEntity*>(this))->PhysicsType == PHYSICS_PUSH))
 	{
-		vec3f dest = GetAbsMin() + GetAbsMax();
-		dest.Scale (0.5f);
+		vec3f dest = (GetAbsMin() + GetAbsMax()) * 0.5f;
 		CTrace trace (inflictor->State.GetOrigin(), dest, inflictor->gameEntity, CONTENTS_MASK_SOLID);
 		if (trace.fraction == 1.0 || trace.Ent == this)
 			return true;
@@ -293,16 +292,26 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 
 	dir.Normalize ();
 
-// bonus damage for suprising a monster
+// bonus damage for surprising a monster
 	if (!(dflags & DAMAGE_RADIUS) && (EntityFlags & ENT_MONSTER) && (attacker->EntityFlags & ENT_PLAYER) && (!gameEntity->enemy) && (gameEntity->health > 0))
 		damage *= 2;
 
 #ifdef CLEANCTF_ENABLED
-//ZOID
-//strength tech
-	if ((game.mode & GAME_CTF) && (attacker->EntityFlags & ENT_PLAYER))
-		damage = (dynamic_cast<CPlayerEntity*>(attacker))->CTFApplyStrength(damage);
-//ZOID
+	if (game.mode & GAME_CTF)
+	{
+		if (isClient)
+		{
+			if (Client->pers.Tech && (Client->pers.Tech->TechType == CTech::TechAggressive))
+				Client->pers.Tech->DoAggressiveTech (dynamic_cast<CPlayerEntity*>(this), attacker, false, damage, knockback, dflags, mod);
+		}
+
+		if (attacker->EntityFlags & ENT_PLAYER)
+		{
+			CPlayerEntity *Atk = dynamic_cast<CPlayerEntity*>(attacker);
+			if (Atk->Client.pers.Tech && (Atk->Client.pers.Tech->TechType == CTech::TechAggressive))
+				dynamic_cast<CPlayerEntity*>(attacker)->Client.pers.Tech->DoAggressiveTech (Atk, dynamic_cast<CPlayerEntity*>(this), false, damage, knockback, dflags, mod);
+		}
+	}
 #endif
 
 	if (Flags & FL_NO_KNOCKBACK)
@@ -325,14 +334,8 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 
 	if (AddVelocity)
 	{
-		vec3f	kvel = dir;
 		const float	mass = Clamp<float> (gameEntity->mass, 50.0f, gameEntity->mass);
-
-		if (isClient && (attacker == this))
-			kvel.Scale (1600.0 * (float)knockback / mass); // the rocket jump hack...
-		else
-			kvel.Scale (500.0 * (float)knockback / mass);
-
+		vec3f	kvel = dir * (((isClient && (attacker == this)) ? 1600.0f : 500.0f) * (float)knockback / mass);
 		Vec3Add (gameEntity->velocity, kvel, gameEntity->velocity);
 	}
 
@@ -391,8 +394,23 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 #ifdef CLEANCTF_ENABLED
 //ZOID
 //resistance tech
-	if (isClient && (game.mode & GAME_CTF))
-		take = (dynamic_cast<CPlayerEntity*>(this))->CTFApplyResistance(take);
+	//if (isClient && (game.mode & GAME_CTF))
+	//	take = (dynamic_cast<CPlayerEntity*>(this))->CTFApplyResistance(take);
+	if (game.mode & GAME_CTF)
+	{
+		if (isClient)
+		{
+			if (Client->pers.Tech && (Client->pers.Tech->TechType == CTech::TechAggressive))
+				Client->pers.Tech->DoAggressiveTech (dynamic_cast<CPlayerEntity*>(this), attacker, true, take, knockback, dflags, mod);
+		}
+
+		if (attacker->EntityFlags & ENT_PLAYER)
+		{
+			CPlayerEntity *Atk = dynamic_cast<CPlayerEntity*>(attacker);
+			if (Atk->Client.pers.Tech && (Atk->Client.pers.Tech->TechType == CTech::TechAggressive))
+				dynamic_cast<CPlayerEntity*>(attacker)->Client.pers.Tech->DoAggressiveTech (Atk, dynamic_cast<CPlayerEntity*>(this), true, damage, knockback, dflags, mod);
+		}
+	}
 //ZOID
 #endif
 

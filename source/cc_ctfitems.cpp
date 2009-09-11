@@ -40,12 +40,21 @@ void CTFResetFlags(void);
 
 CTech::CTech (char *Classname, char *WorldModel, int EffectFlags,
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
-			   char *Precache) :
+			   char *Precache, uint32 TechNumber, ETechType TechType) :
 CBaseItem (Classname, WorldModel, EffectFlags, PickupSound, Icon, Name, Flags,
-		   Precache)
+		   Precache),
+TechNumber(TechNumber),
+TechType(TechType)
 {
 };
 
+CTech::CTech (char *Classname, char *Model, char *Image, char *Name, CTech::ETechType TechType, uint32 TechNumber) :
+CBaseItem (Classname, Model, EF_ROTATE, "items/pkup.wav", Image, Name, ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_TECH,
+			NULL),
+TechNumber(TechNumber),
+TechType(TechType)
+{
+};
 /*------------------------------------------------------------------------*/
 /* TECH																	  */
 /*------------------------------------------------------------------------*/
@@ -78,6 +87,91 @@ static CBaseEntity *FindTechSpawn(void)
 {
 	return SelectRandomDeathmatchSpawnPoint();
 }
+
+class CResistanceTech : public CTech
+{
+public:
+	CResistanceTech (char *Classname, char *Model, char *Image, char *Name, CTech::ETechType TechType, uint32 TechNumber) :
+	CTech (Classname, Model, Image, Name, TechType, TechNumber)
+	{
+	};
+
+	void DoAggressiveTech	(	CPlayerEntity *Left, CBaseEntity *Right, bool Calculated, int &Damage, int &Knockback, int &DamageFlags,
+										EMeansOfDeath &Mod	)
+	{
+		if (!Calculated)
+			return;
+
+		if (Damage)
+		{
+			// make noise
+			Left->PlaySound (CHAN_AUTO, SoundIndex("ctf/tech1.wav"), (Left->Client.silencer_shots) ? 0.2f : 1.0f);
+			Damage /= 2;
+		}
+	};
+};
+
+class CStrengthTech : public CTech
+{
+public:
+	CStrengthTech (char *Classname, char *Model, char *Image, char *Name, CTech::ETechType TechType, uint32 TechNumber) :
+	CTech (Classname, Model, Image, Name, TechType, TechNumber)
+	{
+	};
+
+	void DoAggressiveTech	(	CPlayerEntity *Left, CBaseEntity *Right, bool Calculated, int &Damage, int &Knockback, int &DamageFlags,
+										EMeansOfDeath &Mod	)
+	{
+		if (Calculated || (Left == Right))
+			return;
+
+		if (Damage)
+			Damage *= 2;
+	};
+};
+
+class CRegenTech : public CTech
+{
+public:
+	CRegenTech (char *Classname, char *Model, char *Image, char *Name, CTech::ETechType TechType, uint32 TechNumber) :
+	CTech (Classname, Model, Image, Name, TechType, TechNumber)
+	{
+	};
+
+	void DoPassiveTech	(	CPlayerEntity *Player	)
+	{
+		CBaseItem *index;
+		bool noise = false;
+		if (Player->Client.ctf_regentime < level.framenum)
+		{
+			Player->Client.ctf_regentime = level.framenum;
+			if (Player->gameEntity->health < 150)
+			{
+				Player->gameEntity->health += 5;
+				if (Player->gameEntity->health > 150)
+					Player->gameEntity->health = 150;
+				Player->Client.ctf_regentime += 5;
+				noise = true;
+			}
+			index = Player->Client.pers.Armor;
+			if (index && Player->Client.pers.Inventory.Has(index) < 150)
+			{
+				Player->Client.pers.Inventory.Add (index, 5);
+				if (Player->Client.pers.Inventory.Has(index) > 150)
+					Player->Client.pers.Inventory.Set(index, 150);
+				Player->Client.ctf_regentime += 5;
+				noise = true;
+			}
+		}
+		if (noise && Player->Client.ctf_techsndtime < level.framenum)
+		{
+			Player->Client.ctf_techsndtime = level.framenum + 10;
+			Player->PlaySound (CHAN_AUTO, SoundIndex("ctf/tech4.wav"), (Player->Client.silencer_shots) ? 0.2f : 1.0f);
+		}
+	};
+};
+
+std::vector<CTech*>		TechList;
 
 void SpawnTech(CBaseItem *item, CBaseEntity *spot);
 class CTechEntity : public CItemEntity
@@ -172,7 +266,7 @@ CItemEntity *CTech::DropItem (CBaseEntity *ent)
 		dropped->State.SetOrigin (ent->State.GetOrigin());
 	}
 
-	forward.Scale(100);
+	forward *= 100;
 	dropped->gameEntity->velocity[0] = forward.X;
 	dropped->gameEntity->velocity[1] = forward.Y;
 	dropped->gameEntity->velocity[2] = 300;
@@ -200,8 +294,8 @@ void CTFDeadDropTech(CPlayerEntity *ent)
 
 	CItemEntity *dropped = ent->Client.pers.Tech->DropItem(ent);
 	// hack the velocity to make it bounce random
-	dropped->gameEntity->velocity[0] = (rand() % 600) - 300;
-	dropped->gameEntity->velocity[1] = (rand() % 600) - 300;
+	dropped->gameEntity->velocity[0] = (randomMT() % 600) - 300;
+	dropped->gameEntity->velocity[1] = (randomMT() % 600) - 300;
 	dropped->NextThink = level.framenum + CTF_TECH_TIMEOUT;
 	dropped->gameEntity->owner = NULL;
 	ent->Client.pers.Inventory.Set(ent->Client.pers.Tech, 0);
@@ -225,10 +319,10 @@ void SpawnTech(CBaseItem *item, CBaseEntity *spot)
 	ent->gameEntity->owner = ent->gameEntity;
 
 	vec3f forward;
-	vec3f(0, rand()%360, 0).ToVectors(&forward, NULL, NULL);
+	vec3f(0, randomMT()%360, 0).ToVectors(&forward, NULL, NULL);
 
 	ent->State.SetOrigin (spot->State.GetOrigin() + vec3f(0,0,16));
-	forward.Scale (100);
+	forward *= 100;
 	ent->gameEntity->velocity[0] = forward[0];
 	ent->gameEntity->velocity[1] = forward[1];
 	ent->gameEntity->velocity[2] = 300;
@@ -269,10 +363,12 @@ public:
 
 	void Think ()
 	{
-		SpawnTech (NItems::Regeneration, FindTechSpawn());
-		SpawnTech (NItems::Haste, FindTechSpawn());
-		SpawnTech (NItems::Strength, FindTechSpawn());
-		SpawnTech (NItems::Resistance, FindTechSpawn());
+		//SpawnTech (NItems::Regeneration, FindTechSpawn());
+		//SpawnTech (NItems::Haste, FindTechSpawn());
+		//SpawnTech (NItems::Strength, FindTechSpawn());
+		//SpawnTech (NItems::Resistance, FindTechSpawn());
+		for (size_t i = 0; i < TechList.size(); i++)
+			SpawnTech (TechList[i], FindTechSpawn ());
 
 		Free ();
 	};
@@ -283,15 +379,14 @@ public:
 	};
 };
 
-static void SpawnTechs(edict_t *ent)
+static void SpawnTechs()
 {
-	SpawnTech (NItems::Regeneration, FindTechSpawn());
-	SpawnTech (NItems::Haste, FindTechSpawn());
-	SpawnTech (NItems::Strength, FindTechSpawn());
-	SpawnTech (NItems::Resistance, FindTechSpawn());
-
-	if (ent)
-		G_FreeEdict(ent);
+	//SpawnTech (NItems::Regeneration, FindTechSpawn());
+	//SpawnTech (NItems::Haste, FindTechSpawn());
+	//SpawnTech (NItems::Strength, FindTechSpawn());
+	//SpawnTech (NItems::Resistance, FindTechSpawn());
+	for (size_t i = 0; i < TechList.size(); i++)
+		SpawnTech (TechList[i], FindTechSpawn ());
 }
 
 void CTFSetupTechSpawn(void)
@@ -312,7 +407,7 @@ void CTFResetTech(void)
 		if (ent->inUse && ent->item && (ent->item->Flags & ITEMFLAG_TECH))
 				G_FreeEdict(ent);
 	}
-	SpawnTechs(NULL);
+	SpawnTechs();
 }
 
 void	CTech::Use (CPlayerEntity *ent)
@@ -321,7 +416,7 @@ void	CTech::Use (CPlayerEntity *ent)
 
 void AddTechsToList ()
 {
-	NItems::Regeneration = QNew (com_gamePool, 0) CTech ("item_tech4", "models/ctf/regeneration/tris.md2", EF_ROTATE, "items/pkup.wav", "tech4", "AutoDoc", ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_TECH, NULL);
+/*	NItems::Regeneration = QNew (com_gamePool, 0) CTech ("item_tech4", "models/ctf/regeneration/tris.md2", EF_ROTATE, "items/pkup.wav", "tech4", "AutoDoc", ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_TECH, NULL);
 	NItems::Haste = QNew (com_gamePool, 0) CTech ("item_tech3", "models/ctf/haste/tris.md2", EF_ROTATE, "items/pkup.wav", "tech3", "Time Accel", ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_TECH, NULL);
 	NItems::Strength = QNew (com_gamePool, 0) CTech ("item_tech2", "models/ctf/strength/tris.md2", EF_ROTATE, "items/pkup.wav", "tech2", "Power Amplifier", ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_TECH, NULL);
 	NItems::Resistance = QNew (com_gamePool, 0) CTech ("item_tech1", "models/ctf/resistance/tris.md2", EF_ROTATE, "items/pkup.wav", "tech1", "Disruptor Shield", ITEMFLAG_GRABBABLE|ITEMFLAG_DROPPABLE|ITEMFLAG_TECH, NULL);
@@ -329,7 +424,21 @@ void AddTechsToList ()
 	ItemList->AddItemToList (NItems::Regeneration);
 	ItemList->AddItemToList (NItems::Haste);
 	ItemList->AddItemToList (NItems::Strength);
-	ItemList->AddItemToList (NItems::Resistance);
+	ItemList->AddItemToList (NItems::Resistance); */
+	TechList.push_back (QNew (com_gamePool, 0) CResistanceTech ("item_tech1", "models/ctf/resistance/tris.md2",
+														"tech1", "Disruptor Shield", CTech::TechAggressive, CTFTECH_RESISTANCE_NUMBER));
+
+	TechList.push_back (QNew (com_gamePool, 0) CStrengthTech ("item_tech2", "models/ctf/strength/tris.md2",
+														"tech2", "Power Amplifier", CTech::TechAggressive, CTFTECH_STRENGTH_NUMBER));
+
+	TechList.push_back (QNew (com_gamePool, 0) CTech ("item_tech3", "models/ctf/haste/tris.md2",
+														"tech3", "Time Accel", CTech::TechCustom, CTFTECH_HASTE_NUMBER));
+
+	TechList.push_back (QNew (com_gamePool, 0) CRegenTech ("item_tech4", "models/ctf/regeneration/tris.md2",
+														"tech4", "AutoDoc", CTech::TechPassive, CTFTECH_REGEN_NUMBER));
+
+	for (size_t i = 0; i < TechList.size(); i++)
+		ItemList->AddItemToList (TechList[i]);
 }
 
 

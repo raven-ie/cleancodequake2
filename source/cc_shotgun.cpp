@@ -72,8 +72,7 @@ void CShotgun::Fire (CPlayerEntity *ent)
 
 	ent->Client.ViewAngle.ToVectors (&forward, &right, NULL);
 
-	ent->Client.KickOrigin = forward;
-	ent->Client.KickOrigin.Scale (-2);
+	ent->Client.KickOrigin = forward * -2;
 	ent->Client.KickAngles.X = -2;
 
 	ent->P_ProjectSource (offset, forward, right, start);

@@ -299,9 +299,8 @@ public:
 	inline vec3f(const float Value) : vec3Base(Value) {}
 	inline vec3f(const float Values[3]) : vec3Base(Values) {}
 	inline vec3f(const float InX, const float InY, const float InZ) : vec3Base(InX, InY, InZ) {}
-	inline vec3f(CProperty<vec3f> &Vec) : vec3Base(Vec.Get()) {}
 
- 	/**
+	/**
 	 * Operators
 	 */
 	inline vec3f operator *(const vec3f &Vec) const { return vec3f(X*Vec[0], Y*Vec[1], Z*Vec[2]); }
@@ -424,20 +423,22 @@ public:
 
 	float Normalize()
 	{
-		float Len = LengthSq();
+		float Len = LengthFast();
 
-		if (Len > TINY_NUMBER)
-		{
-			Len = 1.0f / sqrtf(Len);
-			Scale(Len);
-		}
+		if (Len > TINY_NUMBER || Len < TINY_NUMBER)
+			Scale(1.0f / Len);
 		else
-		{
 			Clear();
-		}
 
 		return Len;
 	}
+	float NormalizeFast()
+	{
+		float Len = Q_RSqrtf(Dot(*this));
+		Scale (Len);
+		return (Len > TINY_NUMBER || Len < TINY_NUMBER) ? (1.0f / Len) : 0;
+	}
+
 	float ToYaw ()
 	{
 		float	yaw;
@@ -458,22 +459,6 @@ public:
 		}
 
 		return yaw;
-	}
-	float NormalizeFast()
-	{
-		float Len = LengthSq();
-
-		if (Len > TINY_NUMBER)
-		{
-			Len = Q_RSqrtf(Len);
-			Scale(Len);
-		}
-		else
-		{
-			Clear();
-		}
-
-		return Len;
 	}
 
 	inline void Scale(const float Scale) { X *= Scale; Y *= Scale; Z *= Scale; }

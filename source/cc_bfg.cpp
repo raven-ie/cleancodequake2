@@ -106,8 +106,7 @@ void CBFG::FireBFG (CPlayerEntity *ent)
 	FireAnimation (ent);
 	ent->Client.ViewAngle.ToVectors (&forward, &right, NULL);
 
-	ent->Client.KickOrigin = forward;
-	ent->Client.KickOrigin.Scale (-2);
+	ent->Client.KickOrigin = forward * -2;
 
 	// make a big pitch kick with an inverse fall
 	ent->Client.v_dmg_pitch = -40;

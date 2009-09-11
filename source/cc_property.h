@@ -32,19 +32,27 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 //
 
 // Basic class which contains Set, Get, and = operator.
-template <class TType, TType (*Setter) (TType *Left, const TType &Right) = NULL, TType &(*Getter) (const TType *Left) = NULL>
+// Breakdown of template parameters:
+//  TType = Type of storage for the property
+//  UDType = Type of user data to pass to the Setter/Getter
+//  Setter = The function called when the value is set to a new one. The value is replaced with the value returned by Setter.
+//  Getter = the function called when the value is requested
+template <class TType, class UDType, TType (*Setter) (UDType UD, TType *Left, const TType &Right) = NULL, TType &(*Getter) (UDType UD, const TType *Left) = NULL>
 class CProperty
 {
 public:
 	TType		Value;
+	UDType		UserData;
 
-	CProperty () :
-	Value()
+	CProperty (UDType UserData) :
+	Value(),
+	UserData(UserData)
 	{
 	};
 
-	CProperty (const TType &Right) :
-	Value(Right)
+	CProperty (UDType UserData, const TType &Right) :
+	Value(Right),
+	UserData(UserData)
 	{
 	};
 
@@ -55,7 +63,7 @@ public:
 	inline virtual void Set (const TType &Right)
 	{
 		if (Setter)
-			Value = Setter (&Value, Right);
+			Value = Setter (UserData, &Value, Right);
 		else
 			Value = Right;
 	};
@@ -63,14 +71,14 @@ public:
 	inline virtual TType &Get ()
 	{
 		if (Getter)
-			return Getter (&Value);
+			return Getter (UserData, &Value);
 		return Value;
 	};
 
 	inline virtual TType &operator = (const TType &Right)
 	{
 		if (Setter)
-			Setter (&Value, Right);
+			Setter (UserData, &Value, Right);
 		else
 			Value = Right;
 

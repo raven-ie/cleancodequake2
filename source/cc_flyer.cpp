@@ -470,7 +470,7 @@ void CFlyer::Pain (CBaseEntity *other, float kick, int damage)
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
 
-	switch (rand() % 3)
+	switch (randomMT() % 3)
 	{
 	case 0:
 		Entity->PlaySound (CHAN_VOICE, SoundPain1);

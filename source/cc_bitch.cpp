@@ -257,7 +257,7 @@ void CMaiden::Pain (CBaseEntity *other, float kick, int damage)
 
 	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
 
-	int r = rand()%3;
+	int r = randomMT()%3;
 	switch (r)
 	{
 	case 0:
@@ -371,7 +371,7 @@ void CMaiden::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 	Entity->DeadFlag = true;
 	Entity->CanTakeDamage = true;
 
-	n = rand() % 2;
+	n = randomMT() % 2;
 	CurrentMove = (n == 0) ? &ChickMoveDeath1 : &ChickMoveDeath2;
 	Entity->PlaySound (CHAN_VOICE, (n == 0) ? SoundDeath1 : SoundDeath2);
 }
@@ -542,7 +542,7 @@ void CMaiden::Slash ()
 {
 	vec3_t	aim = {MELEE_DISTANCE, Entity->GetMins().X, 10};
 	Entity->PlaySound (CHAN_WEAPON, SoundMeleeSwing);
-	CMeleeWeapon::Fire (Entity, aim, (10 + (rand() %6)), 100);
+	CMeleeWeapon::Fire (Entity, aim, (10 + (randomMT() %6)), 100);
 }
 
 void CMaiden::Rocket ()

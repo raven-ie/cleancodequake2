@@ -1056,7 +1056,7 @@ void CSoldierBase::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damag
 		return;
 	}
 
-	switch (rand() % 5)
+	switch (randomMT() % 5)
 	{
 	case 0:
 		CurrentMove = &SoldierMoveDeath1;

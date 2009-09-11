@@ -245,7 +245,7 @@ CItemEntity *CFlag::DropItem (CBaseEntity *ent)
 		dropped->State.SetOrigin (ent->State.GetOrigin());
 	}
 
-	forward.Scale(100);
+	forward *= 100;
 	dropped->gameEntity->velocity[0] = forward.X;
 	dropped->gameEntity->velocity[1] = forward.Y;
 	dropped->gameEntity->velocity[2] = 300;

@@ -988,7 +988,7 @@ public:
 		if (gameEntity->spawnflags & 1) // team2
 			State.SetSkinNum (1);
 
-		State.SetFrame (rand() % 16);
+		State.SetFrame (randomMT() % 16);
 		Link ();
 
 		NextThink = level.framenum + FRAMETIME;
@@ -1023,7 +1023,7 @@ public:
 		if (gameEntity->spawnflags & 1) // team2
 			State.SetSkinNum (1);
 
-		State.SetFrame (rand() % 16);
+		State.SetFrame (randomMT() % 16);
 		Link ();
 
 		NextThink = level.framenum + FRAMETIME;
@@ -1160,7 +1160,7 @@ void CTFStartMatch(void)
 			ent->SetSvFlags (SVF_NOCLIENT);
 			ent->Flags &= ~FL_GODMODE;
 
-			ent->Client.respawn_time = level.framenum + 10 + ((rand()%300)/100);
+			ent->Client.respawn_time = level.framenum + 10 + ((randomMT()%300)/100);
 			ent->Client.PlayerState.GetPMove()->pmType = PMT_DEAD;
 			ent->Client.anim_priority = ANIM_DEATH;
 			ent->State.SetFrame (FRAME_death308-1);

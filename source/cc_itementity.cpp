@@ -152,7 +152,7 @@ CItemEntity *CItemEntity::GetRandomTeamMember (CItemEntity *Master)
 	int count = 0;
 
 	for (count = 0, Member = Master; Member; Member = dynamic_cast<CItemEntity*>(Member->Chain), count++);
-	int choice = rand() % count;
+	int choice = randomMT() % count;
 	for (count = 0, Member = Master; count < choice; Member = dynamic_cast<CItemEntity*>(Member->Chain), count++);
 
 	return Member;

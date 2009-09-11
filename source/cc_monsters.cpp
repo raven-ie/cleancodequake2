@@ -249,7 +249,7 @@ void CMonster::MoveToPath (float Dist)
 	}
 
 // bump around...
-	if ( doit || (rand()&3)==1 || !StepDirection (IdealYaw, Dist))
+	if ( doit || (randomMT()&3)==1 || !StepDirection (IdealYaw, Dist))
 	{
 		if (Entity->IsInUse())
 		{
@@ -288,7 +288,7 @@ void CMonster::MoveToPath (float Dist)
 			}
 
 		// try other directions
-			if ( ((rand()&3) & 1) ||  abs(deltay)>abs(deltax))
+			if ( ((randomMT()&3) & 1) ||  abs(deltay)>abs(deltax))
 			{
 				tdir=d[1];
 				d[1]=d[2];
@@ -308,7 +308,7 @@ void CMonster::MoveToPath (float Dist)
 			if (olddir!=DI_NODIR && StepDirection(olddir, Dist))
 					return;
 
-			if (rand()&1) 	/*randomly determine direction of search*/
+			if (randomMT()&1) 	/*randomly determine direction of search*/
 			{
 				for (tdir=0 ; tdir<=315 ; tdir += 45)
 					if (tdir!=turnaround && StepDirection(tdir, Dist) )
@@ -726,7 +726,7 @@ void CMonster::MoveToGoal (float Dist)
 		return;
 
 // bump around...
-	if ( (rand()&3)==1 || !StepDirection (IdealYaw, Dist))
+	if ( (randomMT()&3)==1 || !StepDirection (IdealYaw, Dist))
 	{
 		if (Entity->IsInUse())
 			NewChaseDir (goal, Dist);
@@ -1000,7 +1000,7 @@ void CMonster::NewChaseDir (edict_t *Enemy, float Dist)
 	}
 
 // try other directions
-	if ( ((rand()&3) & 1) ||  abs(deltay)>abs(deltax))
+	if ( ((randomMT()&3) & 1) ||  abs(deltay)>abs(deltax))
 	{
 		tdir=d[1];
 		d[1]=d[2];
@@ -1020,7 +1020,7 @@ void CMonster::NewChaseDir (edict_t *Enemy, float Dist)
 	if (olddir!=DI_NODIR && StepDirection(olddir, Dist))
 			return;
 
-	if (rand()&1) 	/*randomly determine direction of search*/
+	if (randomMT()&1) 	/*randomly determine direction of search*/
 	{
 		for (tdir=0 ; tdir<=315 ; tdir += 45)
 			if (tdir!=turnaround && StepDirection(tdir, Dist) )
@@ -1240,8 +1240,8 @@ void CMonster::MonsterStart ()
 {
 	if (game.mode & GAME_DEATHMATCH)
 	{
-		Entity->Free ();
-		return;
+		//Entity->Free ();
+		//return;
 	}
 
 	if ((Entity->gameEntity->spawnflags & 4) && !(AIFlags & AI_GOOD_GUY))
@@ -1277,7 +1277,7 @@ void CMonster::MonsterStart ()
 
 	// randomize what frame they start on
 	if (CurrentMove)
-		Entity->State.SetFrame(CurrentMove->FirstFrame + (rand() % (CurrentMove->LastFrame - CurrentMove->FirstFrame + 1)));
+		Entity->State.SetFrame(CurrentMove->FirstFrame + (randomMT() % (CurrentMove->LastFrame - CurrentMove->FirstFrame + 1)));
 
 #ifdef MONSTER_USE_ROGUE_AI
 	BaseHeight = Entity->GetMaxs().Z;
@@ -1556,7 +1556,7 @@ bool CMonster::CheckAttack ()
 	if (EnemyRange == RANGE_MELEE)
 	{
 		// don't always melee in easy mode
-		if (skill->Integer() == 0 && (rand()&3) )
+		if (skill->Integer() == 0 && (randomMT()&3) )
 			return false;
 		if (MonsterFlags & MF_HAS_MELEE)
 			AttackState = AS_MELEE;
@@ -1669,7 +1669,7 @@ bool CMonster::CheckAttack ()
 	if (EnemyRange == RANGE_MELEE)
 	{
 		// don't always melee in easy mode
-		if (skill->Integer() == 0 && (rand()&3) )
+		if (skill->Integer() == 0 && (randomMT()&3) )
 		{
 			// PMM - fix for melee only monsters & strafing
 			AttackState = AS_STRAIGHT;

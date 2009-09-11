@@ -91,8 +91,7 @@ void CHyperBlaster::Fire (CPlayerEntity *ent)
 			// I replaced this part with a table because they are constant.
 			ent->P_ProjectSource (vec3f(24, 8, ent->gameEntity->viewheight-8) + hyperblasterOffsetTable[ent->Client.PlayerState.GetGunFrame() - 6], forward, right, start);
 
-			ent->Client.KickOrigin = forward;
-			ent->Client.KickOrigin.Scale (-2);
+			ent->Client.KickOrigin = forward * -2;
 			ent->Client.KickAngles.X = -1;
 
 			CBlasterProjectile::Spawn (ent, start, forward, damage, 1000, effect, true);

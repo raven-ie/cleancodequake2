@@ -168,7 +168,7 @@ void CBerserker::Run ()
 void CBerserker::AttackSpike ()
 {
 	static	vec3f	aim (MELEE_DISTANCE, 0, -24);
-	CMeleeWeapon::Fire (Entity, aim, (15 + (rand() % 6)), 400);		//	Faster attack -- upwards and backwards
+	CMeleeWeapon::Fire (Entity, aim, (15 + (randomMT() % 6)), 400);		//	Faster attack -- upwards and backwards
 }
 
 void CBerserker::Swing ()
@@ -192,7 +192,7 @@ CAnim BerserkMoveAttackSpike (FRAME_att_c1, FRAME_att_c8, BerserkFramesAttackSpi
 void CBerserker::AttackClub ()
 {
 	vec3f	aim (MELEE_DISTANCE, Entity->GetMins().X, -4);
-	CMeleeWeapon::Fire (Entity, aim, (5 + (rand() % 6)), 400);		// Slower attack
+	CMeleeWeapon::Fire (Entity, aim, (5 + (randomMT() % 6)), 400);		// Slower attack
 }
 
 CFrame BerserkFramesAttackClub [] =
@@ -243,7 +243,7 @@ mmove_t berserk_move_attack_strike = {FRAME_att_c21, FRAME_att_c34, berserk_fram
 
 void CBerserker::Melee ()
 {
-	CurrentMove = ((rand() % 2) == 0) ? &BerserkMoveAttackSpike : &BerserkMoveAttackClub;
+	CurrentMove = ((randomMT() % 2) == 0) ? &BerserkMoveAttackSpike : &BerserkMoveAttackClub;
 }
 
 

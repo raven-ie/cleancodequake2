@@ -75,8 +75,7 @@ void CGrenadeLauncher::Fire (CPlayerEntity *ent)
 	ent->Client.ViewAngle.ToVectors (&forward, &right, NULL);
 	ent->P_ProjectSource (offset, forward, right, start);
 
-	ent->Client.KickOrigin = forward;
-	ent->Client.KickOrigin.Scale (-2);
+	ent->Client.KickOrigin = forward * -2;
 	ent->Client.KickAngles.X = -1;
 
 	CGrenade::Spawn (ent, start, forward, damage, 600, 2.5f, radius);
