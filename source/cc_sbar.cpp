@@ -219,13 +219,12 @@ void CreateDMStatusbar ()
 	DMBar.AddPoint_Y (2);
 	DMBar.AddNumStat (STAT_FRAGS);
 
-#ifndef CLEANCTF_ENABLED
-	DMBar.AddIf (STAT_SPECTATOR);
-	DMBar.AddVirtualPoint_X (0);
-	DMBar.AddPoint_Y (-58, true);
-	DMBar.AddString ("SPECTATOR MODE", true);
-	DMBar.AddEndIf ();
-#endif
+	DMBar.AddPoint_Y (-129, true);
+
+	DMBar.AddIf (STAT_TECH);
+		DMBar.AddPoint_X (-26, true);
+		DMBar.AddPicStat (STAT_TECH);
+	DMBar.AddEndIf();
 
 	DMBar.AddIf (STAT_CHASE);
 	DMBar.AddVirtualPoint_X (0);

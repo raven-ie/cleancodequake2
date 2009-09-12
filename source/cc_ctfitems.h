@@ -30,57 +30,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // cc_ctfitems.h
 // Flags and Techs
 //
+
 #if !defined(__CC_CTFITEMS_H__) || !defined(INCLUDE_GUARDS)
 #define __CC_CTFITEMS_H__
-
-class CTech : public CBaseItem
-{
-	uint32		TechNumber;
-
-public:
-	enum ETechType
-	{
-		TechPassive,			// Tech's effect requires time; happens in ClientEndServerFrame
-		TechAggressive,			// Tech's effect will have a direct effect on any damage going in or out of the player.
-		TechCustom				// Tech's effect is hardcoded
-	};
-
-	ETechType	TechType;
-
-	CTech (char *Classname, char *WorldModel, int EffectFlags,
-			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
-			   char *Precache, uint32 TechNumber, ETechType TechType);
-
-	CTech (char *Classname, char *Model, char *Image, char *Name, CTech::ETechType TechType, uint32 TechNumber);
-
-	CItemEntity *DropItem (CBaseEntity *ent);
-
-	bool	Pickup (class CItemEntity *ent, CPlayerEntity *other);
-	void	Drop (CPlayerEntity *ent);
-	void	Use (CPlayerEntity *ent);
-
-	inline uint32 GetTechNumber ()
-	{
-		return TechNumber;
-	};
-
-	virtual void DoPassiveTech		(CPlayerEntity *Player) {};
-	
-	// Left is always the player who is being checked for the tech.
-	// Calculated is true if all of the armor save values have been calculated; otherwise it is false.
-	//   Calculated would be used, for example, in Strength, you would only apply the effect on false Calculated
-	//   and on Resistance, after.
-	// "Damage" is a reference to the current damage variable. Calculated = false means it's modifying "damage",
-	// true means it's modifying "take".
-	// Rest are self explanatory.
-	virtual void DoAggressiveTech	(	CPlayerEntity *Left, CBaseEntity *Right, bool Calculated, int &Damage, int &Knockback, int &DamageFlags,
-										EMeansOfDeath &Mod	) {};
-};
-
-#define CTFTECH_RESISTANCE_NUMBER	1
-#define CTFTECH_STRENGTH_NUMBER		2
-#define CTFTECH_HASTE_NUMBER		3
-#define CTFTECH_REGEN_NUMBER		4
 
 class CFlag : public CBaseItem
 {

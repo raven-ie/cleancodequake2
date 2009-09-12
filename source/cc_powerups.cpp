@@ -177,11 +177,12 @@ public:
 		if (MegaHealthThinking)
 		{
 			if (gameEntity->owner->health > gameEntity->owner->max_health
-		#ifdef CLEANCTF_ENABLED
-		//ZOID
-				&& (!(game.mode & GAME_CTF) || !dynamic_cast<CPlayerEntity*>(gameEntity->owner->Entity)->CTFHasRegeneration())
-		//ZOID
-		#endif
+		
+			&& ((
+#ifdef CLEANCTF_ENABLED
+			!(game.mode & GAME_CTF) && 
+#endif
+			!dmFlags.dfDmTechs) || !dynamic_cast<CPlayerEntity*>(gameEntity->owner->Entity)->HasRegeneration())
 				)
 			{
 				NextThink = level.framenum + 10;
@@ -222,10 +223,13 @@ public:
 void CMegaHealth::DoPickup (CItemEntity *ent, CPlayerEntity *other)
 {
 	CMegaHealthEntity *MegaHealth = dynamic_cast<CMegaHealthEntity*>(ent);
+
+	if (((
 #ifdef CLEANCTF_ENABLED
-	if (((game.mode & GAME_CTF) && !other->CTFHasRegeneration()) || !(game.mode & GAME_CTF))
-	{
+		(game.mode & GAME_CTF) || 
 #endif
+		dmFlags.dfDmTechs) && !other->HasRegeneration()))
+	{
 		MegaHealth->MegaHealthThinking = true;
 		MegaHealth->NextThink = level.framenum + 50;
 		MegaHealth->gameEntity->owner = other->gameEntity;

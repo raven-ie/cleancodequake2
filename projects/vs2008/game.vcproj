@@ -1279,6 +1279,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\source\cc_techs.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\source\cc_techs.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\source\cc_trigger_entities.cpp"
 					>
 				</File>

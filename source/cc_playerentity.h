@@ -143,8 +143,8 @@ typedef struct
 	CArmor		*Armor; // Current armor.
 #ifdef CLEANCTF_ENABLED
 	CFlag		*Flag; // Set if holding a flag
-	CTech		*Tech; // Set if holding a tech
 #endif
+	CTech		*Tech; // Set if holding a tech
 	// Stored here for convenience. (dynamic_cast ew)
 
 	int			power_cubes;	// used for tracking the cubes in coop games
@@ -289,11 +289,11 @@ public:
 	class CGrappleEntity	*ctf_grapple;		// entity of grapple
 	int			ctf_grapplestate;		// true if pulling
 	FrameNumber_t		ctf_grapplereleasetime;	// time of grapple release
-	FrameNumber_t		ctf_regentime;		// regen tech
-	FrameNumber_t		ctf_techsndtime;
-	FrameNumber_t		ctf_lasttechmsg;
 //ZOID
 #endif
+	FrameNumber_t		regentime;		// regen tech
+	FrameNumber_t		techsndtime;
+	FrameNumber_t		lasttechmsg;
 };
 
 // Players don't think or have (game) controlled physics
@@ -347,15 +347,13 @@ public:
 	void			CTFScoreboardMessage (bool reliable);
 	void			CTFAssignGhost ();
 
-	//int				CTFApplyStrength(int dmg);
-	bool			CTFApplyStrengthSound();
-	bool			CTFApplyHaste();
-	void			CTFApplyHasteSound();
-	//void			CTFApplyRegeneration();
-	bool			CTFHasRegeneration();
-	//int				CTFApplyResistance (int dmg);
+	bool			ApplyStrengthSound();
+	bool			ApplyHaste();
+	void			ApplyHasteSound();
+	bool			HasRegeneration();
 #endif
 
+	void			DeadDropTech ();
 	void			TossClientWeapon ();
 	void			MoveToIntermission ();
 	void			ClientThink (userCmd_t *ucmd);

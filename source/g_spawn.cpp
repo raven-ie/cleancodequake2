@@ -410,6 +410,8 @@ __try
 	LoadPathTable ();
 #endif
 
+	SetupTechSpawn();
+
 #ifdef CLEANCTF_ENABLED
 //ZOID
 	CTFSpawn();

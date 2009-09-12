@@ -125,8 +125,6 @@ extern CCvar *ctf;
 
 #define CTF_AUTO_FLAG_RETURN_TIMEOUT		300	// number of seconds before dropped flag auto-returns
 
-#define CTF_TECH_TIMEOUT					600  // seconds before techs spawn again
-
 #define CTF_GRAPPLE_SPEED					650 // speed of grapple in flight
 #define CTF_GRAPPLE_PULL_SPEED				650	// speed player is pulled at
 
@@ -157,14 +155,6 @@ void CTFFragBonuses(CPlayerEntity *targ, CPlayerEntity *attacker);
 void CTFCheckHurtCarrier(CPlayerEntity *targ, CPlayerEntity *attacker);
 
 //TECH
-CBaseItem *CTFWhat_Tech(edict_t *ent);
-bool CTFPickup_Tech (edict_t *ent, edict_t *other);
-void CTFDrop_Tech(edict_t *ent, CBaseItem *item);
-void CTFDeadDropTech(CPlayerEntity *ent);
-void CTFSetupTechSpawn(void);
-void CTFRespawnTech(edict_t *ent);
-void CTFResetTech(void);
-
 void CTFOpenJoinMenu(CPlayerEntity *ent);
 void CTFVoteYes(CPlayerEntity *ent);
 void CTFVoteNo(CPlayerEntity *ent);

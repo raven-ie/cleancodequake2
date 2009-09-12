@@ -101,11 +101,8 @@ void CHandGrenade::FireGrenade (CPlayerEntity *ent, bool inHand)
 		: 25; // If we're dead, don't toss it 5 yards.
 	CGrenade::Spawn (ent, start, forward, damage, speed, timer, radius, true, inHand);
 
-#ifdef CLEANCTF_ENABLED
-	ent->Client.grenade_time = level.framenum + (((game.mode & GAME_CTF) && ent->CTFApplyHaste()) ? 5 : 10);
-#else
-	ent->Client.grenade_time = level.framenum + 10;
-#endif
+	ent->Client.grenade_time = level.framenum + ((((game.mode & GAME_CTF) || dmFlags.dfDmTechs) && ent->ApplyHaste()) ? 5 : 10);
+
 	if (!dmFlags.dfInfiniteAmmo)
 		DepleteAmmo(ent, 1);
 

@@ -28,7 +28,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 //
 // cc_dmflags.h
-// This is so that I don't have to keep doing dmflags->Integer(). Should be faster than bitwise ops every frame!
+// This is so that I don't have to keep doing dmflags->Integer(). Should be faster than manually re-getting the value every frame!
 //
 
 #include "cc_local.h"
@@ -45,6 +45,7 @@ dmFlagsConfig::dmFlagsConfig()
 #ifdef CLEANCTF_ENABLED
 	dfCtfNoTech = dfCtfForceJoin = dfCtfArmorProtect =
 #endif
+	dfDmTechs =
 	false;
 };
 
@@ -101,4 +102,6 @@ void dmFlagsConfig::UpdateFlags (int dmFlags)
 	if (dmFlags & DF_CTF_NO_TECH)
 		dfCtfNoTech = true;
 #endif
+	if (dmFlags & DF_DM_TECHS)
+		dfDmTechs = true;
 };

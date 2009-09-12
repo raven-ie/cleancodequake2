@@ -270,21 +270,18 @@ Drop an inventory item
 void Cmd_Drop_f (CPlayerEntity *ent)
 {
 	char *s = ArgGetConcatenatedString();
-#ifdef CLEANCTF_ENABLED
-	CBaseItem *Item;
 
-//ZOID--special case for tech powerups
-	if (Q_stricmp(s, "tech") == 0 && ent->Client.pers.Tech)
+	if (Q_stricmp(s, "tech") == 0)
 	{
-		ent->Client.pers.Tech->Drop (ent);
-		ent->Client.pers.Inventory.ValidateSelectedItem();
+		if (ent->Client.pers.Tech)
+		{
+			ent->Client.pers.Tech->Drop (ent);
+			ent->Client.pers.Inventory.ValidateSelectedItem();
+		}
 		return;
 	}
-	Item = FindItem(s);
-//ZOID
-#else
+
 	CBaseItem *Item = FindItem(s);
-#endif
 	if (!Item)
 	{
 		Item = FindItemByClassname(s);

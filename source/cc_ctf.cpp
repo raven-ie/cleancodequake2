@@ -96,9 +96,9 @@ void CreateCTFStatusbar ()
 
 	CTFBar.AddPoint_Y (-129, true);
 
-	CTFBar.AddIf (STAT_CTF_TECH);
+	CTFBar.AddIf (STAT_TECH);
 		CTFBar.AddPoint_X (-26, true);
-		CTFBar.AddPicStat (STAT_CTF_TECH);
+		CTFBar.AddPicStat (STAT_TECH);
 	CTFBar.AddEndIf();
 
 	CTFBar.AddPoint_Y (-102, true);
@@ -247,7 +247,6 @@ bool loc_CanSee (CBaseEntity *targ, CBaseEntity *inflictor)
 void CTFSpawn(void)
 {
 	memset(&ctfgame, 0, sizeof(ctfgame));
-	CTFSetupTechSpawn();
 
 	if (competition->Integer() > 1) {
 		ctfgame.match = MATCH_SETUP;
@@ -1097,7 +1096,7 @@ void CTFResetAllPlayers(void)
 
 		CGrapple::PlayerResetGrapple(ent);
 		CTFDeadDropFlag(ent);
-		CTFDeadDropTech(ent);
+		ent->DeadDropTech();
 
 		ent->Client.resp.ctf_team = CTF_NOTEAM;
 		ent->Client.resp.ready = false;
@@ -1108,7 +1107,7 @@ void CTFResetAllPlayers(void)
 	}
 
 	// reset the level
-	CTFResetTech();
+	ResetTechs();
 	CTFResetFlags();
 
 	for (int i = game.maxclients; i < globals.numEdicts; i++)
@@ -1444,7 +1443,7 @@ void CTFObserver(CPlayerEntity *ent)
 
 	CGrapple::PlayerResetGrapple(ent);
 	CTFDeadDropFlag(ent);
-	CTFDeadDropTech(ent);
+	ent->DeadDropTech();
 
 	ent->NoClip = true;
 	ent->SetSolid(SOLID_NOT);

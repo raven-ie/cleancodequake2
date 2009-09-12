@@ -66,6 +66,8 @@ public:
 	bool				dfCtfArmorProtect;
 #endif
 
+	bool				dfDmTechs;
+
 	dmFlagsConfig();
 	void UpdateFlags (int dmFlags);
 };

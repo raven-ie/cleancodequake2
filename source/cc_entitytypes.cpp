@@ -296,23 +296,25 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 	if (!(dflags & DAMAGE_RADIUS) && (EntityFlags & ENT_MONSTER) && (attacker->EntityFlags & ENT_PLAYER) && (!gameEntity->enemy) && (gameEntity->health > 0))
 		damage *= 2;
 
+	if (dmFlags.dfDmTechs
 #ifdef CLEANCTF_ENABLED
-	if (game.mode & GAME_CTF)
+	|| (game.mode & GAME_CTF)
+#endif
+	)
 	{
 		if (isClient)
 		{
 			if (Client->pers.Tech && (Client->pers.Tech->TechType == CTech::TechAggressive))
-				Client->pers.Tech->DoAggressiveTech (dynamic_cast<CPlayerEntity*>(this), attacker, false, damage, knockback, dflags, mod);
+				Client->pers.Tech->DoAggressiveTech (dynamic_cast<CPlayerEntity*>(this), attacker, false, damage, knockback, dflags, mod, true);
 		}
 
 		if (attacker->EntityFlags & ENT_PLAYER)
 		{
 			CPlayerEntity *Atk = dynamic_cast<CPlayerEntity*>(attacker);
 			if (Atk->Client.pers.Tech && (Atk->Client.pers.Tech->TechType == CTech::TechAggressive))
-				dynamic_cast<CPlayerEntity*>(attacker)->Client.pers.Tech->DoAggressiveTech (Atk, dynamic_cast<CPlayerEntity*>(this), false, damage, knockback, dflags, mod);
+				dynamic_cast<CPlayerEntity*>(attacker)->Client.pers.Tech->DoAggressiveTech (Atk, dynamic_cast<CPlayerEntity*>(this), false, damage, knockback, dflags, mod, false);
 		}
 	}
-#endif
 
 	if (Flags & FL_NO_KNOCKBACK)
 		knockback = 0;
@@ -391,28 +393,25 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 	//treat cheat/powerup savings the same as armor
 	asave += save;
 
+	if (dmFlags.dfDmTechs
 #ifdef CLEANCTF_ENABLED
-//ZOID
-//resistance tech
-	//if (isClient && (game.mode & GAME_CTF))
-	//	take = (dynamic_cast<CPlayerEntity*>(this))->CTFApplyResistance(take);
-	if (game.mode & GAME_CTF)
+	|| (game.mode & GAME_CTF)
+#endif
+	)
 	{
 		if (isClient)
 		{
 			if (Client->pers.Tech && (Client->pers.Tech->TechType == CTech::TechAggressive))
-				Client->pers.Tech->DoAggressiveTech (dynamic_cast<CPlayerEntity*>(this), attacker, true, take, knockback, dflags, mod);
+				Client->pers.Tech->DoAggressiveTech (dynamic_cast<CPlayerEntity*>(this), attacker, true, take, knockback, dflags, mod, true);
 		}
 
 		if (attacker->EntityFlags & ENT_PLAYER)
 		{
 			CPlayerEntity *Atk = dynamic_cast<CPlayerEntity*>(attacker);
 			if (Atk->Client.pers.Tech && (Atk->Client.pers.Tech->TechType == CTech::TechAggressive))
-				dynamic_cast<CPlayerEntity*>(attacker)->Client.pers.Tech->DoAggressiveTech (Atk, dynamic_cast<CPlayerEntity*>(this), true, damage, knockback, dflags, mod);
+				dynamic_cast<CPlayerEntity*>(attacker)->Client.pers.Tech->DoAggressiveTech (Atk, dynamic_cast<CPlayerEntity*>(this), true, damage, knockback, dflags, mod, false);
 		}
 	}
-//ZOID
-#endif
 
 	// team damage avoidance
 	if (!(dflags & DAMAGE_NO_PROTECTION) && CheckTeamDamage (attacker))
