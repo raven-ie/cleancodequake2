@@ -287,30 +287,28 @@ void CWeapon::Think (CPlayerEntity *Player)
 	isQuad = (Player->Client.quad_framenum > level.framenum);
 	isSilenced = (Player->Client.silencer_shots) ? true : false;
 	WeaponGeneric (Player);
+	if (dmFlags.dfDmTechs
 #ifdef CLEANCTF_ENABLED
-	if (game.mode & GAME_CTF)
+		|| (game.mode & GAME_CTF)
+#endif
+	)
 	{
-		if (this != &WeaponGrapple && Player->CTFApplyHaste())
+		if (this != &WeaponGrapple && Player->ApplyHaste())
 			WeaponGeneric(Player);
 	}
-#endif
 }
 
 void CWeapon::AttackSound(CPlayerEntity *Player)
 {
-#ifdef CLEANCTF_ENABLED
-//ZOID
-	if (game.mode & GAME_CTF)
+	if ((game.mode & GAME_CTF) || dmFlags.dfDmTechs)
 	{
-		Player->CTFApplyHasteSound();
+		Player->ApplyHasteSound();
 
-		if (!Player->CTFApplyStrengthSound() && isQuad)
+		if (!Player->ApplyStrengthSound() && isQuad)
 			Player->PlaySound (CHAN_ITEM, SoundIndex("items/damage3.wav"));
 	}
 	else if (isQuad)
 		Player->PlaySound (CHAN_ITEM, SoundIndex("items/damage3.wav"));
-//ZOID
-#endif
 }
 
 // YUCK

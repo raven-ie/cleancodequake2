@@ -657,9 +657,9 @@ void CPlayerEntity::InitPersistent ()
 	if (game.mode & GAME_CTF)
 		NItems::Grapple->Add(this, 1);
 	Client.pers.Flag = NULL;
-	Client.pers.Tech = NULL;
 #endif
 
+	Client.pers.Tech = NULL;
 	Client.pers.Armor = NULL;
 
 	Client.pers.health			= 100;
@@ -1873,13 +1873,8 @@ void CPlayerEntity::EndServerFrame ()
 	Client.KickOrigin.Clear();
 	Client.KickAngles.Clear();
 
-#ifdef CLEANCTF_ENABLED
-//ZOID
-//regen tech
-	if (game.mode & GAME_CTF && (Client.pers.Tech && (Client.pers.Tech->TechType == CTech::TechPassive)))
+	if (((game.mode & GAME_CTF) || dmFlags.dfDmTechs) && (Client.pers.Tech && (Client.pers.Tech->TechType == CTech::TechPassive)))
 		Client.pers.Tech->DoPassiveTech (this);
-//ZOID
-#endif
 
 	// if the scoreboard is up, update it
 	if (Client.showscores && !(level.framenum & 31) )
@@ -2314,6 +2309,10 @@ void CPlayerEntity::SetStats ()
 
 	Client.PlayerState.SetStat(STAT_SPECTATOR, 0);
 
+	Client.PlayerState.SetStat(STAT_TECH, 0);
+	if (Client.pers.Tech)
+		Client.PlayerState.SetStat(STAT_TECH, Client.pers.Tech->IconIndex);
+
 #ifdef CLEANCTF_ENABLED
 //ZOID
 	if (game.mode & GAME_CTF)
@@ -2391,11 +2390,7 @@ void CPlayerEntity::SetCTFStats()
 		}
 	}
 
-	// tech icon
 	i = 0;
-	Client.PlayerState.SetStat(STAT_CTF_TECH, 0);
-	if (Client.pers.Tech)
-		Client.PlayerState.SetStat(STAT_CTF_TECH, Client.pers.Tech->IconIndex);
 
 	// figure out what icon to display for team logos
 	// three states:
@@ -2619,22 +2614,13 @@ void CPlayerEntity::MoveToIntermission ()
 		DeathmatchScoreboardMessage (true);
 }
 
-#ifdef CLEANCTF_ENABLED
-
-/*int CPlayerEntity::CTFApplyStrength(int dmg)
-{
-	if (dmg && (Client.pers.Tech == NItems::Strength))
-		return dmg * 2;
-	return dmg;
-}*/
-
-bool CPlayerEntity::CTFApplyStrengthSound()
+bool CPlayerEntity::ApplyStrengthSound()
 {
 	if (Client.pers.Tech && (Client.pers.Tech->GetTechNumber() == CTFTECH_STRENGTH_NUMBER))
 	{
-		if (Client.ctf_techsndtime < level.framenum)
+		if (Client.techsndtime < level.framenum)
 		{
-			Client.ctf_techsndtime = level.framenum + 10;
+			Client.techsndtime = level.framenum + 10;
 			PlaySound (CHAN_AUTO, SoundIndex((Client.quad_framenum > level.framenum) ? "ctf/tech2x.wav" : "ctf/tech2.wav"), (Client.silencer_shots) ? 0.2f : 1.0f);
 		}
 		return true;
@@ -2642,82 +2628,24 @@ bool CPlayerEntity::CTFApplyStrengthSound()
 	return false;
 }
 
-
-bool CPlayerEntity::CTFApplyHaste()
+bool CPlayerEntity::ApplyHaste()
 {
 	return (Client.pers.Tech && (Client.pers.Tech->GetTechNumber() == CTFTECH_HASTE_NUMBER));
 }
 
-void CPlayerEntity::CTFApplyHasteSound()
+void CPlayerEntity::ApplyHasteSound()
 {
-	if (Client.pers.Tech && (Client.pers.Tech->GetTechNumber() == CTFTECH_HASTE_NUMBER) && Client.ctf_techsndtime < level.framenum)
+	if (Client.pers.Tech && (Client.pers.Tech->GetTechNumber() == CTFTECH_HASTE_NUMBER) && Client.techsndtime < level.framenum)
 	{
-		Client.ctf_techsndtime = level.framenum + 10;
+		Client.techsndtime = level.framenum + 10;
 		PlaySound (CHAN_AUTO, SoundIndex("ctf/tech3.wav"), (Client.silencer_shots) ? 0.2f : 1.0f);
 	}
 }
 
-/*void CPlayerEntity::CTFApplyRegeneration()
-{
-	if (Client.pers.Tech == NItems::Regeneration)
-	{
-		CBaseItem *index;
-		bool noise = false;
-		if (Client.ctf_regentime < level.framenum)
-		{
-			Client.ctf_regentime = level.framenum;
-			if (gameEntity->health < 150)
-			{
-				gameEntity->health += 5;
-				if (gameEntity->health > 150)
-					gameEntity->health = 150;
-				Client.ctf_regentime += 5;
-				noise = true;
-			}
-			index = Client.pers.Armor;
-			if (index && Client.pers.Inventory.Has(index) < 150)
-			{
-				Client.pers.Inventory.Add (index, 5);
-				if (Client.pers.Inventory.Has(index) > 150)
-					Client.pers.Inventory.Set(index, 150);
-				Client.ctf_regentime += 5;
-				noise = true;
-			}
-		}
-		if (noise && Client.ctf_techsndtime < level.framenum)
-		{
-			Client.ctf_techsndtime = level.framenum + 10;
-			float volume = 1.0;
-
-			if (Client.silencer_shots)
-				volume = 0.2f;
-
-			PlaySound (CHAN_ITEM, SoundIndex("ctf/tech4.wav"), volume);
-		}
-	}
-}*/
-
-bool CPlayerEntity::CTFHasRegeneration()
+bool CPlayerEntity::HasRegeneration()
 {
 	return (Client.pers.Tech && (Client.pers.Tech->GetTechNumber() == CTFTECH_REGEN_NUMBER));
 }
-
-/*int CPlayerEntity::CTFApplyResistance(int dmg)
-{
-	float volume = 1.0;
-
-	if (Client.silencer_shots)
-		volume = 0.2f;
-
-	if (dmg && (Client.pers.Tech == NItems::Resistance))
-	{
-		// make noise
-	   	PlaySound (CHAN_ITEM, SoundIndex("ctf/tech1.wav"), volume);
-		return dmg / 2;
-	}
-	return dmg;
-}*/
-#endif
 
 
 /*
@@ -2754,6 +2682,22 @@ void CPlayerEntity::LookAtKiller (edict_t *inflictor, edict_t *attacker)
 	}
 	if (Client.killer_yaw < 0)
 		Client.killer_yaw += 360;
+}
+
+void CPlayerEntity::DeadDropTech ()
+{
+	if (!Client.pers.Tech)
+		return;
+
+	CItemEntity *dropped = Client.pers.Tech->DropItem(this);
+	// hack the velocity to make it bounce random
+	dropped->gameEntity->velocity[0] = (frand() * 600) - 300;
+	dropped->gameEntity->velocity[1] = (frand() * 600) - 300;
+	dropped->NextThink = level.framenum + CTF_TECH_TIMEOUT;
+	dropped->gameEntity->owner = NULL;
+	Client.pers.Inventory.Set(Client.pers.Tech, 0);
+
+	Client.pers.Tech = NULL;
 }
 
 void CPlayerEntity::TossClientWeapon ()
@@ -3383,10 +3327,12 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 		{
 			CGrapple::PlayerResetGrapple(this);
 			CTFDeadDropFlag(this);
-			CTFDeadDropTech(this);
 		}
 //ZOID
 #endif
+		if ((game.mode & GAME_CTF) || dmFlags.dfDmTechs) 
+			DeadDropTech();
+
 		if (game.mode & GAME_DEATHMATCH)
 			Cmd_Help_f (this);		// show scores
 
@@ -4011,12 +3957,12 @@ void CPlayerEntity::Disconnect ()
 #ifdef CLEANCTF_ENABLED
 //ZOID
 	if (game.mode & GAME_CTF)
-	{
 		CTFDeadDropFlag(this);
-		CTFDeadDropTech(this);
-	}
 //ZOID
 #endif
+
+	if ((game.mode & GAME_CTF) || dmFlags.dfDmTechs) 
+		DeadDropTech();
 
 	// send effect
 	CTempEnt::MuzzleFlash (State.GetOrigin(), State.GetNumber(), MZ_LOGIN);

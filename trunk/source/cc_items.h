@@ -48,9 +48,7 @@ enum// EItemFlags
 	ITEMFLAG_GRABBABLE			= 128,
 	ITEMFLAG_USABLE				= 256,
 	ITEMFLAG_DROPPABLE			= 512,
-#ifdef CLEANCTF_ENABLED
 	ITEMFLAG_TECH				= 1024,
-#endif
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -171,6 +169,7 @@ public:
 #ifdef CLEANCTF_ENABLED
 #include "cc_ctfitems.h"
 #endif
+#include "cc_techs.h"
 
 #include "cc_itemlist.h"
 

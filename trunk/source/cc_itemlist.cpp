@@ -198,11 +198,9 @@ void InitItemlist ()
 	AddKeysToList();
 #ifdef CLEANCTF_ENABLED
 	if (game.mode & GAME_CTF)
-	{
 		AddFlagsToList();
-		AddTechsToList();
-	}
 #endif
+	AddTechsToList();
 }
 
 void SetItemNames ()
