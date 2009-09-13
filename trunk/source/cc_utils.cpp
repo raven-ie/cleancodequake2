@@ -117,7 +117,7 @@ CBaseEntity *CC_PickTarget (char *targetname)
 		return NULL;
 	}
 
-	return choice[randomMT() % num_choices];
+	return choice[irandom(num_choices)];
 }
 
 void G_SetMovedir (vec3f &angles, vec3f &movedir)
@@ -216,21 +216,6 @@ void ForEachTeamChain (CBaseEntity *Master, CForEachTeamChainCallback *Callback)
 {
 	for (CBaseEntity *e = Master->TeamMaster; e; e = e->TeamChain)
 		Callback->Callback (e);
-
-/*	CBaseEntity *e = Master->gameEntity->teammaster->Entity;
-
-	while (true)
-	{
-		if (!e)
-			break;
-
-		Callback->Callback (e);
-
-		if (!e->TeamChain)
-			break;
-
-		e = e->TeamChain;
-	}*/
 }
 
 /*
@@ -348,7 +333,7 @@ CBaseEntity *SelectRandomDeathmatchSpawnPoint ()
 	else
 		count -= 2;
 
-	int selection = randomMT() % count;
+	int selection = irandom(count);
 	spot = NULL;
 
 	do
@@ -392,6 +377,50 @@ CBaseEntity *SelectFarthestDeathmatchSpawnPoint ()
 }
 
 /*
+=============
+range
+
+returns the range catagorization of an entity reletive to self
+0	melee range, will become hostile even if back is turned
+1	visibility and infront, or visibility and show hostile
+2	infront and show hostile
+3	only triggered by damage
+=============
+*/
+ERangeType Range (CBaseEntity *self, CBaseEntity *other)
+{
+	return Range(self->State.GetOrigin(), other->State.GetOrigin());
+}
+
+/*
+=============
+visible
+
+returns 1 if the entity is visible to self, even if not infront ()
+=============
+*/
+bool IsVisible (CBaseEntity *self, CBaseEntity *other)
+{	
+	return (CTrace (self->State.GetOrigin() + vec3f(0, 0, self->gameEntity->viewheight),
+		other->State.GetOrigin() + vec3f(0, 0, other->gameEntity->viewheight),
+		self->gameEntity, CONTENTS_MASK_OPAQUE).fraction == 1.0);
+}
+
+/*
+=============
+infront
+
+returns 1 if the entity is in front (in sight) of self
+=============
+*/
+bool IsInFront (CBaseEntity *self, CBaseEntity *other)
+{	
+	vec3f forward;
+	self->State.GetAngles().ToVectors (&forward, NULL, NULL);
+	return ((other->State.GetOrigin() - self->State.GetOrigin()).GetNormalized().Dot (forward) > 0.3);
+}
+
+/*
 ============
 T_RadiusDamage
 ============
@@ -430,9 +459,9 @@ void DrawRadiusDebug (vec3f &origin, float radius)
 void T_RadiusDamage (CBaseEntity *inflictor, CBaseEntity *attacker, float damage, CBaseEntity *ignore, float radius, EMeansOfDeath mod)
 {
 	CHurtableEntity	*ent = NULL;
-	vec3f org = inflictor->State.GetOrigin();
 	//DrawRadiusDebug (org, radius);
 
+	vec3f org = inflictor->State.GetOrigin();
 	while ((ent = FindRadius<CHurtableEntity, ENT_HURTABLE> (ent, org, radius)) != NULL)
 	{
 		if (ent == ignore)

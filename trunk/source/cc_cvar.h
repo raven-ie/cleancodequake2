@@ -60,9 +60,10 @@ public:
 	void Register (char *cvarName, float defaultValue, int flags = 0);
 
 	// Let me know if these defs cause any problems with types.
-	float Float ();
-	int Integer();
-	char *String();
+	float		Float ();
+	int			Integer();
+	char		*String();
+	bool		Boolean (bool MustBeOne = false);
 
 	void Set (char *value, bool Force = false);
 	void Set (int value, bool Force = false);

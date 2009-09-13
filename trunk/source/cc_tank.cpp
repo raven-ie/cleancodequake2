@@ -454,7 +454,7 @@ void CTank::Rocket ()
 	vec = Entity->gameEntity->enemy->state.origin;
 	vec.Z += Entity->gameEntity->enemy->viewheight;
 	dir = vec - start;
-	dir.NormalizeFastf ();
+	dir.NormalizeFast ();
 
 	MonsterFireRocket (start, dir, 50, 550, flash_number);
 #endif
@@ -535,7 +535,7 @@ CAnim TankMoveAttackPostBlast (FRAME_attak117, FRAME_attak122, TankFramesAttackP
 
 void CTank::ReAttackBlaster ()
 {
-	if (skill->Integer() >= 2 && visible (Entity->gameEntity, Entity->gameEntity->enemy) && Entity->gameEntity->enemy->health > 0 && random() <= 0.6)
+	if (skill->Integer() >= 2 && IsVisible (Entity, Entity->gameEntity->enemy->Entity) && Entity->gameEntity->enemy->health > 0 && random() <= 0.6)
 	{
 		CurrentMove = &TankMoveReAttackBlast;
 		return;
@@ -712,7 +712,7 @@ void CTank::ReFireRocket ()
 #endif
 
 	// Only on hard or nightmare
-	if ( skill->Integer() >= 2 && Entity->gameEntity->enemy->health > 0 && visible(Entity->gameEntity, Entity->gameEntity->enemy) && random() <= 0.4)
+	if ( skill->Integer() >= 2 && Entity->gameEntity->enemy->health > 0 && IsVisible(Entity, Entity->gameEntity->enemy->Entity) && random() <= 0.4)
 	{
 		CurrentMove = &TankMoveAttackFireRocket;
 		return;

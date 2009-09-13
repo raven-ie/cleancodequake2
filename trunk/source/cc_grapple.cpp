@@ -168,7 +168,7 @@ void CGrapple::WeaponGeneric (CPlayerEntity *Player)
 				newFrame = IdleStart;
 			else
 			{
-				if (CanStopFidgetting(Player) && (randomMT()&15))
+				if (CanStopFidgetting(Player) && (randomMT() & 15))
 					newFrame = Player->Client.PlayerState.GetGunFrame();
 			}
 		}

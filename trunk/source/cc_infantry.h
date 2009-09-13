@@ -55,7 +55,7 @@ public:
 	CInfantry ();
 
 #ifndef MONSTER_USE_ROGUE_AI
-	void Dodge (edict_t *attacker, float eta);
+	void Dodge (CBaseEntity *attacker, float eta);
 	void Duck_Down ();
 	void Duck_Hold ();
 	void Duck_Up ();

@@ -130,7 +130,7 @@ CMonsterEntity *CMedic::FindDeadMonster ()
 			continue;
 		if (ent->NextThink)
 			continue;
-		if (!visible(Entity->gameEntity, ent->gameEntity))
+		if (!IsVisible(Entity, ent))
 			continue;
 #ifdef MONSTER_USE_ROGUE_AI
 		// check to make sure we haven't bailed on this guy already
@@ -532,7 +532,7 @@ CAnim MedicMoveAttackHyperBlaster (FRAME_attack15, FRAME_attack30, MedicFramesAt
 
 void CMedic::ContinueFiring ()
 {
-	if (visible (Entity->gameEntity, Entity->gameEntity->enemy) && (random() <= 0.95))
+	if (IsVisible (Entity, Entity->gameEntity->enemy->Entity) && (random() <= 0.95))
 		CurrentMove = &MedicMoveAttackHyperBlaster;
 }
 
@@ -710,20 +710,54 @@ bool CMedic::CheckAttack ()
 	return CMonster::CheckAttack ();
 }
 
+#ifndef MONSTER_USE_ROGUE_AI
+void CMedic::Duck_Down ()
+{
+	if (AIFlags & AI_DUCKED)
+		return;
+	AIFlags |= AI_DUCKED;
+	PauseTime = level.framenum + 10;
+	Entity->SetMins (Entity->GetMins() - vec3f(0, 0, 32));
+	Entity->Link ();
+}
+
+void CMedic::Duck_Hold ()
+{
+	if (level.framenum >= PauseTime)
+		AIFlags &= ~AI_HOLD_FRAME;
+	else
+		AIFlags |= AI_HOLD_FRAME;
+}
+
+void CMedic::Duck_Up ()
+{
+	AIFlags &= ~AI_DUCKED;
+	Entity->SetMins (Entity->GetMins() + vec3f(0, 0, 32));
+	Entity->Link ();
+}
+#endif
+
+
 CFrame MedicFramesDuck [] =
 {
 	CFrame (&CMonster::AI_Move, -1),
 	CFrame (&CMonster::AI_Move, -1),
+#ifdef MONSTER_USE_ROGUE_AI
 	CFrame (&CMonster::AI_Move, -1, &CMonster::DuckDown),
 	CFrame (&CMonster::AI_Move, -1,	&CMonster::DuckHold),
+#else
+	CFrame (&CMonster::AI_Move, -1, ConvertDerivedFunction(&CMedic::Duck_Down)),
+	CFrame (&CMonster::AI_Move, -1,	ConvertDerivedFunction(&CMedic::Duck_Hold)),
+#endif
 	CFrame (&CMonster::AI_Move, -1),
 	CFrame (&CMonster::AI_Move, -1),
 	CFrame (&CMonster::AI_Move, -1
-#ifndef MONSTER_USE_ROGUE_AI
-	,	&CMonster::DuckUp // in Rogue AI, the UP is down
+#ifdef MONSTER_USE_ROGUE_AI
+	,	&CMonster::UnDuck // in Rogue AI, the UP is down
 #else
-	),
+	,	ConvertDerivedFunction(&CMedic::Duck_Up)
 #endif
+	),
 	CFrame (&CMonster::AI_Move, -1),
 	CFrame (&CMonster::AI_Move, -1),
 	CFrame (&CMonster::AI_Move, -1),
@@ -741,42 +775,13 @@ CFrame MedicFramesDuck [] =
 CAnim MedicMoveDuck (FRAME_duck1, FRAME_duck16, MedicFramesDuck, &CMonster::Run);
 
 #ifndef MONSTER_USE_ROGUE_AI
-void CMedic::DuckDown ()
-{
-	if (AIFlags & AI_DUCKED)
-		return;
-	AIFlags |= AI_DUCKED;
-	vec3f maxs = Entity->GetMaxs();
-	maxs.Z -= 32;
-	Entity->SetMaxs(maxs);
-	PauseTime = level.time + 1;
-	Entity->Link();
-}
-
-void CMedic::DuckHold ()
-{
-	if (level.time >= PauseTime)
-		AIFlags &= ~AI_HOLD_FRAME;
-	else
-		AIFlags |= AI_HOLD_FRAME;
-}
-
-void CMedic::DuckUp ()
-{
-	AIFlags &= ~AI_DUCKED;
-	vec3f maxs = Entity->GetMaxs();
-	maxs.Z += 32;
-	Entity->SetMaxs(maxs);
-	Entity->Link();
-}
-
-void CMedic::Dodge (edict_t *attacker, float eta)
+void CMedic::Dodge (CBaseEntity *attacker, float eta)
 {
 	if (random() > 0.25)
 		return;
 
 	if (!Entity->gameEntity->enemy)
-		Entity->gameEntity->enemy = attacker;
+		Entity->gameEntity->enemy = attacker->gameEntity;
 
 	CurrentMove = &MedicMoveDuck;
 }
@@ -850,9 +855,9 @@ void CMedic::Spawn ()
 	Entity->gameEntity->gib_health = -130;
 	Entity->gameEntity->mass = 400;
 
-	MonsterFlags |= (MF_HAS_DODGE | MF_HAS_ATTACK | MF_HAS_SIGHT | MF_HAS_IDLE | MF_HAS_SEARCH
+	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_SIGHT | MF_HAS_IDLE | MF_HAS_SEARCH
 #ifdef MONSTER_USE_ROGUE_AI
-		| MF_HAS_DUCK | MF_HAS_UNDUCK | MF_HAS_SIDESTEP
+		| MF_HAS_DODGE | MF_HAS_DUCK | MF_HAS_UNDUCK | MF_HAS_SIDESTEP
 #endif
 		);
 

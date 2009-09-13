@@ -126,15 +126,11 @@ void MapPrint (EMapPrintType printType, CBaseEntity *ent, vec3f origin, char *fm
 	DebugPrintf ("%s", text);
 }
 
-#include <string>
-#include <vector>
-using namespace std;
-
 #define POUNDENTITIES_VERSION "1"
 int fileVersion;
 
 int curIf = 0;
-vector<bool> ifLists;
+std::vector<bool> ifLists;
 
 inline void PushIf (bool expr)
 {
@@ -380,7 +376,7 @@ char *ParsePound (char *tok, char *realEntities)
 
 char *CC_LoadEntFile (char *mapname, char *entities)
 {
-	string fileName;
+	std::string fileName;
 
 	fileName = "maps/ents/";
 	fileName += mapname;
@@ -408,7 +404,7 @@ bool TokenEnd (char *token)
 // this goes by entire lines.
 char *CC_ParseSpawnEntities (char *mapname, char *entities)
 {
-	string finalString;
+	std::string finalString;
 	char *realEntities;
 	char *token;
 	char *tempEntities;

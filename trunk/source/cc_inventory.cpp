@@ -723,7 +723,7 @@ void Cmd_Give (CPlayerEntity *ent)
 
 	edict_t *Spawned = G_Spawn();
 
-	Spawned->classname = ArgGetConcatenatedString();
+	Spawned->classname = Mem_PoolStrDup (ArgGetConcatenatedString(), com_levelPool, 0);
 	ED_CallSpawn (Spawned);
 	if (Spawned)
 	{

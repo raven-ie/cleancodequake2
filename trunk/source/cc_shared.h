@@ -41,6 +41,10 @@ class CPlayerEntity;
 // Stand-alone classes
 typedef int64	FrameNumber_t;
 
+#include <string>
+#include <vector>
+#include <list>
+
 #include "cc_conchars.h"
 #include "cc_colors.h"
 #include "cc_indexing.h"
@@ -51,11 +55,14 @@ typedef int64	FrameNumber_t;
 #include "cc_cvar.h"
 #include "cc_ban.h"
 #include "cc_filesystem.h"
+#include "cc_utils.h"
 
 // Main class files
 #include "cc_items.h"
 #include "cc_inventory.h"
+#ifdef MONSTERS_USE_PATHFINDING
 #include "cc_pathfinding.h"
+#endif
 #include "cc_sbar.h"
 #include "cc_menu.h"
 #include "cc_weaponmain.h"
@@ -81,8 +88,6 @@ typedef int64	FrameNumber_t;
 #include "cc_ctfmenu.h"
 #endif
 #include "cc_entitylist.h"
-extern dmFlagsConfig dmFlags;
-#include "cc_utils.h"
 
 
 #if 0

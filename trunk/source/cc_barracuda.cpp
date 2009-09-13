@@ -229,7 +229,7 @@ void CBarracudaShark::Pain (CBaseEntity *other, float kick, int damage)
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
 
-	switch ((randomMT() + 1) % 2)
+	switch (irandom(2))
 	{
 	case 0:
 		Entity->PlaySound (CHAN_VOICE, SoundPain1);

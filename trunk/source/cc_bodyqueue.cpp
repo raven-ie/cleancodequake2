@@ -32,7 +32,6 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 //
 
 #include "cc_local.h"
-#include <list>
 
 // TODO: Is TouchableEntity needed?
 class CBody : public CHurtableEntity, public CTouchableEntity, public CTossProjectile, public CThinkableEntity
@@ -81,7 +80,7 @@ void CBody::Pain (CBaseEntity *other, float kick, int damage)
 void VelocityForDamage (int damage, vec3f &v);
 void CBody::TossHead (int damage)
 {
-	if (randomMT()&1)
+	if (irandom(2))
 	{
 		State.SetModelIndex (gMedia.Gib_Head[1]);
 		State.SetSkinNum (1);		// second skin is player

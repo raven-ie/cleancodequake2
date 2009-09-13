@@ -206,6 +206,8 @@ public:
 	vec3f			ViewAngle;			// aiming direction
 	vec3f			DamageFrom;		// origin for vector calculation
 	colorb			DamageBlend;
+	CBaseEntity		*mynoise;		// can go in client only
+	CBaseEntity		*mynoise2;
 
 	CClient (gclient_t *client);
 

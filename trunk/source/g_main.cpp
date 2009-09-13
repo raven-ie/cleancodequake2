@@ -71,8 +71,8 @@ CCvar	*flood_persecond;
 CCvar	*flood_waitdelay;
 
 CCvar	*sv_maplist;
-
 CCvar	*map_debug;
+CCvar	*cc_techflags;
 
 #ifdef CLEANCTF_ENABLED
 //ZOID

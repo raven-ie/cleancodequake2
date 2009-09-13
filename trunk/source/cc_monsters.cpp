@@ -38,7 +38,6 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #ifdef MONSTERS_USE_PATHFINDING
 
 bool VecInFront (vec3f &angles, vec3f &origin1, vec3f &origin2);
-int rangevector (vec3_t self, vec3_t other);
 
 void CMonster::FoundPath ()
 {
@@ -74,7 +73,7 @@ void CMonster::FoundPath ()
 
 	float timeOut = level.framenum + 20; // Always at least 2 seconds
 	// Calculate approximate distance and check how long we want this to time out for
-	switch (rangevector(origin, P_CurrentNode->Origin))
+	switch (Range(origin, P_CurrentNode->Origin))
 	{
 	case RANGE_MELEE:
 		timeOut += 60; // 10 seconds max
@@ -101,7 +100,7 @@ void CMonster::MoveToPath (float Dist)
 	if (!Entity->GroundEntity && !(Entity->Flags & (FL_FLY|FL_SWIM)))
 		return;
 
-	if (FindTarget() && (Entity->gameEntity->enemy && visible(Entity->gameEntity, Entity->gameEntity->enemy))) // Did we find an enemy while going to our path?
+	if (FindTarget() && (Entity->gameEntity->enemy && IsVisible(Entity, Entity->gameEntity->enemy->Entity))) // Did we find an enemy while going to our path?
 	{
 		FollowingPath = false;
 		PauseTime = 100000000;
@@ -229,7 +228,7 @@ void CMonster::MoveToPath (float Dist)
 
 		FrameNumber_t timeOut = level.framenum + 20; // Always at least 2 seconds
 		// Calculate approximate distance and check how long we want this to time out for
-		switch (rangevector(origin, P_CurrentNode->Origin))
+		switch (Range(origin, P_CurrentNode->Origin))
 		{
 		case RANGE_MELEE:
 			timeOut += 60; // 10 seconds max
@@ -249,7 +248,7 @@ void CMonster::MoveToPath (float Dist)
 	}
 
 // bump around...
-	if ( doit || (randomMT()&3)==1 || !StepDirection (IdealYaw, Dist))
+	if ( doit || (randomMT()&3) == 1 || !StepDirection (IdealYaw, Dist))
 	{
 		if (Entity->IsInUse())
 		{
@@ -349,7 +348,7 @@ will be null.
 In coop games, sight_client will cycle between the clients.
 =================
 */
-void AI_SetSightClient (void)
+void AI_SetSightClient ()
 {
 	int		start, check;
 
@@ -378,97 +377,6 @@ void AI_SetSightClient (void)
 			return;		// nobody to see
 		}
 	}
-}
-
-/*
-=============
-range
-
-returns the range catagorization of an entity reletive to self
-0	melee range, will become hostile even if back is turned
-1	visibility and infront, or visibility and show hostile
-2	infront and show hostile
-3	only triggered by damage
-=============
-*/
-int range (edict_t *self, edict_t *other)
-{
-	vec3_t	v;
-	float	len;
-
-	Vec3Subtract (self->state.origin, other->state.origin, v);
-	len = Vec3Length (v);
-	if (len < MELEE_DISTANCE)
-		return RANGE_MELEE;
-	if (len < 500)
-		return RANGE_NEAR;
-	if (len < 1000)
-		return RANGE_MID;
-	return RANGE_FAR;
-}
-
-int rangevector (vec3_t self, vec3_t other)
-{
-	vec3_t	v;
-	float	len;
-
-	Vec3Subtract (self, other, v);
-	len = Vec3Length (v);
-	if (len < MELEE_DISTANCE)
-		return RANGE_MELEE;
-	if (len < 500)
-		return RANGE_NEAR;
-	if (len < 1000)
-		return RANGE_MID;
-	return RANGE_FAR;
-}
-
-/*
-=============
-visible
-
-returns 1 if the entity is visible to self, even if not infront ()
-=============
-*/
-bool visible (edict_t *self, edict_t *other)
-{
-	vec3_t	spot1;
-	vec3_t	spot2;
-	CTrace	trace;
-
-	Vec3Copy (self->state.origin, spot1);
-	spot1[2] += self->viewheight;
-	Vec3Copy (other->state.origin, spot2);
-	spot2[2] += other->viewheight;
-	trace = CTrace (spot1, spot2, self, CONTENTS_MASK_OPAQUE);
-	
-	if (trace.fraction == 1.0)
-		return true;
-	return false;
-}
-
-
-/*
-=============
-infront
-
-returns 1 if the entity is in front (in sight) of self
-=============
-*/
-bool infront (edict_t *self, edict_t *other)
-{
-	vec3_t	vec;
-	float	dot;
-	vec3_t	forward;
-	
-	Angles_Vectors (self->state.angles, forward, NULL, NULL);
-	Vec3Subtract (other->state.origin, self->state.origin, vec);
-	VectorNormalizef (vec, vec);
-	dot = Dot3Product (vec, forward);
-	
-	if (dot > 0.3)
-		return true;
-	return false;
 }
 
 CMonsterEntity::CMonsterEntity () :
@@ -1277,7 +1185,7 @@ void CMonster::MonsterStart ()
 
 	// randomize what frame they start on
 	if (CurrentMove)
-		Entity->State.SetFrame(CurrentMove->FirstFrame + (randomMT() % (CurrentMove->LastFrame - CurrentMove->FirstFrame + 1)));
+		Entity->State.SetFrame(CurrentMove->FirstFrame + (irandom(CurrentMove->LastFrame - CurrentMove->FirstFrame + 1)));
 
 #ifdef MONSTER_USE_ROGUE_AI
 	BaseHeight = Entity->GetMaxs().Z;
@@ -1417,10 +1325,10 @@ void CMonster::AlertNearbyStroggs ()
 #ifdef MONSTERS_USE_PATHFINDING
 		// Set us up for pathing
 		// Revision: if we aren't visible, that is.
-		if (!visible(strogg->gameEntity, Entity->gameEntity->enemy))
+		if (!IsVisible(strogg, Entity->gameEntity->enemy->Entity))
 		{
 			strogg->Monster->P_CurrentNode = GetClosestNodeTo(strogg->State.GetOrigin());
-			strogg->Monster->P_CurrentGoalNode = GetClosestNodeTo(Entity->gameEntity->enemy->state.origin);
+			strogg->Monster->P_CurrentGoalNode = GetClosestNodeTo(Entity->gameEntity->enemy->Entity->State.GetOrigin());
 			//FoundStrogg->gameEntity->enemy = Entity->gameEntity->enemy;
 			strogg->Monster->FoundPath ();
 		}
@@ -1638,7 +1546,7 @@ bool CMonster::CheckAttack ()
 			if(Entity->gameEntity->enemy->solid != SOLID_NOT || tr.fraction < 1.0)		//PGM
 			{
 				// PMM - if we can't see our target, and we're not blocked by a monster, go into blind fire if available
-				if ((!(tr.ent->svFlags & SVF_MONSTER)) && (!visible(Entity->gameEntity, Entity->gameEntity->enemy)))
+				if ((!(tr.ent->svFlags & SVF_MONSTER)) && (!IsVisible(Entity, Entity->gameEntity->enemy->Entity)))
 				{
 					if ((BlindFire) && (BlindFireDelay <= 20.0))
 					{
@@ -1802,7 +1710,7 @@ void CMonster::AI_Charge(float Dist)
 		return;									//PGM
 
 	// PMM - save blindfire target
-	if (visible(Entity->gameEntity, Entity->gameEntity->enemy))
+	if (IsVisible(Entity, Entity->gameEntity->enemy->Entity))
 		Vec3Copy (Entity->gameEntity->enemy->state.origin, BlindFireTarget);
 	// pmm 
 
@@ -1941,15 +1849,15 @@ bool CMonster::AI_CheckAttack()
 	Entity->gameEntity->show_hostile = level.framenum + 10;		// wake up other monsters
 
 // check knowledge of enemy
-	EnemyVis = visible(Entity->gameEntity, Entity->gameEntity->enemy);
+	EnemyVis = IsVisible(Entity, Entity->gameEntity->enemy->Entity);
 	if (EnemyVis)
 	{
 		SearchTime = level.framenum + 50;
 		Vec3Copy (Entity->gameEntity->enemy->state.origin, LastSighting);
 	}
 
-	EnemyInfront = infront(Entity->gameEntity, Entity->gameEntity->enemy);
-	EnemyRange = range(Entity->gameEntity, Entity->gameEntity->enemy);
+	EnemyInfront = IsInFront(Entity, Entity->gameEntity->enemy->Entity);
+	EnemyRange = Range(Entity, Entity->gameEntity->enemy->Entity);
 	vec3_t origin;
 	Entity->State.GetOrigin (origin);
 	Vec3Subtract (Entity->gameEntity->enemy->state.origin, origin, temp);
@@ -2084,7 +1992,7 @@ bool CMonster::AI_CheckAttack()
 	Entity->gameEntity->show_hostile = level.framenum + 10;		// wake up other monsters
 
 // check knowledge of enemy
-	EnemyVis = visible(Entity->gameEntity, Entity->gameEntity->enemy);
+	EnemyVis = IsVisible(Entity, Entity->gameEntity->enemy->Entity);
 	if (EnemyVis)
 	{
 		SearchTime = level.framenum + 50;
@@ -2097,8 +2005,8 @@ bool CMonster::AI_CheckAttack()
 		// pmm
 	}
 
-	EnemyInfront = infront(Entity->gameEntity, Entity->gameEntity->enemy);
-	EnemyRange = range(Entity->gameEntity, Entity->gameEntity->enemy);
+	EnemyInfront = IsInFront(Entity, Entity->gameEntity->enemy->Entity);
+	EnemyRange = Range(Entity, Entity->gameEntity->enemy->Entity);
 
 	vec3_t origin;
 	Entity->State.GetOrigin(origin);
@@ -2148,16 +2056,11 @@ void CMonster::AI_Move (float Dist)
 void CMonster::AI_Run(float Dist)
 {
 #ifndef MONSTER_USE_ROGUE_AI
-	vec3_t		v;
-	edict_t		*tempgoal;
-	edict_t		*save;
+	edict_t		*tempgoal, *save, *marker;
 	bool		isNew;
-	edict_t		*marker;
-	float		d1, d2;
+	float		d1, d2, left, center, right;
 	CTrace		tr;
-	vec3_t		v_forward, v_right;
-	float		left, center, right;
-	vec3_t		left_target, right_target;
+	vec3f		v_forward, v_right, left_target, right_target, v;
 
 #ifdef MONSTERS_USE_PATHFINDING
 	if (FollowingPath)
@@ -2174,14 +2077,13 @@ void CMonster::AI_Run(float Dist)
 		return;
 	}
 
+	vec3f origin = Entity->State.GetOrigin();
 	if (AIFlags & AI_SOUND_TARGET)
 	{
 		if (Entity->gameEntity->enemy)
 		{
-			vec3_t origin;
-			Entity->State.GetOrigin(origin);
-			Vec3Subtract (origin, Entity->gameEntity->enemy->state.origin, v);
-			if (Vec3Length(v) < 64)
+			v = origin - Entity->gameEntity->enemy->Entity->State.GetOrigin();
+			if (v.Length() < 64)
 			{
 				AIFlags |= (AI_STAND_GROUND | AI_TEMP_STAND_GROUND);
 				Stand ();
@@ -2238,22 +2140,24 @@ void CMonster::AI_Run(float Dist)
 
 	if (!(AIFlags & AI_LOST_SIGHT))
 	{
-		// just lost sight of the player, decide where to go first
-		//gi.dprintf("lost sight of player, last seen at %f %f %f\n", LastSighting[0], LastSighting[1], LastSighting[2]);
-
 #ifdef MONSTERS_USE_PATHFINDING
-		// Set us up for pathing
-		vec3_t origin;
-		Entity->State.GetOrigin(origin);
-		P_CurrentNode = GetClosestNodeTo(origin);
-		P_CurrentGoalNode = GetClosestNodeTo(Entity->gameEntity->enemy->state.origin);
-		FoundPath ();
+		P_NodePathTimeout = level.framenum + 100; // Do "blind fire" first.
 #endif
 
+		// just lost sight of the player, decide where to go first
 		AIFlags |= (AI_LOST_SIGHT | AI_PURSUIT_LAST_SEEN);
 		AIFlags &= ~(AI_PURSUE_NEXT | AI_PURSUE_TEMP);
 		isNew = true;
 	}
+#ifdef MONSTERS_USE_PATHFINDING
+	else if ((AIFlags & AI_LOST_SIGHT) && P_NodePathTimeout < level.framenum)
+	{
+		// Set us up for pathing
+		P_CurrentNode = GetClosestNodeTo(origin);
+		P_CurrentGoalNode = GetClosestNodeTo(Entity->gameEntity->enemy->state.origin);
+		FoundPath ();
+	}
+#endif
 
 	if (AIFlags & AI_PURSUE_NEXT)
 	{
@@ -2273,10 +2177,8 @@ void CMonster::AI_Run(float Dist)
 		}
 	}
 
-	vec3_t origin;
-	Entity->State.GetOrigin();
-	Vec3Subtract (origin, LastSighting, v);
-	d1 = Vec3Length(v);
+	v = origin - vec3f(LastSighting);
+	d1 = v.Length();
 	if (d1 <= Dist)
 	{
 		AIFlags |= AI_PURSUE_NEXT;
@@ -2289,28 +2191,27 @@ void CMonster::AI_Run(float Dist)
 	{
 //		gi.dprintf("checking for course correction\n");
 
-		tr = CTrace (Entity->State.GetOrigin(), Entity->GetMins(), Entity->GetMaxs(), vec3f(LastSighting), Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
+		tr = CTrace (origin, Entity->GetMins(), Entity->GetMaxs(), vec3f(LastSighting), Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
 		if (tr.fraction < 1)
 		{
-			Vec3Subtract (Entity->gameEntity->goalentity->state.origin, origin, v);
-			d1 = Vec3Length(v);
+			v = vec3f(Entity->gameEntity->goalentity->state.origin) - origin;
+			d1 = v.Length();
 			center = tr.fraction;
 			d2 = d1 * ((center+1)/2);
-			vec3_t ang;
-			Entity->State.GetAngles(ang);
-			ang[YAW] = IdealYaw = VecToYaw(v);
+			vec3f ang = Entity->State.GetAngles();
+			ang.Y = IdealYaw = v.ToYaw();
 			Entity->State.SetAngles(ang);
 
-			Angles_Vectors(ang, v_forward, v_right, NULL);
+			ang.ToVectors (&v_forward, &v_right, NULL);
 
-			Vec3Set (v, d2, -16, 0);
+			v = vec3f(d2, -16, 0);
 			G_ProjectSource (origin, v, v_forward, v_right, left_target);
-			tr = CTrace(Entity->State.GetOrigin(), Entity->GetMins(), Entity->GetMaxs(), vec3f(left_target), Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
+			tr = CTrace(origin, Entity->GetMins(), Entity->GetMaxs(), left_target, Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
 			left = tr.fraction;
 
-			Vec3Set (v, d2, 16, 0);
+			v = vec3f(d2, 16, 0);
 			G_ProjectSource (origin, v, v_forward, v_right, right_target);
-			tr = CTrace(Entity->State.GetOrigin(), Entity->GetMins(), Entity->GetMaxs(), vec3f(right_target), Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
+			tr = CTrace(origin, Entity->GetMins(), Entity->GetMaxs(), right_target, Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
 			right = tr.fraction;
 
 			center = (d1*center)/d2;
@@ -2318,7 +2219,7 @@ void CMonster::AI_Run(float Dist)
 			{
 				if (left < 1)
 				{
-					Vec3Set (v, d2 * left * 0.5, -16, 0);
+					v = vec3f(d2 * left * 0.5, -16, 0);
 					G_ProjectSource (origin, v, v_forward, v_right, left_target);
 //					gi.dprintf("incomplete path, go part way and adjust again\n");
 				}
@@ -2326,19 +2227,19 @@ void CMonster::AI_Run(float Dist)
 				AIFlags |= AI_PURSUE_TEMP;
 				Vec3Copy (left_target, Entity->gameEntity->goalentity->state.origin);
 				Vec3Copy (left_target, LastSighting);
-				Vec3Subtract (Entity->gameEntity->goalentity->state.origin, origin, v);
+				v = vec3f(Entity->gameEntity->goalentity->state.origin) - origin;
 
-				vec3_t ang;
-				Entity->State.GetAngles(ang);
-				ang[YAW] = IdealYaw = VecToYaw(v);
+				vec3f ang = Entity->State.GetAngles();
+				ang.Y = IdealYaw = v.ToYaw();
 				Entity->State.SetAngles(ang);
 //				gi.dprintf("adjusted left\n");
 //				debug_drawline(self.origin, self.last_sighting, 152);
 			}
 			else if (right >= center && right > left)
 			{
-				if (right < 1) {
-					Vec3Set (v, d2 * right * 0.5, 16, 0);
+				if (right < 1)
+				{
+					v = vec3f(d2 * right * 0.5, -16, 0);
 					G_ProjectSource (origin, v, v_forward, v_right, right_target);
 //					gi.dprintf("incomplete path, go part way and adjust again\n");
 				}
@@ -2346,10 +2247,9 @@ void CMonster::AI_Run(float Dist)
 				AIFlags |= AI_PURSUE_TEMP;
 				Vec3Copy (right_target, Entity->gameEntity->goalentity->state.origin);
 				Vec3Copy (right_target, LastSighting);
-				Vec3Subtract (Entity->gameEntity->goalentity->state.origin, origin, v);
-				vec3_t ang;
-				Entity->State.GetAngles(ang);
-				ang[YAW] = IdealYaw = VecToYaw(v);
+				v = vec3f(Entity->gameEntity->goalentity->state.origin) - origin;
+				vec3f ang = Entity->State.GetAngles();
+				ang.Y = IdealYaw = v.ToYaw();
 				Entity->State.SetAngles(ang);
 //				gi.dprintf("adjusted right\n");
 //				debug_drawline(self.origin, self.last_sighting, 152);
@@ -2770,7 +2670,7 @@ void CMonster::AI_Stand (float Dist)
 		// Assuming we got here because we're waiting for something.
 		if (P_CurrentNode->Type == NODE_DOOR)
 		{
-			CDoor *Door = dynamic_cast<CDoor*>(P_CurrentNode->LinkedEntity->Entity);
+			CDoor *Door = dynamic_cast<CDoor*>(P_CurrentNode->LinkedEntity);
 			if (Door->MoveState == STATE_TOP)
 				Run(); // We can go again!
 		}
@@ -2874,7 +2774,7 @@ void CMonster::AI_Stand (float Dist)
 			// find out if we're going to be shooting
 			bool retval = AI_CheckAttack ();
 			// record sightings of player
-			if ((Entity->gameEntity->enemy) && (Entity->gameEntity->enemy->inUse) && (visible(Entity->gameEntity, Entity->gameEntity->enemy)))
+			if ((Entity->gameEntity->enemy) && (Entity->gameEntity->enemy->inUse) && (IsVisible(Entity, Entity->gameEntity->enemy->Entity)))
 			{
 				AIFlags &= ~AI_LOST_SIGHT;
 				Vec3Copy (Entity->gameEntity->enemy->state.origin, LastSighting);
@@ -2947,7 +2847,7 @@ void CMonster::ReactToDamage (edict_t *attacker)
 		// only switch if can't see the current enemy
 		if (Entity->gameEntity->enemy && Entity->gameEntity->enemy->client)
 		{
-			if (visible(Entity->gameEntity, Entity->gameEntity->enemy))
+			if (IsVisible(Entity, Entity->gameEntity->enemy->Entity))
 			{
 				Entity->gameEntity->oldenemy = attacker;
 				return;
@@ -2974,12 +2874,12 @@ void CMonster::ReactToDamage (edict_t *attacker)
 #else
 	// it's the same base (walk/swim/fly) type and a different classname and it's not a tank
 	// (they spray too much), get mad at them
-	//if (((Entity->Flags & (FL_FLY|FL_SWIM)) == (attacker->flags & (FL_FLY|FL_SWIM))) &&
-	//	 (strcmp (Entity->gameEntity->classname, attacker->classname) != 0))// &&
-		// (strcmp(attacker->classname, "monster_tank") != 0) &&
-		// (strcmp(attacker->classname, "monster_supertank") != 0) &&
-		// (strcmp(attacker->classname, "monster_makron") != 0) &&
-		// (strcmp(attacker->classname, "monster_jorg") != 0) )
+	if (((Entity->Flags & (FL_FLY|FL_SWIM)) == (attacker->Entity->Flags & (FL_FLY|FL_SWIM))) &&
+		 (strcmp (Entity->gameEntity->classname, attacker->classname) != 0) &&
+		 (strcmp(attacker->classname, "monster_tank") != 0) &&
+		 (strcmp(attacker->classname, "monster_supertank") != 0) &&
+		 (strcmp(attacker->classname, "monster_makron") != 0) &&
+		 (strcmp(attacker->classname, "monster_jorg") != 0))
 	{
 		if (Entity->gameEntity->enemy && Entity->gameEntity->enemy->client)
 			Entity->gameEntity->oldenemy = Entity->gameEntity->enemy;
@@ -2988,7 +2888,7 @@ void CMonster::ReactToDamage (edict_t *attacker)
 			FoundTarget ();
 	}
 	// if they *meant* to shoot us, then shoot back
-	/*else */if (attacker->enemy == Entity)
+	else if (attacker->enemy == Entity->gameEntity)
 	{
 		if (Entity->gameEntity->enemy && Entity->gameEntity->enemy->client)
 			Entity->gameEntity->oldenemy = Entity->gameEntity->enemy;
@@ -3026,7 +2926,7 @@ void CMonster::ReactToDamage (CBaseEntity *attacker)
 		// only switch if can't see the current enemy
 		if (Entity->gameEntity->enemy && (Entity->gameEntity->enemy->Entity->EntityFlags & ENT_PLAYER))
 		{
-			if (visible(Entity->gameEntity, Entity->gameEntity->enemy))
+			if (IsVisible(Entity, Entity->gameEntity->enemy->Entity))
 			{
 				Entity->gameEntity->oldenemy = attacker->gameEntity;
 				return;
@@ -3054,11 +2954,11 @@ void CMonster::ReactToDamage (CBaseEntity *attacker)
 	// it's the same base (walk/swim/fly) type and a different classname and it's not a tank
 	// (they spray too much), get mad at them
 	if (((Entity->Flags & (FL_FLY|FL_SWIM)) == (attacker->Flags & (FL_FLY|FL_SWIM))) &&
-		 (strcmp (Entity->gameEntity->classname, attacker->gameEntity->classname) != 0))// &&
+		 (strcmp (Entity->gameEntity->classname, attacker->gameEntity->classname) != 0) &&
 		 (strcmp(attacker->gameEntity->classname, "monster_tank") != 0) &&
 		 (strcmp(attacker->gameEntity->classname, "monster_supertank") != 0) &&
 		 (strcmp(attacker->gameEntity->classname, "monster_makron") != 0) &&
-		 (strcmp(attacker->gameEntity->classname, "monster_jorg") != 0) )
+		 (strcmp(attacker->gameEntity->classname, "monster_jorg") != 0))
 	{
 		if (Entity->gameEntity->enemy && (Entity->gameEntity->enemy->Entity->EntityFlags & ENT_PLAYER))
 			Entity->gameEntity->oldenemy = Entity->gameEntity->enemy;
@@ -3076,7 +2976,7 @@ void CMonster::ReactToDamage (CBaseEntity *attacker)
 			FoundTarget ();
 	}
 	// Help our buddy!
-	else if ((attacker->EntityFlags & ENT_MONSTER)) && attacker->gameEntity->enemy && attacker->gameEntity->enemy != Entity->gameEntity)
+	else if ((attacker->EntityFlags & ENT_MONSTER) && attacker->gameEntity->enemy && attacker->gameEntity->enemy != Entity->gameEntity)
 	{
 		if (Entity->gameEntity->enemy && (Entity->gameEntity->enemy->Entity->EntityFlags & ENT_PLAYER))
 			Entity->gameEntity->oldenemy = Entity->gameEntity->enemy;
@@ -3133,7 +3033,7 @@ void CMonster::Run ()
 }
 
 #ifndef MONSTER_USE_ROGUE_AI
-void CMonster::Dodge (edict_t *other, float eta)
+void CMonster::Dodge (CBaseEntity *other, float eta)
 {
 }
 #endif
@@ -3302,18 +3202,7 @@ void CMonster::MoveFrame ()
 
 void CMonster::FoundTarget ()
 {
-	// let other monsters see this monster for a while
-#ifndef MONSTERS_ARENT_STUPID
-	if (Entity->gameEntity->enemy->client)
-	{
-		level.sight_entity = Entity;
-		level.sight_entity_framenum = level.framenum;
-		level.sight_entity->light_level = 128;
-	}
-
 	Entity->gameEntity->show_hostile = level.framenum + 10;		// wake up other monsters
-#endif
-
 
 	Vec3Copy(Entity->gameEntity->enemy->state.origin, LastSighting);
 	TrailTime = level.framenum;
@@ -3554,7 +3443,7 @@ void CMonster::HuntTarget()
 bool CMonster::FindTarget()
 {
 	bool		heardit;
-	CPlayerEntity *client;
+	CBaseEntity *client;
 
 	if (AIFlags & AI_GOOD_GUY)
 	{
@@ -3623,7 +3512,7 @@ bool CMonster::FindTarget()
 				Entity->State.GetOrigin (origin);
 				if (Entity->gameEntity->spawnflags & 1)
 				{
-					if (!visible (Entity->gameEntity, client->gameEntity))
+					if (!IsVisible (Entity, client))
 						return false;
 				}
 				else
@@ -3671,7 +3560,7 @@ bool CMonster::FindTarget()
 	if ((level.sight_entity_framenum >= (level.framenum - 1)) && !(Entity->gameEntity->spawnflags & 1) )
 	{
 		client = level.sight_entity;
-		if (client->enemy == Entity->gameEntity->enemy)
+		if (client->gameEntity->enemy == Entity->gameEntity->enemy)
 			return false;
 	}
 #endif
@@ -3710,7 +3599,7 @@ bool CMonster::FindTarget()
 	if (!client->IsInUse())
 		return false;
 
-	if (visible(Entity->gameEntity, client->gameEntity) && (client->gameEntity == Entity->gameEntity->enemy))
+	if (IsVisible(Entity, client) && (client->gameEntity == Entity->gameEntity->enemy))
 		return true;	// JDC false;
 
 	if (client)
@@ -3724,7 +3613,7 @@ bool CMonster::FindTarget()
 	edict_t *old = Entity->gameEntity->enemy;
 	if (!heardit)
 	{
-		int r = range (Entity->gameEntity, client->gameEntity);
+		ERangeType r = Range (Entity, client);
 
 		if (r == RANGE_FAR)
 			return false;
@@ -3735,17 +3624,17 @@ bool CMonster::FindTarget()
 		if (client->gameEntity->light_level <= 5)
 			return false;
 
-		if (!visible (Entity->gameEntity, client->gameEntity))
+		if (!IsVisible (Entity, client))
 			return false;
 
 		if (r == RANGE_NEAR)
 		{
-			if (client->gameEntity->show_hostile < level.framenum && !infront (Entity->gameEntity, client->gameEntity))
+			if (client->gameEntity->show_hostile < level.framenum && !IsInFront (Entity, client))
 				return false;
 		}
 		else if (r == RANGE_MID)
 		{
-			if (!infront (Entity->gameEntity, client->gameEntity))
+			if (!IsInFront (Entity, client))
 				return false;
 		}
 
@@ -3772,7 +3661,7 @@ bool CMonster::FindTarget()
 		Entity->State.GetOrigin(origin);
 		if (Entity->gameEntity->spawnflags & 1)
 		{
-			if (!visible (Entity->gameEntity, client->gameEntity))
+			if (!IsVisible (Entity, client))
 				return false;
 		}
 		else
@@ -3797,7 +3686,7 @@ bool CMonster::FindTarget()
 		ChangeYaw ();
 
 		// hunt the sound for a bit; hopefully find the real player
-		//AIFlags |= AI_SOUND_TARGET;
+		AIFlags |= AI_SOUND_TARGET;
 		Entity->gameEntity->enemy = client->gameEntity;
 	}
 
@@ -3807,7 +3696,7 @@ bool CMonster::FindTarget()
 	FoundTarget ();
 	AlertNearbyStroggs ();
 
-	if ((Entity->gameEntity->enemy != old) && (MonsterFlags & MF_HAS_SIGHT))
+	if (!(AIFlags & AI_SOUND_TARGET) && (Entity->gameEntity->enemy != old) && (MonsterFlags & MF_HAS_SIGHT))
 		Sight ();
 
 	return true;
@@ -3865,7 +3754,7 @@ void CMonster::SideStep ()
 {
 }
 
-void CMonster::Dodge (edict_t *attacker, float eta, CTrace *tr)
+void CMonster::Dodge (CBaseEntity *attacker, float eta, CTrace *tr)
 {
 	float	r = random();
 	float	height;
@@ -3885,7 +3774,7 @@ void CMonster::Dodge (edict_t *attacker, float eta, CTrace *tr)
 
 	if (!Entity->gameEntity->enemy)
 	{
-		Entity->gameEntity->enemy = attacker;
+		Entity->gameEntity->enemy = attacker->gameEntity;
 		FoundTarget ();
 	}
 

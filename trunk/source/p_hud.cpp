@@ -98,7 +98,7 @@ void BeginIntermission (CTargetChangeLevel *targ)
 	}
 	else
 	{	// chose one of four spots
-		int i = randomMT() & 3;
+		int i = irandom(4);
 		while (i--)
 		{
 			ent = CC_Find (ent, FOFS(classname), "info_player_intermission");

@@ -393,7 +393,7 @@ void CTurretDriver::Pain (CBaseEntity *other, float kick, int damage)
 		return;
 
 	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
-	Entity->PlaySound (CHAN_VOICE, (randomMT() % 2 == 0) ? SoundPain1 : SoundPain2);
+	Entity->PlaySound (CHAN_VOICE, (!irandom(2) == 0) ? SoundPain1 : SoundPain2);
 }
 
 void CTurretDriver::TurretThink ()
@@ -412,7 +412,7 @@ void CTurretDriver::TurretThink ()
 	}
 	else
 	{
-		if (visible (Entity->gameEntity, Entity->gameEntity->enemy))
+		if (IsVisible (Entity, Entity->gameEntity->enemy->Entity))
 		{
 			if (AIFlags & AI_LOST_SIGHT)
 			{

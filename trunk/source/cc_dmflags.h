@@ -72,6 +72,8 @@ public:
 	void UpdateFlags (int dmFlags);
 };
 
+extern dmFlagsConfig dmFlags;
+
 #else
 FILE_WARNING
 #endif

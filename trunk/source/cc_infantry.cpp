@@ -223,8 +223,8 @@ void CInfantry::Pain (CBaseEntity *other, float kick, int damage)
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
 
-	CurrentMove = (randomMT() % 2 == 0) ? &InfantryMovePain1 : &InfantryMovePain2;
-	Entity->PlaySound (CHAN_VOICE, (randomMT() % 2 == 0) ? SoundPain1 : SoundPain2);
+	CurrentMove = (!irandom(2)) ? &InfantryMovePain1 : &InfantryMovePain2;
+	Entity->PlaySound (CHAN_VOICE, (!irandom(2)) ? SoundPain1 : SoundPain2);
 
 #ifdef MONSTER_USE_ROGUE_AI
 	// PMM - clear duck flag
@@ -397,7 +397,7 @@ void CInfantry::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, 
 
 	CAnim *Animation;
 	int pSound;
-	switch (randomMT() % 3)
+	switch (irandom(3))
 	{
 	case 0:
 	default:
@@ -469,13 +469,13 @@ CFrame InfantryFramesDuck [] =
 CAnim InfantryMoveDuck (FRAME_duck01, FRAME_duck05, InfantryFramesDuck, ConvertDerivedFunction(&CInfantry::Run));
 
 #ifndef MONSTER_USE_ROGUE_AI
-void CInfantry::Dodge (edict_t *attacker, float eta)
+void CInfantry::Dodge (CBaseEntity *attacker, float eta)
 {
 	if (random() > 0.25)
 		return;
 
 	if (!Entity->gameEntity->enemy)
-		Entity->gameEntity->enemy = attacker;
+		Entity->gameEntity->enemy = attacker->gameEntity;
 
 	CurrentMove = &InfantryMoveDuck;
 }
@@ -547,7 +547,7 @@ void CInfantry::Swing ()
 void CInfantry::Smack ()
 {
 	static vec3f	aim (MELEE_DISTANCE, 0, 0);
-	if (CMeleeWeapon::Fire (Entity, aim, (5 + (randomMT() % 5)), 50))
+	if (CMeleeWeapon::Fire (Entity, aim, (5 + (irandom(5))), 50))
 		Entity->PlaySound (CHAN_WEAPON, SoundPunchHit);
 }
 

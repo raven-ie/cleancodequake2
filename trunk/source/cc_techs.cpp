@@ -194,7 +194,7 @@ public:
 				{
 					CAmmo *Ammo = Player->Client.pers.Weapon->WeaponItem->Ammo;
 	
-					if (Ammo && Player->Client.pers.Inventory.Has(Player->Client.pers.Weapon->WeaponItem) && Player->Client.pers.Inventory.Has(Player->Client.pers.Weapon->WeaponItem) < Player->Client.pers.maxAmmoValues[Ammo->Tag])
+					if (Ammo && Player->Client.pers.Inventory.Has(Ammo) && Player->Client.pers.Inventory.Has(Ammo) < Player->Client.pers.maxAmmoValues[Ammo->Tag])
 					{			
 						noise = true;
 						Ammo->AddAmmo (Player, RegenAmts[Ammo->Tag]);
@@ -352,7 +352,7 @@ void SpawnTech(CBaseItem *item, CBaseEntity *spot)
 	ent->gameEntity->owner = ent->gameEntity;
 
 	vec3f forward;
-	vec3f(0, randomMT()%360, 0).ToVectors(&forward, NULL, NULL);
+	vec3f(0, random()*360, 0).ToVectors(&forward, NULL, NULL);
 
 	ent->State.SetOrigin (spot->State.GetOrigin() + vec3f(0,0,16));
 	forward *= 100;
@@ -363,6 +363,15 @@ void SpawnTech(CBaseItem *item, CBaseEntity *spot)
 	ent->NextThink = level.framenum + CTF_TECH_TIMEOUT;
 
 	ent->Link ();
+}
+
+static void SpawnTechs()
+{
+	for (size_t i = 0; i < TechList.size(); i++)
+	{
+		if (!cc_techflags->Integer() || (cc_techflags->Integer() & (int)powf(2, TechList[i]->GetTechNumber())))
+			SpawnTech (TechList[i], FindTechSpawn ());
+	}
 }
 
 class CTechSpawner : public CThinkableEntity
@@ -389,13 +398,7 @@ public:
 
 	void Think ()
 	{
-		//SpawnTech (NItems::Regeneration, FindTechSpawn());
-		//SpawnTech (NItems::Haste, FindTechSpawn());
-		//SpawnTech (NItems::Strength, FindTechSpawn());
-		//SpawnTech (NItems::Resistance, FindTechSpawn());
-		for (size_t i = 0; i < TechList.size(); i++)
-			SpawnTech (TechList[i], FindTechSpawn ());
-
+		SpawnTechs ();
 		Free ();
 	};
 
@@ -404,12 +407,6 @@ public:
 		NextThink = level.framenum + 20;
 	};
 };
-
-static void SpawnTechs()
-{
-	for (size_t i = 0; i < TechList.size(); i++)
-		SpawnTech (TechList[i], FindTechSpawn ());
-}
 
 void SetupTechSpawn()
 {

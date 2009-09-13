@@ -62,8 +62,8 @@ field_t fields[] = {
 	{"oldenemy", FOFS(oldenemy), F_EDICT, FFL_NOSPAWN},
 	{"activator", FOFS(activator), F_EDICT, FFL_NOSPAWN},
 	{"owner", FOFS(owner), F_EDICT, FFL_NOSPAWN},
-	{"mynoise", FOFS(mynoise), F_EDICT, FFL_NOSPAWN},
-	{"mynoise2", FOFS(mynoise2), F_EDICT, FFL_NOSPAWN},
+//	{"mynoise", FOFS(mynoise), F_EDICT, FFL_NOSPAWN},
+//	{"mynoise2", FOFS(mynoise2), F_EDICT, FFL_NOSPAWN},
 
 	// temp spawn vars -- only valid when the spawn function is called
 	{"lip", STOFS(lip), F_INT, FFL_SPAWNTEMP},
@@ -223,7 +223,9 @@ void G_Register ()
 
 	// dm map list
 	sv_maplist = QNew (com_gamePool, 0) CCvar ("sv_maplist", "", 0);
+	
 	map_debug = QNew (com_gamePool, 0) CCvar ("map_debug", "0", CVAR_LATCH_SERVER);
+	cc_techflags = QNew (com_gamePool, 0) CCvar ("cc_techflags", "0", CVAR_LATCH_SERVER);
 
 	SetupArg ();
 	Cmd_Register ();
@@ -242,7 +244,9 @@ void G_Register ()
 	CTFInit();
 #endif
 
+#ifdef MONSTERS_USE_PATHFINDING
 	Nodes_Register ();
+#endif
 }
 
 void InitGame (void)

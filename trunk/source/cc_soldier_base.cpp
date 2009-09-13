@@ -403,7 +403,7 @@ void CSoldierBase::Attack1_Refire1 ()
 	if (!EnemyVis)
 		return;
 
-	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (range(Entity->gameEntity, Entity->gameEntity->enemy) == RANGE_MELEE) )
+	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (Range(Entity, Entity->gameEntity->enemy->Entity) == RANGE_MELEE) )
 		NextFrame = FRAME_attak102;
 	else
 		NextFrame = FRAME_attak110;
@@ -420,7 +420,7 @@ void CSoldierBase::Attack1_Refire2 ()
 	if (!EnemyVis)
 		return;
 
-	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (range(Entity->gameEntity, Entity->gameEntity->enemy) == RANGE_MELEE) )
+	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (Range(Entity, Entity->gameEntity->enemy->Entity) == RANGE_MELEE) )
 		NextFrame = FRAME_attak102;
 }
 
@@ -459,7 +459,7 @@ void CSoldierBase::Attack2_Refire1 ()
 	if (!EnemyVis)
 		return;
 
-	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (range(Entity->gameEntity, Entity->gameEntity->enemy) == RANGE_MELEE) )
+	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (Range(Entity, Entity->gameEntity->enemy->Entity) == RANGE_MELEE) )
 		NextFrame = FRAME_attak204;
 	else
 		NextFrame = FRAME_attak216;
@@ -476,7 +476,7 @@ void CSoldierBase::Attack2_Refire2 ()
 	if (!EnemyVis)
 		return;
 
-	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (range(Entity->gameEntity, Entity->gameEntity->enemy) == RANGE_MELEE) )
+	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (Range(Entity, Entity->gameEntity->enemy->Entity) == RANGE_MELEE) )
 		NextFrame = FRAME_attak204;
 }
 
@@ -588,7 +588,7 @@ void CSoldierBase::Attack6_Refire ()
 	if (Entity->gameEntity->enemy->health <= 0)
 		return;
 
-	if (range(Entity->gameEntity, Entity->gameEntity->enemy) < RANGE_NEAR)
+	if (Range(Entity, Entity->gameEntity->enemy->Entity) < RANGE_NEAR)
 		return;
 
 	if (!EnemyVis)
@@ -611,7 +611,7 @@ void CSoldierBase::Attack6_RefireBlaster ()
 	if (Entity->gameEntity->enemy->health <= 0)
 		return;
 
-	if (range(Entity->gameEntity, Entity->gameEntity->enemy) < RANGE_NEAR)
+	if (Range(Entity, Entity->gameEntity->enemy->Entity) < RANGE_NEAR)
 		return;
 
 	if (!EnemyVis)
@@ -680,7 +680,7 @@ void CSoldierBase::Sight ()
 {
 	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundSight1 : SoundSight2);
 
-	if ((skill->Integer() > 0) && (range(Entity->gameEntity, Entity->gameEntity->enemy) >= RANGE_NEAR))
+	if ((skill->Integer() > 0) && (Range(Entity, Entity->gameEntity->enemy->Entity) >= RANGE_NEAR))
 	{
 		// Only do run-shoot off the bat if we're not a shotgun soldier (too cheap)
 		if ((random() > 0.75) && (Entity->State.GetSkinNum() < 2))
@@ -1056,7 +1056,7 @@ void CSoldierBase::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damag
 		return;
 	}
 
-	switch (randomMT() % 5)
+	switch (irandom(5))
 	{
 	case 0:
 		CurrentMove = &SoldierMoveDeath1;

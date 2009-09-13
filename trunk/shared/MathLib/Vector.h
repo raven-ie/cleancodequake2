@@ -439,6 +439,34 @@ public:
 		return (Len > TINY_NUMBER || Len < TINY_NUMBER) ? (1.0f / Len) : 0;
 	}
 
+	inline vec3f GetNormalized ()
+	{
+		vec3f val (*this);
+		val.Normalize ();
+		return val;
+	}
+
+	inline vec3f GetNormalizedFast ()
+	{
+		vec3f val (*this);
+		val.NormalizeFast ();
+		return val;
+	}
+
+	inline vec3f GetNormalized (float &length)
+	{
+		vec3f val (*this);
+		length = val.Normalize ();
+		return val;
+	}
+
+	inline vec3f GetNormalizedFast (float &length)
+	{
+		vec3f val (*this);
+		length = val.NormalizeFast ();
+		return val;
+	}
+
 	float ToYaw ()
 	{
 		float	yaw;

@@ -448,7 +448,7 @@ CAnim SuperTankMoveEndAttack1 (FRAME_attak1_7, FRAME_attak1_20, SuperTankFramesE
 
 void CSuperTank::ReAttack1 ()
 {
-	if (visible(Entity->gameEntity, Entity->gameEntity->enemy))
+	if (IsVisible(Entity, Entity->gameEntity->enemy->Entity))
 		CurrentMove = (random() < 0.9) ? &SuperTankMoveAttack1 : &SuperTankMoveEndAttack1;
 	else
 		CurrentMove = &SuperTankMoveEndAttack1;

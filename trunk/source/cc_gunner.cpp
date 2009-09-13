@@ -282,7 +282,7 @@ void CGunner::Pain (CBaseEntity *other, float kick, int damage)
 		return;
 
 	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
-	Entity->PlaySound (CHAN_VOICE, (randomMT()&1) ? SoundPain : SoundPain2);
+	Entity->PlaySound (CHAN_VOICE, (irandom(2)) ? SoundPain : SoundPain2);
 
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
@@ -568,7 +568,7 @@ void CGunner::Grenade ()
 
 	//	pmm
 	// if we're shooting blind and we still can't see our enemy
-	if ((AIFlags & AI_MANUAL_STEERING) && (!visible(Entity->gameEntity, Entity->gameEntity->enemy)))
+	if ((AIFlags & AI_MANUAL_STEERING) && (!IsVisible(Entity, Entity->gameEntity->enemy->Entity)))
 	{
 		// and we have a valid blind_fire_target
 		if (Vec3Compare (BlindFireTarget, vec3Origin))
@@ -700,7 +700,7 @@ CAnim GunnerMoveAttackGrenade (FRAME_attak101, FRAME_attak121, GunnerFramesAttac
 void CGunner::Attack()
 {
 #ifndef MONSTER_USE_ROGUE_AI
-	if (range (Entity->gameEntity, Entity->gameEntity->enemy) == RANGE_MELEE)
+	if (Range (Entity, Entity->gameEntity->enemy->Entity) == RANGE_MELEE)
 		CurrentMove = &GunnerMoveAttackChain;
 	else
 		CurrentMove = (random() <= 0.5) ? &GunnerMoveAttackGrenade : &GunnerMoveAttackChain;
@@ -740,7 +740,7 @@ void CGunner::Attack()
 	// pmm
 
 	// PGM - gunner needs to use his chaingun if he's being attacked by a tesla.
-	if (range (Entity->gameEntity, Entity->gameEntity->enemy) == RANGE_MELEE)
+	if (Range (Entity, Entity->gameEntity->enemy->Entity) == RANGE_MELEE)
 		CurrentMove = &GunnerMoveAttackChain;
 	else
 		CurrentMove = (random() <= 0.5 && GrenadeCheck()) ? &GunnerMoveAttackGrenade : &GunnerMoveAttackChain;
@@ -754,7 +754,7 @@ void CGunner::FireChain ()
 
 void CGunner::ReFireChain ()
 {
-	if (Entity->gameEntity->enemy->health > 0 && visible (Entity->gameEntity, Entity->gameEntity->enemy) && random() <= 0.5)
+	if (Entity->gameEntity->enemy->health > 0 && IsVisible (Entity, Entity->gameEntity->enemy->Entity) && random() <= 0.5)
 	{
 		CurrentMove = &GunnerMoveFireChain;
 		return;

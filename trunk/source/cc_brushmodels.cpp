@@ -1282,7 +1282,7 @@ void CMovableWater::Spawn ()
 
 	vec3f abs_movedir(Q_fabs(gameEntity->movedir[0]), Q_fabs(gameEntity->movedir[1]), Q_fabs(gameEntity->movedir[2]));
 
-	Distance = abs_movedir.X * gameEntity->size[0] + abs_movedir.Y * gameEntity->size[1] + abs_movedir.Z * gameEntity->size[2] - st.lip;
+	Distance = abs_movedir.X * GetSize().X + abs_movedir.Y * GetSize().Y + abs_movedir.Z * GetSize().Z - st.lip;
 	Vec3MA (gameEntity->pos1, Distance, gameEntity->movedir, gameEntity->pos2);
 
 	// if it starts open, switch the positions
@@ -1472,8 +1472,8 @@ void CDoorSecret::Spawn ()
 	State.SetAngles (vec3fOrigin);
 	float side = 1.0 - (gameEntity->spawnflags & SECRET_1ST_LEFT);
 
-	float width = (gameEntity->spawnflags & SECRET_1ST_DOWN) ? Q_fabs(Dot3Product(up, gameEntity->size)) : Q_fabs(Dot3Product(right, gameEntity->size));
-	float length = Q_fabs(Dot3Product(forward, gameEntity->size));
+	float width = (gameEntity->spawnflags & SECRET_1ST_DOWN) ? Q_fabs(up.Dot (GetSize())) : Q_fabs(right.Dot (GetSize()));
+	float length = Q_fabs(forward.Dot (GetSize()));
 	if (gameEntity->spawnflags & SECRET_1ST_DOWN)
 	{
 		State.GetOrigin (gameEntity->pos1);
@@ -1673,7 +1673,7 @@ void CButton::Spawn ()
 		Q_fabs(gameEntity->movedir[0]),
 		Q_fabs(gameEntity->movedir[1]),
 		Q_fabs(gameEntity->movedir[2]));
-	float dist = abs_movedir.X * gameEntity->size[0] + abs_movedir.Y * gameEntity->size[1] + abs_movedir.Z * gameEntity->size[2] - st.lip;
+	float dist = abs_movedir.X * GetSize().X + abs_movedir.Y * GetSize().Y + abs_movedir.Z * GetSize().Y - st.lip;
 	Vec3MA (gameEntity->pos1, dist, gameEntity->movedir, gameEntity->pos2);
 
 	State.AddEffects (EF_ANIM01);

@@ -55,18 +55,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define TAG_CLEAN_GAME	TAG_GAME		// "Clean" memory
 #define TAG_CLEAN_LEVEL	TAG_LEVEL		// "Clean" memory
 
-#define MELEE_DISTANCE	80
-
-//range
-typedef int ERangeType;
-enum
-{
-	RANGE_MELEE,
-	RANGE_NEAR,
-	RANGE_MID,
-	RANGE_FAR
-};
-
 //gib types
 typedef int EGibType;
 enum
@@ -182,11 +170,11 @@ typedef struct
 	CPlayerEntity		*sight_client;	// changed once each frame for coop games
 
 #ifndef MONSTERS_USE_PATHFINDING
-	edict_t		*sight_entity;
+	CBaseEntity	*sight_entity;
 	int			sight_entity_framenum;
-	edict_t		*sound_entity;
+	CBaseEntity	*sound_entity;
 	int			sound_entity_framenum;
-	edict_t		*sound2_entity;
+	CBaseEntity	*sound2_entity;
 	int			sound2_entity_framenum;
 #else
 	class		CPathNode	*NoiseNode;
@@ -304,6 +292,8 @@ extern	edict_t			*g_edicts;
 #define LLOFS(x) (int)&(((level_locals_t *)0)->x)
 #define CLOFS(x) (int)&(((CClient *)0)->x)
 
+#define irandom(x)	((int)(frand()*(x)))
+#define icrandom(x)	((int)(crand()*(x)))
 #define random()	(frand())
 #define crandom()	(crand())
 
@@ -441,12 +431,6 @@ void BecomeExplosion1(edict_t *self);
 //
 void AI_SetSightClient (void);
 
-int range (edict_t *self, edict_t *other);
-bool infront (edict_t *self, edict_t *other);
-bool visible (edict_t *self, edict_t *other);
-
-void ThrowDebris (edict_t *self, char *modelname, float speed, vec3_t origin);
-
 //
 // g_client.c
 //
@@ -570,9 +554,6 @@ struct edict_s
 	edict_t		*oldenemy;
 	edict_t		*activator;
 
-	edict_t		*mynoise;		// can go in client only
-	edict_t		*mynoise2;
-
 	MediaIndex			noise_index;
 	MediaIndex			noise_index2;
 	float		volume;
@@ -641,6 +622,7 @@ extern	CCvar	*flood_waitdelay;
 
 extern	CCvar	*sv_maplist;
 extern	CCvar	*map_debug;
+extern	CCvar	*cc_techflags;
 
 #ifdef CLEANCTF_ENABLED
 extern	CCvar	*capturelimit;
