@@ -43,7 +43,7 @@ CJorg::CJorg ()
 
 void CJorg::Search ()
 {
-	switch (randomMT()%3)
+	switch (irandom(3))
 	{
 	case 0:
 		Entity->PlaySound (CHAN_VOICE, SoundSearch1, 1, ATTN_NORM, 0);
@@ -495,7 +495,7 @@ CAnim JorgMoveEndAttack1 (FRAME_attak115, FRAME_attak118, JorgFramesEndAttack1, 
 
 void CJorg::ReAttack1()
 {
-	if (visible(Entity->gameEntity, Entity->gameEntity->enemy))
+	if (IsVisible(Entity, Entity->gameEntity->enemy->Entity))
 	{
 		if (random() < 0.9)
 			CurrentMove = &JorgMoveAttack1;
@@ -692,7 +692,7 @@ bool CJorg::CheckAttack ()
 			if(Entity->gameEntity->enemy->solid != SOLID_NOT || tr.fraction < 1.0)		//PGM
 			{
 				// PMM - if we can't see our target, and we're not blocked by a monster, go into blind fire if available
-				if ((!(tr.ent->svFlags & SVF_MONSTER)) && (!visible(Entity->gameEntity, Entity->gameEntity->enemy)))
+				if ((!(tr.ent->svFlags & SVF_MONSTER)) && (!IsVisible(Entity, Entity->gameEntity->enemy->Entity)))
 				{
 					if ((BlindFire) && (BlindFireDelay <= 20.0))
 					{

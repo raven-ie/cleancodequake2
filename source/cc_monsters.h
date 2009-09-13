@@ -253,7 +253,7 @@ public:
 	int					PowerArmorPower;
 
 	bool				EnemyInfront, EnemyVis;
-	int					EnemyRange;
+	ERangeType			EnemyRange;
 	float				EnemyYaw;
 
 	CAnim				*CurrentMove;
@@ -294,9 +294,9 @@ public:
 	virtual void		Walk			();
 	virtual void		Run				();
 #ifndef MONSTER_USE_ROGUE_AI
-	virtual void		Dodge			(edict_t *other, float eta);
+	virtual void		Dodge			(CBaseEntity *other, float eta);
 #else
-	virtual void		Dodge			(edict_t *attacker, float eta, CTrace *tr);
+	virtual void		Dodge			(CBaseEntity *attacker, float eta, CTrace *tr);
 	void		DoneDodge	();
 #endif
 	virtual void		Attack			();
@@ -348,8 +348,8 @@ public:
 	void MonsterFireBullet (vec3f start, vec3f dir, int damage, int kick, int hspread, int vspread, int flashtype);
 	void MonsterFireRocket (vec3f start, vec3f dir, int damage, int speed, int flashtype);
 
-#ifdef MONSTERS_ARENT_STUPID
 	void AlertNearbyStroggs ();
+#ifdef MONSTERS_ARENT_STUPID
 	bool FriendlyInLine (vec3_t Origin, vec3_t Direction);
 #endif
 

@@ -33,10 +33,6 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #if !defined(__CC_BAN_H__) || !defined(INCLUDE_GUARDS)
 #define __CC_BAN_H__
 
-
-#include <vector>
-#include <string>
-
 typedef int EBanTypeFlags;
 enum// EBanTypeFlags
 {

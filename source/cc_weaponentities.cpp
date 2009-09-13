@@ -49,21 +49,21 @@ void CheckDodge (CBaseEntity *self, vec3f &start, vec3f &dir, int speed)
 	tr = CTrace (start, end, self->gameEntity, CONTENTS_MASK_SHOT);
 
 #ifdef MONSTER_USE_ROGUE_AI
-	if ((tr.ent) && (tr.ent->Entity) && (tr.ent->Entity->EntityFlags & ENT_MONSTER) && (tr.ent->health > 0) && infront(tr.ent, self->gameEntity))
+	if ((tr.ent) && (tr.ent->Entity) && (tr.ent->Entity->EntityFlags & ENT_MONSTER) && (tr.ent->health > 0) && IsInFront(tr.Ent, self))
 	{
 		vec3f v = tr.EndPos - start;
 		float eta = (v.LengthFast() - tr.ent->maxs[0]) / speed;
-		(dynamic_cast<CMonsterEntity*>(tr.ent->Entity))->Monster->Dodge (self->gameEntity, eta, &tr);
+		(dynamic_cast<CMonsterEntity*>(tr.ent->Entity))->Monster->Dodge (self, eta, &tr);
 
 		if (tr.ent->enemy != self->gameEntity)
 			tr.ent->enemy = self->gameEntity;
 	}
 #else
-	if ((tr.ent) && (tr.ent->Entity) && (tr.ent->Entity->EntityFlags & ENT_MONSTER) && (tr.ent->health > 0) && infront(tr.ent, self->gameEntity))
+	if ((tr.ent) && (tr.ent->Entity) && (tr.ent->Entity->EntityFlags & ENT_MONSTER) && (tr.ent->health > 0) && IsInFront(tr.Ent, self))
 	{
 		vec3f v = tr.EndPos - start;
 		float eta = (v.LengthFast() - tr.ent->maxs[0]) / speed;
-		(dynamic_cast<CMonsterEntity*>(tr.ent->Entity))->Monster->Dodge (self->gameEntity, eta);
+		(dynamic_cast<CMonsterEntity*>(tr.ent->Entity))->Monster->Dodge (self, eta);
 	}
 #endif
 }

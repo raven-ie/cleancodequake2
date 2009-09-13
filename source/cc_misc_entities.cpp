@@ -319,7 +319,7 @@ public:
 	{
 		SetSolid (SOLID_NOT);
 		State.SetModelIndex (ModelIndex ("models/objects/banner/tris.md2"));
-		State.SetFrame (randomMT() % 16);
+		State.SetFrame (irandom(16));
 		Link ();
 
 		NextThink = level.framenum + FRAMETIME;

@@ -257,7 +257,7 @@ void CMaiden::Pain (CBaseEntity *other, float kick, int damage)
 
 	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
 
-	int r = randomMT()%3;
+	int r = irandom(3);
 	switch (r)
 	{
 	case 0:
@@ -371,9 +371,9 @@ void CMaiden::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 	Entity->DeadFlag = true;
 	Entity->CanTakeDamage = true;
 
-	n = randomMT() % 2;
-	CurrentMove = (n == 0) ? &ChickMoveDeath1 : &ChickMoveDeath2;
-	Entity->PlaySound (CHAN_VOICE, (n == 0) ? SoundDeath1 : SoundDeath2);
+	n = irandom(2);
+	CurrentMove = (!n) ? &ChickMoveDeath1 : &ChickMoveDeath2;
+	Entity->PlaySound (CHAN_VOICE, (!n) ? SoundDeath1 : SoundDeath2);
 }
 
 #ifndef MONSTER_USE_ROGUE_AI
@@ -526,13 +526,13 @@ void CMaiden::SideStep ()
 		CurrentMove = &ChickMoveRun;
 }
 #else
-void CMaiden::Dodge (edict_t *attacker, float eta)
+void CMaiden::Dodge (CBaseEntity *attacker, float eta)
 {
 	if (random() > 0.25)
 		return;
 
 	if (!Entity->gameEntity->enemy)
-		Entity->gameEntity->enemy = attacker;
+		Entity->gameEntity->enemy = attacker->gameEntity;
 
 	CurrentMove = &ChickMoveDuck;
 }
@@ -542,7 +542,7 @@ void CMaiden::Slash ()
 {
 	vec3_t	aim = {MELEE_DISTANCE, Entity->GetMins().X, 10};
 	Entity->PlaySound (CHAN_WEAPON, SoundMeleeSwing);
-	CMeleeWeapon::Fire (Entity, aim, (10 + (randomMT() %6)), 100);
+	CMeleeWeapon::Fire (Entity, aim, (10 + (irandom(6))), 100);
 }
 
 void CMaiden::Rocket ()
@@ -631,7 +631,7 @@ void CMaiden::Rocket ()
 	vec = Entity->gameEntity->enemy->state.origin;
 	vec.Z += Entity->gameEntity->enemy->viewheight;
 	dir = vec - start;
-	dir.NormalizeFastf ();
+	dir.NormalizeFast ();
 
 	MonsterFireRocket (start, dir, 50, 500, MZ2_CHICK_ROCKET_1);
 #endif
@@ -656,7 +656,9 @@ void CMaiden::ReRocket()
 #endif
 	if (Entity->gameEntity->enemy->health > 0)
 	{
-		if (range (Entity->gameEntity, Entity->gameEntity->enemy) > RANGE_MELEE && visible (Entity->gameEntity, Entity->gameEntity->enemy) && (random() <= (0.6 + (0.05*skill->Float()))))
+		if (Range (Entity, Entity->gameEntity->enemy->Entity) > RANGE_MELEE &&
+			IsVisible (Entity, Entity->gameEntity->enemy->Entity) &&
+			(random() <= (0.6 + (0.05*skill->Float()))))
 		{
 			CurrentMove = &ChickMoveAttack1;
 			return;
@@ -695,7 +697,7 @@ CAnim ChickMoveEndSlash (FRAME_attak213, FRAME_attak216, ChickFramesEndSlash, Co
 
 void CMaiden::ReSlash()
 {
-	if (Entity->gameEntity->enemy->health > 0 && (range (Entity->gameEntity, Entity->gameEntity->enemy) == RANGE_MELEE) && (random() <= 0.9))
+	if (Entity->gameEntity->enemy->health > 0 && (Range (Entity, Entity->gameEntity->enemy->Entity) == RANGE_MELEE) && (random() <= 0.9))
 		CurrentMove = &ChickMoveSlash;
 	else
 		CurrentMove = &ChickMoveEndSlash;

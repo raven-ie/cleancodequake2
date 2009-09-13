@@ -435,7 +435,7 @@ CAnim HoverMoveEndAttack2 (FRAME_attak107, FRAME_attak108, HoverFramesEndAttack2
 
 void CIcarus::ReAttack ()
 {
-	if (Entity->gameEntity->enemy->health > 0 && visible (Entity->gameEntity, Entity->gameEntity->enemy) && random() <= 0.6)
+	if (Entity->gameEntity->enemy->health > 0 && IsVisible (Entity, Entity->gameEntity->enemy->Entity) && random() <= 0.6)
 	{
 #ifdef MONSTER_USE_ROGUE_AI
 		CurrentMove = (AttackState == AS_SLIDING) ? &HoverMoveAttack2 : &HoverMoveAttack1;

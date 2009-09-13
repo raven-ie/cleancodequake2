@@ -452,7 +452,7 @@ void CFlyer::Melee ()
 
 void CFlyer::CheckMelee ()
 {
-	if (range (Entity->gameEntity, Entity->gameEntity->enemy) == RANGE_MELEE)
+	if (Range (Entity, Entity->gameEntity->enemy->Entity) == RANGE_MELEE)
 		CurrentMove = (random() <= 0.8) ? &FlyerMoveLoopMelee : &FlyerMoveEndMelee;
 	else
 		CurrentMove = &FlyerMoveEndMelee;
@@ -470,7 +470,7 @@ void CFlyer::Pain (CBaseEntity *other, float kick, int damage)
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
 
-	switch (randomMT() % 3)
+	switch (irandom(3))
 	{
 	case 0:
 		Entity->PlaySound (CHAN_VOICE, SoundPain1);

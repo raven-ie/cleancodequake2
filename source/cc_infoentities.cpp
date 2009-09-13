@@ -993,16 +993,3 @@ public:
 };
 
 LINK_CLASSNAME_TO_CLASS ("target_lightramp", CTargetLightRamp);
-
-typedef float anArray[3];
-
-void TestFunction (anArray left, const anArray right)
-{
-	left[0] += right[0];
-}
-
-void Boo ()
-{
-	anArray one = {0,0,0}, two = {1,0,0};
-	TestFunction (one, two);
-}

@@ -146,12 +146,17 @@ char *CCvar::String ()
 	return mainValue;
 }
 
+bool CCvar::Boolean (bool MustBeOne)
+{
+	Update ();
+	return (MustBeOne ? (Integer() == 1) : (Float() != 0));
+}
+
 bool CCvar::Modified ()
 {
 	bool modified = (cVar->modified == 1);
 
 	cVar->modified = 0;
-
 	return modified;
 }
 

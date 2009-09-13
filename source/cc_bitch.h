@@ -71,7 +71,7 @@ public:
 	void DuckDown ();
 	void DuckHold ();
 	void DuckUp ();
-	void Dodge (edict_t *attacker, float eta);
+	void Dodge (CBaseEntity *attacker, float eta);
 #endif
 
 	void Moan ();

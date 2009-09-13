@@ -123,7 +123,7 @@ void CGladiator::MeleeAttack ()
 {
 	static vec3_t	aim = {MELEE_DISTANCE, Entity->GetMins().X, -4};
 
-	if (CMeleeWeapon::Fire (Entity, aim, (20 + (randomMT() %5)), 300))
+	if (CMeleeWeapon::Fire (Entity, aim, (20 + (irandom(5))), 300))
 		Entity->PlaySound (CHAN_AUTO, SoundCleaverHit);
 	else
 		Entity->PlaySound (CHAN_AUTO, SoundCleaverMiss);

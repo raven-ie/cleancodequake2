@@ -898,7 +898,7 @@ inline void CPlayerEntity::DamageFeedback (vec3f &forward, vec3f &right)
 		}
 		else
 		{
-			switch (randomMT()%3)
+			switch (irandom(3))
 			{
 			case 0:
 				State.SetFrame (FRAME_pain101-1);
@@ -926,7 +926,7 @@ inline void CPlayerEntity::DamageFeedback (vec3f &forward, vec3f &right)
 		gameEntity->pain_debounce_time = level.framenum + 7;
 
 		int l = Clamp<int>(((floorf((Max<>(0, gameEntity->health-1)) / 25))), 0, 3);
-		PlaySound (CHAN_VOICE, gMedia.Player.Pain[l][(randomMT()&1)]);
+		PlaySound (CHAN_VOICE, gMedia.Player.Pain[l][(irandom(2))]);
 	}
 
 	// the total alpha of the blend is always proportional to count
@@ -1449,7 +1449,7 @@ inline void CPlayerEntity::WorldEffects ()
 				if (gameEntity->health <= gameEntity->dmg)
 					PlaySound (CHAN_VOICE, SoundIndex("player/drown1.wav"));
 				else
-					PlaySound (CHAN_VOICE, gMedia.Player.Gurp[(randomMT()&1)]);
+					PlaySound (CHAN_VOICE, gMedia.Player.Gurp[(irandom(2))]);
 
 				gameEntity->pain_debounce_time = level.framenum;
 
@@ -1474,7 +1474,7 @@ inline void CPlayerEntity::WorldEffects ()
 				&& gameEntity->pain_debounce_time <= level.framenum
 				&& Client.invincible_framenum < level.framenum)
 			{
-				PlaySound (CHAN_VOICE, SoundIndex((randomMT()&1) ? "player/burn1.wav" : "player/burn2.wav"));
+				PlaySound (CHAN_VOICE, SoundIndex((irandom(2)) ? "player/burn1.wav" : "player/burn2.wav"));
 				gameEntity->pain_debounce_time = level.framenum + 10;
 			}
 
@@ -2553,7 +2553,7 @@ void CPlayerEntity::CTFAssignGhost()
 	ctfgame.ghosts[ghost].score = 0;
 	for (;;)
 	{
-		ctfgame.ghosts[ghost].code = 10000 + (randomMT() % 90000);
+		ctfgame.ghosts[ghost].code = 10000 + (irandom(90000));
 		for (i = 0; i < MAX_CS_CLIENTS; i++)
 		{
 			if (i != ghost && ctfgame.ghosts[i].code == ctfgame.ghosts[ghost].code)
@@ -3013,7 +3013,7 @@ void CPlayerEntity::CTFAssignTeam()
 		Client.resp.ctf_team = CTF_TEAM1;
 	else if (team2count < team1count)
 		Client.resp.ctf_team = CTF_TEAM2;
-	else if (randomMT() & 1)
+	else if (irandom(2))
 		Client.resp.ctf_team = CTF_TEAM1;
 	else
 		Client.resp.ctf_team = CTF_TEAM2;
@@ -3224,7 +3224,7 @@ CBaseEntity *CPlayerEntity::SelectCTFSpawnPoint ()
 	else
 		count -= 2;
 
-	selection = randomMT() % count;
+	selection = irandom(count);
 
 	spot = NULL;
 	do
@@ -3241,7 +3241,7 @@ CBaseEntity *CPlayerEntity::SelectCTFSpawnPoint ()
 void VelocityForDamage (int damage, vec3f &v);
 void CPlayerEntity::TossHead (int damage)
 {
-	if (randomMT()&1)
+	if (irandom(2))
 	{
 		State.SetModelIndex (gMedia.Gib_Head[1]);
 		State.SetSkinNum (1);		// second skin is player
@@ -3398,7 +3398,7 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 					break;
 				}
 			}
-			PlaySound (CHAN_VOICE, gMedia.Player.Death[(randomMT()%4)]);
+			PlaySound (CHAN_VOICE, gMedia.Player.Death[(irandom(4))]);
 		}
 	}
 
@@ -3696,12 +3696,22 @@ void CPlayerEntity::P_ProjectSource (vec3f distance, vec3f &forward, vec3f &righ
 	G_ProjectSource (State.GetOrigin(), distance, forward, right, result);
 }
 
+class CPlayerNoise : public virtual CBaseEntity
+{
+public:
+	CPlayerNoise () :
+	  CBaseEntity ()
+	{
+	};
+
+	CPlayerNoise (int Index) :
+	  CBaseEntity (Index)
+	{
+	};
+};
+
 void CPlayerEntity::PlayerNoiseAt (vec3f Where, int type)
 {
-#ifndef MONSTERS_USE_PATHFINDING
-	edict_t		*noise;
-#endif
-
 	if (type == PNOISE_WEAPON)
 	{
 		if (Client.silencer_shots)
@@ -3720,41 +3730,42 @@ void CPlayerEntity::PlayerNoiseAt (vec3f Where, int type)
 #ifndef MONSTERS_USE_PATHFINDING
 	if (!Client.mynoise)
 	{
-		noise = G_Spawn();
-		noise->classname = "player_noise";
-		Vec3Set (noise->mins, -8, -8, -8);
-		Vec3Set (noise->maxs, 8, 8, 8);
-		noise->owner = who;
-		noise->svFlags = SVF_NOCLIENT;
+		CPlayerNoise *noise = QNew (com_levelPool, 0) CPlayerNoise;
+		noise->gameEntity->classname = "player_noise";
+		noise->SetMins (vec3f(-8, -8, -8));
+		noise->SetMaxs (vec3f(8, 8, 8));
+		noise->SetOwner (this);
+		noise->SetSvFlags (SVF_NOCLIENT);
 		Client.mynoise = noise;
 
-		noise = G_Spawn();
-		noise->classname = "player_noise";
-		Vec3Set (noise->mins, -8, -8, -8);
-		Vec3Set (noise->maxs, 8, 8, 8);
-		noise->owner = who;
-		noise->svFlags = SVF_NOCLIENT;
+		noise = QNew (com_levelPool, 0) CPlayerNoise;
+		noise->gameEntity->classname = "player_noise";
+		noise->SetMins (vec3f(-8, -8, -8));
+		noise->SetMaxs (vec3f(8, 8, 8));
+		noise->SetOwner (this);
+		noise->SetSvFlags (SVF_NOCLIENT);
 		Client.mynoise2 = noise;
 	}
 
+	CPlayerNoise *noise;
 	if (type == PNOISE_SELF || type == PNOISE_WEAPON)
 	{
-		noise = Client.mynoise;
+		noise = dynamic_cast<CPlayerNoise*>(Client.mynoise);
 		level.sound_entity = noise;
 		level.sound_entity_framenum = level.framenum;
 	}
 	else // type == PNOISE_IMPACT
 	{
-		noise = who->mynoise2;
+		noise = dynamic_cast<CPlayerNoise*>(Client.mynoise2);
 		level.sound2_entity = noise;
 		level.sound2_entity_framenum = level.framenum;
 	}
 
-	Vec3Copy (Where, noise->state.origin);
-	Vec3Subtract (Where, noise->maxs, noise->absMin);
-	Vec3Add (Where, noise->maxs, noise->absMax);
-	noise->teleport_time = level.framenum;
-	gi.linkentity (noise);
+	noise->State.SetOrigin (Where);
+	noise->SetAbsMin (Where - noise->GetMins());
+	noise->SetAbsMax (Where + noise->GetMaxs());
+	noise->gameEntity->teleport_time = level.framenum;
+	noise->Link ();
 #else
 	level.NoiseNode = GetClosestNodeTo(Where);
 	level.SoundEntityFramenum = level.framenum;

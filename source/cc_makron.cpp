@@ -44,15 +44,13 @@ CMakron::CMakron ()
 void CMakron::Taunt ()
 {
 	MediaIndex Sound = SoundTaunt1;
-	switch (randomMT() % 3)
+	switch (irandom(3))
 	{
-	case 0:
-		break;
 	case 1:
 		Sound = SoundTaunt2;
+	default:
 		break;
 	case 2:
-	default:
 		Sound = SoundTaunt3;
 		break;
 	};
@@ -584,7 +582,7 @@ void CMakron::Sight()
 
 void CMakron::Attack()
 {
-	switch (randomMT()%3)
+	switch (irandom(3))
 	{
 	case 0:
 		CurrentMove = &MakronMoveAttack3;
@@ -804,7 +802,7 @@ bool CMakron::CheckAttack ()
 			if(Entity->gameEntity->enemy->solid != SOLID_NOT || tr.fraction < 1.0)		//PGM
 			{
 				// PMM - if we can't see our target, and we're not blocked by a monster, go into blind fire if available
-				if ((!(tr.ent->svFlags & SVF_MONSTER)) && (!visible(Entity->gameEntity, Entity->gameEntity->enemy)))
+				if ((!(tr.ent->svFlags & SVF_MONSTER)) && (!IsVisible(Entity, Entity->gameEntity->enemy->Entity)))
 				{
 					if ((BlindFire) && (BlindFireDelay <= 20.0))
 					{

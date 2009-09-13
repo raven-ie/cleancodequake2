@@ -479,7 +479,7 @@ void CBoss2::AttackMg ()
 
 void CBoss2::ReAttackMg ()
 {
-	CurrentMove = (infront(Entity->gameEntity, Entity->gameEntity->enemy)) ?
+	CurrentMove = (IsInFront(Entity, Entity->gameEntity->enemy->Entity)) ?
 		((random() <= 0.7) ? &Boss2MoveAttackMg : &Boss2MoveAttackPostMg) : &Boss2MoveAttackPostMg;
 }
 
@@ -522,7 +522,7 @@ bool CBoss2::CheckAttack ()
 	vec3f	temp;
 	float	chance;
 	bool	enemy_infront;
-	int		enemy_range;
+	ERangeType		enemy_range;
 	float	enemy_yaw;
 
 	if (Entity->gameEntity->enemy->health > 0)
@@ -540,8 +540,8 @@ bool CBoss2::CheckAttack ()
 			return false;
 	}
 	
-	enemy_infront = infront(Entity->gameEntity, Entity->gameEntity->enemy);
-	enemy_range = range(Entity->gameEntity, Entity->gameEntity->enemy);
+	enemy_infront = IsInFront(Entity, Entity->gameEntity->enemy->Entity);
+	enemy_range = Range(Entity, Entity->gameEntity->enemy->Entity);
 	temp = vec3f (Entity->gameEntity->enemy->state.origin) - Entity->State.GetOrigin();
 	enemy_yaw = temp.ToYaw();
 

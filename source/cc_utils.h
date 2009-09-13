@@ -57,6 +57,39 @@ public:
 
 void ForEachTeamChain (CBaseEntity *Master, CForEachTeamChainCallback *Callback);
 
+#define MELEE_DISTANCE	80
+
+//range
+typedef int ERangeType;
+enum
+{
+	RANGE_MELEE,
+	RANGE_NEAR,
+	RANGE_MID,
+	RANGE_FAR
+};
+
+inline float RangeFrom (vec3f left, vec3f right)
+{
+	return (left - right).Length();
+}
+
+inline ERangeType Range (vec3f left, vec3f right)
+{
+	float len = RangeFrom (left, right);
+	if (len < MELEE_DISTANCE)
+		return RANGE_MELEE;
+	else if (len < 500)
+		return RANGE_NEAR;
+	else if (len < 1000)
+		return RANGE_MID;
+	return RANGE_FAR;
+}
+
+ERangeType Range (CBaseEntity *self, CBaseEntity *other);
+bool IsInFront (CBaseEntity *self, CBaseEntity *other);
+bool IsVisible (CBaseEntity *self, CBaseEntity *other);
+
 #else
 FILE_WARNING
 #endif

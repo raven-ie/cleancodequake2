@@ -440,6 +440,7 @@ void Cmd_Test_f (CPlayerEntity *ent)
 	DebugPrintf(	"%5u        %6u            %5u          %5u\n",
 		randomtime, crandomtime, frandtime, crandtime);
 		*/
+	DebugPrintf ("%i %i %i\n", irandom(6), irandom(2), irandom(601));
 }
 
 void GCTFSay_Team (CPlayerEntity *ent);

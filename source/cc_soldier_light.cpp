@@ -83,7 +83,7 @@ void CSoldierLight::Attack ()
 
 	float r = random();
 	if ((!(AIFlags & (AI_BLOCKED|AI_STAND_GROUND))) &&
-		(range(Entity->gameEntity, Entity->gameEntity->enemy) >= RANGE_NEAR) && 
+		(Range(Entity, Entity->gameEntity->enemy->Entity) >= RANGE_NEAR) && 
 		(r < (skill->Integer()*0.25)))
 		CurrentMove = &SoldierMoveAttack6;
 	else
