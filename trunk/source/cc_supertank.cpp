@@ -340,7 +340,6 @@ void CSuperTank::Grenade ()
 	if (Entity->gameEntity->enemy)
 	{
 		vec3f vec = Entity->gameEntity->enemy->state.origin;
-		vec = vec.MultiplyAngles (0, vec3f(Entity->gameEntity->enemy->velocity));
 		vec.Z += Entity->gameEntity->enemy->viewheight;
 		forward = vec - start;
 		forward.Normalize ();
@@ -634,7 +633,6 @@ void CSuperTank::MachineGun ()
 	if (Entity->gameEntity->enemy)
 	{
 		vec3f vec = Entity->gameEntity->enemy->Entity->State.GetOrigin();
-		//Vec3MA (vec, 0, Entity->gameEntity->enemy->velocity, vec);
 		vec.Z += Entity->gameEntity->enemy->viewheight;
 		forward = vec - start;
 		forward.Normalize ();

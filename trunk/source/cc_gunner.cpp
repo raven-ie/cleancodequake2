@@ -499,7 +499,7 @@ void CGunner::Fire ()
 
 	// project enemy back a bit and target there
 	target = Entity->gameEntity->enemy->state.origin;
-	target = target.MultiplyAngles (-0.2f, Entity->gameEntity->enemy->velocity);
+	target = target.MultiplyAngles (-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->gameEntity->enemy->Entity)->Velocity);
 	target.Z += Entity->gameEntity->enemy->viewheight;
 
 	aim = target - start;

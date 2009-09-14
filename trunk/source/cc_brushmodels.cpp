@@ -87,7 +87,7 @@ CThinkableEntity ()
 
 void CBrushModel::MoveDone ()
 {
-	Vec3Clear (gameEntity->velocity);
+	Velocity.Clear ();
 	DoEndFunc ();
 }
 
@@ -99,7 +99,7 @@ void CBrushModel::MoveFinal ()
 		return;
 	}
 
-	Vec3Scale (Dir, RemainingDistance, gameEntity->velocity);
+	Velocity = vec3f(Dir) * RemainingDistance;
 
 	ThinkType = BRUSHTHINK_MOVEDONE;
 	NextThink = level.framenum + FRAMETIME;
@@ -112,7 +112,8 @@ void CBrushModel::MoveBegin ()
 		MoveFinal ();
 		return;
 	}
-	Vec3Scale (Dir, Speed/10, gameEntity->velocity);
+	Velocity = vec3f(Dir) * (Speed / 10);
+
 	float frames = floor((RemainingDistance / Speed) / 0.1f);
 	RemainingDistance -= ((frames * Speed) / 10);
 	NextThink = level.framenum + frames;
@@ -121,7 +122,7 @@ void CBrushModel::MoveBegin ()
 
 void CBrushModel::MoveCalc (vec3_t dest, uint32 EndFunc)
 {
-	Vec3Clear (gameEntity->velocity);
+	Velocity.Clear ();
 	Vec3Subtract (dest, gameEntity->state.origin, Dir);
 	RemainingDistance = VectorNormalizef (Dir, Dir);
 	this->EndFunc = EndFunc;
@@ -350,7 +351,7 @@ void CBrushModel::ThinkAccelMove ()
 		return;
 	}
 
-	Vec3Scale (Dir, CurrentSpeed, gameEntity->velocity);
+	Velocity = vec3f(Dir) * CurrentSpeed;
 	NextThink = level.framenum + FRAMETIME;
 	ThinkType = BRUSHTHINK_MOVEACCEL;
 }
@@ -1799,7 +1800,7 @@ void CTrainBase::TrainWait ()
 		{
 			Next ();
 			gameEntity->spawnflags &= ~TRAIN_START_ON;
-			Vec3Clear (gameEntity->velocity);
+			Velocity.Clear ();
 			NextThink = 0;
 		}
 
@@ -1921,7 +1922,7 @@ void CTrainBase::Use (CBaseEntity *other, CBaseEntity *activator)
 		if (!(gameEntity->spawnflags & TRAIN_TOGGLE))
 			return;
 		gameEntity->spawnflags &= ~TRAIN_START_ON;
-		Vec3Clear (gameEntity->velocity);
+		Velocity.Clear ();
 		NextThink = 0;
 	}
 	else
@@ -2756,10 +2757,9 @@ void CFuncExplosive::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dam
 	if (gameEntity->dmg)
 		T_RadiusDamage (this, attacker->gameEntity->Entity, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_EXPLOSIVE);
 
-	vec3f velocity = State.GetOrigin() - inflictor->State.GetOrigin();
-	velocity.Normalize ();
-	velocity *= 150;
-	Vec3Copy (velocity, gameEntity->velocity);
+	Velocity = State.GetOrigin() - inflictor->State.GetOrigin();
+	Velocity.Normalize ();
+	Velocity *= 150;
 
 	// start chunks towards the center
 	size *= 0.5f;

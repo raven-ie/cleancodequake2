@@ -224,7 +224,11 @@ void CMegaHealth::DoPickup (CItemEntity *ent, CPlayerEntity *other)
 {
 	CMegaHealthEntity *MegaHealth = dynamic_cast<CMegaHealthEntity*>(ent);
 
-	if (((
+	if ((!dmFlags.dfDmTechs
+#ifdef CLEANCTF_ENABLED
+		&& !(game.mode & GAME_CTF)
+#endif
+		)|| ((
 #ifdef CLEANCTF_ENABLED
 		(game.mode & GAME_CTF) || 
 #endif

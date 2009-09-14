@@ -1570,6 +1570,14 @@
 						>
 					</File>
 					<File
+						RelativePath="..\..\source\cc_brain.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\..\source\cc_brain.h"
+						>
+					</File>
+					<File
 						RelativePath=".\..\..\source\cc_floater.cpp"
 						>
 					</File>

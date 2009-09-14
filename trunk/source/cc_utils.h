@@ -53,9 +53,31 @@ class CForEachTeamChainCallback abstract
 {
 public:
 	virtual void Callback (CBaseEntity *Entity) = 0;
+	virtual void Query (CBaseEntity *Master);
 };
 
-void ForEachTeamChain (CBaseEntity *Master, CForEachTeamChainCallback *Callback);
+class CForEachPlayerCallback abstract
+{
+public:
+	int		Index;
+
+	virtual void Callback (CPlayerEntity *Player) = 0;
+	virtual void Query (bool MustBeInUse = true);
+};
+
+/*
+class CMyPlayerCallback : public CForEachPlayerCallback
+{
+public:
+	CMyPlayerCallback ()
+	{
+	};
+
+	void Callback (CPlayerEntity *Player)
+	{
+	}
+};
+*/
 
 #define MELEE_DISTANCE	80
 

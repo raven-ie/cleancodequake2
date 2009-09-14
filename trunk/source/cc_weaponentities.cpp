@@ -123,7 +123,7 @@ void CGrenade::Explode ()
 		mod = MOD_G_SPLASH;
 	T_RadiusDamage(this, GetOwner(), Damage, (gameEntity->enemy) ? gameEntity->enemy->Entity : NULL, RadiusDamage, mod);
 
-	Vec3MA (origin, -0.02f, gameEntity->velocity, origin);
+	origin = origin.MultiplyAngles (-0.02f, Velocity);
 	if (GroundEntity)
 		CTempEnt_Explosions::GrenadeExplosion(origin, gameEntity, !!gameEntity->waterlevel);
 	else
@@ -178,16 +178,10 @@ void CGrenade::Spawn (CBaseEntity *Spawner, vec3f start, vec3f aimdir, int damag
 
 	Grenade->State.SetOrigin (start);
 	aimdir *= speed;
-	Grenade->gameEntity->velocity[0] = aimdir.X;
-	Grenade->gameEntity->velocity[1] = aimdir.Y;
-	Grenade->gameEntity->velocity[2] = aimdir.Z;
 
-	vec3f velocity = aimdir;
-	velocity = velocity.MultiplyAngles (200 + crandom() * 10.0f, up);
-	velocity = velocity.MultiplyAngles (crandom() * 10.0, right);
-	Grenade->gameEntity->velocity[0] = velocity.X;
-	Grenade->gameEntity->velocity[1] = velocity.Y;
-	Grenade->gameEntity->velocity[2] = velocity.Z;
+	Grenade->Velocity = aimdir;
+	Grenade->Velocity = Grenade->Velocity.MultiplyAngles (200 + crandom() * 10.0f, up);
+	Grenade->Velocity = Grenade->Velocity.MultiplyAngles (crandom() * 10.0, right);
 
 	Vec3Set (Grenade->AngularVelocity, 300, 300, 300);
 	Grenade->State.SetEffects (EF_GRENADE);
@@ -259,7 +253,7 @@ void CBlasterProjectile::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface
 		dynamic_cast<CPlayerEntity*>(gameEntity->owner->Entity)->PlayerNoiseAt (origin, PNOISE_IMPACT);
 
 	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
-		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, GetOwner(), gameEntity->velocity, origin, plane ? plane->normal : vec3fOrigin, Damage, 1, DAMAGE_ENERGY, (gameEntity->spawnflags & 1) ? MOD_HYPERBLASTER : MOD_BLASTER);
+		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, GetOwner(), Velocity, origin, plane ? plane->normal : vec3fOrigin, Damage, 1, DAMAGE_ENERGY, (gameEntity->spawnflags & 1) ? MOD_HYPERBLASTER : MOD_BLASTER);
 	else
 		CTempEnt_Splashes::Blaster(origin, plane ? plane->normal : vec3fOrigin);
 
@@ -280,10 +274,7 @@ void CBlasterProjectile::Spawn (CBaseEntity *Spawner, vec3f start, vec3f dir,
 	Bolt->State.SetOrigin (start);
 	Bolt->State.SetOldOrigin (start);
 	Bolt->State.SetAngles (dir.ToAngles());
-	vec3f Scaled = dir * speed;
-	Bolt->gameEntity->velocity[0] = Scaled.X;
-	Bolt->gameEntity->velocity[1] = Scaled.Y;
-	Bolt->gameEntity->velocity[2] = Scaled.Z;
+	Bolt->Velocity = dir * speed;
 
 	Bolt->State.SetEffects (effect);
 	Bolt->State.SetModelIndex (ModelIndex ("models/objects/laser/tris.md2"));
@@ -349,7 +340,7 @@ void CRocket::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 		dynamic_cast<CPlayerEntity*>(gameEntity->owner->Entity)->PlayerNoiseAt (origin, PNOISE_IMPACT);
 
 	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
-		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, GetOwner(), gameEntity->velocity, origin, (plane) ? plane->normal : vec3fOrigin, Damage, 0, 0, MOD_ROCKET);
+		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, GetOwner(), Velocity, origin, (plane) ? plane->normal : vec3fOrigin, Damage, 0, 0, MOD_ROCKET);
 /*	else
 	{
 		// don't throw any debris in net games
@@ -364,7 +355,7 @@ void CRocket::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	}*/
 
 	// calculate position for the explosion entity
-	Vec3MA (origin, -0.02f, gameEntity->velocity, origin);
+	origin = origin.MultiplyAngles (-0.02f, Velocity);
 	T_RadiusDamage(this, GetOwner(), RadiusDamage, other, DamageRadius, MOD_R_SPLASH);
 	CTempEnt_Explosions::RocketExplosion(origin, gameEntity, !!gameEntity->waterlevel);
 
@@ -379,10 +370,7 @@ void CRocket::Spawn	(CBaseEntity *Spawner, vec3f start, vec3f dir,
 	Rocket->State.SetOrigin (start);
 
 	Rocket->State.SetAngles (dir.ToAngles());
-	vec3f vel = dir * speed;
-	Rocket->gameEntity->velocity[0] = vel.X;
-	Rocket->gameEntity->velocity[1] = vel.Y;
-	Rocket->gameEntity->velocity[2] = vel.Z;
+	Rocket->Velocity = dir * speed;
 	Rocket->State.SetEffects (EF_ROCKET);
 	Rocket->State.SetModelIndex (ModelIndex ("models/objects/rocket/tris.md2"));
 	Rocket->SetOwner (Spawner);
@@ -448,7 +436,7 @@ void CBFGBolt::Think ()
 					points = points * 0.5;
 
 				CTempEnt_Explosions::BFGExplosion (ent->State.GetOrigin());
-				ent->TakeDamage (this, GetOwner(), gameEntity->velocity, ent->State.GetOrigin(), vec3fOrigin, (int)points, 0, DAMAGE_ENERGY, MOD_BFG_EFFECT);
+				ent->TakeDamage (this, GetOwner(), Velocity, ent->State.GetOrigin(), vec3fOrigin, (int)points, 0, DAMAGE_ENERGY, MOD_BFG_EFFECT);
 			}
 		}
 
@@ -559,16 +547,15 @@ void CBFGBolt::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 
 	// core explosion - prevents firing it into the wall/floor
 	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
-		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, GetOwner(), gameEntity->velocity, boltOrigin, (plane) ? plane->normal : vec3fOrigin, 200, 0, 0, MOD_BFG_BLAST);
+		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, GetOwner(), Velocity, boltOrigin, (plane) ? plane->normal : vec3fOrigin, 200, 0, 0, MOD_BFG_BLAST);
 	T_RadiusDamage(this, GetOwner(), 200, other, 100, MOD_BFG_BLAST);
 
 	PlaySound (CHAN_VOICE, SoundIndex ("weapons/bfg__x1b.wav"));
 	SetSolid (SOLID_NOT);
 
 	Exploded = true;
-	boltOrigin = boltOrigin.MultiplyAngles (-0.1f, gameEntity->velocity);
-	State.SetOrigin (boltOrigin);
-	Vec3Clear (gameEntity->velocity);
+	State.SetOrigin (boltOrigin.MultiplyAngles (-0.1f, Velocity));
+	Velocity.Clear ();
 	State.SetModelIndex(ModelIndex ("sprites/s_bfg3.sp2"));
 	State.SetFrame(0);
 	State.SetSound(0);
@@ -590,9 +577,7 @@ void CBFGBolt::Spawn	(CBaseEntity *Spawner, vec3f start, vec3f dir,
 	vec3f vel = dir;
 	vel.NormalizeFast();
 	vel *= speed;
-	BFG->gameEntity->velocity[0] = vel.X;
-	BFG->gameEntity->velocity[1] = vel.Y;
-	BFG->gameEntity->velocity[2] = vel.Z;
+	BFG->Velocity = vel;
 	BFG->State.SetEffects (EF_BFG | EF_ANIM_ALLFAST);
 	BFG->State.SetModelIndex (ModelIndex ("sprites/s_bfg1.sp2"));
 	BFG->SetOwner (Spawner);
@@ -1345,12 +1330,15 @@ bool CMeleeWeapon::Fire(CBaseEntity *Entity, vec3f aim, int damage, int kick)
 		return false;
 
 	// do our special form of knockback here
-	vec3f v = Enemy->GetAbsMin().MultiplyAngles (0.5f, Enemy->GetSize()) - point;
-	v.Normalize ();
-	v = v.MultiplyAngles (kick, v);
-	Vec3Copy (v, Enemy->gameEntity->velocity);
-	if (Enemy->gameEntity->velocity[2] > 0)
-		Enemy->GroundEntity = NULL;
+	if (Enemy->EntityFlags & ENT_PHYSICS)
+	{
+		CPhysicsEntity *PhysEnemy = dynamic_cast<CPhysicsEntity*>(Enemy);
+		vec3f v = PhysEnemy->GetAbsMin().MultiplyAngles (0.5f, PhysEnemy->GetSize()) - point;
+		v.Normalize ();
+		PhysEnemy->Velocity = v.MultiplyAngles (kick, v);
+		if (PhysEnemy->Velocity.Z > 0)
+			PhysEnemy->GroundEntity = NULL;
+	}
 	return true;
 }
 
@@ -1389,7 +1377,6 @@ void CGrappleEntity::GrappleDrawCable()
 	CTempEnt_Trails::GrappleCable (origin, end, Player->State.GetNumber(), offset);
 };
 
-void SV_AddGravity (edict_t *ent);
 void CGrappleEntity::GrapplePull()
 {
 	float volume = (Player->Client.silencer_shots) ? 0.2f : 1.0;
@@ -1415,14 +1402,15 @@ void CGrappleEntity::GrapplePull()
 			State.SetOrigin ((gameEntity->enemy->Entity->GetSize() * 0.5f) + gameEntity->enemy->Entity->State.GetOrigin() + gameEntity->enemy->Entity->GetMins());
 			Link ();
 		}
-		else
-			Vec3Copy (gameEntity->enemy->velocity, gameEntity->velocity);
+		else if (gameEntity->enemy->Entity->EntityFlags & ENT_PHYSICS)
+			Velocity = dynamic_cast<CPhysicsEntity*>(gameEntity->enemy->Entity)->Velocity;
+
 		if (gameEntity->enemy && ((gameEntity->enemy->Entity->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(gameEntity->enemy->Entity)->CanTakeDamage))
 		{
 			CHurtableEntity *Hurt = dynamic_cast<CHurtableEntity*>(gameEntity->enemy->Entity);
 			if (!Hurt->CheckTeamDamage (Player))
 			{
-				Hurt->TakeDamage (this, Player, gameEntity->velocity, State.GetOrigin(), vec3fOrigin, 1, 1, 0, MOD_GRAPPLE);
+				Hurt->TakeDamage (this, Player, Velocity, State.GetOrigin(), vec3fOrigin, 1, 1, 0, MOD_GRAPPLE);
 				PlaySound (CHAN_WEAPON, SoundIndex("weapons/grapple/grhurt.wav"), volume);
 			}
 		}
@@ -1461,10 +1449,8 @@ void CGrappleEntity::GrapplePull()
 
 		hookdir.NormalizeFast ();
 		hookdir *= CTF_GRAPPLE_PULL_SPEED;
-		Player->gameEntity->velocity[0] = hookdir.X;
-		Player->gameEntity->velocity[1] = hookdir.Y;
-		Player->gameEntity->velocity[2] = hookdir.Z;
-		SV_AddGravity(Player->gameEntity);
+		Player->Velocity = hookdir;
+		Player->AddGravity();
 	}
 };
 
@@ -1488,10 +1474,7 @@ void CGrappleEntity::Spawn (CPlayerEntity *Spawner, vec3f start, vec3f dir, int 
 	Grapple->State.SetOrigin (start);
 	Grapple->State.SetOldOrigin (start);
 	Grapple->State.SetAngles (dir.ToAngles());
-	vec3f vel = dir * speed;
-	Grapple->gameEntity->velocity[0] = vel.X;
-	Grapple->gameEntity->velocity[1] = vel.Y;
-	Grapple->gameEntity->velocity[2] = vel.Z;
+	Grapple->Velocity = dir * speed;
 	Grapple->SetClipmask (CONTENTS_MASK_SHOT);
 	Grapple->SetSolid (SOLID_BBOX);
 	Grapple->SetMins (vec3fOrigin);
@@ -1525,12 +1508,12 @@ void CGrappleEntity::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *
 		return;
 	}
 
-	Vec3Copy(vec3Origin, gameEntity->velocity);
+	Velocity.Clear ();
 	Player->PlayerNoiseAt (State.GetOrigin(), PNOISE_IMPACT);
 
 	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
 	{
-		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (other, this, Player, gameEntity->velocity, State.GetOrigin(), (plane) ? plane->normal : vec3fOrigin, Damage, 1, 0, MOD_GRAPPLE);
+		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (other, this, Player, Velocity, State.GetOrigin(), (plane) ? plane->normal : vec3fOrigin, Damage, 1, 0, MOD_GRAPPLE);
 		ResetGrapple();
 		return;
 	}

@@ -212,10 +212,24 @@ bool KillBox (CBaseEntity *ent)
 }
 
 // Calls the callback for each member of the team in "ent"
-void ForEachTeamChain (CBaseEntity *Master, CForEachTeamChainCallback *Callback)
+void CForEachTeamChainCallback::Query (CBaseEntity *Master)
 {
 	for (CBaseEntity *e = Master->TeamMaster; e; e = e->TeamChain)
-		Callback->Callback (e);
+		Callback (e);
+}
+
+void CForEachPlayerCallback::Query (bool MustBeInUse)
+{
+	for (byte i = 1; i <= game.maxclients; i++)
+	{
+		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+
+		if (MustBeInUse && (!Player->IsInUse() || Player->Client.pers.state != SVCS_SPAWNED))
+			continue;
+
+		Index = i;
+		Callback (Player);
+	}
 }
 
 /*

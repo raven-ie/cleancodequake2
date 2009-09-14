@@ -183,25 +183,25 @@ CJunkEntity(Index)
 Misc functions
 =================
 */
-void VelocityForDamage (int damage, vec3f &v)
+vec3f VelocityForDamage (int damage)
 {
-	v = vec3f(100.0f * crandom(), 100.0f * crandom(), 200 + 100 * random()) * (damage < 50) ? 0.7f : 1.2f;
+	return vec3f(100.0f * crandom(), 100.0f * crandom(), 200 + 100 * random()) * (damage < 50) ? 0.7f : 1.2f;
 }
 
-void ClipGibVelocity (CBaseEntity *ent)
+void ClipGibVelocity (CPhysicsEntity *ent)
 {
-	if (ent->gameEntity->velocity[0] < -300)
-		ent->gameEntity->velocity[0] = -300;
-	else if (ent->gameEntity->velocity[0] > 300)
-		ent->gameEntity->velocity[0] = 300;
-	if (ent->gameEntity->velocity[1] < -300)
-		ent->gameEntity->velocity[1] = -300;
-	else if (ent->gameEntity->velocity[1] > 300)
-		ent->gameEntity->velocity[1] = 300;
-	if (ent->gameEntity->velocity[2] < 200)
-		ent->gameEntity->velocity[2] = 200;	// always some upwards
-	else if (ent->gameEntity->velocity[2] > 500)
-		ent->gameEntity->velocity[2] = 500;
+	if (ent->Velocity.X < -300)
+		ent->Velocity.X = -300;
+	else if (ent->Velocity.X > 300)
+		ent->Velocity.X = 300;
+	if (ent->Velocity.Y < -300)
+		ent->Velocity.Y = -300;
+	else if (ent->Velocity.Y > 300)
+		ent->Velocity.Y = 300;
+	if (ent->Velocity.Z < 200)
+		ent->Velocity.Z = 200;	// always some upwards
+	else if (ent->Velocity.Z > 500)
+		ent->Velocity.Z = 500;
 }
 
 bool CGibEntity::Run ()
@@ -236,14 +236,11 @@ void CGibEntity::Spawn (CBaseEntity *Owner, MediaIndex gibIndex, int damage, int
 	Junk->backOff = (type == GIB_ORGANIC) ? 1.0f : 1.5f;
 	float vscale = (type == GIB_ORGANIC) ? 0.5f : 1.0f;
 
-	vec3f vd;
-	VelocityForDamage (damage, vd);
+	vec3f vd = VelocityForDamage (damage);
 
-	vec3f velocity (Owner->gameEntity->velocity);
+	vec3f velocity = ((Owner->EntityFlags & ENT_PHYSICS) ? (dynamic_cast<CPhysicsEntity*>(Owner)->Velocity) : vec3fOrigin);
 	velocity.MultiplyAngles (vscale, vd);
-	Junk->gameEntity->velocity[0] = velocity.X;
-	Junk->gameEntity->velocity[1] = velocity.Y;
-	Junk->gameEntity->velocity[2] = velocity.Z;
+	Junk->Velocity = velocity;
 	ClipGibVelocity (Junk);
 
 	Junk->AngularVelocity.Set (crandom()*600, crandom()*600, crandom()*600);

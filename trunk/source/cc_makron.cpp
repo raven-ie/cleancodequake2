@@ -1018,9 +1018,8 @@ void CMakronJumpTimer::Think ()
 	newClass->State.SetAngles (vec3f(0, vec.ToYaw(), 0));
 	vec.Normalize();
 	vec3f vel = vec3fOrigin.MultiplyAngles (400, vec);
-	newClass->gameEntity->velocity[0] = vel.X;
-	newClass->gameEntity->velocity[1] = vel.Y;
-	newClass->gameEntity->velocity[2] = 200;
+	newClass->Velocity = vel;
+	newClass->Velocity.Z = 200;
 	newClass->GroundEntity = NULL;
 
 	Free ();

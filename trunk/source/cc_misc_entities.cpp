@@ -607,7 +607,8 @@ LINK_CLASSNAME_TO_CLASS ("monster_commander_body", CCommanderBody);
 /*QUAKED misc_deadsoldier (1 .5 0) (-16 -16 0) (16 16 16) ON_BACK ON_STOMACH BACK_DECAP FETAL_POS SIT_DECAP IMPALED
 This is the dead player model. Comes in 6 exciting different poses!
 */
-void VelocityForDamage (int damage, vec3f &v);
+vec3f VelocityForDamage (int damage);
+void ClipGibVelocity (CPhysicsEntity *ent);
 class CMiscDeadSoldier : public CMapEntity, public CHurtableEntity, public CThinkableEntity, public CTossProjectile
 {
 public:
@@ -687,27 +688,13 @@ public:
 			vscale = 1.0;
 		}
 
-		vec3f vd;
-		VelocityForDamage (damage, vd);
+		vec3f vd = VelocityForDamage (damage);
 		
-		vec3f velocity (gameEntity->velocity);
+		vec3f velocity (Velocity);
 		velocity.MultiplyAngles (vscale, vd);
-		gameEntity->velocity[0] = velocity.X;
-		gameEntity->velocity[1] = velocity.Y;
-		gameEntity->velocity[2] = velocity.Z;
+		Velocity = velocity;
 
-		if (gameEntity->velocity[0] < -300)
-			gameEntity->velocity[0] = -300;
-		else if (gameEntity->velocity[0] > 300)
-			gameEntity->velocity[0] = 300;
-		if (gameEntity->velocity[1] < -300)
-			gameEntity->velocity[1] = -300;
-		else if (gameEntity->velocity[1] > 300)
-			gameEntity->velocity[1] = 300;
-		if (gameEntity->velocity[2] < 200)
-			gameEntity->velocity[2] = 200;	// always some upwards
-		else if (gameEntity->velocity[2] > 500)
-			gameEntity->velocity[2] = 500;
+		ClipGibVelocity (this);
 
 		AngularVelocity.Y = crandom()*600;
 
@@ -888,8 +875,7 @@ public:
 
 		CMiscViper *viper = dynamic_cast<CMiscViper*>(CC_Find (NULL, FOFS(classname), "misc_viper"));
 
-		vec3f vel = vec3f(viper->Dir) * viper->Speed;
-		Vec3Copy (vel, gameEntity->velocity);
+		Velocity = vec3f(viper->Dir) * viper->Speed;
 
 		TimeStamp = level.framenum;
 		MoveDir = viper->Dir;

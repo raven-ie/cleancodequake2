@@ -284,11 +284,13 @@ void CClient::Clear ()
 CPlayerEntity::CPlayerEntity (int Index) :
 CBaseEntity(Index),
 CHurtableEntity(Index),
+CPhysicsEntity(Index),
 Client(&game.clients[State.GetNumber()-1]),
 NoClip(false),
 TossPhysics(false)
 {
 	EntityFlags |= ENT_PLAYER;
+	PhysicsType = PHYSICS_WALK;
 };
 
 bool CPlayerEntity::Run ()
@@ -553,7 +555,7 @@ void CPlayerEntity::PutInServer ()
 
 	SetMins (mins);
 	SetMaxs (maxs);
-	Vec3Clear (gameEntity->velocity);
+	Velocity.Clear ();
 
 	// clear playerstate values
 	Client.PlayerState.Clear ();
@@ -947,7 +949,7 @@ inline void CPlayerEntity::DamageFeedback (vec3f &forward, vec3f &right)
 	//
 	// calculate view angle kicks
 	//
-	float kick = abs(Client.damage_knockback);
+	float kick = Q_fabs(Client.damage_knockback);
 	if (kick && (gameEntity->health > 0))	// kick of 0 means no view adjust at all
 	{
 		kick *= 100 / gameEntity->health;
@@ -1015,10 +1017,10 @@ inline void CPlayerEntity::CalcViewOffset (vec3f &forward, vec3f &right, vec3f &
 		angles.X += ratio * Client.fall_value;
 
 		// add angles based on velocity
-		float delta = Dot3Product (gameEntity->velocity, forward);
+		float delta = Velocity.Dot (forward);
 		angles.X += delta*run_pitch->Float();
 		
-		delta = Dot3Product (gameEntity->velocity, right);
+		delta = Velocity.Dot (right);
 		angles.Z += delta*run_roll->Float();
 
 		// add angles based on bob
@@ -1092,7 +1094,7 @@ inline void CPlayerEntity::CalcGunOffset (vec3f &forward, vec3f &right, vec3f &u
 	// gun angles from delta movement
 	for (int i = 0; i < 3; i++)
 	{
-		float delta = Client.oldviewangles[i] - angles[i];
+		float delta = Client.OldViewAngles[i] - angles[i];
 		if (delta > 180)
 			delta -= 360;
 		if (delta < -180)
@@ -1282,13 +1284,13 @@ inline void CPlayerEntity::FallingDamage ()
 #endif
 	float	delta;
 
-	if ((Client.oldvelocity[2] < 0) && (gameEntity->velocity[2] > Client.oldvelocity[2]) && (!GroundEntity))
-		delta = Client.oldvelocity[2];
+	if ((Client.OldVelocity.Z < 0) && (Velocity.Z > Client.OldVelocity.Z) && (!GroundEntity))
+		delta = Client.OldVelocity.Z;
 	else
 	{
 		if (!GroundEntity)
 			return;
-		delta = gameEntity->velocity[2] - Client.oldvelocity[2];
+		delta = Velocity.Z - Client.OldVelocity.Z;
 	}
 	delta = delta*delta * 0.0001;
 
@@ -1742,7 +1744,7 @@ void CPlayerEntity::EndServerFrame ()
 	for (i=0 ; i<3 ; i++)
 	{
 		Client.PlayerState.GetPMove()->origin[i] = origin[i]*8.0;
-		Client.PlayerState.GetPMove()->velocity[i] = gameEntity->velocity[i]*8.0;
+		Client.PlayerState.GetPMove()->velocity[i] = Velocity[i]*8.0;
 	}
 
 	//
@@ -1773,17 +1775,16 @@ void CPlayerEntity::EndServerFrame ()
 	// set model angles from view angles so other things in
 	// the world can tell which direction you are looking
 	//
-	vec3f vel = vec3f(gameEntity->velocity);
 	State.SetAngles (vec3f(
 		(Client.ViewAngle.X > 180) ? (-360 + Client.ViewAngle.X)/3 : Client.ViewAngle.X/3,
 		Client.ViewAngle.Y,
-		CalcRoll (vel, right)*4));
+		CalcRoll (Velocity, right)*4));
 
 	//
 	// calculate speed and cycle to be used for
 	// all cyclic walking effects
 	//
-	float xyspeed = sqrtf(gameEntity->velocity[0]*gameEntity->velocity[0] + gameEntity->velocity[1]*gameEntity->velocity[1]);
+	float xyspeed = sqrtf(Velocity.X*Velocity.X + Velocity.Y*Velocity.Y);
 
 	if (xyspeed < 5 || Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED)
 	{
@@ -1863,11 +1864,8 @@ void CPlayerEntity::EndServerFrame ()
 
 	SetClientFrame (xyspeed);
 
-	Vec3Copy (gameEntity->velocity, Client.oldvelocity);
-
-	vec3_t viewAngles;
-	Client.PlayerState.GetViewAngles(viewAngles);
-	Vec3Copy (viewAngles, Client.oldviewangles);
+	Client.OldVelocity = Velocity;
+	Client.OldViewAngles = Client.PlayerState.GetViewAngles();
 
 	// clear weapon kicks
 	Client.KickOrigin.Clear();
@@ -2691,10 +2689,10 @@ void CPlayerEntity::DeadDropTech ()
 
 	CItemEntity *dropped = Client.pers.Tech->DropItem(this);
 	// hack the velocity to make it bounce random
-	dropped->gameEntity->velocity[0] = (frand() * 600) - 300;
-	dropped->gameEntity->velocity[1] = (frand() * 600) - 300;
+	dropped->Velocity.X = (frand() * 600) - 300;
+	dropped->Velocity.Y = (frand() * 600) - 300;
 	dropped->NextThink = level.framenum + CTF_TECH_TIMEOUT;
-	dropped->gameEntity->owner = NULL;
+	dropped->SetOwner (NULL);
 	Client.pers.Inventory.Set(Client.pers.Tech, 0);
 
 	Client.pers.Tech = NULL;
@@ -2843,7 +2841,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 	for (int i = 0; i < 3; i++)
 	{
 		pm.state.origin[i] = origin[i]*8;
-		pm.state.velocity[i] = gameEntity->velocity[i]*8;
+		pm.state.velocity[i] = Velocity[i]*8;
 	}
 
 	if (memcmp (&Client.old_pmove, &pm.state, sizeof(pm.state)))
@@ -2863,7 +2861,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 #ifdef USE_EXTENDED_GAME_IMPORTS
 	gi.Pmove (&pm);
 #else
-	SV_Pmove (gameEntity, &pm, 0);
+	SV_Pmove (gameEntity, &pm, CCvar("sv_airaccelerate", 0, 0).Float());
 #endif
 
 	// save results of pmove
@@ -2872,7 +2870,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 
 	State.SetOrigin(vec3f(pm.state.origin[0]*0.125, pm.state.origin[1]*0.125, pm.state.origin[2]*0.125));
 	for (int i = 0; i < 3; i++)
-		gameEntity->velocity[i] = pm.state.velocity[i]*0.125;
+		Velocity[i] = pm.state.velocity[i]*0.125;
 
 	Vec3Copy (pm.mins, gameEntity->mins);
 	Vec3Copy (pm.maxs, gameEntity->maxs);
@@ -3238,7 +3236,7 @@ CBaseEntity *CPlayerEntity::SelectCTFSpawnPoint ()
 }
 #endif
 
-void VelocityForDamage (int damage, vec3f &v);
+vec3f VelocityForDamage (int damage);
 void CPlayerEntity::TossHead (int damage)
 {
 	if (irandom(2))
@@ -3262,13 +3260,7 @@ void CPlayerEntity::TossHead (int damage)
 	State.SetSound (0);
 	Flags |= FL_NO_KNOCKBACK;
 
-	vec3f vd;
-	VelocityForDamage (damage, vd);
-
-	vec3f vel = vec3f(gameEntity->velocity) + vd;
-	gameEntity->velocity[0] = vel.X;
-	gameEntity->velocity[1] = vel.Y;
-	gameEntity->velocity[2] = vel.Z;
+	Velocity += VelocityForDamage (damage);
 
 	Link ();
 }

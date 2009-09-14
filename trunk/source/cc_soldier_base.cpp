@@ -343,7 +343,7 @@ void CSoldierBase::Pain (CBaseEntity *other, float kick, int damage)
 
 	if (level.framenum < Entity->gameEntity->pain_debounce_time)
 	{
-		if ((Entity->gameEntity->velocity[2] > 100) && ( (CurrentMove == &SoldierMovePain1) || (CurrentMove == &SoldierMovePain2) || (CurrentMove == &SoldierMovePain3)))
+		if ((Entity->Velocity.Z > 100) && ( (CurrentMove == &SoldierMovePain1) || (CurrentMove == &SoldierMovePain2) || (CurrentMove == &SoldierMovePain3)))
 			CurrentMove = &SoldierMovePain4;
 		return;
 	}
@@ -351,7 +351,7 @@ void CSoldierBase::Pain (CBaseEntity *other, float kick, int damage)
 	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
 	Entity->PlaySound (CHAN_VOICE, SoundPain);
 
-	if (Entity->gameEntity->velocity[2] > 100)
+	if (Entity->Velocity.Z > 100)
 	{
 		CurrentMove = &SoldierMovePain4;
 		return;

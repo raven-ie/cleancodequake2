@@ -316,16 +316,16 @@ void CMutant::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 
 	if (other->EntityFlags & ENT_HURTABLE)
 	{
-		if (Vec3Length(Entity->gameEntity->velocity) > 400)
+		if (Entity->Velocity.Length() > 400)
 		{
-			vec3f	normal (Entity->gameEntity->velocity);
+			vec3f	normal (Entity->Velocity);
 			normal.Normalize();
 
 			vec3f origin = Entity->State.GetOrigin();
 			vec3f point = origin.MultiplyAngles (Entity->GetMaxs().X, normal);
 
 			int damage = 40 + 10 * random();
-			dynamic_cast<CHurtableEntity*>(other)->TakeDamage (Entity, Entity, Entity->gameEntity->velocity, point, normal, damage, damage, 0, MOD_UNKNOWN);
+			dynamic_cast<CHurtableEntity*>(other)->TakeDamage (Entity, Entity, Entity->Velocity, point, normal, damage, damage, 0, MOD_UNKNOWN);
 		}
 	}
 
@@ -346,39 +346,33 @@ void CMutant::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 void CMutant::JumpTakeOff ()
 {
 #ifndef MUTANT_JUMPS_UNSTUPIDLY
-	vec3_t	forward;
+	vec3f	forward;
 
 	Entity->PlaySound (CHAN_VOICE, SoundSight);
 
-	Angles_Vectors (Entity->state.angles, forward, NULL, NULL);
-	Vec3Scale (forward, 600, Entity->gameEntity->velocity);
-	Entity->gameEntity->velocity[2] = 250;
+	Entity->State.GetAngles().ToVectors (&forward, NULL, NULL);
+	Entity->Velocity = forward * 600;
+	Entity->Velocity.Z = 250;
 #else
-	vec3_t	forward, up, angles, temp;
-
-	vec3_t origin;
-	Entity->State.GetOrigin(origin);
+	vec3f	forward, up, angles;
+	vec3f origin = Entity->State.GetOrigin();
 
 	if (AttemptJumpToLastSight)
 	{
-		Vec3Subtract (LastSighting, origin, angles);
+		angles = vec3f(LastSighting) - origin;
 		AttemptJumpToLastSight = false;
 	}
 	else
-		Vec3Subtract (Entity->gameEntity->enemy->state.origin, origin, angles);
-	//Angles_Vectors (angles, forward, NULL, NULL);
-	//VectorNormalizef (forward, forward);
-	VecToAngles (angles, temp);
+		angles = Entity->gameEntity->enemy->Entity->State.GetOrigin() - origin;
 
-	Angles_Vectors (temp, forward, NULL, up);
+	angles.ToAngles ().ToVectors (&forward, NULL, &up);
 
 	Entity->PlaySound (CHAN_VOICE, SoundSight);
-	Vec3MA (Entity->gameEntity->velocity, 550, forward, Entity->gameEntity->velocity);
-	Vec3MA (Entity->gameEntity->velocity, 60 + Vec3Length(angles), up, Entity->gameEntity->velocity);
-	//Entity->gameEntity->velocity[2] = 250;
+	Entity->Velocity = Entity->Velocity.MultiplyAngles (550, forward);
+	Entity->Velocity = Entity->Velocity.MultiplyAngles (60 + angles.Length(), up);
 #endif
 
-	origin[2] += 1;
+	origin.Z += 1;
 	Entity->State.SetOrigin(origin);
 	Entity->GroundEntity = NULL;
 	AIFlags |= AI_DUCKED;

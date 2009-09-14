@@ -129,7 +129,8 @@ public:
 		other->State.SetOldOrigin (dest->State.GetOrigin());
 
 		// clear the velocity and hold them in place briefly
-		Vec3Clear (other->gameEntity->velocity);
+		if (other->EntityFlags & ENT_PHYSICS)
+			dynamic_cast<CPhysicsEntity*>(other)->Velocity.Clear ();
 		if (Player)
 		{
 			Player->Client.PlayerState.GetPMove()->pmTime = 160>>3;		// hold time

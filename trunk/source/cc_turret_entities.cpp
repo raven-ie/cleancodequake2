@@ -136,10 +136,15 @@ class CAvelocityForEachTeamChainCallback : public CForEachTeamChainCallback
 public:
 	float avelYaw;
 
+	CAvelocityForEachTeamChainCallback (float avelYaw) :
+	avelYaw(avelYaw)
+	{
+	};
+
 	void Callback (CBaseEntity *Entity)
 	{
 		if (Entity->EntityFlags & ENT_PHYSICS)
-			dynamic_cast<CPhysicsEntity*>(Entity)->AngularVelocity[1] = avelYaw;
+			dynamic_cast<CPhysicsEntity*>(Entity)->AngularVelocity.Y = avelYaw;
 	};
 };
 
@@ -225,9 +230,7 @@ void CTurretBreach::Think ()
 
 		NextThink = level.framenum + FRAMETIME;
 
-		CAvelocityForEachTeamChainCallback cb;
-		cb.avelYaw = AngularVelocity.Y;
-		ForEachTeamChain (this, &cb);
+		CAvelocityForEachTeamChainCallback (AngularVelocity.Y).Query (this);
 
 		// if we have adriver, adjust his velocities
 		if (GetOwner())
@@ -251,15 +254,18 @@ void CTurretBreach::Think ()
 			target.Z = gameEntity->owner->state.origin[2];
 
 			dir = target - gameEntity->owner->Entity->State.GetOrigin();
-			gameEntity->owner->velocity[0] = dir.X * 1.0 / 1;
-			gameEntity->owner->velocity[1] = dir.Y * 1.0 / 1;
+			
+			CPhysicsEntity *Owner = dynamic_cast<CPhysicsEntity*>(GetOwner());
+
+			Owner->Velocity.X = dir.X * 1.0 / 1;
+			Owner->Velocity.Y = dir.Y * 1.0 / 1;
 
 			// z
 			angle = State.GetAngles().X * (M_PI*2 / 360);
 			target_z = SnapToEights(State.GetOrigin().Z + gameEntity->owner->move_origin[0] * tan(angle) + gameEntity->owner->move_origin[2]);
 
 			diff = target_z - gameEntity->owner->state.origin[2];
-			gameEntity->owner->velocity[2] = diff * 1.0 / 1;
+			Owner->Velocity.Z = diff * 1.0 / 1;
 
 			if (ShouldFire)
 			{

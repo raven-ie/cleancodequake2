@@ -96,9 +96,10 @@ void CBoss2::FireBulletRight ()
 	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_BOSS2_MACHINEGUN_R1], forward, right, start);
 
-	vec3_t tempTarget;
-	Vec3MA (Entity->gameEntity->enemy->state.origin, -0.2f, Entity->gameEntity->enemy->velocity, tempTarget);
-	target = vec3f(tempTarget);
+	vec3f tempTarget = Entity->gameEntity->enemy->Entity->State.GetOrigin();
+	if (Entity->gameEntity->enemy->Entity->EntityFlags & ENT_PHYSICS)
+		tempTarget = tempTarget.MultiplyAngles (-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->gameEntity->enemy->Entity)->Velocity);
+	target = tempTarget;
 	target.Z += Entity->gameEntity->enemy->viewheight;
 	forward = target - start;
 	forward.Normalize();
@@ -114,9 +115,10 @@ void CBoss2::FireBulletLeft ()
 	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_BOSS2_MACHINEGUN_R1], forward, right, start);
 
-	vec3_t tempTarget;
-	Vec3MA (Entity->gameEntity->enemy->state.origin, -0.2f, Entity->gameEntity->enemy->velocity, tempTarget);
-	target = vec3f(tempTarget);
+	vec3f tempTarget = Entity->gameEntity->enemy->Entity->State.GetOrigin();
+	if (Entity->gameEntity->enemy->Entity->EntityFlags & ENT_PHYSICS)
+		tempTarget = tempTarget.MultiplyAngles (-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->gameEntity->enemy->Entity)->Velocity);
+	target = tempTarget;
 	target.Z += Entity->gameEntity->enemy->viewheight;
 	forward = target - start;
 	forward.Normalize();
