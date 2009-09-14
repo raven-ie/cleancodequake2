@@ -390,7 +390,7 @@ void CTank::Rocket ()
 
 	if (!blindfire && ((random() < (0.2 + ((3 - skill->Integer()) * 0.15)))))
 	{
-		vec = vec.MultiplyAngles (dir.Length() / rocketSpeed, Entity->gameEntity->enemy->velocity);
+		vec = vec.MultiplyAngles (dir.Length() / rocketSpeed, dynamic_cast<CPhysicsEntity*>(Entity->gameEntity->enemy->Entity)->Velocity);
 		dir = vec - start;
 	}
 

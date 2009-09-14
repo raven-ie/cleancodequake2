@@ -318,9 +318,8 @@ CItemEntity *CTech::DropItem (CBaseEntity *ent)
 	}
 
 	forward *= 100;
-	dropped->gameEntity->velocity[0] = forward.X;
-	dropped->gameEntity->velocity[1] = forward.Y;
-	dropped->gameEntity->velocity[2] = 300;
+	dropped->Velocity = forward;
+	dropped->Velocity.Z = 300;
 
 	dropped->NextThink = level.framenum + 10;
 	dropped->Link ();
@@ -356,9 +355,8 @@ void SpawnTech(CBaseItem *item, CBaseEntity *spot)
 
 	ent->State.SetOrigin (spot->State.GetOrigin() + vec3f(0,0,16));
 	forward *= 100;
-	ent->gameEntity->velocity[0] = forward[0];
-	ent->gameEntity->velocity[1] = forward[1];
-	ent->gameEntity->velocity[2] = 300;
+	ent->Velocity = forward;
+	ent->Velocity.Z = 300;
 
 	ent->NextThink = level.framenum + CTF_TECH_TIMEOUT;
 

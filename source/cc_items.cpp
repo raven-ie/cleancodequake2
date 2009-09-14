@@ -182,9 +182,8 @@ CItemEntity *CBaseItem::DropItem (CBaseEntity *ent)
 	}
 
 	forward *= 100;
-	dropped->gameEntity->velocity[0] = forward.X;
-	dropped->gameEntity->velocity[1] = forward.Y;
-	dropped->gameEntity->velocity[2] = 300;
+	dropped->Velocity = forward;
+	dropped->Velocity.Z = 300;
 
 	dropped->NextThink = level.framenum + 10;
 	dropped->Link ();

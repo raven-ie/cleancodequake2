@@ -182,6 +182,12 @@ public:
 	size_t	StrLen;
 	char	*Message;
 
+	CTargetStringForEachCallback (size_t StrLen, char *Message) :
+	StrLen(StrLen),
+	Message(Message)
+	{
+	};
+
 	void Callback (CBaseEntity *e)
 	{
 		if (!e->gameEntity->count)
@@ -207,11 +213,7 @@ public:
 
 void CTargetString::Use (CBaseEntity *other, CBaseEntity *activator)
 {
-	CTargetStringForEachCallback cb;
-	cb.StrLen = strlen(Message);
-	cb.Message = Message;
-
-	ForEachTeamChain (this, &cb);
+	CTargetStringForEachCallback (strlen(Message), Message).Query (this);
 }
 
 void CTargetString::Spawn ()

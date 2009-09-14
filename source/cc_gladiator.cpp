@@ -235,7 +235,7 @@ void CGladiator::Pain (CBaseEntity *other, float kick, int damage)
 
 	if (level.framenum < Entity->gameEntity->pain_debounce_time)
 	{
-		if ((Entity->gameEntity->velocity[2] > 100) && (CurrentMove == &GladiatorMovePain))
+		if ((Entity->Velocity.Z > 100) && (CurrentMove == &GladiatorMovePain))
 			CurrentMove = &GladiatorMovePainAir;
 		return;
 	}
@@ -246,7 +246,7 @@ void CGladiator::Pain (CBaseEntity *other, float kick, int damage)
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
 
-	CurrentMove = (Entity->gameEntity->velocity[2] > 100) ? &GladiatorMovePainAir : &GladiatorMovePain;
+	CurrentMove = (Entity->Velocity.Z > 100) ? &GladiatorMovePainAir : &GladiatorMovePain;
 }
 
 void CGladiator::Dead ()

@@ -185,8 +185,8 @@ void CMonster::MoveToPath (float Dist)
 				vec3_t sub2, forward;
 				Vec3Subtract (P_CurrentNode->Origin, origin, sub2);
 				Angles_Vectors (sub2, forward, NULL, NULL);
-				Vec3MA (Entity->gameEntity->velocity, 1.5, sub2, Entity->gameEntity->velocity);
-				Entity->gameEntity->velocity[2] = 300;
+				Entity->Velocity = Entity->Velocity.MultiplyAngles (1.5, sub2);
+				Entity->Velocity.Z = 300;
 				Entity->GroundEntity = NULL;
 				CheckGround();
 			}
@@ -287,7 +287,7 @@ void CMonster::MoveToPath (float Dist)
 			}
 
 		// try other directions
-			if ( ((randomMT()&3) & 1) ||  abs(deltay)>abs(deltax))
+			if ( ((randomMT()&3) & 1) ||  Q_fabs(deltay)>Q_fabs(deltax))
 			{
 				tdir=d[1];
 				d[1]=d[2];
@@ -445,7 +445,8 @@ void CMonsterEntity::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *
 	Monster->Touch (other, plane, surf);
 }
 
-void VelocityForDamage (int damage, vec3f &v);
+vec3f VelocityForDamage (int damage);
+void ClipGibVelocity (CPhysicsEntity *);
 void CMonsterEntity::ThrowHead (MediaIndex gibIndex, int damage, int type)
 {
 	float	vscale;
@@ -477,29 +478,9 @@ void CMonsterEntity::ThrowHead (MediaIndex gibIndex, int damage, int type)
 		PhysicsType = PHYSICS_BOUNCE;
 		vscale = 1.0;
 	}
-
-	vec3f vd;
-	VelocityForDamage (damage, vd);
 	
-	vec3f velocity (gameEntity->velocity);
-	velocity.MultiplyAngles (vscale, vd);
-	gameEntity->velocity[0] = velocity.X;
-	gameEntity->velocity[1] = velocity.Y;
-	gameEntity->velocity[2] = velocity.Z;
-
-	if (gameEntity->velocity[0] < -300)
-		gameEntity->velocity[0] = -300;
-	else if (gameEntity->velocity[0] > 300)
-		gameEntity->velocity[0] = 300;
-	if (gameEntity->velocity[1] < -300)
-		gameEntity->velocity[1] = -300;
-	else if (gameEntity->velocity[1] > 300)
-		gameEntity->velocity[1] = 300;
-	if (gameEntity->velocity[2] < 200)
-		gameEntity->velocity[2] = 200;	// always some upwards
-	else if (gameEntity->velocity[2] > 500)
-		gameEntity->velocity[2] = 500;
-
+	Velocity = Velocity.MultiplyAngles (vscale, VelocityForDamage (damage));
+	ClipGibVelocity (this);
 	AngularVelocity.Y = crandom()*600;
 
 	NextThink = level.framenum + 100 + random()*100;
@@ -908,7 +889,7 @@ void CMonster::NewChaseDir (edict_t *Enemy, float Dist)
 	}
 
 // try other directions
-	if ( ((randomMT()&3) & 1) ||  abs(deltay)>abs(deltax))
+	if ( ((randomMT()&3) & 1) ||  Q_fabs(deltay)>Q_fabs(deltax))
 	{
 		tdir=d[1];
 		d[1]=d[2];
@@ -3394,7 +3375,7 @@ void CMonster::CheckGround()
 	if (Entity->Flags & (FL_SWIM|FL_FLY))
 		return;
 
-	if (Entity->gameEntity->velocity[2] > 100)
+	if (Entity->Velocity.Z > 100)
 	{
 		Entity->GroundEntity = NULL;
 		return;
@@ -3418,7 +3399,7 @@ void CMonster::CheckGround()
 		Entity->State.SetOrigin (trace.endPos);
 		Entity->GroundEntity = trace.Ent;
 		Entity->GroundEntityLinkCount = trace.Ent->GetLinkCount();
-		Entity->gameEntity->velocity[2] = 0;
+		Entity->Velocity.Z = 0;
 	}
 }
 

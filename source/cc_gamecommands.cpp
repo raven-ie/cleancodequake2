@@ -135,6 +135,24 @@ int PlayerSort (void const *a, void const *b)
 	return 0;
 }
 
+class CPlayerListCountCallback : public CForEachPlayerCallback
+{
+public:
+	int		*index;
+	int		*count;
+
+	CPlayerListCountCallback (int *index, int *count) :
+	index(index),
+	count(count)
+	{
+	};
+
+	void Callback (CPlayerEntity *Player)
+	{
+		index[(*count)++] = Index;
+	}
+};
+
 /*
 =================
 Cmd_Players_f
@@ -142,22 +160,12 @@ Cmd_Players_f
 */
 void Cmd_Players_f (CPlayerEntity *ent)
 {
-	int		i;
-	int		count;
+	int		count = 0;
 	char	small[MAX_INFO_KEY];
 	char	large[MAX_INFO_STRING];
 	int		*index = QNew (com_genericPool, 0) int[game.maxclients];
 
-	count = 0;
-	for (i = 0 ; i < game.maxclients ; i++)
-	{
-		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity);
-		if (Player->Client.pers.state >= SVCS_CONNECTED)
-		{
-			index[count] = i;
-			count++;
-		}
-	}
+	CPlayerListCountCallback (index, &count).Query ();
 
 	// sort by frags
 	qsort (index, count, sizeof(index[0]), PlayerSort);
@@ -165,7 +173,7 @@ void Cmd_Players_f (CPlayerEntity *ent)
 	// print information
 	large[0] = 0;
 
-	for (i = 0 ; i < count ; i++)
+	for (int i = 0 ; i < count ; i++)
 	{
 		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity);
 		Q_snprintfz (small, sizeof(small), "%3i %s\n",
@@ -266,9 +274,24 @@ bool CheckFlood(CPlayerEntity *ent)
 	return false;
 }
 
+class CSayPlayerCallback : public CForEachPlayerCallback
+{
+public:
+	char	*Text;
+
+	CSayPlayerCallback (char *Text) :
+	Text(Text)
+	{
+	};
+
+	void Callback (CPlayerEntity *Player)
+	{
+		Player->PrintToClient (PRINT_CHAT, "%s", Text);
+	}
+};
+
 void Cmd_Say_f (CPlayerEntity *ent, bool team, bool arg0)
 {
-	int		j;
 	char	*p;
 	char	text[MAX_TALK_STRING];
 
@@ -322,26 +345,90 @@ void Cmd_Say_f (CPlayerEntity *ent, bool team, bool arg0)
 	if (dedicated->Integer())
 		Com_Printf(PRINT_CHAT, "%s", text);
 
-	for (j = 1; j <= game.maxclients; j++)
-	{
-		CPlayerEntity *other = dynamic_cast<CPlayerEntity*>(g_edicts[j].Entity);
-		if (!other->IsInUse())
-			continue;
-		other->PrintToClient (PRINT_CHAT, "%s", text);
-	}
+	CSayPlayerCallback (text).Query ();
 }
+
+class CPlayerListCallback : public CForEachPlayerCallback
+{
+public:
+	char			*Text;
+	size_t			SizeOf;
+	CPlayerEntity	*Ent;
+	bool			Spectator;
+
+	CPlayerListCallback (char *Text, size_t SizeOf, CPlayerEntity *Ent) :
+	Text(Text),
+	SizeOf(SizeOf),
+	Ent(Ent)
+	{
+	};
+
+	bool DoCallback (CPlayerEntity *Player)
+	{
+		char st[80];
+
+		if (!Spectator)
+			Q_snprintfz(st, sizeof(st), " - %02d:%02d %4d %3d %s%s\n",
+				(level.framenum - Player->Client.resp.enterframe) / 600,
+				((level.framenum - Player->Client.resp.enterframe) % 600)/10,
+				Player->Client.GetPing(),
+				Player->Client.resp.score,
+				Player->Client.pers.netname,
+				Player->Client.resp.spectator ? " (spectator)" : "");
+		else
+			Q_snprintfz(st, sizeof(st), " - %s%s\n",
+				Player->Client.pers.netname,
+				Player->Client.resp.spectator ? " (spectator)" : "");
+
+		if (strlen(Text) + strlen(st) > SizeOf - 50)
+		{
+			Q_snprintfz (Text+strlen(Text), SizeOf, "And more...\n");
+			Ent->PrintToClient (PRINT_HIGH, "%s", Text);
+			return true;
+		}
+
+		Q_strcatz(Text, st, SizeOf);
+		return false;
+	}
+
+	bool DoQuery (bool Spectator)
+	{
+		this->Spectator = Spectator;
+		for (byte i = 1; i <= game.maxclients; i++)
+		{
+			CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+
+			if (Spectator && (!Player->IsInUse() || Player->Client.pers.state != SVCS_SPAWNED))
+				continue;
+			else if (!Spectator && (Player->Client.pers.state == SVCS_SPAWNED))
+				continue;
+
+			Index = i;
+			if (DoCallback (Player))
+				return true;
+		}
+		return false;
+	}
+
+	void Query (bool)
+	{
+	}
+
+	void Callback (CPlayerEntity *)
+	{
+	}
+};
 
 void Cmd_PlayerList_f(CPlayerEntity *ent)
 {
-	int i;
-	char st[80];
 	char text[MAX_COMPRINT/4];
 
 	// connect time, ping, score, name
 	*text = 0;
 
 	Q_snprintfz (text, sizeof(text), "Spawned:\n");
-	for (i = 0; i < game.maxclients; i++)
+	CPlayerListCallback(text, sizeof(text), ent).DoQuery (false);
+	/*for (i = 0; i < game.maxclients; i++)
 	{
 		CPlayerEntity *e2 = dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity);
 		if (!e2->IsInUse())
@@ -362,10 +449,10 @@ void Cmd_PlayerList_f(CPlayerEntity *ent)
 			return;
 		}
 		Q_strcatz(text, st, sizeof(text));
-	}
+	}*/
 
 	Q_strcatz (text, "Connecting:\n", sizeof(text));
-	for (i = 0; i < game.maxclients; i++)
+	/*for (i = 0; i < game.maxclients; i++)
 	{
 		CPlayerEntity *e2 = dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity);
 		if (e2->Client.pers.state == SVCS_SPAWNED)
@@ -380,8 +467,9 @@ void Cmd_PlayerList_f(CPlayerEntity *ent)
 			return;
 		}
 		Q_strcatz(text, st, sizeof(text));
-	}
-	ent->PrintToClient (PRINT_HIGH, "%s", text);
+	}*/
+	if (!CPlayerListCallback(text, sizeof(text), ent).DoQuery (true))
+		ent->PrintToClient (PRINT_HIGH, "%s", text);
 }
 
 void GCmd_Say_f (CPlayerEntity *ent)

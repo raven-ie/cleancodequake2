@@ -523,7 +523,6 @@ struct edict_s
 	vec3_t		movedir;
 	vec3_t		pos1, pos2;
 
-	vec3_t		velocity;
 	int			mass;
 	float		gravity;		// per entity gravity multiplier (1.0 is normal)
 								// use for lowgrav artifact, flares

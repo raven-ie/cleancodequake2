@@ -208,6 +208,8 @@ public:
 	colorb			DamageBlend;
 	CBaseEntity		*mynoise;		// can go in client only
 	CBaseEntity		*mynoise2;
+	vec3f			OldViewAngles;
+	vec3f			OldVelocity;
 
 	CClient (gclient_t *client);
 
@@ -247,8 +249,6 @@ public:
 	float		fall_value;		// for view drop on fall
 	byte		bonus_alpha;
 	float		bobtime;			// so off-ground doesn't change it
-	vec3_t		oldviewangles;
-	vec3_t		oldvelocity;
 
 	float		next_drown_time;
 	int			old_waterlevel;
@@ -298,13 +298,14 @@ public:
 	FrameNumber_t		lasttechmsg;
 };
 
-// Players don't think or have (game) controlled physics
-class CPlayerEntity : public CHurtableEntity
+// Players don't think or have (game) controlled physics.
+// PhysicsEntity inherited for velocity.
+class CPlayerEntity : public CHurtableEntity, public CPhysicsEntity
 {
 public:
-	CClient		Client;
-	bool		NoClip;
-	bool		TossPhysics;
+	CClient				Client;
+	bool				NoClip;
+	bool				TossPhysics;
 	FrameNumber_t		FlySoundDebounceTime;
 	FrameNumber_t		DamageDebounceTime;
 	FrameNumber_t		AirFinished;

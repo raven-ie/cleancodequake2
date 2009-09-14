@@ -551,7 +551,7 @@ void CJorg::FireBullet ()
 	Entity->State.GetAngles().ToVectors(&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_JORG_MACHINEGUN_R1], forward, right, start);
 
-	target = vec3f(Entity->gameEntity->enemy->state.origin).MultiplyAngles(-0.2f, vec3f(Entity->gameEntity->enemy->velocity));
+	target = Entity->gameEntity->enemy->Entity->State.GetOrigin().MultiplyAngles(-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->gameEntity->enemy->Entity)->Velocity);
 	target[2] += Entity->gameEntity->enemy->viewheight;
 	forward = (target - start);
 	forward.Normalize();
@@ -561,7 +561,7 @@ void CJorg::FireBullet ()
 	Entity->State.GetAngles().ToVectors(&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_JORG_MACHINEGUN_L1], forward, right, start);
 
-	target = vec3f(Entity->gameEntity->enemy->state.origin).MultiplyAngles(-0.2f, vec3f(Entity->gameEntity->enemy->velocity));
+	target = Entity->gameEntity->enemy->Entity->State.GetOrigin().MultiplyAngles(-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->gameEntity->enemy->Entity)->Velocity);
 	target[2] += Entity->gameEntity->enemy->viewheight;
 	forward = (target - start);
 	forward.Normalize();

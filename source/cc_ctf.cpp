@@ -1624,8 +1624,15 @@ void CTFStats(CPlayerEntity *ent)
 	ent->PrintToClient (PRINT_HIGH, "%s", text);
 }
 
+void Cmd_PlayerList_f (CPlayerEntity *ent);
 void CTFPlayerList(CPlayerEntity *ent)
 {
+	if (!(game.mode & GAME_CTF))
+	{
+		Cmd_PlayerList_f (ent);
+		return;
+	}
+
 	int i;
 	char st[80];
 	char text[1400];

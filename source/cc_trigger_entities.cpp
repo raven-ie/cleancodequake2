@@ -441,29 +441,35 @@ public:
 		vec3f vel = vec3f(gameEntity->movedir) * (gameEntity->speed * 10);
 		if (Q3Touch)
 		{
-			Vec3Copy (vel, other->gameEntity->velocity);
+			if (other->EntityFlags & ENT_PHYSICS)
+				dynamic_cast<CPhysicsEntity*>(other)->Velocity = vel;
 
 			if (other->EntityFlags & ENT_PLAYER)
 			{
 				// don't take falling damage immediately from this
 				CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(other);
-				Vec3Copy (other->gameEntity->velocity, Player->Client.oldvelocity);
+				Player->Client.OldVelocity = Player->Velocity;
 			}
 		}
 		else
 		{
 			// FIXME: replace this shit
 			if (strcmp(other->gameEntity->classname, "grenade") == 0)
-				Vec3Copy (vel, other->gameEntity->velocity);
+			{
+				if (other->EntityFlags & ENT_PHYSICS)
+					dynamic_cast<CPhysicsEntity*>(other)->Velocity = vel;
+			}
 			else if (other->gameEntity->health > 0)
 			{
-				Vec3Copy (vel, other->gameEntity->velocity);
+				if (other->EntityFlags & ENT_PHYSICS)
+					dynamic_cast<CPhysicsEntity*>(other)->Velocity = vel;
 
 				if (other->EntityFlags & ENT_PLAYER)
 				{
 					CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(other);
+
 					// don't take falling damage immediately from this
-					Vec3Copy (other->gameEntity->velocity, Player->Client.oldvelocity);
+					Player->Client.OldVelocity = Player->Velocity;
 					if (Player->FlySoundDebounceTime < level.framenum)
 					{
 						Player->FlySoundDebounceTime = level.framenum + 15;
@@ -620,14 +626,14 @@ public:
 			return;
 
 	// set XY even if not on ground, so the jump will clear lips
-		other->gameEntity->velocity[0] = gameEntity->movedir[0] * gameEntity->speed;
-		other->gameEntity->velocity[1] = gameEntity->movedir[1] * gameEntity->speed;
+		CMonsterEntity *Monster = dynamic_cast<CMonsterEntity*>(other);
+		Monster->Velocity = vec3f(gameEntity->movedir) * gameEntity->speed;
 		
-		if (!other->GroundEntity)
+		if (!Monster->GroundEntity)
 			return;
 		
-		other->GroundEntity = NULL;
-		other->gameEntity->velocity[2] = gameEntity->movedir[2];
+		Monster->GroundEntity = NULL;
+		Monster->Velocity.Z = gameEntity->movedir[2];
 	};
 
 	void Spawn ()

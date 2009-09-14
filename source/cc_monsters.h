@@ -172,8 +172,9 @@ class CMonsterEntity : public CMapEntity, public CStepPhysics, public CTossProje
 public:
 	bool			IsHead;
 	uint8			UseState;
-	FrameNumber_t			AirFinished;
-	FrameNumber_t			DamageDebounceTime;
+	FrameNumber_t	AirFinished;
+	FrameNumber_t	DamageDebounceTime;
+	FrameNumber_t	BonusDamageTime;
 	char			*Message;
 
 	class CMonster	*Monster;

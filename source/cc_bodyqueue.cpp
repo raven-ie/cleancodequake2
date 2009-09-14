@@ -77,7 +77,7 @@ void CBody::Pain (CBaseEntity *other, float kick, int damage)
 {
 }
 
-void VelocityForDamage (int damage, vec3f &v);
+vec3f VelocityForDamage (int damage);
 void CBody::TossHead (int damage)
 {
 	if (irandom(2))
@@ -101,13 +101,8 @@ void CBody::TossHead (int damage)
 	State.SetSound (0);
 	Flags |= FL_NO_KNOCKBACK;
 
-	backOff = 1.5f;
-	vec3f vd;
-	VelocityForDamage (damage, vd);
-	vec3f vel = vec3f(gameEntity->velocity) + vd;
-	gameEntity->velocity[0] = vel.X;
-	gameEntity->velocity[1] = vel.Y;
-	gameEntity->velocity[2] = vel.Z;
+	backOff = 1.5f;	
+	Velocity += VelocityForDamage (damage);
 
 	NextThink = level.framenum + 100 + random()*100;
 
@@ -249,7 +244,7 @@ void CBodyQueue::CopyBodyToQueue (CPlayerEntity *Player)
 	Body->SetSize (Player->GetSize());
 	Body->SetSolid (Player->GetSolid());
 	Body->SetClipmask(Player->GetClipmask());
-	Vec3Clear (Body->gameEntity->velocity);
+	Body->Velocity.Clear ();
 	CBaseEntity *owner;
 	if ((owner = Player->GetOwner()) != 0)
 		Body->SetOwner (owner);

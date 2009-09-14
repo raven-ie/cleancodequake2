@@ -224,8 +224,8 @@ public:
 		KillBox (Entity);
 		Entity->Link ();
 
-		if (gameEntity->speed)
-			Vec3Copy (gameEntity->movedir, ent->velocity);
+		if (gameEntity->speed && (Entity->EntityFlags & ENT_PHYSICS))
+			dynamic_cast<CPhysicsEntity*>(Entity)->Velocity = gameEntity->movedir;
 	};
 
 	void Spawn ()
@@ -1019,10 +1019,12 @@ public:
 			if (!(Entity->EntityFlags & ENT_PLAYER))
 				continue;
 
-			Entity->GroundEntity = NULL;
-			Entity->gameEntity->velocity[0] += crandom()* 150;
-			Entity->gameEntity->velocity[1] += crandom()* 150;
-			Entity->gameEntity->velocity[2] = gameEntity->speed * (100.0 / Entity->gameEntity->mass);
+			CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(Entity);
+
+			Player->GroundEntity = NULL;
+			Player->Velocity.X += crandom()* 150;
+			Player->Velocity.Y += crandom()* 150;
+			Player->Velocity.Z = gameEntity->speed * (100.0 / Player->gameEntity->mass);
 		}
 
 		if (level.framenum < TimeStamp)
