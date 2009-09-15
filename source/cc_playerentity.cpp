@@ -959,16 +959,11 @@ inline void CPlayerEntity::DamageFeedback (vec3f &forward, vec3f &right)
 		if (kick > 50)
 			kick = 50;
 
-		vec3f v = Client.DamageFrom - State.GetOrigin ();
-		v.Normalize ();
+		vec3f v = (Client.DamageFrom - State.GetOrigin ()).GetNormalized();
 		
-		float side = v.Dot (right);
-		Client.v_dmg_roll = kick*side*0.3;
-		
-		side = -v.Dot (forward);
-		Client.v_dmg_pitch = kick*side*0.3;
-
-		Client.v_dmg_time = level.framenum + DAMAGE_TIME;
+		Client.ViewDamage.Y = kick*v.Dot (right)*0.3;
+		Client.ViewDamage.X = kick*-v.Dot (forward)*0.3;
+		Client.ViewDamageTime = level.framenum + DAMAGE_TIME;
 	}
 
 	//
@@ -1000,15 +995,14 @@ inline void CPlayerEntity::CalcViewOffset (vec3f &forward, vec3f &right, vec3f &
 		vec3f angles = Client.KickAngles;
 
 		// add angles based on damage kick
-		ratio = (float)(Client.v_dmg_time - level.framenum) / DAMAGE_TIME;
+		ratio = (float)(Client.ViewDamageTime - level.framenum) / DAMAGE_TIME;
 		if (ratio < 0)
 		{
 			ratio = 0;
-			Client.v_dmg_pitch = 0;
-			Client.v_dmg_roll = 0;
+			Client.ViewDamage.Clear ();
 		}
-		angles.X += ratio * Client.v_dmg_pitch;
-		angles.Z += ratio * Client.v_dmg_roll;
+		angles.X += ratio * Client.ViewDamage.X;
+		angles.Z += ratio * Client.ViewDamage.Y;
 
 		// add pitch based on fall kick
 		ratio = (float)(Client.fall_time - level.framenum) / FALL_TIME;

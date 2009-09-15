@@ -520,8 +520,6 @@ struct edict_s
 	char		*combattarget;
 
 	float		speed, accel, decel;
-	vec3_t		movedir;
-	vec3_t		pos1, pos2;
 
 	int			mass;
 	float		gravity;		// per entity gravity multiplier (1.0 is normal)

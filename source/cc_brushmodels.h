@@ -66,6 +66,20 @@ public:
 	MediaIndex	SoundStart;
 	MediaIndex	SoundMiddle;
 	MediaIndex	SoundEnd;
+	vec3f		MoveDir;
+	vec3f		Positions[2];
+
+	inline void SetMoveDir ()
+	{
+		if (State.GetAngles().Y == -1)
+			MoveDir.Set (0, 0, 1);
+		else if (State.GetAngles().Y == -2)
+			MoveDir.Set (0, 0, -1);
+		else
+			State.GetAngles().ToVectors (&MoveDir, NULL, NULL);
+
+		State.SetAngles (vec3fOrigin);
+	}
 
 	float		Accel;
 	float		Speed;

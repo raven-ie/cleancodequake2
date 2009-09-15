@@ -48,6 +48,8 @@ public:
 	MediaIndex	SoundSearch;
 	MediaIndex	SoundSight;
 
+	vec3f		SavedFirePosition;
+
 	CGladiator ();
 
 	void Attack ();

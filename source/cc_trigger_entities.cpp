@@ -92,6 +92,7 @@ public:
 	};
 	uint32 ThinkType;
 	bool Touchable;
+	vec3f MoveDir;
 
 	CTriggerBase () :
 	  CBaseEntity (),
@@ -153,11 +154,11 @@ public:
 		else
 			return;
 
-		if (vec3f(gameEntity->movedir) != vec3fOrigin)
+		if (MoveDir != vec3fOrigin)
 		{
 			vec3f	forward;
 			other->State.GetOrigin().ToVectors (&forward, NULL, NULL);
-			if (forward.Dot(vec3f(gameEntity->movedir)) < 0)
+			if (forward.Dot(MoveDir) < 0)
 				return;
 		}
 
@@ -175,9 +176,8 @@ public:
 	{
 		if (State.GetAngles() != vec3fOrigin)
 		{
-			vec3f md, angles = State.GetAngles();
-			G_SetMovedir (angles, md);
-			Vec3Copy (md, gameEntity->movedir);
+			vec3f angles = State.GetAngles();
+			G_SetMovedir (angles, MoveDir);
 			State.SetAngles (angles);
 		}
 
@@ -280,9 +280,8 @@ public:
 
 		if (State.GetAngles() != vec3fOrigin)
 		{
-			vec3f md, angles = State.GetAngles();
-			G_SetMovedir (angles, md);
-			Vec3Copy (md, gameEntity->movedir);
+			vec3f angles = State.GetAngles();
+			G_SetMovedir (angles, MoveDir);
 			State.SetAngles (angles);
 		}
 
@@ -438,7 +437,7 @@ public:
 
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
-		vec3f vel = vec3f(gameEntity->movedir) * (gameEntity->speed * 10);
+		vec3f vel = vec3f(MoveDir) * (gameEntity->speed * 10);
 		if (Q3Touch)
 		{
 			if (other->EntityFlags & ENT_PHYSICS)
@@ -627,13 +626,13 @@ public:
 
 	// set XY even if not on ground, so the jump will clear lips
 		CMonsterEntity *Monster = dynamic_cast<CMonsterEntity*>(other);
-		Monster->Velocity = vec3f(gameEntity->movedir) * gameEntity->speed;
+		Monster->Velocity = MoveDir * gameEntity->speed;
 		
 		if (!Monster->GroundEntity)
 			return;
 		
 		Monster->GroundEntity = NULL;
-		Monster->Velocity.Z = gameEntity->movedir[2];
+		Monster->Velocity.Z = MoveDir.Z;
 	};
 
 	void Spawn ()
@@ -649,7 +648,7 @@ public:
 			State.SetAngles (Ang);
 		}
 		Init ();
-		gameEntity->movedir[2] = st.height;
+		MoveDir.Z = st.height;
 	};
 };
 

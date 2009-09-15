@@ -182,27 +182,26 @@ void CTurretBreach::Think ()
 		Vec3Copy (moveangles, gameEntity->move_angles);
 
 		// clamp angles to mins & maxs
-		if (gameEntity->move_angles[PITCH] > gameEntity->pos1[PITCH])
-			gameEntity->move_angles[PITCH] = gameEntity->pos1[PITCH];
-		else if (gameEntity->move_angles[PITCH] < gameEntity->pos2[PITCH])
-			gameEntity->move_angles[PITCH] = gameEntity->pos2[PITCH];
+		if (gameEntity->move_angles[PITCH] > Positions[0].X)
+			gameEntity->move_angles[PITCH] = Positions[0].X;
+		else if (gameEntity->move_angles[PITCH] < Positions[1].X)
+			gameEntity->move_angles[PITCH] = Positions[1].X;
 
-		if ((gameEntity->move_angles[YAW] < gameEntity->pos1[YAW]) || (gameEntity->move_angles[YAW] > gameEntity->pos2[YAW]))
+		if ((gameEntity->move_angles[YAW] < Positions[0].Y) || (gameEntity->move_angles[YAW] > Positions[1].Y))
 		{
-			float dmin = Q_fabs(gameEntity->pos1[YAW] - gameEntity->move_angles[YAW]);
+			float dmin = Q_fabs(Positions[0].Y - gameEntity->move_angles[YAW]);
 			if (dmin < -180)
 				dmin += 360;
 			else if (dmin > 180)
 				dmin -= 360;
-			float dmax = Q_fabs(gameEntity->pos2[YAW] - gameEntity->move_angles[YAW]);
+
+			float dmax = Q_fabs(Positions[1].Y - gameEntity->move_angles[YAW]);
 			if (dmax < -180)
 				dmax += 360;
 			else if (dmax > 180)
 				dmax -= 360;
-			if (Q_fabs(dmin) < Q_fabs(dmax))
-				gameEntity->move_angles[YAW] = gameEntity->pos1[YAW];
-			else
-				gameEntity->move_angles[YAW] = gameEntity->pos2[YAW];
+
+			gameEntity->move_angles[YAW] = Positions[(Q_fabs(dmin) < Q_fabs(dmax)) ? 0 : 1].Y;
 		}
 
 		vec3f delta = (vec3f(gameEntity->move_angles) - current_angles);
@@ -294,10 +293,10 @@ void CTurretBreach::Spawn ()
 	if (!st.maxyaw)
 		st.maxyaw = 360;
 
-	gameEntity->pos1[PITCH] = -1 * st.minpitch;
-	gameEntity->pos1[YAW]   = st.minyaw;
-	gameEntity->pos2[PITCH] = -1 * st.maxpitch;
-	gameEntity->pos2[YAW]   = st.maxyaw;
+	Positions[0].X = -1 * st.minpitch;
+	Positions[0].Y = st.minyaw;
+	Positions[1].X = -1 * st.maxpitch;
+	Positions[1].Y = st.maxyaw;
 
 	gameEntity->move_angles[YAW] = State.GetAngles().Y;
 

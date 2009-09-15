@@ -1076,7 +1076,9 @@ void CMonster::MonsterStartGo ()
 	if (Entity->gameEntity->target)
 	{
 		CBaseEntity *Target = CC_PickTarget(Entity->gameEntity->target);
-		Entity->gameEntity->goalentity = Entity->gameEntity->movetarget = Target->gameEntity;
+
+		if (Target)
+			Entity->gameEntity->goalentity = Entity->gameEntity->movetarget = Target->gameEntity;
 		if (!Entity->gameEntity->movetarget)
 		{
 			//gi.dprintf ("%s can't find target %s at (%f %f %f)\n", self->classname, self->target, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
@@ -1129,8 +1131,8 @@ void CMonster::MonsterStart ()
 {
 	if (game.mode & GAME_DEATHMATCH)
 	{
-		//Entity->Free ();
-		//return;
+		Entity->Free ();
+		return;
 	}
 
 	if ((Entity->gameEntity->spawnflags & 4) && !(AIFlags & AI_GOOD_GUY))

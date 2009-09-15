@@ -192,6 +192,8 @@ void ED_CallSpawn (edict_t *ent);
 class CTargetSpawner : public CMapEntity, public CUsableEntity
 {
 public:
+	vec3f	MoveDir;
+
 	CTargetSpawner () :
 	  CBaseEntity (),
 	  CMapEntity (),
@@ -225,7 +227,7 @@ public:
 		Entity->Link ();
 
 		if (gameEntity->speed && (Entity->EntityFlags & ENT_PHYSICS))
-			dynamic_cast<CPhysicsEntity*>(Entity)->Velocity = gameEntity->movedir;
+			dynamic_cast<CPhysicsEntity*>(Entity)->Velocity = MoveDir;
 	};
 
 	void Spawn ()
@@ -233,10 +235,9 @@ public:
 		SetSvFlags (SVF_NOCLIENT);
 		if (gameEntity->speed)
 		{
-			vec3f md, angles = State.GetAngles();
-			G_SetMovedir (angles, md);
-			md *= gameEntity->speed;
-			Vec3Copy (md, gameEntity->movedir);
+			vec3f angles = State.GetAngles();
+			G_SetMovedir (angles, MoveDir);
+			MoveDir *= gameEntity->speed;
 			State.SetAngles (angles);
 		}
 	};
