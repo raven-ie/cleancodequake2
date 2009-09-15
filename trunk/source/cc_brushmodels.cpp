@@ -533,7 +533,7 @@ void CPlatForm::SpawnInsideTrigger ()
 	tmax.Y -= 25;
 	tmax.Z += 8;
 
-	tmin.Z = tmax.Z - (gameEntity->pos1[2] - gameEntity->pos2[2] + st.lip);
+	tmin.Z = tmax.Z - (Positions[0].Z - Positions[1].Z + st.lip);
 
 	if (gameEntity->spawnflags & PLAT_LOW_TRIGGER)
 		tmax.Z = tmin.Z + 8;
@@ -585,12 +585,8 @@ void CPlatForm::Spawn ()
 		st.lip = 8;
 
 	// pos1 is the top position, pos2 is the bottom
-	State.GetOrigin (gameEntity->pos1);
-	State.GetOrigin (gameEntity->pos2);
-	if (st.height)
-		gameEntity->pos2[2] -= st.height;
-	else
-		gameEntity->pos2[2] -= (GetMaxs().Z - GetMins().Z) - st.lip;
+	Positions[0] = Positions[1] = State.GetOrigin ();
+	Positions[1].Z -= (st.height) ? st.height : ((GetMaxs().Z - GetMins().Z) - st.lip);
 
 	SpawnInsideTrigger ();	// the "start moving" trigger	
 
@@ -598,7 +594,7 @@ void CPlatForm::Spawn ()
 		MoveState = STATE_UP;
 	else
 	{
-		State.SetOrigin (gameEntity->pos2);
+		State.SetOrigin (Positions[1]);
 		Link ();
 		MoveState = STATE_BOTTOM;
 	}
@@ -607,10 +603,10 @@ void CPlatForm::Spawn ()
 	Accel = gameEntity->accel;
 	Decel = gameEntity->decel;
 	Wait = gameEntity->wait;
-	Vec3Copy (gameEntity->pos1, StartOrigin);
+	Vec3Copy (Positions[0], StartOrigin);
 	State.GetAngles (StartAngles);
 	State.GetAngles (EndAngles);
-	Vec3Copy (gameEntity->pos2, EndOrigin);
+	Vec3Copy (Positions[1], EndOrigin);
 
 	SoundStart = SoundIndex ("plats/pt1_strt.wav");
 	SoundMiddle = SoundIndex ("plats/pt1_mid.wav");
@@ -992,11 +988,8 @@ void CDoor::Spawn ()
 		SoundEnd = SoundIndex  ("doors/dr1_end.wav");
 	}
 
-	vec3f md;
-	vec3f angles = State.GetAngles();
-	G_SetMovedir (angles, md);
-	State.SetAngles(angles);
-	Vec3Copy (md, gameEntity->movedir);
+	SetMoveDir ();
+
 	PhysicsType = PHYSICS_PUSH;
 	SetSolid (SOLID_BSP);
 	SetModel (gameEntity, gameEntity->model);
@@ -1019,22 +1012,22 @@ void CDoor::Spawn ()
 		gameEntity->dmg = 2;
 
 	// calculate second position
-	State.GetOrigin (gameEntity->pos1);
-	vec3_t abs_movedir = {
-		fabs(gameEntity->movedir[0]),
-		fabs(gameEntity->movedir[1]),
-		fabs(gameEntity->movedir[2])
-	};
+	Positions[0] = State.GetOrigin ();
+	vec3f abs_movedir (
+		Q_fabs(MoveDir.X),
+		Q_fabs(MoveDir.Y),
+		Q_fabs(MoveDir.Z)
+	);
 	vec3f Size = GetSize();
-	Distance = abs_movedir[0] * Size.X + abs_movedir[1] * Size.Y + abs_movedir[2] * Size.Z - st.lip;
-	Vec3MA (gameEntity->pos1, Distance, gameEntity->movedir, gameEntity->pos2);
+	Distance = abs_movedir.X * Size.X + abs_movedir.Y * Size.Y + abs_movedir.Z * Size.Z - st.lip;
+	Positions[1] = Positions[0].MultiplyAngles (Distance, MoveDir);
 
 	// if it starts open, switch the positions
 	if (gameEntity->spawnflags & DOOR_START_OPEN)
 	{
-		State.SetOrigin (gameEntity->pos2);
-		Vec3Copy (gameEntity->pos1, gameEntity->pos2);
-		State.GetOrigin (gameEntity->pos1);
+		State.SetOrigin (Positions[1]);
+		Positions[1] = Positions[0];
+		Positions[0] = State.GetOrigin ();
 	}
 
 	MoveState = STATE_BOTTOM;
@@ -1056,9 +1049,9 @@ void CDoor::Spawn ()
 	Accel = gameEntity->accel;
 	Decel = gameEntity->decel;
 	Wait = gameEntity->wait;
-	Vec3Copy (gameEntity->pos1, StartOrigin);
+	Vec3Copy (Positions[0], StartOrigin);
 	State.GetAngles (StartAngles);
-	Vec3Copy (gameEntity->pos2, EndOrigin);
+	Vec3Copy (Positions[1], EndOrigin);
 	State.GetAngles (EndAngles);
 
 	if (gameEntity->spawnflags & 16)
@@ -1143,17 +1136,17 @@ void CRotatingDoor::Spawn ()
 	State.SetAngles (vec3fOrigin);
 
 	// set the axis of rotation
-	Vec3Clear(gameEntity->movedir);
+	MoveDir.Clear ();
 	if (gameEntity->spawnflags & DOOR_X_AXIS)
-		gameEntity->movedir[2] = 0.1f;
+		MoveDir.Z = 0.1f;
 	else if (gameEntity->spawnflags & DOOR_Y_AXIS)
-		gameEntity->movedir[0] = 0.1f;
+		MoveDir.X = 0.1f;
 	else // Z_AXIS
-		gameEntity->movedir[1] = 0.1f;
+		MoveDir.Y = 0.1f;
 
 	// check for reverse rotation
 	if (gameEntity->spawnflags & DOOR_REVERSE)
-		Vec3Inverse (gameEntity->movedir);
+		MoveDir.Invert ();
 
 	if (!st.distance)
 	{
@@ -1162,8 +1155,8 @@ void CRotatingDoor::Spawn ()
 		st.distance = 90;
 	}
 
-	State.GetAngles (gameEntity->pos1);
-	Vec3MA (gameEntity->pos1, st.distance, gameEntity->movedir, gameEntity->pos2);
+	Positions[0] = State.GetAngles ();
+	Positions[1] = Positions[0].MultiplyAngles (st.distance, MoveDir);
 	Distance = st.distance;
 
 	PhysicsType = PHYSICS_PUSH;
@@ -1189,13 +1182,16 @@ void CRotatingDoor::Spawn ()
 		SoundEnd = SoundIndex  ("doors/dr1_end.wav");
 	}
 
+	Positions[0] *= 10;
+	Positions[1] *= 10;
+
 	// if it starts open, switch the positions
 	if (gameEntity->spawnflags & DOOR_START_OPEN)
 	{
-		State.SetAngles (gameEntity->pos2);
-		Vec3Copy (gameEntity->pos1, gameEntity->pos2);
-		State.GetAngles (gameEntity->pos1);
-		Vec3Inverse (gameEntity->movedir);
+		State.SetAngles (Positions[1]);
+		Positions[1] = Positions[0];
+		Positions[0] = State.GetAngles ();
+		MoveDir.Invert ();
 	}
 
 	if (gameEntity->health)
@@ -1220,8 +1216,8 @@ void CRotatingDoor::Spawn ()
 	Wait = gameEntity->wait;
 	State.GetOrigin (StartOrigin);
 	State.GetOrigin (EndOrigin);
-	Vec3Scale (gameEntity->pos1, 10, StartAngles);
-	Vec3Scale (gameEntity->pos2, 10, EndAngles);
+	Vec3Copy (Positions[0], StartAngles);
+	Vec3Copy (Positions[1], EndAngles);
 
 	if (gameEntity->spawnflags & 16)
 		State.AddEffects (EF_ANIM_ALL);
@@ -1257,11 +1253,8 @@ CDoor(Index)
 
 void CMovableWater::Spawn ()
 {
-	vec3f md;
-	vec3f angles = State.GetAngles();
-	G_SetMovedir (angles, md);
-	State.SetAngles(angles);
-	Vec3Copy (md, gameEntity->movedir);
+	SetMoveDir ();
+
 	PhysicsType = PHYSICS_PUSH;
 	SetSolid (SOLID_BSP);
 	SetModel (gameEntity, gameEntity->model);
@@ -1279,24 +1272,24 @@ void CMovableWater::Spawn ()
 	}
 
 	// calculate second position
-	State.GetOrigin (gameEntity->pos1);
+	Positions[0] = State.GetOrigin ();
 
-	vec3f abs_movedir(Q_fabs(gameEntity->movedir[0]), Q_fabs(gameEntity->movedir[1]), Q_fabs(gameEntity->movedir[2]));
+	vec3f abs_movedir(Q_fabs(MoveDir.X), Q_fabs(MoveDir.Y), Q_fabs(MoveDir.Z));
 
 	Distance = abs_movedir.X * GetSize().X + abs_movedir.Y * GetSize().Y + abs_movedir.Z * GetSize().Z - st.lip;
-	Vec3MA (gameEntity->pos1, Distance, gameEntity->movedir, gameEntity->pos2);
+	Positions[1] = Positions[0].MultiplyAngles (Distance, MoveDir);
 
 	// if it starts open, switch the positions
 	if (gameEntity->spawnflags & DOOR_START_OPEN)
 	{
-		State.SetOrigin (gameEntity->pos2);
-		Vec3Copy (gameEntity->pos1, gameEntity->pos2);
-		State.GetOrigin (gameEntity->pos1);
+		State.SetOrigin (Positions[1]);
+		Positions[1] = Positions[0];
+		Positions[0] = State.GetOrigin ();
 	}
 
-	Vec3Copy (gameEntity->pos1, StartOrigin);
+	Vec3Copy (Positions[0], StartOrigin);
 	State.GetAngles(StartAngles);
-	Vec3Copy (gameEntity->pos2, EndOrigin);
+	Vec3Copy (Positions[1], EndOrigin);
 	State.GetAngles(EndAngles);
 
 	MoveState = STATE_BOTTOM;
@@ -1391,10 +1384,10 @@ void CDoorSecret::Think ()
 		MoveCalc (vec3Origin, DOORSECRETENDFUNC_DONE);
 		break;
 	case DOORSECRETTHINK_4:
-		MoveCalc (gameEntity->pos1, DOORSECRETENDFUNC_5);
+		MoveCalc (Positions[0], DOORSECRETENDFUNC_5);
 		break;
 	case DOORSECRETTHINK_2:
-		MoveCalc (gameEntity->pos2, DOORSECRETENDFUNC_3);
+		MoveCalc (Positions[1], DOORSECRETENDFUNC_3);
 		break;
 	default:
 		CBrushModel::Think ();
@@ -1407,7 +1400,7 @@ void CDoorSecret::Use (CBaseEntity *other, CBaseEntity *activator)
 	if (State.GetOrigin() != vec3fOrigin)
 		return;
 
-	MoveCalc (gameEntity->pos1, DOORSECRETENDFUNC_1);
+	MoveCalc (Positions[0], DOORSECRETENDFUNC_1);
 	UseAreaPortals (true);
 }
 
@@ -1471,21 +1464,14 @@ void CDoorSecret::Spawn ()
 	vec3f	forward, right, up;
 	State.GetAngles().ToVectors (&forward, &right, &up);
 	State.SetAngles (vec3fOrigin);
-	float side = 1.0 - (gameEntity->spawnflags & SECRET_1ST_LEFT);
 
 	float width = (gameEntity->spawnflags & SECRET_1ST_DOWN) ? Q_fabs(up.Dot (GetSize())) : Q_fabs(right.Dot (GetSize()));
 	float length = Q_fabs(forward.Dot (GetSize()));
 	if (gameEntity->spawnflags & SECRET_1ST_DOWN)
-	{
-		State.GetOrigin (gameEntity->pos1);
-		Vec3MA (gameEntity->pos1, -1 * width, up, gameEntity->pos1);
-	}
+		Positions[0] = State.GetOrigin ().MultiplyAngles (-1 * width, up);
 	else
-	{
-		State.GetOrigin (gameEntity->pos1);
-		Vec3MA (gameEntity->pos1, side * width, right, gameEntity->pos1);
-	}
-	Vec3MA (gameEntity->pos1, length, forward, gameEntity->pos2);
+		Positions[0] = State.GetOrigin().MultiplyAngles ((1.0 - (gameEntity->spawnflags & SECRET_1ST_LEFT)) * width, right);
+	Positions[1] = Positions[0].MultiplyAngles (length, forward);
 
 	if (gameEntity->health)
 	{
@@ -1644,11 +1630,7 @@ void CButton::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 
 void CButton::Spawn ()
 {
-	vec3f md;
-	vec3f angles = State.GetAngles();
-	G_SetMovedir (angles, md);
-	State.SetAngles(angles);
-	Vec3Copy (md, gameEntity->movedir);
+	SetMoveDir ();
 
 	PhysicsType = PHYSICS_STOP;
 	SetSolid (SOLID_BSP);
@@ -1669,13 +1651,13 @@ void CButton::Spawn ()
 	if (!st.lip)
 		st.lip = 4;
 
-	State.GetOrigin (gameEntity->pos1);
+	Positions[0] = State.GetOrigin ();
 	vec3f abs_movedir (
-		Q_fabs(gameEntity->movedir[0]),
-		Q_fabs(gameEntity->movedir[1]),
-		Q_fabs(gameEntity->movedir[2]));
+		Q_fabs(MoveDir.X),
+		Q_fabs(MoveDir.Y),
+		Q_fabs(MoveDir.Z));
 	float dist = abs_movedir.X * GetSize().X + abs_movedir.Y * GetSize().Y + abs_movedir.Z * GetSize().Y - st.lip;
-	Vec3MA (gameEntity->pos1, dist, gameEntity->movedir, gameEntity->pos2);
+	Positions[1] = Positions[0].MultiplyAngles (dist, MoveDir);
 
 	State.AddEffects (EF_ANIM01);
 
@@ -1697,9 +1679,9 @@ void CButton::Spawn ()
 	Accel = gameEntity->accel;
 	Decel = gameEntity->decel;
 	Wait = gameEntity->wait;
-	Vec3Copy (gameEntity->pos1, StartOrigin);
+	Vec3Copy (Positions[0], StartOrigin);
 	State.GetAngles (StartAngles);
-	Vec3Copy (gameEntity->pos2, EndOrigin);
+	Vec3Copy (Positions[1], EndOrigin);
 	State.GetAngles (EndAngles);
 
 	Link ();
@@ -2339,8 +2321,8 @@ void CRotatingBrush::Use (CBaseEntity *other, CBaseEntity *activator)
 	else
 	{
 		State.SetSound (SoundMiddle);
-		AngularVelocity = vec3f(gameEntity->movedir) * gameEntity->speed;
-		//Vec3Scale (gameEntity->movedir, gameEntity->speed, gameEntity->avelocity);
+		AngularVelocity = MoveDir * gameEntity->speed;
+
 		if (gameEntity->spawnflags & 16)
 			Touchable = true;
 	}
@@ -2357,17 +2339,17 @@ void CRotatingBrush::Spawn ()
 		PhysicsType = PHYSICS_PUSH;
 
 	// set the axis of rotation
-	Vec3Clear(gameEntity->movedir);
+	MoveDir.Clear ();
 	if (gameEntity->spawnflags & 4)
-		gameEntity->movedir[2] = 0.1f;
+		MoveDir.Z = 0.1f;
 	else if (gameEntity->spawnflags & 8)
-		gameEntity->movedir[0] = 0.1f;
+		MoveDir.X = 0.1f;
 	else // Z_AXIS
-		gameEntity->movedir[1] = 0.1f;
+		MoveDir.Y = 0.1f;
 
 	// check for reverse rotation
 	if (gameEntity->spawnflags & 2)
-		Vec3Negate (gameEntity->movedir, gameEntity->movedir);
+		MoveDir.Invert ();
 
 	if (!gameEntity->speed)
 		gameEntity->speed = 100;

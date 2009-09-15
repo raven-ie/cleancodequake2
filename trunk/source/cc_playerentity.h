@@ -210,6 +210,8 @@ public:
 	CBaseEntity		*mynoise2;
 	vec3f			OldViewAngles;
 	vec3f			OldVelocity;
+	vec2f			ViewDamage;
+	FrameNumber_t	ViewDamageTime;
 
 	CClient (gclient_t *client);
 
@@ -243,8 +245,6 @@ public:
 	float		killer_yaw;			// when dead, look at killer
 
 	EWeaponState weaponstate;
-	float		v_dmg_roll, v_dmg_pitch;	// damage kicks
-	FrameNumber_t		v_dmg_time;
 	FrameNumber_t		fall_time;
 	float		fall_value;		// for view drop on fall
 	byte		bonus_alpha;

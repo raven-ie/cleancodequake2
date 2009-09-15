@@ -158,16 +158,13 @@ void CGladiator::Melee ()
 
 void CGladiator::FireRail ()
 {
-	vec3f	start, dir, forward, right;
+	vec3f	start, forward, right;
 
 	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_GLADIATOR_RAILGUN_1], forward, right, start);
 
 	// calc direction to where we targted
-	dir = vec3f(Entity->gameEntity->pos1) - start;
-	dir.Normalize ();
-
-	MonsterFireRailgun (start, dir, 50, 100, MZ2_GLADIATOR_RAILGUN_1);
+	MonsterFireRailgun (start, (SavedFirePosition - start).GetNormalized(), 50, 100, MZ2_GLADIATOR_RAILGUN_1);
 }
 
 CFrame GladiatorFramesAttackGun [] =
@@ -200,8 +197,7 @@ void CGladiator::Attack ()
 
 	// charge up the railgun
 	Entity->PlaySound (CHAN_WEAPON, SoundGun);
-	Vec3Copy (Entity->gameEntity->enemy->state.origin, Entity->gameEntity->pos1);	//save for aiming the shot
-	Entity->gameEntity->pos1[2] += Entity->gameEntity->enemy->viewheight;
+	SavedFirePosition = Entity->gameEntity->enemy->Entity->State.GetOrigin() + vec3f(0, 0, Entity->gameEntity->enemy->viewheight);
 	CurrentMove = &GladiatorMoveAttackGun;
 }
 
