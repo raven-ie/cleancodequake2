@@ -143,12 +143,12 @@ public:
 
 		if(other->EntityFlags & ENT_PLAYER)
 		{
-			if (gameEntity->spawnflags & 2)
+			if (SpawnFlags & 2)
 				return;
 		}
 		else if (other->EntityFlags & ENT_MONSTER)
 		{
-			if (!(gameEntity->spawnflags & 1))
+			if (!(SpawnFlags & 1))
 				return;
 		}
 		else
@@ -267,7 +267,7 @@ public:
 			gameEntity->wait = 0.2f;
 		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
 
-		if (gameEntity->spawnflags & 4)
+		if (SpawnFlags & 4)
 		{
 			SetSolid (SOLID_NOT);
 			ActivateUse = true;
@@ -328,10 +328,10 @@ public:
 	{
 		// make old maps work because I messed up on flag assignments here
 		// triggered was on bit 1 when it should have been on bit 4
-		if (gameEntity->spawnflags & 1)
+		if (SpawnFlags & 1)
 		{
-			gameEntity->spawnflags &= ~1;
-			gameEntity->spawnflags |= 4;
+			SpawnFlags &= ~1;
+			SpawnFlags |= 4;
 			MapPrint (MAPPRINT_WARNING, this, GetMins().MultiplyAngles (0.5f, GetSize()), "Fixed TRIGGERED flag\n");
 		}
 
@@ -381,7 +381,7 @@ public:
 
 		if (gameEntity->count)
 		{
-			if (! (gameEntity->spawnflags & 1))
+			if (! (SpawnFlags & 1))
 			{
 				if (IsClient)
 					Player->PrintToClient (PRINT_CENTER, "%i more to go...", gameEntity->count);
@@ -390,7 +390,7 @@ public:
 			return;
 		}
 		
-		if (! (gameEntity->spawnflags & 1))
+		if (! (SpawnFlags & 1))
 		{
 			if (IsClient)
 				Player->PrintToClient (PRINT_CENTER, "Sequence completed!");
@@ -458,7 +458,7 @@ public:
 				if (other->EntityFlags & ENT_PHYSICS)
 					dynamic_cast<CPhysicsEntity*>(other)->Velocity = vel;
 			}
-			else if (other->gameEntity->health > 0)
+			else if ((other->EntityFlags & ENT_HURTABLE) && (dynamic_cast<CHurtableEntity*>(other)->Health > 0))
 			{
 				if (other->EntityFlags & ENT_PHYSICS)
 					dynamic_cast<CPhysicsEntity*>(other)->Velocity = vel;
@@ -476,7 +476,7 @@ public:
 					}
 				}
 			}
-			if (gameEntity->spawnflags & PUSH_ONCE)
+			if (SpawnFlags & PUSH_ONCE)
 				Free ();
 		}
 	};
@@ -550,8 +550,8 @@ public:
 		if (NextHurt > level.framenum)
 			return;
 
-		NextHurt = level.framenum + ((gameEntity->spawnflags & 16) ? 10 : FRAMETIME);
-		if (!(gameEntity->spawnflags & 4))
+		NextHurt = level.framenum + ((SpawnFlags & 16) ? 10 : FRAMETIME);
+		if (!(SpawnFlags & 4))
 		{
 			if ((level.framenum % 10) == 0)
 				other->PlaySound (CHAN_AUTO, gameEntity->noise_index);
@@ -559,7 +559,7 @@ public:
 
 		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(),
 															vec3fOrigin, gameEntity->dmg, gameEntity->dmg,
-															(gameEntity->spawnflags & 8) ? DAMAGE_NO_PROTECTION : 0, MOD_TRIGGER_HURT);
+															(SpawnFlags & 8) ? DAMAGE_NO_PROTECTION : 0, MOD_TRIGGER_HURT);
 	};
 
 	void Use (CBaseEntity *other, CBaseEntity *activator)
@@ -570,7 +570,7 @@ public:
 		SetSolid ((GetSolid() == SOLID_NOT) ? SOLID_TRIGGER : SOLID_NOT);
 		Link ();
 
-		if (!(gameEntity->spawnflags & 2))
+		if (!(SpawnFlags & 2))
 			ActivateUse = true;
 	};
 
@@ -582,9 +582,9 @@ public:
 		if (!gameEntity->dmg)
 			gameEntity->dmg = 5;
 
-		SetSolid ((gameEntity->spawnflags & 1) ? SOLID_NOT : SOLID_TRIGGER);
+		SetSolid ((SpawnFlags & 1) ? SOLID_NOT : SOLID_TRIGGER);
 
-		ActivateUse = (gameEntity->spawnflags & 2) ? false : true;
+		ActivateUse = (SpawnFlags & 2) ? false : true;
 		Link ();
 	};
 };

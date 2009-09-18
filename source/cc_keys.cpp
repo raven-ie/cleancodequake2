@@ -75,10 +75,10 @@ bool CPowerCube::Pickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	if (game.mode == GAME_COOPERATIVE)
 	{
-		if (other->Client.pers.power_cubes & ((ent->gameEntity->spawnflags & 0x0000ff00)>> 8))
+		if (other->Client.pers.power_cubes & ((ent->SpawnFlags & 0x0000ff00)>> 8))
 			return false;
 		other->Client.pers.Inventory += this;
-		other->Client.pers.power_cubes |= ((ent->gameEntity->spawnflags & 0x0000ff00) >> 8);
+		other->Client.pers.power_cubes |= ((ent->SpawnFlags & 0x0000ff00) >> 8);
 		return true;
 	}
 	other->Client.pers.Inventory += this;
@@ -102,15 +102,15 @@ public:
 
 	void Spawn (CBaseItem *item)
 	{
-		if (gameEntity->spawnflags)
+		if (SpawnFlags)
 		{
-			gameEntity->spawnflags = 0;
-			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "Invalid spawnflags (%i, should be 0)\n", gameEntity->spawnflags);
+			SpawnFlags = 0;
+			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "Invalid spawnflags (%i, should be 0)\n", SpawnFlags);
 		}
 
 		if (game.mode == GAME_COOPERATIVE)
 		{
-			gameEntity->spawnflags |= (1 << (8 + level.power_cubes));
+			SpawnFlags |= (1 << (8 + level.power_cubes));
 			level.power_cubes++;
 		}
 

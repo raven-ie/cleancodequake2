@@ -455,7 +455,7 @@ void CSuperTank::ReAttack1 ()
 
 void CSuperTank::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+	if (Entity->Health < (Entity->MaxHealth / 2))
 			Entity->State.SetSkinNum(1);
 
 	if (level.framenum < Entity->gameEntity->pain_debounce_time)
@@ -806,8 +806,8 @@ void CSuperTank::Spawn ()
 	Entity->SetMins (vec3f(-64, -64, 0));
 	Entity->SetMaxs (vec3f(64, 64, 112));
 
-	Entity->gameEntity->health = 1500;
-	Entity->gameEntity->gib_health = -500;
+	Entity->Health = 1500;
+	Entity->GibHealth = -500;
 	Entity->gameEntity->mass = 800;
 
 #ifdef MONSTER_USE_ROGUE_AI

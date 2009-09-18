@@ -254,7 +254,7 @@ CAnim MakronMovePain4 (FRAME_pain401, FRAME_pain404, MakronFramesPain4, &CMonste
 
 void CMakron::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+	if (Entity->Health < (Entity->MaxHealth / 2))
 			Entity->State.SetSkinNum (1);
 
 	if (level.framenum < Entity->gameEntity->pain_debounce_time)
@@ -668,7 +668,7 @@ void CMakron::Die(CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec
 {
 	Entity->State.SetSound (0);
 	// check for gib
-	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
+	if (Entity->Health <= Entity->GibHealth)
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"), 1, ATTN_NORM, 0);
 		for (int n= 0; n < 1 /*4*/; n++)
@@ -701,7 +701,7 @@ bool CMakron::CheckAttack ()
 	float	chance;
 	CTrace	tr;
 
-	if (Entity->gameEntity->enemy->health > 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0)
 	{
 	// see if any entities are in the way of the shot
 		Entity->State.GetOrigin(spot1);
@@ -784,7 +784,7 @@ bool CMakron::CheckAttack ()
 #else
 	float	chance;
 
-	if (Entity->gameEntity->enemy->health > 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0)
 	{
 	// see if any entities are in the way of the shot
 		vec3_t	spot1, spot2;
@@ -967,8 +967,8 @@ void CMakron::Spawn ()
 	Entity->SetMins (vec3f(-30, -30, 0));
 	Entity->SetMaxs (vec3f(30, 30, 90));
 
-	Entity->gameEntity->health = 3000;
-	Entity->gameEntity->gib_health = -2000;
+	Entity->Health = 3000;
+	Entity->GibHealth = -2000;
 	Entity->gameEntity->mass = 500;
 
 	MonsterFlags = (MF_HAS_ATTACK | MF_HAS_SIGHT);

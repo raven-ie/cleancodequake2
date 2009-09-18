@@ -33,6 +33,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 #include "m_player.h"
+#include "cc_ban.h"
 
 /*
 ==================
@@ -95,7 +96,7 @@ void Cmd_Kill_f (CPlayerEntity *ent)
 		return;
 
 	ent->Flags &= ~FL_GODMODE;
-	ent->gameEntity->health = 0;
+	ent->Health = 0;
 	meansOfDeath = MOD_SUICIDE;
 	ent->Die (ent, ent, 100000, vec3fOrigin);
 }
@@ -532,6 +533,9 @@ void Cmd_Test_f (CPlayerEntity *ent)
 }
 
 void GCTFSay_Team (CPlayerEntity *ent);
+void Cmd_MenuLeft_t (CPlayerEntity *ent);
+void Cmd_MenuRight_t (CPlayerEntity *ent);
+
 void Cmd_Register ()
 {
 	// These commands are generic, and can be executed any time

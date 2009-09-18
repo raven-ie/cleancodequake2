@@ -304,7 +304,7 @@ CAnim BerserkMovePain2 (FRAME_painb1, FRAME_painb20, BerserkFramesPain2, &CMonst
 
 void CBerserker::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+	if (Entity->Health < (Entity->MaxHealth / 2))
 		Entity->State.SetSkinNum(1);
 
 	if (level.framenum < Entity->gameEntity->pain_debounce_time)
@@ -364,7 +364,7 @@ CAnim BerserkMoveDeath2 (FRAME_deathc1, FRAME_deathc8, BerserkFramesDeath2, Conv
 
 void CBerserker::Die(CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
-	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
+	if (Entity->Health <= Entity->GibHealth)
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"), 1, ATTN_NORM, 0);
 		for (int n= 0; n < 2; n++)
@@ -412,8 +412,8 @@ void CBerserker::Spawn ()
 	Entity->SetMaxs (vec3f(16, 16, 32));
 	Entity->SetSolid (SOLID_BBOX);
 
-	Entity->gameEntity->health = 240;
-	Entity->gameEntity->gib_health = -60;
+	Entity->Health = 240;
+	Entity->GibHealth = -60;
 	Entity->gameEntity->mass = 250;
 
 	MonsterFlags = (MF_HAS_MELEE | MF_HAS_SEARCH | MF_HAS_SIGHT

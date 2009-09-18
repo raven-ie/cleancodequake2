@@ -32,6 +32,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 //
 
 #include "g_local.h"
+#include "cc_menu.h"
+
 #ifdef CLEANCTF_ENABLED
 
 #ifdef TEMP

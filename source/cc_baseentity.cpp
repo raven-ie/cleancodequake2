@@ -579,3 +579,98 @@ void CBaseEntity::BecomeExplosion (bool grenade)
 		CTempEnt_Explosions::RocketExplosion (State.GetOrigin(), gameEntity);
 	Free ();
 }
+
+#define GameEntityMemberOffset(y,x) (size_t)&(((y*)0)->x)
+
+const CEntityField CMapEntity::FieldsForParsing[] =
+{
+	CEntityField ("spawnflags", EntityMemberOffset(CBaseEntity,SpawnFlags), FTUInteger),
+	CEntityField ("origin", GameEntityMemberOffset(edict_t,state.origin), FTGVector),
+	CEntityField ("angles", GameEntityMemberOffset(edict_t,state.angles), FTGVector),
+	CEntityField ("angle", GameEntityMemberOffset(edict_t,state.angles), FTGAngleHack),
+	CEntityField ("light", 0, FTIgnore),
+	CEntityField ("model", GameEntityMemberOffset(edict_t,model), FTGStringL),
+};
+const size_t CMapEntity::FieldsForParsingSize = (sizeof(CMapEntity::FieldsForParsing) / sizeof(CMapEntity::FieldsForParsing[0]));
+
+bool			CMapEntity::ParseField (char *Key, char *Value)
+{
+	for (size_t i = 0; i < CMapEntity::FieldsForParsingSize; i++)
+	{
+		if (strcmp (Key, CMapEntity::FieldsForParsing[i].Name) == 0)
+		{
+			CMapEntity::FieldsForParsing[i].Create (this, Value);
+			return true;
+		}
+	}
+
+	// Couldn't find it here
+	return false;
+};
+
+bool				CMapEntity::CheckValidity ()
+{
+	// Yet another map hack
+	if (!Q_stricmp(level.mapname, "command") && !Q_stricmp(gameEntity->classname, "trigger_once") && !Q_stricmp(gameEntity->model, "*27"))
+		SpawnFlags &= ~SPAWNFLAG_NOT_HARD;
+
+	level.EntityNumber++;
+	// Remove things (except the world) from different skill levels or deathmatch
+	if (this != World)
+	{
+		if (game.mode & GAME_DEATHMATCH)
+		{
+			if ( SpawnFlags & SPAWNFLAG_NOT_DEATHMATCH )
+			{
+				Free ();
+				level.inhibit++;
+				return false;
+			}
+		}
+		else
+		{
+			if ( /* ((game.mode == GAME_COOPERATIVE) && (SpawnFlags & SPAWNFLAG_NOT_COOP)) || */
+				((skill->Integer() == 0) && (SpawnFlags & SPAWNFLAG_NOT_EASY)) ||
+				((skill->Integer() == 1) && (SpawnFlags & SPAWNFLAG_NOT_MEDIUM)) ||
+				(((skill->Integer() == 2) || (skill->Integer() == 3)) && (SpawnFlags & SPAWNFLAG_NOT_HARD))
+				)
+				{
+					Free ();
+					level.inhibit++;
+					return false;
+				}
+		}
+
+		SpawnFlags &= ~(SPAWNFLAG_NOT_EASY|SPAWNFLAG_NOT_MEDIUM|SPAWNFLAG_NOT_HARD|SPAWNFLAG_NOT_COOP|SPAWNFLAG_NOT_DEATHMATCH);
+	}
+	return true;
+};
+
+void CMapEntity::ParseFields ()
+{
+	if (!gameEntity->ParseData || !gameEntity->ParseData->size())
+		return;
+
+	// Go through all the dictionary pairs
+	std::list<CKeyValuePair*>::iterator it = gameEntity->ParseData->begin();
+	while (it != gameEntity->ParseData->end())
+	{
+		CKeyValuePair *PairPtr = (*it);
+		if (ParseField (PairPtr->Key, PairPtr->Value))
+			gameEntity->ParseData->erase (it++);
+		else
+			++it;
+	}
+
+	// Since this is the last part, go through the rest of the list now
+	// and report ones that are still there.
+	if (gameEntity->ParseData->size())
+	{
+		for (std::list<CKeyValuePair*>::iterator it = gameEntity->ParseData->begin(); it != gameEntity->ParseData->end(); it++)
+		{
+			CKeyValuePair *PairPtr = (*it);
+			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "\"%s\" is not a field (value = \"%s\")\n", PairPtr->Key, PairPtr->Value);
+		}
+	}
+	QDelete gameEntity->ParseData;
+};

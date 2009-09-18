@@ -82,7 +82,12 @@ public:
 		DLLClassName *newClass = QNew (com_levelPool, 0) DLLClassName(Index); \
 		CBaseItem *Item = FindItemByClassname(#mapClassName); \
 		if (Item) \
-			newClass->Spawn (Item); \
+		{	\
+			newClass->ParseFields (); \
+			\
+			if (newClass->CheckValidity()) \
+				newClass->Spawn (Item); \
+		}	\
 		return newClass; \
 	} \
 	CClassnameToClassIndex LINK_RESOLVE_CLASSNAME(mapClassName, _Linker) \

@@ -73,13 +73,12 @@ void CMedic::AbortHeal (bool ChangeFrame, bool Gib, bool Mark)
 	{
 //		if ((g_showlogic) && (g_showlogic->value))
 //			gi.dprintf ("%s - gibbing bad heal target", self->classname);
-		CBaseEntity *Enemy = Entity->gameEntity->enemy->Entity;
+		CMonsterEntity *Enemy = dynamic_cast<CMonsterEntity*>(Entity->gameEntity->enemy->Entity);
 
-		int hurt = (Enemy->gameEntity->gib_health) ? -Enemy->gameEntity->gib_health : 500;
+		int hurt = (Enemy->GibHealth) ? -Enemy->GibHealth : 500;
 
-		if (Enemy->EntityFlags & ENT_HURTABLE)
-		dynamic_cast<CHurtableEntity*>(Enemy)->TakeDamage (Entity, Entity, vec3fOrigin, Enemy->State.GetOrigin(),
-					PainNormal, hurt, 0, 0, MOD_UNKNOWN);
+		Enemy->TakeDamage (Entity, Entity, vec3fOrigin, Enemy->State.GetOrigin(),
+				PainNormal, hurt, 0, 0, MOD_UNKNOWN);
 	}
 	// clean up self
 
@@ -126,7 +125,7 @@ CMonsterEntity *CMedic::FindDeadMonster ()
 			continue;
 		if (ent->Monster->Healer)
 			continue;
-		if (ent->gameEntity->health > 0)
+		if (ent->Health > 0)
 			continue;
 		if (ent->NextThink)
 			continue;
@@ -140,7 +139,7 @@ CMonsterEntity *CMedic::FindDeadMonster ()
 			// FIXME - this is correcting a bug that is somewhere else
 			// if the healer is a monster, and it's in medic mode .. continue .. otherwise
 			//   we will override the healer, if it passes all the other tests
-			if ((ent->Monster->Healer->IsInUse()) && (ent->Monster->Healer->gameEntity->health > 0) &&
+			if ((ent->Monster->Healer->IsInUse()) && (ent->Monster->Healer->Health > 0) &&
 				(ent->Monster->Healer->GetSvFlags() & SVF_MONSTER) && (ent->Monster->Healer->Monster->AIFlags & AI_MEDIC))
 				continue;
 #endif
@@ -149,7 +148,7 @@ CMonsterEntity *CMedic::FindDeadMonster ()
 			best = ent;
 			continue;
 		}
-		if (ent->gameEntity->max_health <= best->gameEntity->max_health)
+		if (ent->MaxHealth <= best->MaxHealth)
 			continue;
 		best = ent;
 	}
@@ -382,7 +381,7 @@ CAnim MedicMovePain2 (FRAME_painb1, FRAME_painb15, MedicFramesPain2, &CMonster::
 
 void CMedic::Pain(CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+	if (Entity->Health < (Entity->MaxHealth / 2))
 		Entity->State.SetSkinNum (1);
 
 	if (level.framenum < Entity->gameEntity->pain_debounce_time)
@@ -486,7 +485,7 @@ void CMedic::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec
 		(dynamic_cast<CMonsterEntity*>(Entity->gameEntity->enemy->Entity))->Monster->Healer = NULL;
 
 // check for gib
-	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
+	if (Entity->Health <= Entity->GibHealth)
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"), 1, ATTN_NORM, 0);
 		for (int n= 0; n < 2; n++)
@@ -615,7 +614,7 @@ void CMedic::CableAttack ()
 		(dynamic_cast<CMonsterEntity*>(Entity->gameEntity->enemy->Entity))->Monster->AIFlags |= AI_RESURRECTING;
 		break;
 	case FRAME_attack50:
-		Entity->gameEntity->enemy->spawnflags = 0;
+		Entity->gameEntity->enemy->Entity->SpawnFlags = 0;
 		(dynamic_cast<CMonsterEntity*>(Entity->gameEntity->enemy->Entity))->Monster->AIFlags = 0;
 		Entity->gameEntity->enemy->target = NULL;
 		Entity->gameEntity->enemy->targetname = NULL;
@@ -851,8 +850,8 @@ void CMedic::Spawn ()
 	Entity->SetMins (vec3f(-24, -24, -24));
 	Entity->SetMaxs (vec3f(24, 24, 32));
 
-	Entity->gameEntity->health = 300;
-	Entity->gameEntity->gib_health = -130;
+	Entity->Health = 300;
+	Entity->GibHealth = -130;
 	Entity->gameEntity->mass = 400;
 
 	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_SIGHT | MF_HAS_IDLE | MF_HAS_SEARCH

@@ -61,6 +61,11 @@ public:
 	{
 	};
 
+	virtual bool			ParseField (char *Key, char *Value)
+	{
+		return (CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	};
+
 #define BARREL_STEPSIZE 8
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
@@ -166,8 +171,8 @@ public:
 
 		if (!gameEntity->mass)
 			gameEntity->mass = 400;
-		if (!gameEntity->health)
-			gameEntity->health = 10;
+		if (!Health)
+			Health = 10;
 		if (!gameEntity->dmg)
 			gameEntity->dmg = 150;
 
@@ -551,6 +556,11 @@ public:
 	{
 	};
 
+	virtual bool			ParseField (char *Key, char *Value)
+	{
+		return (CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	};
+
 	bool Run ()
 	{
 		return (PhysicsType == PHYSICS_TOSS) ? CTossProjectile::Run() : CBaseEntity::Run();
@@ -630,6 +640,11 @@ public:
 	{
 	};
 
+	virtual bool			ParseField (char *Key, char *Value)
+	{
+		return (CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	};
+
 	bool Run ()
 	{
 		switch (PhysicsType)
@@ -646,7 +661,7 @@ public:
 
 	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 	{
-		if (gameEntity->health > -80)
+		if (Health > -80)
 			return;
 
 		PlaySound (CHAN_BODY, SoundIndex ("misc/udeath.wav"));
@@ -721,15 +736,15 @@ public:
 		State.SetModelIndex (ModelIndex ("models/deadbods/dude/tris.md2"));
 
 		// Defaults to frame 0
-		if (gameEntity->spawnflags & 2)
+		if (SpawnFlags & 2)
 			State.SetFrame (1);
-		else if (gameEntity->spawnflags & 4)
+		else if (SpawnFlags & 4)
 			State.SetFrame (2);
-		else if (gameEntity->spawnflags & 8)
+		else if (SpawnFlags & 8)
 			State.SetFrame (3);
-		else if (gameEntity->spawnflags & 16)
+		else if (SpawnFlags & 16)
 			State.SetFrame (4);
-		else if (gameEntity->spawnflags & 32)
+		else if (SpawnFlags & 32)
 			State.SetFrame (5);
 		else
 			State.SetFrame (0);
@@ -1040,6 +1055,11 @@ public:
 	{
 	};
 
+	virtual bool			ParseField (char *Key, char *Value)
+	{
+		return (CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	};
+
 	bool Run ()
 	{
 		return CTossProjectile::Run();
@@ -1088,6 +1108,11 @@ public:
 	{
 	};
 
+	virtual bool			ParseField (char *Key, char *Value)
+	{
+		return (CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	};
+
 	bool Run ()
 	{
 		return CTossProjectile::Run();
@@ -1134,6 +1159,11 @@ public:
 	  CThinkableEntity (Index),
 	  CTossProjectile (Index)
 	{
+	};
+
+	virtual bool			ParseField (char *Key, char *Value)
+	{
+		return (CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 	};
 
 	bool Run ()

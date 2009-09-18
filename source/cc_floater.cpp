@@ -525,7 +525,7 @@ void CFloater::Melee ()
 
 void CFloater::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+	if (Entity->Health < (Entity->MaxHealth / 2))
 		Entity->State.SetSkinNum(1);
 
 	if (level.framenum < Entity->gameEntity->pain_debounce_time)
@@ -565,8 +565,8 @@ void CFloater::Spawn ()
 	Entity->SetMins (vec3f(-24, -24, -24));
 	Entity->SetMaxs (vec3f(24, 24, 32));
 
-	Entity->gameEntity->health = 200;
-	Entity->gameEntity->gib_health = -80;
+	Entity->Health = 200;
+	Entity->GibHealth = -80;
 	Entity->gameEntity->mass = 300;
 
 	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_MELEE | MF_HAS_SIGHT | MF_HAS_IDLE);

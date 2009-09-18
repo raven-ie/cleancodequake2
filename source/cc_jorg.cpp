@@ -267,7 +267,7 @@ CAnim JorgMovePain1 (FRAME_pain101, FRAME_pain103, JorgFramesPain1, &CMonster::R
 
 void CJorg::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+	if (Entity->Health < (Entity->MaxHealth / 2))
 			Entity->State.SetSkinNum (1);
 	
 	Entity->State.SetSound (0);
@@ -591,7 +591,7 @@ bool CJorg::CheckAttack ()
 	float	chance;
 	CTrace	tr;
 
-	if (Entity->gameEntity->enemy->health > 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0)
 	{
 	// see if any entities are in the way of the shot
 		Entity->State.GetOrigin(spot1);
@@ -674,7 +674,7 @@ bool CJorg::CheckAttack ()
 #else
 	float	chance;
 
-	if (Entity->gameEntity->enemy->health > 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0)
 	{
 		// see if any entities are in the way of the shot
 		vec3_t	spot1, spot2;
@@ -836,8 +836,8 @@ void CJorg::Spawn ()
 	Entity->SetMins (vec3f(-80, -80, 0));
 	Entity->SetMaxs (vec3f(80, 80, 140));
 
-	Entity->gameEntity->health = 3000;
-	Entity->gameEntity->gib_health = -2000;
+	Entity->Health = 3000;
+	Entity->GibHealth = -2000;
 	Entity->gameEntity->mass = 1000;
 
 	Entity->Link();

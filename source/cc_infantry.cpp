@@ -208,7 +208,7 @@ CAnim InfantryMovePain2 (FRAME_pain201, FRAME_pain210, InfantryFramesPain2, Conv
 
 void CInfantry::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+	if (Entity->Health < (Entity->MaxHealth / 2))
 		Entity->State.SetSkinNum(1);
 
 #ifdef MONSTER_USE_ROGUE_AI
@@ -376,7 +376,7 @@ CAnim InfantryMoveDeath3 (FRAME_death301, FRAME_death309, InfantryFramesDeath3, 
 void CInfantry::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 // check for gib
-	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
+	if (Entity->Health <= Entity->GibHealth)
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
@@ -641,8 +641,8 @@ void CInfantry::Spawn ()
 	SoundSearch = SoundIndex ("infantry/infsrch1.wav");
 	SoundIdle = SoundIndex ("infantry/infidle1.wav");
 
-	Entity->gameEntity->health = 100;
-	Entity->gameEntity->gib_health = -40;
+	Entity->Health = 100;
+	Entity->GibHealth = -40;
 	Entity->gameEntity->mass = 200;
 
 	MonsterFlags = (MF_HAS_MELEE | MF_HAS_ATTACK | MF_HAS_IDLE | MF_HAS_SIGHT

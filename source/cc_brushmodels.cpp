@@ -501,7 +501,7 @@ CTouchableEntity(Index)
 
 void CPlatForm::CPlatFormInsideTrigger::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 {
-	if (other->gameEntity->health <= 0)
+	if (!(other->EntityFlags & ENT_HURTABLE) || dynamic_cast<CHurtableEntity*>(other)->Health <= 0)
 		return;
 	if (!other->gameEntity->client)
 		return;
@@ -535,7 +535,7 @@ void CPlatForm::SpawnInsideTrigger ()
 
 	tmin.Z = tmax.Z - (Positions[0].Z - Positions[1].Z + st.lip);
 
-	if (gameEntity->spawnflags & PLAT_LOW_TRIGGER)
+	if (SpawnFlags & PLAT_LOW_TRIGGER)
 		tmax.Z = tmin.Z + 8;
 
 	if (tmax.X - tmin.X <= 0)
@@ -678,7 +678,7 @@ void CDoor::HitTop ()
 		State.SetSound (0);
 	}
 	MoveState = STATE_TOP;
-	if (gameEntity->spawnflags & DOOR_TOGGLE)
+	if (SpawnFlags & DOOR_TOGGLE)
 		return;
 	if (Wait >= 0)
 	{
@@ -707,10 +707,10 @@ void CDoor::GoDown ()
 			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 1, ATTN_STATIC);
 		State.SetSound (SoundMiddle);
 	}
-	if (gameEntity->max_health)
+	if (MaxHealth)
 	{
 		CanTakeDamage = true;
-		gameEntity->health = gameEntity->max_health;
+		Health = MaxHealth;
 	}
 	
 	MoveState = STATE_DOWN;
@@ -753,7 +753,7 @@ void CDoor::Use (CBaseEntity *other, CBaseEntity *activator)
 	if (Flags & FL_TEAMSLAVE)
 		return;
 
-	if (gameEntity->spawnflags & DOOR_TOGGLE)
+	if (SpawnFlags & DOOR_TOGGLE)
 	{
 		if (MoveState == STATE_UP || MoveState == STATE_TOP)
 		{
@@ -795,13 +795,13 @@ CTouchableEntity(Index)
 
 void CDoor::CDoorTrigger::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 {
-	if (other->gameEntity->health <= 0)
+	if (!(other->EntityFlags & ENT_HURTABLE) || dynamic_cast<CHurtableEntity*>(other)->Health <= 0)
 		return;
 
 	if (!(other->GetSvFlags() & SVF_MONSTER) && (!(other->EntityFlags & ENT_PLAYER)))
 		return;
 
-	if ((gameEntity->owner->spawnflags & DOOR_NOMONSTER) && (other->EntityFlags & ENT_MONSTER))
+	if ((GetOwner()->SpawnFlags & DOOR_NOMONSTER) && (other->EntityFlags & ENT_MONSTER))
 		return;
 
 	if (level.framenum < TouchDebounce)
@@ -874,7 +874,7 @@ void CDoor::SpawnDoorTrigger ()
 	Trigger->SetSolid (SOLID_TRIGGER);
 	Trigger->Link ();
 
-	if (gameEntity->spawnflags & DOOR_START_OPEN)
+	if (SpawnFlags & DOOR_START_OPEN)
 		UseAreaPortals (true);
 
 	CalcMoveSpeed ();
@@ -897,7 +897,7 @@ void CDoor::Blocked (CBaseEntity *other)
 	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
 		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, gameEntity->dmg, 1, 0, MOD_CRUSH);
 
-	if (gameEntity->spawnflags & DOOR_CRUSHER)
+	if (SpawnFlags & DOOR_CRUSHER)
 		return;
 
 
@@ -923,7 +923,7 @@ void CDoor::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3
 	for (CBaseEntity *ent = TeamMaster ; ent ; ent = ent->TeamChain)
 	{
 		CDoor *Door = dynamic_cast<CDoor*>(ent);
-		Door->gameEntity->health = Door->gameEntity->max_health;
+		Door->Health = Door->MaxHealth;
 		Door->CanTakeDamage = false;
 	}
 
@@ -1023,7 +1023,7 @@ void CDoor::Spawn ()
 	Positions[1] = Positions[0].MultiplyAngles (Distance, MoveDir);
 
 	// if it starts open, switch the positions
-	if (gameEntity->spawnflags & DOOR_START_OPEN)
+	if (SpawnFlags & DOOR_START_OPEN)
 	{
 		State.SetOrigin (Positions[1]);
 		Positions[1] = Positions[0];
@@ -1033,10 +1033,10 @@ void CDoor::Spawn ()
 	MoveState = STATE_BOTTOM;
 
 	Touchable = false;
-	if (gameEntity->health)
+	if (Health)
 	{
 		CanTakeDamage = true;
-		gameEntity->max_health = gameEntity->health;
+		MaxHealth = Health;
 	}
 	else if (gameEntity->targetname && st.message)
 	{
@@ -1054,9 +1054,9 @@ void CDoor::Spawn ()
 	Vec3Copy (Positions[1], EndOrigin);
 	State.GetAngles (EndAngles);
 
-	if (gameEntity->spawnflags & 16)
+	if (SpawnFlags & 16)
 		State.AddEffects (EF_ANIM_ALL);
-	if (gameEntity->spawnflags & 64)
+	if (SpawnFlags & 64)
 		State.AddEffects (EF_ANIM_ALLFAST);
 
 	// to simplify logic elsewhere, make non-teamed doors into a team of one
@@ -1066,7 +1066,7 @@ void CDoor::Spawn ()
 	Link ();
 
 	NextThink = level.framenum + FRAMETIME;
-	if (gameEntity->health || gameEntity->targetname)
+	if (Health || gameEntity->targetname)
 		ThinkType = DOORTHINK_CALCMOVESPEED;
 	else
 		ThinkType = DOORTHINK_SPAWNDOORTRIGGER;
@@ -1096,10 +1096,10 @@ void CRotatingDoor::GoDown ()
 			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 1, ATTN_STATIC);
 		State.SetSound (SoundMiddle);
 	}
-	if (gameEntity->max_health)
+	if (MaxHealth)
 	{
 		CanTakeDamage = true;
-		gameEntity->health = gameEntity->max_health;
+		Health = MaxHealth;
 	}
 	
 	MoveState = STATE_DOWN;
@@ -1137,15 +1137,15 @@ void CRotatingDoor::Spawn ()
 
 	// set the axis of rotation
 	MoveDir.Clear ();
-	if (gameEntity->spawnflags & DOOR_X_AXIS)
+	if (SpawnFlags & DOOR_X_AXIS)
 		MoveDir.Z = 0.1f;
-	else if (gameEntity->spawnflags & DOOR_Y_AXIS)
+	else if (SpawnFlags & DOOR_Y_AXIS)
 		MoveDir.X = 0.1f;
 	else // Z_AXIS
 		MoveDir.Y = 0.1f;
 
 	// check for reverse rotation
-	if (gameEntity->spawnflags & DOOR_REVERSE)
+	if (SpawnFlags & DOOR_REVERSE)
 		MoveDir.Invert ();
 
 	if (!st.distance)
@@ -1186,7 +1186,7 @@ void CRotatingDoor::Spawn ()
 	Positions[1] *= 10;
 
 	// if it starts open, switch the positions
-	if (gameEntity->spawnflags & DOOR_START_OPEN)
+	if (SpawnFlags & DOOR_START_OPEN)
 	{
 		State.SetAngles (Positions[1]);
 		Positions[1] = Positions[0];
@@ -1194,10 +1194,10 @@ void CRotatingDoor::Spawn ()
 		MoveDir.Invert ();
 	}
 
-	if (gameEntity->health)
+	if (Health)
 	{
 		CanTakeDamage = true;
-		gameEntity->max_health = gameEntity->health;
+		MaxHealth = Health;
 	}
 	
 	if (gameEntity->targetname && st.message)
@@ -1219,7 +1219,7 @@ void CRotatingDoor::Spawn ()
 	Vec3Copy (Positions[0], StartAngles);
 	Vec3Copy (Positions[1], EndAngles);
 
-	if (gameEntity->spawnflags & 16)
+	if (SpawnFlags & 16)
 		State.AddEffects (EF_ANIM_ALL);
 
 	// to simplify logic elsewhere, make non-teamed doors into a team of one
@@ -1229,7 +1229,7 @@ void CRotatingDoor::Spawn ()
 	Link ();
 
 	NextThink = level.framenum + FRAMETIME;
-	if (gameEntity->health || gameEntity->targetname)
+	if (Health || gameEntity->targetname)
 		ThinkType = DOORTHINK_CALCMOVESPEED;
 	else
 		ThinkType = DOORTHINK_SPAWNDOORTRIGGER;
@@ -1280,7 +1280,7 @@ void CMovableWater::Spawn ()
 	Positions[1] = Positions[0].MultiplyAngles (Distance, MoveDir);
 
 	// if it starts open, switch the positions
-	if (gameEntity->spawnflags & DOOR_START_OPEN)
+	if (SpawnFlags & DOOR_START_OPEN)
 	{
 		State.SetOrigin (Positions[1]);
 		Positions[1] = Positions[0];
@@ -1305,7 +1305,7 @@ void CMovableWater::Spawn ()
 	Touchable = false;
 
 	if (gameEntity->wait == -1)
-		gameEntity->spawnflags |= DOOR_TOGGLE;
+		SpawnFlags |= DOOR_TOGGLE;
 
 	gameEntity->classname = "func_door";
 
@@ -1350,9 +1350,9 @@ void CDoorSecret::DoEndFunc ()
 	switch (EndFunc)
 	{
 		case DOORSECRETENDFUNC_DONE:
-			if (!(gameEntity->targetname) || (gameEntity->spawnflags & SECRET_ALWAYS_SHOOT))
+			if (!(gameEntity->targetname) || (SpawnFlags & SECRET_ALWAYS_SHOOT))
 			{
-				gameEntity->health = 0;
+				Health = 0;
 				CanTakeDamage = true;
 			}
 			UseAreaPortals (false);
@@ -1442,9 +1442,9 @@ void CDoorSecret::Spawn ()
 	SetSolid (SOLID_BSP);
 	SetModel (gameEntity, gameEntity->model);
 
-	if (!(gameEntity->targetname) || (gameEntity->spawnflags & SECRET_ALWAYS_SHOOT))
+	if (!(gameEntity->targetname) || (SpawnFlags & SECRET_ALWAYS_SHOOT))
 	{
-		gameEntity->health = 0;
+		Health = 0;
 		CanTakeDamage = true;
 	}
 
@@ -1465,18 +1465,18 @@ void CDoorSecret::Spawn ()
 	State.GetAngles().ToVectors (&forward, &right, &up);
 	State.SetAngles (vec3fOrigin);
 
-	float width = (gameEntity->spawnflags & SECRET_1ST_DOWN) ? Q_fabs(up.Dot (GetSize())) : Q_fabs(right.Dot (GetSize()));
+	float width = (SpawnFlags & SECRET_1ST_DOWN) ? Q_fabs(up.Dot (GetSize())) : Q_fabs(right.Dot (GetSize()));
 	float length = Q_fabs(forward.Dot (GetSize()));
-	if (gameEntity->spawnflags & SECRET_1ST_DOWN)
+	if (SpawnFlags & SECRET_1ST_DOWN)
 		Positions[0] = State.GetOrigin ().MultiplyAngles (-1 * width, up);
 	else
-		Positions[0] = State.GetOrigin().MultiplyAngles ((1.0 - (gameEntity->spawnflags & SECRET_1ST_LEFT)) * width, right);
+		Positions[0] = State.GetOrigin().MultiplyAngles ((1.0 - (SpawnFlags & SECRET_1ST_LEFT)) * width, right);
 	Positions[1] = Positions[0].MultiplyAngles (length, forward);
 
-	if (gameEntity->health)
+	if (Health)
 	{
 		CanTakeDamage = true;
-		gameEntity->max_health = gameEntity->health;
+		MaxHealth = Health;
 	}
 	else if (gameEntity->targetname && st.message)
 	{
@@ -1583,7 +1583,7 @@ void CButton::Think ()
 		MoveCalc (StartOrigin, BUTTONENDFUNC_DONE);
 		State.SetFrame (0);
 
-		if (gameEntity->health)
+		if (Health)
 			CanTakeDamage = true;
 		break;
 	default:
@@ -1613,7 +1613,7 @@ void CButton::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	if (!(other->EntityFlags & ENT_PLAYER))
 		return;
 
-	if (other->gameEntity->health <= 0)
+	if (dynamic_cast<CPlayerEntity*>(other)->Health <= 0)
 		return;
 
 	gameEntity->activator = other->gameEntity;
@@ -1623,7 +1623,7 @@ void CButton::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 void CButton::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 	gameEntity->activator = attacker->gameEntity;
-	gameEntity->health = gameEntity->max_health;
+	Health = MaxHealth;
 	CanTakeDamage = false;
 	Fire ();
 }
@@ -1662,9 +1662,9 @@ void CButton::Spawn ()
 	State.AddEffects (EF_ANIM01);
 
 	Touchable = false;
-	if (gameEntity->health)
+	if (Health)
 	{
-		gameEntity->max_health = gameEntity->health;
+		MaxHealth = Health;
 		CanTakeDamage = true;
 	}
 	else if (!gameEntity->targetname)
@@ -1778,10 +1778,10 @@ void CTrainBase::TrainWait ()
 			NextThink = level.framenum + (Wait * 10);
 			ThinkType = TRAINTHINK_NEXT;
 		}
-		else if (gameEntity->spawnflags & TRAIN_TOGGLE)  // && wait < 0
+		else if (SpawnFlags & TRAIN_TOGGLE)  // && wait < 0
 		{
 			Next ();
-			gameEntity->spawnflags &= ~TRAIN_START_ON;
+			SpawnFlags &= ~TRAIN_START_ON;
 			Velocity.Clear ();
 			NextThink = 0;
 		}
@@ -1817,7 +1817,7 @@ void CTrainBase::Next ()
 		gameEntity->target = ent->gameEntity->target;
 
 		// check for a teleport path_corner
-		if (ent->gameEntity->spawnflags & 1)
+		if (ent->SpawnFlags & 1)
 		{
 			if (!first)
 			{
@@ -1850,7 +1850,7 @@ void CTrainBase::Next ()
 	Vec3Copy (dest, EndOrigin);
 	MoveCalc (dest, TRAINENDFUNC_WAIT);
 
-	gameEntity->spawnflags |= TRAIN_START_ON;
+	SpawnFlags |= TRAIN_START_ON;
 }
 
 void CTrainBase::Resume ()
@@ -1862,7 +1862,7 @@ void CTrainBase::Resume ()
 	State.GetOrigin (StartOrigin);
 	Vec3Copy (dest, EndOrigin);
 	MoveCalc (dest, TRAINENDFUNC_WAIT);
-	gameEntity->spawnflags |= TRAIN_START_ON;
+	SpawnFlags |= TRAIN_START_ON;
 }
 
 void CTrainBase::Find ()
@@ -1885,9 +1885,9 @@ void CTrainBase::Find ()
 
 	// if not triggered, start immediately
 	if (!gameEntity->targetname)
-		gameEntity->spawnflags |= TRAIN_START_ON;
+		SpawnFlags |= TRAIN_START_ON;
 
-	if (gameEntity->spawnflags & TRAIN_START_ON)
+	if (SpawnFlags & TRAIN_START_ON)
 	{
 		NextThink = level.framenum + FRAMETIME;
 		ThinkType = TRAINTHINK_NEXT;
@@ -1899,11 +1899,11 @@ void CTrainBase::Use (CBaseEntity *other, CBaseEntity *activator)
 {
 	gameEntity->activator = activator->gameEntity;
 
-	if (gameEntity->spawnflags & TRAIN_START_ON)
+	if (SpawnFlags & TRAIN_START_ON)
 	{
-		if (!(gameEntity->spawnflags & TRAIN_TOGGLE))
+		if (!(SpawnFlags & TRAIN_TOGGLE))
 			return;
-		gameEntity->spawnflags &= ~TRAIN_START_ON;
+		SpawnFlags &= ~TRAIN_START_ON;
 		Velocity.Clear ();
 		NextThink = 0;
 	}
@@ -1962,7 +1962,7 @@ void CTrain::Spawn ()
 	PhysicsType = PHYSICS_PUSH;
 
 	State.SetAngles (vec3fOrigin);
-	if (gameEntity->spawnflags & TRAIN_BLOCK_STOPS)
+	if (SpawnFlags & TRAIN_BLOCK_STOPS)
 		gameEntity->dmg = 0;
 	else
 	{
@@ -2323,7 +2323,7 @@ void CRotatingBrush::Use (CBaseEntity *other, CBaseEntity *activator)
 		State.SetSound (SoundMiddle);
 		AngularVelocity = MoveDir * gameEntity->speed;
 
-		if (gameEntity->spawnflags & 16)
+		if (SpawnFlags & 16)
 			Touchable = true;
 	}
 }
@@ -2333,22 +2333,22 @@ void CRotatingBrush::Spawn ()
 	Touchable = false;
 
 	SetSolid (SOLID_BSP);
-	if (gameEntity->spawnflags & 32)
+	if (SpawnFlags & 32)
 		PhysicsType = PHYSICS_STOP;
 	else
 		PhysicsType = PHYSICS_PUSH;
 
 	// set the axis of rotation
 	MoveDir.Clear ();
-	if (gameEntity->spawnflags & 4)
+	if (SpawnFlags & 4)
 		MoveDir.Z = 0.1f;
-	else if (gameEntity->spawnflags & 8)
+	else if (SpawnFlags & 8)
 		MoveDir.X = 0.1f;
 	else // Z_AXIS
 		MoveDir.Y = 0.1f;
 
 	// check for reverse rotation
-	if (gameEntity->spawnflags & 2)
+	if (SpawnFlags & 2)
 		MoveDir.Invert ();
 
 	if (!gameEntity->speed)
@@ -2360,12 +2360,12 @@ void CRotatingBrush::Spawn ()
 	if (gameEntity->dmg)
 		Blockable = true;
 
-	if (gameEntity->spawnflags & 1)
+	if (SpawnFlags & 1)
 		Use (NULL, NULL);
 
-	if (gameEntity->spawnflags & 64)
+	if (SpawnFlags & 64)
 		State.AddEffects (EF_ANIM_ALL);
-	if (gameEntity->spawnflags & 128)
+	if (SpawnFlags & 128)
 		State.AddEffects (EF_ANIM_ALLFAST);
 
 	SetModel (gameEntity, gameEntity->model);
@@ -2400,18 +2400,18 @@ CConveyor::CConveyor (int Index) :
 
 void CConveyor::Use (CBaseEntity *other, CBaseEntity *activator)
 {
-	if (gameEntity->spawnflags & 1)
+	if (SpawnFlags & 1)
 	{
 		gameEntity->speed = 0;
-		gameEntity->spawnflags &= ~1;
+		SpawnFlags &= ~1;
 	}
 	else
 	{
 		gameEntity->speed = gameEntity->count;
-		gameEntity->spawnflags |= 1;
+		SpawnFlags |= 1;
 	}
 
-	if (!(gameEntity->spawnflags & 2))
+	if (!(SpawnFlags & 2))
 		gameEntity->count = 0;
 }
 
@@ -2425,7 +2425,7 @@ void CConveyor::Spawn ()
 	if (!gameEntity->speed)
 		gameEntity->speed = 100;
 
-	if (!(gameEntity->spawnflags & 1))
+	if (!(SpawnFlags & 1))
 	{
 		gameEntity->count = gameEntity->speed;
 		gameEntity->speed = 0;
@@ -2532,7 +2532,7 @@ void CFuncWall::Use (CBaseEntity *other, CBaseEntity *activator)
 	}
 	Link ();
 
-	if (!(gameEntity->spawnflags & 2))
+	if (!(SpawnFlags & 2))
 		Usable = false;
 }
 
@@ -2546,13 +2546,13 @@ void CFuncWall::Spawn ()
 	PhysicsType = PHYSICS_PUSH;
 	SetModel (gameEntity, gameEntity->model);
 
-	if (gameEntity->spawnflags & 8)
+	if (SpawnFlags & 8)
 		State.AddEffects (EF_ANIM_ALL);
-	if (gameEntity->spawnflags & 16)
+	if (SpawnFlags & 16)
 		State.AddEffects (EF_ANIM_ALLFAST);
 
 	// just a wall
-	if ((gameEntity->spawnflags & 7) == 0)
+	if ((SpawnFlags & 7) == 0)
 	{
 		SetSolid (SOLID_BSP);
 		Link ();
@@ -2560,22 +2560,22 @@ void CFuncWall::Spawn ()
 	}
 
 	// it must be TRIGGER_SPAWN
-	if (!(gameEntity->spawnflags & 1))
-		gameEntity->spawnflags |= 1;
+	if (!(SpawnFlags & 1))
+		SpawnFlags |= 1;
 
 	// yell if the spawnflags are odd
-	if (gameEntity->spawnflags & 4)
+	if (SpawnFlags & 4)
 	{
-		if (!(gameEntity->spawnflags & 2))
+		if (!(SpawnFlags & 2))
 		{
 			//gi.dprintf("func_wall START_ON without TOGGLE\n");
 			MapPrint (MAPPRINT_WARNING, this, GetAbsMin(), "Invalid spawnflags: START_ON without TOGGLE\n");
-			gameEntity->spawnflags |= 2;
+			SpawnFlags |= 2;
 		}
 	}
 
-	SetSolid ((gameEntity->spawnflags & 4) ? SOLID_BSP : SOLID_NOT);
-	if (!(gameEntity->spawnflags & 4))
+	SetSolid ((SpawnFlags & 4) ? SOLID_BSP : SOLID_NOT);
+	if (!(SpawnFlags & 4))
 		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
 
 	Link ();
@@ -2664,7 +2664,7 @@ void CFuncObject::Spawn ()
 	if (!gameEntity->dmg)
 		gameEntity->dmg = 100;
 
-	if (gameEntity->spawnflags == 0)
+	if (SpawnFlags == 0)
 	{
 		SetSolid (SOLID_BSP);
 		PhysicsType = PHYSICS_PUSH;
@@ -2678,9 +2678,9 @@ void CFuncObject::Spawn ()
 		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
 	}
 
-	if (gameEntity->spawnflags & 2)
+	if (SpawnFlags & 2)
 		State.AddEffects (EF_ANIM_ALL);
-	if (gameEntity->spawnflags & 4)
+	if (SpawnFlags & 4)
 		State.AddEffects (EF_ANIM_ALLFAST);
 
 	SetClipmask (CONTENTS_MASK_MONSTERSOLID);
@@ -2780,7 +2780,7 @@ void CFuncExplosive::Use (CBaseEntity *other, CBaseEntity *activator)
 	switch (UseType)
 	{
 	case FUNCEXPLOSIVE_USE_EXPLODE:
-		Die (this, other, gameEntity->health, vec3fOrigin);
+		Die (this, other, Health, vec3fOrigin);
 		break;
 	case FUNCEXPLOSIVE_USE_SPAWN:
 		DoSpawn ();
@@ -2817,7 +2817,7 @@ void CFuncExplosive::Spawn ()
 	ModelIndex ("models/objects/debris1/tris.md2");
 	ModelIndex ("models/objects/debris2/tris.md2");
 
-	if (gameEntity->spawnflags & 1)
+	if (SpawnFlags & 1)
 	{
 		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
 		SetSolid (SOLID_NOT);
@@ -2832,15 +2832,15 @@ void CFuncExplosive::Spawn ()
 
 	SetModel (gameEntity, gameEntity->model);
 
-	if (gameEntity->spawnflags & 2)
+	if (SpawnFlags & 2)
 		State.AddEffects (EF_ANIM_ALL);
-	if (gameEntity->spawnflags & 4)
+	if (SpawnFlags & 4)
 		State.AddEffects (EF_ANIM_ALLFAST);
 
 	if (UseType != FUNCEXPLOSIVE_USE_EXPLODE)
 	{
-		if (!gameEntity->health)
-			gameEntity->health = 100;
+		if (!Health)
+			Health = 100;
 		CanTakeDamage = true;
 	}
 

@@ -20,13 +20,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 #include "cc_exceptionhandler.h"
+#include "cc_ban.h"
 
 #define Function(f) {#f, f}
 
 field_t fields[] = {
 	{"classname", FOFS(classname), F_LSTRING},
-	{"model", FOFS(model), F_LSTRING},
-	{"spawnflags", FOFS(spawnflags), F_INT},
 	{"speed", FOFS(speed), F_FLOAT},
 	{"accel", FOFS(accel), F_FLOAT},
 	{"decel", FOFS(decel), F_FLOAT},
@@ -44,17 +43,12 @@ field_t fields[] = {
 	{"move_angles", FOFS(move_angles), F_VECTOR},
 	{"style", FOFS(style), F_INT},
 	{"count", FOFS(count), F_INT},
-	{"health", FOFS(health), F_INT},
 	{"sounds", FOFS(sounds), F_INT},
-	{"light", 0, F_IGNORE},
 	{"dmg", FOFS(dmg), F_INT},
 	{"mass", FOFS(mass), F_INT},
 	{"volume", FOFS(volume), F_FLOAT},
 	{"attenuation", FOFS(attenuation), F_FLOAT},
 	{"map", FOFS(map), F_LSTRING},
-	{"origin", FOFS(state.origin), F_VECTOR},
-	{"angles", FOFS(state.angles), F_VECTOR},
-	{"angle", FOFS(state.angles), F_ANGLEHACK},
 
 	{"goalentity", FOFS(goalentity), F_EDICT, FFL_NOSPAWN},
 	{"movetarget", FOFS(movetarget), F_EDICT, FFL_NOSPAWN},
@@ -249,12 +243,8 @@ void G_Register ()
 #endif
 }
 
-void InitGame (void)
+void CC_InitGame ()
 {
-#ifdef CC_USE_EXCEPTION_HANDLER
-__try
-{
-#endif
 	Mem_Init ();
 	DebugPrintf ("==== InitGame ====\n");
 	DebugPrintf ("Running CleanCode Quake2, built on %s (%s %s)\nInitializing game...", __TIMESTAMP__, BUILDSTRING, CPUSTRING);
@@ -298,6 +288,15 @@ __try
 	Mem_Register ();
 
 	DebugPrintf ("\nGame initialized in %ums.\n", Sys_Milliseconds()-start);
+}
+
+void InitGame (void)
+{
+#ifdef CC_USE_EXCEPTION_HANDLER
+__try
+{
+#endif
+	CC_InitGame ();
 #ifdef CC_USE_EXCEPTION_HANDLER
 }
 __except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))

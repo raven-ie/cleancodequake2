@@ -83,13 +83,13 @@ bool CWeaponItem::Pickup (class CItemEntity *ent, CPlayerEntity *other)
 	if ( (dmFlags.dfWeaponsStay || game.mode == GAME_COOPERATIVE) 
 		&& other->Client.pers.Inventory.Has(index))
 	{
-		if (!(ent->gameEntity->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM) ) )
+		if (!(ent->SpawnFlags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM) ) )
 			return false;	// leave the weapon for others to pickup
 	}
 
 	other->Client.pers.Inventory += this;
 
-	if (!(ent->gameEntity->spawnflags & DROPPED_ITEM) )
+	if (!(ent->SpawnFlags & DROPPED_ITEM) )
 	{
 		// give them some ammo with it
 		if (Ammo)
@@ -100,7 +100,7 @@ bool CWeaponItem::Pickup (class CItemEntity *ent, CPlayerEntity *other)
 				Ammo->AddAmmo (other, this->Ammo->Quantity);
 		}
 
-		if (! (ent->gameEntity->spawnflags & DROPPED_PLAYER_ITEM) )
+		if (! (ent->SpawnFlags & DROPPED_PLAYER_ITEM) )
 		{
 			if (game.mode & GAME_DEATHMATCH)
 			{
@@ -288,7 +288,7 @@ bool CAmmo::Pickup (class CItemEntity *ent, CPlayerEntity *other)
 			other->Client.NewWeapon = Weapon;
 	}
 
-	if (!(ent->gameEntity->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)) && (game.mode & GAME_DEATHMATCH))
+	if (!(ent->SpawnFlags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)) && (game.mode & GAME_DEATHMATCH))
 		SetRespawn (ent, 300);
 	return true;
 }

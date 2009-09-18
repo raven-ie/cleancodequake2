@@ -244,7 +244,7 @@ CAnim ParasiteMovePain1 (FRAME_pain101, FRAME_pain111, ParasiteFramesPain1, &CMo
 
 void CParasite::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+	if (Entity->Health < (Entity->MaxHealth / 2))
 		Entity->State.SetSkinNum(1);
 
 	if (level.framenum < Entity->gameEntity->pain_debounce_time)
@@ -448,7 +448,7 @@ CAnim ParasiteMoveDeath (FRAME_death101, FRAME_death107, ParasiteFramesDeath, Co
 void CParasite::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 // check for gib
-	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
+	if (Entity->Health <= Entity->GibHealth)
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"), 1, ATTN_NORM, 0);
 		for (int n= 0; n < 2; n++)
@@ -498,8 +498,8 @@ void CParasite::Spawn ()
 
 	Entity->SetSolid (SOLID_BBOX);
 
-	Entity->gameEntity->health = 175;
-	Entity->gameEntity->gib_health = -50;
+	Entity->Health = 175;
+	Entity->GibHealth = -50;
 	Entity->gameEntity->mass = 250;
 
 	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_IDLE | MF_HAS_SIGHT);

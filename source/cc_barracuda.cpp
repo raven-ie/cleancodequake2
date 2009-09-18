@@ -218,7 +218,7 @@ void CBarracudaShark::Melee()
 
 void CBarracudaShark::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+	if (Entity->Health < (Entity->MaxHealth / 2))
 		Entity->State.SetSkinNum(1);
 
 	if (level.framenum < Entity->gameEntity->pain_debounce_time)
@@ -326,7 +326,7 @@ void CBarracudaShark::Sight ()
 void CBarracudaShark::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 // check for gib
-	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
+	if (Entity->Health <= Entity->GibHealth)
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
@@ -366,8 +366,8 @@ void CBarracudaShark::Spawn ()
 	Entity->SetMins (vec3f(-16, -16, 0));
 	Entity->SetMaxs (vec3f(16, 16, 32));
 
-	Entity->gameEntity->health = 50;
-	Entity->gameEntity->gib_health = -30;
+	Entity->Health = 50;
+	Entity->GibHealth = -30;
 	Entity->gameEntity->mass = 100;
 
 	MonsterFlags = (MF_HAS_MELEE | MF_HAS_SIGHT);

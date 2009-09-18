@@ -354,7 +354,7 @@ TargetedBreach(NULL)
 void CTurretDriver::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 // check for gib
-	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
+	if (Entity->Health <= Entity->GibHealth)
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
@@ -391,7 +391,7 @@ void CTurretDriver::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 
 void CTurretDriver::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+	if (Entity->Health < (Entity->MaxHealth / 2))
 		Entity->State.SetSkinNum(1);
 
 	if (level.framenum < Entity->gameEntity->pain_debounce_time)
@@ -405,7 +405,7 @@ void CTurretDriver::TurretThink ()
 {
 	Entity->NextThink = level.framenum + FRAMETIME;
 
-	if (Entity->gameEntity->enemy && (!Entity->gameEntity->enemy->Entity->IsInUse() || Entity->gameEntity->enemy->health <= 0))
+	if (Entity->gameEntity->enemy && (!Entity->gameEntity->enemy->Entity->IsInUse() || dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= 0))
 		Entity->gameEntity->enemy = NULL;
 
 	if (!Entity->gameEntity->enemy)
@@ -497,8 +497,8 @@ void CTurretDriver::Spawn ()
 	Entity->SetMins (vec3f(-16, -16, -24));
 	Entity->SetMaxs (vec3f(16, 16, 32));
 
-	Entity->gameEntity->health = Entity->gameEntity->max_health = 100;
-	Entity->gameEntity->gib_health = -40;
+	Entity->Health = Entity->MaxHealth = 100;
+	Entity->GibHealth = -40;
 	Entity->gameEntity->mass = 200;
 	Entity->gameEntity->viewheight = 24;
 

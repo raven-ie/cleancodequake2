@@ -432,13 +432,13 @@ void CInsane::Cross ()
 
 void CInsane::Walk ()
 {
-	if ( (Entity->gameEntity->spawnflags & 16) && (Entity->State.GetFrame() == FRAME_cr_pain10) )			// Hold Ground?
+	if ( (Entity->SpawnFlags & 16) && (Entity->State.GetFrame() == FRAME_cr_pain10) )			// Hold Ground?
 	{
 		CurrentMove = &InsaneMoveDown;
 		return;
 	}
 
-	if (Entity->gameEntity->spawnflags & 4)
+	if (Entity->SpawnFlags & 4)
 		CurrentMove = &InsaneMoveCrawl;
 	else
 		CurrentMove = (random() <= 0.5) ? &InsaneMoveWalkNormal : &InsaneMoveWalkInsane;
@@ -446,13 +446,13 @@ void CInsane::Walk ()
 
 void CInsane::Run ()
 {
-	if ( (Entity->gameEntity->spawnflags & 16) && (Entity->State.GetFrame() == FRAME_cr_pain10))			// Hold Ground?
+	if ( (Entity->SpawnFlags & 16) && (Entity->State.GetFrame() == FRAME_cr_pain10))			// Hold Ground?
 	{
 		CurrentMove = &InsaneMoveDown;
 		return;
 	}
 	
-	if (Entity->gameEntity->spawnflags & 4)				// Crawling?
+	if (Entity->SpawnFlags & 4)				// Crawling?
 		CurrentMove = &InsaneMoveRunCrawl;
 	else // Else, mix it up
 		CurrentMove = (random() <= 0.5) ? &InsaneMoveRunNormal : &InsaneMoveRunInsane;
@@ -477,11 +477,11 @@ void CInsane::Pain (CBaseEntity *other, float kick, int damage)
 
 	// START SHIT
 	r = 1 + (randomMT()&1);
-	if (Entity->gameEntity->health < 25)
+	if (Entity->Health < 25)
 		l = 25;
-	else if (Entity->gameEntity->health < 50)
+	else if (Entity->Health < 50)
 		l = 50;
-	else if (Entity->gameEntity->health < 75)
+	else if (Entity->Health < 75)
 		l = 75;
 	else
 		l = 100;
@@ -489,7 +489,7 @@ void CInsane::Pain (CBaseEntity *other, float kick, int damage)
 	// END SHIT
 
 	// Don't go into pain frames if crucified.
-	if (Entity->gameEntity->spawnflags & 8)
+	if (Entity->SpawnFlags & 8)
 	{
 		CurrentMove = &InsaneMoveStruggleCross;			
 		return;
@@ -508,7 +508,7 @@ void CInsane::OnGround ()
 
 void CInsane::CheckDown ()
 {
-	if (Entity->gameEntity->spawnflags & 32)				// Always stand
+	if (Entity->SpawnFlags & 32)				// Always stand
 		return;
 	if (random() < 0.3)
 		CurrentMove = (random() < 0.5) ? &InsaneMoveUpToDown : &InsaneMoveJumpDown;
@@ -517,7 +517,7 @@ void CInsane::CheckDown ()
 void CInsane::CheckUp ()
 {
 	// If Hold_Ground and Crawl are set
-	if ( (Entity->gameEntity->spawnflags & 4) && (Entity->gameEntity->spawnflags & 16) )
+	if ( (Entity->SpawnFlags & 4) && (Entity->SpawnFlags & 16) )
 		return;
 	if (random() < 0.5)
 		CurrentMove = &InsaneMoveUpToDown;
@@ -525,13 +525,13 @@ void CInsane::CheckUp ()
 
 void CInsane::Stand ()
 {
-	if (Entity->gameEntity->spawnflags & 8)			// If crucified
+	if (Entity->SpawnFlags & 8)			// If crucified
 	{
 		CurrentMove = &InsaneMoveCross;
 		AIFlags |= AI_STAND_GROUND;
 	}
 	// If Hold_Ground and Crawl are set
-	else if ( (Entity->gameEntity->spawnflags & 4) && (Entity->gameEntity->spawnflags & 16) )
+	else if ( (Entity->SpawnFlags & 4) && (Entity->SpawnFlags & 16) )
 		CurrentMove = &InsaneMoveDown;
 	else
 		CurrentMove = (random() < 0.5) ? &InsaneMoveStandNormal : &InsaneMoveStandInsane;
@@ -539,7 +539,7 @@ void CInsane::Stand ()
 
 void CInsane::Dead ()
 {
-	if (Entity->gameEntity->spawnflags & 8)
+	if (Entity->SpawnFlags & 8)
 		Entity->Flags |= FL_FLY;
 	else
 	{
@@ -555,7 +555,7 @@ void CInsane::Dead ()
 
 void CInsane::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
-	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
+	if (Entity->Health <= Entity->GibHealth)
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"), 1, ATTN_IDLE);
 		for (int n= 0; n < 2; n++)
@@ -575,7 +575,7 @@ void CInsane::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 	Entity->DeadFlag = true;
 	Entity->CanTakeDamage = true;
 
-	if (Entity->gameEntity->spawnflags & 8)
+	if (Entity->SpawnFlags & 8)
 		Dead ();
 	else
 	{
@@ -609,20 +609,20 @@ void CInsane::Spawn ()
 	Entity->SetMins (vec3f(-16, -16, -24));
 	Entity->SetMaxs (vec3f(16, 16, 32));
 
-	Entity->gameEntity->health = 100;
-	Entity->gameEntity->gib_health = -50;
+	Entity->Health = 100;
+	Entity->GibHealth = -50;
 	Entity->gameEntity->mass = 300;
 
 	AIFlags |= AI_GOOD_GUY;
 
 	Entity->Link ();
 
-	if (Entity->gameEntity->spawnflags & 16)				// Stand Ground
+	if (Entity->SpawnFlags & 16)				// Stand Ground
 		AIFlags |= AI_STAND_GROUND;
 
 	CurrentMove = &InsaneMoveStandNormal;
 
-	if (Entity->gameEntity->spawnflags & 8)					// Crucified ?
+	if (Entity->SpawnFlags & 8)					// Crucified ?
 	{
 		Entity->SetMins (vec3f(-16, 0, 0));
 		Entity->SetMaxs (vec3f(16, 8, 32));

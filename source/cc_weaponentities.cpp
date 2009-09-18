@@ -49,7 +49,7 @@ void CheckDodge (CBaseEntity *self, vec3f &start, vec3f &dir, int speed)
 	tr = CTrace (start, end, self->gameEntity, CONTENTS_MASK_SHOT);
 
 #ifdef MONSTER_USE_ROGUE_AI
-	if ((tr.ent) && (tr.ent->Entity) && (tr.ent->Entity->EntityFlags & ENT_MONSTER) && (tr.ent->health > 0) && IsInFront(tr.Ent, self))
+	if ((tr.ent) && (tr.ent->Entity) && (tr.ent->Entity->EntityFlags & ENT_MONSTER) && (dynamic_cast<CHurtableEntity*>(tr.ent->Entity)->Health > 0) && IsInFront(tr.Ent, self))
 	{
 		vec3f v = tr.EndPos - start;
 		float eta = (v.LengthFast() - tr.ent->maxs[0]) / speed;
@@ -59,7 +59,7 @@ void CheckDodge (CBaseEntity *self, vec3f &start, vec3f &dir, int speed)
 			tr.ent->enemy = self->gameEntity;
 	}
 #else
-	if ((tr.ent) && (tr.ent->Entity) && (tr.ent->Entity->EntityFlags & ENT_MONSTER) && (tr.ent->health > 0) && IsInFront(tr.Ent, self))
+	if ((tr.ent) && (tr.ent->Entity) && (tr.ent->Entity->EntityFlags & ENT_MONSTER) && (dynamic_cast<CHurtableEntity*>(tr.ent->Entity)->Health > 0) && IsInFront(tr.Ent, self))
 	{
 		vec3f v = tr.EndPos - start;
 		float eta = (v.LengthFast() - tr.ent->maxs[0]) / speed;
@@ -112,12 +112,12 @@ void CGrenade::Explode ()
 		vec3f dir = Enemy->State.GetOrigin() - origin;
 
 		Enemy->TakeDamage	(this, GetOwner(), dir, origin, vec3fOrigin, (int)points, (int)points,
-							DAMAGE_RADIUS, (gameEntity->spawnflags & GRENADE_HAND) ? MOD_HANDGRENADE : MOD_GRENADE);
+							DAMAGE_RADIUS, (SpawnFlags & GRENADE_HAND) ? MOD_HANDGRENADE : MOD_GRENADE);
 	}
 
-	if (gameEntity->spawnflags & GRENADE_HELD)
+	if (SpawnFlags & GRENADE_HELD)
 		mod = MOD_HELD_GRENADE;
-	else if (gameEntity->spawnflags & GRENADE_HAND)
+	else if (SpawnFlags & GRENADE_HAND)
 		mod = MOD_HG_SPLASH;
 	else
 		mod = MOD_G_SPLASH;
@@ -145,7 +145,7 @@ void CGrenade::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 
 	if (!((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage))
 	{
-		if (gameEntity->spawnflags & GRENADE_HAND)
+		if (SpawnFlags & GRENADE_HAND)
 		{
 			if (random() > 0.5)
 				PlaySound (CHAN_VOICE, SoundIndex ("weapons/hgrenb1a.wav"));
@@ -193,7 +193,7 @@ void CGrenade::Spawn (CBaseEntity *Spawner, vec3f start, vec3f aimdir, int damag
 	Grenade->gameEntity->classname = (!handNade) ? "grenade" : "hgrenade";
 	if (handNade)
 	{
-		Grenade->gameEntity->spawnflags = (held) ? (GRENADE_HAND|GRENADE_HELD) : GRENADE_HAND;
+		Grenade->SpawnFlags = (held) ? (GRENADE_HAND|GRENADE_HELD) : GRENADE_HAND;
 		Grenade->State.SetSound (SoundIndex("weapons/hgrenc1b.wav"));
 	}
 
@@ -253,7 +253,7 @@ void CBlasterProjectile::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface
 		dynamic_cast<CPlayerEntity*>(gameEntity->owner->Entity)->PlayerNoiseAt (origin, PNOISE_IMPACT);
 
 	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
-		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, GetOwner(), Velocity, origin, plane ? plane->normal : vec3fOrigin, Damage, 1, DAMAGE_ENERGY, (gameEntity->spawnflags & 1) ? MOD_HYPERBLASTER : MOD_BLASTER);
+		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, GetOwner(), Velocity, origin, plane ? plane->normal : vec3fOrigin, Damage, 1, DAMAGE_ENERGY, (SpawnFlags & 1) ? MOD_HYPERBLASTER : MOD_BLASTER);
 	else
 		CTempEnt_Splashes::Blaster(origin, plane ? plane->normal : vec3fOrigin);
 
@@ -285,7 +285,7 @@ void CBlasterProjectile::Spawn (CBaseEntity *Spawner, vec3f start, vec3f dir,
 	Bolt->Damage = damage;
 	Bolt->gameEntity->classname = "bolt";
 	if (isHyper)
-		Bolt->gameEntity->spawnflags = 1;
+		Bolt->SpawnFlags = 1;
 	Bolt->Link ();
 
 	CTrace tr = CTrace ((Spawner) ? Spawner->State.GetOrigin() : start, start, Bolt->gameEntity, CONTENTS_MASK_SHOT);

@@ -30,6 +30,19 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // cc_ban.h
 // Simple ban system
 //
+
+#ifdef BAN_BASIC_INFO
+#ifndef MAX_IP_BLOCK_LEN
+#define MAX_IP_BLOCK_LEN 3
+#define MAX_IP_LEN (MAX_IP_BLOCK_LEN * 4 + 3)
+
+typedef struct
+{
+	char str[MAX_IP_LEN];
+} IPAddress;
+
+#endif
+#else
 #if !defined(__CC_BAN_H__) || !defined(INCLUDE_GUARDS)
 #define __CC_BAN_H__
 
@@ -40,14 +53,6 @@ enum// EBanTypeFlags
 	BAN_SPECTATOR	=	2, // Banned from moving to spectator mode
 	BAN_ENTER		=	4, // Banned from entering the game
 };
-
-#define MAX_IP_BLOCK_LEN 3
-#define MAX_IP_LEN (MAX_IP_BLOCK_LEN * 4 + 3)
-
-typedef struct
-{
-	char str[MAX_IP_LEN];
-} IPAddress;
 
 typedef struct BanIndex_s
 {
@@ -89,7 +94,7 @@ public:
 };
 
 extern CBanList	Bans;
-
 #else
 FILE_WARNING
+#endif
 #endif

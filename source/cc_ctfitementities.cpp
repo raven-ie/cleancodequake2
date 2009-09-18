@@ -215,7 +215,7 @@ CItemEntity *CFlag::DropItem (CBaseEntity *ent)
 
 	dropped->gameEntity->classname = Classname;
 	dropped->gameEntity->item = this;
-	dropped->gameEntity->spawnflags = DROPPED_ITEM;
+	dropped->SpawnFlags = DROPPED_ITEM;
 	dropped->State.SetEffects (EffectFlags);
 	dropped->State.SetRenderEffects (RF_GLOW);
 	dropped->SetMins (vec3f(-15));

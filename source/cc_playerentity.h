@@ -158,6 +158,36 @@ typedef struct
 	colorb		viewBlend; // View blending
 } clientPersistent_t;
 
+// All players have a copy of this class.
+class CMenuState
+{
+public:
+	enum EMenuKeys
+	{
+		KEY_NONE,
+		KEY_LEFT,
+		KEY_RIGHT
+	};
+
+	CPlayerEntity		*ent; // A pointer to the entity that is running the show (needed?)
+	int					Cursor; // Cursor position (relative to order)
+	EMenuKeys			Key; // Key hit this frame
+	// CurrentMenu is set to a copy of whatever menu class
+	// you need
+	class CMenu			*CurrentMenu;
+	bool				InMenu;
+
+	CMenuState			();
+	CMenuState			(CPlayerEntity *ent);
+
+	void OpenMenu		(); // Do this AFTER setting CurrentMenu
+	void CloseMenu		();
+
+	void SelectNext		(); // invnext
+	void SelectPrev		(); // invprev
+	void Select			(); // invuse
+};
+
 // client data that stays across deathmatch respawns
 typedef struct
 {
@@ -171,7 +201,7 @@ typedef struct
 	int			messageLevel;
 
 #ifdef MONSTERS_USE_PATHFINDING
-	CPathNode	*LastNode;
+	class CPathNode	*LastNode;
 #endif
 
 	CMenuState	MenuState;

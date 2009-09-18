@@ -541,8 +541,8 @@ void ExitLevel (void)
 		CPlayerEntity *ent = dynamic_cast<CPlayerEntity*>(g_edicts[1 + i].Entity);
 		if (!ent->IsInUse())
 			continue;
-		if (ent->gameEntity->health > ent->Client.pers.max_health)
-			ent->gameEntity->health = ent->Client.pers.max_health;
+		if (ent->Health > ent->Client.pers.max_health)
+			ent->Health = ent->Client.pers.max_health;
 	}
 
 #ifdef MONSTERS_USE_PATHFINDING

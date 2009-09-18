@@ -127,6 +127,7 @@ public:
 	CBaseEntity		*TeamMaster;
 	CBaseEntity		*GroundEntity;
 	int				GroundEntityLinkCount;
+	uint32			SpawnFlags;
 
 	CBaseEntity ();
 	CBaseEntity (int Index);
@@ -209,6 +210,107 @@ public:
 	virtual void	BecomeExplosion (bool grenade);
 };
 
+inline uint32 atou (const char *Str)
+{
+	return (uint32)atol(Str);
+}
+
+#define EntityMemberOffset(y,x) (size_t)&(((y*)0)->x)
+
+typedef uint32 EFieldType;
+enum// EFieldType
+{
+	FTInteger,
+	FTUInteger,
+	FTString,
+	FTFloat,
+	FTVector,
+	FTIgnore,
+	FTStringL,
+	FTStringG,
+
+	FT_LAST,
+
+	FTGVector = 666,
+	FTGAngleHack,
+	FTGStringL,
+	FTGStringG,
+};
+
+class CEntityField
+{
+public:
+	char			*Name;
+	size_t			Offset;
+	EFieldType		FieldType;
+
+	CEntityField (char *Name, size_t Offset, EFieldType FieldType) :
+	Name(Name),
+	Offset(Offset),
+	FieldType(FieldType)
+	{
+	};
+
+	void CreateMemCpy (bool Game, byte *Memory, char *Value);
+
+	template <class TClass>
+	void Create (TClass *Entity, char *Value) const
+	{
+		switch (FieldType)
+		{
+		case FTInteger:
+			*((int*)(((byte*)Entity) + Offset)) = atoi(Value);
+			break;
+		case FTUInteger:
+			*((uint32*)(((byte*)Entity) + Offset)) = atou(Value);
+			break;
+		case FTIgnore:
+			break;
+		case FTStringL:
+		case FTStringG:
+			memcpy (((byte*)Entity)+Offset, Mem_PoolStrDup(Value, (FieldType == FTGStringL) ? com_levelPool : com_gamePool, 0), sizeof(char*));
+			break;
+		};
+	};
+
+	template <>
+	void Create<CBaseEntity> (CBaseEntity *Entity, char *Value) const
+	{
+		switch (FieldType)
+		{
+		case FTInteger:
+			*((int*)(((byte*)Entity) + Offset)) = atoi(Value);
+			break;
+		case FTUInteger:
+			*((uint32*)(((byte*)Entity) + Offset)) = atou(Value);
+			break;
+		case FTIgnore:
+			break;
+		case FTStringL:
+		case FTStringG:
+			*((char **)(((byte*)Entity) + Offset)) = Mem_PoolStrDup(Value, (FieldType == FTStringL) ? com_levelPool : com_gamePool, 0);
+			break;
+		case FTGVector:
+			{
+				vec3f v;
+				sscanf_s (Value, "%f %f %f", &v.X, &v.Y, &v.Z);
+				memcpy (((byte*)Entity->gameEntity)+Offset, &v, sizeof(float)*3);
+			}
+			break;
+		case FTGAngleHack:
+			{
+				vec3f v (0, atof(Value), 0);
+				memcpy (((byte*)Entity->gameEntity)+Offset, &v, sizeof(float)*3);
+			}
+			break;
+		case FTGStringL:
+		case FTGStringG:
+			*((char **)(((byte*)Entity->gameEntity) + Offset)) = Mem_PoolStrDup(Value, (FieldType == FTGStringL) ? com_levelPool : com_gamePool, 0);
+			break;
+		};
+	};
+};
+
 // EntityFlags values
 enum
 {
@@ -242,6 +344,13 @@ public:
 	CMapEntity (int Index);
 
 	virtual void Spawn() = 0;
+
+	static const class CEntityField FieldsForParsing[];
+	static const size_t FieldsForParsingSize;
+
+	virtual bool			ParseField (char *Key, char *Value);
+	void					ParseFields ();
+	bool					CheckValidity ();
 };
 
 // An entity completely privatized.

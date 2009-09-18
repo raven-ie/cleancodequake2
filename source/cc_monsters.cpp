@@ -36,9 +36,9 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #define STEPSIZE	18
 
 #ifdef MONSTERS_USE_PATHFINDING
+#include "cc_pathfinding.h"
 
 bool VecInFront (vec3f &angles, vec3f &origin1, vec3f &origin2);
-
 void CMonster::FoundPath ()
 {
 	if (!P_CurrentGoalNode || !P_CurrentNode)
@@ -365,7 +365,7 @@ void AI_SetSightClient ()
 			check = 1;
 		CPlayerEntity *ent = dynamic_cast<CPlayerEntity*>(g_edicts[check].Entity);
 		if (ent->IsInUse()
-			&& ent->gameEntity->health > 0
+			&& ent->Health > 0
 			&& !(ent->Flags & FL_NOTARGET) )
 		{
 			level.sight_client = ent;
@@ -417,6 +417,11 @@ void CMonsterEntity::Spawn ()
 
 	if (st.message)
 		Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
+};
+
+bool			CMonsterEntity::ParseField (char *Key, char *Value)
+{
+	return (CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 };
 
 void CMonsterEntity::Think ()
@@ -965,7 +970,7 @@ bool CMonster::StepDirection (float Yaw, float Dist)
 
 void CMonster::WalkMonsterStartGo ()
 {
-	if (!(Entity->gameEntity->spawnflags & 2) && level.framenum < 10)
+	if (!(Entity->SpawnFlags & 2) && level.framenum < 10)
 	{
 		DropToFloor ();
 
@@ -982,7 +987,7 @@ void CMonster::WalkMonsterStartGo ()
 
 	MonsterStartGo ();
 
-	if (Entity->gameEntity->spawnflags & 2)
+	if (Entity->SpawnFlags & 2)
 		MonsterTriggeredStart ();
 }
 
@@ -1001,7 +1006,7 @@ void CMonster::SwimMonsterStartGo ()
 
 	MonsterStartGo ();
 
-	if (Entity->gameEntity->spawnflags & 2)
+	if (Entity->SpawnFlags & 2)
 		MonsterTriggeredStart ();
 }
 
@@ -1023,7 +1028,7 @@ void CMonster::FlyMonsterStartGo ()
 
 	MonsterStartGo ();
 
-	if (Entity->gameEntity->spawnflags & 2)
+	if (Entity->SpawnFlags & 2)
 		MonsterTriggeredStart ();
 }
 
@@ -1036,7 +1041,7 @@ void CMonster::FlyMonsterStart ()
 
 void CMonster::MonsterStartGo ()
 {
-	if (Entity->gameEntity->health <= 0)
+	if (Entity->Health <= 0)
 		return;
 
 	// check for target to combat_point and change to combattarget
@@ -1135,10 +1140,10 @@ void CMonster::MonsterStart ()
 		return;
 	}
 
-	if ((Entity->gameEntity->spawnflags & 4) && !(AIFlags & AI_GOOD_GUY))
+	if ((Entity->SpawnFlags & 4) && !(AIFlags & AI_GOOD_GUY))
 	{
-		Entity->gameEntity->spawnflags &= ~4;
-		Entity->gameEntity->spawnflags |= 1;
+		Entity->SpawnFlags &= ~4;
+		Entity->SpawnFlags |= 1;
 	}
 
 	if (!(AIFlags & AI_GOOD_GUY))
@@ -1150,8 +1155,8 @@ void CMonster::MonsterStart ()
 	Entity->CanTakeDamage = true;
 	Entity->AirFinished = level.framenum + 120;
 	Entity->UseState = MONSTERENTITY_THINK_USE;
-	Entity->gameEntity->max_health = Entity->gameEntity->health;
-	Entity->gameEntity->clipMask = CONTENTS_MASK_MONSTERSOLID;
+	Entity->MaxHealth = Entity->Health;
+	Entity->SetClipmask (CONTENTS_MASK_MONSTERSOLID);
 
 	Entity->DeadFlag = false;
 	Entity->SetSvFlags (Entity->GetSvFlags() & ~SVF_DEADMONSTER);
@@ -1200,7 +1205,7 @@ void CMonsterEntity::Use (CBaseEntity *other, CBaseEntity *activator)
 	case MONSTERENTITY_THINK_USE:
 		if (gameEntity->enemy)
 			return;
-		if (gameEntity->health <= 0)
+		if (Health <= 0)
 			return;
 		if (activator->Flags & FL_NOTARGET)
 			return;
@@ -1237,7 +1242,7 @@ void CMonster::MonsterTriggeredSpawn ()
 
 	MonsterStartGo ();
 
-	if (Entity->gameEntity->enemy && !(Entity->gameEntity->spawnflags & 1) && !(Entity->gameEntity->enemy->Entity->Flags & FL_NOTARGET))
+	if (Entity->gameEntity->enemy && !(Entity->SpawnFlags & 1) && !(Entity->gameEntity->enemy->Entity->Flags & FL_NOTARGET))
 		FoundTarget ();
 	else
 		Entity->gameEntity->enemy = NULL;
@@ -1296,7 +1301,7 @@ void CMonster::AlertNearbyStroggs ()
 	vec3f origin = Entity->State.GetOrigin ();
 	while ( (strogg = FindRadius<CMonsterEntity, ENT_MONSTER>(strogg, origin, dist)) != NULL)
 	{
-		if (strogg->gameEntity->health < 1 || !(strogg->CanTakeDamage))
+		if (strogg->Health < 1 || !(strogg->CanTakeDamage))
 			continue;
 		if (strogg == Entity)
 			continue;
@@ -1428,7 +1433,7 @@ bool CMonster::CheckAttack ()
 	float	chance;
 	CTrace	tr;
 
-	if (Entity->gameEntity->enemy->health > 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0)
 	{
 	// see if any entities are in the way of the shot
 		Entity->State.GetOrigin(spot1);
@@ -1511,7 +1516,7 @@ bool CMonster::CheckAttack ()
 #else
 	float	chance;
 
-	if (Entity->gameEntity->enemy->health > 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0)
 	{
 	// see if any entities are in the way of the shot
 		vec3_t	spot1, spot2;
@@ -1779,7 +1784,7 @@ bool CMonster::AI_CheckAttack()
 		hesDeadJim = true;
 	else if (AIFlags & AI_MEDIC)
 	{
-		if (Entity->gameEntity->enemy->health > 0)
+		if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0)
 		{
 			hesDeadJim = true;
 			AIFlags &= ~AI_MEDIC;
@@ -1789,12 +1794,12 @@ bool CMonster::AI_CheckAttack()
 	{
 		if (AIFlags & AI_BRUTAL)
 		{
-			if (Entity->gameEntity->enemy->health <= -80)
+			if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= -80)
 				hesDeadJim = true;
 		}
 		else
 		{
-			if (Entity->gameEntity->enemy->health <= 0)
+			if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= 0)
 				hesDeadJim = true;
 		}
 	}
@@ -1803,7 +1808,7 @@ bool CMonster::AI_CheckAttack()
 	{
 		Entity->gameEntity->enemy = NULL;
 	// FIXME: look all around for other targets
-		if (Entity->gameEntity->oldenemy && Entity->gameEntity->oldenemy->health > 0)
+		if (Entity->gameEntity->oldenemy && dynamic_cast<CHurtableEntity*>(Entity->gameEntity->oldenemy->Entity)->Health > 0)
 		{
 			Entity->gameEntity->enemy = Entity->gameEntity->oldenemy;
 			Entity->gameEntity->oldenemy = NULL;
@@ -1910,7 +1915,7 @@ bool CMonster::AI_CheckAttack()
 	}
 	else if (AIFlags & AI_MEDIC)
 	{
-		if (!(Entity->gameEntity->enemy->inUse) || (Entity->gameEntity->enemy->health > 0))
+		if (!(Entity->gameEntity->enemy->inUse) || (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0))
 		{
 			hesDeadJim = true;
 //			self->monsterinfo.aiflags &= ~AI_MEDIC;
@@ -1920,12 +1925,12 @@ bool CMonster::AI_CheckAttack()
 	{
 		if (AIFlags & AI_BRUTAL)
 		{
-			if (Entity->gameEntity->enemy->health <= -80)
+			if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= -80)
 				hesDeadJim = true;
 		}
 		else
 		{
-			if (Entity->gameEntity->enemy->health <= 0)
+			if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= 0)
 				hesDeadJim = true;
 		}
 	}
@@ -1935,14 +1940,14 @@ bool CMonster::AI_CheckAttack()
 		AIFlags &= ~AI_MEDIC;
 		Entity->gameEntity->enemy = NULL;
 	// FIXME: look all around for other targets
-		if (Entity->gameEntity->oldenemy && Entity->gameEntity->oldenemy->health > 0)
+		if (Entity->gameEntity->oldenemy && dynamic_cast<CHurtableEntity*>(Entity->gameEntity->oldenemy->Entity)->Health > 0)
 		{
 			Entity->gameEntity->enemy = Entity->gameEntity->oldenemy;
 			Entity->gameEntity->oldenemy = NULL;
 			HuntTarget ();
 		}
 //ROGUE - multiple teslas make monsters lose track of the player.
-		else if(LastPlayerEnemy && LastPlayerEnemy->health > 0)
+		else if(LastPlayerEnemy && dynamic_cast<CHurtableEntity*>(LastPlayerEnemy->Entity)->Health > 0)
 		{
 //			if ((g_showlogic) && (g_showlogic->value))
 //				gi.dprintf("resorting to last_player_enemy...\n");
@@ -2696,7 +2701,7 @@ void CMonster::AI_Stand (float Dist)
 		return;
 	}
 
-	if (!(Entity->gameEntity->spawnflags & 1) && (MonsterFlags & MF_HAS_IDLE) && (level.framenum > IdleTime))
+	if (!(Entity->SpawnFlags & 1) && (MonsterFlags & MF_HAS_IDLE) && (level.framenum > IdleTime))
 	{
 		if (IdleTime)
 		{
@@ -2788,7 +2793,7 @@ void CMonster::AI_Stand (float Dist)
 		return;
 	}
 
-	if (!(Entity->gameEntity->spawnflags & 1) && (MonsterFlags & MF_HAS_IDLE) && (level.framenum > IdleTime))
+	if (!(Entity->SpawnFlags & 1) && (MonsterFlags & MF_HAS_IDLE) && (level.framenum > IdleTime))
 	{
 		if (IdleTime)
 		{
@@ -3235,7 +3240,7 @@ void CMonster::SetEffects()
 		Entity->State.AddRenderEffects(RF_SHELL_RED);
 	}
 
-	if (Entity->gameEntity->health <= 0)
+	if (Entity->Health <= 0)
 		return;
 
 	if (Entity->gameEntity->powerarmor_time > level.framenum)
@@ -3254,7 +3259,7 @@ void CMonster::WorldEffects()
 {
 	vec3f origin = Entity->State.GetOrigin();
 
-	if (Entity->gameEntity->health > 0)
+	if (Entity->Health > 0)
 	{
 		if (!(Entity->Flags & FL_SWIM))
 		{
@@ -3451,7 +3456,7 @@ bool CMonster::FindTarget()
 		vec3_t origin;
 
 		Entity->State.GetOrigin(origin);
-		if (Entity->gameEntity->spawnflags & 1)
+		if (Entity->SpawnFlags & 1)
 		{
 			CTrace trace = CTrace(origin, level.NoiseNode->Origin, Entity->gameEntity, CONTENTS_MASK_SOLID);
 
@@ -3480,7 +3485,7 @@ bool CMonster::FindTarget()
 		FoundPath ();
 
 		// Check if we can see the entity too
-		if (!Entity->gameEntity->enemy && (level.SoundEntityFramenum >= (level.framenum - 1)) && !(Entity->gameEntity->spawnflags & 1) )
+		if (!Entity->gameEntity->enemy && (level.SoundEntityFramenum >= (level.framenum - 1)) && !(Entity->SpawnFlags & 1) )
 		{
 			client = level.SoundEntity;
 
@@ -3493,7 +3498,7 @@ bool CMonster::FindTarget()
 
 				client->State.GetOrigin (temp);
 				Entity->State.GetOrigin (origin);
-				if (Entity->gameEntity->spawnflags & 1)
+				if (Entity->SpawnFlags & 1)
 				{
 					if (!IsVisible (Entity, client))
 						return false;
@@ -3540,7 +3545,7 @@ bool CMonster::FindTarget()
 
 	heardit = false;
 #ifndef MONSTERS_USE_PATHFINDING
-	if ((level.sight_entity_framenum >= (level.framenum - 1)) && !(Entity->gameEntity->spawnflags & 1) )
+	if ((level.sight_entity_framenum >= (level.framenum - 1)) && !(Entity->SpawnFlags & 1) )
 	{
 		client = level.sight_entity;
 		if (client->gameEntity->enemy == Entity->gameEntity->enemy)
@@ -3554,7 +3559,7 @@ bool CMonster::FindTarget()
 		client = level.sound_entity;
 		heardit = true;
 	}
-	else if (!(Entity->gameEntity->enemy) && (level.sound2_entity_framenum >= (level.framenum - 1)) && !(Entity->gameEntity->spawnflags & 1) )
+	else if (!(Entity->gameEntity->enemy) && (level.sound2_entity_framenum >= (level.framenum - 1)) && !(Entity->SpawnFlags & 1) )
 	{
 		client = level.sound2_entity;
 		heardit = true;
@@ -3642,7 +3647,7 @@ bool CMonster::FindTarget()
 
 		client->State.GetOrigin (temp);
 		Entity->State.GetOrigin(origin);
-		if (Entity->gameEntity->spawnflags & 1)
+		if (Entity->SpawnFlags & 1)
 		{
 			if (!IsVisible (Entity, client))
 				return false;
@@ -3744,7 +3749,7 @@ void CMonster::Dodge (CBaseEntity *attacker, float eta, CTrace *tr)
 	bool	ducker = false, dodger = false;
 
 	// this needs to be here since this can be called after the monster has "died"
-	if (Entity->gameEntity->health < 1)
+	if (Entity->Health < 1)
 		return;
 
 	if ((MonsterFlags & MF_HAS_DUCK) && (MonsterFlags & MF_HAS_UNDUCK))

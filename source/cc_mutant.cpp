@@ -270,7 +270,7 @@ void CMutant::HitRight ()
 
 void CMutant::CheckRefire ()
 {
-	if (!Entity->gameEntity->enemy || !Entity->gameEntity->enemy->inUse || Entity->gameEntity->enemy->health <= 0)
+	if (!Entity->gameEntity->enemy || !Entity->gameEntity->enemy->inUse || dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= 0)
 		return;
 
 	// Paril, this was kinda dumb because he would keep refiring on nightmare
@@ -308,7 +308,7 @@ void CMutant::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	if (!Jumping)
 		return;
 
-	if (Entity->gameEntity->health <= 0)
+	if (Entity->Health <= 0)
 	{
 		Jumping = false;
 		return;
@@ -532,7 +532,7 @@ bool CMutant::CheckJump ()
 
 bool CMutant::CheckAttack ()
 {
-	if (!Entity->gameEntity->enemy || Entity->gameEntity->enemy->health <= 0)
+	if (!Entity->gameEntity->enemy || dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= 0)
 		return false;
 
 	if (CheckMelee())
@@ -594,7 +594,7 @@ CAnim MutantMovePain3 (FRAME_pain301, FRAME_pain311, MutantFramesPain3, &CMonste
 
 void CMutant::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+	if (Entity->Health < (Entity->MaxHealth / 2))
 		Entity->State.SetSkinNum(1);
 
 	if (level.framenum < Entity->gameEntity->pain_debounce_time)
@@ -669,7 +669,7 @@ CAnim MutantMoveDeath2 (FRAME_death201, FRAME_death210, MutantFramesDeath2, Conv
 
 void CMutant::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
-	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
+	if (Entity->Health <= Entity->GibHealth)
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
@@ -720,8 +720,8 @@ void CMutant::Spawn ()
 	Entity->SetMins (vec3f(-32, -32, -24));
 	Entity->SetMaxs (vec3f(32, 32, 48));
 
-	Entity->gameEntity->health = 300;
-	Entity->gameEntity->gib_health = -120;
+	Entity->Health = 300;
+	Entity->GibHealth = -120;
 	Entity->gameEntity->mass = 300;
 
 	MonsterFlags = (MF_HAS_ATTACK | MF_HAS_MELEE | MF_HAS_SIGHT | MF_HAS_SEARCH | MF_HAS_IDLE);

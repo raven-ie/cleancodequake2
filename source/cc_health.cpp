@@ -45,32 +45,32 @@ HealthFlags(HealthFlags)
 
 bool CHealth::Pickup (class CItemEntity *ent, CPlayerEntity *other)
 {
-	if (!(HealthFlags & HEALTHFLAG_IGNOREMAX) && (other->gameEntity->health >= other->gameEntity->max_health))
+	if (!(HealthFlags & HEALTHFLAG_IGNOREMAX) && (other->Health >= other->MaxHealth))
 		return false;
 
 #ifdef CLEANCTF_ENABLED
 //ZOID
-	if (other->gameEntity->health >= 250 && ent->gameEntity->count > 25)
+	if (other->Health >= 250 && ent->gameEntity->count > 25)
 		return false;
 //ZOID
 #endif
 
-	other->gameEntity->health += Amount;
+	other->Health += Amount;
 
 #ifdef CLEANCTF_ENABLED
 //ZOID
-	if (other->gameEntity->health > 250 && ent->gameEntity->count > 25)
-		other->gameEntity->health = 250;
+	if (other->Health > 250 && ent->gameEntity->count > 25)
+		other->Health = 250;
 //ZOID
 #endif
 
 	if (!(HealthFlags & HEALTHFLAG_IGNOREMAX))
 	{
-		if (other->gameEntity->health > other->gameEntity->max_health)
-			other->gameEntity->health = other->gameEntity->max_health;
+		if (other->Health > other->MaxHealth)
+			other->Health = other->MaxHealth;
 	}
 
-	if (!(ent->gameEntity->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
+	if (!(ent->SpawnFlags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
 		SetRespawn (ent, 300);
 
 	return true;
