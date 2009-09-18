@@ -45,6 +45,7 @@ typedef int64	FrameNumber_t;
 #include <vector>
 #include <list>
 
+#include "cc_memory.h"
 #include "cc_conchars.h"
 #include "cc_colors.h"
 #include "cc_indexing.h"
@@ -53,25 +54,27 @@ typedef int64	FrameNumber_t;
 #include "cc_arg.h"
 #include "cc_write.h"
 #include "cc_cvar.h"
-#include "cc_ban.h"
 #include "cc_filesystem.h"
 #include "cc_utils.h"
+#include "cc_hash.h"
+#define BAN_BASIC_INFO
+#include "cc_ban.h"
+#undef BAN_BASIC_INFO
 
 // Main class files
 #include "cc_items.h"
 #include "cc_inventory.h"
 #ifdef MONSTERS_USE_PATHFINDING
+#define PATHFINDING_FUNCTIONSONLY
 #include "cc_pathfinding.h"
+#undef PATHFINDING_FUNCTIONSONLY
 #endif
 #include "cc_sbar.h"
-#include "cc_menu.h"
 #include "cc_weaponmain.h"
 #include "cc_baseentity.h"
 #include "cc_trace.h"
 #include "cc_cmds.h"
 #include "cc_monsters.h"
-#include "cc_memory.h"
-#include "cc_hash.h"
 
 // Classes that require classes from the above includes
 #include "cc_bodyqueue.h"

@@ -71,17 +71,18 @@ void CItemEntity::Touch(CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf
 	if (!(other->EntityFlags & ENT_PLAYER))
 		return;
 
-	if (other->gameEntity->health < 1)
-		return;		// dead people can't pickup
 	if (!(gameEntity->item->Flags & ITEMFLAG_GRABBABLE))
 		return;		// not a grabbable item?
 
 	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(other);
 
-	if (!(gameEntity->spawnflags & ITEM_TARGETS_USED))
+	if (Player->Health <= 0)
+		return; // Dead players can't grab items
+
+	if (!(SpawnFlags & ITEM_TARGETS_USED))
 	{
 		UseTargets (other, Message);
-		gameEntity->spawnflags |= ITEM_TARGETS_USED;
+		SpawnFlags |= ITEM_TARGETS_USED;
 	}
 
 	if (!gameEntity->item->Pickup(this,Player))
@@ -110,7 +111,7 @@ void CItemEntity::Touch(CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf
 		);
 
 	//if ((game.mode != GAME_COOPERATIVE && (ent->item->Flags & ITEMFLAG_STAY_COOP)) || (ent->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)))
-	if (!((game.mode & GAME_COOPERATIVE) &&  (gameEntity->item->Flags & ITEMFLAG_STAY_COOP)) || (gameEntity->spawnflags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)))
+	if (!((game.mode & GAME_COOPERATIVE) &&  (gameEntity->item->Flags & ITEMFLAG_STAY_COOP)) || (SpawnFlags & (DROPPED_ITEM | DROPPED_PLAYER_ITEM)))
 	{
 		if (Flags & FL_RESPAWN)
 			Flags &= ~FL_RESPAWN;
@@ -131,7 +132,7 @@ void CItemEntity::Use (CBaseEntity *other, CBaseEntity *activator)
 	SetSvFlags (GetSvFlags() & ~SVF_NOCLIENT);
 	Usable = false;
 
-	if (gameEntity->spawnflags & ITEM_NO_TOUCH)
+	if (SpawnFlags & ITEM_NO_TOUCH)
 	{
 		SetSolid (SOLID_BBOX);
 		Touchable = false;
@@ -200,7 +201,7 @@ void CItemEntity::Think ()
 				}
 			}
 
-			if (gameEntity->spawnflags & ITEM_NO_TOUCH)
+			if (SpawnFlags & ITEM_NO_TOUCH)
 			{
 				SetSolid (SOLID_BBOX);
 				NoTouch = true;
@@ -208,7 +209,7 @@ void CItemEntity::Think ()
 				State.RemoveRenderEffects (RF_GLOW);
 			}
 
-			if (gameEntity->spawnflags & ITEM_TRIGGER_SPAWN)
+			if (SpawnFlags & ITEM_TRIGGER_SPAWN)
 			{
 				SetSvFlags(GetSvFlags() | SVF_NOCLIENT);
 				SetSolid (SOLID_NOT);

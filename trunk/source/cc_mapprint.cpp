@@ -34,7 +34,6 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_local.h"
 
 static int mapWarnings, mapErrors;
-int entityNumber;
 
 void InitMapCounter ()
 {
@@ -60,7 +59,7 @@ void Map_Print (EMapPrintType printType, edict_t *ent, vec3_t origin)
 		DebugPrintf ("Error %i>", mapErrors);
 	}
 
-	DebugPrintf ("Entity #%i ", entityNumber);
+	DebugPrintf ("Entity #%i ", level.EntityNumber);
 	if (ent->classname)
 		DebugPrintf ("(%s) ", ent->classname);
 	if (origin)
@@ -100,7 +99,7 @@ void Map_Print (EMapPrintType printType, CBaseEntity *ent, vec3f &origin)
 		DebugPrintf ("Error %i>", mapErrors);
 	}
 
-	DebugPrintf ("Entity #%i ", entityNumber);
+	DebugPrintf ("Entity #%i ", level.EntityNumber);
 	if (ent->gameEntity->classname)
 		DebugPrintf ("(%s) ", ent->gameEntity->classname);
 	if (origin)

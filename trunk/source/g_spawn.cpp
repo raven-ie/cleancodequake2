@@ -125,8 +125,14 @@ static void ED_ParseField (char *key, char *value, edict_t *ent)
 			return;
 		}
 	}
+
+	// If we didn't find it here, push it in the list for the entity
+	if (!ent->ParseData)
+		ent->ParseData = QNew (com_gamePool, 0) std::list<CKeyValuePair *> ();
+
+	ent->ParseData->push_back (QNew (com_gamePool, 0) CKeyValuePair (key, value));
+
 	//gi.dprintf ("%s is not a field\n", key);
-	MapPrint (MAPPRINT_ERROR, ent, ent->state.origin, "\"%s\" is not a field\n", key);
 }
 
 /*
@@ -248,7 +254,6 @@ Creates a server's entity / program execution context by
 parsing textual entity definitions out of an ent file.
 ==============
 */
-extern int entityNumber;
 #include "cc_exceptionhandler.h"
 #include "cc_brushmodels.h"
 
@@ -284,13 +289,12 @@ __try
 {
 #endif
 	edict_t		*ent;
-	int			inhibit;
 	char		*token;
 	int			i;
 	int		skill_level;
 	uint32 startTime = Sys_Milliseconds();
 
-	entityNumber = 0;
+	level.EntityNumber = 0;
 	InitMapCounter();
 
 	skill_level = skill->Integer();
@@ -334,7 +338,7 @@ __try
 	SavedClients = NULL;
 
 	ent = NULL;
-	inhibit = 0;
+	level.inhibit = 0;
 
 	// Parse ents
 	for ( ; ; ) {
@@ -349,49 +353,16 @@ __try
 			ent = g_edicts;
 		else
 			ent = G_Spawn ();
+
 		entities = ED_ParseEdict (entities, ent);
-
-		// Yet another map hack
-		if (!Q_stricmp(level.mapname, "command") && !Q_stricmp(ent->classname, "trigger_once") && !Q_stricmp(ent->model, "*27"))
-			ent->spawnflags &= ~SPAWNFLAG_NOT_HARD;
-
-		entityNumber++;
-		// Remove things (except the world) from different skill levels or deathmatch
-		if (ent != g_edicts)
-		{
-			if (game.mode & GAME_DEATHMATCH)
-			{
-				if ( ent->spawnflags & SPAWNFLAG_NOT_DEATHMATCH )
-				{
-					G_FreeEdict (ent);	
-					inhibit++;
-					continue;
-				}
-			}
-			else
-			{
-				if ( /* ((game.mode == GAME_COOPERATIVE) && (ent->spawnflags & SPAWNFLAG_NOT_COOP)) || */
-					((skill->Integer() == 0) && (ent->spawnflags & SPAWNFLAG_NOT_EASY)) ||
-					((skill->Integer() == 1) && (ent->spawnflags & SPAWNFLAG_NOT_MEDIUM)) ||
-					(((skill->Integer() == 2) || (skill->Integer() == 3)) && (ent->spawnflags & SPAWNFLAG_NOT_HARD))
-					)
-					{
-						G_FreeEdict (ent);	
-						inhibit++;
-						continue;
-					}
-			}
-
-			ent->spawnflags &= ~(SPAWNFLAG_NOT_EASY|SPAWNFLAG_NOT_MEDIUM|SPAWNFLAG_NOT_HARD|SPAWNFLAG_NOT_COOP|SPAWNFLAG_NOT_DEATHMATCH);
-		}
 
 		ED_CallSpawn (ent);
 
 		if (!ent->inUse)
-			inhibit++;
+			level.inhibit++;
 	}
 
-	DebugPrintf ("%i entities removed\n", inhibit);
+	DebugPrintf ("%i entities removed\n", level.inhibit);
 
 #ifdef DEBUG
 	i = 1;

@@ -262,7 +262,7 @@ CAnim TankMovePain3 (FRAME_pain301, FRAME_pain316, TankFramesPain3, ConvertDeriv
 
 void CTank::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+	if (Entity->Health < (Entity->MaxHealth / 2))
 		Entity->State.SetSkinNum (Entity->State.GetSkinNum() | 1);
 
 	if (damage <= 10)
@@ -535,7 +535,7 @@ CAnim TankMoveAttackPostBlast (FRAME_attak117, FRAME_attak122, TankFramesAttackP
 
 void CTank::ReAttackBlaster ()
 {
-	if (skill->Integer() >= 2 && IsVisible (Entity, Entity->gameEntity->enemy->Entity) && Entity->gameEntity->enemy->health > 0 && random() <= 0.6)
+	if (skill->Integer() >= 2 && IsVisible (Entity, Entity->gameEntity->enemy->Entity) && dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0 && random() <= 0.6)
 	{
 		CurrentMove = &TankMoveReAttackBlast;
 		return;
@@ -712,7 +712,7 @@ void CTank::ReFireRocket ()
 #endif
 
 	// Only on hard or nightmare
-	if ( skill->Integer() >= 2 && Entity->gameEntity->enemy->health > 0 && IsVisible(Entity, Entity->gameEntity->enemy->Entity) && random() <= 0.4)
+	if ( skill->Integer() >= 2 && dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0 && IsVisible(Entity, Entity->gameEntity->enemy->Entity) && random() <= 0.4)
 	{
 		CurrentMove = &TankMoveAttackFireRocket;
 		return;
@@ -734,7 +734,7 @@ void CTank::Attack ()
 	float	range;
 	float	r;
 
-	if (Entity->gameEntity->enemy->health < 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health < 0)
 	{
 		CurrentMove = &TankMoveAttackStrike;
 		AIFlags &= ~AI_BRUTAL;
@@ -861,7 +861,7 @@ CAnim TankMoveDeath (FRAME_death101, FRAME_death132, TankFramesDeath1, ConvertDe
 void CTank::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 // check for gib
-	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
+	if (Entity->Health <= Entity->GibHealth)
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 1 /*4*/; n++)
@@ -914,8 +914,8 @@ void CTank::Spawn ()
 	SoundIndex ("tank/tnkatk2e.wav");
 	SoundIndex ("tank/tnkatck3.wav");
 
-	Entity->gameEntity->health = 750;
-	Entity->gameEntity->gib_health = -200;
+	Entity->Health = 750;
+	Entity->GibHealth = -200;
 	Entity->gameEntity->mass = 500;
 
 	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_SIGHT | MF_HAS_IDLE);
@@ -936,8 +936,8 @@ LINK_MONSTER_CLASSNAME_TO_CLASS ("monster_tank", CTank);
 void CTankCommander::Spawn ()
 {
 	CTank::Spawn ();
-	Entity->gameEntity->health = 1000;
-	Entity->gameEntity->gib_health = -225;
+	Entity->Health = 1000;
+	Entity->GibHealth = -225;
 	Entity->State.SetSkinNum (2);
 }
 

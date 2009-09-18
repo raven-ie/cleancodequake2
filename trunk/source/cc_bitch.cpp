@@ -249,7 +249,7 @@ CAnim ChickMovePain3 (FRAME_pain301, FRAME_pain321, ChickFramesPain3, ConvertDer
 
 void CMaiden::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+	if (Entity->Health < (Entity->MaxHealth / 2))
 		Entity->State.SetSkinNum(1);
 
 	if (level.framenum < Entity->gameEntity->pain_debounce_time)
@@ -352,7 +352,7 @@ void CMaiden::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 	int		n;
 
 // check for gib
-	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
+	if (Entity->Health <= Entity->GibHealth)
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (n= 0; n < 2; n++)
@@ -654,7 +654,7 @@ void CMaiden::ReRocket()
 		AIFlags &= ~AI_MANUAL_STEERING;
 	else
 #endif
-	if (Entity->gameEntity->enemy->health > 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0)
 	{
 		if (Range (Entity, Entity->gameEntity->enemy->Entity) > RANGE_MELEE &&
 			IsVisible (Entity, Entity->gameEntity->enemy->Entity) &&
@@ -697,7 +697,7 @@ CAnim ChickMoveEndSlash (FRAME_attak213, FRAME_attak216, ChickFramesEndSlash, Co
 
 void CMaiden::ReSlash()
 {
-	if (Entity->gameEntity->enemy->health > 0 && (Range (Entity, Entity->gameEntity->enemy->Entity) == RANGE_MELEE) && (random() <= 0.9))
+	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0 && (Range (Entity, Entity->gameEntity->enemy->Entity) == RANGE_MELEE) && (random() <= 0.9))
 		CurrentMove = &ChickMoveSlash;
 	else
 		CurrentMove = &ChickMoveEndSlash;
@@ -782,8 +782,8 @@ void CMaiden::Spawn ()
 	SoundSight				= SoundIndex ("chick/chksght1.wav");	
 	SoundSearch			= SoundIndex ("chick/chksrch1.wav");	
 
-	Entity->gameEntity->health = 175;
-	Entity->gameEntity->gib_health = -70;
+	Entity->Health = 175;
+	Entity->GibHealth = -70;
 	Entity->gameEntity->mass = 200;
 
 	MonsterFlags = (MF_HAS_MELEE | MF_HAS_ATTACK | MF_HAS_IDLE | MF_HAS_SIGHT

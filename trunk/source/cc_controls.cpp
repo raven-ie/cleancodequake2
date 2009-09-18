@@ -32,6 +32,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 //
 
 #include "cc_local.h"
+#include "cc_menu.h"
 
 CMenu_Label::CMenu_Label (CMenu *Menu, int x, int y) :
 CMenuItem(Menu, x, y)
@@ -185,13 +186,13 @@ void CMenu_Spin::Update (CPlayerEntity *ent)
 {
 	switch (ent->Client.resp.MenuState.Key)
 	{
-	case KEY_RIGHT:
+	case CMenuState::KEY_RIGHT:
 		if (Index == (NumIndices-1))
 			return; // Can't do that, Dave
 
 		Index++;
 		break;
-	case KEY_LEFT:
+	case CMenuState::KEY_LEFT:
 		if (Index == 0)
 			return;
 
@@ -267,7 +268,7 @@ void CMenu_Slider::Update (CPlayerEntity *ent)
 {
 	switch (ent->Client.resp.MenuState.Key)
 	{
-	case KEY_RIGHT:
+	case CMenuState::KEY_RIGHT:
 		if (Value == Max)
 			return; // Can't do that, Dave
 
@@ -275,7 +276,7 @@ void CMenu_Slider::Update (CPlayerEntity *ent)
 		if (Value > Max)
 			Value = Max;
 		break;
-	case KEY_LEFT:
+	case CMenuState::KEY_LEFT:
 		if (Value == Min)
 			return;
 

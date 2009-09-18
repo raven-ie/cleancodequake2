@@ -188,6 +188,11 @@ public:
 	void UseAreaPortals (bool isOpen);
 	bool Run ();
 
+	virtual bool			ParseField (char *Key, char *Value)
+	{
+		return (CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	};
+
 	enum
 	{
 		DOORENDFUNC_HITBOTTOM,
@@ -289,6 +294,11 @@ public:
 	CButton(int Index);
 
 	bool Run ();
+
+	virtual bool			ParseField (char *Key, char *Value)
+	{
+		return (CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	};
 
 	enum
 	{
@@ -458,6 +468,11 @@ public:
 	};
 
 	EFuncExplosiveUseType	UseType;
+
+	virtual bool			ParseField (char *Key, char *Value)
+	{
+		return (CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	};
 
 	CFuncExplosive ();
 	CFuncExplosive (int Index);

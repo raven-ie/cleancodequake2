@@ -17,8 +17,9 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
-#include "g_local.h"
 
+#include "g_local.h"
+#include "cc_menu.h"
 
 /*
 ======================================================================
@@ -50,7 +51,7 @@ void BeginIntermission (CTargetChangeLevel *targ)
 		CPlayerEntity *client = dynamic_cast<CPlayerEntity*>((g_edicts + 1 + i)->Entity);
 		if (!client->IsInUse())
 			continue;
-		if (client->gameEntity->health <= 0)
+		if (client->Health <= 0)
 			client->Respawn();
 	}
 

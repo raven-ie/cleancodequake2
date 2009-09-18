@@ -195,6 +195,8 @@ typedef struct
 	int			body_que;			// dead bodies
 
 	int			power_cubes;		// ugly necessity for coop
+	uint32		inhibit;
+	uint32		EntityNumber;
 } level_locals_t;
 
 
@@ -467,6 +469,27 @@ struct gclient_s
 	int				ping;
 };
 
+class CKeyValuePair
+{
+public:
+	char	*Key;
+	char	*Value;
+
+	CKeyValuePair (char *Key, char *Value) :
+	Key((Key) ? Mem_PoolStrDup(Key, com_gamePool, 0) : NULL),
+	Value((Key) ? Mem_PoolStrDup(Value, com_gamePool, 0) : NULL)
+	{
+	};
+
+	~CKeyValuePair ()
+	{
+		if (Key)
+			QDelete Key;
+		if (Value)
+			QDelete Value;
+	};
+};
+
 struct edict_s
 {
 	entityStateOld_t	state;
@@ -499,14 +522,15 @@ struct edict_s
 	// EXPECTS THE FIELDS IN THAT ORDER!
 
 	//================================
-	char		*model;
+	std::list<CKeyValuePair*>	*ParseData;
+
+	char				*model;
 	FrameNumber_t		freetime;			// sv.time when the object was freed
 	
 	//
 	// only used locally in game, not by server
 	//
 	char		*classname;
-	int			spawnflags;
 
 	FrameNumber_t		timestamp;
 
@@ -531,9 +555,6 @@ struct edict_s
 	FrameNumber_t		pain_debounce_time;
 	FrameNumber_t		damage_debounce_time;
 
-	int			health;
-	int			max_health;
-	int			gib_health;
 	int			show_hostile;
 
 	FrameNumber_t		powerarmor_time;

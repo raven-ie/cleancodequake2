@@ -387,7 +387,7 @@ void CTFFragBonuses(CPlayerEntity *targ, CPlayerEntity *attacker)
 	CFlagEntity *flag = NULL;
 	while ((flag = dynamic_cast<CFlagEntity*>(CC_Find (flag, FOFS(classname), c))) != NULL)
 	{
-		if (!(flag->gameEntity->spawnflags & DROPPED_ITEM))
+		if (!(flag->SpawnFlags & DROPPED_ITEM))
 			break;
 	}
 
@@ -486,7 +486,7 @@ void CTFResetFlag(int ctf_team)
 	CFlagEntity *ent = NULL;
 	while ((ent = dynamic_cast<CFlagEntity*>(CC_Find (ent, FOFS(classname), c))) != NULL)
 	{
-		if (ent->gameEntity->spawnflags & DROPPED_ITEM)
+		if (ent->SpawnFlags & DROPPED_ITEM)
 			ent->Free ();
 		else
 		{
@@ -598,7 +598,7 @@ void CTFTeam_f (CPlayerEntity *ent)
 		return;
 	}
 
-	ent->gameEntity->health = 0;
+	ent->Health = 0;
 	ent->Die (ent, ent, 100000, vec3fOrigin);
 	// don't even bother waiting for death frames
 	ent->DeadFlag = true;
@@ -798,10 +798,10 @@ static inline void CTFSay_Team_Armor(CPlayerEntity *who, char *buf, size_t bufSi
 
 static inline void CTFSay_Team_Health(CPlayerEntity *who, char *buf, size_t bufSize)
 {
-	if (who->gameEntity->health <= 0)
+	if (who->Health <= 0)
 		Q_strncpyz(buf, "dead", bufSize);
 	else
-		Q_snprintfz(buf, bufSize, "%i health", who->gameEntity->health);
+		Q_snprintfz(buf, bufSize, "%i health", who->Health);
 }
 
 static inline void CTFSay_Team_Tech(CPlayerEntity *who, char *buf, size_t bufSize)
@@ -984,7 +984,7 @@ public:
 	{
 		SetSolid (SOLID_NOT);
 		State.SetModelIndex (ModelIndex ("models/ctf/banner/tris.md2"));
-		if (gameEntity->spawnflags & 1) // team2
+		if (SpawnFlags & 1) // team2
 			State.SetSkinNum (1);
 
 		State.SetFrame (irandom(16));
@@ -1019,7 +1019,7 @@ public:
 	{
 		SetSolid (SOLID_NOT);
 		State.SetModelIndex (ModelIndex ("models/ctf/banner/small.md2"));
-		if (gameEntity->spawnflags & 1) // team2
+		if (SpawnFlags & 1) // team2
 			State.SetSkinNum (1);
 
 		State.SetFrame (irandom(16));

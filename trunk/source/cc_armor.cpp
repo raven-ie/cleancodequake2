@@ -103,7 +103,7 @@ bool CArmor::Pickup (class CItemEntity *ent, CPlayerEntity *other)
 		other->Client.pers.Inventory.Set(this, baseCount);
 	}
 
-	if (!(ent->gameEntity->spawnflags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
+	if (!(ent->SpawnFlags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
 		SetRespawn (ent, 200);
 
 	return true;

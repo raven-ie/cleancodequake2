@@ -147,8 +147,8 @@ void CSoldierLight::SpawnSoldier ()
 	SoundIndex ("soldier/solatck2.wav");
 
 	Entity->State.SetSkinNum (0);
-	Entity->gameEntity->health = 20;
-	Entity->gameEntity->gib_health = -30;
+	Entity->Health = 20;
+	Entity->GibHealth = -30;
 
 #ifdef MONSTER_USE_ROGUE_AI
 	BlindFire = true;

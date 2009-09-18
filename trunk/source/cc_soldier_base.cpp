@@ -327,7 +327,7 @@ CAnim SoldierMovePain4 (FRAME_pain401, FRAME_pain417, SoldierFramesPain4, Conver
 
 void CSoldierBase::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+	if (Entity->Health < (Entity->MaxHealth / 2))
 			Entity->State.SetSkinNum (Entity->State.GetSkinNum() | 1);
 
 #ifdef MONSTER_USE_ROGUE_AI
@@ -397,7 +397,7 @@ void CSoldierBase::Attack1_Refire1 ()
 	if (Entity->State.GetSkinNum() > 1)
 		return;
 
-	if (Entity->gameEntity->enemy->health <= 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= 0)
 		return;
 
 	if (!EnemyVis)
@@ -414,7 +414,7 @@ void CSoldierBase::Attack1_Refire2 ()
 	if (Entity->State.GetSkinNum() < 2)
 		return;
 
-	if (Entity->gameEntity->enemy->health <= 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= 0)
 		return;
 
 	if (!EnemyVis)
@@ -453,7 +453,7 @@ void CSoldierBase::Attack2_Refire1 ()
 	if (Entity->State.GetSkinNum() > 1)
 		return;
 
-	if (Entity->gameEntity->enemy->health <= 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= 0)
 		return;
 
 	if (!EnemyVis)
@@ -470,7 +470,7 @@ void CSoldierBase::Attack2_Refire2 ()
 	if (Entity->State.GetSkinNum() < 2)
 		return;
 
-	if (Entity->gameEntity->enemy->health <= 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= 0)
 		return;
 
 	if (!EnemyVis)
@@ -585,7 +585,7 @@ void CSoldierBase::Attack6_Refire ()
 	StopCharge ();
 #endif
 
-	if (Entity->gameEntity->enemy->health <= 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= 0)
 		return;
 
 	if (Range(Entity, Entity->gameEntity->enemy->Entity) < RANGE_NEAR)
@@ -608,7 +608,7 @@ void CSoldierBase::Attack6_RefireBlaster ()
 	DoneDodge ();
 	StopCharge ();
 
-	if (Entity->gameEntity->enemy->health <= 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= 0)
 		return;
 
 	if (Range(Entity, Entity->gameEntity->enemy->Entity) < RANGE_NEAR)
@@ -1028,7 +1028,7 @@ CAnim SoldierMoveDeath6 (FRAME_death601, FRAME_death610, SoldierFramesDeath6, Co
 void CSoldierBase::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 // check for gib
-	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
+	if (Entity->Health <= Entity->GibHealth)
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 3; n++)

@@ -137,7 +137,7 @@ static void SV_PM_StepSlideMove_ (void) {
 		end[1] = pml.origin[1] + time_left * pml.velocity[1];
 		end[2] = pml.origin[2] + time_left * pml.velocity[2];
 
-		trace = CTrace (pml.origin, pm->mins, pm->maxs, end, pml.ent, (pml.ent->health > 0) ? CONTENTS_MASK_PLAYERSOLID : CONTENTS_MASK_DEADSOLID);
+		trace = CTrace (pml.origin, pm->mins, pm->maxs, end, pml.ent, (dynamic_cast<CHurtableEntity*>(pml.ent->Entity)->Health > 0) ? CONTENTS_MASK_PLAYERSOLID : CONTENTS_MASK_DEADSOLID);
 
 		if (trace.allSolid) {
 			// entity is trapped in another solid
@@ -244,7 +244,7 @@ static void SV_PM_StepSlideMove (void) {
 	Vec3Copy (start_o, up);
 	up[2] += STEPSIZE;
 
-	trace = CTrace (up, pm->mins, pm->maxs, up, pml.ent, (pml.ent->health > 0) ? CONTENTS_MASK_PLAYERSOLID : CONTENTS_MASK_DEADSOLID);
+	trace = CTrace (up, pm->mins, pm->maxs, up, pml.ent, (dynamic_cast<CHurtableEntity*>(pml.ent->Entity)->Health > 0) ? CONTENTS_MASK_PLAYERSOLID : CONTENTS_MASK_DEADSOLID);
 	if (trace.allSolid)
 		return;		// can't step up
 
@@ -257,7 +257,7 @@ static void SV_PM_StepSlideMove (void) {
 	// push down the final amount
 	Vec3Copy (pml.origin, down);
 	down[2] -= STEPSIZE;
-	trace = CTrace (pml.origin, pm->mins, pm->maxs, down, pml.ent, (pml.ent->health > 0) ? CONTENTS_MASK_PLAYERSOLID : CONTENTS_MASK_DEADSOLID);
+	trace = CTrace (pml.origin, pm->mins, pm->maxs, down, pml.ent, (dynamic_cast<CHurtableEntity*>(pml.ent->Entity)->Health > 0) ? CONTENTS_MASK_PLAYERSOLID : CONTENTS_MASK_DEADSOLID);
 	if (!trace.allSolid)
 		Vec3Copy (trace.endPos, pml.origin);
 
@@ -578,7 +578,7 @@ static void SV_PM_CatagorizePosition (void) {
 	}
 	else
 	{
-		CTrace trace (pml.origin, pm->mins, pm->maxs, point, pml.ent, (pml.ent->health > 0) ? CONTENTS_MASK_PLAYERSOLID : CONTENTS_MASK_DEADSOLID);
+		CTrace trace (pml.origin, pm->mins, pm->maxs, point, pml.ent, (dynamic_cast<CHurtableEntity*>(pml.ent->Entity)->Health > 0) ? CONTENTS_MASK_PLAYERSOLID : CONTENTS_MASK_DEADSOLID);
 		pml.groundSurface = trace.surface;
 		pml.groundContents = trace.contents;
 
@@ -730,7 +730,7 @@ static void SV_PM_CheckSpecialMovement (void) {
 	VectorNormalizef (flatforward, flatforward);
 
 	Vec3MA (pml.origin, 1, flatforward, spot);
-	trace = CTrace (pml.origin, pm->mins, pm->maxs, spot, pml.ent, (pml.ent->health > 0) ? CONTENTS_MASK_PLAYERSOLID : CONTENTS_MASK_DEADSOLID);
+	trace = CTrace (pml.origin, pm->mins, pm->maxs, spot, pml.ent, (dynamic_cast<CHurtableEntity*>(pml.ent->Entity)->Health > 0) ? CONTENTS_MASK_PLAYERSOLID : CONTENTS_MASK_DEADSOLID);
 	if ((trace.fraction < 1) && (trace.contents & CONTENTS_LADDER))
 		pml.ladder = true;
 
@@ -826,7 +826,7 @@ static void SV_PM_FlyMove (bool doClip) {
 		vec3_t end;
 		Vec3MA (pml.origin, pml.frameTime, pml.velocity, end);
 
-		CTrace trace (pml.origin, pm->mins, pm->maxs, end, pml.ent, (pml.ent->health > 0) ? CONTENTS_MASK_PLAYERSOLID : CONTENTS_MASK_DEADSOLID);
+		CTrace trace (pml.origin, pm->mins, pm->maxs, end, pml.ent, (dynamic_cast<CHurtableEntity*>(pml.ent->Entity)->Health > 0) ? CONTENTS_MASK_PLAYERSOLID : CONTENTS_MASK_DEADSOLID);
 		Vec3Copy (trace.endPos, pml.origin);
 	}
 	else
@@ -878,7 +878,7 @@ static void SV_PM_CheckDuck (void)
 		{
 			// try to stand up
 			pm->maxs[2] = 32;
-			CTrace trace (pml.origin, pm->mins, pm->maxs, pml.origin, pml.ent, (pml.ent->health > 0) ? CONTENTS_MASK_PLAYERSOLID : CONTENTS_MASK_DEADSOLID);
+			CTrace trace (pml.origin, pm->mins, pm->maxs, pml.origin, pml.ent, (dynamic_cast<CHurtableEntity*>(pml.ent->Entity)->Health > 0) ? CONTENTS_MASK_PLAYERSOLID : CONTENTS_MASK_DEADSOLID);
 			if (!trace.allSolid)
 				pm->state.pmFlags &= ~PMF_DUCKED;
 		}
@@ -937,7 +937,7 @@ static bool SV_PM_GoodPosition (void)
 	origin[0] = end[0] = pm->state.origin[0]*(1.0f/8.0f);
 	origin[1] = end[1] = pm->state.origin[1]*(1.0f/8.0f);
 	origin[2] = end[2] = pm->state.origin[2]*(1.0f/8.0f);
-	trace = CTrace (origin, pm->mins, pm->maxs, end, pml.ent, (pml.ent->health > 0) ? CONTENTS_MASK_PLAYERSOLID : CONTENTS_MASK_DEADSOLID);
+	trace = CTrace (origin, pm->mins, pm->maxs, end, pml.ent, (dynamic_cast<CHurtableEntity*>(pml.ent->Entity)->Health > 0) ? CONTENTS_MASK_PLAYERSOLID : CONTENTS_MASK_DEADSOLID);
 
 	return !trace.allSolid;
 }

@@ -604,7 +604,7 @@ public:
 		}
 
 		next = (gameEntity->target) ? CC_PickTarget(gameEntity->target) : NULL;
-		if ((next) && (next->gameEntity->spawnflags & 1))
+		if ((next) && (next->SpawnFlags & 1))
 		{
 			other->State.SetOrigin (next->State.GetOrigin() + vec3f(0, 0, next->GetMins().Z - other->GetMins().Z));
 			next = CC_PickTarget(next->gameEntity->target);
@@ -703,7 +703,7 @@ public:
 			}
 			gameEntity->target = NULL;
 		}
-		else if ((gameEntity->spawnflags & 1) && !(other->Flags & (FL_SWIM|FL_FLY)))
+		else if ((SpawnFlags & 1) && !(other->Flags & (FL_SWIM|FL_FLY)))
 		{
 			if (other->EntityFlags & ENT_MONSTER)
 			{
@@ -850,15 +850,15 @@ public:
 		if (!Usable)
 			return;
 
-		if (gameEntity->spawnflags & START_OFF)
+		if (SpawnFlags & START_OFF)
 		{
 			ConfigString (CS_LIGHTS+gameEntity->style, "m");
-			gameEntity->spawnflags &= ~START_OFF;
+			SpawnFlags &= ~START_OFF;
 		}
 		else
 		{
 			ConfigString (CS_LIGHTS+gameEntity->style, "a");
-			gameEntity->spawnflags |= START_OFF;
+			SpawnFlags |= START_OFF;
 		}
 	};
 
@@ -874,7 +874,7 @@ public:
 		if (gameEntity->style >= 32)
 		{
 			Usable = true;
-			ConfigString (CS_LIGHTS+gameEntity->style, (gameEntity->spawnflags & START_OFF) ? "a" : "m");
+			ConfigString (CS_LIGHTS+gameEntity->style, (SpawnFlags & START_OFF) ? "a" : "m");
 		}
 	};
 };
@@ -922,7 +922,7 @@ public:
 
 		if ((level.framenum - TimeStamp) < gameEntity->speed)
 			NextThink = level.framenum + FRAMETIME;
-		else if (gameEntity->spawnflags & 1)
+		else if (SpawnFlags & 1)
 		{
 			char temp = Message[0];
 			Message[0] = Message[1];

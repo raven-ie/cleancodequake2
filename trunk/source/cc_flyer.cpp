@@ -460,7 +460,7 @@ void CFlyer::CheckMelee ()
 
 void CFlyer::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+	if (Entity->Health < (Entity->MaxHealth / 2))
 		Entity->State.SetSkinNum(1);
 
 	if (level.framenum < Entity->gameEntity->pain_debounce_time)
@@ -631,7 +631,7 @@ void CFlyer::Spawn ()
 
 	Entity->State.SetSound (SoundIndex ("flyer/flyidle1.wav"));
 
-	Entity->gameEntity->health = 50;
+	Entity->Health = 50;
 	Entity->gameEntity->mass = 50;
 
 	MonsterFlags |= (MF_HAS_IDLE | MF_HAS_SIGHT | MF_HAS_MELEE | MF_HAS_ATTACK

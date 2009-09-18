@@ -276,7 +276,7 @@ void CWeapon::Think (CPlayerEntity *Player)
 #endif
 
 	// if just died, put the weapon away
-	if (Player->gameEntity->health < 1)
+	if (Player->Health < 1)
 	{
 		Player->Client.NewWeapon = NULL;
 		ChangeWeapon (Player);
@@ -316,7 +316,7 @@ void CWeapon::AttackSound(CPlayerEntity *Player)
 void CWeapon::NoAmmoWeaponChange (CPlayerEntity *Player)
 {
 	// Dead?
-	if (!Player->Client.pers.Weapon || Player->gameEntity->health <= 0 || Player->DeadFlag)
+	if (!Player->Client.pers.Weapon || Player->Health <= 0 || Player->DeadFlag)
 		return;
 
 	// Collect info on our current state
@@ -340,7 +340,7 @@ void CWeapon::NoAmmoWeaponChange (CPlayerEntity *Player)
 	bool HasCells_ForBFG = (Player->Client.pers.Inventory.Has (NItems::Cells) >= 50);
 	bool HasSlugs = (Player->Client.pers.Inventory.Has(NItems::Slugs) != 0);
 
-	bool AlmostDead = (Player->gameEntity->health <= 20);
+	bool AlmostDead = (Player->Health <= 20);
 
 	CWeaponItem	*Chosen_Weapon = NULL;
 	CAmmo		*Chosen_Ammo = NULL;

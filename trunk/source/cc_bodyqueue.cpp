@@ -42,6 +42,11 @@ public:
 	CBody ();
 	CBody (int Index);
 
+	virtual bool			ParseField (char *Key, char *Value)
+	{
+		return true;
+	};
+
 	void TossHead (int damage);
 
 	void Pain (CBaseEntity *other, float kick, int damage);
@@ -145,7 +150,7 @@ void CBody::Think ()
 
 void CBody::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
-	if (gameEntity->health < -40)
+	if (Health < -40)
 	{
 		PlaySound(CHAN_BODY, SoundIndex ("misc/udeath.wav"));
 		for (int n = 0; n < 4; n++)

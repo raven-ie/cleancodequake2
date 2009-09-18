@@ -487,7 +487,7 @@ void CBoss2::ReAttackMg ()
 
 void CBoss2::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+	if (Entity->Health < (Entity->MaxHealth / 2))
 		Entity->State.SetSkinNum(1);
 
 	if (level.framenum < Entity->gameEntity->pain_debounce_time)
@@ -527,7 +527,7 @@ bool CBoss2::CheckAttack ()
 	ERangeType		enemy_range;
 	float	enemy_yaw;
 
-	if (Entity->gameEntity->enemy->health > 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0)
 	{
 	// see if any entities are in the way of the shot
 		vec3f spot1 = Entity->State.GetOrigin();
@@ -602,8 +602,8 @@ void CBoss2::Spawn ()
 	Entity->SetMins (vec3f(-56, -56, 0));
 	Entity->SetMaxs (vec3f(56, 56, 80));
 
-	Entity->gameEntity->health = 2000;
-	Entity->gameEntity->gib_health = -200;
+	Entity->Health = 2000;
+	Entity->GibHealth = -200;
 	Entity->gameEntity->mass = 1000;
 
 	Entity->Flags |= FL_IMMUNE_LASER;

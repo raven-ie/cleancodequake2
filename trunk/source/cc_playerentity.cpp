@@ -33,6 +33,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 #include "m_player.h"
+#include "cc_menu.h"
+#include "cc_ban.h"
 
 CPlayerState::CPlayerState (playerState_t *playerState) :
 playerState(playerState)
@@ -834,8 +836,8 @@ bool CPlayerEntity::CTFStart ()
 
 void CPlayerEntity::FetchEntData ()
 {
-	gameEntity->health = Client.pers.health;
-	gameEntity->max_health = Client.pers.max_health;
+	Health = Client.pers.health;
+	MaxHealth = Client.pers.max_health;
 	Flags |= Client.pers.savedFlags;
 	if (game.mode == GAME_COOPERATIVE)
 		Client.resp.score = Client.pers.score;
@@ -927,7 +929,7 @@ inline void CPlayerEntity::DamageFeedback (vec3f &forward, vec3f &right)
 	{
 		gameEntity->pain_debounce_time = level.framenum + 7;
 
-		int l = Clamp<int>(((floorf((Max<>(0, gameEntity->health-1)) / 25))), 0, 3);
+		int l = Clamp<int>(((floorf((Max<>(0, Health-1)) / 25))), 0, 3);
 		PlaySound (CHAN_VOICE, gMedia.Player.Pain[l][(irandom(2))]);
 	}
 
@@ -950,9 +952,9 @@ inline void CPlayerEntity::DamageFeedback (vec3f &forward, vec3f &right)
 	// calculate view angle kicks
 	//
 	float kick = Q_fabs(Client.damage_knockback);
-	if (kick && (gameEntity->health > 0))	// kick of 0 means no view adjust at all
+	if (kick && (Health > 0))	// kick of 0 means no view adjust at all
 	{
-		kick *= 100 / gameEntity->health;
+		kick *= 100 / Health;
 
 		if (kick < count*0.5)
 			kick = count*0.5;
@@ -1312,7 +1314,7 @@ inline void CPlayerEntity::FallingDamage ()
 
 	if (delta > 30)
 	{
-		if (gameEntity->health > 0)
+		if (Health > 0)
 		{
 			if (delta >= 55)
 				State.SetEvent (EV_FALLFAR);
@@ -1432,7 +1434,7 @@ inline void CPlayerEntity::WorldEffects ()
 		if (AirFinished < level.framenum)
 		{	// drown!
 			if (Client.next_drown_time < level.framenum 
-				&& gameEntity->health > 0)
+				&& Health > 0)
 			{
 				Client.next_drown_time = level.framenum + 10;
 
@@ -1442,7 +1444,7 @@ inline void CPlayerEntity::WorldEffects ()
 					gameEntity->dmg = 15;
 
 				// play a gurp sound instead of a normal pain sound
-				if (gameEntity->health <= gameEntity->dmg)
+				if (Health <= gameEntity->dmg)
 					PlaySound (CHAN_VOICE, SoundIndex("player/drown1.wav"));
 				else
 					PlaySound (CHAN_VOICE, gMedia.Player.Gurp[(irandom(2))]);
@@ -1466,7 +1468,7 @@ inline void CPlayerEntity::WorldEffects ()
 	{
 		if (gameEntity->watertype & CONTENTS_LAVA)
 		{
-			if (gameEntity->health > 0
+			if (Health > 0
 				&& gameEntity->pain_debounce_time <= level.framenum
 				&& Client.invincible_framenum < level.framenum)
 			{
@@ -1508,7 +1510,7 @@ inline void CPlayerEntity::SetClientEffects ()
 	State.SetEffects (0);
 	State.SetRenderEffects (0);
 
-	if (gameEntity->health <= 0 || level.intermissiontime)
+	if (Health <= 0 || level.intermissiontime)
 		return;
 
 	if (gameEntity->powerarmor_time > level.framenum)
@@ -1529,7 +1531,7 @@ inline void CPlayerEntity::SetClientEffects ()
 		State.RemoveEffects (EF_FLAG1 | EF_FLAG2);
 		if (Client.pers.Flag)
 		{
-			if (gameEntity->health > 0)
+			if (Health > 0)
 				State.AddEffects (Client.pers.Flag->EffectFlags);
 			State.SetModelIndex (ModelIndex(Client.pers.Flag->WorldModel), 3);
 		}
@@ -2153,7 +2155,7 @@ void CPlayerEntity::SetStats ()
 	// health
 	//
 	Client.PlayerState.SetStat(STAT_HEALTH_ICON, gMedia.Hud.HealthPic);
-	Client.PlayerState.SetStat(STAT_HEALTH, gameEntity->health);
+	Client.PlayerState.SetStat(STAT_HEALTH, Health);
 
 	//
 	// ammo
@@ -2413,7 +2415,7 @@ void CPlayerEntity::SetCTFStats()
 				}
 			}
 		}
-		else if (e->gameEntity->spawnflags & DROPPED_ITEM)
+		else if (e->SpawnFlags & DROPPED_ITEM)
 			p1 = ImageIndex ("i_ctf1d"); // must be dropped
 	}
 	p2 = ImageIndex ("i_ctf2");
@@ -2440,7 +2442,7 @@ void CPlayerEntity::SetCTFStats()
 				}
 			}
 		}
-		else if (e->gameEntity->spawnflags & DROPPED_ITEM)
+		else if (e->SpawnFlags & DROPPED_ITEM)
 			p2 = ImageIndex ("i_ctf2d"); // must be dropped
 	}
 
@@ -2712,7 +2714,7 @@ void CPlayerEntity::TossClientWeapon ()
 		Client.ViewAngle.Y -= spread;
 		CItemEntity *drop = Item->DropItem (this);
 		Client.ViewAngle.Y += spread;
-		drop->gameEntity->spawnflags |= DROPPED_PLAYER_ITEM;
+		drop->SpawnFlags |= DROPPED_PLAYER_ITEM;
 		if (Client.pers.Weapon->WeaponItem)
 			drop->gameEntity->count = Client.pers.Weapon->WeaponItem->Ammo->Quantity;
 		else
@@ -2724,7 +2726,7 @@ void CPlayerEntity::TossClientWeapon ()
 		Client.ViewAngle.Y += spread;
 		CItemEntity *drop = NItems::Quad->DropItem (this);
 		Client.ViewAngle.Y -= spread;
-		drop->gameEntity->spawnflags |= DROPPED_PLAYER_ITEM;
+		drop->SpawnFlags |= DROPPED_PLAYER_ITEM;
 
 		drop->NextThink = level.framenum + (Client.quad_framenum - level.framenum);
 		drop->ThinkState = ITS_FREE;
@@ -3067,8 +3069,8 @@ void CPlayerEntity::SaveClientData ()
 			continue;
 
 		memcpy (&SavedClients[i], &ent->Client.pers, sizeof(clientPersistent_t));
-		SavedClients[i].health = ent->gameEntity->health;
-		SavedClients[i].max_health = ent->gameEntity->max_health;
+		SavedClients[i].health = ent->Health;
+		SavedClients[i].max_health = ent->MaxHealth;
 		SavedClients[i].savedFlags = (ent->Flags & (FL_GODMODE|FL_NOTARGET|FL_POWER_ARMOR));
 		if (game.mode & GAME_COOPERATIVE)
 			SavedClients[i].score = ent->Client.resp.score;
@@ -3339,7 +3341,7 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 	Client.enviro_framenum = 0;
 	Flags &= ~FL_POWER_ARMOR;
 
-	if (gameEntity->health < -40)
+	if (Health < -40)
 	{	// gib
 		PlaySound (CHAN_BODY, SoundIndex ("misc/udeath.wav"));
 		for (int n = 0; n < 4; n++)
@@ -3695,6 +3697,10 @@ public:
 	{
 	};
 };
+
+#ifdef MONSTERS_USE_PATHFINDING
+class CPathNode *GetClosestNodeTo (vec3f origin);
+#endif
 
 void CPlayerEntity::PlayerNoiseAt (vec3f Where, int type)
 {
@@ -4173,7 +4179,5 @@ void CPlayerEntity::Obituary (CBaseEntity *attacker)
 		if (game.mode & GAME_DEATHMATCH)
 			Client.resp.score--;
 		BroadcastPrintf (PRINT_MEDIUM, "%s %s.\n", Client.pers.netname, message);
-		if (game.mode & GAME_DEATHMATCH)
-			Client.resp.score--;
 	}
 }

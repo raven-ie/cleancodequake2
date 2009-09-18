@@ -144,8 +144,12 @@ void	G_TouchTriggers (CBaseEntity *ent)
 	memset(touch, 0, sizeof(touch));
 
 	// dead things don't activate triggers!
-	if (((ent->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(ent)->CanTakeDamage) && (ent->gameEntity->health <= 0))
-		return;
+	if (ent->EntityFlags & ENT_HURTABLE)
+	{
+		CHurtableEntity *Hurt = dynamic_cast<CHurtableEntity*>(ent);
+		if ((Hurt->CanTakeDamage) && (Hurt->Health <= 0))
+			return;
+	}
 
 	int num = BoxEdicts (ent->GetAbsMin(), ent->GetAbsMax(), touch, MAX_CS_EDICTS, true);
 
@@ -298,7 +302,7 @@ float	PlayersRangeFromSpot (CBaseEntity *spot)
 		if (!player->IsInUse())
 			continue;
 
-		if (player->gameEntity->health <= 0)
+		if (player->Health <= 0)
 			continue;
 
 		float length = (spot->State.GetOrigin() - player->State.GetOrigin()).Length();

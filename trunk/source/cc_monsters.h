@@ -194,6 +194,8 @@ public:
 	void			ThrowHead (MediaIndex gibIndex, int damage, int type);
 
 	void Spawn ();
+
+	bool			ParseField (char *Key, char *Value);
 };
 
 class CMonster
@@ -263,9 +265,9 @@ public:
 
 #ifdef MONSTERS_USE_PATHFINDING
 	// Pathfinding
-	CPath				*P_CurrentPath;
-	CPathNode			*P_CurrentGoalNode;
-	CPathNode			*P_CurrentNode; // Always the current path node
+	class CPath				*P_CurrentPath;
+	class CPathNode			*P_CurrentGoalNode;
+	class CPathNode			*P_CurrentNode; // Always the current path node
 	int32				P_CurrentNodeIndex;
 	FrameNumber_t				P_NodePathTimeout;
 	FrameNumber_t				P_NodeFollowTimeout;
@@ -397,8 +399,14 @@ void Monster_Think (edict_t *ent);
 		DLLClassName *Monster = QNew (com_levelPool, 0) DLLClassName (); \
 		newClass->Monster = Monster; \
 		Monster->Entity = newClass; \
-		Monster->Spawn (); \
-		newClass->NextThink = level.framenum + 1; \
+		\
+		newClass->ParseFields (); \
+		\
+		if (newClass->CheckValidity()) \
+		{	\
+			Monster->Spawn (); \
+			newClass->NextThink = level.framenum + 1; \
+		}	\
 		return newClass; \
 	} \
 	CClassnameToClassIndex LINK_RESOLVE_CLASSNAME(DLLClassName, _Linker) \

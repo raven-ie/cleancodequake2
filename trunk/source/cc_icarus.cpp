@@ -435,7 +435,7 @@ CAnim HoverMoveEndAttack2 (FRAME_attak107, FRAME_attak108, HoverFramesEndAttack2
 
 void CIcarus::ReAttack ()
 {
-	if (Entity->gameEntity->enemy->health > 0 && IsVisible (Entity, Entity->gameEntity->enemy->Entity) && random() <= 0.6)
+	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0 && IsVisible (Entity, Entity->gameEntity->enemy->Entity) && random() <= 0.6)
 	{
 #ifdef MONSTER_USE_ROGUE_AI
 		CurrentMove = (AttackState == AS_SLIDING) ? &HoverMoveAttack2 : &HoverMoveAttack1;
@@ -517,7 +517,7 @@ void CIcarus::StartAttack()
 
 void CIcarus::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+	if (Entity->Health < (Entity->MaxHealth / 2))
 		Entity->State.SetSkinNum(1);
 
 	if (level.framenum < Entity->gameEntity->pain_debounce_time)
@@ -585,7 +585,7 @@ void CIcarus::Dead ()
 void CIcarus::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 // check for gib
-	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
+	if (Entity->Health <= Entity->GibHealth)
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
@@ -629,8 +629,8 @@ void CIcarus::Spawn ()
 	Entity->SetMins (vec3f(-24, -24, -24));
 	Entity->SetMaxs (vec3f(24, 24, 32));
 
-	Entity->gameEntity->health = 240;
-	Entity->gameEntity->gib_health = -100;
+	Entity->Health = 240;
+	Entity->GibHealth = -100;
 	Entity->gameEntity->mass = 150;
 
 	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_SIGHT | MF_HAS_SEARCH);

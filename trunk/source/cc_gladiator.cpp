@@ -226,7 +226,7 @@ CAnim GladiatorMovePainAir (FRAME_painup1, FRAME_painup7, GladiatorFramesPainAir
 
 void CGladiator::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+	if (Entity->Health < (Entity->MaxHealth / 2))
 		Entity->State.SetSkinNum(1);
 
 	if (level.framenum < Entity->gameEntity->pain_debounce_time)
@@ -285,7 +285,7 @@ CAnim GladiatorMoveDeath (FRAME_death1, FRAME_death22, GladiatorFramesDeath, Con
 void CGladiator::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 // check for gib
-	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
+	if (Entity->Health <= Entity->GibHealth)
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
@@ -329,8 +329,8 @@ void CGladiator::Spawn ()
 	Entity->SetMins (vec3f(-32, -32, -24));
 	Entity->SetMaxs (vec3f(32, 32, 64));
 
-	Entity->gameEntity->health = 400;
-	Entity->gameEntity->gib_health = -175;
+	Entity->Health = 400;
+	Entity->GibHealth = -175;
 	Entity->gameEntity->mass = 400;
 
 	MonsterFlags = (MF_HAS_SEARCH | MF_HAS_IDLE | MF_HAS_SIGHT | MF_HAS_MELEE | MF_HAS_ATTACK);

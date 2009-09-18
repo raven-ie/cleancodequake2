@@ -271,7 +271,7 @@ CAnim GunnerMovePain1 (FRAME_pain101, FRAME_pain118, GunnerFramesPain1, ConvertD
 
 void CGunner::Pain (CBaseEntity *other, float kick, int damage)
 {
-	if (Entity->gameEntity->health < (Entity->gameEntity->max_health / 2))
+	if (Entity->Health < (Entity->MaxHealth / 2))
 		Entity->State.SetSkinNum(1);
 
 #ifdef MONSTER_USE_ROGUE_AI
@@ -327,7 +327,7 @@ CAnim GunnerMoveDeath (FRAME_death01, FRAME_death11, GunnerFramesDeath, ConvertD
 void CGunner::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 // check for gib
-	if (Entity->gameEntity->health <= Entity->gameEntity->gib_health)
+	if (Entity->Health <= Entity->GibHealth)
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
@@ -754,7 +754,7 @@ void CGunner::FireChain ()
 
 void CGunner::ReFireChain ()
 {
-	if (Entity->gameEntity->enemy->health > 0 && IsVisible (Entity, Entity->gameEntity->enemy->Entity) && random() <= 0.5)
+	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0 && IsVisible (Entity, Entity->gameEntity->enemy->Entity) && random() <= 0.5)
 	{
 		CurrentMove = &GunnerMoveFireChain;
 		return;
@@ -828,8 +828,8 @@ void CGunner::Spawn ()
 	Entity->SetMins (vec3f(-16, -16, -24));
 	Entity->SetMaxs (vec3f(16, 16, 32));
 
-	Entity->gameEntity->health = 175;
-	Entity->gameEntity->gib_health = -70;
+	Entity->Health = 175;
+	Entity->GibHealth = -70;
 	Entity->gameEntity->mass = 200;
 
 	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_SIGHT

@@ -111,8 +111,8 @@ void CSoldierShotgun::SpawnSoldier ()
 	SoundDeath = SoundIndex ("soldier/soldeth1.wav");
 
 	Entity->State.SetSkinNum (2);
-	Entity->gameEntity->health = 30;
-	Entity->gameEntity->gib_health = -30;
+	Entity->Health = 30;
+	Entity->GibHealth = -30;
 }
 
 LINK_MONSTER_CLASSNAME_TO_CLASS ("monster_soldier", CSoldierShotgun);

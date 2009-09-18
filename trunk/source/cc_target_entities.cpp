@@ -68,12 +68,12 @@ public:
 
 	void Use (CBaseEntity *other, CBaseEntity *activator)
 	{
-		if (gameEntity->spawnflags & 3) // looping sound toggles
+		if (SpawnFlags & 3) // looping sound toggles
 			State.SetSound (State.GetSound() ? 0 : gameEntity->noise_index); // start or stop it
 		else
 			// use a positioned_sound, because this entity won't normally be
 			// sent to any clients because it is invisible
-			PlayPositionedSound (State.GetOrigin(), (gameEntity->spawnflags & 4) ? CHAN_VOICE|CHAN_RELIABLE : CHAN_VOICE, gameEntity->noise_index, gameEntity->volume, gameEntity->attenuation);
+			PlayPositionedSound (State.GetOrigin(), (SpawnFlags & 4) ? CHAN_VOICE|CHAN_RELIABLE : CHAN_VOICE, gameEntity->noise_index, gameEntity->volume, gameEntity->attenuation);
 	};
 
 	void Spawn ()
@@ -101,7 +101,7 @@ public:
 			gameEntity->attenuation = 0;
 
 		// check for prestarted looping sound
-		if (gameEntity->spawnflags & 1)
+		if (SpawnFlags & 1)
 			State.SetSound (gameEntity->noise_index);
 
 		// must link the entity so we get areas and clusters so
@@ -377,15 +377,20 @@ void CTargetChangeLevel::Use (CBaseEntity *other, CBaseEntity *activator)
 
 	if (game.mode == GAME_SINGLEPLAYER)
 	{
-		if (g_edicts[1].health <= 0)
+		if (dynamic_cast<CPlayerEntity*>(g_edicts[1].Entity)->Health <= 0)
 			return;
 	}
 
 	// if noexit, do a ton of damage to other
 	if ((game.mode & GAME_DEATHMATCH) && !dmFlags.dfAllowExit && (other != world->Entity))
 	{
-		if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
-			dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, 10 * other->gameEntity->max_health, 1000, 0, MOD_EXIT);
+		if ((other->EntityFlags & ENT_HURTABLE))
+		{
+			CHurtableEntity *Other = dynamic_cast<CHurtableEntity*>(other);
+
+			if (Other->CanTakeDamage)
+				Other->TakeDamage (this, this, vec3fOrigin, Other->State.GetOrigin(), vec3fOrigin, 10 * Other->MaxHealth, 1000, 0, MOD_EXIT);
+		}
 		return;
 	}
 
@@ -452,7 +457,7 @@ public:
 
 	void Use (CBaseEntity *other, CBaseEntity *activator)
 	{
-		game.serverflags |= gameEntity->spawnflags;
+		game.serverflags |= SpawnFlags;
 		Free ();
 	};
 
@@ -500,7 +505,7 @@ public:
 
 	void Think ()
 	{
-		if (gameEntity->spawnflags == (game.serverflags & SFL_CROSS_TRIGGER_MASK & gameEntity->spawnflags))
+		if (SpawnFlags == (game.serverflags & SFL_CROSS_TRIGGER_MASK & SpawnFlags))
 		{
 			UseTargets (this, Message);
 			Free ();
@@ -679,7 +684,7 @@ public:
 
 	void Use (CBaseEntity *other, CBaseEntity *activator)
 	{
-		CBlasterProjectile::Spawn (this, State.GetOrigin(), MoveDir, gameEntity->dmg, gameEntity->speed, (gameEntity->spawnflags & 2) ? 0 : ((gameEntity->spawnflags & 1) ? EF_HYPERBLASTER : EF_BLASTER), true);
+		CBlasterProjectile::Spawn (this, State.GetOrigin(), MoveDir, gameEntity->dmg, gameEntity->speed, (SpawnFlags & 2) ? 0 : ((SpawnFlags & 1) ? EF_HYPERBLASTER : EF_BLASTER), true);
 		PlaySound (CHAN_VOICE, gameEntity->noise_index);
 	};
 
@@ -766,7 +771,7 @@ public:
 			MoveDir = point - State.GetOrigin();
 			MoveDir.Normalize ();
 			if (MoveDir != last_movedir)
-				gameEntity->spawnflags |= 0x80000000;
+				SpawnFlags |= 0x80000000;
 		}
 
 		ignore = gameEntity;
@@ -790,14 +795,14 @@ public:
 			// if we hit something that's not a monster or player or is immune to lasers, we're done
 			if (!(Entity->EntityFlags & ENT_MONSTER) && (!(Entity->EntityFlags & ENT_PLAYER)))
 			{
-				if (gameEntity->spawnflags & 0x80000000)
+				if (SpawnFlags & 0x80000000)
 				{
-					gameEntity->spawnflags &= ~0x80000000;
+					SpawnFlags &= ~0x80000000;
 					CTempEnt_Splashes::Sparks (tr.EndPos,
 						tr.Plane.normal, 
 						CTempEnt_Splashes::STLaserSparks,
 						(CTempEnt_Splashes::ESplashType)(State.GetSkinNum() & 255),
-						(gameEntity->spawnflags & 0x80000000) ? 8 : 4);
+						(SpawnFlags & 0x80000000) ? 8 : 4);
 				}
 				break;
 			}
@@ -816,7 +821,7 @@ public:
 			return;
 
 		gameEntity->activator = activator->gameEntity;
-		if (gameEntity->spawnflags & 1)
+		if (SpawnFlags & 1)
 			Off ();
 		else
 			On ();
@@ -826,13 +831,13 @@ public:
 	{
 		if (!gameEntity->activator)
 			gameEntity->activator = gameEntity;
-		gameEntity->spawnflags |= 0x80000001;
+		SpawnFlags |= 0x80000001;
 		SetSvFlags (GetSvFlags() & ~SVF_NOCLIENT);
 		Think ();
 	};
 	void Off ()
 	{
-		gameEntity->spawnflags &= ~1;
+		SpawnFlags &= ~1;
 		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
 		NextThink = 0;
 	};
@@ -843,21 +848,21 @@ public:
 		State.SetModelIndex (1);			// must be non-zero
 
 		// set the beam diameter
-		if (gameEntity->spawnflags & FAT)
+		if (SpawnFlags & FAT)
 			State.SetFrame (16);
 		else
 			State.SetFrame (4);
 
 		// set the color
-		if (gameEntity->spawnflags & RED)
+		if (SpawnFlags & RED)
 			State.SetSkinNum (Color_RGBAToHex (NSColor::PatriotRed, NSColor::PatriotRed, NSColor::Red, NSColor::Red));
-		else if (gameEntity->spawnflags & GREEN)
+		else if (SpawnFlags & GREEN)
 			State.SetSkinNum (Color_RGBAToHex (NSColor::Green, NSColor::Lime, NSColor::FireSpeechGreen, NSColor::Harlequin));
-		else if (gameEntity->spawnflags & BLUE)
+		else if (SpawnFlags & BLUE)
 			State.SetSkinNum (Color_RGBAToHex (NSColor::PatriotBlue, NSColor::PatriotBlue, NSColor::NeonBlue, NSColor::NeonBlue));
-		else if (gameEntity->spawnflags & YELLOW)
+		else if (SpawnFlags & YELLOW)
 			State.SetSkinNum (Color_RGBAToHex (NSColor::ParisDaisy, NSColor::Gorse, NSColor::Lemon, NSColor::Gold));
-		else if (gameEntity->spawnflags & ORANGE)
+		else if (SpawnFlags & ORANGE)
 			State.SetSkinNum (Color_RGBAToHex (NSColor::HarvestGold, NSColor::RobRoy, NSColor::TulipTree, NSColor::FireBush));
 
 		if (!gameEntity->enemy)
@@ -888,7 +893,7 @@ public:
 		SetMaxs (vec3f(8, 8, 8));
 		Link ();
 
-		if (gameEntity->spawnflags & START_ON)
+		if (SpawnFlags & START_ON)
 			On ();
 		else
 			Off ();
@@ -932,7 +937,7 @@ public:
 
 	void Use (CBaseEntity *other, CBaseEntity *activator)
 	{
-		Q_strncpyz ((gameEntity->spawnflags & 1) ? game.helpmessage1 : game.helpmessage2, Message, sizeof(game.helpmessage1)-1);
+		Q_strncpyz ((SpawnFlags & 1) ? game.helpmessage1 : game.helpmessage2, Message, sizeof(game.helpmessage1)-1);
 		game.helpchanged++;
 	};
 

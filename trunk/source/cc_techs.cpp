@@ -136,11 +136,11 @@ public:
 		if (Player->Client.regentime < level.framenum)
 		{
 			Player->Client.regentime = level.framenum;
-			if (Player->gameEntity->health < 150)
+			if (Player->Health < 150)
 			{
-				Player->gameEntity->health += 5;
-				if (Player->gameEntity->health > 150)
-					Player->gameEntity->health = 150;
+				Player->Health += 5;
+				if (Player->Health > 150)
+					Player->Health = 150;
 				Player->Client.regentime += 5;
 				noise = true;
 			}
@@ -287,7 +287,7 @@ CItemEntity *CTech::DropItem (CBaseEntity *ent)
 
 	dropped->gameEntity->classname = Classname;
 	dropped->gameEntity->item = this;
-	dropped->gameEntity->spawnflags = DROPPED_ITEM;
+	dropped->SpawnFlags = DROPPED_ITEM;
 	dropped->State.SetEffects (EffectFlags);
 	dropped->State.SetRenderEffects (RF_GLOW);
 	dropped->SetMins (vec3f(-15));
@@ -341,7 +341,7 @@ void SpawnTech(CBaseItem *item, CBaseEntity *spot)
 
 	ent->gameEntity->classname = item->Classname;
 	ent->gameEntity->item = item;
-	ent->gameEntity->spawnflags = DROPPED_ITEM;
+	ent->SpawnFlags = DROPPED_ITEM;
 	ent->State.SetEffects(item->EffectFlags);
 	ent->State.SetRenderEffects (RF_GLOW);
 	ent->SetMins (vec3f(-15));

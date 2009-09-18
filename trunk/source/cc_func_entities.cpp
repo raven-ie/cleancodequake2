@@ -109,7 +109,7 @@ void CFuncTimer::Spawn ()
 		//gi.dprintf("func_timer at (%f %f %f) has random >= wait\n", self->state.origin[0], self->state.origin[1], self->state.origin[2]);
 	}
 
-	if (gameEntity->spawnflags & 1)
+	if (SpawnFlags & 1)
 	{
 		// lots of backwards compatibility
 		NextThink = level.framenum + 10 + ((st.pausetime + gameEntity->delay + gameEntity->wait + (crandom() * gameEntity->random))* 10);
@@ -270,12 +270,12 @@ bool CFuncClock::Run ()
 void CFuncClock::Reset ()
 {
 	gameEntity->activator = NULL;
-	if (gameEntity->spawnflags & 1)
+	if (SpawnFlags & 1)
 	{
 		Seconds = 0;
 		gameEntity->wait = gameEntity->count;
 	}
-	else if (gameEntity->spawnflags & 2)
+	else if (SpawnFlags & 2)
 	{
 		Seconds = gameEntity->count;
 		gameEntity->wait = 0;
@@ -314,12 +314,12 @@ void CFuncClock::Think ()
 			return;
 	}
 
-	if (gameEntity->spawnflags & 1)
+	if (SpawnFlags & 1)
 	{
 		FormatCountdown ();
 		Seconds++;
 	}
-	else if (gameEntity->spawnflags & 2)
+	else if (SpawnFlags & 2)
 	{
 		FormatCountdown ();
 		Seconds--;
@@ -343,8 +343,8 @@ void CFuncClock::Think ()
 	String->Message = Message;
 	String->Use (this, this);
 
-	if (((gameEntity->spawnflags & 1) && (Seconds > gameEntity->wait)) ||
-		((gameEntity->spawnflags & 2) && (Seconds < gameEntity->wait)))
+	if (((SpawnFlags & 1) && (Seconds > gameEntity->wait)) ||
+		((SpawnFlags & 2) && (Seconds < gameEntity->wait)))
 	{
 		if (gameEntity->pathtarget)
 		{
@@ -357,12 +357,12 @@ void CFuncClock::Think ()
 			Message = savemessage;
 		}
 
-		if (!(gameEntity->spawnflags & 8))
+		if (!(SpawnFlags & 8))
 			return;
 
 		Reset ();
 
-		if (gameEntity->spawnflags & 4)
+		if (SpawnFlags & 4)
 			return;
 	}
 
@@ -374,7 +374,7 @@ void CFuncClock::Use (CBaseEntity *other, CBaseEntity *activator)
 	if (!Usable)
 		return;
 
-	if (!(gameEntity->spawnflags & 8))
+	if (!(SpawnFlags & 8))
 		Usable = false;
 	
 	if (gameEntity->activator)
@@ -394,7 +394,7 @@ void CFuncClock::Spawn ()
 		return;
 	}
 
-	if ((gameEntity->spawnflags & 2) && (!gameEntity->count))
+	if ((SpawnFlags & 2) && (!gameEntity->count))
 	{
 		//gi.dprintf("%s with no count at (%f %f %f)\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
 		MapPrint (MAPPRINT_ERROR, this, GetAbsMin(), "No count\n");
@@ -402,13 +402,13 @@ void CFuncClock::Spawn ()
 		return;
 	}
 
-	if ((gameEntity->spawnflags & 1) && (!gameEntity->count))
+	if ((SpawnFlags & 1) && (!gameEntity->count))
 		gameEntity->count = 60*60;
 
 	Reset ();
 	Message = QNew (com_levelPool, 0) char[CLOCK_MESSAGE_SIZE];
 
-	if (gameEntity->spawnflags & 4)
+	if (SpawnFlags & 4)
 		Usable = true;
 	else
 		NextThink = level.framenum + 10;

@@ -31,9 +31,10 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Pathfinding algorithm for monsters
 //
 
+#ifndef PATHFINDING_FUNCTIONSONLY
+
 #if (!defined(__CC_PATHFINDING_H__) || !defined(INCLUDE_GUARDS))
 #define __CC_PATHFINDING_H__
-
 enum ENodeType
 {
 	NODE_REGULAR,
@@ -107,11 +108,15 @@ public:
 	void CreatePath ();
 };
 
+CPathNode *GetClosestNodeTo (vec3f origin);
+CPath *GetPath (CPathNode *Start, CPathNode *End);
+#else
+FILE_WARNING
+#endif
+#endif
+
 void InitNodes ();
 void RunNodes ();
-CPathNode *GetClosestNodeTo (vec3f origin);
-
-CPath *GetPath (CPathNode *Start, CPathNode *End);
 
 void LoadNodes();
 
@@ -119,7 +124,3 @@ void SavePathTable ();
 void LoadPathTable ();
 
 void Nodes_Register ();
-
-#else
-FILE_WARNING
-#endif

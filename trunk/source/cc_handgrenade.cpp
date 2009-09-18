@@ -106,7 +106,7 @@ void CHandGrenade::FireGrenade (CPlayerEntity *ent, bool inHand)
 	if (!dmFlags.dfInfiniteAmmo)
 		DepleteAmmo(ent, 1);
 
-	if (ent->gameEntity->health <= 0 || ent->DeadFlag || ent->State.GetModelIndex() != 255) // VWep animations screw up corpses
+	if (ent->Health <= 0 || ent->DeadFlag || ent->State.GetModelIndex() != 255) // VWep animations screw up corpses
 		return;
 
 	AttackSound (ent);

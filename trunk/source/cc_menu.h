@@ -69,36 +69,6 @@ public:
 	void						AddItem (CMenuItem *Item);
 };
 
-enum EMenuKeys
-{
-	KEY_NONE,
-	KEY_LEFT,
-	KEY_RIGHT
-};
-
-// All players have a copy of this class.
-class CMenuState
-{
-public:
-	CPlayerEntity		*ent; // A pointer to the entity that is running the show (needed?)
-	int					Cursor; // Cursor position (relative to order)
-	EMenuKeys			Key; // Key hit this frame
-	// CurrentMenu is set to a copy of whatever menu class
-	// you need
-	CMenu				*CurrentMenu;
-	bool				InMenu;
-
-	CMenuState			();
-	CMenuState			(CPlayerEntity *ent);
-
-	void OpenMenu		(); // Do this AFTER setting CurrentMenu
-	void CloseMenu		();
-
-	void SelectNext		(); // invnext
-	void SelectPrev		(); // invprev
-	void Select			(); // invuse
-};
-
 void Cmd_MenuLeft_t (CPlayerEntity *ent);
 void Cmd_MenuRight_t (CPlayerEntity *ent);
 

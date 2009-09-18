@@ -59,7 +59,7 @@ bool CFlag::Pickup(CItemEntity *ent, CPlayerEntity *other)
 {
 	if (team == other->Client.resp.ctf_team)
 	{
-		if (!(ent->gameEntity->spawnflags & DROPPED_ITEM))
+		if (!(ent->SpawnFlags & DROPPED_ITEM))
 		{
 			// If we have the flag, but the flag isn't this, then we have another flag.
 			// FIXME this code here will break with > 2 teams (when we get there)!!
@@ -140,7 +140,7 @@ bool CFlag::Pickup(CItemEntity *ent, CPlayerEntity *other)
 	// pick up the flag
 	// if it's not a dropped flag, we just make is disappear
 	// if it's dropped, it will be removed by the pickup caller
-	if (!(ent->gameEntity->spawnflags & DROPPED_ITEM))
+	if (!(ent->SpawnFlags & DROPPED_ITEM))
 	{
 		ent->Flags |= FL_RESPAWN;
 		ent->SetSvFlags (ent->GetSvFlags() | SVF_NOCLIENT);

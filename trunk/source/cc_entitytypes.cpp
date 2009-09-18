@@ -47,6 +47,27 @@ CanTakeDamage(false)
 	EntityFlags |= ENT_HURTABLE;
 };
 
+const CEntityField CHurtableEntity::FieldsForParsing[] =
+{
+	CEntityField ("health", EntityMemberOffset(CHurtableEntity,Health), FTInteger),
+};
+const size_t CHurtableEntity::FieldsForParsingSize = (sizeof(CHurtableEntity::FieldsForParsing) / sizeof(CHurtableEntity::FieldsForParsing[0]));
+
+bool			CHurtableEntity::ParseField (char *Key, char *Value)
+{
+	for (size_t i = 0; i < CHurtableEntity::FieldsForParsingSize; i++)
+	{
+		if (strcmp (Key, CHurtableEntity::FieldsForParsing[i].Name) == 0)
+		{
+			CHurtableEntity::FieldsForParsing[i].Create<CHurtableEntity> (this, Value);
+			return true;
+		}
+	}
+
+	// Couldn't find it here
+	return false;
+};
+
 char *ClientTeam (CPlayerEntity *ent)
 {
 	char		*p;
@@ -218,8 +239,8 @@ int CHurtableEntity::CheckPowerArmor (vec3f &point, vec3f &normal, int damage, i
 
 void CHurtableEntity::Killed (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
-	if (gameEntity->health < -999)
-		gameEntity->health = -999;
+	if (Health < -999)
+		Health = -999;
 
 	gameEntity->enemy = attacker->gameEntity;
 
@@ -298,7 +319,7 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 	{
 		CMonsterEntity *Monster = dynamic_cast<CMonsterEntity*>(this);
 
-		if ((gameEntity->health > 0) &&
+		if ((Health > 0) &&
 			(!gameEntity->enemy && (Monster->BonusDamageTime <= level.framenum)) ||
 			(gameEntity->enemy && (Monster->BonusDamageTime == level.framenum)))
 		{
@@ -446,9 +467,9 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 		else
 			CTempEnt_Splashes::Sparks (point, normal, (dflags & DAMAGE_BULLET) ? CTempEnt_Splashes::STBulletSparks : CTempEnt_Splashes::STSparks, CTempEnt_Splashes::SPTSparks);
 
-		gameEntity->health -= take;
+		Health -= take;
 			
-		if (gameEntity->health <= 0)
+		if (Health <= 0)
 		{
 			if ((EntityFlags & ENT_MONSTER) || (isClient))
 				Flags |= FL_NO_KNOCKBACK;
@@ -554,18 +575,12 @@ void CPhysicsEntity::AddGravity()
 CTrace CPhysicsEntity::PushEntity (vec3_t push)
 {
 	CTrace		Trace;
-	int			mask;
 	vec3f		Start = State.GetOrigin();
 	vec3f		End = Start + vec3f(push);
 
 	while (true)
 	{
-		if (gameEntity->clipMask)
-			mask = gameEntity->clipMask;
-		else
-			mask = CONTENTS_MASK_SOLID;
-
-		Trace = CTrace (State.GetOrigin(), GetMins(), GetMaxs(), End, gameEntity, mask);
+		Trace = CTrace (Start, GetMins(), GetMaxs(), End, gameEntity, (GetClipmask()) ? GetClipmask() : CONTENTS_MASK_SOLID);
 		
 		State.SetOrigin (Trace.endPos);
 		Link();
@@ -1131,7 +1146,7 @@ bool CStepPhysics::Run ()
 	{
 		// apply friction
 		// let dead monsters who aren't completely onground slide
-		if ((wasonground) || (Flags & (FL_SWIM|FL_FLY)) && !(gameEntity->health <= 0.0 && ((EntityFlags & ENT_MONSTER) && !(dynamic_cast<CMonsterEntity*>(this))->Monster->CheckBottom())))
+		if ((wasonground) || (Flags & (FL_SWIM|FL_FLY)) && !(((EntityFlags & ENT_MONSTER) && dynamic_cast<CMonsterEntity*>(this)->Health <= 0 && !(dynamic_cast<CMonsterEntity*>(this))->Monster->CheckBottom())))
 		{
 			speed = sqrtf(Velocity.X*Velocity.X + Velocity.Y*Velocity.Y);
 			if (speed)

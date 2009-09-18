@@ -32,6 +32,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 //
 
 #include "cc_local.h"
+#include "cc_menu.h"
 
 CMenuItem::CMenuItem (CMenu *Menu, int x, int y) :
 Menu(Menu),
@@ -264,13 +265,13 @@ void Cmd_MenuLeft_t (CPlayerEntity *Player)
 	if (!Player->Client.resp.MenuState.InMenu)
 		return;
 
-	Player->Client.resp.MenuState.Key = KEY_LEFT;
+	Player->Client.resp.MenuState.Key = CMenuState::KEY_LEFT;
 
 	// Update the currently selected control
 	if (Player->Client.resp.MenuState.Cursor != -1)
 		Player->Client.resp.MenuState.CurrentMenu->Items.at(Player->Client.resp.MenuState.Cursor)->Update(Player);
 
-	Player->Client.resp.MenuState.Key = KEY_NONE;
+	Player->Client.resp.MenuState.Key = CMenuState::KEY_NONE;
 }
 
 void Cmd_MenuRight_t (CPlayerEntity *Player)
@@ -278,11 +279,11 @@ void Cmd_MenuRight_t (CPlayerEntity *Player)
 	if (!Player->Client.resp.MenuState.InMenu)
 		return;
 
-	Player->Client.resp.MenuState.Key = KEY_RIGHT;
+	Player->Client.resp.MenuState.Key = CMenuState::KEY_RIGHT;
 
 	// Update the currently selected control
 	if (Player->Client.resp.MenuState.Cursor != -1)
 		Player->Client.resp.MenuState.CurrentMenu->Items.at(Player->Client.resp.MenuState.Cursor)->Update(Player);
 
-	Player->Client.resp.MenuState.Key = KEY_NONE;
+	Player->Client.resp.MenuState.Key = CMenuState::KEY_NONE;
 }
