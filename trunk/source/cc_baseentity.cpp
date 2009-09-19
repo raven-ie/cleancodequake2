@@ -599,7 +599,7 @@ bool			CMapEntity::ParseField (char *Key, char *Value)
 	{
 		if (strcmp (Key, CMapEntity::FieldsForParsing[i].Name) == 0)
 		{
-			CMapEntity::FieldsForParsing[i].Create (this, Value);
+			CMapEntity::FieldsForParsing[i].Create<CBaseEntity> (this, Value);
 			return true;
 		}
 	}

@@ -81,7 +81,7 @@ CThinkableEntity ()
 
 CBrushModel::CBrushModel (int Index) :
 CBaseEntity (Index),
-CThinkableEntity ()
+CThinkableEntity (Index)
 {
 };
 
@@ -1656,7 +1656,7 @@ void CButton::Spawn ()
 		Q_fabs(MoveDir.X),
 		Q_fabs(MoveDir.Y),
 		Q_fabs(MoveDir.Z));
-	float dist = abs_movedir.X * GetSize().X + abs_movedir.Y * GetSize().Y + abs_movedir.Z * GetSize().Y - st.lip;
+	float dist = abs_movedir.X * GetSize().X + abs_movedir.Y * GetSize().Y + abs_movedir.Z * GetSize().Z - st.lip;
 	Positions[1] = Positions[0].MultiplyAngles (dist, MoveDir);
 
 	State.AddEffects (EF_ANIM01);

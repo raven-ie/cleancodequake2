@@ -45,7 +45,7 @@ public:
 	bool		CanTakeDamage;
 	CBaseEntity	*Enemy;
 
-	static const CEntityField FieldsForParsing[];
+	static const class CEntityField FieldsForParsing[];
 	static const size_t FieldsForParsingSize;
 	virtual bool			ParseField (char *Key, char *Value);
 
