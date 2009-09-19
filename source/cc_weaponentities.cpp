@@ -270,7 +270,7 @@ void CBlasterProjectile::Spawn (CBaseEntity *Spawner, vec3f start, vec3f dir,
 
 	dir.NormalizeFast();
 
-	Bolt->SetSvFlags (SVF_DEADMONSTER);
+	Bolt->SetSvFlags (SVF_DEADMONSTER | SVF_PROJECTILE);
 	Bolt->State.SetOrigin (start);
 	Bolt->State.SetOldOrigin (start);
 	Bolt->State.SetAngles (dir.ToAngles());
