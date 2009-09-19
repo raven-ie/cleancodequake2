@@ -275,6 +275,30 @@ void CTurretBreach::Think ()
 	}
 }
 
+const CEntityField CTurretBreach::FieldsForParsing[] =
+{
+	CEntityField ("minpitch", EntityMemberOffset(CTurretBreach,PitchOptions[0]), FTFloat),
+	CEntityField ("maxpitch", EntityMemberOffset(CTurretBreach,PitchOptions[1]), FTFloat),
+	CEntityField ("minyaw", EntityMemberOffset(CTurretBreach,PitchOptions[2]), FTFloat),
+	CEntityField ("maxyaw", EntityMemberOffset(CTurretBreach,PitchOptions[3]), FTFloat),
+};
+const size_t CTurretBreach::FieldsForParsingSize = (sizeof(CTurretBreach::FieldsForParsing) / sizeof(CTurretBreach::FieldsForParsing[0]));
+
+bool			CTurretBreach::ParseField (char *Key, char *Value)
+{
+	for (size_t i = 0; i < CTurretBreach::FieldsForParsingSize; i++)
+	{
+		if (strcmp (Key, CTurretBreach::FieldsForParsing[i].Name) == 0)
+		{
+			CTurretBreach::FieldsForParsing[i].Create<CTurretBreach> (this, Value);
+			return true;
+		}
+	}
+
+	// Couldn't find it here
+	return (CMapEntity::ParseField (Key, Value));
+};
+
 void CTurretBreach::Spawn ()
 {
 	SetSolid (SOLID_BSP);
@@ -286,19 +310,20 @@ void CTurretBreach::Spawn ()
 	if (!gameEntity->dmg)
 		gameEntity->dmg = 10;
 
-	if (!st.minpitch)
-		st.minpitch = -30;
-	if (!st.maxpitch)
-		st.maxpitch = 30;
-	if (!st.maxyaw)
-		st.maxyaw = 360;
+	if (!PitchOptions[0])
+		PitchOptions[0] = -30;
+	if (!PitchOptions[1])
+		PitchOptions[1] = 30;
+	if (!PitchOptions[3])
+		PitchOptions[3] = 360;
 
-	Positions[0].X = -1 * st.minpitch;
-	Positions[0].Y = st.minyaw;
-	Positions[1].X = -1 * st.maxpitch;
-	Positions[1].Y = st.maxyaw;
+	Positions[0].X = -1 * PitchOptions[0];
+	Positions[0].Y = PitchOptions[2];
+	Positions[1].X = -1 * PitchOptions[1];
+	Positions[1].Y = PitchOptions[3];
 
 	gameEntity->move_angles[YAW] = State.GetAngles().Y;
+	State.SetAngles (vec3fOrigin);
 
 	NextThink = level.framenum + FRAMETIME;
 	Link ();

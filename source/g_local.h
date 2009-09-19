@@ -219,11 +219,6 @@ typedef struct
 	float		pausetime;
 	char		*item;
 	char		*gravity;
-
-	float		minyaw;
-	float		maxyaw;
-	float		minpitch;
-	float		maxpitch;
 } spawn_temp_t;
 
 typedef int EFuncState;

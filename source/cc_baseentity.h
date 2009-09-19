@@ -210,6 +210,48 @@ public:
 	virtual void	BecomeExplosion (bool grenade);
 };
 
+// EntityFlags values
+enum
+{
+	ENT_BASE		=	BIT(0), // Can be casted to CBaseEntity
+	ENT_HURTABLE	=	BIT(1), // Can be casted to CHurtableEntity
+	ENT_THINKABLE	=	BIT(2), // Can be casted to CThinkableEntity
+	ENT_TOUCHABLE	=	BIT(3), // Can be casted to CTouchableEntity
+	ENT_PLAYER		=	BIT(4), // Can be casted to CPlayerEntity
+	ENT_MONSTER		=	BIT(5), // Can be casted to CMonsterEntity
+	ENT_PHYSICS		=	BIT(6), // Can be casted to CPhysicsEntity
+	ENT_BLOCKABLE	=	BIT(7), // Can be casted to CBlockableEntity
+	ENT_USABLE		=	BIT(8), // Can be casted to CUsableEntity
+	ENT_ITEM		=	BIT(9), // Can be casted to CItemEntity
+};
+
+// Base classes
+#include "cc_entitytypes.h"
+
+// Derivitives
+#include "cc_playerentity.h"
+#include "cc_weaponentities.h"
+
+// An entity that can be seen via a map.
+// Just to bypass the damn abstractness I did.
+class CMapEntity : public virtual CBaseEntity
+{
+public:
+	char		*Classname;
+
+	CMapEntity ();
+	CMapEntity (int Index);
+
+	virtual void Spawn() = 0;
+
+	static const class CEntityField FieldsForParsing[];
+	static const size_t FieldsForParsingSize;
+
+	virtual bool			ParseField (char *Key, char *Value);
+	void					ParseFields ();
+	bool					CheckValidity ();
+};
+
 inline uint32 atou (const char *Str)
 {
 	return (uint32)atol(Str);
@@ -309,48 +351,6 @@ public:
 			break;
 		};
 	};
-};
-
-// EntityFlags values
-enum
-{
-	ENT_BASE		=	BIT(0), // Can be casted to CBaseEntity
-	ENT_HURTABLE	=	BIT(1), // Can be casted to CHurtableEntity
-	ENT_THINKABLE	=	BIT(2), // Can be casted to CThinkableEntity
-	ENT_TOUCHABLE	=	BIT(3), // Can be casted to CTouchableEntity
-	ENT_PLAYER		=	BIT(4), // Can be casted to CPlayerEntity
-	ENT_MONSTER		=	BIT(5), // Can be casted to CMonsterEntity
-	ENT_PHYSICS		=	BIT(6), // Can be casted to CPhysicsEntity
-	ENT_BLOCKABLE	=	BIT(7), // Can be casted to CBlockableEntity
-	ENT_USABLE		=	BIT(8), // Can be casted to CUsableEntity
-	ENT_ITEM		=	BIT(9), // Can be casted to CItemEntity
-};
-
-// Base classes
-#include "cc_entitytypes.h"
-
-// Derivitives
-#include "cc_playerentity.h"
-#include "cc_weaponentities.h"
-
-// An entity that can be seen via a map.
-// Just to bypass the damn abstractness I did.
-class CMapEntity : public virtual CBaseEntity
-{
-public:
-	char		*Classname;
-
-	CMapEntity ();
-	CMapEntity (int Index);
-
-	virtual void Spawn() = 0;
-
-	static const class CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-
-	virtual bool			ParseField (char *Key, char *Value);
-	void					ParseFields ();
-	bool					CheckValidity ();
 };
 
 // An entity completely privatized.
