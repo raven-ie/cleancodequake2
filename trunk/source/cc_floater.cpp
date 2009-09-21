@@ -38,6 +38,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 CFloater::CFloater ()
 {
 	Scale = MODEL_SCALE;
+	MonsterName = "Technician";
 }
 
 void CFloater::Sight ()
@@ -66,8 +67,8 @@ void CFloater::FireBlaster ()
 	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_FLOAT_BLASTER_1], forward, right, start);
 
-	end = Entity->gameEntity->enemy->state.origin;
-	end.Z += Entity->gameEntity->enemy->viewheight;
+	end = Entity->Enemy->State.GetOrigin();
+	end.Z += Entity->Enemy->gameEntity->viewheight;
 	dir = end - start;
 
 	MonsterFireBlaster (start, dir, 1, 1000, MZ2_FLOAT_BLASTER_1, effect);
@@ -478,7 +479,7 @@ void CFloater::Zap ()
 {
 	vec3f	forward, right, origin, dir;
 	static const vec3f offset (18.5f, -0.9f, 10);
-	dir = Entity->gameEntity->enemy->Entity->State.GetOrigin() - Entity->State.GetOrigin();
+	dir = Entity->Enemy->State.GetOrigin() - Entity->State.GetOrigin();
 
 	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), offset, forward, right, origin);
@@ -486,9 +487,9 @@ void CFloater::Zap ()
 	Entity->PlaySound (CHAN_WEAPON, SoundAttack2);
 	CTempEnt_Splashes::Splash (origin, vec3Origin, CTempEnt_Splashes::SPTSparks, 32);
 
-	if (Entity->gameEntity->enemy && (Entity->gameEntity->enemy->Entity->EntityFlags & ENT_HURTABLE))
-		dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->TakeDamage (Entity, Entity, vec3fOrigin,
-		Entity->gameEntity->enemy->Entity->State.GetOrigin(), vec3fOrigin, 5 + irandom(6), -10, DAMAGE_ENERGY, MOD_UNKNOWN);
+	if (Entity->Enemy && (Entity->Enemy->EntityFlags & ENT_HURTABLE))
+		dynamic_cast<CHurtableEntity*>(Entity->Enemy)->TakeDamage (Entity, Entity, vec3fOrigin,
+		Entity->Enemy->State.GetOrigin(), vec3fOrigin, 5 + irandom(6), -10, DAMAGE_ENERGY, MOD_UNKNOWN);
 }
 
 void CFloater::Attack()

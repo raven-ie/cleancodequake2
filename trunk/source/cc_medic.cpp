@@ -35,13 +35,19 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_medic.h"
 #include "m_medic.h"
 
+CMedic::CMedic ()
+{
+	Scale = MODEL_SCALE;
+	MonsterName = "Medic";
+}
+
 #ifdef MONSTER_USE_ROGUE_AI
 void CMedic::CleanupHeal (bool ChangeFrame)
 {
 	// clean up target, if we have one and it's legit
-	if (Entity->gameEntity->enemy && Entity->gameEntity->enemy->inUse)
+	if (Entity->Enemy && Entity->Enemy->IsInUse())
 	{
-		CMonsterEntity *Enemy = dynamic_cast<CMonsterEntity*>(Entity->gameEntity->enemy->Entity);
+		CMonsterEntity *Enemy = dynamic_cast<CMonsterEntity*>(Entity->Enemy);
 		Enemy->Monster->Healer = NULL;
 		Enemy->Monster->AIFlags &= ~AI_RESURRECTING;
 		Enemy->CanTakeDamage = true;
@@ -59,9 +65,9 @@ void CMedic::AbortHeal (bool ChangeFrame, bool Gib, bool Mark)
 	// clean up target
 	CleanupHeal (ChangeFrame);
 	// gib em!
-	if ((Mark) && (Entity->gameEntity->enemy) && (Entity->gameEntity->enemy->inUse))
+	if ((Mark) && (Entity->Enemy) && (Entity->Enemy->IsInUse()))
 	{
-		CMonsterEntity *Enemy = dynamic_cast<CMonsterEntity*>(Entity->gameEntity->enemy->Entity);
+		CMonsterEntity *Enemy = dynamic_cast<CMonsterEntity*>(Entity->Enemy);
 		// if the first badMedic slot is filled by a medic, skip it and use the second one
 		if ((Enemy->Monster->BadMedic1) && (Enemy->Monster->BadMedic1->IsInUse())
 			&& (!strncmp(Enemy->Monster->BadMedic1->gameEntity->classname, "monster_medic", 13)) )
@@ -69,11 +75,11 @@ void CMedic::AbortHeal (bool ChangeFrame, bool Gib, bool Mark)
 		else
 			Enemy->Monster->BadMedic1 = Entity;
 	}
-	if ((Gib) && (Entity->gameEntity->enemy) && (Entity->gameEntity->enemy->inUse))
+	if ((Gib) && (Entity->Enemy) && (Entity->Enemy->IsInUse()))
 	{
 //		if ((g_showlogic) && (g_showlogic->value))
 //			gi.dprintf ("%s - gibbing bad heal target", self->classname);
-		CMonsterEntity *Enemy = dynamic_cast<CMonsterEntity*>(Entity->gameEntity->enemy->Entity);
+		CMonsterEntity *Enemy = dynamic_cast<CMonsterEntity*>(Entity->Enemy);
 
 		int hurt = (Enemy->GibHealth) ? -Enemy->GibHealth : 500;
 
@@ -83,10 +89,10 @@ void CMedic::AbortHeal (bool ChangeFrame, bool Gib, bool Mark)
 	// clean up self
 
 	AIFlags &= ~AI_MEDIC;
-	if ((Entity->gameEntity->oldenemy) && (Entity->gameEntity->oldenemy->inUse))
-		Entity->gameEntity->enemy = Entity->gameEntity->oldenemy;
+	if ((Entity->OldEnemy) && (Entity->OldEnemy->IsInUse()))
+		Entity->Enemy = Entity->OldEnemy;
 	else
-		Entity->gameEntity->enemy = NULL;
+		Entity->Enemy = NULL;
 
 	MedicTries = 0;
 }
@@ -107,10 +113,7 @@ bool CMedic::CanReach (CBaseEntity *other)
 
 #endif
 
-CMedic::CMedic ()
-{
-	Scale = MODEL_SCALE;
-}
+
 
 CMonsterEntity *CMedic::FindDeadMonster ()
 {
@@ -163,7 +166,7 @@ void CMedic::Idle ()
 	CMonsterEntity *ent = FindDeadMonster();
 	if (ent)
 	{
-		Entity->gameEntity->enemy = ent->gameEntity;
+		Entity->Enemy = ent;
 		ent->Monster->Healer = Entity;
 		AIFlags |= AI_MEDIC;
 		FoundTarget ();
@@ -174,13 +177,13 @@ void CMedic::Search ()
 {
 	Entity->PlaySound (CHAN_VOICE, SoundSearch, 1, ATTN_IDLE, 0);
 
-	if (!Entity->gameEntity->oldenemy)
+	if (!Entity->OldEnemy)
 	{
 		CMonsterEntity *ent = FindDeadMonster();
 		if (ent)
 		{
-			Entity->gameEntity->oldenemy = Entity->gameEntity->enemy;
-			Entity->gameEntity->enemy = ent->gameEntity;
+			Entity->OldEnemy = Entity->Enemy;
+			Entity->Enemy = ent;
 			ent->Monster->Healer = Entity;
 			AIFlags |= AI_MEDIC;
 			FoundTarget ();
@@ -333,8 +336,8 @@ void CMedic::Run ()
 		CMonsterEntity *ent = FindDeadMonster();
 		if (ent)
 		{
-			Entity->gameEntity->oldenemy = Entity->gameEntity->enemy;
-			Entity->gameEntity->enemy = ent->gameEntity;
+			Entity->OldEnemy = Entity->Enemy;
+			Entity->Enemy = ent;
 			ent->Monster->Healer = Entity;
 			AIFlags |= AI_MEDIC;
 			FoundTarget ();
@@ -424,8 +427,8 @@ void CMedic::FireBlaster ()
 	Entity->State.GetAngles().ToVectors(&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_MEDIC_BLASTER_1], forward, right, start);
 
-	end = vec3f(Entity->gameEntity->enemy->state.origin);
-	end.Z += Entity->gameEntity->enemy->viewheight;
+	end = Entity->Enemy->State.GetOrigin();
+	end.Z += Entity->Enemy->gameEntity->viewheight;
 	dir = end - start;
 
 	MonsterFireBlaster (start, dir, 2, 1000, MZ2_MEDIC_BLASTER_1, effect);
@@ -479,10 +482,10 @@ CAnim MedicMoveDeath (FRAME_death1, FRAME_death30, MedicFramesDeath, ConvertDeri
 void CMedic::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 	// if we had a pending patient, free him up for another medic
-	if ((Entity->gameEntity->enemy) &&
-		(Entity->gameEntity->enemy->Entity->EntityFlags & ENT_MONSTER ) && 
-		((dynamic_cast<CMonsterEntity*>(Entity->gameEntity->enemy->Entity))->Monster->Healer == Entity))
-		(dynamic_cast<CMonsterEntity*>(Entity->gameEntity->enemy->Entity))->Monster->Healer = NULL;
+	if ((Entity->Enemy) &&
+		(Entity->Enemy->EntityFlags & ENT_MONSTER ) && 
+		((dynamic_cast<CMonsterEntity*>(Entity->Enemy))->Monster->Healer == Entity))
+		(dynamic_cast<CMonsterEntity*>(Entity->Enemy))->Monster->Healer = NULL;
 
 // check for gib
 	if (Entity->Health <= Entity->GibHealth)
@@ -531,7 +534,7 @@ CAnim MedicMoveAttackHyperBlaster (FRAME_attack15, FRAME_attack30, MedicFramesAt
 
 void CMedic::ContinueFiring ()
 {
-	if (IsVisible (Entity, Entity->gameEntity->enemy->Entity) && (random() <= 0.95))
+	if (IsVisible (Entity, Entity->Enemy) && (random() <= 0.95))
 		CurrentMove = &MedicMoveAttackHyperBlaster;
 }
 
@@ -582,7 +585,7 @@ void CMedic::CableAttack ()
 	vec3f	dir, angles;
 	float	distance;
 
-	if (!Entity->gameEntity->enemy->inUse)
+	if (!Entity->Enemy->IsInUse())
 		return;
 
 	Entity->State.GetAngles().ToVectors (&f, &r, NULL);
@@ -590,7 +593,7 @@ void CMedic::CableAttack ()
 	G_ProjectSource (Entity->State.GetOrigin(), offset, f, r, start);
 
 	// check for max distance
-	dir = start - vec3f(Entity->gameEntity->enemy->state.origin);
+	dir = start - Entity->Enemy->State.GetOrigin();
 	distance = dir.Length();
 	if (distance > 256)
 		return;
@@ -602,8 +605,8 @@ void CMedic::CableAttack ()
 	if (fabs(angles.X) > 45)
 		return;
 
-	tr = CTrace (start, vec3f(Entity->gameEntity->enemy->state.origin), Entity->gameEntity, CONTENTS_MASK_SHOT);
-	if (tr.fraction != 1.0 && tr.ent != Entity->gameEntity->enemy)
+	tr = CTrace (start, Entity->Enemy->State.GetOrigin(), Entity->gameEntity, CONTENTS_MASK_SHOT);
+	if (tr.fraction != 1.0 && tr.Ent != Entity->Enemy)
 		return;
 
 	CMonsterEntity *Monster;
@@ -611,31 +614,31 @@ void CMedic::CableAttack ()
 	{
 	case FRAME_attack43:
 		Entity->PlaySound (CHAN_AUTO, SoundHookHit);
-		(dynamic_cast<CMonsterEntity*>(Entity->gameEntity->enemy->Entity))->Monster->AIFlags |= AI_RESURRECTING;
+		(dynamic_cast<CMonsterEntity*>(Entity->Enemy))->Monster->AIFlags |= AI_RESURRECTING;
 		break;
 	case FRAME_attack50:
-		Entity->gameEntity->enemy->Entity->SpawnFlags = 0;
-		(dynamic_cast<CMonsterEntity*>(Entity->gameEntity->enemy->Entity))->Monster->AIFlags = 0;
-		Entity->gameEntity->enemy->target = NULL;
-		Entity->gameEntity->enemy->targetname = NULL;
-		Entity->gameEntity->enemy->combattarget = NULL;
-		Entity->gameEntity->enemy->deathtarget = NULL;
+		Entity->Enemy->SpawnFlags = 0;
+		(dynamic_cast<CMonsterEntity*>(Entity->Enemy))->Monster->AIFlags = 0;
+		Entity->Enemy->gameEntity->target = NULL;
+		Entity->Enemy->gameEntity->targetname = NULL;
+		Entity->Enemy->gameEntity->combattarget = NULL;
+		Entity->Enemy->gameEntity->deathtarget = NULL;
 
 
-		Monster = (dynamic_cast<CMonsterEntity*>(Entity->gameEntity->enemy->Entity));
-		//Entity->gameEntity->enemy->owner = Entity->gameEntity;
+		Monster = (dynamic_cast<CMonsterEntity*>(Entity->Enemy));
+		//Entity->Enemy->owner = Entity->gameEntity;
 		Monster->Monster->Healer = Entity;
-		//ED_CallSpawn (Entity->gameEntity->enemy);
+		//ED_CallSpawn (Entity->Enemy);
 		Monster->Monster->Spawn ();
 		Monster->Monster->Healer = NULL;
-		//Entity->gameEntity->enemy->owner = NULL;
+		//Entity->Enemy->owner = NULL;
 		Monster->NextThink = level.framenum;
 		Monster->Think ();
 		Monster->Monster->AIFlags |= AI_RESURRECTING;
-		Monster->gameEntity->enemy = NULL;
-		if (Entity->gameEntity->oldenemy && Entity->gameEntity->oldenemy->client)
+		Monster->Enemy = NULL;
+		if (Entity->OldEnemy && (Entity->OldEnemy->EntityFlags & ENT_PLAYER))
 		{
-			Monster->gameEntity->enemy = Entity->gameEntity->oldenemy;
+			Monster->Enemy = Entity->OldEnemy;
 			Monster->Monster->FoundTarget ();
 		}
 		break;
@@ -648,8 +651,8 @@ void CMedic::CableAttack ()
 	start = start.MultiplyAngles (8, f);
 
 	// adjust end z for end spot since the monster is currently dead
-	end = vec3f (Entity->gameEntity->enemy->state.origin);
-	end.Z = Entity->gameEntity->enemy->absMin[2] + Entity->gameEntity->enemy->size[2] / 2;
+	end = Entity->Enemy->State.GetOrigin();
+	end.Z = (Entity->Enemy->GetAbsMin().Z + Entity->Enemy->GetSize().Z) / 2;
 
 	CTempEnt_Trails::FleshCable (start, end, Entity->State.GetNumber());
 }
@@ -657,7 +660,7 @@ void CMedic::CableAttack ()
 void CMedic::HookRetract ()
 {
 	Entity->PlaySound (CHAN_WEAPON, SoundHookRetract, 1, ATTN_NORM, 0);
-	(dynamic_cast<CMonsterEntity*>(Entity->gameEntity->enemy->Entity))->Monster->AIFlags &= ~AI_RESURRECTING;
+	(dynamic_cast<CMonsterEntity*>(Entity->Enemy))->Monster->AIFlags &= ~AI_RESURRECTING;
 }
 
 CFrame MedicFramesAttackCable [] =
@@ -779,8 +782,8 @@ void CMedic::Dodge (CBaseEntity *attacker, float eta)
 	if (random() > 0.25)
 		return;
 
-	if (!Entity->gameEntity->enemy)
-		Entity->gameEntity->enemy = attacker->gameEntity;
+	if (!Entity->Enemy)
+		Entity->Enemy = attacker->gameEntity;
 
 	CurrentMove = &MedicMoveDuck;
 }

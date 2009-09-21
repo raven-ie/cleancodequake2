@@ -37,6 +37,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 CSoldierShotgun::CSoldierShotgun ()
 {
+	Scale = MODEL_SCALE;
+	MonsterName = "Shotgun Soldier";
 }
 
 extern CAnim SoldierMoveAttack1;
@@ -50,7 +52,7 @@ void CSoldierShotgun::Attack ()
 
 	float r = random();
 	if ((!(AIFlags & (AI_BLOCKED|AI_STAND_GROUND))) &&
-		(Range(Entity, Entity->gameEntity->enemy->Entity) == RANGE_MID) && 
+		(Range(Entity, Entity->Enemy) == RANGE_MID) && 
 		(r < (skill->Integer()*0.05))) // Very low chance for shotty soldier
 		CurrentMove = &SoldierMoveAttack6;
 	else
@@ -80,7 +82,7 @@ void CSoldierShotgun::FireGun (int FlashNumber)
 		break;
 	default:
 		{
-			CBaseEntity *Enemy = Entity->gameEntity->enemy->Entity;
+			CBaseEntity *Enemy = Entity->Enemy;
 			vec3f end;
 
 			end = Enemy->State.GetOrigin() + vec3f(0, 0, Enemy->gameEntity->viewheight);

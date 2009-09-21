@@ -55,13 +55,17 @@ public:
 	bool			NoTouch;
 	EItemThinkState ThinkState;
 	bool			Usable;
-	char			*Message;
 	CBaseEntity		*Chain;
 
 	CItemEntity ();
 	CItemEntity (int Index);
 
 	virtual void Spawn (CBaseItem *item);
+
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
 
 	// Returns a random team member of ent
 	CItemEntity *GetRandomTeamMember (CItemEntity *Master);

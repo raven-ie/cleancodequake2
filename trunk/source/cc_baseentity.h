@@ -128,6 +128,7 @@ public:
 	CBaseEntity		*GroundEntity;
 	int				GroundEntityLinkCount;
 	uint32			SpawnFlags;
+	CBaseEntity		*Enemy;
 
 	CBaseEntity ();
 	CBaseEntity (int Index);
@@ -279,6 +280,31 @@ enum// EFieldType
 	FTGStringG,
 };
 
+inline char *CopyStr (char *In, struct memPool_s *Pool)
+{
+	std::string newString (In);
+	
+	size_t i = 0;
+	while (true)
+	{
+		if (i >= newString.size())
+			break;
+
+		if (newString[i] == '\\' && newString[i+1] == 'n')
+		{
+			newString[i] = '\n';
+			newString.erase (i+1, 1);
+		}
+
+		i++;
+	}
+
+	char *string = new char[newString.size()+1];
+	Q_snprintfz (string, newString.size()+1, "%s", newString.c_str());
+
+	return string;
+}
+
 class CEntityField
 {
 public:
@@ -310,7 +336,7 @@ public:
 			break;
 		case FTStringL:
 		case FTStringG:
-			memcpy (((byte*)Entity)+Offset, Mem_PoolStrDup(Value, (FieldType == FTGStringL) ? com_levelPool : com_gamePool, 0), sizeof(char*));
+			*((char **)(((byte*)Entity) + Offset)) = CopyStr(Value, (FieldType == FTStringL) ? com_levelPool : com_gamePool);
 			break;
 		};
 	};
@@ -330,7 +356,7 @@ public:
 			break;
 		case FTStringL:
 		case FTStringG:
-			*((char **)(((byte*)Entity) + Offset)) = Mem_PoolStrDup(Value, (FieldType == FTStringL) ? com_levelPool : com_gamePool, 0);
+			*((char **)(((byte*)Entity) + Offset)) = CopyStr(Value, (FieldType == FTStringL) ? com_levelPool : com_gamePool);
 			break;
 		case FTGVector:
 			{
@@ -347,7 +373,7 @@ public:
 			break;
 		case FTGStringL:
 		case FTGStringG:
-			*((char **)(((byte*)Entity->gameEntity) + Offset)) = Mem_PoolStrDup(Value, (FieldType == FTGStringL) ? com_levelPool : com_gamePool, 0);
+			*((char **)(((byte*)Entity->gameEntity) + Offset)) = CopyStr(Value, (FieldType == FTGStringL) ? com_levelPool : com_gamePool);
 			break;
 		};
 	};

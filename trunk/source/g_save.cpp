@@ -52,9 +52,6 @@ field_t fields[] = {
 
 	{"goalentity", FOFS(goalentity), F_EDICT, FFL_NOSPAWN},
 	{"movetarget", FOFS(movetarget), F_EDICT, FFL_NOSPAWN},
-	{"enemy", FOFS(enemy), F_EDICT, FFL_NOSPAWN},
-	{"oldenemy", FOFS(oldenemy), F_EDICT, FFL_NOSPAWN},
-	{"activator", FOFS(activator), F_EDICT, FFL_NOSPAWN},
 	{"owner", FOFS(owner), F_EDICT, FFL_NOSPAWN},
 //	{"mynoise", FOFS(mynoise), F_EDICT, FFL_NOSPAWN},
 //	{"mynoise2", FOFS(mynoise2), F_EDICT, FFL_NOSPAWN},
@@ -75,7 +72,6 @@ field_t fields[] = {
 	{"skyrotate", STOFS(skyrotate), F_FLOAT, FFL_SPAWNTEMP},
 	{"skyaxis", STOFS(skyaxis), F_VECTOR, FFL_SPAWNTEMP},
 	{"nextmap", STOFS(nextmap), F_LSTRING, FFL_SPAWNTEMP},
-	{"message", STOFS(message), F_LSTRING, FFL_SPAWNTEMP},
 
 	{0, 0, F_IGNORE, 0}
 

@@ -38,6 +38,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 CParasite::CParasite ()
 {
 	Scale = MODEL_SCALE;
+	MonsterName = "Parasite";
 }
 
 void CParasite::Launch ()
@@ -301,34 +302,34 @@ void CParasite::DrainAttack ()
 	vec3f start;
  	G_ProjectSource (Entity->State.GetOrigin(), frameOffsets[Entity->State.GetFrame() - 41], f, r, start);
 
-	vec3f end = vec3f(Entity->gameEntity->enemy->state.origin);
+	vec3f end = Entity->Enemy->State.GetOrigin();
 	if (!DrainAttackOK(start, end))
 	{
-		end.Z = Entity->gameEntity->enemy->state.origin[2] + Entity->gameEntity->enemy->maxs[2] - 8;
+		end.Z = Entity->Enemy->State.GetOrigin().Z + Entity->Enemy->GetMaxs().Z - 8;
 		if (!DrainAttackOK(start, end))
 		{
-			end.Z = Entity->gameEntity->enemy->state.origin[2] + Entity->gameEntity->enemy->maxs[2] + 8;
+			end.Z = Entity->Enemy->State.GetOrigin().Z + Entity->Enemy->GetMaxs().Z + 8;
 			if (!DrainAttackOK(start, end))
 				return;
 		}
 	}
-	end = vec3f(Entity->gameEntity->enemy->state.origin);
+	end = Entity->Enemy->State.GetOrigin();
 
 	CTrace tr = CTrace(start, end, Entity->gameEntity, CONTENTS_MASK_SHOT);
-	if (tr.ent != Entity->gameEntity->enemy)
+	if (tr.Ent != Entity->Enemy)
 		return;
 
 	int damage = (Entity->State.GetFrame() == FRAME_drain03) ? 5 : 2;
 	if (Entity->State.GetFrame() == FRAME_drain03)
-		Entity->gameEntity->enemy->Entity->PlaySound (CHAN_AUTO, SoundImpact);
+		Entity->Enemy->PlaySound (CHAN_AUTO, SoundImpact);
 	else if (Entity->State.GetFrame() == FRAME_drain04)
 		Entity->PlaySound (CHAN_WEAPON, SoundSuck, 1, ATTN_NORM, 0);
 
 	CTempEnt_Trails::FleshCable (start, end, Entity->State.GetNumber());
 
 	vec3f dir = start - end;
-	if (Entity->gameEntity->enemy)
-		dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->TakeDamage (Entity, Entity, dir, Entity->gameEntity->enemy->Entity->State.GetOrigin(), vec3fOrigin, damage, 0, DAMAGE_NO_KNOCKBACK, MOD_UNKNOWN);
+	if (Entity->Enemy)
+		dynamic_cast<CHurtableEntity*>(Entity->Enemy)->TakeDamage (Entity, Entity, dir, Entity->Enemy->State.GetOrigin(), vec3fOrigin, damage, 0, DAMAGE_NO_KNOCKBACK, MOD_UNKNOWN);
 }
 
 CFrame ParasiteFramesDrain [] =
@@ -413,7 +414,7 @@ bool CParasite::CheckAttack ()
 		return false;
 
 	vec3f start = Entity->State.GetOrigin();
-	vec3f end = vec3f(Entity->gameEntity->enemy->state.origin);
+	vec3f end = Entity->Enemy->State.GetOrigin();
 	return DrainAttackOK(start, end);
 }
 

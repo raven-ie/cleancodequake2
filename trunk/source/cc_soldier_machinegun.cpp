@@ -37,6 +37,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 CSoldierMachinegun::CSoldierMachinegun ()
 {
+	Scale = MODEL_SCALE;
+	MonsterName = "Machinegun Soldier";
 }
 
 extern CAnim SoldierMoveAttack4;
@@ -67,7 +69,7 @@ void CSoldierMachinegun::FireGun (int FlashNumber)
 		break;
 	default:
 		{
-			CBaseEntity *Enemy = Entity->gameEntity->enemy->Entity;
+			CBaseEntity *Enemy = Entity->Enemy;
 			vec3f end;
 
 			end = Enemy->State.GetOrigin() + vec3f(0, 0, Enemy->gameEntity->viewheight);

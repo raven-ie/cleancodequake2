@@ -257,7 +257,6 @@ public:
 
 		// noise maker and splash effect dude
 		NoiseMaker *s = QNew (com_levelPool, 0) NoiseMaker;
-		gameEntity->enemy = s->gameEntity;
 		s->State.SetOrigin (GetMins() + ((GetMaxs() - GetMins()) / 2));
 		s->State.SetSound (SoundIndex ("world/hum1.wav"));
 		s->Link ();
@@ -566,8 +565,6 @@ Pathtarget: gets used when an entity that has
 class CPathCorner : public CMapEntity, public CTouchableEntity, public CUsableEntity
 {
 public:
-	char	*Message;
-
 	CPathCorner () :
 	  CBaseEntity(),
 	  CMapEntity (),
@@ -582,6 +579,11 @@ public:
 	  {
 	  };
 
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
+
 	virtual void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
 		vec3f			v;
@@ -590,7 +592,7 @@ public:
 		if (other->gameEntity->movetarget != gameEntity)
 			return;
 		
-		if (other->gameEntity->enemy)
+		if (other->Enemy)
 			return;
 
 		if (gameEntity->pathtarget)
@@ -657,9 +659,6 @@ public:
 		SetMaxs (vec3f(8, 8, 8));
 		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
 		Link ();
-
-		if (st.message)
-			Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	};
 };
 
@@ -673,8 +672,6 @@ hold is selected, it will stay here.
 class CPathCombat : public CPathCorner
 {
 public:
-	char	*Message;
-
 	CPathCombat () :
 	  CBaseEntity (),
 	  CPathCorner ()
@@ -719,7 +716,7 @@ public:
 		{
 			other->gameEntity->target = NULL;
 			other->gameEntity->movetarget = NULL;
-			other->gameEntity->goalentity = other->gameEntity->enemy;
+			other->gameEntity->goalentity = other->Enemy->gameEntity;
 
 			if (other->EntityFlags & ENT_MONSTER)
 				(dynamic_cast<CMonsterEntity*>(other))->Monster->AIFlags &= ~AI_COMBAT_POINT;
@@ -728,19 +725,20 @@ public:
 		if (gameEntity->pathtarget)
 		{
 			char *savetarget;
-			edict_t *activator;
+			CBaseEntity *activator;
 
 			savetarget = gameEntity->target;
 			gameEntity->target = gameEntity->pathtarget;
-			if (other->gameEntity->enemy && (other->gameEntity->enemy->Entity->EntityFlags & ENT_PLAYER))
-				activator = other->gameEntity->enemy;
-			else if (other->gameEntity->oldenemy && (other->gameEntity->oldenemy->Entity->EntityFlags & ENT_PLAYER))
-				activator = other->gameEntity->oldenemy;
-			else if (other->gameEntity->activator && (other->gameEntity->activator->Entity->EntityFlags & ENT_PLAYER))
-				activator = other->gameEntity->activator;
+			if (other->Enemy && (other->Enemy->EntityFlags & ENT_PLAYER))
+				activator = other->Enemy;
+			else if ((other->EntityFlags & ENT_MONSTER) &&
+				(dynamic_cast<CMonsterEntity*>(other)->OldEnemy) && (dynamic_cast<CMonsterEntity*>(other)->OldEnemy->EntityFlags & ENT_PLAYER))
+				activator = dynamic_cast<CMonsterEntity*>(other)->OldEnemy;
+			else if ((other->EntityFlags & ENT_USABLE) && (dynamic_cast<CUsableEntity*>(other)->Activator) && ((dynamic_cast<CUsableEntity*>(other)->Activator)->EntityFlags & ENT_PLAYER))
+				activator = (dynamic_cast<CUsableEntity*>(other)->Activator);
 			else
-				activator = other->gameEntity;
-			UseTargets (activator->Entity, Message);
+				activator = other;
+			UseTargets (activator, Message);
 			gameEntity->target = savetarget;
 		}
 	};
@@ -758,9 +756,6 @@ public:
 		SetMaxs (vec3f(8, 8, 16));
 		SetSvFlags (SVF_NOCLIENT);
 		Link ();
-
-		if (st.message)
-			Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	};
 };
 
@@ -845,6 +840,11 @@ public:
 	  {
 	  };
 
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
+
 	void Use (CBaseEntity *other, CBaseEntity *activator)
 	{
 		if (!Usable)
@@ -888,8 +888,8 @@ message		two letters; starting lightlevel and ending lightlevel
 class CTargetLightRamp : public CMapEntity, public CThinkableEntity, public CUsableEntity
 {
 public:
-	int32			Message[3];
-	FrameNumber_t			TimeStamp;
+	int32			RampMessage[3];
+	FrameNumber_t	TimeStamp;
 	CLight			*Light;
 
 	CTargetLightRamp () :
@@ -910,6 +910,11 @@ public:
 	{
 	};
 
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
+
 	bool Run ()
 	{
 		return CBaseEntity::Run();
@@ -917,17 +922,17 @@ public:
 
 	void Think ()
 	{
-		char	style[2] = {'a' + Message[0] + (level.framenum - TimeStamp) / 0.1f * Message[2], 0};
+		char	style[2] = {'a' + RampMessage[0] + (level.framenum - TimeStamp) / 0.1f * RampMessage[2], 0};
 		ConfigString (CS_LIGHTS+Light->gameEntity->style, style);
 
 		if ((level.framenum - TimeStamp) < gameEntity->speed)
 			NextThink = level.framenum + FRAMETIME;
 		else if (SpawnFlags & 1)
 		{
-			char temp = Message[0];
-			Message[0] = Message[1];
-			Message[1] = temp;
-			Message[2] *= -1;
+			int32 temp = RampMessage[0];
+			RampMessage[0] = RampMessage[1];
+			RampMessage[1] = temp;
+			RampMessage[2] *= -1;
 		}
 	};
 
@@ -963,10 +968,10 @@ public:
 
 	void Spawn ()
 	{
-		if (!st.message || strlen(st.message) != 2 || st.message[0] < 'a' || st.message[0] > 'z' || st.message[1] < 'a' || st.message[1] > 'z' || st.message[0] == st.message[1])
+		if (!Message || strlen(Message) != 2 || Message[0] < 'a' || Message[0] > 'z' || Message[1] < 'a' || Message[1] > 'z' || Message[0] == Message[1])
 		{
 			//gi.dprintf("target_lightramp has bad ramp (%s) at (%f %f %f)\n", self->message, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
-			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "Bad ramp (%s)\n", st.message);
+			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "Bad ramp (%s)\n", Message);
 			Free ();
 			return;
 		}
@@ -987,9 +992,9 @@ public:
 
 		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
 
-		Message[0] = st.message[0] - 'a';
-		Message[1] = st.message[1] - 'a';
-		Message[2] = (Message[1] - Message[0]) / (gameEntity->speed / 0.1f);
+		RampMessage[0] = Message[0] - 'a';
+		RampMessage[1] = Message[1] - 'a';
+		RampMessage[2] = (RampMessage[1] - RampMessage[0]) / (gameEntity->speed / 0.1f);
 	};
 };
 

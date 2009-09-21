@@ -59,6 +59,11 @@ public:
 	{
 	};
 
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
+
 	bool Run ()
 	{
 		return CStepPhysics::Run();

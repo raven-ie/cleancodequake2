@@ -38,6 +38,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 CGunner::CGunner ()
 {
 	Scale = MODEL_SCALE;
+	MonsterName = "Gunner";
 }
 
 void CGunner::Idle ()
@@ -438,8 +439,8 @@ void CGunner::Dodge (CBaseEntity *attacker, float eta
 	if (random() > 0.25)
 		return;
 
-	if (!Entity->gameEntity->enemy)
-		Entity->gameEntity->enemy = attacker->gameEntity;
+	if (!Entity->Enemy)
+		Entity->Enemy = attacker;
 
 	CurrentMove = &GunnerMoveDuck;
 }
@@ -452,7 +453,7 @@ void CGunner::OpenGun ()
 #ifdef MONSTER_USE_ROGUE_AI
 bool CGunner::GrenadeCheck()
 {
-	if(!Entity->gameEntity->enemy)
+	if(!Entity->Enemy)
 		return false;
 
 	vec3f		start, forward, right, target, dir;
@@ -465,7 +466,7 @@ bool CGunner::GrenadeCheck()
 		if ((Entity->State.GetOrigin().Z + Entity->gameEntity->viewheight) < BlindFireTarget[2])
 			return false;
 	}
-	else if(Entity->GetAbsMax().Z <= Entity->gameEntity->enemy->absMin[2])
+	else if(Entity->GetAbsMax().Z <= Entity->Enemy->GetAbsMin().Z)
 		return false;
 
 	// check to see that we can trace to the player before we start
@@ -474,7 +475,7 @@ bool CGunner::GrenadeCheck()
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_GUNNER_GRENADE_1], forward, right, start);
 
 	// pmm - check for blindfire flag
-	target = (AIFlags & AI_MANUAL_STEERING) ? BlindFireTarget : Entity->gameEntity->enemy->state.origin;
+	target = (AIFlags & AI_MANUAL_STEERING) ? BlindFireTarget : Entity->Enemy->State.GetOrigin();
 
 	dir = Entity->State.GetOrigin() - target;
 
@@ -482,7 +483,7 @@ bool CGunner::GrenadeCheck()
 		return false;
 
 	CTrace tr = CTrace(start, target, Entity->gameEntity, CONTENTS_MASK_SHOT);
-	if(tr.ent == Entity->gameEntity->enemy || tr.fraction == 1)
+	if(tr.Ent == Entity->Enemy || tr.fraction == 1)
 		return true;
 
 	return false;
@@ -498,9 +499,9 @@ void CGunner::Fire ()
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
 	// project enemy back a bit and target there
-	target = Entity->gameEntity->enemy->state.origin;
-	target = target.MultiplyAngles (-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->gameEntity->enemy->Entity)->Velocity);
-	target.Z += Entity->gameEntity->enemy->viewheight;
+	target = Entity->Enemy->State.GetOrigin();
+	target = target.MultiplyAngles (-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->Enemy)->Velocity);
+	target.Z += Entity->Enemy->gameEntity->viewheight;
 
 	aim = target - start;
 	aim.NormalizeFast ();
@@ -542,7 +543,7 @@ void CGunner::Grenade ()
 	// PMM
 	vec3f	target;	
 
-	if(!Entity->gameEntity->enemy || !Entity->gameEntity->enemy->inUse)		//PGM
+	if(!Entity->Enemy || !Entity->Enemy->IsInUse())		//PGM
 		return;									//PGM
 
 	switch (Entity->State.GetFrame())
@@ -568,7 +569,7 @@ void CGunner::Grenade ()
 
 	//	pmm
 	// if we're shooting blind and we still can't see our enemy
-	if ((AIFlags & AI_MANUAL_STEERING) && (!IsVisible(Entity, Entity->gameEntity->enemy->Entity)))
+	if ((AIFlags & AI_MANUAL_STEERING) && (!IsVisible(Entity, Entity->Enemy)))
 	{
 		// and we have a valid blind_fire_target
 		if (Vec3Compare (BlindFireTarget, vec3Origin))
@@ -584,7 +585,7 @@ void CGunner::Grenade ()
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
 //PGM
-	if(Entity->gameEntity->enemy)
+	if(Entity->Enemy)
 	{
 		aim = target - Entity->State.GetOrigin();
 
@@ -700,7 +701,7 @@ CAnim GunnerMoveAttackGrenade (FRAME_attak101, FRAME_attak121, GunnerFramesAttac
 void CGunner::Attack()
 {
 #ifndef MONSTER_USE_ROGUE_AI
-	if (Range (Entity, Entity->gameEntity->enemy->Entity) == RANGE_MELEE)
+	if (Range (Entity, Entity->Enemy) == RANGE_MELEE)
 		CurrentMove = &GunnerMoveAttackChain;
 	else
 		CurrentMove = (random() <= 0.5) ? &GunnerMoveAttackGrenade : &GunnerMoveAttackChain;
@@ -740,7 +741,7 @@ void CGunner::Attack()
 	// pmm
 
 	// PGM - gunner needs to use his chaingun if he's being attacked by a tesla.
-	if (Range (Entity, Entity->gameEntity->enemy->Entity) == RANGE_MELEE)
+	if (Range (Entity, Entity->Enemy) == RANGE_MELEE)
 		CurrentMove = &GunnerMoveAttackChain;
 	else
 		CurrentMove = (random() <= 0.5 && GrenadeCheck()) ? &GunnerMoveAttackGrenade : &GunnerMoveAttackChain;
@@ -754,7 +755,7 @@ void CGunner::FireChain ()
 
 void CGunner::ReFireChain ()
 {
-	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0 && IsVisible (Entity, Entity->gameEntity->enemy->Entity) && random() <= 0.5)
+	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0 && IsVisible (Entity, Entity->Enemy) && random() <= 0.5)
 	{
 		CurrentMove = &GunnerMoveFireChain;
 		return;

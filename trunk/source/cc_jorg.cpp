@@ -39,6 +39,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 CJorg::CJorg ()
 {
 	Scale = MODEL_SCALE;
+	MonsterName = "JORG";
 }
 
 void CJorg::Search ()
@@ -495,7 +496,7 @@ CAnim JorgMoveEndAttack1 (FRAME_attak115, FRAME_attak118, JorgFramesEndAttack1, 
 
 void CJorg::ReAttack1()
 {
-	if (IsVisible(Entity, Entity->gameEntity->enemy->Entity))
+	if (IsVisible(Entity, Entity->Enemy))
 	{
 		if (random() < 0.9)
 			CurrentMove = &JorgMoveAttack1;
@@ -527,19 +528,8 @@ void CJorg::FireBFG ()
 	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_JORG_BFG_1], forward, right, start);
 
-	vec = vec3f(Entity->gameEntity->enemy->state.origin);
-	vec.Z += Entity->gameEntity->enemy->viewheight;
-	dir = (vec - start);
-	dir.Normalize();
+	dir = ((Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->gameEntity->viewheight)) - start).GetNormalized();
 	Entity->PlaySound (CHAN_VOICE, SoundAttack2, 1, ATTN_NORM, 0);
-	/*void monster_fire_bfg (edict_t *self, 
-							 vec3_t start, 
-							 vec3_t aimdir, 
-							 int damage, 
-							 int speed, 
-							 int kick, 
-							 float damage_radius, 
-							 int flashtype)*/
 	MonsterFireBfg (start, dir, 50, 300, 100, 200, MZ2_JORG_BFG_1);
 }
 
@@ -551,8 +541,8 @@ void CJorg::FireBullet ()
 	Entity->State.GetAngles().ToVectors(&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_JORG_MACHINEGUN_R1], forward, right, start);
 
-	target = Entity->gameEntity->enemy->Entity->State.GetOrigin().MultiplyAngles(-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->gameEntity->enemy->Entity)->Velocity);
-	target[2] += Entity->gameEntity->enemy->viewheight;
+	target = Entity->Enemy->State.GetOrigin().MultiplyAngles(-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->Enemy)->Velocity);
+	target[2] += Entity->Enemy->gameEntity->viewheight;
 	forward = (target - start);
 	forward.Normalize();
 
@@ -561,8 +551,8 @@ void CJorg::FireBullet ()
 	Entity->State.GetAngles().ToVectors(&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_JORG_MACHINEGUN_L1], forward, right, start);
 
-	target = Entity->gameEntity->enemy->Entity->State.GetOrigin().MultiplyAngles(-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->gameEntity->enemy->Entity)->Velocity);
-	target[2] += Entity->gameEntity->enemy->viewheight;
+	target = Entity->Enemy->State.GetOrigin().MultiplyAngles(-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->Enemy)->Velocity);
+	target[2] += Entity->Enemy->gameEntity->viewheight;
 	forward = (target - start);
 	forward.Normalize();
 
@@ -591,18 +581,18 @@ bool CJorg::CheckAttack ()
 	float	chance;
 	CTrace	tr;
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0)
 	{
 	// see if any entities are in the way of the shot
 		Entity->State.GetOrigin(spot1);
 		spot1[2] += Entity->gameEntity->viewheight;
-		Vec3Copy (Entity->gameEntity->enemy->state.origin, spot2);
-		spot2[2] += Entity->gameEntity->enemy->viewheight;
+		Vec3Copy (Entity->Enemy->State.GetOrigin(), spot2);
+		spot2[2] += Entity->Enemy->gameEntity->viewheight;
 
 		tr = CTrace(spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
 
 		// do we have a clear shot?
-		if (tr.ent != Entity->gameEntity->enemy)
+		if (tr.ent != Entity->Enemy)
 			return false;
 	}
 	
@@ -674,25 +664,25 @@ bool CJorg::CheckAttack ()
 #else
 	float	chance;
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0)
 	{
 		// see if any entities are in the way of the shot
 		vec3_t	spot1, spot2;
 		Entity->State.GetOrigin (spot1);
 		spot1[2] += Entity->gameEntity->viewheight;
-		Vec3Copy (Entity->gameEntity->enemy->state.origin, spot2);
-		spot2[2] += Entity->gameEntity->enemy->viewheight;
+		Vec3Copy (Entity->Enemy->State.GetOrigin(), spot2);
+		spot2[2] += Entity->Enemy->gameEntity->viewheight;
 
 		CTrace tr (spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
 
 		// do we have a clear shot?
-		if (tr.ent != Entity->gameEntity->enemy)
+		if (tr.Ent != Entity->Enemy)
 		{	
 			// PGM - we want them to go ahead and shoot at info_notnulls if they can.
-			if(Entity->gameEntity->enemy->solid != SOLID_NOT || tr.fraction < 1.0)		//PGM
+			if(Entity->Enemy->GetSolid() != SOLID_NOT || tr.fraction < 1.0)		//PGM
 			{
 				// PMM - if we can't see our target, and we're not blocked by a monster, go into blind fire if available
-				if ((!(tr.ent->svFlags & SVF_MONSTER)) && (!IsVisible(Entity, Entity->gameEntity->enemy->Entity)))
+				if ((!(tr.ent->svFlags & SVF_MONSTER)) && (!IsVisible(Entity, Entity->Enemy)))
 				{
 					if ((BlindFire) && (BlindFireDelay <= 20.0))
 					{
@@ -705,7 +695,7 @@ bool CJorg::CheckAttack ()
 						{
 							// make sure we're not going to shoot a monster
 							tr = CTrace (spot1, BlindFireTarget, Entity->gameEntity, CONTENTS_MONSTER);
-							if (tr.allSolid || tr.startSolid || ((tr.fraction < 1.0) && (tr.ent != Entity->gameEntity->enemy)))
+							if (tr.allSolid || tr.startSolid || ((tr.fraction < 1.0) && (tr.Ent != Entity->Enemy)))
 								return false;
 
 							AttackState = AS_BLIND;
@@ -767,7 +757,7 @@ bool CJorg::CheckAttack ()
 		chance *= 2;
 
 	// PGM - go ahead and shoot every time if it's a info_notnull
-	if ((random () < chance) || (Entity->gameEntity->enemy->solid == SOLID_NOT))
+	if ((random () < chance) || (Entity->Enemy->GetSolid() == SOLID_NOT))
 	{
 		AttackState = AS_MISSILE;
 		AttackFinished = level.framenum + ((2*random())*10);
@@ -786,7 +776,7 @@ bool CJorg::CheckAttack ()
 			strafe_chance = 0.6f;
 
 		// if enemy is tesla, never strafe
-		if ((Entity->gameEntity->enemy) && (Entity->gameEntity->enemy->classname) && (!strcmp(Entity->gameEntity->enemy->classname, "tesla")))
+		if ((Entity->Enemy) && (Entity->Enemy->gameEntity->classname) && (!strcmp(Entity->Enemy->gameEntity->classname, "tesla")))
 			strafe_chance = 0;
 
 		if (random() < strafe_chance)

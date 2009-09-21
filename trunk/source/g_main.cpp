@@ -560,6 +560,14 @@ Advances the world by 0.1 seconds
 
 void RunFrame ()
 {
+	if (level.framenum == 3 && map_debug->Boolean())
+	{
+		// Run the players only
+		// build the playerstate_t structures for all players
+		ClientEndServerFrames ();
+		return;
+	}
+
 	int		i;
 	edict_t	*ent;
 

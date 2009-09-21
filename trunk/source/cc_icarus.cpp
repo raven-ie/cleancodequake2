@@ -38,6 +38,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 CIcarus::CIcarus ()
 {
 	Scale = MODEL_SCALE;
+	MonsterName = "Icarus";
 }
 
 void CIcarus::Sight ()
@@ -435,7 +436,7 @@ CAnim HoverMoveEndAttack2 (FRAME_attak107, FRAME_attak108, HoverFramesEndAttack2
 
 void CIcarus::ReAttack ()
 {
-	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0 && IsVisible (Entity, Entity->gameEntity->enemy->Entity) && random() <= 0.6)
+	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0 && IsVisible (Entity, Entity->Enemy) && random() <= 0.6)
 	{
 #ifdef MONSTER_USE_ROGUE_AI
 		CurrentMove = (AttackState == AS_SLIDING) ? &HoverMoveAttack2 : &HoverMoveAttack1;
@@ -456,8 +457,8 @@ void CIcarus::FireBlaster ()
 	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_HOVER_BLASTER_1], forward, right, start);
 
-	end = vec3f(Entity->gameEntity->enemy->state.origin);
-	end.Z += Entity->gameEntity->enemy->viewheight;
+	end = Entity->Enemy->State.GetOrigin();
+	end.Z += Entity->Enemy->gameEntity->viewheight;
 	dir = end - start;
 
 	MonsterFireBlaster (start, dir, 1, 1000, MZ2_HOVER_BLASTER_1, (Entity->State.GetFrame() == FRAME_attak104) ? EF_HYPERBLASTER : 0);

@@ -32,7 +32,6 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 //
 
 #include "cc_local.h"
-#include "m_soldier.h"
 #include "cc_soldier_base.h"
 
 void CSoldierBase::Idle ()
@@ -397,13 +396,13 @@ void CSoldierBase::Attack1_Refire1 ()
 	if (Entity->State.GetSkinNum() > 1)
 		return;
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= 0)
 		return;
 
 	if (!EnemyVis)
 		return;
 
-	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (Range(Entity, Entity->gameEntity->enemy->Entity) == RANGE_MELEE) )
+	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (Range(Entity, Entity->Enemy) == RANGE_MELEE) )
 		NextFrame = FRAME_attak102;
 	else
 		NextFrame = FRAME_attak110;
@@ -414,13 +413,13 @@ void CSoldierBase::Attack1_Refire2 ()
 	if (Entity->State.GetSkinNum() < 2)
 		return;
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= 0)
 		return;
 
 	if (!EnemyVis)
 		return;
 
-	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (Range(Entity, Entity->gameEntity->enemy->Entity) == RANGE_MELEE) )
+	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (Range(Entity, Entity->Enemy) == RANGE_MELEE) )
 		NextFrame = FRAME_attak102;
 }
 
@@ -453,13 +452,13 @@ void CSoldierBase::Attack2_Refire1 ()
 	if (Entity->State.GetSkinNum() > 1)
 		return;
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= 0)
 		return;
 
 	if (!EnemyVis)
 		return;
 
-	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (Range(Entity, Entity->gameEntity->enemy->Entity) == RANGE_MELEE) )
+	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (Range(Entity, Entity->Enemy) == RANGE_MELEE) )
 		NextFrame = FRAME_attak204;
 	else
 		NextFrame = FRAME_attak216;
@@ -470,13 +469,13 @@ void CSoldierBase::Attack2_Refire2 ()
 	if (Entity->State.GetSkinNum() < 2)
 		return;
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= 0)
 		return;
 
 	if (!EnemyVis)
 		return;
 
-	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (Range(Entity, Entity->gameEntity->enemy->Entity) == RANGE_MELEE) )
+	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (Range(Entity, Entity->Enemy) == RANGE_MELEE) )
 		NextFrame = FRAME_attak204;
 }
 
@@ -585,10 +584,10 @@ void CSoldierBase::Attack6_Refire ()
 	StopCharge ();
 #endif
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= 0)
 		return;
 
-	if (Range(Entity, Entity->gameEntity->enemy->Entity) < RANGE_NEAR)
+	if (Range(Entity, Entity->Enemy) < RANGE_NEAR)
 		return;
 
 	if (!EnemyVis)
@@ -608,10 +607,10 @@ void CSoldierBase::Attack6_RefireBlaster ()
 	DoneDodge ();
 	StopCharge ();
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= 0)
 		return;
 
-	if (Range(Entity, Entity->gameEntity->enemy->Entity) < RANGE_NEAR)
+	if (Range(Entity, Entity->Enemy) < RANGE_NEAR)
 		return;
 
 	if (!EnemyVis)
@@ -680,7 +679,7 @@ void CSoldierBase::Sight ()
 {
 	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundSight1 : SoundSight2);
 
-	if ((skill->Integer() > 0) && (Range(Entity, Entity->gameEntity->enemy->Entity) >= RANGE_NEAR))
+	if ((skill->Integer() > 0) && (Range(Entity, Entity->Enemy) >= RANGE_NEAR))
 	{
 		// Only do run-shoot off the bat if we're not a shotgun soldier (too cheap)
 		if ((random() > 0.75) && (Entity->State.GetSkinNum() < 2))
@@ -716,8 +715,8 @@ void CSoldierBase::Dodge (CBaseEntity *attacker, float eta)
 	if (random() > 0.25)
 		return;
 
-	if (!Entity->gameEntity->enemy)
-		Entity->gameEntity->enemy = attacker->gameEntity;
+	if (!Entity->Enemy)
+		Entity->Enemy = attacker->gameEntity;
 
 	PauseTime = level.framenum + ((eta + 0.3) * 10);
 

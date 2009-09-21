@@ -66,6 +66,11 @@ public:
 	  {
 	  };
 
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
+
 	void Use (CBaseEntity *other, CBaseEntity *activator)
 	{
 		if (SpawnFlags & 3) // looping sound toggles
@@ -115,8 +120,6 @@ LINK_CLASSNAME_TO_CLASS ("target_speaker", CTargetSpeaker);
 class CTargetExplosion : public CMapEntity, public CThinkableEntity, public CUsableEntity
 {
 public:
-	char	*Message;
-
 	CTargetExplosion () :
 	  CBaseEntity (),
 	  CMapEntity (),
@@ -133,6 +136,11 @@ public:
 	{
 	};
 
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
+
 	bool Run ()
 	{
 		return CBaseEntity::Run();
@@ -143,17 +151,17 @@ public:
 		vec3f or = State.GetOrigin();
 		CTempEnt_Explosions::RocketExplosion (or, this);
 
-		T_RadiusDamage (this, gameEntity->activator->Entity, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_EXPLOSIVE);
+		T_RadiusDamage (this, Activator, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_EXPLOSIVE);
 
 		float save = gameEntity->delay;
 		gameEntity->delay = 0;
-		UseTargets (gameEntity->activator->Entity, Message);
+		UseTargets (Activator, Message);
 		gameEntity->delay = save;
 	};
 
 	void Use (CBaseEntity *other, CBaseEntity *activator)
 	{
-		gameEntity->activator = activator->gameEntity;
+		Activator = activator;
 
 		if (!gameEntity->delay)
 		{
@@ -168,9 +176,6 @@ public:
 	void Spawn ()
 	{
 		SetSvFlags (SVF_NOCLIENT);
-
-		if (st.message)
-			Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	};
 };
 
@@ -207,6 +212,11 @@ public:
 	  CUsableEntity (Index)
 	{
 	};
+
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
 
 	bool Run ()
 	{
@@ -279,6 +289,11 @@ public:
 	{
 	};
 
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
+
 	bool Run ()
 	{
 		return CBaseEntity::Run();
@@ -327,6 +342,11 @@ public:
 	  CUsableEntity (Index)
 	{
 	};
+
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
 
 	bool Run ()
 	{
@@ -450,6 +470,11 @@ public:
 	{
 	};
 
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
+
 	bool Run ()
 	{
 		return CBaseEntity::Run();
@@ -478,8 +503,6 @@ killtarget also work.
 class CTargetCrossLevelTarget : public CMapEntity, public CThinkableEntity, public CUsableEntity
 {
 public:
-	char	*Message;
-
 	CTargetCrossLevelTarget () :
 	  CBaseEntity (),
 	  CMapEntity (),
@@ -493,6 +516,11 @@ public:
 	  CThinkableEntity (Index)
 	{
 	};
+
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
 
 	void Use (CBaseEntity *, CBaseEntity *)
 	{
@@ -520,9 +548,6 @@ public:
 		
 		// Paril: backwards compatibility
 		NextThink = level.framenum + (gameEntity->delay * 10);
-
-		if (st.message)
-			Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	};
 };
 
@@ -535,8 +560,6 @@ These are single use targets.
 class CTargetSecret : public CMapEntity, public CUsableEntity
 {
 public:
-	char	*Message;
-
 	CTargetSecret () :
 	  CBaseEntity (),
 	  CMapEntity (),
@@ -550,6 +573,11 @@ public:
 	  CUsableEntity (Index)
 	{
 	};
+
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
 
 	bool Run ()
 	{
@@ -581,10 +609,9 @@ public:
 		level.total_secrets++;
 		// map bug hack
 
-		if (!Q_stricmp(level.mapname, "mine3") && (State.GetOrigin().X == 280 && State.GetOrigin().Y == -2048 && State.GetOrigin().Z == -624))
+		if (!Q_stricmp(level.mapname, "mine3") && (State.GetOrigin() == vec3f(280, -2048, -624)))
+			//(State.GetOrigin().X == 280 && State.GetOrigin().Y == -2048 && State.GetOrigin().Z == -624))
 			Message = "You have found a secret area.";
-		else if (st.message)
-			Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	};
 };
 
@@ -597,8 +624,6 @@ These are single use targets.
 class CTargetGoal : public CMapEntity, public CUsableEntity
 {
 public:
-	char	*Message;
-
 	CTargetGoal () :
 	  CBaseEntity (),
 	  CMapEntity (),
@@ -612,6 +637,11 @@ public:
 	  CUsableEntity (Index)
 	{
 	};
+
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
 
 	bool Run ()
 	{
@@ -644,9 +674,6 @@ public:
 		gameEntity->noise_index = SoundIndex (st.noise);
 		SetSvFlags (SVF_NOCLIENT);
 		level.total_goals++;
-
-		if (st.message)
-			Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	};
 };
 
@@ -676,6 +703,11 @@ public:
 	  CUsableEntity (Index)
 	{
 	};
+
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
 
 	bool Run ()
 	{
@@ -746,6 +778,11 @@ public:
 	{
 	};
 
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
+
 	bool Run ()
 	{
 		return CBaseEntity::Run();
@@ -763,10 +800,10 @@ public:
 		vec3f	start;
 		vec3f	end;
 
-		if (gameEntity->enemy)
+		if (Enemy)
 		{
 			vec3f last_movedir = MoveDir;
-			vec3f point = gameEntity->enemy->Entity->GetAbsMin().MultiplyAngles (0.5f, gameEntity->enemy->Entity->GetSize());
+			vec3f point = Enemy->GetAbsMin().MultiplyAngles (0.5f, Enemy->GetSize());
 
 			MoveDir = point - State.GetOrigin();
 			MoveDir.Normalize ();
@@ -790,7 +827,7 @@ public:
 			CBaseEntity *Entity = tr.ent->Entity;
 			// hurt it if we can
 			if (((Entity->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(Entity)->CanTakeDamage) && !(Entity->Flags & FL_IMMUNE_LASER))
-				dynamic_cast<CHurtableEntity*>(Entity)->TakeDamage (this, (gameEntity->activator) ? gameEntity->activator->Entity : NULL, MoveDir, tr.EndPos, vec3fOrigin, gameEntity->dmg, 1, DAMAGE_ENERGY, MOD_TARGET_LASER);
+				dynamic_cast<CHurtableEntity*>(Entity)->TakeDamage (this, Activator, MoveDir, tr.EndPos, vec3fOrigin, gameEntity->dmg, 1, DAMAGE_ENERGY, MOD_TARGET_LASER);
 
 			// if we hit something that's not a monster or player or is immune to lasers, we're done
 			if (!(Entity->EntityFlags & ENT_MONSTER) && (!(Entity->EntityFlags & ENT_PLAYER)))
@@ -820,7 +857,7 @@ public:
 		if (!Usable)
 			return;
 
-		gameEntity->activator = activator->gameEntity;
+		Activator = activator;
 		if (SpawnFlags & 1)
 			Off ();
 		else
@@ -829,8 +866,8 @@ public:
 
 	void On ()
 	{
-		if (!gameEntity->activator)
-			gameEntity->activator = gameEntity;
+		if (!Activator)
+			Activator = this;
 		SpawnFlags |= 0x80000001;
 		SetSvFlags (GetSvFlags() & ~SVF_NOCLIENT);
 		Think ();
@@ -865,7 +902,7 @@ public:
 		else if (SpawnFlags & ORANGE)
 			State.SetSkinNum (Color_RGBAToHex (NSColor::HarvestGold, NSColor::RobRoy, NSColor::TulipTree, NSColor::FireBush));
 
-		if (!gameEntity->enemy)
+		if (!Enemy)
 		{
 			if (gameEntity->target)
 			{
@@ -873,7 +910,7 @@ public:
 				if (!ent)
 					//gi.dprintf ("%s at (%f %f %f): %s is a bad target\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2], self->target);
 					MapPrint (MAPPRINT_WARNING, this, State.GetOrigin(), "\"%s\" is a bad target\n", gameEntity->target);
-				gameEntity->enemy = ent->gameEntity;
+				Enemy = ent;
 			}
 			else
 			{
@@ -914,8 +951,6 @@ When fired, the "message" key becomes the current personal computer string, and 
 class CTargeHelp : public CMapEntity, public CUsableEntity
 {
 public:
-	char		*Message;
-
 	CTargeHelp () :
 	  CBaseEntity (),
 	  CMapEntity (),
@@ -929,6 +964,11 @@ public:
 	  CUsableEntity (Index)
 	{
 	};
+
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
 
 	bool Run ()
 	{
@@ -949,14 +989,12 @@ public:
 			return;
 		}
 
-		if (!st.message)
+		if (!Message)
 		{
 			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No message\n");
 			Free ();
 			return;
 		}
-
-		Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	};
 };
 
@@ -993,6 +1031,11 @@ public:
 	  LastShakeTime (0)
 	{
 	};
+
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
 
 	bool Run ()
 	{

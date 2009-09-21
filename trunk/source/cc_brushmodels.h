@@ -146,6 +146,11 @@ public:
 	void HitTop ();
 	void HitBottom ();
 
+	virtual bool			ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	};
+
 	enum
 	{
 		PLATENDFUNC_HITBOTTOM,
@@ -160,6 +165,8 @@ public:
 	class CPlatFormInsideTrigger : public CTouchableEntity
 	{
 	public:
+		CPlatForm	*Owner;
+
 		CPlatFormInsideTrigger::CPlatFormInsideTrigger ();
 		CPlatFormInsideTrigger::CPlatFormInsideTrigger (int Index);
 		void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
@@ -173,8 +180,6 @@ public:
 class CDoor : public CMapEntity, public CBrushModel, public CHurtableEntity, public CBlockableEntity, public CTouchableEntity, public CUsableEntity
 {
 public:
-	char	*Message;
-
 	enum
 	{
 		DOORTHINK_SPAWNDOORTRIGGER = BRUSHTHINK_CUSTOM_START,
@@ -190,7 +195,7 @@ public:
 
 	virtual bool			ParseField (char *Key, char *Value)
 	{
-		return (CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+		return (CUsableEntity::ParseField (Key, Value) || CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 	};
 
 	enum
@@ -285,7 +290,6 @@ public:
 class CButton : public CMapEntity, public CBrushModel, public CHurtableEntity, public CTouchableEntity, public CUsableEntity
 {
 public:
-	char	*Message;
 	enum
 	{
 		BUTTONTHINK_RETURN = BRUSHTHINK_CUSTOM_START,
@@ -297,7 +301,7 @@ public:
 
 	virtual bool			ParseField (char *Key, char *Value)
 	{
-		return (CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+		return (CUsableEntity::ParseField (Key, Value) || CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 	};
 
 	enum
@@ -321,7 +325,6 @@ public:
 class CTrainBase : public CMapEntity, public CBrushModel, public CBlockableEntity, public CUsableEntity
 {
 public:
-	char		*Message;
 	CBaseEntity	*TargetEntity;
 	enum
 	{
@@ -332,6 +335,11 @@ public:
 	CTrainBase(int Index);
 
 	virtual bool Run ();
+
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
 
 	enum
 	{
@@ -370,17 +378,28 @@ public:
 	CTriggerElevator ();
 	CTriggerElevator (int Index);
 
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
+
 	void Think ();
 	void Use (CBaseEntity *other, CBaseEntity *activator);
 
 	void Spawn ();
 };
 
-class CWorldEntity : public CBrushModel
+class CWorldEntity : public CMapEntity, public CBrushModel
 {
 public:
+	char	*Message;
+
 	CWorldEntity ();
 	CWorldEntity (int Index);
+
+	static const class CEntityField FieldsForParsing[];
+	static const size_t FieldsForParsingSize;
+	virtual bool			ParseField (char *Key, char *Value);
 
 	bool Run ();
 	void Spawn ();
@@ -398,6 +417,11 @@ public:
 	void Blocked (CBaseEntity *other);
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
 
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
+
 	bool Run ();
 	void Spawn ();
 };
@@ -407,6 +431,11 @@ class CConveyor : public CMapEntity, public CBrushModel, public CUsableEntity
 public:
 	CConveyor ();
 	CConveyor (int Index);
+
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
 
 	void Use (CBaseEntity *other, CBaseEntity *activator);
 
@@ -419,6 +448,11 @@ class CAreaPortal : public CMapEntity, public CUsableEntity
 public:
 	CAreaPortal ();
 	CAreaPortal (int Index);
+
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
 
 	void Use (CBaseEntity *other, CBaseEntity *activator);
 
@@ -433,6 +467,11 @@ public:
 
 	CFuncWall ();
 	CFuncWall (int Index);
+
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
 
 	void Use (CBaseEntity *other, CBaseEntity *activator);
 
@@ -452,6 +491,11 @@ public:
 	void Use (CBaseEntity *other, CBaseEntity *activator);
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
 
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
+
 	bool Run ();
 	void Spawn ();
 };
@@ -459,7 +503,6 @@ public:
 class CFuncExplosive : public CMapEntity, public CBrushModel, public CUsableEntity, public CHurtableEntity
 {
 public:
-	char	*Message;
 	enum EFuncExplosiveUseType
 	{
 		FUNCEXPLOSIVE_USE_NONE,
@@ -471,7 +514,7 @@ public:
 
 	virtual bool			ParseField (char *Key, char *Value)
 	{
-		return (CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+		return (CUsableEntity::ParseField (Key, Value) || CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 	};
 
 	CFuncExplosive ();
@@ -492,6 +535,11 @@ class CKillbox : public CMapEntity, public CUsableEntity
 public:
 	CKillbox ();
 	CKillbox (int Index);
+
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
 
 	void Use (CBaseEntity *other, CBaseEntity *activator);
 	void Spawn ();

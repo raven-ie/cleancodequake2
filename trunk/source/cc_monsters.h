@@ -175,7 +175,7 @@ public:
 	FrameNumber_t	AirFinished;
 	FrameNumber_t	DamageDebounceTime;
 	FrameNumber_t	BonusDamageTime;
-	char			*Message;
+	CBaseEntity		*OldEnemy;
 
 	class CMonster	*Monster;
 
@@ -230,7 +230,7 @@ public:
 	FrameNumber_t		NextDuckTime;
 	FrameNumber_t		DuckWaitTime;
 	FrameNumber_t		BlindFireDelay;
-	edict_t		*LastPlayerEnemy;
+	CPlayerEntity		*LastPlayerEnemy;
 	vec3_t		BlindFireTarget;
 	// blindfire stuff .. the boolean says whether the monster will do it, and blind_fire_time is the timing
 	// (set in the monster) of the next shot
@@ -262,6 +262,7 @@ public:
 	CAnim				*CurrentMove;
 
 	uint32				MonsterFlags;
+	char				*MonsterName;
 
 #ifdef MONSTERS_USE_PATHFINDING
 	// Pathfinding
@@ -307,7 +308,6 @@ public:
 	virtual void		Sight			();
 	virtual bool		CheckAttack		();
 
-	virtual void		ReactToDamage	(edict_t *attacker);
 	virtual void		ReactToDamage	(CBaseEntity *attacker);
 
 	virtual void		MonsterThink	();
@@ -375,8 +375,8 @@ public:
 	bool CheckBottom ();
 	void MoveToGoal (float Dist);
 	bool WalkMove (float Yaw, float Dist);
-	bool CloseEnough (edict_t *Goal, float Dist);
-	void NewChaseDir (edict_t *Enemy, float Dist);
+	bool CloseEnough (CBaseEntity *Goal, float Dist);
+	void NewChaseDir (CBaseEntity *Enemy, float Dist);
 	bool StepDirection (float Yaw, float Dist);
 	bool MoveStep (vec3_t move, bool ReLink);
 

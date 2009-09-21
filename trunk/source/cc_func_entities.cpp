@@ -68,7 +68,7 @@ CFuncTimer::CFuncTimer (int Index) :
 
 void CFuncTimer::Think ()
 {
-	UseTargets (gameEntity->activator->Entity, Message);
+	UseTargets (Activator, Message);
 	NextThink = level.framenum + ((gameEntity->wait + (crandom() * gameEntity->random)) * 10);
 }
 
@@ -79,7 +79,7 @@ bool CFuncTimer::Run ()
 
 void CFuncTimer::Use (CBaseEntity *other, CBaseEntity *activator)
 {
-	gameEntity->activator = activator->gameEntity;
+	Activator = activator;
 
 	// if on, turn it off
 	if (NextThink)
@@ -113,13 +113,10 @@ void CFuncTimer::Spawn ()
 	{
 		// lots of backwards compatibility
 		NextThink = level.framenum + 10 + ((st.pausetime + gameEntity->delay + gameEntity->wait + (crandom() * gameEntity->random))* 10);
-		gameEntity->activator = this->gameEntity;
+		Activator = this;
 	}
 
 	SetSvFlags (SVF_NOCLIENT);
-
-	if (st.message)
-		Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 }
 
 LINK_CLASSNAME_TO_CLASS ("func_timer", CFuncTimer);
@@ -218,10 +215,8 @@ void CTargetString::Use (CBaseEntity *other, CBaseEntity *activator)
 
 void CTargetString::Spawn ()
 {
-	if (!st.message)
+	if (!Message)
 		Message = "";
-	else
-		Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 }
 
 LINK_CLASSNAME_TO_CLASS ("target_string", CTargetString);
@@ -269,7 +264,7 @@ bool CFuncClock::Run ()
 
 void CFuncClock::Reset ()
 {
-	gameEntity->activator = NULL;
+	Activator = NULL;
 	if (SpawnFlags & 1)
 	{
 		Seconds = 0;
@@ -352,7 +347,7 @@ void CFuncClock::Think ()
 			char *savemessage = Message;
 			gameEntity->target = gameEntity->pathtarget;
 			Message = NULL;
-			UseTargets (gameEntity->activator->Entity, Message);
+			UseTargets (Activator, Message);
 			gameEntity->target = savetarget;
 			Message = savemessage;
 		}
@@ -377,10 +372,10 @@ void CFuncClock::Use (CBaseEntity *other, CBaseEntity *activator)
 	if (!(SpawnFlags & 8))
 		Usable = false;
 	
-	if (gameEntity->activator)
+	if (Activator)
 		return;
 
-	gameEntity->activator = activator->gameEntity;
+	Activator = activator;
 	Think ();
 }
 

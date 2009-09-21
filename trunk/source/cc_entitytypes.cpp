@@ -242,8 +242,7 @@ void CHurtableEntity::Killed (CBaseEntity *inflictor, CBaseEntity *attacker, int
 	if (Health < -999)
 		Health = -999;
 
-	gameEntity->enemy = attacker->gameEntity;
-
+	Enemy = attacker;
 	if ((!DeadFlag) && (EntityFlags & ENT_MONSTER))
 	{
 		if (!((dynamic_cast<CMonsterEntity*>(this))->Monster->AIFlags & AI_GOOD_GUY))
@@ -320,8 +319,8 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 		CMonsterEntity *Monster = dynamic_cast<CMonsterEntity*>(this);
 
 		if ((Health > 0) &&
-			(!gameEntity->enemy && (Monster->BonusDamageTime <= level.framenum)) ||
-			(gameEntity->enemy && (Monster->BonusDamageTime == level.framenum)))
+			(!Enemy && (Monster->BonusDamageTime <= level.framenum)) ||
+			(Enemy && (Monster->BonusDamageTime == level.framenum)))
 		{
 			Monster->BonusDamageTime = level.framenum;
 			damage *= 2;
@@ -1542,23 +1541,39 @@ CBaseEntity (Index)
 	EntityFlags |= ENT_USABLE;
 }
 
+const CEntityField CUsableEntity::FieldsForParsing[] =
+{
+	CEntityField ("message", EntityMemberOffset(CUsableEntity,Message), FTStringL),
+};
+const size_t CUsableEntity::FieldsForParsingSize = (sizeof(CUsableEntity::FieldsForParsing) / sizeof(CUsableEntity::FieldsForParsing[0]));
+
+bool			CUsableEntity::ParseField (char *Key, char *Value)
+{
+	for (size_t i = 0; i < CUsableEntity::FieldsForParsingSize; i++)
+	{
+		if (strcmp (Key, CUsableEntity::FieldsForParsing[i].Name) == 0)
+		{
+			CUsableEntity::FieldsForParsing[i].Create<CUsableEntity> (this, Value);
+			return true;
+		}
+	}
+
+	// Couldn't find it here
+	return false;
+};
+
 class CDelayedUse : public CThinkableEntity, public CUsableEntity
 {
 public:
-	CBaseEntity	*Activator;
-	const char	*Message;
-
 	CDelayedUse () :
 	  CBaseEntity (),
-	  CThinkableEntity (),
-	  Activator(NULL)
+	  CThinkableEntity ()
 	  {
 	  };
 
 	CDelayedUse (int Index) :
 	  CBaseEntity (Index),
-	  CThinkableEntity (Index),
-	  Activator(NULL)
+	  CThinkableEntity (Index)
 	  {
 	  };
 
@@ -1573,7 +1588,7 @@ public:
 	}
 };
 
-void CUsableEntity::UseTargets (CBaseEntity *activator, const char *Message)
+void CUsableEntity::UseTargets (CBaseEntity *activator, char *Message)
 {
 //
 // check for a delay

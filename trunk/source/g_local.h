@@ -210,7 +210,6 @@ typedef struct
 	float		skyrotate;
 	vec3_t		skyaxis;
 	char		*nextmap;
-	char		*message;
 
 	int			lip;
 	int			distance;
@@ -562,10 +561,6 @@ struct edict_s
 	float		dmg_radius;
 	int			sounds;			//make this a spawntemp var?
 	int			count;
-
-	edict_t		*enemy;
-	edict_t		*oldenemy;
-	edict_t		*activator;
 
 	MediaIndex			noise_index;
 	MediaIndex			noise_index2;

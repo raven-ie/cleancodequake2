@@ -39,6 +39,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 CMakron::CMakron ()
 {
 	Scale = MODEL_SCALE;
+	MonsterName = "Makron";
 }
 
 void CMakron::Taunt ()
@@ -440,19 +441,14 @@ void CMakron::FireBFG ()
 {
 	vec3f	forward, right;
 	vec3f	start;
-	vec3f	dir;
-	vec3f	vec;
 
 	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_MAKRON_BFG], forward, right, start);
 
-	vec = vec3f(Entity->gameEntity->enemy->state.origin);
-	vec.Z += Entity->gameEntity->enemy->viewheight;
-	dir = vec - start;
-	dir.Normalize();
-
 	Entity->PlaySound (CHAN_VOICE, SoundAttackBfg, 1, ATTN_NORM, 0);
-	MonsterFireBfg (start, dir, 50, 300, 100, 300, MZ2_MAKRON_BFG);
+	MonsterFireBfg (start,
+		((Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->gameEntity->viewheight)) - start).GetNormalized(),
+		50, 300, 100, 300, MZ2_MAKRON_BFG);
 }	
 
 CFrame MakronFramesAttack3 []=
@@ -510,14 +506,8 @@ void CMakron::FireHyperblaster ()
 	Entity->State.GetAngles().ToVectors(&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
-	if (Entity->gameEntity->enemy)
-	{
-		vec3f vec = vec3f (Entity->gameEntity->enemy->state.origin);
-		vec.Z += Entity->gameEntity->enemy->viewheight;
-		vec = vec - start;
-		vec = vec.ToAngles();
-		dir.X = vec.X;
-	}
+	if (Entity->Enemy)
+		dir.X = (Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->gameEntity->viewheight) - start).ToAngles().X;
 	else
 		dir.X = 0;
 
@@ -554,8 +544,7 @@ CAnim MakronMoveAttack5 (FRAME_attak501, FRAME_attak516, MakronFramesAttack5, &C
 
 void CMakron::SavePosition ()
 {
-	SavedLoc = vec3f(Entity->gameEntity->enemy->state.origin);
-	SavedLoc.Z += Entity->gameEntity->enemy->viewheight;
+	SavedLoc = Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->gameEntity->viewheight);
 };
 
 // FIXME: He's not firing from the proper Z
@@ -701,18 +690,18 @@ bool CMakron::CheckAttack ()
 	float	chance;
 	CTrace	tr;
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0)
 	{
 	// see if any entities are in the way of the shot
 		Entity->State.GetOrigin(spot1);
 		spot1[2] += Entity->gameEntity->viewheight;
-		Vec3Copy (Entity->gameEntity->enemy->state.origin, spot2);
-		spot2[2] += Entity->gameEntity->enemy->viewheight;
+		Vec3Copy (Entity->Enemy->State.GetOrigin(), spot2);
+		spot2[2] += Entity->Enemy->gameEntity->viewheight;
 
 		tr = CTrace(spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
 
 		// do we have a clear shot?
-		if (tr.ent != Entity->gameEntity->enemy)
+		if (tr.ent != Entity->Enemy)
 			return false;
 	}
 	
@@ -784,25 +773,22 @@ bool CMakron::CheckAttack ()
 #else
 	float	chance;
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0)
 	{
 	// see if any entities are in the way of the shot
-		vec3_t	spot1, spot2;
-		Entity->State.GetOrigin (spot1);
-		spot1[2] += Entity->gameEntity->viewheight;
-		Vec3Copy (Entity->gameEntity->enemy->state.origin, spot2);
-		spot2[2] += Entity->gameEntity->enemy->viewheight;
+		vec3f	spot1 = Entity->State.GetOrigin() + vec3f(0, 0, Entity->gameEntity->viewheight);
+		vec3f	spot2 = Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->gameEntity->viewheight);
 
 		CTrace tr (spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
 
 		// do we have a clear shot?
-		if (tr.ent != Entity->gameEntity->enemy)
+		if (tr.Ent != Entity->Enemy)
 		{	
 			// PGM - we want them to go ahead and shoot at info_notnulls if they can.
-			if(Entity->gameEntity->enemy->solid != SOLID_NOT || tr.fraction < 1.0)		//PGM
+			if(Entity->Enemy->GetSolid() != SOLID_NOT || tr.fraction < 1.0)		//PGM
 			{
 				// PMM - if we can't see our target, and we're not blocked by a monster, go into blind fire if available
-				if ((!(tr.ent->svFlags & SVF_MONSTER)) && (!IsVisible(Entity, Entity->gameEntity->enemy->Entity)))
+				if ((!(tr.ent->svFlags & SVF_MONSTER)) && (!IsVisible(Entity, Entity->Enemy)))
 				{
 					if ((BlindFire) && (BlindFireDelay <= 20.0))
 					{
@@ -815,7 +801,7 @@ bool CMakron::CheckAttack ()
 						{
 							// make sure we're not going to shoot a monster
 							tr = CTrace (spot1, BlindFireTarget, Entity->gameEntity, CONTENTS_MONSTER);
-							if (tr.allSolid || tr.startSolid || ((tr.fraction < 1.0) && (tr.ent != Entity->gameEntity->enemy)))
+							if (tr.allSolid || tr.startSolid || ((tr.fraction < 1.0) && (tr.Ent != Entity->Enemy)))
 								return false;
 
 							AttackState = AS_BLIND;
@@ -877,7 +863,7 @@ bool CMakron::CheckAttack ()
 		chance *= 2;
 
 	// PGM - go ahead and shoot every time if it's a info_notnull
-	if ((random () < chance) || (Entity->gameEntity->enemy->solid == SOLID_NOT))
+	if ((random () < chance) || (Entity->Enemy->GetSolid() == SOLID_NOT))
 	{
 		AttackState = AS_MISSILE;
 		AttackFinished = level.framenum + ((2*random())*10);
@@ -896,7 +882,7 @@ bool CMakron::CheckAttack ()
 			strafe_chance = 0.6f;
 
 		// if enemy is tesla, never strafe
-		if ((Entity->gameEntity->enemy) && (Entity->gameEntity->enemy->classname) && (!strcmp(Entity->gameEntity->enemy->classname, "tesla")))
+		if ((Entity->Enemy) && (Entity->Enemy->gameEntity->classname) && (!strcmp(Entity->Enemy->gameEntity->classname, "tesla")))
 			strafe_chance = 0;
 
 		if (random() < strafe_chance)

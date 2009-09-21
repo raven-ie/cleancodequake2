@@ -39,7 +39,8 @@ health (80), and dmg (150).
 */
 class CMiscExploBox : public CMapEntity, public CStepPhysics, public CHurtableEntity, public CThinkableEntity, public CTouchableEntity
 {
-	bool Dropped;
+	bool		Dropped;
+	CBaseEntity	*Shooter;
 public:
 	CMiscExploBox () :
 	Dropped(false),
@@ -137,10 +138,9 @@ public:
 			Link();
 			return;
 		}
-		T_RadiusDamage (this, gameEntity->activator->Entity, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_BARREL);
+		T_RadiusDamage (this, Shooter, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_BARREL);
 
-		vec3_t origin;
-		State.GetOrigin (origin);
+		vec3f origin = State.GetOrigin ();
 		CTempEnt_Explosions::GrenadeExplosion (origin, gameEntity);
 
 		Free ();
@@ -150,7 +150,7 @@ public:
 	{
 		CanTakeDamage = false;
 		NextThink = level.framenum + 2;
-		gameEntity->activator = attacker->gameEntity;
+		Shooter = attacker;
 	};
 
 	void Pain (CBaseEntity *other, float kick, int damage) {};
@@ -251,9 +251,6 @@ public:
 		Accel = Decel = Speed = gameEntity->speed;
 
 		Link ();
-
-		if (st.message)
-			Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	};
 };
 
@@ -353,6 +350,11 @@ public:
 	  CUsableEntity (Index)
 	{
 	};
+
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
 
 	bool Run ()
 	{
@@ -558,7 +560,7 @@ public:
 
 	virtual bool			ParseField (char *Key, char *Value)
 	{
-		return (CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+		return (CUsableEntity::ParseField (Key, Value) || CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 	};
 
 	bool Run ()
@@ -807,7 +809,6 @@ public:
 	vec3f MoveDir;
 	bool Usable;
 	bool Touchable;
-	char *Message;
 
 	CMiscViperBomb () :
 	  CBaseEntity (),
@@ -839,6 +840,11 @@ public:
 	{
 	};
 
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
+
 	bool Run ()
 	{
 		return (PhysicsType == PHYSICS_TOSS) ? CTossProjectile::Run() : CBaseEntity::Run();
@@ -867,7 +873,7 @@ public:
 
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
-		UseTargets (gameEntity->activator->Entity, Message);
+		UseTargets (Activator, Message);
 
 		State.SetOrigin (vec3f(State.GetOrigin().X, State.GetOrigin().Y, GetAbsMin().Z + 1));
 		T_RadiusDamage (this, this, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_BOMB);
@@ -886,7 +892,7 @@ public:
 		PhysicsType = PHYSICS_TOSS;
 		PreThinkable = true;
 		Touchable = true;
-		gameEntity->activator = activator->gameEntity;
+		Activator = activator;
 
 		CMiscViper *viper = dynamic_cast<CMiscViper*>(CC_Find (NULL, FOFS(classname), "misc_viper"));
 
@@ -911,9 +917,6 @@ public:
 
 		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
 		Link ();
-
-		if (st.message)
-			Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	};
 };
 
@@ -939,6 +942,11 @@ public:
 	  CUsableEntity (Index)
 	{
 	};
+
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
 
 	bool Run ()
 	{
