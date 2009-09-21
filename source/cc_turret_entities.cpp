@@ -430,10 +430,10 @@ void CTurretDriver::TurretThink ()
 {
 	Entity->NextThink = level.framenum + FRAMETIME;
 
-	if (Entity->gameEntity->enemy && (!Entity->gameEntity->enemy->Entity->IsInUse() || dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= 0))
-		Entity->gameEntity->enemy = NULL;
+	if (Entity->Enemy && (!Entity->Enemy->IsInUse() || dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= 0))
+		Entity->Enemy = NULL;
 
-	if (!Entity->gameEntity->enemy)
+	if (!Entity->Enemy)
 	{
 		if (!FindTarget ())
 			return;
@@ -442,7 +442,7 @@ void CTurretDriver::TurretThink ()
 	}
 	else
 	{
-		if (IsVisible (Entity, Entity->gameEntity->enemy->Entity))
+		if (IsVisible (Entity, Entity->Enemy))
 		{
 			if (AIFlags & AI_LOST_SIGHT)
 			{
@@ -458,8 +458,8 @@ void CTurretDriver::TurretThink ()
 	}
 
 	// let the turret know where we want it to aim
-	vec3f dir = (Entity->gameEntity->enemy->Entity->State.GetOrigin() +
-		vec3f(0, 0, Entity->gameEntity->enemy->viewheight)) -
+	vec3f dir = (Entity->Enemy->State.GetOrigin() +
+		vec3f(0, 0, Entity->Enemy->gameEntity->viewheight)) -
 		TargetedBreach->State.GetOrigin();
 
 	vec3f ang = dir.ToAngles ();

@@ -38,6 +38,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 CFlyer::CFlyer ()
 {
 	Scale = MODEL_SCALE;
+	MonsterName = "Flyer";
 }
 
 void CFlyer::Sight ()
@@ -328,7 +329,7 @@ void CFlyer::Fire (int FlashNumber)
 	vec3f	start, forward, right, end, dir;
 	int effect;
 
-	if (!Entity->gameEntity->enemy)
+	if (!Entity->Enemy)
 		return;
 
 	if ((Entity->State.GetFrame() == FRAME_attak204) || (Entity->State.GetFrame() == FRAME_attak207) || (Entity->State.GetFrame() == FRAME_attak210))
@@ -339,8 +340,8 @@ void CFlyer::Fire (int FlashNumber)
 	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[FlashNumber], forward, right, start);
 	
-	end = Entity->gameEntity->enemy->state.origin;
-	end.Z += Entity->gameEntity->enemy->viewheight;
+	end = Entity->Enemy->State.GetOrigin();
+	end.Z += Entity->Enemy->gameEntity->viewheight;
 	dir = end - start;
 
 	MonsterFireBlaster (start, dir, 1, 1000, FlashNumber, effect);
@@ -452,7 +453,7 @@ void CFlyer::Melee ()
 
 void CFlyer::CheckMelee ()
 {
-	if (Range (Entity, Entity->gameEntity->enemy->Entity) == RANGE_MELEE)
+	if (Range (Entity, Entity->Enemy) == RANGE_MELEE)
 		CurrentMove = (random() <= 0.8) ? &FlyerMoveLoopMelee : &FlyerMoveEndMelee;
 	else
 		CurrentMove = &FlyerMoveEndMelee;
@@ -524,11 +525,7 @@ CAnim FlyerMoveRollRight (FRAME_rollr01, FRAME_rollr09, FlyerFramesRollRight, Co
 
 void CFlyer::AI_Roll(float Dist)
 {
-	vec3_t	v;
-
-	Entity->State.GetOrigin(v);
-	Vec3Subtract (Entity->gameEntity->enemy->state.origin, v, v);
-	IdealYaw = VecToYaw(v);
+	IdealYaw = (Entity->Enemy->State.GetOrigin() - Entity->State.GetOrigin()).ToYaw();
 	ChangeYaw ();
 
 	float Yaw = (Entity->State.GetAngles().Y - 90);

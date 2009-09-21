@@ -38,6 +38,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 CBerserker::CBerserker ()
 {
 	Scale = MODEL_SCALE;
+	MonsterName = "Berserker";
 }
 
 void CBerserker::Sight ()

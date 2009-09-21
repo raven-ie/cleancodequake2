@@ -38,6 +38,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 CInfantry::CInfantry ()
 {
 	Scale = MODEL_SCALE;
+	MonsterName = "Enforcer";
 }
 
 CFrame InfantryFramesStand [] =
@@ -260,11 +261,11 @@ void CInfantry::MachineGun ()
 		Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
 		G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
-		if (Entity->gameEntity->enemy)
+		if (Entity->Enemy)
 		{
-			vec3f target = Entity->gameEntity->enemy->state.origin;
-			target = target.MultiplyAngles (-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->gameEntity->enemy->Entity)->Velocity);
-			target.Z += Entity->gameEntity->enemy->viewheight;
+			vec3f target = Entity->Enemy->State.GetOrigin();
+			target = target.MultiplyAngles (-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->Enemy)->Velocity);
+			target.Z += Entity->Enemy->gameEntity->viewheight;
 
 			forward = target - start;
 			forward.NormalizeFast ();
@@ -474,8 +475,8 @@ void CInfantry::Dodge (CBaseEntity *attacker, float eta)
 	if (random() > 0.25)
 		return;
 
-	if (!Entity->gameEntity->enemy)
-		Entity->gameEntity->enemy = attacker->gameEntity;
+	if (!Entity->Enemy)
+		Entity->Enemy = attacker->gameEntity;
 
 	CurrentMove = &InfantryMoveDuck;
 }

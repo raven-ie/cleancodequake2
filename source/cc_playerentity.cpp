@@ -2087,7 +2087,7 @@ void CPlayerEntity::DeathmatchScoreboardMessage (bool reliable)
 	int					sorted[MAX_CS_CLIENTS];
 	int					sortedscores[MAX_CS_CLIENTS];
 	int					score, total;
-	CPlayerEntity		*Killer = (gameEntity->enemy) ? dynamic_cast<CPlayerEntity*>(gameEntity->enemy->Entity) : NULL;
+	CPlayerEntity		*Killer = (Enemy) ? dynamic_cast<CPlayerEntity*>(Enemy) : NULL;
 
 	// sort the clients by score
 	total = 0;
@@ -2603,7 +2603,7 @@ void CPlayerEntity::MoveToIntermission ()
 	SetSolid (SOLID_NOT);
 
 	// add the layout
-	gameEntity->enemy = NULL;
+	Enemy = NULL;
 	if (game.mode != GAME_SINGLEPLAYER)
 		DeathmatchScoreboardMessage (true);
 }
@@ -2906,25 +2906,29 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 
 	Link ();
 
-	if (!NoClip)
+	if (!NoClip && !(map_debug->Boolean()))
 		G_TouchTriggers (this);
 
 	// touch other objects
-	for (int i = 0; i < pm.numTouch; i++)
+	if (!map_debug->Boolean())
 	{
-		edict_t *other = pm.touchEnts[i];
-		if (other->Entity)
+		for (int i = 0; i < pm.numTouch; i++)
 		{
-			if ((other->Entity->EntityFlags & ENT_TOUCHABLE) && other->Entity->IsInUse())
+			edict_t *other = pm.touchEnts[i];
+			if (other->Entity)
 			{
-				CTouchableEntity *Touchered = dynamic_cast<CTouchableEntity*>(other->Entity);
+				if ((other->Entity->EntityFlags & ENT_TOUCHABLE) && other->Entity->IsInUse())
+				{
+					CTouchableEntity *Touchered = dynamic_cast<CTouchableEntity*>(other->Entity);
 
-				if (Touchered->Touchable)
-					Touchered->Touch (this, NULL, NULL);
+					if (Touchered->Touchable)
+						Touchered->Touch (this, NULL, NULL);
+				}
+				continue;
 			}
-			continue;
 		}
 	}
+
 	// save light level the player is standing on for
 	// monster sighting AI
 	gameEntity->light_level = ucmd->lightLevel;
@@ -3261,7 +3265,6 @@ void CPlayerEntity::TossHead (int damage)
 	Link ();
 }
 
-void ClientObituary (CPlayerEntity *self, edict_t *attacker);
 void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 	CanTakeDamage = true;
@@ -3979,6 +3982,24 @@ void CPlayerEntity::Disconnect ()
 	ConfigString (CS_PLAYERSKINS+(State.GetNumber()-1), "");
 }
 
+const char *MonsterAOrAn (const char *Name)
+{
+	static const char *_a = "a";
+	static const char *_an = "an";
+
+	switch (Q_tolower(Name[0]))
+	{
+	case 'a':
+	case 'e':
+	case 'i':
+	case 'o':
+	case 'u':
+		return _an;
+	default:
+		return _a;
+	};
+}
+
 void CPlayerEntity::Obituary (CBaseEntity *attacker)
 {
 	char *message = "", *message2 = "";
@@ -4127,9 +4148,81 @@ void CPlayerEntity::Obituary (CBaseEntity *attacker)
 //ZOID
 #endif
 		}
-		BroadcastPrintf (PRINT_MEDIUM,"%s %s %s%s\n", Client.pers.netname, message, Attacker->Client.pers.netname, message2);
+		BroadcastPrintf (PRINT_MEDIUM,"%s %s %s%s.\n", Client.pers.netname, message, Attacker->Client.pers.netname, message2);
 		if (game.mode & GAME_DEATHMATCH)
 			Attacker->Client.resp.score++;
+	}
+	else if (attacker && (attacker->EntityFlags & ENT_MONSTER))
+	{
+		switch (meansOfDeath)
+		{
+		case MOD_BLASTER:
+			message = "was blasted by";
+			break;
+		case MOD_SHOTGUN:
+			message = "was gunned down by";
+			break;
+		case MOD_SSHOTGUN:
+			message = "was blown away by";
+			message2 = "'s super shotgun";
+			break;
+		case MOD_MACHINEGUN:
+			message = "was machinegunned by";
+			break;
+		case MOD_CHAINGUN:
+			message = "was cut in half by";
+			message2 = "'s chaingun";
+			break;
+		case MOD_GRENADE:
+			message = "was popped by";
+			message2 = "'s grenade";
+			break;
+		case MOD_G_SPLASH:
+			message = "was shredded by";
+			message2 = "'s shrapnel";
+			break;
+		case MOD_ROCKET:
+			message = "ate";
+			message2 = "'s rocket";
+			break;
+		case MOD_R_SPLASH:
+			message = "almost dodged";
+			message2 = "'s rocket";
+			break;
+		case MOD_HYPERBLASTER:
+			message = "was melted by";
+			message2 = "'s hyperblaster";
+			break;
+		case MOD_RAILGUN:
+			message = "was railed by";
+			break;
+		case MOD_BFG_LASER:
+			message = "saw the pretty lights from";
+			message2 = "'s BFG";
+			break;
+		case MOD_BFG_BLAST:
+			message = "was disintegrated by";
+			message2 = "'s BFG blast";
+			break;
+		case MOD_BFG_EFFECT:
+			message = "couldn't hide from";
+			message2 = "'s BFG";
+			break;
+		case MOD_EXPLOSIVE:
+		case MOD_BARREL:
+			message = "was blown to smithereens by";
+			break;
+		default:
+			message = "was killed by";
+			break;
+		};
+
+		CMonsterEntity *Monster = dynamic_cast<CMonsterEntity*>(attacker);
+		char *Name = Monster->Monster->MonsterName;
+
+		if (game.mode & GAME_DEATHMATCH)
+			Client.resp.score--;
+		BroadcastPrintf (PRINT_MEDIUM, "%s %s %s %s%s.\n", Client.pers.netname, message, MonsterAOrAn(Name), Name, message2);
 	}
 	else
 	{

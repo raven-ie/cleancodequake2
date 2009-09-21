@@ -38,6 +38,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 CBoss2::CBoss2 ()
 {
 	Scale = MODEL_SCALE;
+	MonsterName = "boss"; // FIXME: Name for this guy?
 };
 
 void CBoss2::Search ()
@@ -57,7 +58,7 @@ void CBoss2::FireRocket ()
 	vec3f origin = Entity->State.GetOrigin();
 
 	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_BOSS2_ROCKET_1], forward, right, start);
-	vec3f vec = vec3f(Entity->gameEntity->enemy->state.origin);
+	vec3f vec = Entity->Enemy->State.GetOrigin();
 	vec.Z += Entity->gameEntity->viewheight;
 	vec3f dir = vec - start;
 	dir.Normalize();
@@ -65,7 +66,7 @@ void CBoss2::FireRocket ()
 
 //2
 	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_BOSS2_ROCKET_2], forward, right, start);
-	vec = vec3f(Entity->gameEntity->enemy->state.origin);
+	vec = Entity->Enemy->State.GetOrigin();
 	vec.Z += Entity->gameEntity->viewheight;
 	dir = vec - start;
 	dir.Normalize();
@@ -73,7 +74,7 @@ void CBoss2::FireRocket ()
 
 //3
 	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_BOSS2_ROCKET_3], forward, right, start);
-	vec = vec3f(Entity->gameEntity->enemy->state.origin);
+	vec = Entity->Enemy->State.GetOrigin();
 	vec.Z += Entity->gameEntity->viewheight;
 	dir = vec - start;
 	dir.Normalize();
@@ -81,7 +82,7 @@ void CBoss2::FireRocket ()
 
 //4
 	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_BOSS2_ROCKET_4], forward, right, start);
-	vec = vec3f(Entity->gameEntity->enemy->state.origin);
+	vec = Entity->Enemy->State.GetOrigin();
 	vec.Z += Entity->gameEntity->viewheight;
 	dir = vec - start;
 	dir.Normalize();
@@ -96,11 +97,11 @@ void CBoss2::FireBulletRight ()
 	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_BOSS2_MACHINEGUN_R1], forward, right, start);
 
-	vec3f tempTarget = Entity->gameEntity->enemy->Entity->State.GetOrigin();
-	if (Entity->gameEntity->enemy->Entity->EntityFlags & ENT_PHYSICS)
-		tempTarget = tempTarget.MultiplyAngles (-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->gameEntity->enemy->Entity)->Velocity);
+	vec3f tempTarget = Entity->Enemy->State.GetOrigin();
+	if (Entity->Enemy->EntityFlags & ENT_PHYSICS)
+		tempTarget = tempTarget.MultiplyAngles (-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->Enemy)->Velocity);
 	target = tempTarget;
-	target.Z += Entity->gameEntity->enemy->viewheight;
+	target.Z += Entity->Enemy->gameEntity->viewheight;
 	forward = target - start;
 	forward.Normalize();
 
@@ -115,11 +116,11 @@ void CBoss2::FireBulletLeft ()
 	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_BOSS2_MACHINEGUN_R1], forward, right, start);
 
-	vec3f tempTarget = Entity->gameEntity->enemy->Entity->State.GetOrigin();
-	if (Entity->gameEntity->enemy->Entity->EntityFlags & ENT_PHYSICS)
-		tempTarget = tempTarget.MultiplyAngles (-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->gameEntity->enemy->Entity)->Velocity);
+	vec3f tempTarget = Entity->Enemy->State.GetOrigin();
+	if (Entity->Enemy->EntityFlags & ENT_PHYSICS)
+		tempTarget = tempTarget.MultiplyAngles (-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->Enemy)->Velocity);
 	target = tempTarget;
-	target.Z += Entity->gameEntity->enemy->viewheight;
+	target.Z += Entity->Enemy->gameEntity->viewheight;
 	forward = target - start;
 	forward.Normalize();
 
@@ -470,7 +471,7 @@ void CBoss2::Walk ()
 
 void CBoss2::Attack ()
 {
-	CurrentMove = ((vec3f(Entity->gameEntity->enemy->state.origin) - Entity->State.GetOrigin()).Length() <= 125) ?
+	CurrentMove = ((Entity->Enemy->State.GetOrigin() - Entity->State.GetOrigin()).Length() <= 125) ?
 		&Boss2MoveAttackPreMg : ((random() <= 0.6) ? &Boss2MoveAttackPreMg : &Boss2MoveAttackRocket);
 }
 
@@ -481,7 +482,7 @@ void CBoss2::AttackMg ()
 
 void CBoss2::ReAttackMg ()
 {
-	CurrentMove = (IsInFront(Entity, Entity->gameEntity->enemy->Entity)) ?
+	CurrentMove = (IsInFront(Entity, Entity->Enemy)) ?
 		((random() <= 0.7) ? &Boss2MoveAttackMg : &Boss2MoveAttackPostMg) : &Boss2MoveAttackPostMg;
 }
 
@@ -527,24 +528,24 @@ bool CBoss2::CheckAttack ()
 	ERangeType		enemy_range;
 	float	enemy_yaw;
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0)
 	{
 	// see if any entities are in the way of the shot
 		vec3f spot1 = Entity->State.GetOrigin();
 		spot1.Z += Entity->gameEntity->viewheight;
-		vec3f spot2 = vec3f (Entity->gameEntity->enemy->state.origin);
-		spot2.Z += Entity->gameEntity->enemy->viewheight;
+		vec3f spot2 = Entity->Enemy->State.GetOrigin();
+		spot2.Z += Entity->Enemy->gameEntity->viewheight;
 
 		CTrace tr (spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA);
 
 		// do we have a clear shot?
-		if (tr.ent != Entity->gameEntity->enemy)
+		if (tr.Ent != Entity->Enemy)
 			return false;
 	}
 	
-	enemy_infront = IsInFront(Entity, Entity->gameEntity->enemy->Entity);
-	enemy_range = Range(Entity, Entity->gameEntity->enemy->Entity);
-	temp = vec3f (Entity->gameEntity->enemy->state.origin) - Entity->State.GetOrigin();
+	enemy_infront = IsInFront(Entity, Entity->Enemy);
+	enemy_range = Range(Entity, Entity->Enemy);
+	temp = Entity->Enemy->State.GetOrigin() - Entity->State.GetOrigin();
 	enemy_yaw = temp.ToYaw();
 
 	IdealYaw = enemy_yaw;

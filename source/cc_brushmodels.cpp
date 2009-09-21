@@ -506,11 +506,10 @@ void CPlatForm::CPlatFormInsideTrigger::Touch (CBaseEntity *other, plane_t *plan
 	if (!other->gameEntity->client)
 		return;
 
-	CPlatForm *Plat = dynamic_cast<CPlatForm*>(gameEntity->enemy->Entity); // get the plat
-	if (Plat->MoveState == STATE_BOTTOM)
-		Plat->GoUp ();
-	else if (Plat->MoveState == STATE_TOP)
-		Plat->NextThink = level.framenum + 10;	// the player is still on the plat, so delay going down
+	if (Owner->MoveState == STATE_BOTTOM)
+		Owner->GoUp ();
+	else if (Owner->MoveState == STATE_TOP)
+		Owner->NextThink = level.framenum + 10;	// the player is still on the plat, so delay going down
 };
 
 void CPlatForm::SpawnInsideTrigger ()
@@ -522,7 +521,7 @@ void CPlatForm::SpawnInsideTrigger ()
 	// middle trigger
 	//	
 	trigger->SetSolid(SOLID_TRIGGER);
-	trigger->gameEntity->enemy = gameEntity;
+	trigger->Owner = this;
 
 	tmin = GetMins();
 	tmin.X += 25;
@@ -588,6 +587,7 @@ void CPlatForm::Spawn ()
 	Positions[0] = Positions[1] = State.GetOrigin ();
 	Positions[1].Z -= (st.height) ? st.height : ((GetMaxs().Z - GetMins().Z) - st.lip);
 
+	if (!map_debug->Boolean())
 	SpawnInsideTrigger ();	// the "start moving" trigger	
 
 	if (gameEntity->targetname)
@@ -908,7 +908,7 @@ void CDoor::Blocked (CBaseEntity *other)
 		if (MoveState == STATE_DOWN)
 		{
 			for (CBaseEntity *ent = TeamMaster ; ent ; ent = ent->TeamChain)
-				(dynamic_cast<CDoor*>(ent))->GoUp ((gameEntity->activator) ? gameEntity->activator->Entity : NULL);
+				(dynamic_cast<CDoor*>(ent))->GoUp ((Activator) ? Activator : NULL);
 		}
 		else
 		{
@@ -1038,11 +1038,10 @@ void CDoor::Spawn ()
 		CanTakeDamage = true;
 		MaxHealth = Health;
 	}
-	else if (gameEntity->targetname && st.message)
+	else if (gameEntity->targetname && Message)
 	{
 		SoundIndex ("misc/talk.wav");
 		Touchable = true;
-		Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	}
 	
 	Speed = gameEntity->speed;
@@ -1068,7 +1067,7 @@ void CDoor::Spawn ()
 	NextThink = level.framenum + FRAMETIME;
 	if (Health || gameEntity->targetname)
 		ThinkType = DOORTHINK_CALCMOVESPEED;
-	else
+	else if (!map_debug->Boolean())
 		ThinkType = DOORTHINK_SPAWNDOORTRIGGER;
 }
 
@@ -1200,11 +1199,10 @@ void CRotatingDoor::Spawn ()
 		MaxHealth = Health;
 	}
 	
-	if (gameEntity->targetname && st.message)
+	if (gameEntity->targetname && Message)
 	{
 		SoundIndex ("misc/talk.wav");
 		Touchable = true;
-		Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	}
 	else
 		Touchable = false;
@@ -1478,11 +1476,10 @@ void CDoorSecret::Spawn ()
 		CanTakeDamage = true;
 		MaxHealth = Health;
 	}
-	else if (gameEntity->targetname && st.message)
+	else if (gameEntity->targetname && Message)
 	{
 		SoundIndex ("misc/talk.wav");
 		Touchable = true;
-		Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	}
 	
 	gameEntity->classname = "func_door";
@@ -1563,7 +1560,7 @@ void CButton::DoEndFunc ()
 		State.RemoveEffects (EF_ANIM01);
 		State.AddEffects (EF_ANIM23);
 
-		UseTargets (gameEntity->activator->Entity, Message);
+		UseTargets (Activator, Message);
 		State.SetFrame (1);
 		if (Wait >= 0)
 		{
@@ -1604,7 +1601,7 @@ void CButton::Fire ()
 
 void CButton::Use (CBaseEntity *other, CBaseEntity *activator)
 {
-	gameEntity->activator = activator->gameEntity;
+	Activator = activator;
 	Fire ();
 }
 
@@ -1616,13 +1613,13 @@ void CButton::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	if (dynamic_cast<CPlayerEntity*>(other)->Health <= 0)
 		return;
 
-	gameEntity->activator = other->gameEntity;
+	Activator = other;
 	Fire ();
 }
 
 void CButton::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
-	gameEntity->activator = attacker->gameEntity;
+	Activator = attacker;
 	Health = MaxHealth;
 	CanTakeDamage = false;
 	Fire ();
@@ -1669,9 +1666,6 @@ void CButton::Spawn ()
 	}
 	else if (!gameEntity->targetname)
 		Touchable = true;
-
-	if (st.message)
-		Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 
 	MoveState = STATE_BOTTOM;
 
@@ -1763,7 +1757,7 @@ void CTrainBase::TrainWait ()
 		savetarget = ent->gameEntity->target;
 		ent->gameEntity->target = ent->gameEntity->pathtarget;
 		if (TargetEntity->EntityFlags & ENT_USABLE)
-			dynamic_cast<CUsableEntity*>(TargetEntity)->UseTargets (gameEntity->activator->Entity, Message);
+			dynamic_cast<CUsableEntity*>(TargetEntity)->UseTargets (Activator, Message);
 		ent->gameEntity->target = savetarget;
 
 		// make sure we didn't get killed by a killtarget
@@ -1891,13 +1885,13 @@ void CTrainBase::Find ()
 	{
 		NextThink = level.framenum + FRAMETIME;
 		ThinkType = TRAINTHINK_NEXT;
-		gameEntity->activator = gameEntity;
+		Activator = this;
 	}
 }
 
 void CTrainBase::Use (CBaseEntity *other, CBaseEntity *activator)
 {
-	gameEntity->activator = activator->gameEntity;
+	Activator = activator;
 
 	if (SpawnFlags & TRAIN_START_ON)
 	{
@@ -1995,9 +1989,6 @@ void CTrain::Spawn ()
 		//gi.dprintf ("func_train without a target at (%f %f %f)\n", self->absMin[0], self->absMin[1], self->absMin[2]);
 		MapPrint (MAPPRINT_ERROR, this, GetAbsMin(), "No target\n");
 	}
-
-	if (st.message)
-		Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 }
 
 LINK_CLASSNAME_TO_CLASS ("func_train", CTrain);
@@ -2085,14 +2076,37 @@ LINK_CLASSNAME_TO_CLASS ("trigger_elevator", CTriggerElevator);
 #pragma region World
 CWorldEntity::CWorldEntity () : 
 CBaseEntity(),
+CMapEntity(),
 CBrushModel()
 {
 };
 
 CWorldEntity::CWorldEntity (int Index) : 
 CBaseEntity(Index),
-CBrushModel()
+CMapEntity(Index),
+CBrushModel(Index)
 {
+};
+
+const CEntityField CWorldEntity::FieldsForParsing[] =
+{
+	CEntityField ("message", EntityMemberOffset(CWorldEntity,Message), FTStringL),
+};
+const size_t CWorldEntity::FieldsForParsingSize = (sizeof(CWorldEntity::FieldsForParsing) / sizeof(CWorldEntity::FieldsForParsing[0]));
+
+bool			CWorldEntity::ParseField (char *Key, char *Value)
+{
+	for (size_t i = 0; i < CWorldEntity::FieldsForParsingSize; i++)
+	{
+		if (strcmp (Key, CWorldEntity::FieldsForParsing[i].Name) == 0)
+		{
+			CWorldEntity::FieldsForParsing[i].Create<CWorldEntity> (this, Value);
+			return true;
+		}
+	}
+
+	// Couldn't find it here
+	return CMapEntity::ParseField (Key, Value);
 };
 
 bool CWorldEntity::Run ()
@@ -2159,10 +2173,10 @@ void CWorldEntity::Spawn ()
 		Q_strncpyz (level.nextmap, st.nextmap, sizeof(level.nextmap));
 
 	// make some data visible to the server
-	if (st.message && st.message[0])
+	if (Message && Message[0])
 	{
-		ConfigString (CS_NAME, st.message);
-		Q_strncpyz (level.level_name, st.message, sizeof(level.level_name));
+		ConfigString (CS_NAME, Message);
+		Q_strncpyz (level.level_name, Message, sizeof(level.level_name));
 	}
 	else
 		Q_strncpyz (level.level_name, level.mapname, sizeof(level.level_name));
@@ -2253,6 +2267,7 @@ void CWorldEntity::Spawn ()
 
 void SpawnWorld ()
 {
+	(dynamic_cast<CWorldEntity*>(g_edicts[0].Entity))->ParseFields ();
 	(dynamic_cast<CWorldEntity*>(g_edicts[0].Entity))->Spawn ();
 };
 #pragma endregion World
@@ -2845,9 +2860,6 @@ void CFuncExplosive::Spawn ()
 	}
 
 	Link ();
-
-	if (st.message)
-		Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 };
 
 LINK_CLASSNAME_TO_CLASS ("func_explosive", CFuncExplosive);
@@ -2890,8 +2902,6 @@ LINK_CLASSNAME_TO_CLASS ("func_killbox", CKillbox);
 class CTriggerRelay : public CMapEntity, public CUsableEntity
 {
 public:
-	char	*Message;
-
 	CTriggerRelay () :
 	  CBaseEntity (),
 	  CMapEntity (),
@@ -2906,6 +2916,11 @@ public:
 	  {
 	  };
 
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
+
 	void Use (CBaseEntity *other, CBaseEntity *activator)
 	{
 		UseTargets (activator, Message);
@@ -2913,8 +2928,6 @@ public:
 
 	void Spawn ()
 	{
-		if (st.message)
-			Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	};
 };
 

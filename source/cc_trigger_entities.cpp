@@ -40,8 +40,6 @@ This trigger will always fire.  It is activated by the world.
 class CTriggerAlways : public CMapEntity, public CUsableEntity
 {
 public:
-	char	*Message;
-
 	CTriggerAlways () :
 	  CBaseEntity (),
 	  CMapEntity ()
@@ -53,6 +51,11 @@ public:
 	  CMapEntity (Index)
 	{
 	};
+
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
 
 	void Use (CBaseEntity *, CBaseEntity *)
 	{
@@ -69,9 +72,6 @@ public:
 		if (gameEntity->delay < 0.2f)
 			gameEntity->delay = 0.2f;
 
-		if (st.message)
-			Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
-
 		UseTargets (this, Message);
 	};
 };
@@ -81,7 +81,6 @@ LINK_CLASSNAME_TO_CLASS ("trigger_always", CTriggerAlways);
 class CTriggerBase abstract : public CMapEntity, public CThinkableEntity, public CTouchableEntity, public CUsableEntity
 {
 public:
-	char	*Message;
 	enum
 	{
 		TRIGGER_THINK_NONE,
@@ -115,6 +114,11 @@ public:
 	  Touchable(true)
 	{
 	};
+
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
 
 	bool Run ()
 	{
@@ -162,13 +166,13 @@ public:
 				return;
 		}
 
-		gameEntity->activator = other->gameEntity;
+		Activator = other;
 		Trigger ();
 	};
 
 	virtual void Use (CBaseEntity *other, CBaseEntity *activator)
 	{
-		gameEntity->activator = activator->gameEntity;
+		Activator = activator;
 		Trigger ();
 	};
 
@@ -183,6 +187,7 @@ public:
 
 		SetSolid (SOLID_TRIGGER);
 		SetModel (gameEntity, gameEntity->model);
+
 		SetSvFlags (SVF_NOCLIENT);
 	};
 	// the trigger was just activated
@@ -193,7 +198,7 @@ public:
 		if (NextThink)
 			return;		// already been triggered
 
-		UseTargets (gameEntity->activator->Entity, Message);
+		UseTargets (Activator, Message);
 
 		if (gameEntity->wait > 0)	
 		{
@@ -265,7 +270,9 @@ public:
 		
 		if (!gameEntity->wait)
 			gameEntity->wait = 0.2f;
-		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
+
+		if (!map_debug->Boolean())
+			SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
 
 		if (SpawnFlags & 4)
 		{
@@ -287,9 +294,6 @@ public:
 
 		SetModel (gameEntity, gameEntity->model);
 		Link ();
-
-		if (st.message)
-			Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	};
 };
 
@@ -396,7 +400,7 @@ public:
 				Player->PrintToClient (PRINT_CENTER, "Sequence completed!");
 			activator->PlaySound (CHAN_AUTO, SoundIndex ("misc/talk1.wav"));
 		}
-		gameEntity->activator = activator->gameEntity;
+		Activator = activator;
 		Trigger ();
 	};
 
@@ -718,7 +722,6 @@ public:
 	bool		Usable;
 	CBaseItem	*Item;
 	FrameNumber_t		TouchDebounce;
-	char		*Message;
 
 	CTriggerKey () :
 	  CBaseEntity (),
@@ -737,6 +740,11 @@ public:
 	  TouchDebounce(0)
 	{
 	};
+
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
 
 	bool Run ()
 	{
@@ -838,9 +846,6 @@ public:
 
 		SoundIndex ("misc/keytry.wav");
 		SoundIndex ("misc/keyuse.wav");
-
-		if (st.message)
-			Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 	};
 };
 

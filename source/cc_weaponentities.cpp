@@ -51,19 +51,24 @@ void CheckDodge (CBaseEntity *self, vec3f &start, vec3f &dir, int speed)
 #ifdef MONSTER_USE_ROGUE_AI
 	if ((tr.ent) && (tr.ent->Entity) && (tr.ent->Entity->EntityFlags & ENT_MONSTER) && (dynamic_cast<CHurtableEntity*>(tr.ent->Entity)->Health > 0) && IsInFront(tr.Ent, self))
 	{
+		CMonsterEntity *Monster = (dynamic_cast<CMonsterEntity*>(tr.ent->Entity));
+		if (Monster->Enemy != self)
+			Monster->Enemy = self;
+
 		vec3f v = tr.EndPos - start;
 		float eta = (v.LengthFast() - tr.ent->maxs[0]) / speed;
-		(dynamic_cast<CMonsterEntity*>(tr.ent->Entity))->Monster->Dodge (self, eta, &tr);
-
-		if (tr.ent->enemy != self->gameEntity)
-			tr.ent->enemy = self->gameEntity;
+		Monster->Monster->Dodge (self, eta, &tr);
 	}
 #else
 	if ((tr.ent) && (tr.ent->Entity) && (tr.ent->Entity->EntityFlags & ENT_MONSTER) && (dynamic_cast<CHurtableEntity*>(tr.ent->Entity)->Health > 0) && IsInFront(tr.Ent, self))
 	{
+		CMonsterEntity *Monster = (dynamic_cast<CMonsterEntity*>(tr.ent->Entity));
+		if (Monster->Enemy != self)
+			Monster->Enemy = self;
+
 		vec3f v = tr.EndPos - start;
 		float eta = (v.LengthFast() - tr.ent->maxs[0]) / speed;
-		(dynamic_cast<CMonsterEntity*>(tr.ent->Entity))->Monster->Dodge (self, eta);
+		*Monster->Monster->Dodge (self, eta);
 	}
 #endif
 }
@@ -101,17 +106,17 @@ void CGrenade::Explode ()
 		dynamic_cast<CPlayerEntity*>(gameEntity->owner->Entity)->PlayerNoiseAt (origin, PNOISE_IMPACT);
 
 	//FIXME: if we are onground then raise our Z just a bit since we are a point?
-	if (gameEntity->enemy)
+	if (Enemy)
 	{
-		CHurtableEntity *Enemy = dynamic_cast<CHurtableEntity*>(gameEntity->enemy->Entity);
+		CHurtableEntity *HurtEnemy = dynamic_cast<CHurtableEntity*>(Enemy);
 
-		vec3f v = (Enemy->GetMins() + Enemy->GetMaxs());
-		v = (origin - Enemy->State.GetOrigin().MultiplyAngles (0.5f, v));
+		vec3f v = (HurtEnemy->GetMins() + HurtEnemy->GetMaxs());
+		v = (origin - HurtEnemy->State.GetOrigin().MultiplyAngles (0.5f, v));
 
 		float points = Damage - 0.5 * v.Length();
-		vec3f dir = Enemy->State.GetOrigin() - origin;
+		vec3f dir = HurtEnemy->State.GetOrigin() - origin;
 
-		Enemy->TakeDamage	(this, GetOwner(), dir, origin, vec3fOrigin, (int)points, (int)points,
+		HurtEnemy->TakeDamage	(this, GetOwner(), dir, origin, vec3fOrigin, (int)points, (int)points,
 							DAMAGE_RADIUS, (SpawnFlags & GRENADE_HAND) ? MOD_HANDGRENADE : MOD_GRENADE);
 	}
 
@@ -121,7 +126,7 @@ void CGrenade::Explode ()
 		mod = MOD_HG_SPLASH;
 	else
 		mod = MOD_G_SPLASH;
-	T_RadiusDamage(this, GetOwner(), Damage, (gameEntity->enemy) ? gameEntity->enemy->Entity : NULL, RadiusDamage, mod);
+	T_RadiusDamage(this, GetOwner(), Damage, (Enemy) ? Enemy : NULL, RadiusDamage, mod);
 
 	origin = origin.MultiplyAngles (-0.02f, Velocity);
 	if (GroundEntity)
@@ -157,7 +162,7 @@ void CGrenade::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 		return;
 	}
 
-	gameEntity->enemy = other->gameEntity;
+	Enemy = other;
 	Explode ();
 }
 
@@ -561,7 +566,7 @@ void CBFGBolt::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	State.SetSound(0);
 	State.SetEffects (EF_BFG);
 	NextThink = level.framenum + FRAMETIME;
-	gameEntity->enemy = other->gameEntity;
+	Enemy = other;
 
 	CTempEnt_Explosions::BFGExplosion (boltOrigin, true);
 }
@@ -1283,7 +1288,7 @@ bool CMeleeWeapon::Fire(CBaseEntity *Entity, vec3f aim, int damage, int kick)
 	float		range;
 
 	//see if enemy is in range
-	CBaseEntity *Enemy = Entity->gameEntity->enemy->Entity;
+	CBaseEntity *Enemy = Entity->Enemy;
 
 	dir = Enemy->State.GetOrigin() - Entity->State.GetOrigin();
 	range = dir.Length();
@@ -1390,31 +1395,32 @@ void CGrappleEntity::GrapplePull()
 		return;
 	}
 
-	if (gameEntity->enemy)
+	if (Enemy)
 	{
-		if (gameEntity->enemy->solid == SOLID_NOT)
+		if (Enemy->GetSolid() == SOLID_NOT)
 		{
 			ResetGrapple();
 			return;
 		}
-		if (gameEntity->enemy->solid == SOLID_BBOX)
+
+		if (Enemy->GetSolid() == SOLID_BBOX)
 		{
-			State.SetOrigin ((gameEntity->enemy->Entity->GetSize() * 0.5f) + gameEntity->enemy->Entity->State.GetOrigin() + gameEntity->enemy->Entity->GetMins());
+			State.SetOrigin ((Enemy->GetSize() * 0.5f) + Enemy->State.GetOrigin() + Enemy->GetMins());
 			Link ();
 		}
-		else if (gameEntity->enemy->Entity->EntityFlags & ENT_PHYSICS)
-			Velocity = dynamic_cast<CPhysicsEntity*>(gameEntity->enemy->Entity)->Velocity;
+		else if (Enemy->EntityFlags & ENT_PHYSICS)
+			Velocity = dynamic_cast<CPhysicsEntity*>(Enemy)->Velocity;
 
-		if (gameEntity->enemy && ((gameEntity->enemy->Entity->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(gameEntity->enemy->Entity)->CanTakeDamage))
+		if (Enemy && ((Enemy->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(Enemy)->CanTakeDamage))
 		{
-			CHurtableEntity *Hurt = dynamic_cast<CHurtableEntity*>(gameEntity->enemy->Entity);
+			CHurtableEntity *Hurt = dynamic_cast<CHurtableEntity*>(Enemy);
 			if (!Hurt->CheckTeamDamage (Player))
 			{
 				Hurt->TakeDamage (this, Player, Velocity, State.GetOrigin(), vec3fOrigin, 1, 1, 0, MOD_GRAPPLE);
 				PlaySound (CHAN_WEAPON, SoundIndex("weapons/grapple/grhurt.wav"), volume);
 			}
 		}
-		if (gameEntity->enemy && (gameEntity->enemy->Entity->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(gameEntity->enemy->Entity)->DeadFlag)
+		if (Enemy && (Enemy->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(Enemy)->DeadFlag)
 		{ // he died
 			ResetGrapple();
 			return;
@@ -1519,7 +1525,7 @@ void CGrappleEntity::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *
 	}
 
 	Player->Client.ctf_grapplestate = CTF_GRAPPLE_STATE_PULL; // we're on hook
-	gameEntity->enemy = other->gameEntity;
+	Enemy = other;
 
 	SetSolid (SOLID_NOT);
 

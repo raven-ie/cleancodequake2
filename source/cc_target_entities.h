@@ -41,5 +41,10 @@ public:
 
 	void Use (CBaseEntity *other, CBaseEntity *activator);
 
+	virtual bool ParseField (char *Key, char *Value)
+	{
+		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	}
+
 	void Spawn ();
 };

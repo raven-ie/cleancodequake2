@@ -38,6 +38,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 CBarracudaShark::CBarracudaShark ()
 {
 	Scale = MODEL_SCALE;
+	MonsterName = "Shark";
 }
 
 CFrame FlipperFramesStand [] =

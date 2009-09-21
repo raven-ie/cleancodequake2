@@ -43,7 +43,6 @@ public:
 	int			GibHealth;
 	bool		DeadFlag; // false = false, true = true
 	bool		CanTakeDamage;
-	CBaseEntity	*Enemy;
 
 	static const class CEntityField FieldsForParsing[];
 	static const size_t FieldsForParsingSize;
@@ -90,11 +89,18 @@ public:
 class CUsableEntity abstract : public virtual CBaseEntity
 {
 public:
+	char		*Message;
+	CBaseEntity	*Activator;
+
+	static const class CEntityField FieldsForParsing[];
+	static const size_t FieldsForParsingSize;
+	virtual bool			ParseField (char *Key, char *Value);
+
 	CUsableEntity ();
 	CUsableEntity (int Index);
 
 	virtual void Use (CBaseEntity *other, CBaseEntity *activator) {};
-	virtual void UseTargets (CBaseEntity *activator, const char *Message);
+	virtual void UseTargets (CBaseEntity *activator, char *Message);
 };
 
 // Thinkable entity

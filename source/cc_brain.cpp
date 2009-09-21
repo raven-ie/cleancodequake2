@@ -38,6 +38,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 CBrain::CBrain ()
 {
 	Scale = MODEL_SCALE;
+	MonsterName = "Brain";
 }
 
 void CBrain::Sight ()
@@ -373,8 +374,8 @@ void CBrain::Dodge (CBaseEntity *attacker, float eta)
 	if (frand() > 0.25f)
 		return;
 
-	if (!Entity->gameEntity->enemy)
-		Entity->gameEntity->enemy = attacker->gameEntity;
+	if (!Entity->Enemy)
+		Entity->Enemy = attacker->gameEntity;
 
 	PauseTime = level.framenum + ((eta + 0.5) * 10);
 	CurrentMove = &BrainMoveDuck;

@@ -281,14 +281,29 @@ edict_t *PlayerNearby (vec3f origin, int distance)
 	return NULL;
 }
 
-void PrintVerboseNodes (vec3f origin, uint32 numNode)
+void PrintVerboseNodes (vec3f origin, uint32 numNode, ENodeType Type)
 {
 	CPlayerEntity *ent = NULL;
 
 	while ((ent = FindRadius <CPlayerEntity, ENT_PLAYER>(ent, origin, 25)) != NULL)
 	{
 		if (ent->IsInUse())
-			ent->PrintToClient (PRINT_HIGH, "You are very close to node %i\n", numNode);
+		{
+			char *nodeType = "normal";
+			switch (Type)
+			{
+			case NODE_DOOR:
+				nodeType = "door";
+				break;
+			case NODE_PLATFORM:
+				nodeType = "platform";
+				break;
+			case NODE_JUMP:
+				nodeType = "jump";
+				break;
+			}
+			ent->PrintToClient (PRINT_HIGH, "You are very close to node %i (%s)\n", numNode, nodeType);
+		}
 	}
 }
 
@@ -317,7 +332,7 @@ void RunNodes()
 				CTempEnt_Trails::BFGLaser (NodeList[i]->Origin, Child->Origin);
 			}
 
-			PrintVerboseNodes (NodeList[i]->Origin, i);
+			PrintVerboseNodes (NodeList[i]->Origin, i, NodeList[i]->Type);
 		}
 	}
 }

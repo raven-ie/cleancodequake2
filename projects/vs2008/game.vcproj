@@ -1008,6 +1008,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\cc_stl.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\todo.txt"
 				>
 			</File>

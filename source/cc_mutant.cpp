@@ -38,6 +38,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 CMutant::CMutant ()
 {
 	Scale = MODEL_SCALE;
+	MonsterName = "Mutant";
 }
 
 //
@@ -270,7 +271,7 @@ void CMutant::HitRight ()
 
 void CMutant::CheckRefire ()
 {
-	if (!Entity->gameEntity->enemy || !Entity->gameEntity->enemy->inUse || dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= 0)
+	if (!Entity->Enemy || !Entity->Enemy->IsInUse() || dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= 0)
 		return;
 
 	// Paril, this was kinda dumb because he would keep refiring on nightmare
@@ -278,7 +279,7 @@ void CMutant::CheckRefire ()
 	if ((skill->Integer() == 3) && (random() < 0.5))
 		return;
 
-	if (Range(Entity, Entity->gameEntity->enemy->Entity) == RANGE_MELEE)
+	if (Range(Entity, Entity->Enemy) == RANGE_MELEE)
 		NextFrame = FRAME_attack09;
 }
 
@@ -363,7 +364,7 @@ void CMutant::JumpTakeOff ()
 		AttemptJumpToLastSight = false;
 	}
 	else
-		angles = Entity->gameEntity->enemy->Entity->State.GetOrigin() - origin;
+		angles = Entity->Enemy->State.GetOrigin() - origin;
 
 	angles.ToAngles ().ToVectors (&forward, NULL, &up);
 
@@ -421,26 +422,24 @@ void CMutant::Attack ()
 
 bool CMutant::CheckMelee ()
 {
-	if (Range (Entity, Entity->gameEntity->enemy->Entity) == RANGE_MELEE)
+	if (Range (Entity, Entity->Enemy) == RANGE_MELEE)
 		return true;
 	return false;
 }
 
 bool CMutant::CheckJump ()
 {
-	vec3_t origin;
-	Entity->State.GetOrigin(origin);
+	vec3f origin = Entity->State.GetOrigin();
+
 	// Did we lose sight of them?
 	if (AIFlags & AI_LOST_SIGHT)
 	{
-		vec3_t temp;
-
 		// Did we already try this?
 		if (AttemptJumpToLastSight)
 			return false;
 
-		Vec3Subtract (origin, LastSighting, temp);
-		if (Vec3Length(temp) > 400)
+		vec3f temp = origin - vec3f(LastSighting);
+		if (temp.Length() > 400)
 		{
 			//DebugPrintf ("Not attempting.\n");
 			return false; // Too far
@@ -448,7 +447,7 @@ bool CMutant::CheckJump ()
 
 		// So we lost sight of the player.
 		// Can we jump to the last spot we saw him?
-		CTrace trace = CTrace(origin, LastSighting, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
+		CTrace trace = CTrace(origin, vec3f(LastSighting), Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
 
 		//CTempEnt_Trails::DebugTrail (origin, LastSighting);
 
@@ -456,9 +455,9 @@ bool CMutant::CheckJump ()
 		if (trace.fraction == 1.0)
 		{
 			// Now we need to check if the last sighting is on ground.
-			vec3_t below = {LastSighting[0], LastSighting[1], LastSighting[2] - 64};
+			vec3f below = vec3f(LastSighting) - vec3f(0, 0, 64);
 
-			trace = CTrace (LastSighting, below, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
+			trace = CTrace (vec3f(LastSighting), below, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
 			//CTempEnt_Trails::DebugTrail (LastSighting, below);
 			if (trace.fraction < 1.0)
 			{
@@ -472,27 +471,25 @@ bool CMutant::CheckJump ()
 			// We weren't able to get to this spot right away.
 			// We need to calculate a good spot for this.
 			int escape = 0;
-			vec3_t temp, angles, forward;
+			vec3f temp, angles, forward;
 
 			// Keep going back about 15 units until we're clear
-			Vec3Subtract (LastSighting, origin, angles);
-			VecToAngles (angles, temp);
-			angles[0] = angles[2] = 0; // Only move the yaw
-			Angles_Vectors (temp, forward, NULL, NULL);
+			angles = (vec3f(LastSighting) - origin).ToAngles();
+			angles.X = angles.Z = 0; // Only move the yaw
+			temp.ToVectors (&forward, NULL, NULL);
 
-			Vec3Copy (LastSighting, temp);
-
+			temp = LastSighting;
 			while (trace.fraction != 1.0 && escape < 100)
 			{
 				escape++;
-			
-				Vec3MA (temp, -15, forward, temp);
+				
+				temp = temp.MultiplyAngles (-15, forward);
 				trace = CTrace(origin, temp, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
 				//CTempEnt_Trails::DebugTrail (origin, temp);
 			}
 
 			// Push it up a bit
-			temp[2] += 8;
+			temp.Z += 8;
 
 			if (escape != 100)
 			{
@@ -506,16 +503,15 @@ bool CMutant::CheckJump ()
 		return false;
 	}
 	AttemptJumpToLastSight = false;
-	//if (Entity->absMin[2] > (Entity->gameEntity->enemy->absMin[2] + 0.75 * Entity->gameEntity->enemy->size[2]))
+	//if (Entity->absMin[2] > (Entity->Enemy->absMin[2] + 0.75 * Entity->Enemy->size[2]))
 	//	return false;
 
-	//if (Entity->absMax[2] < (Entity->gameEntity->enemy->absMin[2] + 0.25 * Entity->gameEntity->enemy->size[2]))
+	//if (Entity->absMax[2] < (Entity->Enemy->absMin[2] + 0.25 * Entity->Enemy->size[2]))
 	//	return false;
 
-	vec3_t v = {origin[0] - Entity->gameEntity->enemy->state.origin[0],
-				origin[1] - Entity->gameEntity->enemy->state.origin[1],
-				0};
-	float distance = Vec3Length(v);
+	vec3f v = origin - Entity->Enemy->State.GetOrigin();
+	v.Z = 0;
+	float distance = v.Length();
 
 	if (distance < 100)
 		return false;
@@ -532,7 +528,7 @@ bool CMutant::CheckJump ()
 
 bool CMutant::CheckAttack ()
 {
-	if (!Entity->gameEntity->enemy || dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= 0)
+	if (!Entity->Enemy || dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= 0)
 		return false;
 
 	if (CheckMelee())

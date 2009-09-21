@@ -38,11 +38,13 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 CTank::CTank ()
 {
 	Scale = MODEL_SCALE;
+	MonsterName = "Tank";
 }
 
 CTankCommander::CTankCommander ()
 {
 	Scale = MODEL_SCALE;
+	MonsterName = "Tank Commander";
 }
 
 //
@@ -194,7 +196,7 @@ CAnim TankMoveStopRun (FRAME_walk21, FRAME_walk25, TankFramesStopRun, ConvertDer
 
 void CTank::Run ()
 {
-	if (Entity->gameEntity->enemy && Entity->gameEntity->enemy->client)
+	if (Entity->Enemy && (Entity->Enemy->EntityFlags & ENT_PLAYER))
 		AIFlags |= AI_BRUTAL;
 	else
 		AIFlags &= ~AI_BRUTAL;
@@ -324,8 +326,8 @@ void CTank::Blaster ()
 	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
-	end = Entity->gameEntity->enemy->state.origin;
-	end.Z += Entity->gameEntity->enemy->viewheight;
+	end = Entity->Enemy->State.GetOrigin();
+	end.Z += Entity->Enemy->gameEntity->viewheight;
 	dir = end - start;
 
 	MonsterFireBlaster (start, dir, 30, 800, flash_number, EF_BLASTER);
@@ -344,7 +346,7 @@ void CTank::Rocket ()
 	CTrace	trace;
 	bool blindfire = false;
 
-	if(!Entity->gameEntity->enemy || !Entity->gameEntity->enemy->inUse)
+	if(!Entity->Enemy || !Entity->Enemy->IsInUse())
 		return;
 
 	if (AIFlags & AI_MANUAL_STEERING)
@@ -368,29 +370,29 @@ void CTank::Rocket ()
 
 	rocketSpeed = 500 + (100 * skill->Integer());	// PGM rock & roll.... :)
 
-	target = (blindfire) ? BlindFireTarget : Entity->gameEntity->enemy->state.origin;
+	target = (blindfire) ? BlindFireTarget : Entity->Enemy->State.GetOrigin();
 
 	if (blindfire)
 	{
 		vec = target;
 		dir = vec - start;
 	}
-	else if(random() < 0.66 || (start[2] < Entity->gameEntity->enemy->absMin[2]))
+	else if(random() < 0.66 || (start[2] < Entity->Enemy->GetAbsMin().Z))
 	{
-		vec = Entity->gameEntity->enemy->state.origin;
-		vec.Z += Entity->gameEntity->enemy->viewheight;
+		vec = Entity->Enemy->State.GetOrigin();
+		vec.Z += Entity->Enemy->gameEntity->viewheight;
 		dir = vec - start;
 	}
 	else
 	{
-		vec = Entity->gameEntity->enemy->state.origin;
-		vec.Z = Entity->gameEntity->enemy->absMin[2];
+		vec = Entity->Enemy->State.GetOrigin();
+		vec.Z = Entity->Enemy->GetAbsMin().Z;
 		dir = vec - start;
 	}
 
 	if (!blindfire && ((random() < (0.2 + ((3 - skill->Integer()) * 0.15)))))
 	{
-		vec = vec.MultiplyAngles (dir.Length() / rocketSpeed, dynamic_cast<CPhysicsEntity*>(Entity->gameEntity->enemy->Entity)->Velocity);
+		vec = vec.MultiplyAngles (dir.Length() / rocketSpeed, dynamic_cast<CPhysicsEntity*>(Entity->Enemy)->Velocity);
 		dir = vec - start;
 	}
 
@@ -425,7 +427,7 @@ void CTank::Rocket ()
 	else
 	{
 		trace = CTrace(start, vec, Entity->gameEntity, CONTENTS_MASK_SHOT);
-		if(trace.ent == Entity->gameEntity->enemy || trace.ent == world)
+		if(trace.Ent == Entity->Enemy || trace.ent == world)
 		{
 			if(trace.fraction > 0.5 || (trace.ent && trace.ent->client))
 				MonsterFireRocket (start, dir, 50, rocketSpeed, flash_number);
@@ -451,8 +453,8 @@ void CTank::Rocket ()
 	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
-	vec = Entity->gameEntity->enemy->state.origin;
-	vec.Z += Entity->gameEntity->enemy->viewheight;
+	vec = Entity->Enemy->state.origin;
+	vec.Z += Entity->Enemy->gameEntity->viewheight;
 	dir = vec - start;
 	dir.NormalizeFast ();
 
@@ -468,10 +470,10 @@ void CTank::MachineGun ()
 	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
-	if (Entity->gameEntity->enemy)
+	if (Entity->Enemy)
 	{
-		vec3f vec = Entity->gameEntity->enemy->state.origin;
-		vec.Z += Entity->gameEntity->enemy->viewheight;
+		vec3f vec = Entity->Enemy->State.GetOrigin();
+		vec.Z += Entity->Enemy->gameEntity->viewheight;
 		vec -= start;
 		vec = vec.ToAngles ();
 		dir.X = vec.X;
@@ -535,7 +537,7 @@ CAnim TankMoveAttackPostBlast (FRAME_attak117, FRAME_attak122, TankFramesAttackP
 
 void CTank::ReAttackBlaster ()
 {
-	if (skill->Integer() >= 2 && IsVisible (Entity, Entity->gameEntity->enemy->Entity) && dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0 && random() <= 0.6)
+	if (skill->Integer() >= 2 && IsVisible (Entity, Entity->Enemy) && dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0 && random() <= 0.6)
 	{
 		CurrentMove = &TankMoveReAttackBlast;
 		return;
@@ -545,7 +547,7 @@ void CTank::ReAttackBlaster ()
 
 void CTank::PostStrike ()
 {
-	Entity->gameEntity->enemy = NULL;
+	Entity->Enemy = NULL;
 	Run ();
 }
 
@@ -712,7 +714,7 @@ void CTank::ReFireRocket ()
 #endif
 
 	// Only on hard or nightmare
-	if ( skill->Integer() >= 2 && dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0 && IsVisible(Entity, Entity->gameEntity->enemy->Entity) && random() <= 0.4)
+	if ( skill->Integer() >= 2 && dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0 && IsVisible(Entity, Entity->Enemy) && random() <= 0.4)
 	{
 		CurrentMove = &TankMoveAttackFireRocket;
 		return;
@@ -727,14 +729,10 @@ void CTank::DoAttackRocket ()
 
 void CTank::Attack ()
 {
-	if (!Entity->gameEntity->enemy || !Entity->gameEntity->enemy->inUse)
+	if (!Entity->Enemy || !Entity->Enemy->IsInUse())
 		return;
 
-	vec3_t	vec;
-	float	range;
-	float	r;
-
-	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health < 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health < 0)
 	{
 		CurrentMove = &TankMoveAttackStrike;
 		AIFlags &= ~AI_BRUTAL;
@@ -746,7 +744,7 @@ void CTank::Attack ()
 	if (AttackState == AS_BLIND)
 	{
 		// setup shot probabilities
-		r = random();
+		float r = random();
 
 		BlindFireDelay += 3.2 + 2.0 + random()*3.0;
 
@@ -770,13 +768,8 @@ void CTank::Attack ()
 	// pmm
 #endif
 
-	vec3_t origin;
-	Entity->State.GetOrigin(origin);
-
-	Vec3Subtract (Entity->gameEntity->enemy->state.origin, origin, vec);
-	range = Vec3Length (vec);
-
-	r = random();
+	float range = (Entity->Enemy->State.GetOrigin() - Entity->State.GetOrigin()).Length();
+	float r = random();
 
 	if (range <= 125)
 	{

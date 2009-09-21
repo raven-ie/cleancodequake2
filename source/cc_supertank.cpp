@@ -38,6 +38,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 CSuperTank::CSuperTank ()
 {
 	Scale = MODEL_SCALE;
+	MonsterName = "SuperTank";
 };
 
 void CSuperTank::PlayTreadSound ()
@@ -337,10 +338,10 @@ void CSuperTank::Grenade ()
 	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), offset, forward, right, start);
 
-	if (Entity->gameEntity->enemy)
+	if (Entity->Enemy)
 	{
-		vec3f vec = Entity->gameEntity->enemy->state.origin;
-		vec.Z += Entity->gameEntity->enemy->viewheight;
+		vec3f vec = Entity->Enemy->State.GetOrigin();
+		vec.Z += Entity->Enemy->gameEntity->viewheight;
 		forward = vec - start;
 		forward.Normalize ();
 	}
@@ -447,7 +448,7 @@ CAnim SuperTankMoveEndAttack1 (FRAME_attak1_7, FRAME_attak1_20, SuperTankFramesE
 
 void CSuperTank::ReAttack1 ()
 {
-	if (IsVisible(Entity, Entity->gameEntity->enemy->Entity))
+	if (IsVisible(Entity, Entity->Enemy))
 		CurrentMove = (random() < 0.9) ? &SuperTankMoveAttack1 : &SuperTankMoveEndAttack1;
 	else
 		CurrentMove = &SuperTankMoveEndAttack1;
@@ -541,7 +542,7 @@ void CSuperTank::Rocket ()
 		target = BlindFireTarget;
 	else
 #endif
-		target = Entity->gameEntity->enemy->Entity->State.GetOrigin();
+		target = Entity->Enemy->State.GetOrigin();
 	// pmm
 
 //PGM
@@ -556,18 +557,18 @@ void CSuperTank::Rocket ()
 	// don't shoot at feet if they're above me.
 	else
 #endif
-	if(random() < 0.66 || (start.Z < Entity->gameEntity->enemy->Entity->GetAbsMin().Z))
+	if(random() < 0.66 || (start.Z < Entity->Enemy->GetAbsMin().Z))
 	{
 //		gi.dprintf("normal shot\n");
-		vec = Entity->gameEntity->enemy->Entity->State.GetOrigin();
-		vec.Z += Entity->gameEntity->enemy->viewheight;
+		vec = Entity->Enemy->State.GetOrigin();
+		vec.Z += Entity->Enemy->gameEntity->viewheight;
 		dir = vec - start;
 	}
 	else
 	{
 //		gi.dprintf("shooting at feet!\n");
-		vec = Entity->gameEntity->enemy->Entity->State.GetOrigin();
-		vec.Z = Entity->gameEntity->enemy->viewheight;
+		vec = Entity->Enemy->State.GetOrigin();
+		vec.Z = Entity->Enemy->gameEntity->viewheight;
 		dir = vec - start;
 	}
 //PGM
@@ -611,7 +612,7 @@ void CSuperTank::Rocket ()
 #endif
 	{
 		trace = CTrace(start, vec, Entity->gameEntity, CONTENTS_MASK_SHOT);
-		if(trace.ent == Entity->gameEntity->enemy || trace.ent == world)
+		if(trace.Ent == Entity->Enemy || trace.ent == world)
 		{
 			if(trace.fraction > 0.5 || (trace.ent && trace.ent->client))
 				MonsterFireRocket (start, dir, 50, 500, FlashNumber);
@@ -630,10 +631,10 @@ void CSuperTank::MachineGun ()
 	dir.ToVectors (&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[FlashNumber], forward, right, start);
 
-	if (Entity->gameEntity->enemy)
+	if (Entity->Enemy)
 	{
-		vec3f vec = Entity->gameEntity->enemy->Entity->State.GetOrigin();
-		vec.Z += Entity->gameEntity->enemy->viewheight;
+		vec3f vec = Entity->Enemy->State.GetOrigin();
+		vec.Z += Entity->Enemy->gameEntity->viewheight;
 		forward = vec - start;
 		forward.Normalize ();
 	}
@@ -644,9 +645,6 @@ void CSuperTank::MachineGun ()
 
 void CSuperTank::Attack ()
 {
-	vec3_t	vec;
-	float	range;
-
 #ifdef MONSTER_USE_ROGUE_AI
 	// PMM 
 	if (AttackState == AS_BLIND)
@@ -681,10 +679,7 @@ void CSuperTank::Attack ()
 	// pmm
 #endif
 
-	vec3_t origin;
-	Entity->State.GetOrigin(origin);
-	Vec3Subtract (Entity->gameEntity->enemy->state.origin, origin, vec);
-	range = Vec3Length (vec);
+	float range = (Entity->Enemy->State.GetOrigin() - Entity->State.GetOrigin()).Length();
 
 #ifndef SUPERTANK_USES_GRENADE_LAUNCHER
 	if (range <= 160)

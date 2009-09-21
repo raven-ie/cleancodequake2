@@ -91,9 +91,9 @@ inline void operator delete(void *Pointer)
 	_Mem_Free (Pointer, "null", 0);
 }
 
-inline void *operator new[](size_t Size)
+_Ret_bytecap_(_Size) inline void *__CRTDECL operator new[](size_t _Size)
 {
-	return Mem_Alloc (Size);
+	return Mem_Alloc (_Size);
 }
 
 inline void operator delete[](void *Pointer)

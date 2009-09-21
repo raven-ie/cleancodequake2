@@ -38,6 +38,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 CGladiator::CGladiator ()
 {
 	Scale = MODEL_SCALE;
+	MonsterName = "Gladiator";
 }
 
 void CGladiator::Idle ()
@@ -183,21 +184,13 @@ CAnim GladiatorMoveAttackGun (FRAME_attack1, FRAME_attack9, GladiatorFramesAttac
 
 void CGladiator::Attack ()
 {
-	float	range;
-	vec3_t	v;
-
-	vec3_t origin;
-	Entity->State.GetOrigin(origin);
-
 	// a small safe zone
-	Vec3Subtract (origin, Entity->gameEntity->enemy->state.origin, v);
-	range = Vec3Length(v);
-	if (range <= (MELEE_DISTANCE + 32))
+	if ((Entity->State.GetOrigin() - Entity->Enemy->State.GetOrigin()).Length() <= (MELEE_DISTANCE + 32))
 		return;
 
 	// charge up the railgun
 	Entity->PlaySound (CHAN_WEAPON, SoundGun);
-	SavedFirePosition = Entity->gameEntity->enemy->Entity->State.GetOrigin() + vec3f(0, 0, Entity->gameEntity->enemy->viewheight);
+	SavedFirePosition = Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->gameEntity->viewheight);
 	CurrentMove = &GladiatorMoveAttackGun;
 }
 

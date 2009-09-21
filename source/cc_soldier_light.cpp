@@ -37,6 +37,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 CSoldierLight::CSoldierLight ()
 {
+	Scale = MODEL_SCALE;
+	MonsterName = "Light Soldier";
 }
 
 extern CAnim SoldierMoveAttack1;
@@ -83,7 +85,7 @@ void CSoldierLight::Attack ()
 
 	float r = random();
 	if ((!(AIFlags & (AI_BLOCKED|AI_STAND_GROUND))) &&
-		(Range(Entity, Entity->gameEntity->enemy->Entity) >= RANGE_NEAR) && 
+		(Range(Entity, Entity->Enemy) >= RANGE_NEAR) && 
 		(r < (skill->Integer()*0.25)))
 		CurrentMove = &SoldierMoveAttack6;
 	else
@@ -113,7 +115,7 @@ void CSoldierLight::FireGun (int FlashNumber)
 		break;
 	default:
 		{
-			CBaseEntity *Enemy = Entity->gameEntity->enemy->Entity;
+			CBaseEntity *Enemy = Entity->Enemy;
 			vec3f end;
 
 			end = Enemy->State.GetOrigin() + vec3f(0, 0, Enemy->gameEntity->viewheight);

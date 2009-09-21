@@ -99,8 +99,7 @@ void CMonster::MoveToPath (float Dist)
 {
 	if (!Entity->GroundEntity && !(Entity->Flags & (FL_FLY|FL_SWIM)))
 		return;
-
-	if (FindTarget() && (Entity->gameEntity->enemy && IsVisible(Entity, Entity->gameEntity->enemy->Entity))) // Did we find an enemy while going to our path?
+	if (FindTarget() && (Entity->Enemy && IsVisible(Entity, Entity->Enemy))) // Did we find an enemy while going to our path?
 	{
 		FollowingPath = false;
 		PauseTime = 100000000;
@@ -113,6 +112,13 @@ void CMonster::MoveToPath (float Dist)
 	vec3_t sub;
 	bool doit = false;
 	// Check if we hit our new path.
+
+	if (!P_CurrentNode || !P_CurrentPath->Path.size())
+	{
+		FollowingPath = false;
+		return;
+	}
+
 	vec3_t origin;
 	Entity->State.GetOrigin(origin);
 	Vec3Subtract (origin, P_CurrentNode->Origin, sub);
@@ -193,16 +199,14 @@ void CMonster::MoveToPath (float Dist)
 		}
 		else
 		{
-			if (Entity->gameEntity->enemy)
+			if (Entity->Enemy)
 			{
-				vec3_t sub;
-				Vec3Subtract (origin, Entity->gameEntity->enemy->state.origin, sub);
-
-				if (Vec3Length(sub) < 250) // If we're still close enough that it's possible
+				vec3f sub = (Entity->State.GetOrigin() - Entity->Enemy->State.GetOrigin());
+				if (sub.Length() < 250) // If we're still close enough that it's possible
 					// to hear him breathing (lol), start back on the trail
 				{
 					P_CurrentPath = NULL;
-					P_CurrentGoalNode = GetClosestNodeTo(Entity->gameEntity->enemy->state.origin);
+					P_CurrentGoalNode = GetClosestNodeTo(Entity->Enemy->State.GetOrigin());
 					FoundPath ();
 					return;
 				}
@@ -414,14 +418,11 @@ UseState(MONSTERENTITY_THINK_NONE)
 void CMonsterEntity::Spawn ()
 {
 	PhysicsType = PHYSICS_STEP;
-
-	if (st.message)
-		Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 };
 
 bool			CMonsterEntity::ParseField (char *Key, char *Value)
 {
-	return (CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	return (CUsableEntity::ParseField (Key, Value) || CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 };
 
 void CMonsterEntity::Think ()
@@ -610,13 +611,13 @@ bool CMonster::CheckBottom ()
 
 void CMonster::MoveToGoal (float Dist)
 {
-	edict_t *goal = Entity->gameEntity->goalentity;
+	CBaseEntity *goal = (Entity->gameEntity->goalentity) ? Entity->gameEntity->goalentity->Entity : Entity->Enemy;
 
 	if (!Entity->GroundEntity && !(Entity->Flags & (FL_FLY|FL_SWIM)))
 		return;
 
 // if the next step hits the enemy, return immediately
-	if (Entity->gameEntity->enemy && CloseEnough (Entity->gameEntity->enemy, Dist) )
+	if (Entity->Enemy && CloseEnough (Entity->Enemy, Dist) )
 		return;
 
 // bump around...
@@ -660,10 +661,10 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 		for (int i=0 ; i<2 ; i++)
 		{
 			Vec3Add (oldorg, move, neworg);
-			if (i == 0 && Entity->gameEntity->enemy)
+			if (i == 0 && Entity->Enemy)
 			{
 				if (!Entity->gameEntity->goalentity)
-					Entity->gameEntity->goalentity = Entity->gameEntity->enemy;
+					Entity->gameEntity->goalentity = Entity->Enemy->gameEntity;
 				float dz = oldorg[2] - Entity->gameEntity->goalentity->state.origin[2];
 				if (Entity->gameEntity->goalentity->client)
 				{
@@ -722,7 +723,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 				return true;
 			}
 			
-			if (!Entity->gameEntity->enemy)
+			if (!Entity->Enemy)
 				break;
 		}
 		
@@ -841,89 +842,79 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 	return true;
 }
 
-bool CMonster::CloseEnough (edict_t *Goal, float Dist)
+bool CMonster::CloseEnough (CBaseEntity *Goal, float Dist)
 {
 	for (int i=0 ; i<3 ; i++)
 	{
-		if (Goal->absMin[i] > Entity->GetAbsMax()[i] + Dist)
+		if (Goal->GetAbsMin()[i] > Entity->GetAbsMax()[i] + Dist)
 			return false;
-		if (Goal->absMax[i] < Entity->GetAbsMin()[i] - Dist)
+		if (Goal->GetAbsMax()[i] < Entity->GetAbsMin()[i] - Dist)
 			return false;
 	}
 	return true;
 }
 
-void CMonster::NewChaseDir (edict_t *Enemy, float Dist)
+void CMonster::NewChaseDir (CBaseEntity *Enemy, float Dist)
 {
-	float	deltax,deltay;
-	vec3_t	d;
-	float	tdir, olddir, turnaround;
-
 	//FIXME: how did we get here with no enemy
 	if (!Enemy)
+	{
+//		assert (0); // Let's find out!
 		return;
+	}
 
-	olddir = AngleModf ((int)(IdealYaw/45)*45);
-	turnaround = AngleModf (olddir - 180);
+	float olddir = AngleModf ((int)(IdealYaw/45)*45);
+	float turnaround = AngleModf (olddir - 180);
 
-	deltax = Enemy->state.origin[0] - Entity->State.GetOrigin().X;
-	deltay = Enemy->state.origin[1] - Entity->State.GetOrigin().Y;
-	if (deltax>10)
-		d[1]= 0;
-	else if (deltax<-10)
-		d[1]= 180;
-	else
-		d[1]= DI_NODIR;
-	if (deltay<-10)
-		d[2]= 270;
-	else if (deltay>10)
-		d[2]= 90;
-	else
-		d[2]= DI_NODIR;
+	float deltax = Enemy->State.GetOrigin().X - Entity->State.GetOrigin().X;
+	float deltay = Enemy->State.GetOrigin().Y - Entity->State.GetOrigin().Y;
+	
+	vec2f d (
+		((deltax > 10) ? 0 : (deltax < -10) ? 180 : DI_NODIR),
+		((deltay < -10) ? 270 : (deltay > 10) ? 90 : DI_NODIR));
 
 // try direct route
-	if (d[1] != DI_NODIR && d[2] != DI_NODIR)
+	float tdir;
+	if (d.X != DI_NODIR && d.Y != DI_NODIR)
 	{
-		if (d[1] == 0)
-			tdir = d[2] == 90 ? 45 : 315;
+		if (d.X == 0)
+			tdir = (d.Y == 90) ? 45 : 315;
 		else
-			tdir = d[2] == 90 ? 135 : 215;
+			tdir = (d.Y == 90) ? 135 : 215;
 			
 		if (tdir != turnaround && StepDirection(tdir, Dist))
 			return;
 	}
 
 // try other directions
-	if ( ((randomMT()&3) & 1) ||  Q_fabs(deltay)>Q_fabs(deltax))
+	if ( ((randomMT()&3) & 1) ||  Q_fabs(deltay) > Q_fabs(deltax))
 	{
-		tdir=d[1];
-		d[1]=d[2];
-		d[2]=tdir;
+		tdir = d.X;
+		d.X = d.Y;
+		d.Y = tdir;
 	}
 
-	if (d[1]!=DI_NODIR && d[1]!=turnaround 
-	&& StepDirection(d[1], Dist))
+	if (d.X != DI_NODIR && d.X != turnaround && StepDirection(d.X, Dist))
 			return;
 
-	if (d[2]!=DI_NODIR && d[2]!=turnaround
-	&& StepDirection(d[2], Dist))
+	if (d.Y != DI_NODIR && d.Y != turnaround && StepDirection(d.Y, Dist))
 			return;
 
 /* there is no direct path to the player, so pick another direction */
 
-	if (olddir!=DI_NODIR && StepDirection(olddir, Dist))
+	if (olddir != DI_NODIR && StepDirection(olddir, Dist))
 			return;
 
 	if (randomMT()&1) 	/*randomly determine direction of search*/
 	{
-		for (tdir=0 ; tdir<=315 ; tdir += 45)
-			if (tdir!=turnaround && StepDirection(tdir, Dist) )
+		for (tdir = 0; tdir <= 315; tdir += 45)
+			if (tdir != turnaround && StepDirection(tdir, Dist) )
 					return;
 	}
 	else
 	{
-		for (tdir=315 ; tdir >=0 ; tdir -= 45)
-			if (tdir!=turnaround && StepDirection(tdir, Dist) )
+		for (tdir = 315; tdir >= 0; tdir -= 45)
+			if (tdir != turnaround && StepDirection(tdir, Dist) )
 					return;
 	}
 
@@ -1203,7 +1194,7 @@ void CMonsterEntity::Use (CBaseEntity *other, CBaseEntity *activator)
 	case MONSTERENTITY_THINK_NONE:
 		break;
 	case MONSTERENTITY_THINK_USE:
-		if (gameEntity->enemy)
+		if (Enemy)
 			return;
 		if (Health <= 0)
 			return;
@@ -1213,7 +1204,7 @@ void CMonsterEntity::Use (CBaseEntity *other, CBaseEntity *activator)
 			return;
 		
 	// delay reaction so if the monster is teleported, its sound is still heard
-		gameEntity->enemy = activator->gameEntity;
+		Enemy = activator;
 		Monster->FoundTarget ();
 		break;
 	case MONSTERENTITY_THINK_TRIGGEREDSPAWNUSE:
@@ -1221,7 +1212,7 @@ void CMonsterEntity::Use (CBaseEntity *other, CBaseEntity *activator)
 		Monster->Think = &CMonster::MonsterTriggeredSpawn;
 		NextThink = level.framenum + FRAMETIME;
 		if (activator->EntityFlags & ENT_PLAYER)
-			gameEntity->enemy = activator->gameEntity;
+			Enemy = activator;
 		UseState = MONSTERENTITY_THINK_USE;
 		break;
 	};
@@ -1242,10 +1233,10 @@ void CMonster::MonsterTriggeredSpawn ()
 
 	MonsterStartGo ();
 
-	if (Entity->gameEntity->enemy && !(Entity->SpawnFlags & 1) && !(Entity->gameEntity->enemy->Entity->Flags & FL_NOTARGET))
+	if (Entity->Enemy && !(Entity->SpawnFlags & 1) && !(Entity->Enemy->Flags & FL_NOTARGET))
 		FoundTarget ();
 	else
-		Entity->gameEntity->enemy = NULL;
+		Entity->Enemy = NULL;
 }
 
 #ifdef MONSTERS_ARENT_STUPID
@@ -1258,7 +1249,8 @@ bool CMonster::FriendlyInLine (vec3_t Origin, vec3_t Direction)
 	Vec3MA (Origin, 8192, forward, end);
 	CTrace trace = CTrace(Origin, end, Entity->gameEntity, CONTENTS_MONSTER);
 
-	if (trace.fraction <= 0.5 && trace.ent && (trace.ent->Entity && (trace.ent->Entity->EntityFlags & ENT_MONSTER)) && (trace.ent->enemy != Entity->gameEntity))
+	if (trace.fraction <= 0.5 && trace.ent && (trace.ent->Entity && (trace.ent->Entity->EntityFlags & ENT_MONSTER)) &&
+		(dynamic_cast<CMonsterEntity*>(trace.Ent)->Enemy != Entity))
 		return true;
 	return false;
 }
@@ -1277,7 +1269,7 @@ void CMonster::AlertNearbyStroggs ()
 	float dist;
 	CMonsterEntity		*strogg = NULL;
 
-	if (Entity->gameEntity->enemy->Entity->Flags & FL_NOTARGET)
+	if (Entity->Enemy->Flags & FL_NOTARGET)
 		return;
 
 	switch (skill->Integer())
@@ -1307,27 +1299,29 @@ void CMonster::AlertNearbyStroggs ()
 			continue;
 		if (!(strogg->EntityFlags & ENT_MONSTER))
 			continue;
-		if (strogg->gameEntity->enemy)
+		if (strogg->Enemy)
+			continue;
+		if (strogg->SpawnFlags & 1)
 			continue;
 		
 #ifdef MONSTERS_USE_PATHFINDING
 		// Set us up for pathing
 		// Revision: if we aren't visible, that is.
-		if (!IsVisible(strogg, Entity->gameEntity->enemy->Entity))
+		if (!IsVisible(strogg, Entity->Enemy))
 		{
 			strogg->Monster->P_CurrentNode = GetClosestNodeTo(strogg->State.GetOrigin());
-			strogg->Monster->P_CurrentGoalNode = GetClosestNodeTo(Entity->gameEntity->enemy->Entity->State.GetOrigin());
-			//FoundStrogg->gameEntity->enemy = Entity->gameEntity->enemy;
+			strogg->Monster->P_CurrentGoalNode = GetClosestNodeTo(Entity->Enemy->State.GetOrigin());
+			//FoundStrogg->Enemy = Entity->Enemy;
 			strogg->Monster->FoundPath ();
 		}
 		else
 		{
-			strogg->gameEntity->enemy = Entity->gameEntity->enemy;
+			strogg->Enemy = Entity->Enemy;
 			strogg->Monster->FoundTarget ();
 			strogg->Monster->Sight ();
 		}
 #else
-		strogg->gameEntity->enemy = Entity->gameEntity->enemy;
+		strogg->Enemy = Entity->Enemy;
 		strogg->Monster->FoundTarget ();
 		strogg->Monster->Sight ();
 #endif
@@ -1341,7 +1335,7 @@ void CMonster::MonsterFireBullet (vec3f start, vec3f dir, int damage, int kick, 
 		return;
 #endif
 
-	CBullet::Fire (Entity, start, dir, damage, kick, hspread, vspread, MOD_UNKNOWN);
+	CBullet::Fire (Entity, start, dir, damage, kick, hspread, vspread, MOD_MACHINEGUN);
 
 	if (flashtype != -1)
 		CTempEnt::MonsterFlash (start, Entity->State.GetNumber(), flashtype);
@@ -1354,7 +1348,7 @@ void CMonster::MonsterFireShotgun (vec3f start, vec3f aimdir, int damage, int ki
 		return;
 #endif
 
-	CShotgunPellets::Fire (Entity, start, aimdir, damage, kick, hspread, vspread, count, MOD_UNKNOWN);
+	CShotgunPellets::Fire (Entity, start, aimdir, damage, kick, hspread, vspread, count, MOD_SHOTGUN);
 
 	if (flashtype != -1)
 		CTempEnt::MonsterFlash (start, Entity->State.GetNumber(), flashtype);
@@ -1433,18 +1427,18 @@ bool CMonster::CheckAttack ()
 	float	chance;
 	CTrace	tr;
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0)
 	{
 	// see if any entities are in the way of the shot
 		Entity->State.GetOrigin(spot1);
 		spot1[2] += Entity->gameEntity->viewheight;
-		Vec3Copy (Entity->gameEntity->enemy->state.origin, spot2);
-		spot2[2] += Entity->gameEntity->enemy->viewheight;
+		Vec3Copy (Entity->Enemy->State.GetOrigin(), spot2);
+		spot2[2] += Entity->Enemy->gameEntity->viewheight;
 
 		tr = CTrace(spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
 
 		// do we have a clear shot?
-		if (tr.ent != Entity->gameEntity->enemy)
+		if (tr.ent != Entity->Enemy)
 			return false;
 	}
 	
@@ -1516,25 +1510,25 @@ bool CMonster::CheckAttack ()
 #else
 	float	chance;
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0)
 	{
 	// see if any entities are in the way of the shot
 		vec3_t	spot1, spot2;
 		Entity->State.GetOrigin (spot1);
 		spot1[2] += Entity->gameEntity->viewheight;
-		Vec3Copy (Entity->gameEntity->enemy->state.origin, spot2);
-		spot2[2] += Entity->gameEntity->enemy->viewheight;
+		Vec3Copy (Entity->Enemy->State.GetOrigin(), spot2);
+		spot2[2] += Entity->Enemy->gameEntity->viewheight;
 
 		CTrace tr (spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
 
 		// do we have a clear shot?
-		if (tr.ent != Entity->gameEntity->enemy)
+		if (tr.Ent != Entity->Enemy)
 		{	
 			// PGM - we want them to go ahead and shoot at info_notnulls if they can.
-			if(Entity->gameEntity->enemy->solid != SOLID_NOT || tr.fraction < 1.0)		//PGM
+			if(Entity->Enemy->GetSolid() != SOLID_NOT || tr.fraction < 1.0)		//PGM
 			{
 				// PMM - if we can't see our target, and we're not blocked by a monster, go into blind fire if available
-				if ((!(tr.ent->svFlags & SVF_MONSTER)) && (!IsVisible(Entity, Entity->gameEntity->enemy->Entity)))
+				if ((!(tr.ent->svFlags & SVF_MONSTER)) && (!IsVisible(Entity, Entity->Enemy)))
 				{
 					if ((BlindFire) && (BlindFireDelay <= 20.0))
 					{
@@ -1547,7 +1541,7 @@ bool CMonster::CheckAttack ()
 						{
 							// make sure we're not going to shoot a monster
 							tr = CTrace (spot1, BlindFireTarget, Entity->gameEntity, CONTENTS_MONSTER);
-							if (tr.allSolid || tr.startSolid || ((tr.fraction < 1.0) && (tr.ent != Entity->gameEntity->enemy)))
+							if (tr.allSolid || tr.startSolid || ((tr.fraction < 1.0) && (tr.Ent != Entity->Enemy)))
 								return false;
 
 							AttackState = AS_BLIND;
@@ -1609,7 +1603,7 @@ bool CMonster::CheckAttack ()
 		chance *= 2;
 
 	// PGM - go ahead and shoot every time if it's a info_notnull
-	if ((random () < chance) || (Entity->gameEntity->enemy->solid == SOLID_NOT))
+	if ((random () < chance) || (Entity->Enemy->GetSolid() == SOLID_NOT))
 	{
 		AttackState = AS_MISSILE;
 		AttackFinished = level.framenum + ((2*random())*10);
@@ -1628,7 +1622,7 @@ bool CMonster::CheckAttack ()
 			strafe_chance = 0.6f;
 
 		// if enemy is tesla, never strafe
-		if ((Entity->gameEntity->enemy) && (Entity->gameEntity->enemy->classname) && (!strcmp(Entity->gameEntity->enemy->classname, "tesla")))
+		if ((Entity->Enemy) && (Entity->Enemy->gameEntity->classname) && (!strcmp(Entity->Enemy->gameEntity->classname, "tesla")))
 			strafe_chance = 0;
 
 		if (random() < strafe_chance)
@@ -1682,7 +1676,7 @@ void CMonster::AI_Charge(float Dist)
 
 	vec3_t origin;
 	Entity->State.GetOrigin (origin);
-	Vec3Subtract (Entity->gameEntity->enemy->state.origin, origin, v);
+	Vec3Subtract (Entity->Enemy->state.origin, origin, v);
 	IdealYaw = VecToYaw(v);
 	ChangeYaw ();
 
@@ -1694,21 +1688,16 @@ void CMonster::AI_Charge(float Dist)
 
 	// This is put in there so monsters won't move towards the origin after killing
 	// a tesla. This could be problematic, so keep an eye on it.
-	if(!Entity->gameEntity->enemy || !Entity->gameEntity->enemy->inUse)		//PGM
+	if(!Entity->Enemy || !Entity->Enemy->IsInUse())		//PGM
 		return;									//PGM
 
 	// PMM - save blindfire target
-	if (IsVisible(Entity, Entity->gameEntity->enemy->Entity))
-		Vec3Copy (Entity->gameEntity->enemy->state.origin, BlindFireTarget);
+	if (IsVisible(Entity, Entity->Enemy))
+		Vec3Copy (Entity->Enemy->State.GetOrigin(), BlindFireTarget);
 	// pmm 
 
 	if (!(AIFlags & AI_MANUAL_STEERING))
-	{
-		vec3_t origin, v;
-		Entity->State.GetOrigin (origin);
-		Vec3Subtract (Entity->gameEntity->enemy->state.origin, origin, v);
-		IdealYaw = VecToYaw(v);
-	}
+		IdealYaw = (Entity->Enemy->State.GetOrigin() - Entity->State.GetOrigin()).ToYaw ();
 	ChangeYaw ();
 
 	if (Dist)
@@ -1723,7 +1712,7 @@ void CMonster::AI_Charge(float Dist)
 		{
 			float ofs;
 			// if we're fighting a tesla, NEVER circle strafe
-			if ((Entity->gameEntity->enemy) && (Entity->gameEntity->enemy->classname) && (!strcmp(Entity->gameEntity->enemy->classname, "tesla")))
+			if ((Entity->Enemy) && (Entity->Enemy->gameEntity->classname) && (!strcmp(Entity->Enemy->gameEntity->classname, "tesla")))
 				ofs = 0;
 			else if (Lefty)
 				ofs = 90;
@@ -1757,11 +1746,11 @@ bool CMonster::AI_CheckAttack()
 
 		if (AIFlags & AI_SOUND_TARGET)
 		{
-			if (Entity->gameEntity->enemy)
+			if (Entity->Enemy)
 			{
-				if ((level.framenum - Entity->gameEntity->enemy->teleport_time) > 50)
+				if ((level.framenum - Entity->Enemy->teleport_time) > 50)
 				{
-					if (Entity->gameEntity->goalentity == Entity->gameEntity->enemy)
+					if (Entity->gameEntity->goalentity == Entity->Enemy)
 						if (Entity->gameEntity->movetarget)
 							Entity->gameEntity->goalentity = Entity->gameEntity->movetarget;
 						else
@@ -1780,11 +1769,11 @@ bool CMonster::AI_CheckAttack()
 	}
 
 // see if the enemy is dead
-	if ((!Entity->gameEntity->enemy) || (!Entity->gameEntity->enemy->inUse))
+	if ((!Entity->Enemy) || (!Entity->Enemy->IsInUse()))
 		hesDeadJim = true;
 	else if (AIFlags & AI_MEDIC)
 	{
-		if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0)
+		if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0)
 		{
 			hesDeadJim = true;
 			AIFlags &= ~AI_MEDIC;
@@ -1794,24 +1783,24 @@ bool CMonster::AI_CheckAttack()
 	{
 		if (AIFlags & AI_BRUTAL)
 		{
-			if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= -80)
+			if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= -80)
 				hesDeadJim = true;
 		}
 		else
 		{
-			if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= 0)
+			if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= 0)
 				hesDeadJim = true;
 		}
 	}
 
 	if (hesDeadJim)
 	{
-		Entity->gameEntity->enemy = NULL;
+		Entity->Enemy = NULL;
 	// FIXME: look all around for other targets
-		if (Entity->gameEntity->oldenemy && dynamic_cast<CHurtableEntity*>(Entity->gameEntity->oldenemy->Entity)->Health > 0)
+		if (Entity->OldEnemy && dynamic_cast<CHurtableEntity*>(Entity->OldEnemy)->Health > 0)
 		{
-			Entity->gameEntity->enemy = Entity->gameEntity->oldenemy;
-			Entity->gameEntity->oldenemy = NULL;
+			Entity->Enemy = Entity->OldEnemy;
+			Entity->OldEnemy = NULL;
 			HuntTarget ();
 		}
 		else
@@ -1837,18 +1826,18 @@ bool CMonster::AI_CheckAttack()
 	Entity->gameEntity->show_hostile = level.framenum + 10;		// wake up other monsters
 
 // check knowledge of enemy
-	EnemyVis = IsVisible(Entity, Entity->gameEntity->enemy->Entity);
+	EnemyVis = IsVisible(Entity, Entity->Enemy);
 	if (EnemyVis)
 	{
 		SearchTime = level.framenum + 50;
-		Vec3Copy (Entity->gameEntity->enemy->state.origin, LastSighting);
+		Vec3Copy (Entity->Enemy->State.GetOrigin(), LastSighting);
 	}
 
-	EnemyInfront = IsInFront(Entity, Entity->gameEntity->enemy->Entity);
-	EnemyRange = Range(Entity, Entity->gameEntity->enemy->Entity);
+	EnemyInfront = IsInFront(Entity, Entity->Enemy);
+	EnemyRange = Range(Entity, Entity->Enemy);
 	vec3_t origin;
 	Entity->State.GetOrigin (origin);
-	Vec3Subtract (Entity->gameEntity->enemy->state.origin, origin, temp);
+	Vec3Subtract (Entity->Enemy->state.origin, origin, temp);
 	EnemyYaw = VecToYaw(temp);
 
 	// JDC self->ideal_yaw = enemy_yaw;
@@ -1870,7 +1859,7 @@ bool CMonster::AI_CheckAttack()
 
 	return CheckAttack ();
 #else
-	vec3_t		temp;
+	vec3f		temp;
 	bool	hesDeadJim;
 	// PMM
 	bool	retval;
@@ -1883,9 +1872,9 @@ bool CMonster::AI_CheckAttack()
 
 		if (AIFlags & AI_SOUND_TARGET)
 		{
-			if ((level.framenum - Entity->gameEntity->enemy->teleport_time) > 50)
+			if ((level.framenum - Entity->Enemy->gameEntity->teleport_time) > 50)
 			{
-				if (Entity->gameEntity->goalentity == Entity->gameEntity->enemy)
+				if (Entity->gameEntity->goalentity == Entity->Enemy->gameEntity)
 				{
 					if (Entity->gameEntity->movetarget)
 						Entity->gameEntity->goalentity = Entity->gameEntity->movetarget;
@@ -1909,13 +1898,13 @@ bool CMonster::AI_CheckAttack()
 
 // see if the enemy is dead
 	hesDeadJim = false;
-	if ((!Entity->gameEntity->enemy) || (!Entity->gameEntity->enemy->inUse))
+	if ((!Entity->Enemy) || (!Entity->Enemy->IsInUse()))
 	{
 		hesDeadJim = true;
 	}
 	else if (AIFlags & AI_MEDIC)
 	{
-		if (!(Entity->gameEntity->enemy->inUse) || (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0))
+		if (!(Entity->Enemy->IsInUse()) || (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0))
 		{
 			hesDeadJim = true;
 //			self->monsterinfo.aiflags &= ~AI_MEDIC;
@@ -1925,12 +1914,12 @@ bool CMonster::AI_CheckAttack()
 	{
 		if (AIFlags & AI_BRUTAL)
 		{
-			if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= -80)
+			if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= -80)
 				hesDeadJim = true;
 		}
 		else
 		{
-			if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health <= 0)
+			if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= 0)
 				hesDeadJim = true;
 		}
 	}
@@ -1938,21 +1927,21 @@ bool CMonster::AI_CheckAttack()
 	if (hesDeadJim)
 	{
 		AIFlags &= ~AI_MEDIC;
-		Entity->gameEntity->enemy = NULL;
+		Entity->Enemy = NULL;
 	// FIXME: look all around for other targets
-		if (Entity->gameEntity->oldenemy && dynamic_cast<CHurtableEntity*>(Entity->gameEntity->oldenemy->Entity)->Health > 0)
+		if (Entity->OldEnemy && dynamic_cast<CHurtableEntity*>(Entity->OldEnemy)->Health > 0)
 		{
-			Entity->gameEntity->enemy = Entity->gameEntity->oldenemy;
-			Entity->gameEntity->oldenemy = NULL;
+			Entity->Enemy = Entity->OldEnemy;
+			Entity->OldEnemy = NULL;
 			HuntTarget ();
 		}
 //ROGUE - multiple teslas make monsters lose track of the player.
-		else if(LastPlayerEnemy && dynamic_cast<CHurtableEntity*>(LastPlayerEnemy->Entity)->Health > 0)
+		else if(LastPlayerEnemy && LastPlayerEnemy->Health > 0)
 		{
 //			if ((g_showlogic) && (g_showlogic->value))
 //				gi.dprintf("resorting to last_player_enemy...\n");
-			Entity->gameEntity->enemy = LastPlayerEnemy;
-			Entity->gameEntity->oldenemy = NULL;
+			Entity->Enemy = LastPlayerEnemy;
+			Entity->OldEnemy = NULL;
 			LastPlayerEnemy = NULL;
 			HuntTarget ();
 		}
@@ -1980,26 +1969,24 @@ bool CMonster::AI_CheckAttack()
 	Entity->gameEntity->show_hostile = level.framenum + 10;		// wake up other monsters
 
 // check knowledge of enemy
-	EnemyVis = IsVisible(Entity, Entity->gameEntity->enemy->Entity);
+	EnemyVis = IsVisible(Entity, Entity->Enemy);
 	if (EnemyVis)
 	{
 		SearchTime = level.framenum + 50;
-		Vec3Copy (Entity->gameEntity->enemy->state.origin, LastSighting);
+		Vec3Copy (Entity->Enemy->State.GetOrigin(), LastSighting);
 		// PMM
 		AIFlags &= ~AI_LOST_SIGHT;
 		TrailTime = level.framenum;
-		Vec3Copy (Entity->gameEntity->enemy->state.origin, BlindFireTarget);
+		Vec3Copy (Entity->Enemy->State.GetOrigin(), BlindFireTarget);
 		BlindFireDelay = 0;
 		// pmm
 	}
 
-	EnemyInfront = IsInFront(Entity, Entity->gameEntity->enemy->Entity);
-	EnemyRange = Range(Entity, Entity->gameEntity->enemy->Entity);
+	EnemyInfront = IsInFront(Entity, Entity->Enemy);
+	EnemyRange = Range(Entity, Entity->Enemy);
 
-	vec3_t origin;
-	Entity->State.GetOrigin(origin);
-	Vec3Subtract (Entity->gameEntity->enemy->state.origin, origin, temp);
-	EnemyYaw = VecToYaw(temp);
+	temp = Entity->Enemy->State.GetOrigin() - Entity->State.GetOrigin();
+	EnemyYaw = temp.ToYaw ();
 
 	// JDC self->ideal_yaw = enemy_yaw;
 
@@ -2041,6 +2028,20 @@ void CMonster::AI_Move (float Dist)
 	WalkMove (Entity->State.GetAngles().Y, Dist);
 }
 
+class CTempGoal : public virtual CBaseEntity
+{
+public:
+	CTempGoal () :
+	  CBaseEntity ()
+	{
+	};
+
+	CTempGoal (int Index) :
+	  CBaseEntity (Index)
+	{
+	};
+};
+
 void CMonster::AI_Run(float Dist)
 {
 #ifndef MONSTER_USE_ROGUE_AI
@@ -2068,9 +2069,9 @@ void CMonster::AI_Run(float Dist)
 	vec3f origin = Entity->State.GetOrigin();
 	if (AIFlags & AI_SOUND_TARGET)
 	{
-		if (Entity->gameEntity->enemy)
+		if (Entity->Enemy)
 		{
-			v = origin - Entity->gameEntity->enemy->Entity->State.GetOrigin();
+			v = origin - Entity->Enemy->State.GetOrigin();
 			if (v.Length() < 64)
 			{
 				AIFlags |= (AI_STAND_GROUND | AI_TEMP_STAND_GROUND);
@@ -2100,7 +2101,7 @@ void CMonster::AI_Run(float Dist)
 			//gi.dprintf("regained sight\n");
 		MoveToGoal (Dist);
 		AIFlags &= ~AI_LOST_SIGHT;
-		Vec3Copy (Entity->gameEntity->enemy->state.origin, LastSighting);
+		Vec3Copy (Entity->Enemy->State.GetOrigin(), LastSighting);
 		TrailTime = level.framenum;
 		return;
 	}
@@ -2142,7 +2143,7 @@ void CMonster::AI_Run(float Dist)
 	{
 		// Set us up for pathing
 		P_CurrentNode = GetClosestNodeTo(origin);
-		P_CurrentGoalNode = GetClosestNodeTo(Entity->gameEntity->enemy->state.origin);
+		P_CurrentGoalNode = GetClosestNodeTo(Entity->Enemy->state.origin);
 		FoundPath ();
 	}
 #endif
@@ -2253,8 +2254,7 @@ void CMonster::AI_Run(float Dist)
 	if (Entity)
 		Entity->gameEntity->goalentity = save;
 #else
-	vec3_t		v;
-	edict_t		*tempgoal;
+	CTempGoal		*tempgoal;
 	edict_t		*save;
 	bool	isNew;
 	//PMM
@@ -2296,16 +2296,15 @@ void CMonster::AI_Run(float Dist)
 //	}
 	// pmm
 
-	vec3_t origin;
-	Entity->State.GetOrigin(origin);
 	if (AIFlags & AI_SOUND_TARGET)
 	{
-
 		// PMM - paranoia checking
-		if (Entity->gameEntity->enemy)
-			Vec3Subtract (origin, Entity->gameEntity->enemy->state.origin, v);
+		vec3f v (0, 0, 0);
 
-		if ((!Entity->gameEntity->enemy) || (Vec3Length(v) < 64))
+		if (Entity->Enemy)
+			v = Entity->State.GetOrigin() - Entity->Enemy->State.GetOrigin();
+
+		if ((!Entity->Enemy) || (v.Length() < 64))
 		// pmm
 		{
 			AIFlags |= (AI_STAND_GROUND | AI_TEMP_STAND_GROUND);
@@ -2363,13 +2362,13 @@ void CMonster::AI_Run(float Dist)
 		if ((Dist != 0) && (!alreadyMoved) && (AttackState == AS_STRAIGHT) && (!(AIFlags & AI_STAND_GROUND)))
 			MoveToGoal (Dist);
 
-		if ((Entity->gameEntity->enemy) && (Entity->gameEntity->enemy->inUse) && (EnemyVis))
+		if ((Entity->Enemy) && (Entity->Enemy->IsInUse()) && (EnemyVis))
 		{
 			AIFlags &= ~AI_LOST_SIGHT;
-			Vec3Copy (Entity->gameEntity->enemy->state.origin, LastSighting);
+			Vec3Copy (Entity->Enemy->State.GetOrigin(), LastSighting);
 			TrailTime = level.framenum;
 			//PMM
-			Vec3Copy (Entity->gameEntity->enemy->state.origin, BlindFireTarget);
+			Vec3Copy (Entity->Enemy->State.GetOrigin(), BlindFireTarget);
 			BlindFireDelay = 0;
 			//pmm
 		}
@@ -2378,7 +2377,7 @@ void CMonster::AI_Run(float Dist)
 	//PMM
 
 	// PGM - added a little paranoia checking here... 9/22/98
-	if ((Entity->gameEntity->enemy) && (Entity->gameEntity->enemy->inUse) && (EnemyVis))
+	if ((Entity->Enemy) && (Entity->Enemy->IsInUse()) && (EnemyVis))
 	{
 		// PMM - check for alreadyMoved
 		if (!alreadyMoved)
@@ -2387,10 +2386,10 @@ void CMonster::AI_Run(float Dist)
 			return;			// PGM - g_touchtrigger free problem
 
 		AIFlags &= ~AI_LOST_SIGHT;
-		Vec3Copy (Entity->gameEntity->enemy->state.origin, LastSighting);
+		Vec3Copy (Entity->Enemy->State.GetOrigin(), LastSighting);
 		TrailTime = level.framenum;
 		// PMM
-		Vec3Copy (Entity->gameEntity->enemy->state.origin, BlindFireTarget);
+		Vec3Copy (Entity->Enemy->State.GetOrigin(), BlindFireTarget);
 		BlindFireDelay = 0;
 		// pmm
 		return;
@@ -2415,8 +2414,8 @@ void CMonster::AI_Run(float Dist)
 	}
 
 	save = Entity->gameEntity->goalentity;
-	tempgoal = G_Spawn();
-	Entity->gameEntity->goalentity = tempgoal;
+	tempgoal = QNew (com_levelPool, 0) CTempGoal;
+	Entity->gameEntity->goalentity = tempgoal->gameEntity;
 
 	isNew = false;
 
@@ -2435,8 +2434,8 @@ void CMonster::AI_Run(float Dist)
 	else if ((AIFlags & AI_LOST_SIGHT) && P_NodePathTimeout < level.framenum)
 	{
 		// Set us up for pathing
-		P_CurrentNode = GetClosestNodeTo(origin);
-		P_CurrentGoalNode = GetClosestNodeTo(Entity->gameEntity->enemy->state.origin);
+		P_CurrentNode = GetClosestNodeTo(Entity->State.GetOrigin());
+		P_CurrentGoalNode = GetClosestNodeTo(Entity->Enemy->State.GetOrigin());
 		FoundPath ();
 	}
 #endif
@@ -2456,8 +2455,8 @@ void CMonster::AI_Run(float Dist)
 		}
 	}
 
-	Vec3Subtract (origin, LastSighting, v);
-	float d1 = Vec3Length(v);
+	vec3f v = Entity->State.GetOrigin() - vec3f(LastSighting);
+	float d1 = v.Length();
 	if (d1 <= Dist)
 	{
 		AIFlags |= AI_PURSUE_NEXT;
@@ -2468,18 +2467,18 @@ void CMonster::AI_Run(float Dist)
 
 	if (isNew)
 	{
-		CTrace tr (vec3f(origin), Entity->GetMins(), Entity->GetMaxs(), vec3f(LastSighting), Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
+		CTrace tr (Entity->State.GetOrigin(), Entity->GetMins(), Entity->GetMaxs(), vec3f(LastSighting), Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
 		if (tr.fraction < 1)
 		{
 			float center = tr.fraction;
-			Vec3Subtract (Entity->gameEntity->goalentity->state.origin, origin, v);
-			d1 = Vec3Length(v);
+			v = Entity->gameEntity->goalentity->Entity->State.GetOrigin() - Entity->State.GetOrigin();
+			d1 = v.Length();
 
 			float d2 = d1 * ((center+1)/2);
 			vec3f angles = Entity->State.GetAngles();
 			vec3f origin = Entity->State.GetOrigin();
 
-			angles.Y = IdealYaw = VecToYaw(v);
+			angles.Y = IdealYaw = v.ToYaw();
 			Entity->State.SetAngles(angles);
 
 			vec3f v_forward, v_right;
@@ -2509,9 +2508,9 @@ void CMonster::AI_Run(float Dist)
 				AIFlags |= AI_PURSUE_TEMP;
 				Vec3Copy (left_target, Entity->gameEntity->goalentity->state.origin);
 				Vec3Copy (left_target, LastSighting);
-				Vec3Subtract (Entity->gameEntity->goalentity->state.origin, origin, v);
+				v = Entity->gameEntity->goalentity->Entity->State.GetOrigin() - origin;
 
-				angles[YAW] = IdealYaw = VecToYaw(v);
+				angles[YAW] = IdealYaw = v.ToYaw();
 				Entity->State.SetAngles(angles);
 			}
 			else if (right >= center && right > left)
@@ -2525,8 +2524,8 @@ void CMonster::AI_Run(float Dist)
 				AIFlags |= AI_PURSUE_TEMP;
 				Vec3Copy (right_target, Entity->gameEntity->goalentity->state.origin);
 				Vec3Copy (right_target, LastSighting);
-				Vec3Subtract (Entity->gameEntity->goalentity->state.origin, origin, v);
-				angles[YAW] = IdealYaw = VecToYaw(v);
+				v = Entity->gameEntity->goalentity->Entity->State.GetOrigin() - origin;
+				angles[YAW] = IdealYaw = v.ToYaw();
 				Entity->State.SetAngles(angles);
 			}
 		}
@@ -2534,7 +2533,7 @@ void CMonster::AI_Run(float Dist)
 
 	MoveToGoal (Dist);
 
-	G_FreeEdict(tempgoal);
+	tempgoal->Free ();
 
 	if(!Entity->IsInUse())
 		return;			// PGM - g_touchtrigger free problem
@@ -2656,11 +2655,19 @@ void CMonster::AI_Stand (float Dist)
 	if (FollowingPath)
 	{
 		// Assuming we got here because we're waiting for something.
-		if (P_CurrentNode->Type == NODE_DOOR)
+		if (P_CurrentNode->Type == NODE_DOOR || P_CurrentNode->Type == NODE_PLATFORM)
 		{
-			CDoor *Door = dynamic_cast<CDoor*>(P_CurrentNode->LinkedEntity);
+			CBrushModel *Door = dynamic_cast<CBrushModel*>(P_CurrentNode->LinkedEntity);
 			if (Door->MoveState == STATE_TOP)
 				Run(); // We can go again!
+		}
+		// In two goals, do we reach the platform node?
+		else if (P_CurrentPath->Path[P_CurrentNodeIndex-1]->Type == NODE_PLATFORM)
+		{
+			CPlatForm *Plat = dynamic_cast<CPlatForm*>(P_CurrentPath->Path[P_CurrentNodeIndex-1]->LinkedEntity); // get the plat
+			// Is it at bottom?
+			if (Plat->MoveState == STATE_BOTTOM)
+				Run (); // Go!
 		}
 		else
 		{
@@ -2673,11 +2680,11 @@ void CMonster::AI_Stand (float Dist)
 
 	if (AIFlags & AI_STAND_GROUND)
 	{
-		if (Entity->gameEntity->enemy)
+		if (Entity->Enemy)
 		{
 			vec3_t v;
 			Entity->State.GetOrigin(v);
-			Vec3Subtract (Entity->gameEntity->enemy->state.origin, v, v);
+			Vec3Subtract (Entity->Enemy->state.origin, v, v);
 			IdealYaw = VecToYaw(v);
 			if (Entity->State.GetAngles().Y != IdealYaw && AIFlags & AI_TEMP_STAND_GROUND)
 			{
@@ -2744,13 +2751,11 @@ void CMonster::AI_Stand (float Dist)
 
 	if (AIFlags & AI_STAND_GROUND)
 	{
-		if (Entity->gameEntity->enemy)
+		if (Entity->Enemy)
 		{
-			vec3_t origin, v;
-			Entity->State.GetOrigin (origin);
+			vec3f v = (Entity->Enemy->State.GetOrigin() - Entity->State.GetOrigin());
+			IdealYaw = v.ToYaw();
 
-			Vec3Subtract (Entity->gameEntity->enemy->state.origin, origin, v);
-			IdealYaw = VecToYaw(v);
 			if (Entity->State.GetAngles().Y != IdealYaw && (AIFlags & AI_TEMP_STAND_GROUND))
 			{
 				AIFlags &= ~(AI_STAND_GROUND | AI_TEMP_STAND_GROUND);
@@ -2762,11 +2767,11 @@ void CMonster::AI_Stand (float Dist)
 			// find out if we're going to be shooting
 			bool retval = AI_CheckAttack ();
 			// record sightings of player
-			if ((Entity->gameEntity->enemy) && (Entity->gameEntity->enemy->inUse) && (IsVisible(Entity, Entity->gameEntity->enemy->Entity)))
+			if ((Entity->Enemy) && (Entity->Enemy->IsInUse()) && (IsVisible(Entity, Entity->Enemy)))
 			{
 				AIFlags &= ~AI_LOST_SIGHT;
-				Vec3Copy (Entity->gameEntity->enemy->state.origin, LastSighting);
-				Vec3Copy (Entity->gameEntity->enemy->state.origin, BlindFireTarget);
+				Vec3Copy (Entity->Enemy->State.GetOrigin(), LastSighting);
+				Vec3Copy (Entity->Enemy->State.GetOrigin(), BlindFireTarget);
 				TrailTime = level.framenum;
 				BlindFireDelay = 0;
 			}
@@ -2808,91 +2813,12 @@ void CMonster::AI_Stand (float Dist)
 #endif
 }
 
-void CMonster::ReactToDamage (edict_t *attacker)
-{
-	if (!(attacker->client) && !(attacker->Entity && (attacker->Entity->EntityFlags & ENT_MONSTER)))
-		return;
-
-	if (attacker == Entity->gameEntity || attacker == Entity->gameEntity->enemy)
-		return;
-
-	// if we are a good guy monster and our attacker is a player
-	// or another good guy, do not get mad at them
-	if (AIFlags & AI_GOOD_GUY)
-	{
-		if (attacker->client || ((dynamic_cast<CMonsterEntity*>(attacker->Entity))->Monster->AIFlags & AI_GOOD_GUY))
-			return;
-	}
-
-	// we now know that we are not both good guys
-
-	// if attacker is a client, get mad at them because he's good and we're not
-	if (attacker->client)
-	{
-		AIFlags &= ~AI_SOUND_TARGET;
-
-		// this can only happen in coop (both new and old enemies are clients)
-		// only switch if can't see the current enemy
-		if (Entity->gameEntity->enemy && Entity->gameEntity->enemy->client)
-		{
-			if (IsVisible(Entity, Entity->gameEntity->enemy->Entity))
-			{
-				Entity->gameEntity->oldenemy = attacker;
-				return;
-			}
-			Entity->gameEntity->oldenemy = Entity->gameEntity->enemy;
-		}
-		Entity->gameEntity->enemy = attacker;
-		if (!(AIFlags & AI_DUCKED))
-			FoundTarget ();
-		return;
-	}
-
-#ifdef MONSTERS_ARENT_STUPID
-	// Help our buddy!
-	if ((attacker->Entity && (attacker->Entity->EntityFlags & ENT_MONSTER)) && attacker->enemy && attacker->enemy != Entity->gameEntity)
-	{
-		if (Entity->gameEntity->enemy && Entity->gameEntity->enemy->client)
-			Entity->gameEntity->oldenemy = Entity->gameEntity->enemy;
-		Entity->gameEntity->enemy = attacker->enemy;
-		if (!(AIFlags & AI_DUCKED))
-			FoundTarget ();
-	}
-	return;
-#else
-	// it's the same base (walk/swim/fly) type and a different classname and it's not a tank
-	// (they spray too much), get mad at them
-	if (((Entity->Flags & (FL_FLY|FL_SWIM)) == (attacker->Entity->Flags & (FL_FLY|FL_SWIM))) &&
-		 (strcmp (Entity->gameEntity->classname, attacker->classname) != 0) &&
-		 (strcmp(attacker->classname, "monster_tank") != 0) &&
-		 (strcmp(attacker->classname, "monster_supertank") != 0) &&
-		 (strcmp(attacker->classname, "monster_makron") != 0) &&
-		 (strcmp(attacker->classname, "monster_jorg") != 0))
-	{
-		if (Entity->gameEntity->enemy && Entity->gameEntity->enemy->client)
-			Entity->gameEntity->oldenemy = Entity->gameEntity->enemy;
-		Entity->gameEntity->enemy = attacker;
-		if (!(AIFlags & AI_DUCKED))
-			FoundTarget ();
-	}
-	// if they *meant* to shoot us, then shoot back
-	else if (attacker->enemy == Entity->gameEntity)
-	{
-		if (Entity->gameEntity->enemy && Entity->gameEntity->enemy->client)
-			Entity->gameEntity->oldenemy = Entity->gameEntity->enemy;
-		Entity->gameEntity->enemy = attacker;
-		if (!(AIFlags & AI_DUCKED))
-			FoundTarget ();
-	}
-#endif
-}
-
 void CMonster::ReactToDamage (CBaseEntity *attacker)
 {
 	if (!(attacker->EntityFlags & ENT_PLAYER) && !(attacker->EntityFlags & ENT_MONSTER))
 		return;
 
-	if (attacker == Entity || (Entity->gameEntity->enemy && (attacker == Entity->gameEntity->enemy->Entity)))
+	if (attacker == Entity || (Entity->Enemy && (attacker == Entity->Enemy)))
 		return;
 
 	// if we are a good guy monster and our attacker is a player
@@ -2912,16 +2838,16 @@ void CMonster::ReactToDamage (CBaseEntity *attacker)
 
 		// this can only happen in coop (both new and old enemies are clients)
 		// only switch if can't see the current enemy
-		if (Entity->gameEntity->enemy && (Entity->gameEntity->enemy->Entity->EntityFlags & ENT_PLAYER))
+		if (Entity->Enemy && (Entity->Enemy->EntityFlags & ENT_PLAYER))
 		{
-			if (IsVisible(Entity, Entity->gameEntity->enemy->Entity))
+			if (IsVisible(Entity, Entity->Enemy))
 			{
-				Entity->gameEntity->oldenemy = attacker->gameEntity;
+				Entity->OldEnemy = attacker;
 				return;
 			}
-			Entity->gameEntity->oldenemy = Entity->gameEntity->enemy;
+			Entity->OldEnemy = Entity->Enemy;
 		}
-		Entity->gameEntity->enemy = attacker->gameEntity;
+		Entity->Enemy = attacker;
 		if (!(AIFlags & AI_DUCKED))
 			FoundTarget ();
 		return;
@@ -2929,11 +2855,11 @@ void CMonster::ReactToDamage (CBaseEntity *attacker)
 
 #ifdef MONSTERS_ARENT_STUPID
 	// Help our buddy!
-	if ((attacker->EntityFlags & ENT_MONSTER) && attacker->gameEntity->enemy && attacker->gameEntity->enemy != Entity->gameEntity)
+	if ((attacker->EntityFlags & ENT_MONSTER) && attacker->Enemy && attacker->Enemy != Entity)
 	{
-		if (Entity->gameEntity->enemy && (Entity->gameEntity->enemy->Entity->EntityFlags & ENT_PLAYER))
-			Entity->gameEntity->oldenemy = Entity->gameEntity->enemy;
-		Entity->gameEntity->enemy = attacker->gameEntity->enemy;
+		if (Entity->Enemy && (Entity->Enemy->EntityFlags & ENT_PLAYER))
+			Entity->OldEnemy = Entity->Enemy;
+		Entity->Enemy = attacker->Enemy;
 		if (!(AIFlags & AI_DUCKED))
 			FoundTarget ();
 	}
@@ -2948,27 +2874,27 @@ void CMonster::ReactToDamage (CBaseEntity *attacker)
 		 (strcmp(attacker->gameEntity->classname, "monster_makron") != 0) &&
 		 (strcmp(attacker->gameEntity->classname, "monster_jorg") != 0))
 	{
-		if (Entity->gameEntity->enemy && (Entity->gameEntity->enemy->Entity->EntityFlags & ENT_PLAYER))
-			Entity->gameEntity->oldenemy = Entity->gameEntity->enemy;
-		Entity->gameEntity->enemy = attacker->gameEntity;
+		if (Entity->Enemy && (Entity->Enemy->EntityFlags & ENT_PLAYER))
+			Entity->OldEnemy = Entity->Enemy;
+		Entity->Enemy = attacker->gameEntity;
 		if (!(AIFlags & AI_DUCKED))
 			FoundTarget ();
 	}
 	// if they *meant* to shoot us, then shoot back
-	else if (attacker->gameEntity->enemy == Entity->gameEntity)
+	else if (attacker->Enemy == Entity->gameEntity)
 	{
-		if (Entity->gameEntity->enemy && (Entity->gameEntity->enemy->Entity->EntityFlags & ENT_PLAYER))
-			Entity->gameEntity->oldenemy = Entity->gameEntity->enemy;
-		Entity->gameEntity->enemy = attacker->gameEntity;
+		if (Entity->Enemy && (Entity->Enemy->EntityFlags & ENT_PLAYER))
+			Entity->OldEnemy = Entity->Enemy;
+		Entity->Enemy = attacker->gameEntity;
 		if (!(AIFlags & AI_DUCKED))
 			FoundTarget ();
 	}
 	// Help our buddy!
-	else if ((attacker->EntityFlags & ENT_MONSTER) && attacker->gameEntity->enemy && attacker->gameEntity->enemy != Entity->gameEntity)
+	else if ((attacker->EntityFlags & ENT_MONSTER) && attacker->Enemy && attacker->Enemy != Entity->gameEntity)
 	{
-		if (Entity->gameEntity->enemy && (Entity->gameEntity->enemy->Entity->EntityFlags & ENT_PLAYER))
-			Entity->gameEntity->oldenemy = Entity->gameEntity->enemy;
-		Entity->gameEntity->enemy = attacker->gameEntity->enemy;
+		if (Entity->Enemy && (Entity->Enemy->EntityFlags & ENT_PLAYER))
+			Entity->OldEnemy = Entity->Enemy;
+		Entity->Enemy = attacker->Enemy;
 		if (!(AIFlags & AI_DUCKED))
 			FoundTarget ();
 	}
@@ -3061,7 +2987,7 @@ void CMonster::MonsterDeathUse ()
 	if (!Entity->gameEntity->target)
 		return;
 
-	Entity->UseTargets (Entity->gameEntity->enemy->Entity, Entity->Message);
+	Entity->UseTargets (Entity->Enemy, Entity->Message);
 }
 
 void CMonster::MonsterThink ()
@@ -3192,7 +3118,7 @@ void CMonster::FoundTarget ()
 {
 	Entity->gameEntity->show_hostile = level.framenum + 10;		// wake up other monsters
 
-	Vec3Copy(Entity->gameEntity->enemy->state.origin, LastSighting);
+	Vec3Copy(Entity->Enemy->State.GetOrigin(), LastSighting);
 	TrailTime = level.framenum;
 
 	if (!Entity->gameEntity->combattarget)
@@ -3205,7 +3131,8 @@ void CMonster::FoundTarget ()
 	Entity->gameEntity->goalentity = Entity->gameEntity->movetarget = Target->gameEntity;
 	if (!Entity->gameEntity->movetarget)
 	{
-		Entity->gameEntity->goalentity = Entity->gameEntity->movetarget = Entity->gameEntity->enemy;
+		if (Entity->Enemy)
+			Entity->gameEntity->goalentity = Entity->gameEntity->movetarget = Entity->Enemy->gameEntity;
 		HuntTarget ();
 		MapPrint (MAPPRINT_ERROR, Entity, Entity->State.GetOrigin(), "combattarget %s not found\n", Entity->gameEntity->combattarget);
 		return;
@@ -3220,7 +3147,7 @@ void CMonster::FoundTarget ()
 	PauseTime = 0;
 #ifdef MONSTER_USE_ROGUE_AI
 	// PMM
-	Vec3Copy (Entity->gameEntity->enemy->state.origin, BlindFireTarget);
+	Vec3Copy (Entity->Enemy->State.GetOrigin(), BlindFireTarget);
 	BlindFireDelay = 0;
 	// PMM
 #endif
@@ -3412,17 +3339,13 @@ void CMonster::CheckGround()
 
 void CMonster::HuntTarget()
 {
-	vec3_t	vec;
-
-	Entity->gameEntity->goalentity = Entity->gameEntity->enemy;
+	Entity->gameEntity->goalentity = Entity->Enemy->gameEntity;
 	if (AIFlags & AI_STAND_GROUND)
 		Stand ();
 	else
 		Run ();
-
-	Entity->State.GetOrigin(vec);
-	Vec3Subtract (Entity->gameEntity->enemy->state.origin, vec, vec);
-	IdealYaw = VecToYaw(vec);
+ 
+	IdealYaw = (Entity->Enemy->State.GetOrigin() - Entity->State.GetOrigin()).ToYaw();
 	// wait a while before first attack
 	if (!(AIFlags & AI_STAND_GROUND))
 		AttackFinished = level.framenum + 1;
@@ -3485,7 +3408,7 @@ bool CMonster::FindTarget()
 		FoundPath ();
 
 		// Check if we can see the entity too
-		if (!Entity->gameEntity->enemy && (level.SoundEntityFramenum >= (level.framenum - 1)) && !(Entity->SpawnFlags & 1) )
+		if (IsVisible(Entity, level.SoundEntity) && !Entity->Enemy && (level.SoundEntityFramenum >= (level.framenum - 1)) && !(Entity->SpawnFlags & 1) )
 		{
 			client = level.SoundEntity;
 
@@ -3522,7 +3445,7 @@ bool CMonster::FindTarget()
 				}
 
 				// hunt the sound for a bit; hopefully find the real player
-				Entity->gameEntity->enemy = client->gameEntity;
+				Entity->Enemy = client;
 
 				FoundTarget ();
 				AlertNearbyStroggs ();
@@ -3548,7 +3471,7 @@ bool CMonster::FindTarget()
 	if ((level.sight_entity_framenum >= (level.framenum - 1)) && !(Entity->SpawnFlags & 1) )
 	{
 		client = level.sight_entity;
-		if (client->gameEntity->enemy == Entity->gameEntity->enemy)
+		if (client->Enemy == Entity->Enemy)
 			return false;
 	}
 #endif
@@ -3559,7 +3482,7 @@ bool CMonster::FindTarget()
 		client = level.sound_entity;
 		heardit = true;
 	}
-	else if (!(Entity->gameEntity->enemy) && (level.sound2_entity_framenum >= (level.framenum - 1)) && !(Entity->SpawnFlags & 1) )
+	else if (!(Entity->Enemy) && (level.sound2_entity_framenum >= (level.framenum - 1)) && !(Entity->SpawnFlags & 1) )
 	{
 		client = level.sound2_entity;
 		heardit = true;
@@ -3587,7 +3510,7 @@ bool CMonster::FindTarget()
 	if (!client->IsInUse())
 		return false;
 
-	if (IsVisible(Entity, client) && (client->gameEntity == Entity->gameEntity->enemy))
+	if (IsVisible(Entity, client) && (client == Entity->Enemy))
 		return true;	// JDC false;
 
 	if (client)
@@ -3598,7 +3521,7 @@ bool CMonster::FindTarget()
 	else
 		return false;
 
-	edict_t *old = Entity->gameEntity->enemy;
+	CBaseEntity *old = Entity->Enemy;
 	if (!heardit)
 	{
 		ERangeType r = Range (Entity, client);
@@ -3626,16 +3549,16 @@ bool CMonster::FindTarget()
 				return false;
 		}
 
-		Entity->gameEntity->enemy = client->gameEntity;
+		Entity->Enemy = client;
 
 		AIFlags &= ~AI_SOUND_TARGET;
 
-		if (!Entity->gameEntity->enemy->client)
+		if (!(Entity->Enemy->EntityFlags & ENT_PLAYER))
 		{
-			Entity->gameEntity->enemy = Entity->gameEntity->enemy->enemy;
-			if (!Entity->gameEntity->enemy->client)
+			Entity->Enemy = Entity->Enemy->Enemy;
+			if (!(Entity->Enemy->EntityFlags & ENT_PLAYER))
 			{
-				Entity->gameEntity->enemy = NULL;
+				Entity->Enemy = NULL;
 				return false;
 			}
 		}
@@ -3674,8 +3597,8 @@ bool CMonster::FindTarget()
 		ChangeYaw ();
 
 		// hunt the sound for a bit; hopefully find the real player
-		AIFlags |= AI_SOUND_TARGET;
-		Entity->gameEntity->enemy = client->gameEntity;
+		//AIFlags |= AI_SOUND_TARGET;
+		Entity->Enemy = client;
 	}
 
 //
@@ -3684,7 +3607,7 @@ bool CMonster::FindTarget()
 	FoundTarget ();
 	AlertNearbyStroggs ();
 
-	if (!(AIFlags & AI_SOUND_TARGET) && (Entity->gameEntity->enemy != old) && (MonsterFlags & MF_HAS_SIGHT))
+	if (!(AIFlags & AI_SOUND_TARGET) && (Entity->Enemy != old) && (MonsterFlags & MF_HAS_SIGHT))
 		Sight ();
 
 	return true;
@@ -3726,8 +3649,9 @@ void CMonster::CheckFlies ()
 	Entity->NextThink = level.framenum + ((5 + 10 * random()) * 10);
 }
 
-static uint32 lastMonsterID;
-CMonster::CMonster ()
+static uint32 lastMonsterID = 0;
+CMonster::CMonster () :
+MonsterName(NULL)
 {
 	MonsterID = lastMonsterID++;
 }
@@ -3760,9 +3684,9 @@ void CMonster::Dodge (CBaseEntity *attacker, float eta, CTrace *tr)
 	if ((!ducker) && (!dodger))
 		return;
 
-	if (!Entity->gameEntity->enemy)
+	if (!Entity->Enemy)
 	{
-		Entity->gameEntity->enemy = attacker->gameEntity;
+		Entity->Enemy = attacker;
 		FoundTarget ();
 	}
 

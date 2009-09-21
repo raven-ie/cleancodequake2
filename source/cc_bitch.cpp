@@ -38,6 +38,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 CMaiden::CMaiden ()
 {
 	Scale = MODEL_SCALE;
+	MonsterName = "Iron Maiden";
 }
 
 void CMaiden::Moan ()
@@ -531,8 +532,8 @@ void CMaiden::Dodge (CBaseEntity *attacker, float eta)
 	if (random() > 0.25)
 		return;
 
-	if (!Entity->gameEntity->enemy)
-		Entity->gameEntity->enemy = attacker->gameEntity;
+	if (!Entity->Enemy)
+		Entity->Enemy = attacker->gameEntity;
 
 	CurrentMove = &ChickMoveDuck;
 }
@@ -556,7 +557,7 @@ void CMaiden::Rocket ()
 
 	int rocketSpeed = 500 + (100 * skill->Integer());	// PGM rock & roll.... :)
 
-	target = (blindfire) ? BlindFireTarget : Entity->gameEntity->enemy->state.origin;
+	target = (blindfire) ? BlindFireTarget : Entity->Enemy->State.GetOrigin();
 	if (blindfire)
 	{
 		vec = target;
@@ -564,16 +565,16 @@ void CMaiden::Rocket ()
 	}
 	// pmm
 	// don't shoot at feet if they're above where i'm shooting from.
-	else if(random() < 0.33 || (start[2] < Entity->gameEntity->enemy->absMin[2]))
+	else if(random() < 0.33 || (start[2] < Entity->Enemy->GetAbsMin().Z))
 	{
 		vec = target;
-		vec.Z += Entity->gameEntity->enemy->viewheight;
+		vec.Z += Entity->Enemy->gameEntity->viewheight;
 		dir = vec - start;
 	}
 	else
 	{
 		vec = target;
-		vec.Z = Entity->gameEntity->enemy->absMin[2];
+		vec.Z = Entity->Enemy->GetAbsMin().Z;
 		dir = vec - start;
 	}
 
@@ -581,7 +582,7 @@ void CMaiden::Rocket ()
 	// 20, 35, 50, 65 chance of leading
 	if((!blindfire) && ((random() < (0.2 + ((3 - skill->Integer()) * 0.15)))))
 	{
-		vec = vec.MultiplyAngles (dir.Length() / rocketSpeed, dynamic_cast<CPhysicsEntity*>(Entity->gameEntity->enemy->Entity)->Velocity);
+		vec = vec.MultiplyAngles (dir.Length() / rocketSpeed, dynamic_cast<CPhysicsEntity*>(Entity->Enemy)->Velocity);
 		dir = vec - start;
 	}
 
@@ -628,8 +629,8 @@ void CMaiden::Rocket ()
 	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_CHICK_ROCKET_1], forward, right, start);
 
-	vec = Entity->gameEntity->enemy->state.origin;
-	vec.Z += Entity->gameEntity->enemy->viewheight;
+	vec = Entity->Enemy->state.origin;
+	vec.Z += Entity->Enemy->gameEntity->viewheight;
 	dir = vec - start;
 	dir.NormalizeFast ();
 
@@ -654,10 +655,10 @@ void CMaiden::ReRocket()
 		AIFlags &= ~AI_MANUAL_STEERING;
 	else
 #endif
-	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0)
+	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0)
 	{
-		if (Range (Entity, Entity->gameEntity->enemy->Entity) > RANGE_MELEE &&
-			IsVisible (Entity, Entity->gameEntity->enemy->Entity) &&
+		if (Range (Entity, Entity->Enemy) > RANGE_MELEE &&
+			IsVisible (Entity, Entity->Enemy) &&
 			(random() <= (0.6 + (0.05*skill->Float()))))
 		{
 			CurrentMove = &ChickMoveAttack1;
@@ -697,7 +698,7 @@ CAnim ChickMoveEndSlash (FRAME_attak213, FRAME_attak216, ChickFramesEndSlash, Co
 
 void CMaiden::ReSlash()
 {
-	if (dynamic_cast<CHurtableEntity*>(Entity->gameEntity->enemy->Entity)->Health > 0 && (Range (Entity, Entity->gameEntity->enemy->Entity) == RANGE_MELEE) && (random() <= 0.9))
+	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0 && (Range (Entity, Entity->Enemy) == RANGE_MELEE) && (random() <= 0.9))
 		CurrentMove = &ChickMoveSlash;
 	else
 		CurrentMove = &ChickMoveEndSlash;

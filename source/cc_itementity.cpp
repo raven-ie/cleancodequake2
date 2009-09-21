@@ -60,8 +60,6 @@ NoPhysics(false)
 
 void CItemEntity::Spawn ()
 {
-	if (st.message)
-		Message = Mem_PoolStrDup (st.message, com_levelPool, 0);
 } // Just to fill CMapEntity
 
 void CItemEntity::Touch(CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
