@@ -860,9 +860,9 @@ void CTank::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3
 		for (int n= 0; n < 1 /*4*/; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 		for (int n= 0; n < 4; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMetal, damage, GIB_METALLIC);
+			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMetal(), damage, GIB_METALLIC);
 		CGibEntity::Spawn (Entity, gMedia.Gib_Chest, damage, GIB_ORGANIC);
-		Entity->ThrowHead (gMedia.Gib_Gear, damage, GIB_METALLIC);
+		Entity->ThrowHead (gMedia.Gib_Gear(), damage, GIB_METALLIC);
 		Entity->DeadFlag = true;
 		return;
 	}

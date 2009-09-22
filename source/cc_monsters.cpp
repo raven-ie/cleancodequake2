@@ -415,6 +415,16 @@ UseState(MONSTERENTITY_THINK_NONE)
 	PhysicsType = PHYSICS_STEP;
 };
 
+bool CMonsterEntity::CheckValidity ()
+{
+	if (game.mode & GAME_DEATHMATCH)
+	{
+		Free ();
+		return false;
+	}
+	return CMapEntity::CheckValidity ();
+}
+
 void CMonsterEntity::Spawn ()
 {
 	PhysicsType = PHYSICS_STEP;

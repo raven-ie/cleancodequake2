@@ -34,6 +34,14 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #if !defined(__CC_MEDIA_H__) || !defined(INCLUDE_GUARDS)
 #define __CC_MEDIA_H__
 
+#define PUTTOGETHER(name) name##_index
+#define MEDIA_INDEXING_FUNCTION(name,string,registerer) \
+	inline MediaIndex name () \
+	{ \
+		static MediaIndex PUTTOGETHER(name) = registerer (string); \
+		return PUTTOGETHER(name); \
+	} \
+
 typedef struct SPlayerMedia_s
 {
 	MediaIndex		Death[4];
@@ -64,18 +72,18 @@ typedef struct SGameMedia_s
 
 	// Gibs
 	MediaIndex		Gib_SmallMeat;
-	MediaIndex		Gib_SmallMetal;
-	MediaIndex		Gib_Arm;
-	MediaIndex		Gib_Leg;
-	MediaIndex		Gib_Gear;
+	MEDIA_INDEXING_FUNCTION (Gib_SmallMetal, "models/objects/gibs/sm_metal/tris.md2", ModelIndex);
+	MEDIA_INDEXING_FUNCTION (Gib_Arm, "models/objects/gibs/arm/tris.md2", ModelIndex);
+	MEDIA_INDEXING_FUNCTION (Gib_Leg, "models/objects/gibs/leg/tris.md2", ModelIndex);
+	MEDIA_INDEXING_FUNCTION (Gib_Gear, "models/objects/gibs/gear/tris.md2", ModelIndex);
 	MediaIndex		Gib_Bone[2];
 	MediaIndex		Gib_Chest;
 	MediaIndex		Gib_Skull;
 	MediaIndex		Gib_Head[2];
 
 	// World stuff
-	MediaIndex		FrySound;
-	MediaIndex		FlySound;
+	MEDIA_INDEXING_FUNCTION (FrySound, "player/fry.wav", SoundIndex);
+	MEDIA_INDEXING_FUNCTION (FlySound, "misc/windfly.wav", SoundIndex);
 } SGameMedia_t;
 
 extern SGameMedia_t gMedia;

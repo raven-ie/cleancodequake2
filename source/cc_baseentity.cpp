@@ -614,7 +614,6 @@ bool				CMapEntity::CheckValidity ()
 	if (!Q_stricmp(level.mapname, "command") && !Q_stricmp(gameEntity->classname, "trigger_once") && !Q_stricmp(gameEntity->model, "*27"))
 		SpawnFlags &= ~SPAWNFLAG_NOT_HARD;
 
-	level.EntityNumber++;
 	// Remove things (except the world) from different skill levels or deathmatch
 	if (this != World)
 	{

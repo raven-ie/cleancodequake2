@@ -182,6 +182,8 @@ public:
 	CMonsterEntity	();
 	CMonsterEntity	(int Index);
 
+	virtual bool			CheckValidity ();
+
 	void			Think ();
 
 	void Pain (CBaseEntity *other, float kick, int damage);

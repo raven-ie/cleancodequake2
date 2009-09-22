@@ -476,7 +476,7 @@ public:
 					if (Player->FlySoundDebounceTime < level.framenum)
 					{
 						Player->FlySoundDebounceTime = level.framenum + 15;
-						other->PlaySound (CHAN_AUTO, gMedia.FlySound);
+						other->PlaySound (CHAN_AUTO, gMedia.FlySound());
 					}
 				}
 			}

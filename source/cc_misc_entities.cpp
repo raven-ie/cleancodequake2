@@ -162,6 +162,12 @@ public:
 
 	void Spawn ()
 	{
+		if (deathmatch->Boolean())
+		{
+			Free ();
+			return;
+		}
+
 		SetSolid (SOLID_BBOX);
 
 		State.SetModelIndex (ModelIndex ("models/objects/barrels/tris.md2"));
@@ -1080,7 +1086,7 @@ public:
 
 	void Spawn ()
 	{
-		State.SetModelIndex (gMedia.Gib_Arm);
+		State.SetModelIndex (gMedia.Gib_Arm());
 		SetSolid (SOLID_NOT);
 		State.AddEffects (EF_GIB);
 		CanTakeDamage = true;
@@ -1133,7 +1139,7 @@ public:
 
 	void Spawn ()
 	{
-		State.SetModelIndex (gMedia.Gib_Leg);
+		State.SetModelIndex (gMedia.Gib_Leg());
 		SetSolid (SOLID_NOT);
 		State.AddEffects (EF_GIB);
 		CanTakeDamage = true;
