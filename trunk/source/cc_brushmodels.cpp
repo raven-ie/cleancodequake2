@@ -99,7 +99,7 @@ void CBrushModel::MoveFinal ()
 		return;
 	}
 
-	Velocity = vec3f(Dir) * RemainingDistance;
+	Velocity = Dir * RemainingDistance;
 
 	ThinkType = BRUSHTHINK_MOVEDONE;
 	NextThink = level.framenum + FRAMETIME;
@@ -112,7 +112,7 @@ void CBrushModel::MoveBegin ()
 		MoveFinal ();
 		return;
 	}
-	Velocity = vec3f(Dir) * (Speed / 10);
+	Velocity = (Dir * Speed) / 10;
 
 	float frames = floor((RemainingDistance / Speed) / 0.1f);
 	RemainingDistance -= ((frames * Speed) / 10);
@@ -120,11 +120,11 @@ void CBrushModel::MoveBegin ()
 	ThinkType = BRUSHTHINK_MOVEFINAL;
 }
 
-void CBrushModel::MoveCalc (vec3_t dest, uint32 EndFunc)
+void CBrushModel::MoveCalc (vec3f &dest, uint32 EndFunc)
 {
 	Velocity.Clear ();
-	Vec3Subtract (dest, gameEntity->state.origin, Dir);
-	RemainingDistance = VectorNormalizef (Dir, Dir);
+	Dir = dest - State.GetOrigin();
+	RemainingDistance = Dir.Normalize();
 	this->EndFunc = EndFunc;
 
 	if (Speed == Accel && Speed == Decel)
@@ -159,20 +159,14 @@ void CBrushModel::AngleMoveDone ()
 
 void CBrushModel::AngleMoveFinal ()
 {
-	vec3_t	move;
+	vec3f move = ((MoveState == STATE_UP) ? EndAngles : StartAngles) - State.GetAngles();
 
-	if (MoveState == STATE_UP)
-		Vec3Subtract (EndAngles, gameEntity->state.angles, move);
-	else
-		Vec3Subtract (StartAngles, gameEntity->state.angles, move);
-
-	if (Vec3Compare (move, vec3Origin))
+	if (move == vec3fOrigin)
 	{
 		AngleMoveDone ();
 		return;
 	}
 
-	//Vec3Scale (move, 1, gameEntity->avelocity);
 	AngularVelocity = move;
 
 	ThinkType = BRUSHTHINK_AMOVEDONE;
@@ -181,21 +175,14 @@ void CBrushModel::AngleMoveFinal ()
 
 void CBrushModel::AngleMoveBegin ()
 {
-	vec3_t	destdelta;
-	float	len;
-	float	traveltime;
-
 	// set destdelta to the vector needed to move
-	if (MoveState == STATE_UP)
-		Vec3Subtract (EndAngles, gameEntity->state.angles, destdelta);
-	else
-		Vec3Subtract (StartAngles, gameEntity->state.angles, destdelta);
+	vec3f	destdelta = ((MoveState == STATE_UP) ? EndAngles : StartAngles) - State.GetAngles();
 	
 	// calculate length of vector
-	len = Vec3Length (destdelta);
+	float len = destdelta.Length();
 	
 	// divide by speed to get time to reach dest
-	traveltime = len / Speed;
+	float traveltime = len / Speed;
 
 	if (traveltime < 0.1f)
 	{
@@ -207,7 +194,7 @@ void CBrushModel::AngleMoveBegin ()
 
 	// scale the destdelta vector by the time spent traveling to get velocity
 	//Vec3Scale (destdelta, 1.0 / (traveltime * 10), gameEntity->avelocity);
-	AngularVelocity = vec3f(destdelta) * 1.0 / (traveltime * 10);
+	AngularVelocity = destdelta * 1.0 / (traveltime * 10);
 
 	// set nextthink to trigger a think when dest is reached
 	NextThink = level.framenum + frames;
@@ -351,7 +338,7 @@ void CBrushModel::ThinkAccelMove ()
 		return;
 	}
 
-	Velocity = vec3f(Dir) * CurrentSpeed;
+	Velocity = Dir * CurrentSpeed;
 	NextThink = level.framenum + FRAMETIME;
 	ThinkType = BRUSHTHINK_MOVEACCEL;
 }
@@ -603,10 +590,10 @@ void CPlatForm::Spawn ()
 	Accel = gameEntity->accel;
 	Decel = gameEntity->decel;
 	Wait = gameEntity->wait;
-	Vec3Copy (Positions[0], StartOrigin);
-	State.GetAngles (StartAngles);
-	State.GetAngles (EndAngles);
-	Vec3Copy (Positions[1], EndOrigin);
+	StartOrigin = Positions[0];
+	StartAngles = State.GetAngles ();
+	EndAngles = State.GetAngles ();
+	EndOrigin = Positions[1];
 
 	SoundStart = SoundIndex ("plats/pt1_strt.wav");
 	SoundMiddle = SoundIndex ("plats/pt1_mid.wav");
@@ -1013,13 +1000,8 @@ void CDoor::Spawn ()
 
 	// calculate second position
 	Positions[0] = State.GetOrigin ();
-	vec3f abs_movedir (
-		Q_fabs(MoveDir.X),
-		Q_fabs(MoveDir.Y),
-		Q_fabs(MoveDir.Z)
-	);
 	vec3f Size = GetSize();
-	Distance = abs_movedir.X * Size.X + abs_movedir.Y * Size.Y + abs_movedir.Z * Size.Z - st.lip;
+	Distance = Q_fabs(MoveDir.X) * Size.X + Q_fabs(MoveDir.Y) * Size.Y + Q_fabs(MoveDir.Z) * Size.Z - st.lip;
 	Positions[1] = Positions[0].MultiplyAngles (Distance, MoveDir);
 
 	// if it starts open, switch the positions
@@ -1048,10 +1030,10 @@ void CDoor::Spawn ()
 	Accel = gameEntity->accel;
 	Decel = gameEntity->decel;
 	Wait = gameEntity->wait;
-	Vec3Copy (Positions[0], StartOrigin);
-	State.GetAngles (StartAngles);
-	Vec3Copy (Positions[1], EndOrigin);
-	State.GetAngles (EndAngles);
+	StartOrigin = Positions[0];
+	StartAngles = State.GetAngles ();
+	EndOrigin = Positions[1];
+	EndAngles = State.GetAngles ();
 
 	if (SpawnFlags & 16)
 		State.AddEffects (EF_ANIM_ALL);
@@ -1212,10 +1194,10 @@ void CRotatingDoor::Spawn ()
 	Accel = gameEntity->accel;
 	Decel = gameEntity->decel;
 	Wait = gameEntity->wait;
-	State.GetOrigin (StartOrigin);
-	State.GetOrigin (EndOrigin);
-	Vec3Copy (Positions[0], StartAngles);
-	Vec3Copy (Positions[1], EndAngles);
+	StartOrigin = State.GetOrigin ();
+	EndOrigin = State.GetOrigin ();
+	StartAngles = Positions[0];
+	EndAngles = Positions[1];
 
 	if (SpawnFlags & 16)
 		State.AddEffects (EF_ANIM_ALL);
@@ -1272,9 +1254,7 @@ void CMovableWater::Spawn ()
 	// calculate second position
 	Positions[0] = State.GetOrigin ();
 
-	vec3f abs_movedir(Q_fabs(MoveDir.X), Q_fabs(MoveDir.Y), Q_fabs(MoveDir.Z));
-
-	Distance = abs_movedir.X * GetSize().X + abs_movedir.Y * GetSize().Y + abs_movedir.Z * GetSize().Z - st.lip;
+	Distance = Q_fabs(MoveDir.X) * GetSize().X + Q_fabs(MoveDir.Y) * GetSize().Y + Q_fabs(MoveDir.Z) * GetSize().Z - st.lip;
 	Positions[1] = Positions[0].MultiplyAngles (Distance, MoveDir);
 
 	// if it starts open, switch the positions
@@ -1285,10 +1265,10 @@ void CMovableWater::Spawn ()
 		Positions[0] = State.GetOrigin ();
 	}
 
-	Vec3Copy (Positions[0], StartOrigin);
-	State.GetAngles(StartAngles);
-	Vec3Copy (Positions[1], EndOrigin);
-	State.GetAngles(EndAngles);
+	StartOrigin = Positions[0];
+	StartAngles = State.GetAngles();
+	EndOrigin = Positions[1];
+	EndAngles = State.GetAngles();
 
 	MoveState = STATE_BOTTOM;
 
@@ -1305,7 +1285,7 @@ void CMovableWater::Spawn ()
 	if (gameEntity->wait == -1)
 		SpawnFlags |= DOOR_TOGGLE;
 
-	gameEntity->classname = "func_door";
+	//gameEntity->classname = "func_door";
 
 	Link ();
 };
@@ -1354,6 +1334,8 @@ void CDoorSecret::DoEndFunc ()
 				CanTakeDamage = true;
 			}
 			UseAreaPortals (false);
+
+			State.SetOrigin (vec3fOrigin); // FIXME: This SHOULDN'T be required.
 			break;
 		case DOORSECRETENDFUNC_5:
 			NextThink = level.framenum + 10;
@@ -1379,7 +1361,7 @@ void CDoorSecret::Think ()
 	switch (ThinkType)
 	{
 	case DOORSECRETTHINK_6:
-		MoveCalc (vec3Origin, DOORSECRETENDFUNC_DONE);
+		MoveCalc (vec3fOrigin, DOORSECRETENDFUNC_DONE);
 		break;
 	case DOORSECRETTHINK_4:
 		MoveCalc (Positions[0], DOORSECRETENDFUNC_5);
@@ -1482,7 +1464,7 @@ void CDoorSecret::Spawn ()
 		Touchable = true;
 	}
 	
-	gameEntity->classname = "func_door";
+	//gameEntity->classname = "func_door";
 
 	Link ();
 }
@@ -1649,11 +1631,7 @@ void CButton::Spawn ()
 		st.lip = 4;
 
 	Positions[0] = State.GetOrigin ();
-	vec3f abs_movedir (
-		Q_fabs(MoveDir.X),
-		Q_fabs(MoveDir.Y),
-		Q_fabs(MoveDir.Z));
-	float dist = abs_movedir.X * GetSize().X + abs_movedir.Y * GetSize().Y + abs_movedir.Z * GetSize().Z - st.lip;
+	float dist = Q_fabs(MoveDir.X) * GetSize().X + Q_fabs(MoveDir.Y) * GetSize().Y + Q_fabs(MoveDir.Z) * GetSize().Z - st.lip;
 	Positions[1] = Positions[0].MultiplyAngles (dist, MoveDir);
 
 	State.AddEffects (EF_ANIM01);
@@ -1673,10 +1651,10 @@ void CButton::Spawn ()
 	Accel = gameEntity->accel;
 	Decel = gameEntity->decel;
 	Wait = gameEntity->wait;
-	Vec3Copy (Positions[0], StartOrigin);
-	State.GetAngles (StartAngles);
-	Vec3Copy (Positions[1], EndOrigin);
-	State.GetAngles (EndAngles);
+	StartOrigin = Positions[0];
+	StartAngles = State.GetAngles ();
+	EndOrigin = Positions[1];
+	EndAngles = State.GetAngles ();
 
 	Link ();
 }
@@ -1839,10 +1817,9 @@ void CTrainBase::Next ()
 	}
 
 	MoveState = STATE_TOP;
-	State.GetOrigin (StartOrigin);
-	vec3f dest = (ent->State.GetOrigin() - GetMins());
-	Vec3Copy (dest, EndOrigin);
-	MoveCalc (dest, TRAINENDFUNC_WAIT);
+	StartOrigin = State.GetOrigin ();
+	EndOrigin = (ent->State.GetOrigin() - GetMins());
+	MoveCalc (EndOrigin, TRAINENDFUNC_WAIT);
 
 	SpawnFlags |= TRAIN_START_ON;
 }
@@ -1851,11 +1828,10 @@ void CTrainBase::Resume ()
 {
 	CBaseEntity *ent = TargetEntity;
 
-	vec3f dest = ent->State.GetOrigin() - GetMins();
+	EndOrigin = ent->State.GetOrigin() - GetMins();
 	MoveState = STATE_TOP;
-	State.GetOrigin (StartOrigin);
-	Vec3Copy (dest, EndOrigin);
-	MoveCalc (dest, TRAINENDFUNC_WAIT);
+	StartOrigin = State.GetOrigin ();
+	MoveCalc (EndOrigin, TRAINENDFUNC_WAIT);
 	SpawnFlags |= TRAIN_START_ON;
 }
 

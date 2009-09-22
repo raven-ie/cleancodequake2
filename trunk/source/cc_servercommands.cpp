@@ -110,6 +110,7 @@ typedef struct SServerEntityListIndex_s
 	const char	*className;
 	uint32		Num;
 	bool		Old;
+	vec3f		Origin;
 
 	struct SServerEntityListIndex_s	*hashNext;
 	uint32							hashValue;
@@ -118,7 +119,8 @@ typedef struct SServerEntityListIndex_s
 		className(name),
 		hashValue (Com_HashGeneric(className, MAX_CS_EDICTS)),
 		Num (0),
-		Old (true)
+		Old (true),
+		Origin()
 	{
 	};
 } SServerEntityListIndex;
@@ -166,20 +168,29 @@ public:
 		return Ind;
 	};
 
-	void Search ()
+	void Search (const char *WildCard)
 	{
 		for (int i = 0; i < globals.numEdicts; i++)
 		{
 			edict_t *e = (&g_edicts[i]);
 			if (!e->inUse)
 				continue;
-			
+
+			if (!Q_WildcardMatch (WildCard, e->classname, true))
+				continue;
+
 			SServerEntityListIndex *Index = Exists(e->classname);
 			if (!Index)
 			{
 				Index = AddToList (e->classname);
 				if (e->Entity)
+				{
 					Index->Old = false;
+					if (e->Entity->State.GetOrigin() == vec3fOrigin)
+						Index->Origin = e->Entity->GetAbsMin();
+					else
+						Index->Origin = e->Entity->State.GetOrigin();
+				}
 			}
 
 			Index->Num++;
@@ -205,19 +216,21 @@ void SvCmd_EntList_f ()
 	int oldPerc = 100 - newPerc;
 	DebugPrintf ("Clean Entities: %i (%i%%)\nOld Entities: %i (%i%%)\nTotal Entities: %i\n", numNew, newPerc, numOld, oldPerc, numOld+numNew);
 	*/
+
+	const char *WildCard = ArgGets(2) ? ArgGets(2) : "*";
 	CServerEntityList tmp;
-	tmp.Search ();
+	tmp.Search (WildCard);
 
 	DebugPrintf ("Entity Stats\n"
-			"      old        amount       classname\n"
-			"----  ---        ------       --------------------------\n");
+			"      old        amount       origin             classname\n"
+			"----  ---        ------       ----------------   --------------------\n");
 
 	uint32 oldCount = 0, newCount = 0;
 	for (uint32 i = 0; i < tmp.NumInList; i++)
 	{
 		DebugPrintf (
-			"#%3u  %s         %5u       %s\n",
-			i, (tmp.List[i]->Old) ? "Yes" : "No ", tmp.List[i]->Num, tmp.List[i]->className);
+			"#%3u  %s         %5u       %4.0f %4.0f %4.0f   %s\n",
+			i, (tmp.List[i]->Old) ? "Yes" : "No ", tmp.List[i]->Num, tmp.List[i]->Origin.X, tmp.List[i]->Origin.Y, tmp.List[i]->Origin.Z, tmp.List[i]->className);
 
 		if (tmp.List[i]->Old)
 			oldCount += tmp.List[i]->Num;
@@ -246,9 +259,12 @@ void SvCmd_Dump_f ()
 	FS_CloseFile (f);
 }
 
+void SvCmd_IndexList_f ();
+
 void SvCmd_Register ()
 {
 	SvCmd_AddCommand ("entlist", SvCmd_EntList_f);
+	SvCmd_AddCommand ("indexlist", SvCmd_IndexList_f);
 	SvCmd_AddCommand ("dump", SvCmd_Dump_f);
 }
 

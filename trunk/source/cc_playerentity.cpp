@@ -1601,7 +1601,7 @@ inline void CPlayerEntity::SetClientSound ()
 	}
 
 	if (gameEntity->waterlevel && (gameEntity->watertype & (CONTENTS_LAVA|CONTENTS_SLIME)))
-		State.SetSound (gMedia.FrySound);
+		State.SetSound (gMedia.FrySound());
 	else if (Client.pers.Weapon && Client.pers.Weapon->WeaponSoundIndex)
 		State.SetSound (Client.pers.Weapon->WeaponSoundIndex);
 	else if (Client.weapon_sound)

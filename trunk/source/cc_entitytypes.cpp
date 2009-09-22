@@ -662,10 +662,9 @@ int ClipVelocity (vec3f &in, vec3f &normal, vec3f &out, float overbounce);
 bool CBounceProjectile::Run ()
 {
 	CTrace	trace;
-	vec3_t		move;
+	vec3f		move, old_origin;
 	bool		wasinwater;
 	bool		isinwater;
-	vec3_t		old_origin;
 
 	// if not a team captain, so movement will be handled elsewhere
 	if (Flags & FL_TEAMSLAVE)
@@ -682,7 +681,7 @@ bool CBounceProjectile::Run ()
 	if ( GroundEntity )
 		return false;
 
-	State.GetOrigin(old_origin);
+	old_origin = State.GetOrigin();
 
 // add gravity
 	AddGravity ();
@@ -691,8 +690,7 @@ bool CBounceProjectile::Run ()
 	State.SetAngles (State.GetAngles().MultiplyAngles (0.1f, AngularVelocity));
 
 // move origin
-	Vec3Copy (Velocity, move);
-	Vec3Scale (move, 0.1f, move);
+	move = Velocity * 0.1f;
 
 	trace = PushEntity (move);
 	if (!IsInUse())
@@ -710,24 +708,19 @@ bool CBounceProjectile::Run ()
 				GroundEntity = trace.Ent;
 				GroundEntityLinkCount = GroundEntity->GetLinkCount();
 				Velocity.Clear ();
-				AngularVelocity = vec3fOrigin;
+				AngularVelocity.Clear ();
 			}
 		}
 	}
 	
 // check for water transition
-	vec3_t or;
-	State.GetOrigin (or);
+	vec3f or = State.GetOrigin ();
 
 	wasinwater = (gameEntity->watertype & CONTENTS_MASK_WATER) ? true : false;
 	gameEntity->watertype = PointContents (or);
 	isinwater = (gameEntity->watertype & CONTENTS_MASK_WATER) ? true : false;
 
-	if (isinwater)
-		gameEntity->waterlevel = 1;
-	else
-		gameEntity->waterlevel = 0;
-
+	gameEntity->waterlevel = (isinwater) ? 1 : 0;
 	if (!wasinwater && isinwater)
 		PlaySoundAt (old_origin, g_edicts, CHAN_AUTO, SoundIndex("misc/h2ohit1.wav"));
 	else if (wasinwater && !isinwater)
@@ -786,10 +779,9 @@ CPhysicsEntity (Index)
 bool CFlyMissileProjectile::Run ()
 {
 	CTrace	trace;
-	vec3_t		move;
+	vec3f		move, old_origin;
 	bool		wasinwater;
 	bool		isinwater;
-	vec3_t		old_origin;
 
 	// if not a team captain, so movement will be handled elsewhere
 	if (Flags & FL_TEAMSLAVE)
@@ -806,14 +798,13 @@ bool CFlyMissileProjectile::Run ()
 	if ( GroundEntity )
 		return false;
 
-	State.GetOrigin(old_origin);
+	old_origin = State.GetOrigin();
 
 // move angles
 	State.SetAngles (State.GetAngles().MultiplyAngles (0.1f, AngularVelocity));
 
 // move origin
-	Vec3Copy (Velocity, move);
-	Vec3Scale (move, 0.1f, move);
+	move = Velocity * 0.1f;
 	trace = PushEntity (move);
 
 	if (!IsInUse())
@@ -834,22 +825,16 @@ bool CFlyMissileProjectile::Run ()
 	}
 	
 // check for water transition
-	vec3_t or;
-	State.GetOrigin (or);
-
 	wasinwater = (gameEntity->watertype & CONTENTS_MASK_WATER) ? true : false;
-	gameEntity->watertype = PointContents (or);
+	gameEntity->watertype = PointContents (State.GetOrigin());
 	isinwater = (gameEntity->watertype & CONTENTS_MASK_WATER) ? true : false;
 
-	if (isinwater)
-		gameEntity->waterlevel = 1;
-	else
-		gameEntity->waterlevel = 0;
+	gameEntity->waterlevel = (isinwater) ? 1 : 0;
 
 	if (!wasinwater && isinwater)
 		PlaySoundAt (old_origin, g_edicts, CHAN_AUTO, SoundIndex("misc/h2ohit1.wav"));
 	else if (wasinwater && !isinwater)
-		PlaySoundAt (or, g_edicts, CHAN_AUTO, SoundIndex("misc/h2ohit1.wav"));
+		PlaySoundAt (State.GetOrigin(), g_edicts, CHAN_AUTO, SoundIndex("misc/h2ohit1.wav"));
 
 // move teamslaves
 	for (CBaseEntity *slave = TeamChain; slave; slave = slave->TeamChain)

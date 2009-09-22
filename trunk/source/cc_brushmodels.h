@@ -58,10 +58,10 @@ public:
 	FrameNumber_t		TouchDebounce;
 
 	// fixed data
-	vec3_t		StartOrigin;
-	vec3_t		StartAngles;
-	vec3_t		EndOrigin;
-	vec3_t		EndAngles;
+	vec3f		StartOrigin;
+	vec3f		StartAngles;
+	vec3f		EndOrigin;
+	vec3f		EndAngles;
 
 	MediaIndex	SoundStart;
 	MediaIndex	SoundMiddle;
@@ -90,7 +90,7 @@ public:
 
 	// state data
 	int			MoveState;
-	vec3_t		Dir;
+	vec3f		Dir;
 	float		CurrentSpeed;
 	float		MoveSpeed;
 	float		NextSpeed;
@@ -108,7 +108,7 @@ public:
 	void MoveDone ();
 	void MoveFinal ();
 	void MoveBegin ();
-	void MoveCalc (vec3_t dest, uint32 EndFunc);
+	void MoveCalc (vec3f &dest, uint32 EndFunc);
 
 	// Angle/avelocity
 	void AngleMoveDone ();

@@ -757,9 +757,9 @@ void CSuperTank::Explode ()
 		for (int n= 0; n < 4; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, 500, GIB_ORGANIC);
 		for (int n= 0; n < 8; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMetal, 500, GIB_METALLIC);
+			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMetal(), 500, GIB_METALLIC);
 		CGibEntity::Spawn (Entity, gMedia.Gib_Chest, 500, GIB_ORGANIC);
-		Entity->ThrowHead (gMedia.Gib_Gear, 500, GIB_METALLIC);
+		Entity->ThrowHead (gMedia.Gib_Gear(), 500, GIB_METALLIC);
 		Entity->DeadFlag = true;
 		return;
 	}

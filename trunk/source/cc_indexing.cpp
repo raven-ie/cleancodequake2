@@ -78,6 +78,11 @@ int CIndexList::AddToList (char *String, MediaIndex Index)
 	return Index;
 }
 
+inline bool OverFlow ()
+{
+	return ((ModelList.numIndexes + SoundList.numIndexes + ImageList.numIndexes) >= 255);
+}
+
 _CC_DISABLE_DEPRECATION
 
 MediaIndex ModelIndex (char *String)
@@ -87,6 +92,12 @@ MediaIndex ModelIndex (char *String)
 	if (Index == -1)
 	{
 		//DebugPrintf ("ModelIndex: Adding new index for %s\n", String);
+		if (OverFlow())
+		{
+			DebugPrintf ("Index overflow registering \"%s\"\n", String);
+			return 0;
+		}
+
 		return ModelList.AddToList (String, gi.modelindex(String));
 	}
 	//DebugPrintf ("ModelIndex: Using existing index %s\n", String);
@@ -100,6 +111,12 @@ MediaIndex SoundIndex (char *String)
 	if (Index == -1)
 	{
 		//DebugPrintf ("SoundIndex: Adding new index for %s\n", String);
+		if (OverFlow())
+		{
+			DebugPrintf ("Index overflow registering \"%s\"\n", String);
+			return 0;
+		}
+
 		return SoundList.AddToList (String, gi.soundindex(String));
 	}
 	//DebugPrintf ("SoundIndex: Using existing index %s\n", String);
@@ -113,6 +130,12 @@ MediaIndex ImageIndex (char *String)
 	if (Index == -1)
 	{
 		//DebugPrintf ("ImageIndex: Adding new index for %s\n", String);
+		if (OverFlow())
+		{
+			DebugPrintf ("Index overflow registering \"%s\"\n", String);
+			return 0;
+		}
+
 		return ImageList.AddToList (String, gi.imageindex(String));
 	}
 	//DebugPrintf ("ImageIndex: Using existing index %s\n", String);
@@ -138,4 +161,21 @@ void ClearList ()
 	ModelList.Clear();
 	ImageList.Clear();
 	SoundList.Clear();
+}
+
+void SvCmd_IndexList_f ()
+{
+	DebugPrintf ("Models: (%u)\n", ModelList.numIndexes);
+	for (byte i = 0; i < ModelList.numIndexes; i++)
+		DebugPrintf ("%s\n", ModelList.List[i]->Name);
+
+	DebugPrintf ("\nSounds: (%u)\n", SoundList.numIndexes);
+	for (byte i = 0; i < SoundList.numIndexes; i++)
+		DebugPrintf ("%s\n", SoundList.List[i]->Name);
+
+	DebugPrintf ("\nImages: (%u)\n", ImageList.numIndexes);
+	for (byte i = 0; i < ImageList.numIndexes; i++)
+		DebugPrintf ("%s\n", ImageList.List[i]->Name);
+
+	DebugPrintf ("\nTotal: %u\n", ModelList.numIndexes + SoundList.numIndexes + ImageList.numIndexes);
 }

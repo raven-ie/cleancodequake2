@@ -63,19 +63,12 @@ void InitGameMedia ()
 	}
 
 	gMedia.Gib_SmallMeat	=	ModelIndex ("models/objects/gibs/sm_meat/tris.md2");
-	gMedia.Gib_Arm			=	ModelIndex ("models/objects/gibs/arm/tris.md2");
 	gMedia.Gib_Bone[0]		=	ModelIndex ("models/objects/gibs/bone/tris.md2");
 	gMedia.Gib_Bone[1]		=	ModelIndex ("models/objects/gibs/bone2/tris.md2");
 	gMedia.Gib_Chest		=	ModelIndex ("models/objects/gibs/chest/tris.md2");
-	gMedia.Gib_Gear			=	ModelIndex ("models/objects/gibs/gear/tris.md2");
 	gMedia.Gib_Skull		=	ModelIndex ("models/objects/gibs/skull/tris.md2");
 	gMedia.Gib_Head[0]		=	ModelIndex ("models/objects/gibs/head/tris.md2");
 	gMedia.Gib_Head[1]		=	ModelIndex ("models/objects/gibs/head2/tris.md2");
-	gMedia.Gib_SmallMetal	=	ModelIndex ("models/objects/gibs/sm_metal/tris.md2");
-	gMedia.Gib_Leg			=	ModelIndex ("models/objects/gibs/leg/tris.md2");
-
-	gMedia.FrySound			=	SoundIndex ("player/fry.wav");
-	gMedia.FlySound			=	SoundIndex ("misc/windfly.wav");
 
 	// Hud stuff
 	gMedia.Hud.HealthPic		=	ImageIndex ("i_health");

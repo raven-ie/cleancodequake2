@@ -529,7 +529,19 @@ void Cmd_Test_f (CPlayerEntity *ent)
 	DebugPrintf(	"%5u        %6u            %5u          %5u\n",
 		randomtime, crandomtime, frandtime, crandtime);
 		*/
-	DebugPrintf ("%i %i %i\n", irandom(6), irandom(2), irandom(601));
+	//DebugPrintf ("%i %i %i\n", (int)ent->State.GetOrigin().X, (int)ent->State.GetOrigin().Y, (int)ent->State.GetOrigin().Z);
+
+	uint32 time1 = Sys_Milliseconds ();
+	for (uint32 i = 0; i < 80000; i++)
+		gMedia.FlySound();
+	time1 = Sys_Milliseconds() - time1;
+
+	uint32 time2 = Sys_Milliseconds ();
+	for (uint32 i = 0; i < 80000; i++)
+		SoundIndex ("misc/windfly.wav");
+	time2 = Sys_Milliseconds() - time2;
+
+	DebugPrintf ("%ums vs %ums\n", time1, time2);
 }
 
 void GCTFSay_Team (CPlayerEntity *ent);

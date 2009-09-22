@@ -200,7 +200,9 @@ void InitItemlist ()
 	if (game.mode & GAME_CTF)
 		AddFlagsToList();
 #endif
-	AddTechsToList();
+
+	if (dmFlags.dfDmTechs || (game.mode & GAME_CTF))
+		AddTechsToList();
 }
 
 void SetItemNames ()

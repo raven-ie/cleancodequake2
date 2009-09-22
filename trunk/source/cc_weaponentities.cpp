@@ -1541,3 +1541,235 @@ bool CGrappleEntity::Run ()
 	return CFlyMissileProjectile::Run();
 };
 #endif
+
+// Taser test
+#if 0
+class CTazerProjectile : public CThinkableEntity, public CTouchableEntity, public CFlyMissileProjectile
+{
+public:
+	class CTazerBase	*Base; // Same as owner, here for convenience
+	CBaseEntity			*OwnedPlayer;
+	CHurtableEntity		*Attached;
+	vec3f				Offset;
+	FrameNumber_t		NextZapTime;
+	byte				NumZaps;
+	int					Damage;
+
+	CTazerProjectile () :
+	  CBaseEntity (),
+	  CThinkableEntity (),
+	  CTouchableEntity (),
+	  CFlyMissileProjectile (),
+	  Base (NULL),
+	  Attached(NULL)
+	{
+	};
+
+	CTazerProjectile (int Index) :
+	  CBaseEntity (Index),
+	  CThinkableEntity (Index),
+	  CTouchableEntity (Index),
+	  CFlyMissileProjectile (Index),
+	  Base (NULL),
+	  Attached(NULL)
+	{
+	};
+
+	bool Run ()
+	{
+		return (!Attached) ? CFlyMissileProjectile::Run() : CBaseEntity::Run();
+	};
+
+	void Think ();
+
+	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
+	{
+		if (other == World)
+		{
+			SetSolid (SOLID_NOT);
+			SetClipmask (0);
+			Velocity.Clear ();
+		}
+
+		if (!(other->EntityFlags & ENT_HURTABLE))
+			return;
+
+		Attached = dynamic_cast<CHurtableEntity*>(other);
+		Velocity.Clear ();
+		Offset = State.GetOrigin() - Attached->State.GetOrigin();
+
+		NextThink = level.framenum + FRAMETIME;
+		NextZapTime = level.framenum + FRAMETIME + (int)(random() * 4);
+		NumZaps = 0;
+
+		SetSolid (SOLID_NOT);
+		SetClipmask (0);
+	};
+};
+
+class CTazerBase : public CHurtableEntity, public CThinkableEntity, public CTossProjectile
+{
+public:
+	CTazerProjectile	*Projectiles[2];
+
+	CTazerBase () :
+	  CBaseEntity (),
+	  CHurtableEntity (),
+	  CThinkableEntity (),
+	  CTossProjectile ()
+	{
+		Projectiles[0] = Projectiles[1] = NULL;
+	};
+
+	CTazerBase (int Index) :
+	  CBaseEntity (Index),
+	  CHurtableEntity (Index),
+	  CThinkableEntity (Index),
+	  CTossProjectile (Index)
+	{
+		Projectiles[0] = Projectiles[1] = NULL;
+	};
+
+	bool Run ()
+	{
+		return CTossProjectile::Run();
+	};
+
+	void Pain (CBaseEntity *other, float kick, int damage)
+	{
+	};
+	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+	{
+		if (Projectiles[0])
+			Projectiles[0]->Free ();
+		if (Projectiles[1])
+			Projectiles[1]->Free ();
+
+		vec3f explOrigin = State.GetOrigin() + vec3f(0,0,2);
+		CTempEnt_Explosions::RocketExplosion (explOrigin, gameEntity);
+
+		Free ();
+	};
+
+	void Think ()
+	{
+		if (Projectiles[0] || Projectiles[1])
+		{
+			Die (this, this, 0, vec3Origin);
+			return;
+		}
+
+		// Two frames in, spawn both projectiles
+		vec3f forward, right;
+		State.GetAngles().ToVectors (&forward, &right, NULL);
+
+		vec3f results[2];
+
+		vec3f offset (0, -5, 0);
+		G_ProjectSource (State.GetOrigin(), offset, forward, right, results[0]);
+
+		offset = vec3f (0, 5, 0);
+		G_ProjectSource (State.GetOrigin(), offset, forward, right, results[1]);
+
+		forward.NormalizeFast ();
+
+		for (byte i = 0; i < 2; i++)
+		{
+			Projectiles[i] = QNew (com_levelPool, 0) CTazerProjectile;
+
+			Projectiles[i]->State.SetOrigin (results[i]);
+			Projectiles[i]->State.SetOldOrigin (results[i]);
+			Projectiles[i]->State.SetAngles (forward.ToAngles());
+			Projectiles[i]->Velocity = forward * 600;
+			Projectiles[i]->SetClipmask (CONTENTS_MASK_SHOT);
+			Projectiles[i]->SetSolid (SOLID_BBOX);
+			Projectiles[i]->SetMins (vec3fOrigin);
+			Projectiles[i]->SetMaxs (vec3fOrigin);
+			Projectiles[i]->State.SetModelIndex (ModelIndex ("models/monsters/parasite/tip/tris.md2"));
+			Projectiles[i]->SetOwner (this);
+			Projectiles[i]->Base = this;
+			Projectiles[i]->NextThink = level.framenum + FRAMETIME;
+			Projectiles[i]->OwnedPlayer = GetOwner();
+
+			Projectiles[i]->Link ();
+		}
+
+		NextThink = level.framenum + 100;
+	};
+
+	static void Spawn (CBaseEntity *Spawner, vec3f origin, vec3f dir, int damage, int speed)
+	{
+		CTazerBase *Base = QNew (com_levelPool, 0) CTazerBase;
+
+		dir.NormalizeFast ();
+
+		Base->State.SetOrigin (origin);
+		Base->State.SetOldOrigin (origin);
+		Base->State.SetAngles (dir.ToAngles());
+		Base->Velocity = dir * speed;
+		Base->SetClipmask (CONTENTS_MASK_SHOT);
+		Base->SetSolid (SOLID_BBOX);
+		Base->SetMins (vec3fOrigin);
+		Base->SetMaxs (vec3fOrigin);
+		Base->State.SetModelIndex (ModelIndex ("models/objects/grenade/tris.md2"));
+		Base->NextThink = level.framenum + 1;
+		Base->SetOwner (Spawner);
+		Base->Link ();
+	};
+};
+
+void SpawnTazerProjectile (CBaseEntity *Spawner, vec3f origin, vec3f dir, int damage, int speed)
+{
+	CTazerBase::Spawn (Spawner, origin, dir, damage, speed);
+}
+
+void CTazerProjectile::Think ()
+{
+	// Lightning back to base
+	vec3f or1 = State.GetOrigin(), or2 = Base->State.GetOrigin();
+	::CTempEnt_Trails::FleshCable (or1, or2, State.GetNumber());
+
+	NextThink = level.framenum + FRAMETIME;
+
+	if (!Attached)
+		return;
+
+	if (Attached->Health <= Attached->GibHealth)
+	{
+		Base->Die (this, this, 0, vec3Origin);
+		return;
+	}
+
+	if (!IsVisible (this, Base))
+	{
+		if (Base->Projectiles[0] == this)
+		{
+			Base->Projectiles[0]->Free ();
+			Base->Projectiles[0] = NULL;
+		}
+		else
+		{
+			Base->Projectiles[1]->Free ();
+			Base->Projectiles[1] = NULL;
+		}
+
+		if (!Base->Projectiles[0] && !Base->Projectiles[1])
+			Base->Free ();
+
+		return;
+	}
+
+	if (NextZapTime < level.framenum)
+	{
+		NextZapTime = level.framenum + FRAMETIME + (int)(random() * 8) + (int)(random() * 8);
+		NumZaps++;
+
+		Attached->PlaySound (CHAN_AUTO, SoundIndex("world/spark3.wav"));
+		Attached->TakeDamage (this, OwnedPlayer, vec3fOrigin, State.GetOrigin(), vec3fOrigin, 5, 0, 0, MOD_BLASTER);
+	}
+
+	// Attach
+	State.SetOrigin (Attached->State.GetOrigin() + Offset);
+	Link ();
+};
+#endif

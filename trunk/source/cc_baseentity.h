@@ -250,7 +250,7 @@ public:
 
 	virtual bool			ParseField (char *Key, char *Value);
 	void					ParseFields ();
-	bool					CheckValidity ();
+	virtual bool			CheckValidity ();
 };
 
 inline uint32 atou (const char *Str)
