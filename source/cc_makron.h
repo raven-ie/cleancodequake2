@@ -54,7 +54,7 @@ public:
 	MediaIndex	SoundTaunt3;
 	MediaIndex	SoundHit;
 
-	CMakron ();
+	CMakron (uint32 ID);
 
 	void Run ();
 	void Stand ();

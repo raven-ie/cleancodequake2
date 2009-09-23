@@ -35,7 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_soldier_base.h"
 #include "cc_soldier_machinegun.h"
 
-CSoldierMachinegun::CSoldierMachinegun ()
+CSoldierMachinegun::CSoldierMachinegun (uint32 ID) :
+CSoldierBase (ID)
 {
 	Scale = MODEL_SCALE;
 	MonsterName = "Machinegun Soldier";

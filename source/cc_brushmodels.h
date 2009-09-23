@@ -68,6 +68,7 @@ public:
 	MediaIndex	SoundEnd;
 	vec3f		MoveDir;
 	vec3f		Positions[2];
+	vec3f		MoveOrigin, MoveAngles;
 
 	inline void SetMoveDir ()
 	{
@@ -511,11 +512,11 @@ public:
 	};
 
 	EFuncExplosiveUseType	UseType;
+	int						Explosivity;
 
-	virtual bool			ParseField (char *Key, char *Value)
-	{
-		return (CUsableEntity::ParseField (Key, Value) || CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
-	};
+	static const class CEntityField FieldsForParsing[];
+	static const size_t FieldsForParsingSize;
+	virtual bool			ParseField (char *Key, char *Value);
 
 	CFuncExplosive ();
 	CFuncExplosive (int Index);

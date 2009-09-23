@@ -35,7 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "m_gladiator.h"
 #include "cc_gladiator.h"
 
-CGladiator::CGladiator ()
+CGladiator::CGladiator (uint32 ID) :
+CMonster (ID)
 {
 	Scale = MODEL_SCALE;
 	MonsterName = "Gladiator";
@@ -122,12 +123,8 @@ void CGladiator::Run ()
 
 void CGladiator::MeleeAttack ()
 {
-	static vec3_t	aim = {MELEE_DISTANCE, Entity->GetMins().X, -4};
-
-	if (CMeleeWeapon::Fire (Entity, aim, (20 + (irandom(5))), 300))
-		Entity->PlaySound (CHAN_AUTO, SoundCleaverHit);
-	else
-		Entity->PlaySound (CHAN_AUTO, SoundCleaverMiss);
+	vec3f	aim (MELEE_DISTANCE, Entity->GetMins().X, -4);
+	Entity->PlaySound (CHAN_AUTO, (CMeleeWeapon::Fire (Entity, aim, (20 + (irandom(5))), 300)) ? SoundCleaverHit : SoundCleaverMiss);
 }
 
 CFrame GladiatorFramesAttackMelee [] =
@@ -324,7 +321,7 @@ void CGladiator::Spawn ()
 
 	Entity->Health = 400;
 	Entity->GibHealth = -175;
-	Entity->gameEntity->mass = 400;
+	Entity->Mass = 400;
 
 	MonsterFlags = (MF_HAS_SEARCH | MF_HAS_IDLE | MF_HAS_SIGHT | MF_HAS_MELEE | MF_HAS_ATTACK);
 

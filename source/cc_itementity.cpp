@@ -87,7 +87,7 @@ void CItemEntity::Touch(CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf
 		return;
 
 	// flash the screen
-	Player->Client.bonus_alpha = 64;	
+	Player->Client.bonus_alpha = 0.25;	
 
 	// show icon and name on status bar
 	Player->Client.PlayerState.SetStat(STAT_PICKUP_ICON, gameEntity->item->IconIndex);

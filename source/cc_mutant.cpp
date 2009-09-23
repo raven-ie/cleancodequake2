@@ -35,7 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "m_mutant.h"
 #include "cc_mutant.h"
 
-CMutant::CMutant ()
+CMutant::CMutant (uint32 ID) :
+CMonster(ID)
 {
 	Scale = MODEL_SCALE;
 	MonsterName = "Mutant";
@@ -251,7 +252,7 @@ void CMutant::Run ()
 
 void CMutant::HitLeft ()
 {
-	static vec3_t	aim = {MELEE_DISTANCE, Entity->GetMins().X, 8};
+	vec3f	aim (MELEE_DISTANCE, Entity->GetMins().X, 8);
 
 	if (CMeleeWeapon::Fire (Entity, aim, (10 + (irandom(5))), 100))
 		Entity->PlaySound (CHAN_WEAPON, SoundHit);
@@ -261,7 +262,7 @@ void CMutant::HitLeft ()
 
 void CMutant::HitRight ()
 {
-	static vec3_t	aim = {MELEE_DISTANCE, Entity->GetMins().X, 8};
+	vec3f	aim (MELEE_DISTANCE, Entity->GetMins().X, 8);
 
 	if (CMeleeWeapon::Fire (Entity, aim, (10 + (irandom(5))), 100))
 		Entity->PlaySound (CHAN_WEAPON, SoundHit2);
@@ -360,7 +361,7 @@ void CMutant::JumpTakeOff ()
 
 	if (AttemptJumpToLastSight)
 	{
-		angles = vec3f(LastSighting) - origin;
+		angles = LastSighting - origin;
 		AttemptJumpToLastSight = false;
 	}
 	else
@@ -438,7 +439,7 @@ bool CMutant::CheckJump ()
 		if (AttemptJumpToLastSight)
 			return false;
 
-		vec3f temp = origin - vec3f(LastSighting);
+		vec3f temp = origin - LastSighting;
 		if (temp.Length() > 400)
 		{
 			//DebugPrintf ("Not attempting.\n");
@@ -447,7 +448,7 @@ bool CMutant::CheckJump ()
 
 		// So we lost sight of the player.
 		// Can we jump to the last spot we saw him?
-		CTrace trace = CTrace(origin, vec3f(LastSighting), Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
+		CTrace trace = CTrace(origin, LastSighting, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
 
 		//CTempEnt_Trails::DebugTrail (origin, LastSighting);
 
@@ -455,9 +456,9 @@ bool CMutant::CheckJump ()
 		if (trace.fraction == 1.0)
 		{
 			// Now we need to check if the last sighting is on ground.
-			vec3f below = vec3f(LastSighting) - vec3f(0, 0, 64);
+			vec3f below = LastSighting - vec3f(0, 0, 64);
 
-			trace = CTrace (vec3f(LastSighting), below, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
+			trace = CTrace (LastSighting, below, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
 			//CTempEnt_Trails::DebugTrail (LastSighting, below);
 			if (trace.fraction < 1.0)
 			{
@@ -474,7 +475,7 @@ bool CMutant::CheckJump ()
 			vec3f temp, angles, forward;
 
 			// Keep going back about 15 units until we're clear
-			angles = (vec3f(LastSighting) - origin).ToAngles();
+			angles = (LastSighting - origin).ToAngles();
 			angles.X = angles.Z = 0; // Only move the yaw
 			temp.ToVectors (&forward, NULL, NULL);
 
@@ -496,7 +497,7 @@ bool CMutant::CheckJump ()
 				// Assume our last trace passed
 				//CTempEnt::TeleportEffect (temp);
 				AttemptJumpToLastSight = true;
-				Vec3Copy (temp, LastSighting);
+				LastSighting = temp;
 				return true;
 			}
 		}
@@ -718,7 +719,7 @@ void CMutant::Spawn ()
 
 	Entity->Health = 300;
 	Entity->GibHealth = -120;
-	Entity->gameEntity->mass = 300;
+	Entity->Mass = 300;
 
 	MonsterFlags = (MF_HAS_ATTACK | MF_HAS_MELEE | MF_HAS_SIGHT | MF_HAS_SEARCH | MF_HAS_IDLE);
 

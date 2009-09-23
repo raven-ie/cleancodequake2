@@ -109,9 +109,7 @@ void CMonster::MoveToPath (float Dist)
 		return;
 	}
 
-	vec3_t sub;
 	bool doit = false;
-	// Check if we hit our new path.
 
 	if (!P_CurrentNode || !P_CurrentPath->Path.size())
 	{
@@ -119,12 +117,10 @@ void CMonster::MoveToPath (float Dist)
 		return;
 	}
 
-	vec3_t origin;
-	Entity->State.GetOrigin(origin);
-	Vec3Subtract (origin, P_CurrentNode->Origin, sub);
-
+	// Check if we hit our new path.
+	vec3f sub = Entity->State.GetOrigin() - P_CurrentNode->Origin;
 	//CTempEnt_Trails::FleshCable (origin, P_CurrentNode->Origin, Entity->State.GetNumber());
-	if (Vec3Length (sub) < 30)
+	if (sub.Length() < 30)
 	{
 		bool shouldJump = (P_CurrentNode->Type == NODE_JUMP);
 		// Hit the path.
@@ -188,9 +184,8 @@ void CMonster::MoveToPath (float Dist)
 
 			if (shouldJump)
 			{
-				vec3_t sub2, forward;
-				Vec3Subtract (P_CurrentNode->Origin, origin, sub2);
-				Angles_Vectors (sub2, forward, NULL, NULL);
+				vec3f sub2 = P_CurrentNode->Origin - Entity->State.GetOrigin(), forward;
+				sub2.ToVectors (&forward, NULL, NULL);
 				Entity->Velocity = Entity->Velocity.MultiplyAngles (1.5, sub2);
 				Entity->Velocity.Z = 300;
 				Entity->GroundEntity = NULL;
@@ -225,14 +220,14 @@ void CMonster::MoveToPath (float Dist)
 	{
 		// Re-evaluate start and end nodes
 		CPathNode *End = P_CurrentPath->Path[0];
-		P_CurrentNode = GetClosestNodeTo(origin);
+		P_CurrentNode = GetClosestNodeTo(Entity->State.GetOrigin());
 		P_CurrentGoalNode = End;
 		P_CurrentPath = NULL;
 		FoundPath ();
 
 		FrameNumber_t timeOut = level.framenum + 20; // Always at least 2 seconds
 		// Calculate approximate distance and check how long we want this to time out for
-		switch (Range(origin, P_CurrentNode->Origin))
+		switch (Range(Entity->State.GetOrigin(), P_CurrentNode->Origin))
 		{
 		case RANGE_MELEE:
 			timeOut += 60; // 10 seconds max
@@ -257,34 +252,26 @@ void CMonster::MoveToPath (float Dist)
 		if (Entity->IsInUse())
 		{
 			float	deltax,deltay;
-			vec3_t	d;
 			float	tdir, olddir, turnaround;
 
 			olddir = AngleModf ((int)(IdealYaw/45)*45);
 			turnaround = AngleModf (olddir - 180);
 
-			deltax = P_CurrentNode->Origin[0] - origin[0];
-			deltay = P_CurrentNode->Origin[1] - origin[1];
-			if (deltax>10)
-				d[1]= 0;
-			else if (deltax<-10)
-				d[1]= 180;
-			else
-				d[1]= DI_NODIR;
-			if (deltay<-10)
-				d[2]= 270;
-			else if (deltay>10)
-				d[2]= 90;
-			else
-				d[2]= DI_NODIR;
+			deltax = P_CurrentNode->Origin.X - Entity->State.GetOrigin().X;
+			deltay = P_CurrentNode->Origin.Y - Entity->State.GetOrigin().Y;
+			
+			vec2f d (
+				(deltax > 10) ? 0 : ((deltax < -10) ? 180 : DI_NODIR),
+				(deltay < -10) ? 270 : ((deltay > 10) ? 90 : DI_NODIR)
+				);
 
 		// try direct route
-			if (d[1] != DI_NODIR && d[2] != DI_NODIR)
+			if (d.X != DI_NODIR && d.Y != DI_NODIR)
 			{
-				if (d[1] == 0)
-					tdir = d[2] == 90 ? 45 : 315;
+				if (d.X == 0)
+					tdir = d.Y == 90 ? 45 : 315;
 				else
-					tdir = d[2] == 90 ? 135 : 215;
+					tdir = d.Y == 90 ? 135 : 215;
 					
 				if (tdir != turnaround && StepDirection(tdir, Dist))
 					return;
@@ -293,17 +280,17 @@ void CMonster::MoveToPath (float Dist)
 		// try other directions
 			if ( ((randomMT()&3) & 1) ||  Q_fabs(deltay)>Q_fabs(deltax))
 			{
-				tdir=d[1];
-				d[1]=d[2];
-				d[2]=tdir;
+				tdir=d.X;
+				d.X=d.Y;
+				d.Y=tdir;
 			}
 
-			if (d[1]!=DI_NODIR && d[1]!=turnaround 
-			&& StepDirection(d[1], Dist))
+			if (d.X!=DI_NODIR && d.X!=turnaround 
+			&& StepDirection(d.X, Dist))
 					return;
 
-			if (d[2]!=DI_NODIR && d[2]!=turnaround
-			&& StepDirection(d[2], Dist))
+			if (d.Y!=DI_NODIR && d.Y!=turnaround
+			&& StepDirection(d.Y, Dist))
 					return;
 
 		/* there is no direct path to the player, so pick another direction */
@@ -576,8 +563,7 @@ bool CMonster::CheckBottom ()
 			start.X = x ? maxs.X : mins.X;
 			start.Y = y ? maxs.Y : mins.Y;
 
-			vec3_t startVec = {start.X, start.Y, start.Z};
-			if (PointContents (startVec) != CONTENTS_SOLID)
+			if (PointContents (start) != CONTENTS_SOLID)
 				gotOutEasy = true;
 		}
 
@@ -639,64 +625,57 @@ void CMonster::MoveToGoal (float Dist)
 }
 
 bool CMonster::WalkMove (float Yaw, float Dist)
-{
-	vec3_t	move;
-	
+{	
 	if (!Entity->GroundEntity && !(Entity->Flags & (FL_FLY|FL_SWIM)))
 		return false;
 
 	Yaw = Yaw*M_PI*2 / 360;
-	
-	move[0] = cosf(Yaw)*Dist;
-	move[1] = sinf(Yaw)*Dist;
-	move[2] = 0;
-
-	return MoveStep(move, true);
+	return MoveStep(vec3f (cosf(Yaw)*Dist, sinf(Yaw)*Dist, 0), true);
 }
 
-bool CMonster::MoveStep (vec3_t move, bool ReLink)
+bool CMonster::MoveStep (vec3f move, bool ReLink)
 {
-	vec3_t		oldorg, neworg, end;
+	vec3f		end;
 	CTrace		trace;
 	float		stepsize;
 
 // try the move	
-	Entity->State.GetOrigin(oldorg);
-	Vec3Add (oldorg, move, neworg);
+	vec3f oldorg = Entity->State.GetOrigin();
 
 // flying monsters don't step up
-	if ( Entity->Flags & (FL_SWIM | FL_FLY) )
+	if (Entity->Flags & (FL_SWIM | FL_FLY))
 	{
 	// try one move with vertical motion, then one without
-		for (int i=0 ; i<2 ; i++)
+		for (int i = 0; i < 2; i++)
 		{
-			Vec3Add (oldorg, move, neworg);
+			vec3f neworg = oldorg + move;
 			if (i == 0 && Entity->Enemy)
 			{
 				if (!Entity->gameEntity->goalentity)
 					Entity->gameEntity->goalentity = Entity->Enemy->gameEntity;
-				float dz = oldorg[2] - Entity->gameEntity->goalentity->state.origin[2];
+
+				float dz = oldorg.Z - Entity->gameEntity->goalentity->state.origin[2];
 				if (Entity->gameEntity->goalentity->client)
 				{
 					if (dz > 40)
-						neworg[2] -= 8;
-					if (!((Entity->Flags & FL_SWIM) && (Entity->gameEntity->waterlevel < 2)))
-						if (dz < 30)
-							neworg[2] += 8;
+						neworg.Z -= 8;
+
+					if (!((Entity->Flags & FL_SWIM) && (Entity->gameEntity->waterlevel < 2)) && (dz < 30))
+						neworg.Z += 8;
 				}
 				else
 				{
 					if (dz > 8)
-						neworg[2] -= 8;
+						neworg.Z -= 8;
 					else if (dz > 0)
-						neworg[2] -= dz;
+						neworg.Z -= dz;
 					else if (dz < -8)
-						neworg[2] += 8;
+						neworg.Z += 8;
 					else
-						neworg[2] += dz;
+						neworg.Z += dz;
 				}
 			}
-			trace = CTrace(vec3f(oldorg), Entity->GetMins(), Entity->GetMaxs(), vec3f(neworg), Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
+			trace = CTrace(oldorg, Entity->GetMins(), Entity->GetMaxs(), neworg, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
 	
 			// fly monsters don't enter water voluntarily
 			if (Entity->Flags & FL_FLY)
@@ -740,25 +719,24 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 		return false;
 	}
 
+	vec3f neworg = oldorg + move;
+
 	// push down from a step height above the wished position
-	if (!(AIFlags & AI_NOSTEP))
-		stepsize = STEPSIZE;
-	else
-		stepsize = 1;
+	stepsize = (AIFlags & AI_NOSTEP) ? 1 :  STEPSIZE;
 
-	neworg[2] += stepsize;
-	Vec3Copy (neworg, end);
-	end[2] -= stepsize*2;
+	neworg.Z += stepsize;
+	end = neworg;
+	end.Z -= stepsize * 2;
 
-	trace = CTrace(vec3f(neworg), Entity->GetMins(), Entity->GetMaxs(), vec3f(end), Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
+	trace = CTrace(neworg, Entity->GetMins(), Entity->GetMaxs(), end, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
 
 	if (trace.allSolid)
 		return false;
 
 	if (trace.startSolid)
 	{
-		neworg[2] -= stepsize;
-		trace = CTrace(vec3f(neworg), Entity->GetMins(), Entity->GetMaxs(), vec3f(end), Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
+		neworg.Z -= stepsize;
+		trace = CTrace(neworg, Entity->GetMins(), Entity->GetMaxs(), end, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
 		if (trace.allSolid || trace.startSolid)
 			return false;
 	}
@@ -779,12 +757,9 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 	if (trace.fraction == 1)
 	{
 	// if monster had the ground pulled out, go ahead and fall
-		if ( Entity->Flags & FL_PARTIALGROUND )
+		if (Entity->Flags & FL_PARTIALGROUND)
 		{
-			vec3_t or;
-			Entity->State.GetOrigin(or);
-			Vec3Add (or, move, or);
-			Entity->State.SetOrigin (or);
+			Entity->State.SetOrigin (Entity->State.GetOrigin() + move);
 			if (ReLink)
 			{
 				Entity->Link ();
@@ -802,7 +777,7 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 	
 	if (!CheckBottom ())
 	{
-		if ( Entity->Flags & FL_PARTIALGROUND )
+		if (Entity->Flags & FL_PARTIALGROUND)
 		{	// entity had floor mostly pulled out from underneath it
 			// and is trying to correct
 			if (ReLink)
@@ -812,19 +787,14 @@ bool CMonster::MoveStep (vec3_t move, bool ReLink)
 			}
 			return true;
 		}
-		vec3_t angles;
 
-		Entity->State.GetAngles(angles);
 		// Check to see if there's floor just after this
-		vec3_t org, up, end2;
-		Angles_Vectors (angles, NULL, NULL, up);
-
-		vec3_t origin;
-		Entity->State.GetOrigin (origin);
-		Vec3Add (origin, move, org);
+		vec3f org, up, end2;
+		Entity->State.GetAngles().ToVectors (NULL, NULL, &up);
+		org = Entity->State.GetOrigin() + move;
 
 		// Go down
-		Vec3MA (org, -STEPSIZE, up, end2);
+		end2 = org.MultiplyAngles (-STEPSIZE, up);
 
 		// Trace
 		trace = CTrace (org, end2, Entity->gameEntity, CONTENTS_MASK_SOLID);
@@ -941,29 +911,24 @@ void CMonster::NewChaseDir (CBaseEntity *Enemy, float Dist)
 }
 
 bool CMonster::StepDirection (float Yaw, float Dist)
-{
-	vec3_t		move, oldorigin;
-	float		delta;
-	
+{	
 	IdealYaw = Yaw;
 	ChangeYaw ();
-	
 	Yaw = Yaw*M_PI*2 / 360;
-	move[0] = cosf(Yaw)*Dist;
-	move[1] = sinf(Yaw)*Dist;
-	move[2] = 0;
 
-	Entity->State.GetOrigin (oldorigin);
-	if (MoveStep (move, false))
+	vec3f oldOrigin = Entity->State.GetOrigin ();
+	if (MoveStep (vec3f(cosf(Yaw) * Dist, sinf(Yaw) * Dist, 0), false))
 	{
-		delta = Entity->State.GetAngles().Y - IdealYaw;
+		float delta = Entity->State.GetAngles().Y - IdealYaw;
 		// not turned far enough, so don't take the step
 		if (delta > 45 && delta < 315)
-			Entity->State.SetOrigin (oldorigin);
+			Entity->State.SetOrigin (oldOrigin);
+
 		Entity->Link ();
 		G_TouchTriggers (Entity);
 		return true;
 	}
+
 	Entity->Link ();
 	G_TouchTriggers (Entity);
 	return false;
@@ -1095,12 +1060,8 @@ void CMonster::MonsterStartGo ()
 		}
 		else if (strcmp (Entity->gameEntity->movetarget->classname, "path_corner") == 0)
 		{
-			vec3_t origin, v;
-
-			Entity->State.GetOrigin(origin);
-			Vec3Subtract (Entity->gameEntity->goalentity->state.origin, origin, v);
 			vec3f angles = Entity->State.GetAngles();
-			IdealYaw = angles.Y = VecToYaw(v);
+			IdealYaw = angles.Y = (Entity->gameEntity->goalentity->Entity->State.GetOrigin() - Entity->State.GetOrigin()).ToYaw();
 			Entity->State.SetAngles(angles);
 			Walk ();
 			Entity->gameEntity->target = NULL;
@@ -1135,6 +1096,7 @@ void CMonster::MonsterStartGo ()
 
 void CMonster::MonsterStart ()
 {
+	DebugPrintf ("%s spawned with ID %u\n", MonsterName, MonsterID);
 	if (game.mode & GAME_DEATHMATCH)
 	{
 		Entity->Free ();
@@ -1250,13 +1212,12 @@ void CMonster::MonsterTriggeredSpawn ()
 }
 
 #ifdef MONSTERS_ARENT_STUPID
-bool CMonster::FriendlyInLine (vec3_t Origin, vec3_t Direction)
+bool CMonster::FriendlyInLine (vec3f &Origin, vec3f &Direction)
 {
-	vec3_t dir, forward, end;
-	VecToAngles (Direction, dir);
-	Angles_Vectors (dir, forward, NULL, NULL);
+	vec3f forward;
+	Direction.ToAngles ().ToVectors (&forward, NULL, NULL);
 
-	Vec3MA (Origin, 8192, forward, end);
+	vec3f end = Origin.MultiplyAngles (8192, forward);
 	CTrace trace = CTrace(Origin, end, Entity->gameEntity, CONTENTS_MONSTER);
 
 	if (trace.fraction <= 0.5 && trace.ent && (trace.ent->Entity && (trace.ent->Entity->EntityFlags & ENT_MONSTER)) &&
@@ -1433,17 +1394,17 @@ void CMonster::MonsterFireBfg (vec3f start, vec3f aimdir, int damage, int speed,
 bool CMonster::CheckAttack ()
 {
 #ifndef MONSTER_USE_ROGUE_AI
-	vec3_t	spot1, spot2;
+	vec3f	spot1, spot2;
 	float	chance;
 	CTrace	tr;
 
 	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0)
 	{
 	// see if any entities are in the way of the shot
-		Entity->State.GetOrigin(spot1);
-		spot1[2] += Entity->gameEntity->viewheight;
-		Vec3Copy (Entity->Enemy->State.GetOrigin(), spot2);
-		spot2[2] += Entity->Enemy->gameEntity->viewheight;
+		spot1 = Entity->State.GetOrigin();
+		spot1.Z += Entity->gameEntity->viewheight;
+		spot2 = Entity->Enemy->State.GetOrigin();
+		spot2.Z += Entity->Enemy->gameEntity->viewheight;
 
 		tr = CTrace(spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
 
@@ -1523,11 +1484,11 @@ bool CMonster::CheckAttack ()
 	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0)
 	{
 	// see if any entities are in the way of the shot
-		vec3_t	spot1, spot2;
-		Entity->State.GetOrigin (spot1);
-		spot1[2] += Entity->gameEntity->viewheight;
-		Vec3Copy (Entity->Enemy->State.GetOrigin(), spot2);
-		spot2[2] += Entity->Enemy->gameEntity->viewheight;
+		vec3f	spot1, spot2;
+		spot1 = Entity->State.GetOrigin ();
+		spot1.Z += Entity->gameEntity->viewheight;
+		spot2 = Entity->Enemy->State.GetOrigin();
+		spot2.Z += Entity->Enemy->gameEntity->viewheight;
 
 		CTrace tr (spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
 
@@ -1657,17 +1618,11 @@ bool CMonster::CheckAttack ()
 
 void CMonster::DropToFloor ()
 {
-	vec3_t		end;
-	CTrace		trace;
-	vec3_t		origin;
-
-	Entity->State.GetOrigin(origin);
-	origin[2] += 1;
+	vec3f		origin = Entity->State.GetOrigin() + vec3f(0, 0, 1);
 	Entity->State.SetOrigin(origin);
-	Vec3Copy (origin, end);
-	end[2] -= 256;
-	
-	trace = CTrace (Entity->State.GetOrigin(), Entity->GetMins(), Entity->GetMaxs(), vec3f(end), Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
+
+	vec3f end = origin - vec3f(0, 0, 256);	
+	CTrace trace (Entity->State.GetOrigin(), Entity->GetMins(), Entity->GetMaxs(), end, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
 
 	if (trace.fraction == 1 || trace.allSolid)
 		return;
@@ -1682,12 +1637,7 @@ void CMonster::DropToFloor ()
 void CMonster::AI_Charge(float Dist)
 {
 #ifndef MONSTER_USE_ROGUE_AI
-	vec3_t	v;
-
-	vec3_t origin;
-	Entity->State.GetOrigin (origin);
-	Vec3Subtract (Entity->Enemy->state.origin, origin, v);
-	IdealYaw = VecToYaw(v);
+	IdealYaw = (Entity->Enemy->State.GetOrigin() - Entity->State.GetOrigin()).ToYaw ();
 	ChangeYaw ();
 
 	if (Dist)
@@ -1703,7 +1653,7 @@ void CMonster::AI_Charge(float Dist)
 
 	// PMM - save blindfire target
 	if (IsVisible(Entity, Entity->Enemy))
-		Vec3Copy (Entity->Enemy->State.GetOrigin(), BlindFireTarget);
+		BlindFireTarget = Entity->Enemy->State.GetOrigin();
 	// pmm 
 
 	if (!(AIFlags & AI_MANUAL_STEERING))
@@ -1745,7 +1695,6 @@ void CMonster::AI_Charge(float Dist)
 bool CMonster::AI_CheckAttack()
 {
 #ifndef MONSTER_USE_ROGUE_AI
-	vec3_t		temp;
 	bool		hesDeadJim = false;
 
 // this causes monsters to run blindly to the combat point w/o firing
@@ -1761,10 +1710,13 @@ bool CMonster::AI_CheckAttack()
 				if ((level.framenum - Entity->Enemy->teleport_time) > 50)
 				{
 					if (Entity->gameEntity->goalentity == Entity->Enemy)
+					{
 						if (Entity->gameEntity->movetarget)
 							Entity->gameEntity->goalentity = Entity->gameEntity->movetarget;
 						else
 							Entity->gameEntity->goalentity = NULL;
+					}
+
 					AIFlags &= ~AI_SOUND_TARGET;
 					if (AIFlags & AI_TEMP_STAND_GROUND)
 						AIFlags &= ~(AI_STAND_GROUND | AI_TEMP_STAND_GROUND);
@@ -1840,15 +1792,12 @@ bool CMonster::AI_CheckAttack()
 	if (EnemyVis)
 	{
 		SearchTime = level.framenum + 50;
-		Vec3Copy (Entity->Enemy->State.GetOrigin(), LastSighting);
+		LastSighting = Entity->Enemy->State.GetOrigin();
 	}
 
 	EnemyInfront = IsInFront(Entity, Entity->Enemy);
 	EnemyRange = Range(Entity, Entity->Enemy);
-	vec3_t origin;
-	Entity->State.GetOrigin (origin);
-	Vec3Subtract (Entity->Enemy->state.origin, origin, temp);
-	EnemyYaw = VecToYaw(temp);
+	EnemyYaw = (Entity->Enemy->State.GetOrigin() - Entity->State.GetOrigin()).ToYaw();
 
 	// JDC self->ideal_yaw = enemy_yaw;
 
@@ -1983,11 +1932,11 @@ bool CMonster::AI_CheckAttack()
 	if (EnemyVis)
 	{
 		SearchTime = level.framenum + 50;
-		Vec3Copy (Entity->Enemy->State.GetOrigin(), LastSighting);
+		LastSighting = Entity->Enemy->State.GetOrigin();
 		// PMM
 		AIFlags &= ~AI_LOST_SIGHT;
 		TrailTime = level.framenum;
-		Vec3Copy (Entity->Enemy->State.GetOrigin(), BlindFireTarget);
+		BlindFireTarget = Entity->Enemy->State.GetOrigin();
 		BlindFireDelay = 0;
 		// pmm
 	}
@@ -2111,7 +2060,7 @@ void CMonster::AI_Run(float Dist)
 			//gi.dprintf("regained sight\n");
 		MoveToGoal (Dist);
 		AIFlags &= ~AI_LOST_SIGHT;
-		Vec3Copy (Entity->Enemy->State.GetOrigin(), LastSighting);
+		LastSighting = Entity->Enemy->State.GetOrigin();
 		TrailTime = level.framenum;
 		return;
 	}
@@ -2171,12 +2120,12 @@ void CMonster::AI_Run(float Dist)
 //			dprint("was temp goal; retrying original\n");
 			AIFlags &= ~AI_PURSUE_TEMP;
 			marker = NULL;
-			Vec3Copy (SavedGoal, LastSighting);
+			LastSighting = SavedGoal;
 			isNew = true;
 		}
 	}
 
-	v = origin - vec3f(LastSighting);
+	v = origin - LastSighting;
 	d1 = v.Length();
 	if (d1 <= Dist)
 	{
@@ -2184,13 +2133,13 @@ void CMonster::AI_Run(float Dist)
 		Dist = d1;
 	}
 
-	Vec3Copy (LastSighting, Entity->gameEntity->goalentity->state.origin);
+	Entity->gameEntity->goalentity->Entity->State.SetOrigin (LastSighting);
 
 	if (isNew)
 	{
 //		gi.dprintf("checking for course correction\n");
 
-		tr = CTrace (origin, Entity->GetMins(), Entity->GetMaxs(), vec3f(LastSighting), Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
+		tr = CTrace (origin, Entity->GetMins(), Entity->GetMaxs(), LastSighting, Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
 		if (tr.fraction < 1)
 		{
 			v = vec3f(Entity->gameEntity->goalentity->state.origin) - origin;
@@ -2222,10 +2171,10 @@ void CMonster::AI_Run(float Dist)
 					G_ProjectSource (origin, v, v_forward, v_right, left_target);
 //					gi.dprintf("incomplete path, go part way and adjust again\n");
 				}
-				Vec3Copy (LastSighting, SavedGoal);
+				SavedGoal = LastSighting;
 				AIFlags |= AI_PURSUE_TEMP;
 				Vec3Copy (left_target, Entity->gameEntity->goalentity->state.origin);
-				Vec3Copy (left_target, LastSighting);
+				LastSighting = left_target;
 				v = vec3f(Entity->gameEntity->goalentity->state.origin) - origin;
 
 				vec3f ang = Entity->State.GetAngles();
@@ -2242,10 +2191,10 @@ void CMonster::AI_Run(float Dist)
 					G_ProjectSource (origin, v, v_forward, v_right, right_target);
 //					gi.dprintf("incomplete path, go part way and adjust again\n");
 				}
-				Vec3Copy (LastSighting, SavedGoal);
+				SavedGoal = LastSighting;
 				AIFlags |= AI_PURSUE_TEMP;
 				Vec3Copy (right_target, Entity->gameEntity->goalentity->state.origin);
-				Vec3Copy (right_target, LastSighting);
+				LastSighting = right_target;
 				v = vec3f(Entity->gameEntity->goalentity->state.origin) - origin;
 				vec3f ang = Entity->State.GetAngles();
 				ang.Y = IdealYaw = v.ToYaw();
@@ -2375,10 +2324,10 @@ void CMonster::AI_Run(float Dist)
 		if ((Entity->Enemy) && (Entity->Enemy->IsInUse()) && (EnemyVis))
 		{
 			AIFlags &= ~AI_LOST_SIGHT;
-			Vec3Copy (Entity->Enemy->State.GetOrigin(), LastSighting);
+			LastSighting = Entity->Enemy->State.GetOrigin();
 			TrailTime = level.framenum;
 			//PMM
-			Vec3Copy (Entity->Enemy->State.GetOrigin(), BlindFireTarget);
+			BlindFireTarget = Entity->Enemy->State.GetOrigin();
 			BlindFireDelay = 0;
 			//pmm
 		}
@@ -2396,10 +2345,10 @@ void CMonster::AI_Run(float Dist)
 			return;			// PGM - g_touchtrigger free problem
 
 		AIFlags &= ~AI_LOST_SIGHT;
-		Vec3Copy (Entity->Enemy->State.GetOrigin(), LastSighting);
+		LastSighting = Entity->Enemy->State.GetOrigin();
 		TrailTime = level.framenum;
 		// PMM
-		Vec3Copy (Entity->Enemy->State.GetOrigin(), BlindFireTarget);
+		BlindFireTarget = Entity->Enemy->State.GetOrigin();
 		BlindFireDelay = 0;
 		// pmm
 		return;
@@ -2460,12 +2409,12 @@ void CMonster::AI_Run(float Dist)
 		if (AIFlags & AI_PURSUE_TEMP)
 		{
 			AIFlags &= ~AI_PURSUE_TEMP;
-			Vec3Copy (SavedGoal, LastSighting);
+			LastSighting = SavedGoal;
 			isNew = true;
 		}
 	}
 
-	vec3f v = Entity->State.GetOrigin() - vec3f(LastSighting);
+	vec3f v = Entity->State.GetOrigin() - LastSighting;
 	float d1 = v.Length();
 	if (d1 <= Dist)
 	{
@@ -2473,11 +2422,11 @@ void CMonster::AI_Run(float Dist)
 		Dist = d1;
 	}
 
-	Vec3Copy (LastSighting, Entity->gameEntity->goalentity->state.origin);
+	Entity->gameEntity->goalentity->Entity->State.SetOrigin (LastSighting);
 
 	if (isNew)
 	{
-		CTrace tr (Entity->State.GetOrigin(), Entity->GetMins(), Entity->GetMaxs(), vec3f(LastSighting), Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
+		CTrace tr (Entity->State.GetOrigin(), Entity->GetMins(), Entity->GetMaxs(), LastSighting, Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
 		if (tr.fraction < 1)
 		{
 			float center = tr.fraction;
@@ -2514,10 +2463,10 @@ void CMonster::AI_Run(float Dist)
 					offset = vec3f(d2 * left * 0.5, -16, 0);
 					G_ProjectSource (origin, offset, v_forward, v_right, left_target);
 				}
-				Vec3Copy (LastSighting, SavedGoal);
+				SavedGoal = LastSighting;
 				AIFlags |= AI_PURSUE_TEMP;
 				Vec3Copy (left_target, Entity->gameEntity->goalentity->state.origin);
-				Vec3Copy (left_target, LastSighting);
+				LastSighting = left_target;
 				v = Entity->gameEntity->goalentity->Entity->State.GetOrigin() - origin;
 
 				angles[YAW] = IdealYaw = v.ToYaw();
@@ -2530,10 +2479,10 @@ void CMonster::AI_Run(float Dist)
 					offset = vec3f(d2 * right * 0.5, 16, 0);
 					G_ProjectSource (origin, offset, v_forward, v_right, right_target);
 				}
-				Vec3Copy (LastSighting, SavedGoal);
+				SavedGoal = LastSighting;
 				AIFlags |= AI_PURSUE_TEMP;
 				Vec3Copy (right_target, Entity->gameEntity->goalentity->state.origin);
-				Vec3Copy (right_target, LastSighting);
+				LastSighting = right_target;
 				v = Entity->gameEntity->goalentity->Entity->State.GetOrigin() - origin;
 				angles[YAW] = IdealYaw = v.ToYaw();
 				Entity->State.SetAngles(angles);
@@ -2692,10 +2641,7 @@ void CMonster::AI_Stand (float Dist)
 	{
 		if (Entity->Enemy)
 		{
-			vec3_t v;
-			Entity->State.GetOrigin(v);
-			Vec3Subtract (Entity->Enemy->state.origin, v, v);
-			IdealYaw = VecToYaw(v);
+			IdealYaw = (Entity->Enemy->State.GetOrigin() - Entity->State.GetOrigin()).ToYaw();
 			if (Entity->State.GetAngles().Y != IdealYaw && AIFlags & AI_TEMP_STAND_GROUND)
 			{
 				AIFlags &= ~(AI_STAND_GROUND | AI_TEMP_STAND_GROUND);
@@ -2780,8 +2726,8 @@ void CMonster::AI_Stand (float Dist)
 			if ((Entity->Enemy) && (Entity->Enemy->IsInUse()) && (IsVisible(Entity, Entity->Enemy)))
 			{
 				AIFlags &= ~AI_LOST_SIGHT;
-				Vec3Copy (Entity->Enemy->State.GetOrigin(), LastSighting);
-				Vec3Copy (Entity->Enemy->State.GetOrigin(), BlindFireTarget);
+				LastSighting = Entity->Enemy->State.GetOrigin();
+				BlindFireTarget = Entity->Enemy->State.GetOrigin();
 				TrailTime = level.framenum;
 				BlindFireDelay = 0;
 			}
@@ -3128,7 +3074,7 @@ void CMonster::FoundTarget ()
 {
 	Entity->gameEntity->show_hostile = level.framenum + 10;		// wake up other monsters
 
-	Vec3Copy(Entity->Enemy->State.GetOrigin(), LastSighting);
+	LastSighting = Entity->Enemy->State.GetOrigin();
 	TrailTime = level.framenum;
 
 	if (!Entity->gameEntity->combattarget)
@@ -3157,7 +3103,7 @@ void CMonster::FoundTarget ()
 	PauseTime = 0;
 #ifdef MONSTER_USE_ROGUE_AI
 	// PMM
-	Vec3Copy (Entity->Enemy->State.GetOrigin(), BlindFireTarget);
+	BlindFireTarget = Entity->Enemy->State.GetOrigin();
 	BlindFireDelay = 0;
 	// PMM
 #endif
@@ -3281,14 +3227,11 @@ void CMonster::WorldEffects()
 
 void CMonster::CatagorizePosition()
 {
-	vec3_t		point;
-	int			cont;
 //
 // get waterlevel
 //
-	Entity->State.GetOrigin(point);
-	point[2] += Entity->GetMins().Z + 1;	
-	cont = PointContents (point);
+	vec3f point = Entity->State.GetOrigin() + vec3f (0, 0, Entity->GetMins().Z + 1);	
+	int cont = PointContents (point);
 
 	if (!(cont & CONTENTS_MASK_WATER))
 	{
@@ -3299,13 +3242,13 @@ void CMonster::CatagorizePosition()
 
 	Entity->gameEntity->watertype = cont;
 	Entity->gameEntity->waterlevel = 1;
-	point[2] += 26;
+	point.Z += 26;
 	cont = PointContents (point);
 	if (!(cont & CONTENTS_MASK_WATER))
 		return;
 
 	Entity->gameEntity->waterlevel = 2;
-	point[2] += 22;
+	point.Z += 22;
 	cont = PointContents (point);
 	if (cont & CONTENTS_MASK_WATER)
 		Entity->gameEntity->waterlevel = 3;
@@ -3313,9 +3256,6 @@ void CMonster::CatagorizePosition()
 
 void CMonster::CheckGround()
 {
-	vec3_t		point;
-	CTrace		trace;
-
 	if (Entity->Flags & (FL_SWIM|FL_FLY))
 		return;
 
@@ -3326,13 +3266,11 @@ void CMonster::CheckGround()
 	}
 
 // if the hull point one-quarter unit down is solid the entity is on ground
-	Entity->State.GetOrigin (point);
-	point[2] -= 0.25;
-
-	trace = CTrace (Entity->State.GetOrigin(), Entity->GetMins(), Entity->GetMaxs(), vec3f(point), Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
+	vec3f point = Entity->State.GetOrigin() - vec3f(0, 0, 0.25f);
+	CTrace trace (Entity->State.GetOrigin(), Entity->GetMins(), Entity->GetMaxs(), point, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
 
 	// check steepness
-	if ( trace.plane.normal[2] < 0.7 && !trace.startSolid)
+	if (trace.plane.normal[2] < 0.7 && !trace.startSolid)
 	{
 		Entity->GroundEntity = NULL;
 		return;
@@ -3385,35 +3323,30 @@ bool CMonster::FindTarget()
 #ifdef MONSTERS_USE_PATHFINDING
 	if ((level.SoundEntityFramenum >= (level.framenum - 1)) && level.NoiseNode)
 	{
-		vec3_t temp;
-		vec3_t origin;
-
-		Entity->State.GetOrigin(origin);
 		if (Entity->SpawnFlags & 1)
 		{
-			CTrace trace = CTrace(origin, level.NoiseNode->Origin, Entity->gameEntity, CONTENTS_MASK_SOLID);
+			CTrace trace = CTrace(Entity->State.GetOrigin(), level.NoiseNode->Origin, Entity->gameEntity, CONTENTS_MASK_SOLID);
 
 			if (trace.fraction < 1.0)
 				return false;
 		}
 		else
 		{
-			if (!InHearableArea(origin, level.NoiseNode->Origin))
+			if (!InHearableArea(Entity->State.GetOrigin(), level.NoiseNode->Origin))
 				return false;
 		}
 
-		Vec3Subtract (level.NoiseNode->Origin, origin, temp);
-
-		if (Vec3Length(temp) > 1000)	// too far to hear
+		vec3f temp = level.NoiseNode->Origin - Entity->State.GetOrigin();
+		if (temp.Length() > 1000)	// too far to hear
 			return false;
 
-		IdealYaw = VecToYaw(temp);
+		IdealYaw = temp.ToYaw ();
 		ChangeYaw ();
 
 		// hunt the sound for a bit; hopefully find the real player
 		//AIFlags |= AI_SOUND_TARGET;
 
-		P_CurrentNode = GetClosestNodeTo(origin);
+		P_CurrentNode = GetClosestNodeTo(Entity->State.GetOrigin());
 		P_CurrentGoalNode = level.NoiseNode;
 		FoundPath ();
 
@@ -3424,13 +3357,9 @@ bool CMonster::FindTarget()
 
 			if (client)
 			{
-				vec3_t	temp;
-
 				if (client->Flags & FL_NOTARGET)
 					return false;
 
-				client->State.GetOrigin (temp);
-				Entity->State.GetOrigin (origin);
 				if (Entity->SpawnFlags & 1)
 				{
 					if (!IsVisible (Entity, client))
@@ -3438,13 +3367,12 @@ bool CMonster::FindTarget()
 				}
 				else
 				{
-					if (!InHearableArea(origin, temp))
+					if (!InHearableArea(Entity->State.GetOrigin(), client->State.GetOrigin()))
 						return false;
 				}
 
-				Vec3Subtract (temp, origin, temp);
-
-				if (Vec3Length(temp) > 1000)	// too far to hear
+				vec3f temp = client->State.GetOrigin() - Entity->State.GetOrigin();
+				if (temp.Length() > 1000)	// too far to hear
 					return false;
 
 				// check area portals - if they are different and not connected then we can't hear it
@@ -3575,11 +3503,6 @@ bool CMonster::FindTarget()
 	}
 	else	// heardit
 	{
-		vec3_t	temp;
-		vec3_t origin;
-
-		client->State.GetOrigin (temp);
-		Entity->State.GetOrigin(origin);
 		if (Entity->SpawnFlags & 1)
 		{
 			if (!IsVisible (Entity, client))
@@ -3587,13 +3510,12 @@ bool CMonster::FindTarget()
 		}
 		else
 		{
-			if (!InHearableArea(origin, temp))
+			if (!InHearableArea(Entity->State.GetOrigin (), client->State.GetOrigin ()))
 				return false;
 		}
 
-		Vec3Subtract (temp, origin, temp);
-
-		if (Vec3Length(temp) > 1000)	// too far to hear
+		vec3f temp = client->State.GetOrigin() - Entity->State.GetOrigin();
+		if (temp.Length() > 1000)	// too far to hear
 			return false;
 
 		// check area portals - if they are different and not connected then we can't hear it
@@ -3603,7 +3525,7 @@ bool CMonster::FindTarget()
 				return false;
 		}
 
-		IdealYaw = VecToYaw(temp);
+		IdealYaw = temp.ToYaw ();
 		ChangeYaw ();
 
 		// hunt the sound for a bit; hopefully find the real player
@@ -3659,11 +3581,11 @@ void CMonster::CheckFlies ()
 	Entity->NextThink = level.framenum + ((5 + 10 * random()) * 10);
 }
 
-static uint32 lastMonsterID = 0;
-CMonster::CMonster () :
-MonsterName(NULL)
+uint32 LastID = 0;
+CMonster::CMonster (uint32 ID) :
+MonsterName(NULL),
+MonsterID(ID)
 {
-	MonsterID = lastMonsterID++;
 }
 
 #ifdef MONSTER_USE_ROGUE_AI
@@ -3746,20 +3668,10 @@ void CMonster::Dodge (CBaseEntity *attacker, float eta, CTrace *tr)
 		// if we're ducking already, or the shot is at our knees
 		if ((tr->endPos[2] <= height) || (AIFlags & AI_DUCKED))
 		{
-			vec3_t right, diff;
-			vec3_t angles, origin;
+			vec3f right;
 
-			Entity->State.GetAngles (angles);
-			Entity->State.GetOrigin (origin);
-
-			Angles_Vectors (angles, NULL, right, NULL);
-			Vec3Subtract (tr->endPos, origin, diff);
-
-			if (Dot3Product (right, diff) < 0)
-				Lefty = false;
-			else
-				Lefty = true;
-	
+			Entity->State.GetAngles().ToVectors (NULL, &right, NULL);
+			Lefty = !(right.Dot (tr->EndPos - Entity->State.GetOrigin()) < 0);	
 			// if we are currently ducked, unduck
 
 			if ((ducker) && (AIFlags & AI_DUCKED))

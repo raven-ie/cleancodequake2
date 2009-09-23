@@ -35,7 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "m_float.h"
 #include "cc_floater.h"
 
-CFloater::CFloater ()
+CFloater::CFloater (uint32 ID) :
+CMonster (ID)
 {
 	Scale = MODEL_SCALE;
 	MonsterName = "Technician";
@@ -470,7 +471,7 @@ void CFloater::Walk ()
 
 void CFloater::Wham ()
 {
-	static	vec3_t	aim = {MELEE_DISTANCE, 0, 0};
+	static	vec3f	aim (MELEE_DISTANCE, 0, 0);
 	Entity->PlaySound (CHAN_WEAPON, SoundAttack3);
 	CMeleeWeapon::Fire (Entity, aim, 5 + irandom(6), -50);
 }
@@ -568,7 +569,7 @@ void CFloater::Spawn ()
 
 	Entity->Health = 200;
 	Entity->GibHealth = -80;
-	Entity->gameEntity->mass = 300;
+	Entity->Mass = 300;
 
 	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_MELEE | MF_HAS_SIGHT | MF_HAS_IDLE);
 

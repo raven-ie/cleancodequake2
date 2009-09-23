@@ -539,7 +539,6 @@ struct edict_s
 
 	float		speed, accel, decel;
 
-	int			mass;
 	float		gravity;		// per entity gravity multiplier (1.0 is normal)
 								// use for lowgrav artifact, flares
 
@@ -576,10 +575,6 @@ struct edict_s
 
 	int			watertype;
 	int			waterlevel;
-
-	vec3_t		move_origin;
-	vec3_t		move_angles;
-
 	int			light_level;
 	int			style;			// also used as areaportal number
 
@@ -640,9 +635,6 @@ extern	CCvar	*instantweap;
 #ifdef CLEANCTF_ENABLED
 #include "cc_ctf.h"
 #endif
-
-bool CheckTeamDamage (edict_t *targ, edict_t *attacker);
-void	SelectSpawnPoint (edict_t *ent, vec3_t origin, vec3_t angles);
 
 extern CBaseEntity *World;
 

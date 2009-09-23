@@ -356,12 +356,15 @@ __try
 
 		entities = ED_ParseEdict (entities, ent);
 
-		DebugPrintf ("Entity %i\n", level.EntityNumber);
 		ED_CallSpawn (ent);
 		level.EntityNumber++;
 
 		if (!ent->inUse)
+		{
 			level.inhibit++;
+			if (ent->Entity && !ent->Entity->Freed)
+				assert (0);
+		}
 	}
 
 	DebugPrintf ("%i entities removed\n", level.inhibit);

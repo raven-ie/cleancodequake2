@@ -47,6 +47,8 @@ public:
 	MediaIndex	SoundPain;
 	MediaIndex	SoundDeath;
 
+	CSoldierBase (uint32 ID);
+
 	virtual void Attack () = 0;
 #ifndef MONSTER_USE_ROGUE_AI
 	void Dodge (CBaseEntity *attacker, float eta);

@@ -256,9 +256,8 @@ void CWeapon::Muzzle (CPlayerEntity *Player, int muzzleNum)
 {
 	if (isSilenced)
 		muzzleNum |= MZ_SILENCED;
-	vec3_t origin;
-	Player->State.GetOrigin (origin);
-	CTempEnt::MuzzleFlash(origin, Player->State.GetNumber(), muzzleNum);
+
+	CTempEnt::MuzzleFlash(Player->State.GetOrigin(), Player->State.GetNumber(), muzzleNum);
 }
 
 /*

@@ -152,12 +152,13 @@ public:
 	EPhysicsType		PhysicsType;
 	vec3f				AngularVelocity;
 	vec3f				Velocity;
+	float				Mass;
 
 	bool				PhysicsDisabled;
 	CPhysicsEntity ();
 	CPhysicsEntity (int index);
 
-	class CTrace	PushEntity (vec3_t push);
+	class CTrace	PushEntity (vec3f &push);
 	inline void		AddGravity ();
 	void			Impact (CTrace *trace);
 };

@@ -47,7 +47,7 @@ public:
 	MediaIndex	SoundSproing;
 	MediaIndex	SoundDie;
 
-	CFlyer ();
+	CFlyer (uint32 ID);
 
 	void Attack ();
 #ifdef FLYER_KNOWS_HOW_TO_DODGE

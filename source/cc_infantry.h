@@ -52,7 +52,7 @@ public:
 	MediaIndex	SoundSearch;
 	MediaIndex	SoundIdle;
 
-	CInfantry ();
+	CInfantry (uint32 ID);
 
 #ifndef MONSTER_USE_ROGUE_AI
 	void Dodge (CBaseEntity *attacker, float eta);

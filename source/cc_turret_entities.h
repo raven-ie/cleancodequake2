@@ -75,9 +75,10 @@ public:
 class CTurretDriver : public CInfantry
 {
 public:
+	vec3f				MoveOrigin;
 	CTurretBreach		*TargetedBreach;
 
-	CTurretDriver ();
+	CTurretDriver (uint32 ID);
 
 	void Attack () {};
 	void Idle () {};

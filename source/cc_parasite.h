@@ -49,7 +49,7 @@ public:
 	MediaIndex	SoundScratch;
 	MediaIndex	SoundSearch;
 
-	CParasite ();
+	CParasite (uint32 ID);
 
 	void Run ();
 	void Walk ();

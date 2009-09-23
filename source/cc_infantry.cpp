@@ -35,7 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "m_infantry.h"
 #include "cc_infantry.h"
 
-CInfantry::CInfantry ()
+CInfantry::CInfantry (uint32 ID) :
+CMonster (ID)
 {
 	Scale = MODEL_SCALE;
 	MonsterName = "Enforcer";
@@ -644,7 +645,7 @@ void CInfantry::Spawn ()
 
 	Entity->Health = 100;
 	Entity->GibHealth = -40;
-	Entity->gameEntity->mass = 200;
+	Entity->Mass = 200;
 
 	MonsterFlags = (MF_HAS_MELEE | MF_HAS_ATTACK | MF_HAS_IDLE | MF_HAS_SIGHT
 #ifdef MONSTER_USE_ROGUE_AI

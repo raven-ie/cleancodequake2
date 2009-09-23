@@ -44,7 +44,7 @@ public:
 	MediaIndex	SoundSight;
 	MediaIndex	SoundSearch;
 
-	CBerserker ();
+	CBerserker (uint32 ID);
 
 	void Run ();
 	void Search ();

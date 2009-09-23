@@ -42,13 +42,16 @@ class CMiscExploBox : public CMapEntity, public CStepPhysics, public CHurtableEn
 	bool		Dropped;
 	CBaseEntity	*Shooter;
 public:
+	int			Explosivity;
+
 	CMiscExploBox () :
 	Dropped(false),
 	CBaseEntity(),
 	CMapEntity(),
 	CThinkableEntity(),
 	CHurtableEntity (),
-	CStepPhysics()
+	CStepPhysics(),
+	Explosivity(100)
 	{
 	};
 
@@ -58,22 +61,25 @@ public:
 	CMapEntity(Index),
 	CThinkableEntity(),
 	CHurtableEntity(Index),
-	CStepPhysics(Index)
+	CStepPhysics(Index),
+	Explosivity(100)
 	{
 	};
 
-	virtual bool			ParseField (char *Key, char *Value)
-	{
-		return (CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
-	};
+	static const CEntityField FieldsForParsing[];
+	static const size_t FieldsForParsingSize;
+
+	bool			ParseField (char *Key, char *Value);
 
 #define BARREL_STEPSIZE 8
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
 		if ((!other->GroundEntity) || (other->GroundEntity == this))
 			return;
+		if (!(other->EntityFlags & ENT_PHYSICS))
+			return;
 
-		float ratio = (float)other->gameEntity->mass / (float)gameEntity->mass;
+		float ratio = dynamic_cast<CPhysicsEntity*>(other)->Mass / Mass;
 		vec3f v = State.GetOrigin() - other->State.GetOrigin();
 		float Yaw = (v.ToYaw ()*M_PI*2 / 360);
 		vec3f move = vec3f( cosf(Yaw)*(20 * ratio),
@@ -175,8 +181,9 @@ public:
 		SetMins (vec3f(-16, -16, 0));
 		SetMaxs (vec3f(16, 16, 40));
 
-		if (!gameEntity->mass)
-			gameEntity->mass = 400;
+		if (!Explosivity)
+			Explosivity = 400;
+		Mass = Explosivity;
 		if (!Health)
 			Health = 10;
 		if (!gameEntity->dmg)
@@ -187,6 +194,26 @@ public:
 
 		Link ();
 	};
+};
+
+const CEntityField CMiscExploBox::FieldsForParsing[] =
+{
+	CEntityField ("mass", EntityMemberOffset(CMiscExploBox,Explosivity), FTInteger),
+};
+const size_t CMiscExploBox::FieldsForParsingSize = (sizeof(CMiscExploBox::FieldsForParsing) / sizeof(CMiscExploBox::FieldsForParsing[0]));
+
+bool			CMiscExploBox::ParseField (char *Key, char *Value)
+{
+	for (size_t i = 0; i < CMiscExploBox::FieldsForParsingSize; i++)
+	{
+		if (strcmp (Key, CMiscExploBox::FieldsForParsing[i].Name) == 0)
+		{
+			CMiscExploBox::FieldsForParsing[i].Create<CMiscExploBox> (this, Value);
+			return true;
+		}
+	}
+
+	return (CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 };
 
 LINK_CLASSNAME_TO_CLASS ("misc_explobox",CMiscExploBox);

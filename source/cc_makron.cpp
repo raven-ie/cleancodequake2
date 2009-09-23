@@ -36,7 +36,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_makron.h"
 #include "m_boss32.h"
 
-CMakron::CMakron ()
+CMakron::CMakron (uint32 ID) :
+CMonster (ID)
 {
 	Scale = MODEL_SCALE;
 	MonsterName = "Makron";
@@ -686,17 +687,17 @@ void CMakron::Die(CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec
 bool CMakron::CheckAttack ()
 {
 #ifndef MONSTER_USE_ROGUE_AI
-	vec3_t	spot1, spot2;
+	vec3f	spot1, spot2;
 	float	chance;
 	CTrace	tr;
 
 	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0)
 	{
 	// see if any entities are in the way of the shot
-		Entity->State.GetOrigin(spot1);
-		spot1[2] += Entity->gameEntity->viewheight;
-		Vec3Copy (Entity->Enemy->State.GetOrigin(), spot2);
-		spot2[2] += Entity->Enemy->gameEntity->viewheight;
+		spot1 = Entity->State.GetOrigin();
+		spot1.Z += Entity->gameEntity->viewheight;
+		spot2 = Entity->Enemy->State.GetOrigin();
+		spot2.Z += Entity->Enemy->gameEntity->viewheight;
 
 		tr = CTrace(spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
 
@@ -955,7 +956,7 @@ void CMakron::Spawn ()
 
 	Entity->Health = 3000;
 	Entity->GibHealth = -2000;
-	Entity->gameEntity->mass = 500;
+	Entity->Mass = 500;
 
 	MonsterFlags = (MF_HAS_ATTACK | MF_HAS_SIGHT);
 	Entity->Link ();
@@ -987,7 +988,7 @@ CThinkableEntity (Index)
 void CMakronJumpTimer::Think ()
 {
 	CMonsterEntity *newClass = QNew (com_levelPool, 0) CMonsterEntity;
-	CMakron *Monster = QNew (com_levelPool, 0) CMakron ();
+	CMakron *Monster = QNew (com_levelPool, 0) CMakron (CMakron_ID);
 	newClass->Monster = Monster;
 	Monster->Entity = newClass;
 	newClass->State.SetOrigin (State.GetOrigin());

@@ -122,9 +122,9 @@ void CTurretBreach::Fire ()
 {
 	vec3f f, r, u;
 	State.GetAngles().ToVectors (&f, &r, &u);
-	vec3f start = State.GetOrigin().MultiplyAngles (gameEntity->move_origin[0], f);
-	start = start.MultiplyAngles (gameEntity->move_origin[1], r);
-	start = start.MultiplyAngles (gameEntity->move_origin[2], u);
+	vec3f start = State.GetOrigin().MultiplyAngles (MoveOrigin.X, f);
+	start = start.MultiplyAngles (MoveOrigin.Y, r);
+	start = start.MultiplyAngles (MoveOrigin.Z, u);
 
 	int damage = 100 + random() * 50;
 	CRocket::Spawn (TeamMaster->GetOwner(), start, f, damage, 550 + 50 * skill->Integer(), 150, damage);
@@ -162,8 +162,7 @@ void CTurretBreach::Think ()
 		else
 		{
 			CBaseEntity *targ = CC_PickTarget (gameEntity->target);
-			vec3f moveOrg = (targ->State.GetOrigin() - State.GetOrigin());
-			Vec3Copy (moveOrg, gameEntity->move_origin);
+			MoveOrigin = (targ->State.GetOrigin() - State.GetOrigin());
 			targ->Free();
 		}
 
@@ -175,36 +174,34 @@ void CTurretBreach::Think ()
 		vec3f current_angles = State.GetAngles ();
 		AnglesNormalize(current_angles);
 
-		vec3f moveangles = vec3f(gameEntity->move_angles);
-		AnglesNormalize(moveangles);
-		if (moveangles.X > 180)
-			moveangles.X -= 360;
-		Vec3Copy (moveangles, gameEntity->move_angles);
+		AnglesNormalize(MoveAngles);
+		if (MoveAngles.X > 180)
+			MoveAngles.X -= 360;
 
 		// clamp angles to mins & maxs
-		if (gameEntity->move_angles[PITCH] > Positions[0].X)
-			gameEntity->move_angles[PITCH] = Positions[0].X;
-		else if (gameEntity->move_angles[PITCH] < Positions[1].X)
-			gameEntity->move_angles[PITCH] = Positions[1].X;
+		if (MoveAngles.X > Positions[0].X)
+			MoveAngles.X = Positions[0].X;
+		else if (MoveAngles.X < Positions[1].X)
+			MoveAngles.X = Positions[1].X;
 
-		if ((gameEntity->move_angles[YAW] < Positions[0].Y) || (gameEntity->move_angles[YAW] > Positions[1].Y))
+		if ((MoveAngles.Y < Positions[0].Y) || (MoveAngles.Y > Positions[1].Y))
 		{
-			float dmin = Q_fabs(Positions[0].Y - gameEntity->move_angles[YAW]);
+			float dmin = Q_fabs(Positions[0].Y - MoveAngles.Y);
 			if (dmin < -180)
 				dmin += 360;
 			else if (dmin > 180)
 				dmin -= 360;
 
-			float dmax = Q_fabs(Positions[1].Y - gameEntity->move_angles[YAW]);
+			float dmax = Q_fabs(Positions[1].Y - MoveAngles.Y);
 			if (dmax < -180)
 				dmax += 360;
 			else if (dmax > 180)
 				dmax -= 360;
 
-			gameEntity->move_angles[YAW] = Positions[(Q_fabs(dmin) < Q_fabs(dmax)) ? 0 : 1].Y;
+			MoveAngles.Y = Positions[(Q_fabs(dmin) < Q_fabs(dmax)) ? 0 : 1].Y;
 		}
 
-		vec3f delta = (vec3f(gameEntity->move_angles) - current_angles);
+		vec3f delta = (MoveAngles - current_angles);
 		if (delta.X < -180)
 			delta.X += 360;
 		else if (delta.X > 180)
@@ -239,32 +236,31 @@ void CTurretBreach::Think ()
 			float	diff;
 			vec3f	target;
 			vec3f	dir;
+			CMonsterEntity *TheDriver = dynamic_cast<CMonsterEntity*>(GetOwner());
+			CTurretDriver *Driver = dynamic_cast<CTurretDriver*>(TheDriver->Monster);
 
 			// angular is easy, just copy ours
-			CPhysicsEntity *Owned = dynamic_cast<CPhysicsEntity*>(GetOwner());
-			Owned->AngularVelocity.X = AngularVelocity.Z;
-			Owned->AngularVelocity.Y = AngularVelocity.Y;
+			TheDriver->AngularVelocity.X = AngularVelocity.Z;
+			TheDriver->AngularVelocity.Y = AngularVelocity.Y;
 
 			// x & y
-			angle = State.GetAngles().Y + gameEntity->owner->move_origin[1];
+			angle = State.GetAngles().Y + Driver->MoveOrigin.Y;
 			angle *= (((float)M_PI)*2 / 360);
-			target.X = SnapToEights(State.GetOrigin().X + cosf(angle) * gameEntity->owner->move_origin[0]);
-			target.Y = SnapToEights(State.GetOrigin().Y + sinf(angle) * gameEntity->owner->move_origin[0]);
-			target.Z = gameEntity->owner->state.origin[2];
+			target.X = SnapToEights(State.GetOrigin().X + cosf(angle) * Driver->MoveOrigin.X);
+			target.Y = SnapToEights(State.GetOrigin().Y + sinf(angle) * Driver->MoveOrigin.X);
+			target.Z = TheDriver->State.GetOrigin().Z;
 
-			dir = target - gameEntity->owner->Entity->State.GetOrigin();
-			
-			CPhysicsEntity *Owner = dynamic_cast<CPhysicsEntity*>(GetOwner());
+			dir = target - TheDriver->State.GetOrigin();
 
-			Owner->Velocity.X = dir.X * 1.0 / 1;
-			Owner->Velocity.Y = dir.Y * 1.0 / 1;
+			TheDriver->Velocity.X = dir.X * 1.0 / 1;
+			TheDriver->Velocity.Y = dir.Y * 1.0 / 1;
 
 			// z
 			angle = State.GetAngles().X * (M_PI*2 / 360);
-			target_z = SnapToEights(State.GetOrigin().Z + gameEntity->owner->move_origin[0] * tan(angle) + gameEntity->owner->move_origin[2]);
+			target_z = SnapToEights(State.GetOrigin().Z + Driver->MoveOrigin.X * tan(angle) + Driver->MoveOrigin.Z);
 
-			diff = target_z - gameEntity->owner->state.origin[2];
-			Owner->Velocity.Z = diff * 1.0 / 1;
+			diff = target_z - TheDriver->State.GetOrigin().Z;
+			TheDriver->Velocity.Z = diff * 1.0 / 1;
 
 			if (ShouldFire)
 			{
@@ -322,7 +318,7 @@ void CTurretBreach::Spawn ()
 	Positions[1].X = -1 * PitchOptions[1];
 	Positions[1].Y = PitchOptions[3];
 
-	gameEntity->move_angles[YAW] = State.GetAngles().Y;
+	MoveAngles.Y = State.GetAngles().Y;
 	State.SetAngles (vec3fOrigin);
 
 	NextThink = level.framenum + FRAMETIME;
@@ -370,8 +366,8 @@ Must NOT be on the team with the rest of the turret parts.
 Instead it must target the turret_breach.
 */
 
-CTurretDriver::CTurretDriver () :
-CInfantry (),
+CTurretDriver::CTurretDriver (uint32 ID) :
+CInfantry (ID),
 TargetedBreach(NULL)
 {
 };
@@ -397,7 +393,7 @@ void CTurretDriver::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 	CBaseEntity	*ent;
 
 	// level the gun
-	TargetedBreach->gameEntity->move_angles[0] = 0;
+	TargetedBreach->MoveAngles.X = 0;
 
 	// remove the driver from the end of them team chain
 	for (ent = TargetedBreach->TeamMaster; ent->TeamChain != Entity; ent = ent->TeamChain)
@@ -463,7 +459,7 @@ void CTurretDriver::TurretThink ()
 		TargetedBreach->State.GetOrigin();
 
 	vec3f ang = dir.ToAngles ();
-	Vec3Copy (ang, TargetedBreach->gameEntity->move_angles);
+	TargetedBreach->MoveAngles = ang;
 
 	// decide if we should shoot
 	if (level.framenum < AttackFinished)
@@ -490,14 +486,14 @@ void CTurretDriver::TurretLink ()
 
 	vec3f vec = (TargetedBreach->State.GetOrigin() - Entity->State.GetOrigin());
 	vec.Z = 0;
-	Entity->gameEntity->move_origin[0] = vec.Length();
+	MoveOrigin.X = vec.Length();
 
 	vec = (Entity->State.GetOrigin() - TargetedBreach->State.GetOrigin());
 	vec = vec.ToAngles();
 	AnglesNormalize(vec);
-	Entity->gameEntity->move_origin[1] = vec.Y;
+	MoveOrigin.Y = vec.Y;
 
-	Entity->gameEntity->move_origin[2] = Entity->State.GetOrigin().Z - TargetedBreach->State.GetOrigin().Z;
+	MoveOrigin.Z = Entity->State.GetOrigin().Z - TargetedBreach->State.GetOrigin().Z;
 
 	// add the driver to the end of them team chain
 	CBaseEntity	*ent;
@@ -524,7 +520,7 @@ void CTurretDriver::Spawn ()
 
 	Entity->Health = Entity->MaxHealth = 100;
 	Entity->GibHealth = -40;
-	Entity->gameEntity->mass = 200;
+	Entity->Mass = 200;
 	Entity->gameEntity->viewheight = 24;
 
 	SoundPain1 = SoundIndex ("infantry/infpain1.wav");

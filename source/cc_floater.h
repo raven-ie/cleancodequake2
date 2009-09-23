@@ -45,7 +45,7 @@ public:
 	MediaIndex	SoundPain2;
 	MediaIndex	SoundSight;
 
-	CFloater ();
+	CFloater (uint32 ID);
 
 	void Attack ();
 	void Idle ();

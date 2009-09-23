@@ -35,7 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_medic.h"
 #include "m_medic.h"
 
-CMedic::CMedic ()
+CMedic::CMedic (uint32 ID) :
+CMonster(ID)
 {
 	Scale = MODEL_SCALE;
 	MonsterName = "Medic";
@@ -855,7 +856,7 @@ void CMedic::Spawn ()
 
 	Entity->Health = 300;
 	Entity->GibHealth = -130;
-	Entity->gameEntity->mass = 400;
+	Entity->Mass = 400;
 
 	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_SIGHT | MF_HAS_IDLE | MF_HAS_SEARCH
 #ifdef MONSTER_USE_ROGUE_AI

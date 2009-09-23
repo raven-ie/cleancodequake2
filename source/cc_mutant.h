@@ -55,7 +55,7 @@ public:
 	MediaIndex	SoundStep3;
 	MediaIndex	SoundThud;
 
-	CMutant ();
+	CMutant (uint32 ID);
 
 	void Step ();
 	void Swing ();

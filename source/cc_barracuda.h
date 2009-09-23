@@ -46,7 +46,7 @@ public:
 	MediaIndex	SoundSearch;
 	MediaIndex	SoundSight;
 
-	CBarracudaShark ();
+	CBarracudaShark (uint32 ID);
 
 	void Run ();
 	void Sight ();

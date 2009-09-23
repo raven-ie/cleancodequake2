@@ -54,7 +54,7 @@ public:
 	MediaIndex	SoundMelee2;
 	MediaIndex	SoundMelee3;
 
-	CBrain ();
+	CBrain (uint32 ID);
 
 	void Run ();
 	void Search ();

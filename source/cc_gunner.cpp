@@ -35,7 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "m_gunner.h"
 #include "cc_gunner.h"
 
-CGunner::CGunner ()
+CGunner::CGunner (uint32 ID) :
+CMonster (ID)
 {
 	Scale = MODEL_SCALE;
 	MonsterName = "Gunner";
@@ -463,7 +464,7 @@ bool CGunner::GrenadeCheck()
 	// check for flag telling us that we're blindfiring
 	if (AIFlags & AI_MANUAL_STEERING)
 	{
-		if ((Entity->State.GetOrigin().Z + Entity->gameEntity->viewheight) < BlindFireTarget[2])
+		if ((Entity->State.GetOrigin().Z + Entity->gameEntity->viewheight) < BlindFireTarget.Z)
 			return false;
 	}
 	else if(Entity->GetAbsMax().Z <= Entity->Enemy->GetAbsMin().Z)
@@ -572,7 +573,7 @@ void CGunner::Grenade ()
 	if ((AIFlags & AI_MANUAL_STEERING) && (!IsVisible(Entity, Entity->Enemy)))
 	{
 		// and we have a valid blind_fire_target
-		if (Vec3Compare (BlindFireTarget, vec3Origin))
+		if (BlindFireTarget == vec3fOrigin)
 			return;
 
 		target = BlindFireTarget;
@@ -658,13 +659,7 @@ CAnim GunnerMoveEndFireChain (FRAME_attak224, FRAME_attak230, GunnerFramesEndFir
 void CGunner::BlindCheck ()
 {
 	if (AIFlags & AI_MANUAL_STEERING)
-	{
-		vec3_t origin;
-		vec3_t aim;
-		Entity->State.GetOrigin(origin);
-		Vec3Subtract(BlindFireTarget, origin, aim);
-		IdealYaw = VecToYaw(aim);
-	}
+		IdealYaw = (BlindFireTarget - Entity->State.GetOrigin()).ToYaw();
 }
 #endif
 
@@ -715,7 +710,7 @@ void CGunner::Attack()
 		BlindFireDelay += 2.1 + 2.0 + random()*3.0;
 
 		// don't shoot at the origin
-		if (Vec3Compare (BlindFireTarget, vec3Origin))
+		if (BlindFireTarget == vec3fOrigin)
 			return;
 
 		// don't shoot if the dice say not to
@@ -831,7 +826,7 @@ void CGunner::Spawn ()
 
 	Entity->Health = 175;
 	Entity->GibHealth = -70;
-	Entity->gameEntity->mass = 200;
+	Entity->Mass = 200;
 
 	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_SIGHT
 #ifdef MONSTER_USE_ROGUE_AI

@@ -708,15 +708,13 @@ void Cmd_Give (CPlayerEntity *ent)
 	}
 
 	// Calculate spawning direction
-	vec3_t Origin, Angles, forward;
+	vec3f Origin, Angles, forward;
 
-	ent->State.GetAngles(Angles);
-	Angles[0] = 0; // No pitch
-	Angles[2] = 0; // No roll
+	Angles = ent->State.GetAngles();
+	Angles.X = Angles.Z = 0; // only yaw
 
-	Angles_Vectors (Angles, forward, NULL, NULL);
-	ent->State.GetOrigin(Origin);
-	Vec3MA (Origin, 150, forward, Origin);
+	Angles.ToVectors (&forward, NULL, NULL);
+	Origin = ent->State.GetOrigin().MultiplyAngles (150, forward);
 
 	if (PointContents(Origin) & CONTENTS_SOLID)
 		return;
@@ -727,9 +725,9 @@ void Cmd_Give (CPlayerEntity *ent)
 	ED_CallSpawn (Spawned);
 	if (Spawned)
 	{
-		Vec3Copy (Origin, Spawned->state.origin);
-		Vec3Copy (Angles, Spawned->state.angles);
+		Spawned->Entity->State.SetOrigin (Origin);
+		Spawned->Entity->State.SetAngles (Angles);
 
-		gi.linkentity(Spawned);
+		Spawned->Entity->Link ();
 	}
 }

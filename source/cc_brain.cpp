@@ -35,7 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_brain.h"
 #include "m_brain.h"
 
-CBrain::CBrain ()
+CBrain::CBrain (uint32 ID) :
+CMonster (ID)
 {
 	Scale = MODEL_SCALE;
 	MonsterName = "Brain";
@@ -627,7 +628,7 @@ void CBrain::Spawn ()
 
 	Entity->Health = 300;
 	Entity->GibHealth = -150;
-	Entity->gameEntity->mass = 400;
+	Entity->Mass = 400;
 
 	MonsterFlags |= (MF_HAS_MELEE | MF_HAS_SIGHT | MF_HAS_SEARCH | MF_HAS_IDLE
 #ifdef MONSTER_USE_ROGUE_AI

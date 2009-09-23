@@ -53,8 +53,7 @@ public:
 	MediaIndex	SoundSight;
 	MediaIndex	SoundSearch;
 
-	CMaiden ();
-
+	CMaiden (uint32 ID);
 
 	void Attack ();
 	void Idle ();

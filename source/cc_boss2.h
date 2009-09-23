@@ -43,7 +43,7 @@ public:
 	MediaIndex	SoundDeath;
 	MediaIndex	SoundSearch1;
 
-	CBoss2 ();
+	CBoss2 (uint32 ID);
 
 	void Attack ();
 	void Run ();

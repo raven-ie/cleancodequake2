@@ -35,7 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_soldier_base.h"
 #include "cc_soldier_light.h"
 
-CSoldierLight::CSoldierLight ()
+CSoldierLight::CSoldierLight (uint32 ID) :
+CSoldierBase (ID)
 {
 	Scale = MODEL_SCALE;
 	MonsterName = "Light Soldier";
@@ -68,7 +69,7 @@ void CSoldierLight::Attack ()
 		BlindFireDelay += 2.1 + 2.0 + random()*3.0;
 
 		// don't shoot at the origin
-		if (Vec3Compare (BlindFireTarget, vec3Origin))
+		if (BlindFireTarget == vec3fOrigin)
 			return;
 
 		// don't shoot if the dice say not to

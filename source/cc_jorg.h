@@ -52,7 +52,7 @@ public:
 	MediaIndex	SoundStepRight;
 	MediaIndex	SoundDeathHit;
 
-	CJorg ();
+	CJorg (uint32 ID);
 
 	void Run ();
 	void Search ();
