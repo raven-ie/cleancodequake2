@@ -35,7 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "m_chick.h"
 #include "cc_bitch.h"
 
-CMaiden::CMaiden ()
+CMaiden::CMaiden (uint32 ID) :
+CMonster(ID)
 {
 	Scale = MODEL_SCALE;
 	MonsterName = "Iron Maiden";
@@ -541,7 +542,7 @@ void CMaiden::Dodge (CBaseEntity *attacker, float eta)
 
 void CMaiden::Slash ()
 {
-	vec3_t	aim = {MELEE_DISTANCE, Entity->GetMins().X, 10};
+	vec3f	aim (MELEE_DISTANCE, Entity->GetMins().X, 10);
 	Entity->PlaySound (CHAN_WEAPON, SoundMeleeSwing);
 	CMeleeWeapon::Fire (Entity, aim, (10 + (irandom(6))), 100);
 }
@@ -734,7 +735,7 @@ void CMaiden::Attack()
 		BlindFireDelay += 2.0 + (4.5 * random());
 
 		// don't shoot at the origin
-		if (Vec3Compare (BlindFireTarget, vec3Origin))
+		if (BlindFireTarget == vec3fOrigin)
 			return;
 
 		// don't shoot if the dice say not to
@@ -785,7 +786,7 @@ void CMaiden::Spawn ()
 
 	Entity->Health = 175;
 	Entity->GibHealth = -70;
-	Entity->gameEntity->mass = 200;
+	Entity->Mass = 200;
 
 	MonsterFlags = (MF_HAS_MELEE | MF_HAS_ATTACK | MF_HAS_IDLE | MF_HAS_SIGHT
 #ifdef MONSTER_USE_ROGUE_AI

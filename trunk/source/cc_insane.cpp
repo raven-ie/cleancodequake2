@@ -35,7 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "m_insane.h"
 #include "cc_insane.h"
 
-CInsane::CInsane ()
+CInsane::CInsane (uint32 ID) :
+CMonster (ID)
 {
 	Scale = MODEL_SCALE;
 }
@@ -611,7 +612,7 @@ void CInsane::Spawn ()
 
 	Entity->Health = 100;
 	Entity->GibHealth = -50;
-	Entity->gameEntity->mass = 300;
+	Entity->Mass = 300;
 
 	AIFlags |= AI_GOOD_GUY;
 

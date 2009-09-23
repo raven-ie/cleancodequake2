@@ -36,7 +36,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_jorg.h"
 #include "m_boss31.h"
 
-CJorg::CJorg ()
+CJorg::CJorg (uint32 ID) :
+CMonster (ID)
 {
 	Scale = MODEL_SCALE;
 	MonsterName = "JORG";
@@ -378,44 +379,42 @@ void CJorg::TossMakron ()
 
 void CJorg::Explode ()
 {
-	vec3_t	org;
-
+	vec3f	org = Entity->State.GetOrigin() + vec3f(0, 0, 24 + (randomMT()&15));
 	Think = ConvertDerivedFunction(&CJorg::Explode);
-	Entity->State.GetOrigin(org);
-	org[2] += 24 + (randomMT()&15);
+
 	switch (Entity->gameEntity->count++)
 	{
 	case 0:
-		org[0] -= 24;
-		org[1] -= 24;
+		org.X -= 24;
+		org.Y -= 24;
 		break;
 	case 1:
-		org[0] += 24;
-		org[1] += 24;
+		org.X += 24;
+		org.Y += 24;
 		break;
 	case 2:
-		org[0] += 24;
-		org[1] -= 24;
+		org.X += 24;
+		org.Y -= 24;
 		break;
 	case 3:
-		org[0] -= 24;
-		org[1] += 24;
+		org.X -= 24;
+		org.Y += 24;
 		break;
 	case 4:
-		org[0] -= 48;
-		org[1] -= 48;
+		org.X -= 48;
+		org.Y -= 48;
 		break;
 	case 5:
-		org[0] += 48;
-		org[1] += 48;
+		org.X += 48;
+		org.Y += 48;
 		break;
 	case 6:
-		org[0] -= 48;
-		org[1] += 48;
+		org.X -= 48;
+		org.Y += 48;
 		break;
 	case 7:
-		org[0] += 48;
-		org[1] -= 48;
+		org.X += 48;
+		org.Y -= 48;
 		break;
 	case 8:
 		Entity->State.SetSound (0);
@@ -429,7 +428,7 @@ void CJorg::Explode ()
 		return;
 	}
 
-	CTempEnt_Explosions::RocketExplosion (org, Entity->gameEntity);
+	CTempEnt_Explosions::RocketExplosion (org, Entity);
 	Entity->NextThink = level.framenum + FRAMETIME;
 }
 
@@ -577,17 +576,17 @@ void CJorg::Attack()
 bool CJorg::CheckAttack ()
 {
 #ifndef MONSTER_USE_ROGUE_AI
-	vec3_t	spot1, spot2;
+	vec3f	spot1, spot2;
 	float	chance;
 	CTrace	tr;
 
 	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0)
 	{
 	// see if any entities are in the way of the shot
-		Entity->State.GetOrigin(spot1);
-		spot1[2] += Entity->gameEntity->viewheight;
-		Vec3Copy (Entity->Enemy->State.GetOrigin(), spot2);
-		spot2[2] += Entity->Enemy->gameEntity->viewheight;
+		spot1 = Entity->State.GetOrigin();
+		spot1.Z += Entity->gameEntity->viewheight;
+		spot2 = Entity->Enemy->State.GetOrigin();
+		spot2.Z += Entity->Enemy->gameEntity->viewheight;
 
 		tr = CTrace(spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
 
@@ -667,11 +666,10 @@ bool CJorg::CheckAttack ()
 	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0)
 	{
 		// see if any entities are in the way of the shot
-		vec3_t	spot1, spot2;
-		Entity->State.GetOrigin (spot1);
-		spot1[2] += Entity->gameEntity->viewheight;
-		Vec3Copy (Entity->Enemy->State.GetOrigin(), spot2);
-		spot2[2] += Entity->Enemy->gameEntity->viewheight;
+		vec3f spot1 = Entity->State.GetOrigin ();
+		spot1.Z += Entity->gameEntity->viewheight;
+		vec3f spot2 = Entity->Enemy->State.GetOrigin();
+		spot2.Z += Entity->Enemy->gameEntity->viewheight;
 
 		CTrace tr (spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
 
@@ -828,7 +826,7 @@ void CJorg::Spawn ()
 
 	Entity->Health = 3000;
 	Entity->GibHealth = -2000;
-	Entity->gameEntity->mass = 1000;
+	Entity->Mass = 1000;
 
 	Entity->Link();
 	MonsterFlags = (MF_HAS_ATTACK | MF_HAS_SEARCH);

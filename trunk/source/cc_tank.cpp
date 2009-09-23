@@ -35,13 +35,15 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "m_tank.h"
 #include "cc_tank.h"
 
-CTank::CTank ()
+CTank::CTank (uint32 ID) :
+CMonster(ID)
 {
 	Scale = MODEL_SCALE;
 	MonsterName = "Tank";
 }
 
-CTankCommander::CTankCommander ()
+CTankCommander::CTankCommander (uint32 ID) :
+CTank (ID)
 {
 	Scale = MODEL_SCALE;
 	MonsterName = "Tank Commander";
@@ -749,11 +751,11 @@ void CTank::Attack ()
 		BlindFireDelay += 3.2 + 2.0 + random()*3.0;
 
 		// don't shoot at the origin
-		if (Vec3Compare (BlindFireTarget, vec3Origin))
+		if (BlindFireTarget == vec3fOrigin)
 			return;
 
 		// don't shoot if the dice say not to
-		if (BlindFireDelay < 7.5 && (r > 0.4f))
+		if (BlindFireDelay < 6.5 && (r > 0.4f))
 			return;
 		else if (r > 0.1f)
 			return;
@@ -909,7 +911,7 @@ void CTank::Spawn ()
 
 	Entity->Health = 750;
 	Entity->GibHealth = -200;
-	Entity->gameEntity->mass = 500;
+	Entity->Mass = 500;
 
 	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_SIGHT | MF_HAS_IDLE);
 

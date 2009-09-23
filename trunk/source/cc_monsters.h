@@ -202,16 +202,17 @@ public:
 
 class CMonster
 {
+private:
+	CMonster			&operator = (const CMonster &r) { return *this; };
 protected:
 public:
 	void				(CMonster::*Think) ();
-
-	uint32				MonsterID;
 
 	// Hash
 	uint32				HashValue;
 	CMonster			*HashNext;
 
+	const uint32		MonsterID;
 	CMonsterEntity		*Entity; // Entity linked to the monster
 
 	float				IdealYaw;
@@ -233,7 +234,7 @@ public:
 	FrameNumber_t		DuckWaitTime;
 	FrameNumber_t		BlindFireDelay;
 	CPlayerEntity		*LastPlayerEnemy;
-	vec3_t		BlindFireTarget;
+	vec3f				BlindFireTarget;
 	// blindfire stuff .. the boolean says whether the monster will do it, and blind_fire_time is the timing
 	// (set in the monster) of the next shot
 	CMonsterEntity		*BadMedic1, *BadMedic2;	// these medics have declared this monster "unhealable"
@@ -245,10 +246,10 @@ public:
 	FrameNumber_t				PauseTime;
 	FrameNumber_t				AttackFinished;
 	
-	vec3_t				SavedGoal;
-	FrameNumber_t				SearchTime;
-	FrameNumber_t				TrailTime;
-	vec3_t				LastSighting;
+	FrameNumber_t		SearchTime;
+	FrameNumber_t		TrailTime;
+	vec3f				LastSighting;
+	vec3f				SavedGoal;
 	int					AttackState;
 	bool				Lefty;
 	float				IdleTime;
@@ -281,7 +282,7 @@ public:
 	void	MoveToPath		(float Dist);
 #endif
 
-	CMonster();
+	CMonster(uint32 ID);
 
 	virtual void	Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf) {}; // Empty
 
@@ -355,7 +356,7 @@ public:
 
 	void AlertNearbyStroggs ();
 #ifdef MONSTERS_ARENT_STUPID
-	bool FriendlyInLine (vec3_t Origin, vec3_t Direction);
+	bool FriendlyInLine (vec3f &Origin, vec3f &Direction);
 #endif
 
 	void MonsterTriggeredSpawn ();
@@ -380,7 +381,7 @@ public:
 	bool CloseEnough (CBaseEntity *Goal, float Dist);
 	void NewChaseDir (CBaseEntity *Enemy, float Dist);
 	bool StepDirection (float Yaw, float Dist);
-	bool MoveStep (vec3_t move, bool ReLink);
+	bool MoveStep (vec3f move, bool ReLink);
 
 	virtual void	Spawn () = 0;
 	virtual void	Die(CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point) = 0;
@@ -394,11 +395,13 @@ void Monster_Think (edict_t *ent);
 #define ConvertDerivedFunction(x) static_cast<void (__thiscall CMonster::* )(void)>(x)
 #define ConvertDerivedAIMove(x) static_cast<void (__thiscall CMonster::* )(float)>(x)
 
+extern uint32 LastID;
 #define LINK_MONSTER_CLASSNAME_TO_CLASS(mapClassName,DLLClassName) \
+	uint32 LINK_RESOLVE_CLASSNAME(DLLClassName, _ID) = LastID++; \
 	CMapEntity *LINK_RESOLVE_CLASSNAME(DLLClassName, _Spawn) (int Index) \
 	{ \
 		CMonsterEntity *newClass = QNew (com_levelPool, 0) CMonsterEntity(Index); \
-		DLLClassName *Monster = QNew (com_levelPool, 0) DLLClassName (); \
+		DLLClassName *Monster = QNew (com_levelPool, 0) DLLClassName (LINK_RESOLVE_CLASSNAME(DLLClassName, _ID)); \
 		newClass->Monster = Monster; \
 		Monster->Entity = newClass; \
 		\

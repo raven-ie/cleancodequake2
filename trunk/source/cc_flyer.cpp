@@ -35,7 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "m_flyer.h"
 #include "cc_flyer.h"
 
-CFlyer::CFlyer ()
+CFlyer::CFlyer (uint32 ID) :
+CMonster (ID)
 {
 	Scale = MODEL_SCALE;
 	MonsterName = "Flyer";
@@ -381,14 +382,14 @@ CAnim FlyerMoveAttack2 (FRAME_attak201, FRAME_attak217, FlyerFramesAttack2, Conv
 
 void CFlyer::SlashLeft ()
 {
-	vec3_t	aim = {MELEE_DISTANCE, Entity->GetMins().X, 0};
+	vec3f	aim (MELEE_DISTANCE, Entity->GetMins().X, 0);
 	CMeleeWeapon::Fire (Entity, aim, 5, 0);
 	Entity->PlaySound (CHAN_WEAPON, SoundSlash);
 }
 
 void CFlyer::SlashRight ()
 {
-	vec3_t	aim = {MELEE_DISTANCE, Entity->GetMaxs().X, 0};
+	vec3f	aim (MELEE_DISTANCE, Entity->GetMaxs().X, 0);
 	CMeleeWeapon::Fire (Entity, aim, 5, 0);
 	Entity->PlaySound (CHAN_WEAPON, SoundSlash);
 }
@@ -555,11 +556,9 @@ void CFlyer::Duck (float eta)
 		return;
 
 	CTrace trace;
-	vec3_t right, end;
-	vec3_t angles;
-	Entity->State.GetAngles(angles);
 
-	Angles_Vectors (angles, NULL, right, NULL);
+	vec3f right;
+	Entity->State.GetAngles().ToVectors (NULL, &right, NULL);
 	bool WantsLeft = (random() < 0.5);
 
 	// Approximate travel distance.
@@ -567,17 +566,15 @@ void CFlyer::Duck (float eta)
 	bool CanRollRight = false;
 	bool CanRollLeft = false;
 
-	Entity->State.GetOrigin(end);
-	Vec3MA (end, -(15 * 5), right, end);
-	trace = CTrace (Entity->State.GetOrigin(), Entity->GetMins(), Entity->GetMaxs(), vec3f(end), Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
+	vec3f end = Entity->State.GetOrigin ().MultiplyAngles (-75, right);
+	trace = CTrace (Entity->State.GetOrigin(), Entity->GetMins(), Entity->GetMaxs(), end, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
 
 	if (trace.fraction == 1.0)
 		CanRollRight = true;
 
 	// Now check the left
-	Entity->State.GetOrigin(end);
-	Vec3MA (end, (15 * 5), right, end);
-	trace = CTrace(Entity->State.GetOrigin(), Entity->GetMins(), Entity->GetMaxs(), vec3f(end), Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
+	end = Entity->State.GetOrigin ().MultiplyAngles (-75, right);
+	trace = CTrace(Entity->State.GetOrigin(), Entity->GetMins(), Entity->GetMaxs(), end, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
 
 	if (trace.fraction == 1.0)
 		CanRollLeft = true;
@@ -629,7 +626,7 @@ void CFlyer::Spawn ()
 	Entity->State.SetSound (SoundIndex ("flyer/flyidle1.wav"));
 
 	Entity->Health = 50;
-	Entity->gameEntity->mass = 50;
+	Entity->Mass = 50;
 
 	MonsterFlags |= (MF_HAS_IDLE | MF_HAS_SIGHT | MF_HAS_MELEE | MF_HAS_ATTACK
 #ifdef MONSTER_USE_ROGUE_AI

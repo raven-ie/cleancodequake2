@@ -35,7 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "m_flipper.h"
 #include "cc_barracuda.h"
 
-CBarracudaShark::CBarracudaShark ()
+CBarracudaShark::CBarracudaShark (uint32 ID) :
+CMonster (ID)
 {
 	Scale = MODEL_SCALE;
 	MonsterName = "Shark";
@@ -178,7 +179,7 @@ CAnim FlipperMovePain1 (FRAME_flppn201, FRAME_flppn205, FlipperFramesPain1, &CMo
 
 void CBarracudaShark::Bite ()
 {
-	vec3_t	aim = {MELEE_DISTANCE, 0, 0};
+	static vec3f	aim (MELEE_DISTANCE, 0, 0);
 	CMeleeWeapon::Fire (Entity, aim, 5, 0);
 }
 
@@ -369,7 +370,7 @@ void CBarracudaShark::Spawn ()
 
 	Entity->Health = 50;
 	Entity->GibHealth = -30;
-	Entity->gameEntity->mass = 100;
+	Entity->Mass = 100;
 
 	MonsterFlags = (MF_HAS_MELEE | MF_HAS_SIGHT);
 

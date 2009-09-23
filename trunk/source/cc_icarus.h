@@ -47,7 +47,7 @@ public:
 	MediaIndex	SoundSearch1;
 	MediaIndex	SoundSearch2;
 
-	CIcarus ();
+	CIcarus (uint32 ID);
 
 	void ReAttack ();
 	void FireBlaster ();

@@ -50,7 +50,7 @@ public:
 
 	vec3f		SavedFirePosition;
 
-	CGladiator ();
+	CGladiator (uint32 ID);
 
 	void Attack ();
 	void Idle ();

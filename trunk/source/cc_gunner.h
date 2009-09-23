@@ -45,7 +45,7 @@ public:
 	MediaIndex	SoundSearch;
 	MediaIndex	SoundSight;
 
-	CGunner ();
+	CGunner (uint32 ID);
 
 	void ReFireChain ();
 	void FireChain ();

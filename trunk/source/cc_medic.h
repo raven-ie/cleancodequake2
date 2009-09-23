@@ -48,7 +48,7 @@ public:
 	MediaIndex	SoundHookHeal;
 	MediaIndex	SoundHookRetract;
 
-	CMedic ();
+	CMedic (uint32 ID);
 
 	void Attack ();
 	void Run ();

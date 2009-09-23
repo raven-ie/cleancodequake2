@@ -35,7 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "m_supertank.h"
 #include "cc_supertank.h"
 
-CSuperTank::CSuperTank ()
+CSuperTank::CSuperTank (uint32 ID) :
+CMonster (ID)
 {
 	Scale = MODEL_SCALE;
 	MonsterName = "SuperTank";
@@ -663,7 +664,7 @@ void CSuperTank::Attack ()
 		BlindFireDelay += 3.2 + 2.0 + random()*3.0;
 
 		// don't shoot at the origin
-		if (Vec3Compare (BlindFireTarget, vec3Origin))
+		if (BlindFireTarget == vec3fOrigin)
 			return;
 
 		// don't shoot if the dice say not to
@@ -713,44 +714,42 @@ void CSuperTank::Dead ()
 
 void CSuperTank::Explode ()
 {
-	vec3_t	org;
-
+	vec3f	org = Entity->State.GetOrigin() + vec3f(0, 0, 24 + (randomMT()&15));
 	Think = ConvertDerivedFunction(&CSuperTank::Explode);
-	Entity->State.GetOrigin(org);
-	org[2] += 24 + (randomMT()&15);
+
 	switch (Entity->gameEntity->count++)
 	{
 	case 0:
-		org[0] -= 24;
-		org[1] -= 24;
+		org.X -= 24;
+		org.Y -= 24;
 		break;
 	case 1:
-		org[0] += 24;
-		org[1] += 24;
+		org.X += 24;
+		org.Y += 24;
 		break;
 	case 2:
-		org[0] += 24;
-		org[1] -= 24;
+		org.X += 24;
+		org.Y -= 24;
 		break;
 	case 3:
-		org[0] -= 24;
-		org[1] += 24;
+		org.X -= 24;
+		org.Y += 24;
 		break;
 	case 4:
-		org[0] -= 48;
-		org[1] -= 48;
+		org.X -= 48;
+		org.Y -= 48;
 		break;
 	case 5:
-		org[0] += 48;
-		org[1] += 48;
+		org.X += 48;
+		org.Y += 48;
 		break;
 	case 6:
-		org[0] -= 48;
-		org[1] += 48;
+		org.X -= 48;
+		org.Y += 48;
 		break;
 	case 7:
-		org[0] += 48;
-		org[1] -= 48;
+		org.X += 48;
+		org.Y -= 48;
 		break;
 	case 8:
 		Entity->State.SetSound (0);
@@ -764,7 +763,7 @@ void CSuperTank::Explode ()
 		return;
 	}
 
-	CTempEnt_Explosions::RocketExplosion (org, Entity->gameEntity);
+	CTempEnt_Explosions::RocketExplosion (org, Entity);
 
 	Entity->NextThink = level.framenum + FRAMETIME;
 }
@@ -803,7 +802,7 @@ void CSuperTank::Spawn ()
 
 	Entity->Health = 1500;
 	Entity->GibHealth = -500;
-	Entity->gameEntity->mass = 800;
+	Entity->Mass = 800;
 
 #ifdef MONSTER_USE_ROGUE_AI
 	// PMM

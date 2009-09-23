@@ -2680,6 +2680,7 @@ void CFuncObject::Spawn ()
 #pragma endregion Object
 
 #pragma region Explosive
+
 /*QUAKED func_explosive (0 .5 .8) ? Trigger_Spawn ANIMATED ANIMATED_FAST
 Any brush that you want to explode or break apart.  If you want an
 ex0plosion, set dmg and it will do a radius explosion of that amount
@@ -2693,14 +2694,14 @@ mass defaults to 75.  This determines how much debris is emitted when
 it explodes.  You get one large chunk per 100 of mass (up to 8) and
 one small chunk per 25 of mass (up to 16).  So 800 gives the most.
 */
-
 CFuncExplosive::CFuncExplosive () :
 	CBaseEntity (),
 	CMapEntity (),
 	CBrushModel (),
 	CUsableEntity (),
 	CHurtableEntity (),
-	UseType(FUNCEXPLOSIVE_USE_NONE)
+	UseType(FUNCEXPLOSIVE_USE_NONE),
+	Explosivity (75)
 	{
 	};
 
@@ -2710,9 +2711,30 @@ CFuncExplosive::CFuncExplosive (int Index) :
 	CBrushModel (Index),
 	CUsableEntity (Index),
 	CHurtableEntity (Index),
-	UseType(FUNCEXPLOSIVE_USE_NONE)
+	UseType(FUNCEXPLOSIVE_USE_NONE),
+	Explosivity (75)
 	{
 	};
+
+const CEntityField CFuncExplosive::FieldsForParsing[] =
+{
+	CEntityField ("mass", EntityMemberOffset(CFuncExplosive,Explosivity), FTInteger),
+};
+const size_t CFuncExplosive::FieldsForParsingSize = (sizeof(CFuncExplosive::FieldsForParsing) / sizeof(CFuncExplosive::FieldsForParsing[0]));
+
+bool			CFuncExplosive::ParseField (char *Key, char *Value)
+{
+	for (size_t i = 0; i < CFuncExplosive::FieldsForParsingSize; i++)
+	{
+		if (strcmp (Key, CFuncExplosive::FieldsForParsing[i].Name) == 0)
+		{
+			CHurtableEntity::FieldsForParsing[i].Create<CFuncExplosive> (this, Value);
+			return true;
+		}
+	}
+
+	return (CUsableEntity::ParseField (Key, Value) || CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+};
 
 void CFuncExplosive::Pain (CBaseEntity *other, float kick, int damage)
 {
@@ -2721,9 +2743,7 @@ void CFuncExplosive::Pain (CBaseEntity *other, float kick, int damage)
 void CFuncExplosive::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 	// bmodel origins are (0 0 0), we need to adjust that here
-	vec3f size = GetSize() * 0.5f;
-	vec3f origin = GetAbsMin() + size;
-	State.SetOrigin (origin);
+	State.SetOrigin ( GetAbsMin() + (GetSize() * 0.5f));
 
 	CanTakeDamage = false;
 
@@ -2735,16 +2755,15 @@ void CFuncExplosive::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dam
 	Velocity *= 150;
 
 	// start chunks towards the center
-	size *= 0.5f;
+	//size *= 0.5f;
 
-	float mass = gameEntity->mass;
-	if (!mass)
-		mass = 75;
+	if (!Explosivity)
+		Explosivity = 75;
 
 	// big chunks
-	/*if (mass >= 100)
+	/*if (Explosivity >= 100)
 	{
-		int count = mass / 100;
+		int count = Explosivity / 100;
 		if (count > 8)
 			count = 8;
 		while(count--)
@@ -2752,7 +2771,7 @@ void CFuncExplosive::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dam
 	}
 
 	// small chunks
-	int count = mass / 25;
+	int count = Explosivity / 25;
 	if (count > 16)
 		count = 16;
 	while(count--)

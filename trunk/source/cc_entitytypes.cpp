@@ -351,28 +351,19 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 		knockback = 0;
 
 // figure momentum add
-	bool AddVelocity = true;
-	if (!knockback || (dflags & DAMAGE_NO_KNOCKBACK))
-		AddVelocity = false;
-
-	if (EntityFlags & ENT_PHYSICS)
+	if (knockback && !(dflags & DAMAGE_NO_KNOCKBACK) && (EntityFlags & ENT_PHYSICS))
 	{
 		CPhysicsEntity *Phys = dynamic_cast<CPhysicsEntity*>(this);
-		if (Phys->PhysicsType == PHYSICS_NONE ||
+		if (!(Phys->PhysicsType == PHYSICS_NONE ||
 			Phys->PhysicsType == PHYSICS_BOUNCE ||
 			Phys->PhysicsType == PHYSICS_PUSH ||
-			Phys->PhysicsType == PHYSICS_STOP)
-			AddVelocity = false;
-	}
-	else
-		AddVelocity = false;
-
-	if (AddVelocity)
-	{
-		const float	mass = Clamp<float> (gameEntity->mass, 50.0f, gameEntity->mass);
-		vec3f	kvel = dir * (((isClient && (attacker == this)) ? 1600.0f : 500.0f) * (float)knockback / mass);
-		
-		dynamic_cast<CPhysicsEntity*>(this)->Velocity += kvel;
+			Phys->PhysicsType == PHYSICS_STOP))
+		{
+			const float	mass = Clamp<float> (Phys->Mass, 50.0f, Phys->Mass);
+			vec3f	kvel = dir * (((isClient && (attacker == this)) ? 1600.0f : 500.0f) * (float)knockback / mass);
+			
+			Phys->Velocity += kvel;
+		}
 	}
 
 	take = damage;
@@ -571,11 +562,11 @@ void CPhysicsEntity::AddGravity()
 	Velocity.Z -= gameEntity->gravity * sv_gravity->Float() * 0.1f;
 }
 
-CTrace CPhysicsEntity::PushEntity (vec3_t push)
+CTrace CPhysicsEntity::PushEntity (vec3f &push)
 {
 	CTrace		Trace;
 	vec3f		Start = State.GetOrigin();
-	vec3f		End = Start + vec3f(push);
+	vec3f		End = Start + push;
 
 	while (true)
 	{
@@ -932,47 +923,33 @@ void CStepPhysics::AddRotationalFriction ()
 int CStepPhysics::FlyMove (float time, int mask)
 {
 	edict_t		*hit;
-	int			bumpcount, numbumps;
-	vec3_t		dir;
-	float		d;
-	int			numplanes;
-	vec3_t		planes[MAX_CLIP_PLANES];
-	vec3_t		primal_velocity, original_velocity, new_velocity;
-	int			i, j;
+	int			i, j, blocked = 0, numplanes = 0, numbumps = 4;
+	vec3f		planes[MAX_CLIP_PLANES], dir, primal_velocity, original_velocity, new_velocity, end;
+	float		d, time_left = time;
 	CTrace		trace;
-	vec3_t		end;
-	float		time_left;
-	int			blocked;
 	
-	numbumps = 4;
-	
-	blocked = 0;
-	Vec3Copy (Velocity, original_velocity);
-	Vec3Copy (Velocity, primal_velocity);
-	numplanes = 0;
-	
-	time_left = time;
-
+	original_velocity = primal_velocity = Velocity;
 	GroundEntity = NULL;
-	for (bumpcount=0 ; bumpcount<numbumps ; bumpcount++)
-	{
-		vec3_t origin;
-		State.GetOrigin (origin);
-		for (i=0 ; i<3 ; i++)
-			end[i] = origin[i] + time_left * Velocity[i];
 
-		trace = CTrace (origin, gameEntity->mins, gameEntity->maxs, end, gameEntity, mask);
+	for (int bumpcount = 0; bumpcount < numbumps; bumpcount++)
+	{
+		vec3f origin = State.GetOrigin ();
+		end = origin + time_left * Velocity;
+
+		trace = CTrace (origin, GetMins(), GetMaxs(), end, gameEntity, mask);
 
 		if (trace.allSolid)
-		{	// entity is trapped in another solid
+		{
+			// entity is trapped in another solid
 			Velocity.Clear ();
 			return 3;
 		}
 
 		if (trace.fraction > 0)
-		{	// actually covered some distance
-			State.SetOrigin (trace.endPos);
-			Vec3Copy (Velocity, original_velocity);
+		{
+			// actually covered some distance
+			State.SetOrigin (trace.EndPos);
+			original_velocity = Velocity;
 			numplanes = 0;
 		}
 
@@ -1005,49 +982,51 @@ int CStepPhysics::FlyMove (float time, int mask)
 		
 	// cliped to another plane
 		if (numplanes >= MAX_CLIP_PLANES)
-		{	// this shouldn't really happen
+		{
+			// this shouldn't really happen
 			Velocity.Clear ();
 			return 3;
 		}
 
-		Vec3Copy (trace.plane.normal, planes[numplanes]);
-		numplanes++;
+		planes[numplanes++] = trace.Plane.normal;
 
 //
 // modify original_velocity so it parallels all of the clip planes
 //
 		for (i=0 ; i<numplanes ; i++)
 		{
-			vec3f ov = original_velocity, nv = new_velocity;
-			vec3f p = planes[i];
-			ClipVelocity (ov, p, nv, 1);
-			Vec3Copy (nv, new_velocity);
+			ClipVelocity (original_velocity, planes[i], new_velocity, 1);
 
-			for (j=0 ; j<numplanes ; j++)
-				if ((j != i) && !Vec3Compare (planes[i], planes[j]))
+			for (j = 0; j < numplanes; j++)
+			{
+				if ((j != i) && planes[i] != planes[j])
 				{
-					if (Dot3Product (new_velocity, planes[j]) < 0)
+					if (new_velocity.Dot (planes[j]) < 0)
 						break;	// not ok
 				}
+			}
+
 			if (j == numplanes)
 				break;
 		}
 		
 		if (i != numplanes)
-		{	// go along this plane
+		{
+			// go along this plane
 			Velocity = new_velocity;
 		}
 		else
-		{	// go along the crease
+		{
+			// go along the crease
 			if (numplanes != 2)
 			{
-//				gi.dprintf ("clip velocity, numplanes == %i\n",numplanes);
+				//gi.dprintf ("clip velocity, numplanes == %i\n",numplanes);
 				Velocity.Clear ();
 				return 7;
 			}
-			CrossProduct (planes[0], planes[1], dir);
-			d = Dot3Product (dir, Velocity);
-			Velocity = vec3f(dir) * d;
+			dir = planes[0].Cross (planes[1]);
+			d = dir.Dot (Velocity);
+			Velocity = dir * d;
 		}
 
 //
@@ -1177,14 +1156,14 @@ CPhysicsEntity(Index)
 
 typedef struct
 {
-	edict_t	*ent;
-	vec3_t	origin;
-	vec3_t	angles;
-	float	deltayaw;
+	CBaseEntity		*ent;
+	vec3f			origin;
+	vec3f			angles;
+	float			deltayaw;
 } pushed_t;
 pushed_t	pushed[MAX_CS_EDICTS], *pushed_p;
 
-edict_t	*obstacle;
+CBaseEntity	*obstacle;
 
 /*
 ============
@@ -1192,21 +1171,9 @@ SV_TestEntityPosition
 
 ============
 */
-edict_t	*SV_TestEntityPosition (edict_t *ent)
+CBaseEntity	*SV_TestEntityPosition (CBaseEntity *ent)
 {
-	CTrace	trace;
-	int			mask;
-
-	if (ent->clipMask)
-		mask = ent->clipMask;
-	else
-		mask = CONTENTS_MASK_SOLID;
-	trace = CTrace (ent->state.origin, ent->mins, ent->maxs, ent->state.origin, ent, mask);
-	
-	if (trace.startSolid)
-		return g_edicts;
-		
-	return NULL;
+	return (CTrace (ent->State.GetOrigin(), ent->GetMins(), ent->GetMaxs(), ent->State.GetOrigin(), ent->gameEntity, (ent->GetClipmask()) ? ent->GetClipmask() : CONTENTS_MASK_SOLID)).startSolid ? g_edicts[0].Entity : NULL;
 }
 
 /*
@@ -1221,21 +1188,17 @@ returns the blocked flags (1 = floor, 2 = step / wall)
 
 int ClipVelocity (vec3f &in, vec3f &normal, vec3f &out, float overbounce)
 {
-	float	backoff;
-	float	change;
-	int		i, blocked;
-	
-	blocked = 0;
+	int		blocked = 0;
+
 	if (normal[2] > 0)
 		blocked |= 1;		// floor
 	if (!normal[2])
 		blocked |= 2;		// step
 	
-	backoff = Dot3Product (in, normal) * overbounce;
-
-	for (i=0 ; i<3 ; i++)
+	float backoff = in.Dot (normal) * overbounce;
+	for (int i = 0; i < 3; i++)
 	{
-		change = normal[i]*backoff;
+		float change = normal[i]*backoff;
 		out[i] = in[i] - change;
 		if (out[i] > -STOP_EPSILON && out[i] < STOP_EPSILON)
 			out[i] = 0;
@@ -1244,20 +1207,17 @@ int ClipVelocity (vec3f &in, vec3f &normal, vec3f &out, float overbounce)
 	return blocked;
 }
 
-bool Push (CBaseEntity *Entity, vec3_t move, vec3_t amove)
+bool Push (CBaseEntity *Entity, vec3f &move, vec3f &amove)
 {
-	int			i, e;
-	edict_t		*check, *block;
-	vec3_t		mins, maxs;
-	pushed_t	*p;
-	vec3_t		org, org2, move2, forward, right, up;
+	CBaseEntity		*block;
+	pushed_t		*p;
+	vec3f			mins, maxs, org, org2, move2, forward, right, up;
 
 	// clamp the move to 1/8 units, so the position will
 	// be accurate for client side prediction
-	for (i=0 ; i<3 ; i++)
+	for (int i = 0; i < 3; i++)
 	{
-		float	temp;
-		temp = move[i]*8.0;
+		float	temp = move[i]*8.0;
 		if (temp > 0.0)
 			temp += 0.5;
 		else
@@ -1265,43 +1225,38 @@ bool Push (CBaseEntity *Entity, vec3_t move, vec3_t amove)
 		move[i] = 0.125 * (int)temp;
 	}
 
-	vec3_t absMinTemp, absMaxTemp;
-	Entity->GetAbsMin (absMinTemp);
-	Entity->GetAbsMax (absMaxTemp);
 	// find the bounding box
-	for (i=0 ; i<3 ; i++)
+	for (int i = 0; i < 3; i++)
 	{
-		mins[i] = absMinTemp[i] + move[i];
-		maxs[i] = absMaxTemp[i] + move[i];
+		mins[i] = Entity->GetAbsMin()[i] + move[i];
+		maxs[i] = Entity->GetAbsMax()[i] + move[i];
 	}
 
 // we need this for pushing things later
-	Vec3Subtract (vec3Origin, amove, org);
-	Angles_Vectors (org, forward, right, up);
+	org = vec3fOrigin - amove;
+	org.ToVectors (&forward, &right, &up);
 
 // save the pusher's original position
-	pushed_p->ent = Entity->gameEntity;
-	Entity->State.GetOrigin (pushed_p->origin);
-	Entity->State.GetAngles (pushed_p->angles);
-	if (Entity->gameEntity->client)
+	pushed_p->ent = Entity;
+	pushed_p->origin = Entity->State.GetOrigin ();
+	pushed_p->angles = Entity->State.GetAngles ();
+	if (Entity->EntityFlags & ENT_PLAYER)
 		pushed_p->deltayaw = (dynamic_cast<CPlayerEntity*>(Entity))->Client.PlayerState.GetPMove()->deltaAngles[YAW];
+
 	pushed_p++;
 
 // move the pusher to it's final position
-	Entity->State.SetOrigin (Entity->State.GetOrigin() + vec3f(move));
-	Entity->State.SetAngles (Entity->State.GetAngles() + vec3f(amove));
+	Entity->State.SetOrigin (Entity->State.GetOrigin() + move);
+	Entity->State.SetAngles (Entity->State.GetAngles() + amove);
 	Entity->Link ();
 
 // see if any solid entities are inside the final position
-	check = g_edicts+1;
-	for (e = 1; e < globals.numEdicts; e++, check++)
+	for (int e = 1; e < globals.numEdicts; e++)
 	{
-		if (!check->inUse)
-			continue;
-		if (!check->Entity)
+		CBaseEntity *Check = g_edicts[e].Entity;
+		if (!Check || !Check->IsInUse())
 			continue;
 
-		CBaseEntity *Check = check->Entity;
 		if (Check->EntityFlags & ENT_PHYSICS)
 		{
 			CPhysicsEntity *CheckPhys = dynamic_cast<CPhysicsEntity*>(Check);
@@ -1314,66 +1269,61 @@ bool Push (CBaseEntity *Entity, vec3_t move, vec3_t amove)
 		else if (Check->GetSolid() != SOLID_BBOX)
 			continue;
 
-		if (!check->area.prev)
+		if (!Check->GetArea()->prev)
 			continue;		// not linked in anywhere
 
 	// if the entity is standing on the pusher, it will definitely be moved
 		if (Check->GroundEntity != Entity)
 		{
 			// see if the ent needs to be tested
-			if (check->absMin[0] >= maxs[0]
-			|| check->absMin[1] >= maxs[1]
-			|| check->absMin[2] >= maxs[2]
-			|| check->absMax[0] <= mins[0]
-			|| check->absMax[1] <= mins[1]
-			|| check->absMax[2] <= mins[2])
+			if (Check->GetAbsMin() >= maxs ||
+				Check->GetAbsMax() <= mins)
 				continue;
 
 			// see if the ent's bbox is inside the pusher's final position
-			if (!SV_TestEntityPosition (check))
+			if (!SV_TestEntityPosition (Check))
 				continue;
 		}
 
 		if ((dynamic_cast<CPhysicsEntity*>(Entity)->PhysicsType == PHYSICS_PUSH) || (Check->GroundEntity == Entity))
 		{
 			// move this entity
-			pushed_p->ent = check;
-			Vec3Copy (check->state.origin, pushed_p->origin);
-			Vec3Copy (check->state.angles, pushed_p->angles);
+			pushed_p->ent = Check;
+			pushed_p->origin = Check->State.GetOrigin();
+			pushed_p->angles = Check->State.GetAngles();
 
-			// try moving the contacted entity 
-			Vec3Add (check->state.origin, move, check->state.origin);
-			if (check->client)
+			// try moving the contacted entity
+			Check->State.SetOrigin (Check->State.GetOrigin() + move);
+			if (Check->EntityFlags & ENT_PLAYER)
 			{
 				(dynamic_cast<CPlayerEntity*>(Check))->Client.PlayerState.GetPMove()->deltaAngles[YAW] += amove[YAW];
 
 				//r1: dead-body-on-lift / other random view distortion fix
-				pushed_p->deltayaw = (dynamic_cast<CPlayerEntity*>(pushed_p->ent->Entity))->Client.PlayerState.GetPMove()->deltaAngles[YAW];
+				pushed_p->deltayaw = (dynamic_cast<CPlayerEntity*>(pushed_p->ent))->Client.PlayerState.GetPMove()->deltaAngles[YAW];
 			}
 
 			else
-				check->state.angles[YAW] += amove[YAW];
+				Check->State.SetAngles (Check->State.GetAngles() + vec3f(0, amove.Y, 0));
 
 			pushed_p++;
 
 			// figure movement due to the pusher's amove
-			vec3_t temporigin;
-			Entity->State.GetOrigin (temporigin);
-			Vec3Subtract (check->state.origin, temporigin, org);
-			org2[0] = Dot3Product (org, forward);
-			org2[1] = -Dot3Product (org, right);
-			org2[2] = Dot3Product (org, up);
-			Vec3Subtract (org2, org, move2);
-			Vec3Add (check->state.origin, move2, check->state.origin);
+			org = Check->State.GetOrigin() - Entity->State.GetOrigin();
+			org2.X = org.Dot (forward);
+			org2.Y = -org.Dot (right);
+			org2.Z = org.Dot (up);
+			move2 = org2 - org;
+			Check->State.SetOrigin (Check->State.GetOrigin() + move2);
 
 			// may have pushed them off an edge
 			if (Check->GroundEntity != Entity)
 				Check->GroundEntity = NULL;
 
-			block = SV_TestEntityPosition (check);
+			block = SV_TestEntityPosition (Check);
 			if (!block)
-			{	// pushed ok
-				gi.linkentity (check);
+			{
+				// pushed ok
+				Check->Link ();
 				// impact?
 				continue;
 			}
@@ -1381,8 +1331,8 @@ bool Push (CBaseEntity *Entity, vec3_t move, vec3_t amove)
 			// if it is ok to leave in the old position, do it
 			// this is only relevent for riding entities, not pushed
 			// FIXME: this doesn't acount for rotation
-			Vec3Subtract (check->state.origin, move, check->state.origin);
-			block = SV_TestEntityPosition (check);
+			Check->State.SetOrigin (Check->State.GetOrigin() - move);
+			block = SV_TestEntityPosition (Check);
 			if (!block)
 			{
 				pushed_p--;
@@ -1391,20 +1341,18 @@ bool Push (CBaseEntity *Entity, vec3_t move, vec3_t amove)
 		}
 		
 		// save off the obstacle so we can call the block function
-		obstacle = check;
+		obstacle = Check;
 
 		// move back any entities we already moved
 		// go backwards, so if the same entity was pushed
 		// twice, it goes back to the original position
 		for (p=pushed_p-1 ; p>=pushed ; p--)
 		{
-			Vec3Copy (p->origin, p->ent->state.origin);
-			Vec3Copy (p->angles, p->ent->state.angles);
-			if (p->ent->client)
-			{
-				(dynamic_cast<CPlayerEntity*>(p->ent->Entity))->Client.PlayerState.GetPMove()->deltaAngles[YAW] = p->deltayaw;
-			}
-			gi.linkentity (p->ent);
+			p->ent->State.SetOrigin (p->origin);
+			p->ent->State.SetAngles (p->angles);
+			if (p->ent->EntityFlags & ENT_PLAYER)
+				(dynamic_cast<CPlayerEntity*>(p->ent))->Client.PlayerState.GetPMove()->deltaAngles[YAW] = p->deltayaw;
+			p->ent->Link ();
 		}
 		return false;
 	}
@@ -1412,14 +1360,14 @@ bool Push (CBaseEntity *Entity, vec3_t move, vec3_t amove)
 //FIXME: is there a better way to handle this?
 	// see if anything we moved has touched a trigger
 	for (p=pushed_p-1 ; p>=pushed ; p--)
-		G_TouchTriggers (p->ent->Entity);
+		G_TouchTriggers (p->ent);
 
 	return true;
 }
 
 bool CPushPhysics::Run ()
 {
-	vec3_t		move, amove;
+	vec3f			move, amove;
 	CBaseEntity		*part;
 
 	// if not a team captain, so movement will be handled elsewhere
@@ -1440,8 +1388,8 @@ bool CPushPhysics::Run ()
 			{
 				CPhysicsEntity *Phys = dynamic_cast<CPhysicsEntity*>(part);
 
-				Vec3Scale (Phys->Velocity, 1, move);
-				Vec3Scale (Phys->AngularVelocity, 1, amove);
+				move = Phys->Velocity;
+				amove = Phys->AngularVelocity;
 			}
 
 			if (!Push (part, move, amove))
@@ -1467,8 +1415,8 @@ bool CPushPhysics::Run ()
 
 		// if the pusher has a "blocked" function, call it
 		// otherwise, just stay in place until the obstacle is gone
-		if ((part->EntityFlags & ENT_BLOCKABLE) && obstacle->Entity)
-			(dynamic_cast<CBlockableEntity*>(part))->Blocked (obstacle->Entity);
+		if ((part->EntityFlags & ENT_BLOCKABLE) && obstacle)
+			(dynamic_cast<CBlockableEntity*>(part))->Blocked (obstacle);
 	}
 	else
 	{

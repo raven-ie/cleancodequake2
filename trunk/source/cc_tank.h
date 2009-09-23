@@ -46,7 +46,7 @@ public:
 	MediaIndex	SoundWindup;
 	MediaIndex	SoundStrike;
 
-	CTank ();
+	CTank (uint32 ID);
 
 	void Attack ();
 	void Idle ();
@@ -78,7 +78,7 @@ public:
 class CTankCommander : public CTank
 {
 public:
-	CTankCommander ();
+	CTankCommander (uint32 ID);
 
 	void Spawn ();
 };

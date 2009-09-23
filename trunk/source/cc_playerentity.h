@@ -155,7 +155,7 @@ typedef struct
 
 	bool		spectator;			// client is a spectator
 
-	colorb		viewBlend; // View blending
+	colorf		viewBlend; // View blending
 } clientPersistent_t;
 
 // All players have a copy of this class.
@@ -235,13 +235,14 @@ public:
 	vec3f			KickOrigin;
 	vec3f			ViewAngle;			// aiming direction
 	vec3f			DamageFrom;		// origin for vector calculation
-	colorb			DamageBlend;
+	colorf			DamageBlend;
 	CBaseEntity		*mynoise;		// can go in client only
 	CBaseEntity		*mynoise2;
 	vec3f			OldViewAngles;
 	vec3f			OldVelocity;
 	vec2f			ViewDamage;
 	FrameNumber_t	ViewDamageTime;
+	float			KillerYaw;			// when dead, look at killer
 
 	CClient (gclient_t *client);
 
@@ -272,12 +273,10 @@ public:
 	int			damage_blood;		// damage taken out of health
 	int			damage_knockback;	// impact damage
 
-	float		killer_yaw;			// when dead, look at killer
-
 	EWeaponState weaponstate;
 	FrameNumber_t		fall_time;
 	float		fall_value;		// for view drop on fall
-	byte		bonus_alpha;
+	float		bonus_alpha;
 	float		bobtime;			// so off-ground doesn't change it
 
 	float		next_drown_time;
@@ -393,7 +392,7 @@ public:
 
 	void			DeathmatchScoreboardMessage (bool reliable);
 	void			EndServerFrame ();
-	void			LookAtKiller (edict_t *inflictor, edict_t *attacker);
+	void			LookAtKiller (CBaseEntity *inflictor, CBaseEntity *attacker);
 
 	void			InitResp ();
 	static void		SaveClientData ();

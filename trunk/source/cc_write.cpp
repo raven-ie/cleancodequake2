@@ -104,13 +104,6 @@ void Cast (ECastFlags castFlags, edict_t *Ent)
 // vec3f overloads
 void Cast (ECastType castType, ECastFlags castFlags, vec3f *Origin = NULL, CBaseEntity *Ent = NULL)
 {
-	vec3_t oOrigin;
-	if (Origin)
-	{
-		oOrigin[0] = Origin->X;
-		oOrigin[1] = Origin->Y;
-		oOrigin[2] = Origin->Z;
-	}
 	// Sanity checks
 	if (castType == CAST_MULTI && Ent)
 		Com_Printf (0, "Multicast with an associated Ent\n");
@@ -157,7 +150,7 @@ void Cast (ECastType castType, ECastFlags castFlags, vec3f *Origin = NULL, CBase
 		gi.unicast (Ent, (castFlags & CASTFLAG_RELIABLE) ? true : false);
 	}*/
 	if (castType == CAST_MULTI)
-		gi.multicast (oOrigin, (castFlags & CASTFLAG_PVS) ? MULTICAST_PVS : MULTICAST_PHS);
+		gi.multicast ((Origin) ? (*Origin) : vec3fOrigin, (castFlags & CASTFLAG_PVS) ? MULTICAST_PVS : MULTICAST_PHS);
 	else if (castType == CAST_UNI)
 		gi.unicast (Ent->gameEntity, (castFlags & CASTFLAG_RELIABLE) ? true : false);
 

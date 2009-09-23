@@ -42,7 +42,7 @@ public:
 	MediaIndex	SoundMoan;
 	MediaIndex	SoundScream[8];
 
-	CInsane ();
+	CInsane (uint32 ID);
 
 	void Fist ();
 	void Shake ();

@@ -1638,7 +1638,7 @@ public:
 	void Pain (CBaseEntity *other, float kick, int damage)
 	{
 	};
-	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3_t point)
+	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 	{
 		if (Projectiles[0])
 			Projectiles[0]->Free ();

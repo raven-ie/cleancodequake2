@@ -1073,7 +1073,7 @@ public:
 			Player->GroundEntity = NULL;
 			Player->Velocity.X += crandom()* 150;
 			Player->Velocity.Y += crandom()* 150;
-			Player->Velocity.Z = gameEntity->speed * (100.0 / Player->gameEntity->mass);
+			Player->Velocity.Z = gameEntity->speed * (100.0 / Player->Mass);
 		}
 
 		if (level.framenum < TimeStamp)

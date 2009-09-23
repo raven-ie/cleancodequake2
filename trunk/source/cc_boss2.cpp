@@ -35,7 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_boss2.h"
 #include "m_boss2.h"
 
-CBoss2::CBoss2 ()
+CBoss2::CBoss2 (uint32 ID) :
+CMonster (ID)
 {
 	Scale = MODEL_SCALE;
 	MonsterName = "boss"; // FIXME: Name for this guy?
@@ -394,44 +395,42 @@ CAnim Boss2MoveDeath (FRAME_death2, FRAME_death50, Boss2FramesDeath, ConvertDeri
 
 void CBoss2::Explode ()
 {
-	vec3_t	org;
-
+	vec3f	org = Entity->State.GetOrigin() + vec3f(0, 0, 24 + (randomMT()&15));
 	Think = ConvertDerivedFunction(&CBoss2::Explode);
-	Entity->State.GetOrigin(org);
-	org[2] += 24 + (randomMT()&15);
+
 	switch (Entity->gameEntity->count++)
 	{
 	case 0:
-		org[0] -= 24;
-		org[1] -= 24;
+		org.X -= 24;
+		org.Y -= 24;
 		break;
 	case 1:
-		org[0] += 24;
-		org[1] += 24;
+		org.X += 24;
+		org.Y += 24;
 		break;
 	case 2:
-		org[0] += 24;
-		org[1] -= 24;
+		org.X += 24;
+		org.Y -= 24;
 		break;
 	case 3:
-		org[0] -= 24;
-		org[1] += 24;
+		org.X -= 24;
+		org.Y += 24;
 		break;
 	case 4:
-		org[0] -= 48;
-		org[1] -= 48;
+		org.X -= 48;
+		org.Y -= 48;
 		break;
 	case 5:
-		org[0] += 48;
-		org[1] += 48;
+		org.X += 48;
+		org.Y += 48;
 		break;
 	case 6:
-		org[0] -= 48;
-		org[1] += 48;
+		org.X -= 48;
+		org.Y += 48;
 		break;
 	case 7:
-		org[0] += 48;
-		org[1] -= 48;
+		org.X += 48;
+		org.Y -= 48;
 		break;
 	case 8:
 		Entity->State.SetSound (0);
@@ -445,7 +444,7 @@ void CBoss2::Explode ()
 		return;
 	}
 
-	CTempEnt_Explosions::RocketExplosion (org, Entity->gameEntity);
+	CTempEnt_Explosions::RocketExplosion (org, Entity);
 
 	Entity->NextThink = level.framenum + FRAMETIME;
 }
@@ -605,7 +604,7 @@ void CBoss2::Spawn ()
 
 	Entity->Health = 2000;
 	Entity->GibHealth = -200;
-	Entity->gameEntity->mass = 1000;
+	Entity->Mass = 1000;
 
 	Entity->Flags |= FL_IMMUNE_LASER;
 	

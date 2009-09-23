@@ -52,9 +52,9 @@ _CC_ENABLE_DEPRECATION
 
 int PointContents (vec3f &start)
 {
-	vec3_t temp = {start.X, start.Y, start.Z};
-	return PointContents(temp);
-};
+_CC_DISABLE_DEPRECATION
+	return gi.pointcontents(start);
+_CC_ENABLE_DEPRECATION};
 
 int BoxEdicts (vec3_t mins, vec3_t maxs, edict_t **list, int maxCount, bool triggers)
 {
@@ -65,9 +65,9 @@ _CC_ENABLE_DEPRECATION
 
 int BoxEdicts (vec3f &mins, vec3f &maxs, edict_t **list, int maxCount, bool triggers)
 {
-	vec3_t amins = {mins.X, mins.Y, mins.Z};
-	vec3_t amaxs = {maxs.X, maxs.Y, maxs.Z};
-	return BoxEdicts (amins, amaxs, list, maxCount, triggers);
+_CC_DISABLE_DEPRECATION
+	return gi.BoxEdicts (mins, maxs, list, maxCount, (triggers) ? AREA_TRIGGERS : AREA_SOLID);
+_CC_ENABLE_DEPRECATION
 }
 
 void ConfigString (int configStringIndex, char *configStringValue, CPlayerEntity *Audience)

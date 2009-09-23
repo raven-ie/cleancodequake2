@@ -35,7 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_parasite.h"
 #include "m_parasite.h"
 
-CParasite::CParasite ()
+CParasite::CParasite (uint32 ID) :
+CMonster(ID)
 {
 	Scale = MODEL_SCALE;
 	MonsterName = "Parasite";
@@ -501,7 +502,7 @@ void CParasite::Spawn ()
 
 	Entity->Health = 175;
 	Entity->GibHealth = -50;
-	Entity->gameEntity->mass = 250;
+	Entity->Mass = 250;
 
 	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_IDLE | MF_HAS_SIGHT);
 

@@ -35,7 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "m_hover.h"
 #include "cc_icarus.h"
 
-CIcarus::CIcarus ()
+CIcarus::CIcarus (uint32 ID) :
+CMonster (ID)
 {
 	Scale = MODEL_SCALE;
 	MonsterName = "Icarus";
@@ -632,7 +633,7 @@ void CIcarus::Spawn ()
 
 	Entity->Health = 240;
 	Entity->GibHealth = -100;
-	Entity->gameEntity->mass = 150;
+	Entity->Mass = 150;
 
 	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_SIGHT | MF_HAS_SEARCH);
 

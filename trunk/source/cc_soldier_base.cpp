@@ -34,6 +34,11 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_local.h"
 #include "cc_soldier_base.h"
 
+CSoldierBase::CSoldierBase (uint32 ID) :
+CMonster (ID)
+{
+};
+
 void CSoldierBase::Idle ()
 {
 	if (random() > 0.8)
@@ -1166,7 +1171,7 @@ void CSoldierBase::Spawn ()
 	SoundSight2 =	SoundIndex ("soldier/solsrch1.wav");
 	SoundCock =	SoundIndex ("infantry/infatck3.wav");
 
-	Entity->gameEntity->mass = 100;
+	Entity->Mass = 100;
 	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_SIGHT | MF_HAS_IDLE
 #ifdef MONSTER_USE_ROGUE_AI
 		| MF_HAS_DODGE | MF_HAS_DUCK | MF_HAS_UNDUCK | MF_HAS_SIDESTEP

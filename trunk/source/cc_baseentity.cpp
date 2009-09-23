@@ -622,7 +622,6 @@ bool				CMapEntity::CheckValidity ()
 			if ( SpawnFlags & SPAWNFLAG_NOT_DEATHMATCH )
 			{
 				Free ();
-				level.inhibit++;
 				return false;
 			}
 		}
@@ -635,7 +634,6 @@ bool				CMapEntity::CheckValidity ()
 				)
 				{
 					Free ();
-					level.inhibit++;
 					return false;
 				}
 		}

@@ -48,7 +48,7 @@ public:
 
 	MediaIndex	TreadSound;
 
-	CSuperTank ();
+	CSuperTank (uint32 ID);
 
 	void PlayTreadSound ();
 	void Explode ();

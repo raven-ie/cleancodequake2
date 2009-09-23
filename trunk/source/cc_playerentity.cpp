@@ -453,10 +453,8 @@ void CPlayerEntity::SpectatorRespawn ()
 	// add a teleportation effect
 	if (!Client.pers.spectator)
 	{
-		vec3_t origin;
-		State.GetOrigin (origin);
 		// send effect
-		CTempEnt::MuzzleFlash (origin, State.GetNumber(), MZ_LOGIN);
+		CTempEnt::MuzzleFlash (State.GetOrigin(), State.GetNumber(), MZ_LOGIN);
 
 		// hold in place briefly
 		Client.PlayerState.GetPMove()->pmFlags = PMF_TIME_TELEPORT;
@@ -542,7 +540,7 @@ void CPlayerEntity::PutInServer ()
 	gameEntity->viewheight = 22;
 	SetInUse (true);
 	gameEntity->classname = "player";
-	gameEntity->mass = 200;
+	Mass = 200;
 	SetSolid (SOLID_BBOX);
 	DeadFlag = false;
 	AirFinished = level.framenum + 120;
@@ -875,9 +873,9 @@ DamageFeedback
 */
 inline void CPlayerEntity::DamageFeedback (vec3f &forward, vec3f &right)
 {
-	static	const colorb	PowerColor = colorb(0, 255, 0, 0);
-	static	const colorb	ArmorColor = colorb(255, 255, 255, 0);
-	static	const colorb	BloodColor = colorb(255, 0, 0, 0);
+	static	const vec3f	PowerColor (0, 1, 0);
+	static	const vec3f	ArmorColor (1, 1, 1);
+	static	const vec3f	BloodColor (1, 0, 0);
 
 	// flash the backgrounds behind the status numbers
 	Client.PlayerState.SetStat(STAT_FLASHES, 0);
@@ -934,7 +932,7 @@ inline void CPlayerEntity::DamageFeedback (vec3f &forward, vec3f &right)
 	}
 
 	// the total alpha of the blend is always proportional to count
-	int Alpha = Client.DamageBlend.A + count*3;
+/*	int Alpha = Client.DamageBlend.A + count*3;
 	if (Alpha < 51)
 		Alpha = 51;
 	if (Alpha > 153)
@@ -946,7 +944,30 @@ inline void CPlayerEntity::DamageFeedback (vec3f &forward, vec3f &right)
 							(BloodColor.R * ((float)Client.damage_blood/(float)realcount)) + (ArmorColor.R * ((float)Client.damage_armor/(float)realcount)) + (PowerColor.R * ((float)Client.damage_parmor/(float)realcount)),
 							(BloodColor.G * ((float)Client.damage_blood/(float)realcount)) + (ArmorColor.G * ((float)Client.damage_armor/(float)realcount)) + (PowerColor.G * ((float)Client.damage_parmor/(float)realcount)),
 							(BloodColor.B * ((float)Client.damage_blood/(float)realcount)) + (ArmorColor.B * ((float)Client.damage_armor/(float)realcount)) + (PowerColor.B * ((float)Client.damage_parmor/(float)realcount)),
-							Alpha);
+							Alpha);*/
+	// the total alpha of the blend is always proportional to count
+	if (Client.DamageBlend.A < 0)
+		Client.DamageBlend.A = 0;
+	Client.DamageBlend.A += count*0.01f;
+	if (Client.DamageBlend.A < 0.2f)
+		Client.DamageBlend.A = 0.2f;
+	if (Client.DamageBlend.A > 0.6f)
+		Client.DamageBlend.A = 0.6f;		// don't go too saturated
+
+	// the color of the blend will vary based on how much was absorbed
+	// by different armors
+	vec3_t v;
+	Vec3Clear (v);
+	if (Client.damage_parmor)
+		Vec3MA (v, (float)Client.damage_parmor/realcount, PowerColor, v);
+	if (Client.damage_armor)
+		Vec3MA (v, (float)Client.damage_armor/realcount,  ArmorColor, v);
+	if (Client.damage_blood)
+		Vec3MA (v, (float)Client.damage_blood/realcount,  BloodColor, v);
+	Client.DamageBlend.R = v[0];
+	Client.DamageBlend.G = v[1];
+	Client.DamageBlend.B = v[2];
+
 
 	//
 	// calculate view angle kicks
@@ -988,7 +1009,7 @@ inline void CPlayerEntity::CalcViewOffset (vec3f &forward, vec3f &right, vec3f &
 	// if dead, fix the angle and don't add any kick
 	if (DeadFlag)
 	{
-		Client.PlayerState.SetViewAngles (vec3f(-15, Client.killer_yaw, 40));
+		Client.PlayerState.SetViewAngles (vec3f(-15, Client.KillerYaw, 40));
 		Client.PlayerState.SetKickAngles (vec3Origin);
 	}
 	else
@@ -1129,9 +1150,9 @@ SV_AddBlend
 =============
 */
 // Not a part of CPlayerEntity
-static inline void SV_AddBlend (colorb color, colorb &v_blend)
+static inline void SV_AddBlend (colorf color, colorf &v_blend)
 {
-	if (color.A <= 0)
+/*	if (color.A <= 0)
 		return;
 
 	byte a2 = v_blend.A  + color.A;	// new total alpha
@@ -1140,6 +1161,15 @@ static inline void SV_AddBlend (colorb color, colorb &v_blend)
 	v_blend.R = (float)(v_blend.R)*a3 + color.R*(1-a3);
 	v_blend.G = (float)(v_blend.G)*a3 + color.G*(1-a3);
 	v_blend.B = (float)(v_blend.B)*a3 + color.B*(1-a3);
+	v_blend.A = a2;*/
+	if (color.A <= 0)
+		return;
+	float a2 = v_blend.A + (1-v_blend.A)*color.A;	// new total alpha
+	float a3 = v_blend.A/a2;		// fraction of color from old
+
+	v_blend.R = v_blend.R*a3 + color.R*(1-a3);
+	v_blend.G = v_blend.G*a3 + color.G*(1-a3);
+	v_blend.B = v_blend.B*a3 + color.B*(1-a3);
 	v_blend.A = a2;
 }
 
@@ -1149,24 +1179,20 @@ static inline void SV_AddBlend (colorb color, colorb &v_blend)
 SV_CalcBlend
 =============
 */
-static const colorb LavaColor = colorb(255, 76, 0, 153);
-static const colorb SlimeColor = colorb(0, 25, 13, 153);
-static const colorb WaterColor = colorb(127, 76, 51, 102);
-static const colorb QuadColor = colorb(0, 0, 255, 20);
-static const colorb InvulColor = colorb(255, 255, 0, 20);
-static const colorb EnviroColor = colorb(0, 255, 0, 20);
-static const colorb BreatherColor = colorb(102, 255, 102, 10);
-static const colorb ClearColor = colorb(0,0,0,0);
-static colorb BonusColor = colorb(217, 178, 76, 0);
+static const colorf LavaColor (1.0f, 0.3f, 0.0f, 0.6f);
+static const colorf SlimeColor (0.0f, 0.1f, 0.05f, 0.6f);
+static const colorf WaterColor (0.5f, 0.3f, 0.2f, 0.4f);
+static const colorf QuadColor (0, 0, 1, 0.08f);
+static const colorf InvulColor (1, 1, 0, 0.08f);
+static const colorf EnviroColor (0, 1, 0, 0.08f);
+static const colorf BreatherColor (0.4f, 1, 0.4f, 0.04f);
+static const colorf ClearColor (0,0,0,0);
+static colorf BonusColor (0.85f, 0.7f, 0.3f, 0);
 
 inline void CPlayerEntity::CalcBlend ()
 {
 	// add for contents
-	vec3_t	vieworg, vOff;
-	Client.PlayerState.GetViewOffset(vOff);
-	State.GetOrigin (vieworg);
-	Vec3Add (vieworg, vOff, vieworg);
-
+	vec3f	vieworg = State.GetOrigin() + Client.PlayerState.GetViewOffset();
 	int contents = PointContents (vieworg);
 
 	if (contents & (CONTENTS_LAVA|CONTENTS_SLIME|CONTENTS_WATER) )
@@ -1223,10 +1249,9 @@ inline void CPlayerEntity::CalcBlend ()
 	// drop the damage value
 	if (Client.DamageBlend.A)
 	{
-		if (Client.DamageBlend.A < 15)
+		Client.DamageBlend.A -= 0.06f;
+		if (Client.DamageBlend.A < 0)
 			Client.DamageBlend.A = 0;
-		else
-			Client.DamageBlend.A -= 15;
 	}
 
 	// add bonus and drop the value
@@ -1235,10 +1260,9 @@ inline void CPlayerEntity::CalcBlend ()
 		BonusColor.A = Client.bonus_alpha;
 		SV_AddBlend (BonusColor, Client.pers.viewBlend);
 
-		if (Client.bonus_alpha < 15)
+		Client.bonus_alpha -= 0.1f;
+		if (Client.bonus_alpha < 0)
 			Client.bonus_alpha = 0;
-		else
-			Client.bonus_alpha -= 15;
 	}
 
 	if (contents & (CONTENTS_LAVA))
@@ -1348,8 +1372,7 @@ inline void CPlayerEntity::WorldEffects ()
 	bool	breather;
 	bool	envirosuit;
 	int		waterlevel, old_waterlevel;
-	vec3_t origin;
-	State.GetOrigin(origin);
+	vec3f origin = State.GetOrigin();
 
 	if (NoClip)
 	{
@@ -1735,8 +1758,7 @@ void CPlayerEntity::EndServerFrame ()
 	// If it wasn't updated here, the view position would lag a frame
 	// behind the body position when pushed -- "sinking into plats"
 	//
-	vec3_t origin;
-	State.GetOrigin(origin);
+	vec3f origin = State.GetOrigin();
 	for (i=0 ; i<3 ; i++)
 	{
 		Client.PlayerState.GetPMove()->origin[i] = origin[i]*8.0;
@@ -2647,35 +2669,22 @@ bool CPlayerEntity::HasRegeneration()
 LookAtKiller
 ==================
 */
-void CPlayerEntity::LookAtKiller (edict_t *inflictor, edict_t *attacker)
+void CPlayerEntity::LookAtKiller (CBaseEntity *inflictor, CBaseEntity *attacker)
 {
-	vec3_t		dir;
-	vec3_t		origin, angles;
-	State.GetOrigin (origin);
-	State.GetAngles (angles);
-
-	if (attacker && (attacker != world) && (attacker != gameEntity))
-		Vec3Subtract (attacker->state.origin, origin, dir);
-	else if (inflictor && (inflictor != world) && (inflictor != gameEntity))
-		Vec3Subtract (inflictor->state.origin, origin, dir);
+	vec3f dir;
+	if (attacker && (attacker != World) && (attacker != this))
+		dir = attacker->State.GetOrigin() - State.GetOrigin();
+	else if (inflictor && (inflictor != World) && (inflictor != this))
+		dir = inflictor->State.GetOrigin() - State.GetOrigin();
 	else
 	{
-		Client.killer_yaw = angles[YAW];
+		Client.KillerYaw = State.GetAngles().Y;
 		return;
 	}
 
-	if (dir[0])
-		Client.killer_yaw = 180/M_PI*atan2f(dir[1], dir[0]);
-	else
-	{
-		Client.killer_yaw = 0;
-		if (dir[1] > 0)
-			Client.killer_yaw = 90;
-		else if (dir[1] < 0)
-			Client.killer_yaw = -90;
-	}
-	if (Client.killer_yaw < 0)
-		Client.killer_yaw += 360;
+	Client.KillerYaw = (dir.X) ? (180/M_PI*atan2f(dir.Y, dir.X)) : (((dir.Y > 0) ? 90 : dir.Y < 0) ? -90 : 0);
+	if (Client.KillerYaw < 0)
+		Client.KillerYaw += 360;
 }
 
 void CPlayerEntity::DeadDropTech ()
@@ -2832,11 +2841,9 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 	Client.PlayerState.GetPMove()->gravity = sv_gravity->Float();
 	pm.state = *Client.PlayerState.GetPMove();
 
-	vec3_t origin;
-	State.GetOrigin (origin);
 	for (int i = 0; i < 3; i++)
 	{
-		pm.state.origin[i] = origin[i]*8;
+		pm.state.origin[i] = State.GetOrigin()[i]*8;
 		pm.state.velocity[i] = Velocity[i]*8;
 	}
 
@@ -2875,11 +2882,10 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 	Client.resp.cmd_angles[1] = SHORT2ANGLE(ucmd->angles[1]);
 	Client.resp.cmd_angles[2] = SHORT2ANGLE(ucmd->angles[2]);
 
-	State.GetOrigin (origin);
 	if (GroundEntity && !pm.groundEntity && (pm.cmd.upMove >= 10) && (pm.waterLevel == 0))
 	{
 		PlaySound (CHAN_VOICE, gMedia.Player.Jump);
-		PlayerNoiseAt (origin, PNOISE_SELF);
+		PlayerNoiseAt (State.GetOrigin(), PNOISE_SELF);
 	}
 
 	gameEntity->viewheight = pm.viewHeight;
@@ -2890,7 +2896,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 		GroundEntityLinkCount = GroundEntity->GetLinkCount();
 
 	if (DeadFlag)
-		Client.PlayerState.SetViewAngles (vec3f(40, -15, Client.killer_yaw));
+		Client.PlayerState.SetViewAngles (vec3f(-15, Client.KillerYaw, 40));
 	else
 	{
 		Client.ViewAngle.Set (pm.viewAngles);
@@ -3287,7 +3293,7 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 	if (!DeadFlag)
 	{
 		Client.respawn_time = level.framenum + 10;
-		LookAtKiller (inflictor->gameEntity, attacker->gameEntity);
+		LookAtKiller (inflictor, attacker);
 		Client.PlayerState.GetPMove()->pmType = PMT_DEAD;
 		Obituary (attacker);
 
@@ -3486,7 +3492,7 @@ void CPlayerEntity::UpdateChaseCam()
 			Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(targ->Client.ViewAngle[i] - Client.resp.cmd_angles[i]);
 
 		if (targ->DeadFlag)
-			Client.PlayerState.SetViewAngles (vec3f(40, -15, targ->Client.killer_yaw));
+			Client.PlayerState.SetViewAngles (vec3f(-15, targ->Client.KillerYaw, 40));
 		else
 		{
 			angles = targ->Client.ViewAngle + targ->Client.KickAngles;
@@ -3563,7 +3569,7 @@ void CPlayerEntity::UpdateChaseCam()
 			Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(targ->Client.ViewAngle[i] - Client.resp.cmd_angles[i]);
 
 		if (targ->DeadFlag)
-			Client.PlayerState.SetViewAngles (vec3f(40, -15, targ->Client.killer_yaw));
+			Client.PlayerState.SetViewAngles (vec3f(-15, targ->Client.KillerYaw, 40));
 		else
 		{
 			angles = targ->Client.ViewAngle + targ->Client.KickAngles;

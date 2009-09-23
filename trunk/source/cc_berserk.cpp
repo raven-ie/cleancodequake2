@@ -35,7 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_berserk.h"
 #include "m_berserk.h"
 
-CBerserker::CBerserker ()
+CBerserker::CBerserker (uint32 ID) :
+CMonster(ID)
 {
 	Scale = MODEL_SCALE;
 	MonsterName = "Berserker";
@@ -415,7 +416,7 @@ void CBerserker::Spawn ()
 
 	Entity->Health = 240;
 	Entity->GibHealth = -60;
-	Entity->gameEntity->mass = 250;
+	Entity->Mass = 250;
 
 	MonsterFlags = (MF_HAS_MELEE | MF_HAS_SEARCH | MF_HAS_SIGHT
 #ifdef MONSTER_USE_ROGUE_AI
