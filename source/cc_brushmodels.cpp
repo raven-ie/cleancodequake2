@@ -107,7 +107,7 @@ void CBrushModel::MoveFinal ()
 
 void CBrushModel::MoveBegin ()
 {
-	if (Speed >= (RemainingDistance * 10))
+	if ((Speed * 0.1f) >= RemainingDistance)
 	{
 		MoveFinal ();
 		return;
@@ -115,7 +115,7 @@ void CBrushModel::MoveBegin ()
 	Velocity = (Dir * Speed) / 10;
 
 	float frames = floor((RemainingDistance / Speed) / 0.1f);
-	RemainingDistance -= ((frames * Speed) / 10);
+	RemainingDistance -= (frames * Speed / 10);
 	NextThink = level.framenum + frames;
 	ThinkType = BRUSHTHINK_MOVEFINAL;
 }
@@ -1334,8 +1334,6 @@ void CDoorSecret::DoEndFunc ()
 				CanTakeDamage = true;
 			}
 			UseAreaPortals (false);
-
-			State.SetOrigin (vec3fOrigin); // FIXME: This SHOULDN'T be required.
 			break;
 		case DOORSECRETENDFUNC_5:
 			NextThink = level.framenum + 10;

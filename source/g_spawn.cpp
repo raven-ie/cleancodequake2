@@ -40,7 +40,10 @@ void ED_CallSpawn (edict_t *ent)
 	CBaseEntity *MapEntity = ResolveMapEntity(ent);
 
 	if (!MapEntity)
+	{
 		MapPrint (MAPPRINT_ERROR, ent, ent->state.origin, "Invalid entity (no spawn function)\n");
+		G_FreeEdict (ent);
+	}
 }
 
 /*
