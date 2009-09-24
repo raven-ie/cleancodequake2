@@ -956,17 +956,19 @@ inline void CPlayerEntity::DamageFeedback (vec3f &forward, vec3f &right)
 
 	// the color of the blend will vary based on how much was absorbed
 	// by different armors
-	vec3_t v;
-	Vec3Clear (v);
+	colorf NewColor (0, 0, 0, Client.DamageBlend.A);
 	if (Client.damage_parmor)
-		Vec3MA (v, (float)Client.damage_parmor/realcount, PowerColor, v);
+		NewColor.G = NewColor.G + (float)Client.damage_parmor/realcount;
 	if (Client.damage_armor)
-		Vec3MA (v, (float)Client.damage_armor/realcount,  ArmorColor, v);
+	{
+		NewColor.R = NewColor.R + (float)Client.damage_armor/realcount;
+		NewColor.G = NewColor.G + (float)Client.damage_armor/realcount;
+		NewColor.B = NewColor.B + (float)Client.damage_armor/realcount;
+	}
 	if (Client.damage_blood)
-		Vec3MA (v, (float)Client.damage_blood/realcount,  BloodColor, v);
-	Client.DamageBlend.R = v[0];
-	Client.DamageBlend.G = v[1];
-	Client.DamageBlend.B = v[2];
+		NewColor.R = NewColor.R + (float)Client.damage_blood/realcount;
+
+	Client.DamageBlend = NewColor;
 
 
 	//

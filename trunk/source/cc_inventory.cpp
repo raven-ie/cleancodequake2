@@ -723,7 +723,7 @@ void Cmd_Give (CPlayerEntity *ent)
 
 	Spawned->classname = Mem_PoolStrDup (ArgGetConcatenatedString(), com_levelPool, 0);
 	ED_CallSpawn (Spawned);
-	if (Spawned)
+	if (Spawned && Spawned->inUse)
 	{
 		Spawned->Entity->State.SetOrigin (Origin);
 		Spawned->Entity->State.SetAngles (Angles);

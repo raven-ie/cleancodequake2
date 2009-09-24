@@ -423,9 +423,9 @@ public:
 
 	float Normalize()
 	{
-		float Len = LengthFast();
+		float Len = Length();
 
-		if (Len > TINY_NUMBER || Len < TINY_NUMBER)
+		if (Len)
 			Scale(1.0f / Len);
 		else
 			Clear();
@@ -436,7 +436,7 @@ public:
 	{
 		float Len = Q_RSqrtf(Dot(*this));
 		Scale (Len);
-		return (Len > TINY_NUMBER || Len < TINY_NUMBER) ? (1.0f / Len) : 0;
+		return (Len) ? (1.0f / Len) : 0;
 	}
 
 	inline vec3f GetNormalized ()
