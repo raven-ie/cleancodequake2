@@ -107,6 +107,12 @@ inline void *operator new(size_t Size, struct memPool_s *Pool, const int TagNum,
 	return _Mem_Alloc(Size, Pool, TagNum, FileName, FileLine);
 }
 
+// Placement operator
+inline void *operator new (size_t Size, void *ptr, struct memPool_s *Pool, const int TagNum, const char *FileName, const int FileLine)
+{
+	return (ptr = _Mem_Alloc(Size, Pool, TagNum, FileName, FileLine));
+}
+
 #define QNew(Pool,TagNum)	new((Pool),(TagNum),__FILE__,__LINE__)
 
 inline void operator delete(void *Pointer, struct memPool_s *Pool, const int TagNum, const char *FileName, const int FileLine)
