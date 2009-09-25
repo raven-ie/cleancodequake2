@@ -273,6 +273,9 @@ public:
 	inline void Invert() { X = -X; Y = -Y; Z = -Z; }
 	inline vec3Base GetInverted() const { return vec3Base(-X, -Y, -Z); }
 
+	inline void Abs() { X = Q_fabs(X); Y = Q_fabs(Y); Z = Q_fabs(Z); }
+	inline vec3Base GetAbs() const { return vec3Base(Q_fabs(X), Q_fabs(Y), Q_fabs(Z)); }
+
 	inline const bool IsZero() const { return (X == 0 && Y == 0 && Z == 0); }
 
 	inline void Set(const TType Number) { X = Number; Y = Number; Z = Number; }
@@ -386,6 +389,9 @@ public:
 
 	inline vec3f operator ^(const vec3f &Vec) const { return Cross(Vec); }
 	inline float operator |(const vec3f &Vec) const { return Dot(Vec); }
+
+	// Paril, unary operators
+	inline vec3f operator - () const { return vec3f(-X, -Y, -Z); }
 
 	/**
 	 * Functions
