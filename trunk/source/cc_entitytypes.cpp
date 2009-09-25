@@ -1157,14 +1157,30 @@ CPhysicsEntity(Index)
 	PhysicsType = PHYSICS_PUSH;
 };
 
-typedef struct
+class CPushed
 {
-	CBaseEntity *ent;
-	vec3f  origin;
-	vec3f  angles;
-	float   deltayaw;
-} pushed_t;
-pushed_t        pushed[MAX_CS_EDICTS], *pushed_p;
+public:
+	CBaseEntity		*Entity;
+	float			DeltaYaw;
+	vec3f			Origin;
+	vec3f			Angles;
+
+	CPushed () :
+	Entity(NULL),
+	DeltaYaw(0),
+	Origin(),
+	Angles()
+	{
+	};
+
+	CPushed (CBaseEntity *Entity, float DeltaYaw, vec3f Origin, vec3f Angles) :
+	Entity(Entity),
+	DeltaYaw(DeltaYaw),
+	Origin(Origin),
+	Angles(Angles)
+	{
+	};
+};
 
 CBaseEntity *obstacle;
 
@@ -1210,7 +1226,7 @@ int ClipVelocity (vec3f &in, vec3f &normal, vec3f &out, float overbounce)
 	return blocked;
 }
 
-bool Push (CBaseEntity *Entity, vec3f &move, vec3f &amove)
+bool Push (std::vector<CPushed> &Pushed, CBaseEntity *Entity, vec3f &move, vec3f &amove)
 {
 	// clamp the move to 1/8 units, so the position will
 	// be accurate for client side prediction
@@ -1229,12 +1245,9 @@ bool Push (CBaseEntity *Entity, vec3f &move, vec3f &amove)
 	(-amove).ToVectors (&forward, &right, &up);
 
 	// save the pusher's original position
-	pushed_p->ent = Entity;
-	pushed_p->origin = Entity->State.GetOrigin ();
-	pushed_p->angles = Entity->State.GetAngles ();
-	if (Entity->EntityFlags & ENT_PLAYER)
-		pushed_p->deltayaw = (dynamic_cast<CPlayerEntity*>(Entity))->Client.PlayerState.GetPMove()->deltaAngles[YAW];
-	pushed_p++;
+	Pushed.push_back (CPushed (Entity,
+	(Entity->EntityFlags & ENT_PLAYER) ? (dynamic_cast<CPlayerEntity*>(Entity))->Client.PlayerState.GetPMove()->deltaAngles[YAW] : 0,
+	Entity->State.GetOrigin(), Entity->State.GetAngles()));
 
 	// move the pusher to it's final position
 	Entity->State.SetOrigin (Entity->State.GetOrigin() + move);
@@ -1288,42 +1301,38 @@ bool Push (CBaseEntity *Entity, vec3f &move, vec3f &amove)
 		if ((dynamic_cast<CPhysicsEntity*>(Entity)->PhysicsType == PHYSICS_PUSH) || (Check->GroundEntity == Entity))
 		{
 			// move this entity
-			pushed_p->ent = Check;
-			pushed_p->origin = check->state.origin;
-			pushed_p->angles = check->state.angles;
+			CPushed PushedEntity (Check, 0, Check->State.GetOrigin(), Check->State.GetAngles());
 
 			// try moving the contacted entity
 			Check->State.SetOrigin (Check->State.GetOrigin() + move);
-			if (check->client)
+			if (Check->EntityFlags & ENT_PLAYER)
 			{
-				(dynamic_cast<CPlayerEntity*>(Check))->Client.PlayerState.GetPMove()->deltaAngles[YAW] += amove[YAW];
+				CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(Check);
+				Player->Client.PlayerState.GetPMove()->deltaAngles[YAW] += amove[YAW];
 
 				//r1: dead-body-on-lift / other random view distortion fix
-				pushed_p->deltayaw = (dynamic_cast<CPlayerEntity*>(pushed_p->ent))->Client.PlayerState.GetPMove()->deltaAngles[YAW];
+				PushedEntity.DeltaYaw = Player->Client.PlayerState.GetPMove()->deltaAngles[YAW];
 			}
 
 			else
-				check->state.angles[YAW] += amove[YAW];
+				Check->State.SetAngles (Check->State.GetAngles() + vec3f (0, amove.Y, 0));
 
-			pushed_p++;
+			Pushed.push_back (PushedEntity);
 
 			// figure movement due to the pusher's amove
-			vec3f temporigin = Entity->State.GetOrigin ();
-			vec3f org = Check->State.GetOrigin() - temporigin;
+			vec3f org = Check->State.GetOrigin() - Entity->State.GetOrigin ();
 			vec3f org2 (
 				org.Dot (forward),
 				-org.Dot (right),
 				org.Dot (up)
 				);
-			vec3f move2 = org2 - org;
-			Check->State.SetOrigin (Check->State.GetOrigin() + move2);
+			Check->State.SetOrigin (Check->State.GetOrigin() + (org2 - org));
 
 			// may have pushed them off an edge
 			if (Check->GroundEntity != Entity)
 				Check->GroundEntity = NULL;
 
-			CBaseEntity *block = SV_TestEntityPosition (Check);
-			if (!block)
+			if (!SV_TestEntityPosition (Check))
 			{       // pushed ok
 				Check->Link ();
 				// impact?
@@ -1334,10 +1343,9 @@ bool Push (CBaseEntity *Entity, vec3f &move, vec3f &amove)
 			// this is only relevent for riding entities, not pushed
 			// FIXME: this doesn't acount for rotation
 			Check->State.SetOrigin (Check->State.GetOrigin() - move);
-			block = SV_TestEntityPosition (Check);
-			if (!block)
+			if (!SV_TestEntityPosition (Check))
 			{
-				pushed_p--;
+				Pushed.pop_back();
 				continue;
 			}
 		}
@@ -1348,21 +1356,40 @@ bool Push (CBaseEntity *Entity, vec3f &move, vec3f &amove)
 		// move back any entities we already moved
 		// go backwards, so if the same entity was pushed
 		// twice, it goes back to the original position
-		for (pushed_t *p = pushed_p - 1; p >= pushed; p--)
+		/*for (pushed_t *p = pushed_p - 1; p >= pushed; p--)
 		{
 			p->ent->State.SetOrigin (p->origin);
 			p->ent->State.SetAngles (p->angles);
 			if (p->ent->EntityFlags & ENT_PLAYER)
 				(dynamic_cast<CPlayerEntity*>(p->ent))->Client.PlayerState.GetPMove()->deltaAngles[YAW] = p->deltayaw;
 			p->ent->Link ();
+		}*/
+
+		for (std::vector<CPushed>::reverse_iterator it = Pushed.rbegin(); it < Pushed.rend(); ++it)
+		{
+			CPushed &PushedEntity = *it;
+
+			PushedEntity.Entity->State.SetOrigin (PushedEntity.Origin);
+			PushedEntity.Entity->State.SetAngles (PushedEntity.Angles);
+			if (PushedEntity.Entity->EntityFlags & ENT_PLAYER)
+				(dynamic_cast<CPlayerEntity*>(PushedEntity.Entity))->Client.PlayerState.GetPMove()->deltaAngles[YAW] = PushedEntity.DeltaYaw;
+			PushedEntity.Entity->Link ();
 		}
+
 		return false;
 	}
 
 	//FIXME: is there a better way to handle this?
 	// see if anything we moved has touched a trigger
-	for (pushed_t *p = pushed_p - 1; p >= pushed; p--)
-		G_TouchTriggers (p->ent);
+
+	//for (pushed_t *p = pushed_p - 1; p >= pushed; p--)
+	//	G_TouchTriggers (p->ent);
+
+	for (std::vector<CPushed>::reverse_iterator it = Pushed.rbegin(); it < Pushed.rend(); ++it)
+	{
+		CPushed &PushedEntity = *it;
+		G_TouchTriggers (PushedEntity.Entity);
+	}
 
 	return true;
 }
@@ -1371,6 +1398,7 @@ bool CPushPhysics::Run ()
 {
 	vec3f					move, amove;
 	CBaseEntity				*part;
+	std::vector <CPushed>	Pushed;
 
 	// if not a team captain, so movement will be handled elsewhere
 	if (Flags & FL_TEAMSLAVE)
@@ -1379,7 +1407,6 @@ bool CPushPhysics::Run ()
 	// make sure all team slaves can move before commiting
 	// any moves or calling any think functions
 	// if the move is blocked, all moved objects will be backed out
-	pushed_p = pushed;
 	for (part = this; part; part = part->TeamChain)
 	{
 		if ((Velocity != vec3fOrigin) ||
@@ -1395,12 +1422,12 @@ bool CPushPhysics::Run ()
 			else
 				move = amove = vec3fOrigin;
 
-			if (!Push (part, move, amove))
+			if (!Push (Pushed, part, move, amove))
 				break;
 		}
 	}
-	if (pushed_p > &pushed[MAX_CS_EDICTS])
-		GameError ("pushed_p > &pushed[MAX_CS_EDICTS], memory corrupted");
+	if (Pushed.size() > MAX_CS_EDICTS)
+		GameError ("Pushed.size() > MAX_CS_EDICTS, memory corrupted");
 
 	if (part)
 	{
@@ -1433,6 +1460,7 @@ bool CPushPhysics::Run ()
 			}
 		}
 	}
+
 	return true;
 }
 
