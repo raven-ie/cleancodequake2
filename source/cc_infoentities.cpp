@@ -32,6 +32,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 //
 
 #include "cc_local.h"
+#include "cc_infoentities.h"
 
 /*QUAKED misc_teleporter_dest (1 0 0) (-32 -32 -24) (32 32 -16)
 Point teleporters at these.
@@ -104,7 +105,7 @@ public:
 
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
-		CTeleporterDest		*dest = dynamic_cast<CTeleporterDest*>(CC_Find (NULL, FOFS(targetname), gameEntity->target));
+		CBaseEntity		*dest = CC_Find (NULL, FOFS(targetname), gameEntity->target);
 		if (!dest)
 		{
 			DebugPrintf ("Couldn't find destination\n");
@@ -562,105 +563,118 @@ Pathtarget: gets used when an entity that has
 	this path_corner targeted touches it
 */
 
-class CPathCorner : public CMapEntity, public CTouchableEntity, public CUsableEntity
+CPathCorner::CPathCorner () :
+  CBaseEntity(),
+  CMapEntity (),
+  CTouchableEntity ()
+  {
+  };
+
+CPathCorner::CPathCorner (int Index) :
+  CBaseEntity(Index),
+  CMapEntity (Index),
+  CTouchableEntity (Index)
+  {
+  };
+
+void CPathCorner::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 {
-public:
-	CPathCorner () :
-	  CBaseEntity(),
-	  CMapEntity (),
-	  CTouchableEntity ()
-	  {
-	  };
+	vec3f			v;
+	CBaseEntity		*next;
 
-	CPathCorner (int Index) :
-	  CBaseEntity(Index),
-	  CMapEntity (Index),
-	  CTouchableEntity (Index)
-	  {
-	  };
+	if (other->gameEntity->movetarget != gameEntity)
+		return;
+	
+	if (other->Enemy)
+		return;
 
-	virtual bool ParseField (char *Key, char *Value)
+	if (gameEntity->pathtarget)
 	{
-		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+		char *savetarget;
+
+		savetarget = gameEntity->target;
+		gameEntity->target = gameEntity->pathtarget;
+		UseTargets (other, Message);
+		gameEntity->target = savetarget;
 	}
 
-	virtual void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
+	next = (gameEntity->target) ? CC_PickTarget(gameEntity->target) : NULL;
+	if ((next) && (next->SpawnFlags & 1))
 	{
-		vec3f			v;
-		CBaseEntity		*next;
+		other->State.SetOrigin (next->State.GetOrigin() + vec3f(0, 0, next->GetMins().Z - other->GetMins().Z));
+		next = CC_PickTarget(next->gameEntity->target);
+		other->State.SetEvent (EV_OTHER_TELEPORT);
+	}
 
-		if (other->gameEntity->movetarget != gameEntity)
-			return;
-		
-		if (other->Enemy)
-			return;
+	other->gameEntity->goalentity = other->gameEntity->movetarget = (next) ? next->gameEntity : NULL;
 
-		if (gameEntity->pathtarget)
-		{
-			char *savetarget;
-
-			savetarget = gameEntity->target;
-			gameEntity->target = gameEntity->pathtarget;
-			UseTargets (other, Message);
-			gameEntity->target = savetarget;
-		}
-
-		next = (gameEntity->target) ? CC_PickTarget(gameEntity->target) : NULL;
-		if ((next) && (next->SpawnFlags & 1))
-		{
-			other->State.SetOrigin (next->State.GetOrigin() + vec3f(0, 0, next->GetMins().Z - other->GetMins().Z));
-			next = CC_PickTarget(next->gameEntity->target);
-			other->State.SetEvent (EV_OTHER_TELEPORT);
-		}
-
-		other->gameEntity->goalentity = other->gameEntity->movetarget = (next) ? next->gameEntity : NULL;
-
-		if (gameEntity->wait)
-		{
-			if (other->EntityFlags & ENT_MONSTER)
-			{
-				CMonsterEntity *Monster = dynamic_cast<CMonsterEntity*>(other);
-				// Backcompat
-				Monster->Monster->PauseTime = level.framenum + (gameEntity->wait * 10);
-				Monster->Monster->Stand();
-			}
-			return;
-		}
-
-		if (!other->gameEntity->movetarget)
-		{
-			if (other->EntityFlags & ENT_MONSTER)
-			{
-				CMonsterEntity *Monster = dynamic_cast<CMonsterEntity*>(other);
-				Monster->Monster->PauseTime = level.framenum + 100000000;
-				Monster->Monster->Stand ();
-			}
-		}
-		else
-		{
-			if (other->EntityFlags & ENT_MONSTER)
-				(dynamic_cast<CMonsterEntity*>(other))->Monster->IdealYaw = (other->gameEntity->goalentity->Entity->State.GetOrigin() - other->State.GetOrigin()).ToYaw();
-		}
-	};
-
-	virtual void Spawn ()
+	if (Wait)
 	{
-		if (!gameEntity->targetname)
+		if (other->EntityFlags & ENT_MONSTER)
 		{
-			//gi.dprintf ("path_corner with no targetname at (%f %f %f)\n", self->state.origin[0], self->state.origin[1], self->state.origin[2]);
-			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No targetname\n");
-			Free ();
-			return;
+			CMonsterEntity *Monster = dynamic_cast<CMonsterEntity*>(other);
+			// Backcompat
+			Monster->Monster->PauseTime = level.framenum + Wait;
+			Monster->Monster->Stand();
 		}
+		return;
+	}
 
-		SetSolid (SOLID_TRIGGER);
-		Touchable = true;
-		SetMins (vec3f(-8, -8, -8));
-		SetMaxs (vec3f(8, 8, 8));
-		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
-		Link ();
-	};
+	if (!other->gameEntity->movetarget)
+	{
+		if (other->EntityFlags & ENT_MONSTER)
+		{
+			CMonsterEntity *Monster = dynamic_cast<CMonsterEntity*>(other);
+			Monster->Monster->PauseTime = level.framenum + 100000000;
+			Monster->Monster->Stand ();
+		}
+	}
+	else
+	{
+		if (other->EntityFlags & ENT_MONSTER)
+			(dynamic_cast<CMonsterEntity*>(other))->Monster->IdealYaw = (other->gameEntity->goalentity->Entity->State.GetOrigin() - other->State.GetOrigin()).ToYaw();
+	}
 };
+
+void CPathCorner::Spawn ()
+{
+	if (!gameEntity->targetname)
+	{
+		//gi.dprintf ("path_corner with no targetname at (%f %f %f)\n", self->state.origin[0], self->state.origin[1], self->state.origin[2]);
+		MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No targetname\n");
+		Free ();
+		return;
+	}
+
+	SetSolid (SOLID_TRIGGER);
+	Touchable = true;
+	SetMins (vec3f(-8, -8, -8));
+	SetMaxs (vec3f(8, 8, 8));
+	SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
+	Link ();
+};
+
+const CEntityField CPathCorner::FieldsForParsing[] =
+{
+	CEntityField ("wait", EntityMemberOffset(CPathCorner,Wait), FTTime),
+};
+const size_t CPathCorner::FieldsForParsingSize = (sizeof(CPathCorner::FieldsForParsing) / sizeof(CPathCorner::FieldsForParsing[0]));
+
+bool			CPathCorner::ParseField (char *Key, char *Value)
+{
+	for (size_t i = 0; i < CPathCorner::FieldsForParsingSize; i++)
+	{
+		if (strcmp (Key, CPathCorner::FieldsForParsing[i].Name) == 0)
+		{
+			CPathCorner::FieldsForParsing[i].Create<CPathCorner> (this, Value);
+			return true;
+		}
+	}
+
+	// Couldn't find it here
+	return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+};
+
 
 LINK_CLASSNAME_TO_CLASS ("path_corner", CPathCorner);
 
@@ -891,6 +905,7 @@ public:
 	int32			RampMessage[3];
 	FrameNumber_t	TimeStamp;
 	CLight			*Light;
+	float			Speed;
 
 	CTargetLightRamp () :
 	  CBaseEntity (),
@@ -899,6 +914,7 @@ public:
 	  CUsableEntity (),
 	  Light (NULL)
 	{
+		RampMessage[0] = RampMessage[1] = RampMessage[2] = 0;
 	};
 
 	CTargetLightRamp (int Index) :
@@ -908,12 +924,12 @@ public:
 	  CUsableEntity (Index),
 	  Light (NULL)
 	{
+		RampMessage[0] = RampMessage[1] = RampMessage[2] = 0;
 	};
 
-	virtual bool ParseField (char *Key, char *Value)
-	{
-		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
-	}
+	static const class CEntityField FieldsForParsing[];
+	static const size_t FieldsForParsingSize;
+	virtual bool			ParseField (char *Key, char *Value);
 
 	bool Run ()
 	{
@@ -925,7 +941,7 @@ public:
 		char	style[2] = {'a' + RampMessage[0] + (level.framenum - TimeStamp) / 0.1f * RampMessage[2], 0};
 		ConfigString (CS_LIGHTS+Light->gameEntity->style, style);
 
-		if ((level.framenum - TimeStamp) < gameEntity->speed)
+		if ((level.framenum - TimeStamp) < Speed)
 			NextThink = level.framenum + FRAMETIME;
 		else if (SpawnFlags & 1)
 		{
@@ -994,8 +1010,29 @@ public:
 
 		RampMessage[0] = Message[0] - 'a';
 		RampMessage[1] = Message[1] - 'a';
-		RampMessage[2] = (RampMessage[1] - RampMessage[0]) / (gameEntity->speed / 0.1f);
+		RampMessage[2] = (RampMessage[1] - RampMessage[0]) / (Speed * 10);
 	};
+};
+
+const CEntityField CTargetLightRamp::FieldsForParsing[] =
+{
+	CEntityField ("speed", EntityMemberOffset(CTargetLightRamp,Speed), FTFloat),
+};
+const size_t CTargetLightRamp::FieldsForParsingSize = (sizeof(CTargetLightRamp::FieldsForParsing) / sizeof(CTargetLightRamp::FieldsForParsing[0]));
+
+bool			CTargetLightRamp::ParseField (char *Key, char *Value)
+{
+	for (size_t i = 0; i < CTargetLightRamp::FieldsForParsingSize; i++)
+	{
+		if (strcmp (Key, CTargetLightRamp::FieldsForParsing[i].Name) == 0)
+		{
+			CTargetLightRamp::FieldsForParsing[i].Create<CTargetLightRamp> (this, Value);
+			return true;
+		}
+	}
+
+	// Couldn't find it here
+	return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 };
 
 LINK_CLASSNAME_TO_CLASS ("target_lightramp", CTargetLightRamp);

@@ -75,14 +75,43 @@ bool CBrushModel::Run ()
 
 CBrushModel::CBrushModel () :
 CBaseEntity (),
-CThinkableEntity ()
+CThinkableEntity (),
+CPushPhysics (),
+CStopPhysics ()
 {
 };
 
 CBrushModel::CBrushModel (int Index) :
 CBaseEntity (Index),
-CThinkableEntity (Index)
+CThinkableEntity (Index),
+CPushPhysics (Index),
+CStopPhysics (Index)
 {
+};
+
+const CEntityField CBrushModel::FieldsForParsing[] =
+{
+	CEntityField ("wait", EntityMemberOffset(CBrushModel,Wait), FTTime),
+	CEntityField ("speed", EntityMemberOffset(CBrushModel,Speed), FTFloat),
+	CEntityField ("accel", EntityMemberOffset(CBrushModel,Accel), FTFloat),
+	CEntityField ("decel", EntityMemberOffset(CBrushModel,Decel), FTFloat),
+	CEntityField ("distance", EntityMemberOffset(CBrushModel,Distance), FTInteger),
+};
+const size_t CBrushModel::FieldsForParsingSize = (sizeof(CBrushModel::FieldsForParsing) / sizeof(CBrushModel::FieldsForParsing[0]));
+
+bool			CBrushModel::ParseField (char *Key, char *Value)
+{
+	for (size_t i = 0; i < CBrushModel::FieldsForParsingSize; i++)
+	{
+		if (strcmp (Key, CBrushModel::FieldsForParsing[i].Name) == 0)
+		{
+			CBrushModel::FieldsForParsing[i].Create<CBrushModel> (this, Value);
+			return true;
+		}
+	}
+
+	// Couldn't find it here
+	return false;
 };
 
 void CBrushModel::MoveDone ()
@@ -549,20 +578,20 @@ void CPlatForm::Spawn ()
 
 	SetModel (gameEntity, gameEntity->model);
 
-	if (!gameEntity->speed)
-		gameEntity->speed = 20;
+	if (!Speed)
+		Speed = 20;
 	else
-		gameEntity->speed *= 0.1f;
+		Speed *= 0.1f;
 
-	if (!gameEntity->accel)
-		gameEntity->accel = 5;
+	if (!Accel)
+		Accel = 5;
 	else
-		gameEntity->accel *= 0.1f;
+		Accel *= 0.1f;
 
-	if (!gameEntity->decel)
-		gameEntity->decel = 5;
+	if (!Decel)
+		Decel = 5;
 	else
-		gameEntity->decel *= 0.1f;
+		Decel *= 0.1f;
 
 	if (!gameEntity->dmg)
 		gameEntity->dmg = 2;
@@ -574,9 +603,6 @@ void CPlatForm::Spawn ()
 	Positions[0] = Positions[1] = State.GetOrigin ();
 	Positions[1].Z -= (st.height) ? st.height : ((GetMaxs().Z - GetMins().Z) - st.lip);
 
-	if (!map_debug->Boolean())
-	SpawnInsideTrigger ();	// the "start moving" trigger	
-
 	if (gameEntity->targetname)
 		MoveState = STATE_UP;
 	else
@@ -586,10 +612,6 @@ void CPlatForm::Spawn ()
 		MoveState = STATE_BOTTOM;
 	}
 
-	Speed = gameEntity->speed;
-	Accel = gameEntity->accel;
-	Decel = gameEntity->decel;
-	Wait = gameEntity->wait;
 	StartOrigin = Positions[0];
 	StartAngles = State.GetAngles ();
 	EndAngles = State.GetAngles ();
@@ -598,6 +620,11 @@ void CPlatForm::Spawn ()
 	SoundStart = SoundIndex ("plats/pt1_strt.wav");
 	SoundMiddle = SoundIndex ("plats/pt1_mid.wav");
 	SoundEnd = SoundIndex ("plats/pt1_end.wav");
+
+	if (!map_debug->Boolean())
+		SpawnInsideTrigger ();	// the "start moving" trigger	
+	else
+		SetSolid (SOLID_NOT);
 };
 
 LINK_CLASSNAME_TO_CLASS ("func_plat", CPlatForm);
@@ -670,7 +697,7 @@ void CDoor::HitTop ()
 	if (Wait >= 0)
 	{
 		ThinkType = DOORTHINK_GODOWN;
-		NextThink = level.framenum + (Wait * 10);
+		NextThink = level.framenum + Wait;
 	}
 }
 
@@ -715,7 +742,7 @@ void CDoor::GoUp (CBaseEntity *activator)
 	if (MoveState == STATE_TOP)
 	{	// reset top wait time
 		if (Wait >= 0)
-			NextThink = level.framenum + (Wait * 10);
+			NextThink = level.framenum + Wait;
 		return;
 	}
 	
@@ -981,18 +1008,18 @@ void CDoor::Spawn ()
 	SetSolid (SOLID_BSP);
 	SetModel (gameEntity, gameEntity->model);
 	
-	if (!gameEntity->speed)
-		gameEntity->speed = 100;
+	if (!Speed)
+		Speed = 100;
 	if (game.mode & GAME_DEATHMATCH)
-		gameEntity->speed *= 2;
+		Speed *= 2;
 
-	if (!gameEntity->accel)
-		gameEntity->accel = gameEntity->speed;
-	if (!gameEntity->decel)
-		gameEntity->decel = gameEntity->speed;
+	if (!Accel)
+		Accel = Speed;
+	if (!Decel)
+		Decel = Speed;
 
-	if (!gameEntity->wait)
-		gameEntity->wait = 3;
+	if (!Wait)
+		Wait = 30;
 	if (!st.lip)
 		st.lip = 8;
 	if (!gameEntity->dmg)
@@ -1026,10 +1053,6 @@ void CDoor::Spawn ()
 		Touchable = true;
 	}
 	
-	Speed = gameEntity->speed;
-	Accel = gameEntity->accel;
-	Decel = gameEntity->decel;
-	Wait = gameEntity->wait;
 	StartOrigin = Positions[0];
 	StartAngles = State.GetAngles ();
 	EndOrigin = Positions[1];
@@ -1095,7 +1118,7 @@ void CRotatingDoor::GoUp (CBaseEntity *activator)
 	if (MoveState == STATE_TOP)
 	{	// reset top wait time
 		if (Wait >= 0)
-			NextThink = level.framenum + (Wait * 10);
+			NextThink = level.framenum + Wait;
 		return;
 	}
 	
@@ -1129,30 +1152,29 @@ void CRotatingDoor::Spawn ()
 	if (SpawnFlags & DOOR_REVERSE)
 		MoveDir.Invert ();
 
-	if (!st.distance)
+	if (!Distance)
 	{
 		//gi.dprintf("%s at (%f %f %f) with no distance set\n", ent->classname, ent->state.origin[0], ent->state.origin[1], ent->state.origin[2]);
 		MapPrint (MAPPRINT_WARNING, this, State.GetOrigin(), "No distance set\n");
-		st.distance = 90;
+		Distance = 90;
 	}
 
 	Positions[0] = State.GetAngles ();
-	Positions[1] = Positions[0].MultiplyAngles (st.distance, MoveDir);
-	Distance = st.distance;
+	Positions[1] = Positions[0].MultiplyAngles (Distance, MoveDir);
 
 	PhysicsType = PHYSICS_PUSH;
 	SetSolid (SOLID_BSP);
 	SetModel (gameEntity, gameEntity->model);
 
-	if (!gameEntity->speed)
-		gameEntity->speed = 100;
-	if (!gameEntity->accel)
-		gameEntity->accel = gameEntity->speed;
-	if (!gameEntity->decel)
-		gameEntity->decel = gameEntity->speed;
+	if (!Speed)
+		Speed = 100;
+	if (!Accel)
+		Accel = Speed;
+	if (!Decel)
+		Decel = Speed;
 
-	if (!gameEntity->wait)
-		gameEntity->wait = 3;
+	if (!Wait)
+		Wait = 30;
 	if (!gameEntity->dmg)
 		gameEntity->dmg = 2;
 
@@ -1190,10 +1212,6 @@ void CRotatingDoor::Spawn ()
 		Touchable = false;
 
 	MoveState = STATE_BOTTOM;
-	Speed = gameEntity->speed;
-	Accel = gameEntity->accel;
-	Decel = gameEntity->decel;
-	Wait = gameEntity->wait;
 	StartOrigin = State.GetOrigin ();
 	EndOrigin = State.GetOrigin ();
 	StartAngles = Positions[0];
@@ -1272,17 +1290,16 @@ void CMovableWater::Spawn ()
 
 	MoveState = STATE_BOTTOM;
 
-	if (!gameEntity->speed)
-		gameEntity->speed = 25;
-	Accel = Decel = Speed = gameEntity->speed;
+	if (!Speed)
+		Speed = 25;
+	Accel = Decel = Speed;
 
-	if (!gameEntity->wait)
-		gameEntity->wait = -1;
-	Wait = gameEntity->wait;
+	if (!Wait)
+		Wait = -1;
 
 	Touchable = false;
 
-	if (gameEntity->wait == -1)
+	if (Wait == -1)
 		SpawnFlags |= DOOR_TOGGLE;
 
 	//gameEntity->classname = "func_door";
@@ -1340,11 +1357,11 @@ void CDoorSecret::DoEndFunc ()
 			ThinkType = DOORSECRETTHINK_6;
 			break;
 		case DOORSECRETENDFUNC_3:
-			if (gameEntity->wait == -1)
+			if (Wait == -1)
 				return;
 
 			// Backcompat
-			NextThink = level.framenum + (gameEntity->wait * 10);
+			NextThink = level.framenum + Wait;
 			ThinkType = DOORSECRETTHINK_4;
 			break;
 		case DOORSECRETENDFUNC_1:
@@ -1431,8 +1448,8 @@ void CDoorSecret::Spawn ()
 	if (!gameEntity->dmg)
 		gameEntity->dmg = 2;
 
-	if (!gameEntity->wait)
-		gameEntity->wait = 5;
+	if (!Wait)
+		Wait = 50;
 
 	Accel =
 	Decel =
@@ -1536,7 +1553,7 @@ void CButton::DoEndFunc ()
 		State.AddEffects (EF_ANIM01);
 		break;
 	case BUTTONENDFUNC_WAIT:
-		MoveState = STATE_BOTTOM;
+		MoveState = STATE_TOP;
 		State.RemoveEffects (EF_ANIM01);
 		State.AddEffects (EF_ANIM23);
 
@@ -1544,7 +1561,7 @@ void CButton::DoEndFunc ()
 		State.SetFrame (1);
 		if (Wait >= 0)
 		{
-			NextThink = level.framenum + (Wait * 10);
+			NextThink = level.framenum + Wait;
 			ThinkType = BUTTONTHINK_RETURN;
 		}
 		break;
@@ -1616,15 +1633,15 @@ void CButton::Spawn ()
 	if (gameEntity->sounds != 1)
 		SoundStart = SoundIndex ("switches/butn2.wav");
 	
-	if (!gameEntity->speed)
-		gameEntity->speed = 40;
-	if (!gameEntity->accel)
-		gameEntity->accel = gameEntity->speed;
-	if (!gameEntity->decel)
-		gameEntity->decel = gameEntity->speed;
+	if (!Speed)
+		Speed = 40;
+	if (!Accel)
+		Accel = Speed;
+	if (!Decel)
+		Decel = Speed;
 
-	if (!gameEntity->wait)
-		gameEntity->wait = 3;
+	if (!Wait)
+		Wait = 30;
 	if (!st.lip)
 		st.lip = 4;
 
@@ -1645,10 +1662,6 @@ void CButton::Spawn ()
 
 	MoveState = STATE_BOTTOM;
 
-	Speed = gameEntity->speed;
-	Accel = gameEntity->accel;
-	Decel = gameEntity->decel;
-	Wait = gameEntity->wait;
 	StartOrigin = Positions[0];
 	StartAngles = State.GetAngles ();
 	EndOrigin = Positions[1];
@@ -1745,7 +1758,7 @@ void CTrainBase::TrainWait ()
 	{
 		if (Wait > 0)
 		{
-			NextThink = level.framenum + (Wait * 10);
+			NextThink = level.framenum + Wait;
 			ThinkType = TRAINTHINK_NEXT;
 		}
 		else if (SpawnFlags & TRAIN_TOGGLE)  // && wait < 0
@@ -1766,6 +1779,8 @@ void CTrainBase::TrainWait ()
 	else
 		Next ();	
 }
+
+#include "cc_infoentities.h"
 
 void CTrainBase::Next ()
 {
@@ -1804,7 +1819,11 @@ void CTrainBase::Next ()
 		break;
 	}
 
-	Wait = ent->gameEntity->wait;
+	CPathCorner *Corner = dynamic_cast<CPathCorner*>(ent);
+
+	if (Corner)
+		Wait = Corner->Wait;
+
 	TargetEntity = ent;
 
 	if (!(Flags & FL_TEAMSLAVE))
@@ -1940,13 +1959,12 @@ void CTrain::Spawn ()
 	SetSolid (SOLID_BSP);
 	SetModel (gameEntity, gameEntity->model);
 
-	if (st.noise)
-		SoundMiddle = SoundIndex  (st.noise);
+	if (NoiseIndex)
+		SoundMiddle = NoiseIndex;
 
-	if (!gameEntity->speed)
-		gameEntity->speed = 100;
+	if (!Speed)
+		Speed = 100;
 
-	Speed = gameEntity->speed;
 	Accel = Decel = Speed;
 
 	Link ();
@@ -2310,7 +2328,7 @@ void CRotatingBrush::Use (CBaseEntity *other, CBaseEntity *activator)
 	else
 	{
 		State.SetSound (SoundMiddle);
-		AngularVelocity = MoveDir * gameEntity->speed;
+		AngularVelocity = MoveDir * Speed;
 
 		if (SpawnFlags & 16)
 			Touchable = true;
@@ -2340,8 +2358,8 @@ void CRotatingBrush::Spawn ()
 	if (SpawnFlags & 2)
 		MoveDir.Invert ();
 
-	if (!gameEntity->speed)
-		gameEntity->speed = 100;
+	if (!Speed)
+		Speed = 100;
 	if (!gameEntity->dmg)
 		gameEntity->dmg = 2;
 
@@ -2391,12 +2409,12 @@ void CConveyor::Use (CBaseEntity *other, CBaseEntity *activator)
 {
 	if (SpawnFlags & 1)
 	{
-		gameEntity->speed = 0;
+		Speed = 0;
 		SpawnFlags &= ~1;
 	}
 	else
 	{
-		gameEntity->speed = gameEntity->count;
+		Speed = gameEntity->count;
 		SpawnFlags |= 1;
 	}
 
@@ -2411,13 +2429,13 @@ bool CConveyor::Run ()
 
 void CConveyor::Spawn ()
 {
-	if (!gameEntity->speed)
-		gameEntity->speed = 100;
+	if (!Speed)
+		Speed = 100;
 
 	if (!(SpawnFlags & 1))
 	{
-		gameEntity->count = gameEntity->speed;
-		gameEntity->speed = 0;
+		gameEntity->count = Speed;
+		Speed = 0;
 	}
 
 	SetModel (gameEntity, gameEntity->model);

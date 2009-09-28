@@ -54,7 +54,10 @@ CFuncTimer::CFuncTimer () :
 	CBaseEntity (),
 	CMapEntity (),
 	CThinkableEntity (),
-	CUsableEntity ()
+	CUsableEntity (),
+	Wait (0),
+	Random (0),
+	PauseTime (0)
 	{
 	};
 
@@ -62,14 +65,40 @@ CFuncTimer::CFuncTimer (int Index) :
 	CBaseEntity (Index),
 	CMapEntity (Index),
 	CThinkableEntity (Index),
-	CUsableEntity (Index)
+	CUsableEntity (Index),
+	Wait (0),
+	Random (0),
+	PauseTime (0)
 	{
 	};
+
+const CEntityField CFuncTimer::FieldsForParsing[] =
+{
+	CEntityField ("random", EntityMemberOffset(CFuncTimer,Random), FTTime),
+	CEntityField ("pausetime", EntityMemberOffset(CFuncTimer,PauseTime), FTTime),
+	CEntityField ("wait", EntityMemberOffset(CFuncTimer,Wait), FTTime),
+};
+const size_t CFuncTimer::FieldsForParsingSize = (sizeof(CFuncTimer::FieldsForParsing) / sizeof(CFuncTimer::FieldsForParsing[0]));
+
+bool			CFuncTimer::ParseField (char *Key, char *Value)
+{
+	for (size_t i = 0; i < CFuncTimer::FieldsForParsingSize; i++)
+	{
+		if (strcmp (Key, CFuncTimer::FieldsForParsing[i].Name) == 0)
+		{
+			CFuncTimer::FieldsForParsing[i].Create<CFuncTimer> (this, Value);
+			return true;
+		}
+	}
+
+	// Couldn't find it here
+	return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+};
 
 void CFuncTimer::Think ()
 {
 	UseTargets (Activator, Message);
-	NextThink = level.framenum + ((gameEntity->wait + (crandom() * gameEntity->random)) * 10);
+	NextThink = level.framenum + (Wait + (irandom(Random)));
 }
 
 bool CFuncTimer::Run ()
@@ -89,20 +118,20 @@ void CFuncTimer::Use (CBaseEntity *other, CBaseEntity *activator)
 	}
 
 	// turn it on
-	if (gameEntity->delay)
-		NextThink = level.framenum + (gameEntity->delay * 10);
+	if (Delay)
+		NextThink = level.framenum + Delay;
 	else
 		Think ();
 }
 
 void CFuncTimer::Spawn ()
 {
-	if (!gameEntity->wait)
-		gameEntity->wait = 1.0;
+	if (!Wait)
+		Wait = 10;
 
-	if (gameEntity->random >= gameEntity->wait)
+	if (Random >= Wait)
 	{
-		gameEntity->random = gameEntity->wait - FRAMETIME;
+		Random = Wait - FRAMETIME;
 		// Paril FIXME
 		// This to me seems like a very silly warning.
 		MapPrint (MAPPRINT_WARNING, this, State.GetOrigin(), "Random is greater than or equal to wait\n");
@@ -112,7 +141,7 @@ void CFuncTimer::Spawn ()
 	if (SpawnFlags & 1)
 	{
 		// lots of backwards compatibility
-		NextThink = level.framenum + 10 + ((st.pausetime + gameEntity->delay + gameEntity->wait + (crandom() * gameEntity->random))* 10);
+		NextThink = level.framenum + 10 + (PauseTime + Delay + Wait + irandom(Random));
 		Activator = this;
 	}
 
@@ -241,7 +270,9 @@ CFuncClock::CFuncClock () :
 	CMapEntity (),
 	CThinkableEntity (),
 	CUsableEntity (),
-	Usable(false)
+	Usable(false),
+	Seconds(0),
+	String(NULL)
 	{
 	};
 
@@ -250,7 +281,9 @@ CFuncClock::CFuncClock (int Index) :
 	CMapEntity (Index),
 	CThinkableEntity (Index),
 	CUsableEntity (Index),
-	Usable(false)
+	Usable(false),
+	Seconds(0),
+	String(NULL)
 	{
 	};
 
@@ -268,12 +301,12 @@ void CFuncClock::Reset ()
 	if (SpawnFlags & 1)
 	{
 		Seconds = 0;
-		gameEntity->wait = gameEntity->count;
+		Wait = gameEntity->count;
 	}
 	else if (SpawnFlags & 2)
 	{
 		Seconds = gameEntity->count;
-		gameEntity->wait = 0;
+		Wait = 0;
 	}
 }
 
@@ -338,8 +371,8 @@ void CFuncClock::Think ()
 	String->Message = Message;
 	String->Use (this, this);
 
-	if (((SpawnFlags & 1) && (Seconds > gameEntity->wait)) ||
-		((SpawnFlags & 2) && (Seconds < gameEntity->wait)))
+	if (((SpawnFlags & 1) && (Seconds > Wait)) ||
+		((SpawnFlags & 2) && (Seconds < Wait)))
 	{
 		if (gameEntity->pathtarget)
 		{

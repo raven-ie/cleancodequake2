@@ -161,14 +161,16 @@ public:
 
 	CMegaHealthEntity () :
 	  CBaseEntity(),
-	  CItemEntity()
+	  CItemEntity(),
+	  Player(NULL)
 	  {
 		  MegaHealthThinking = false;
 	  };
 
 	CMegaHealthEntity (int Index) :
 	  CBaseEntity (Index),
-	  CItemEntity(Index)
+	  CItemEntity(Index),
+	  Player(NULL)
 	  {
 		  MegaHealthThinking = false;
 	  };

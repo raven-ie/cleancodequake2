@@ -31,3 +31,18 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 // Info_ and some Target_ entities
 //
 
+class CPathCorner : public CMapEntity, public CTouchableEntity, public CUsableEntity
+{
+public:
+	FrameNumber_t	Wait;
+
+	CPathCorner ();
+	CPathCorner (int Index);
+
+	static const class CEntityField FieldsForParsing[];
+	static const size_t FieldsForParsingSize;
+	virtual bool			ParseField (char *Key, char *Value);
+
+	virtual void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
+	virtual void Spawn ();
+};

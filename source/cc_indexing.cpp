@@ -47,7 +47,7 @@ numIndexes(0)
 	memset (HashList, 0, sizeof(CIndex*) * MAX_INDEXES);
 }
 
-int CIndexList::GetIndex (char *String)
+int CIndexList::GetIndex (const char *String)
 {
 	// Check through the itemlist
 	uint32 hash = Com_HashGeneric(String, MAX_INDEXES);
@@ -61,7 +61,7 @@ int CIndexList::GetIndex (char *String)
 	return -1;
 }
 
-int CIndexList::AddToList (char *String, MediaIndex Index)
+int CIndexList::AddToList (const char *String, MediaIndex Index)
 {
 	CIndex *NewIndex = QNew (com_gamePool, 0) CIndex;
 	NewIndex->Index = Index;
@@ -85,7 +85,7 @@ inline bool OverFlow ()
 
 _CC_DISABLE_DEPRECATION
 
-MediaIndex ModelIndex (char *String)
+MediaIndex ModelIndex (const char *String)
 {
 	// Do we exist?
 	int Index = ModelList.GetIndex(String);
@@ -98,13 +98,13 @@ MediaIndex ModelIndex (char *String)
 			return 0;
 		}
 
-		return ModelList.AddToList (String, gi.modelindex(String));
+		return ModelList.AddToList (String, gi.modelindex(const_cast<char*>(String)));
 	}
 	//DebugPrintf ("ModelIndex: Using existing index %s\n", String);
 	return Index;
 }
 
-MediaIndex SoundIndex (char *String)
+MediaIndex SoundIndex (const char *String)
 {
 	// Do we exist?
 	int Index = SoundList.GetIndex(String);
@@ -117,13 +117,13 @@ MediaIndex SoundIndex (char *String)
 			return 0;
 		}
 
-		return SoundList.AddToList (String, gi.soundindex(String));
+		return SoundList.AddToList (String, gi.soundindex(const_cast<char*>(String)));
 	}
 	//DebugPrintf ("SoundIndex: Using existing index %s\n", String);
 	return Index;
 }
 
-MediaIndex ImageIndex (char *String)
+MediaIndex ImageIndex (const char *String)
 {
 	// Do we exist?
 	int Index = ImageList.GetIndex(String);
@@ -136,7 +136,7 @@ MediaIndex ImageIndex (char *String)
 			return 0;
 		}
 
-		return ImageList.AddToList (String, gi.imageindex(String));
+		return ImageList.AddToList (String, gi.imageindex(const_cast<char*>(String)));
 	}
 	//DebugPrintf ("ImageIndex: Using existing index %s\n", String);
 	return Index;

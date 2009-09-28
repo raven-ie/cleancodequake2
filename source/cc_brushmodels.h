@@ -55,6 +55,20 @@ enum
 class CBrushModel : public virtual CBaseEntity, public CThinkableEntity, public CPushPhysics, public CStopPhysics
 {
 public:
+	CBrushModel ();
+	CBrushModel (int Index);
+
+	float		Accel;
+	float		Speed;
+	float		Decel;
+	int			Distance;
+
+	FrameNumber_t		Wait;
+
+	static const class CEntityField FieldsForParsing[];
+	static const size_t FieldsForParsingSize;
+	virtual bool			ParseField (char *Key, char *Value);
+
 	FrameNumber_t		TouchDebounce;
 
 	// fixed data
@@ -82,13 +96,6 @@ public:
 		State.SetAngles (vec3fOrigin);
 	}
 
-	float		Accel;
-	float		Speed;
-	float		Decel;
-	float		Distance;
-
-	float		Wait;
-
 	// state data
 	int			MoveState;
 	vec3f		Dir;
@@ -102,8 +109,6 @@ public:
 
 	uint32		ThinkType;
 
-	CBrushModel ();
-	CBrushModel (int Index);
 
 	// Origin/velocity
 	void MoveDone ();
@@ -149,7 +154,7 @@ public:
 
 	virtual bool			ParseField (char *Key, char *Value)
 	{
-		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+		return (CBrushModel::ParseField (Key, Value) || CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 	};
 
 	enum
@@ -196,7 +201,7 @@ public:
 
 	virtual bool			ParseField (char *Key, char *Value)
 	{
-		return (CUsableEntity::ParseField (Key, Value) || CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+		return (CBrushModel::ParseField (Key, Value) || CUsableEntity::ParseField (Key, Value) || CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 	};
 
 	enum
@@ -239,6 +244,8 @@ public:
 class CRotatingDoor : public CDoor
 {
 public:
+	int			Distance;
+
 	CRotatingDoor ();
 	CRotatingDoor (int Index);
 
@@ -302,7 +309,7 @@ public:
 
 	virtual bool			ParseField (char *Key, char *Value)
 	{
-		return (CUsableEntity::ParseField (Key, Value) || CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+		return (CBrushModel::ParseField (Key, Value) || CUsableEntity::ParseField (Key, Value) || CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 	};
 
 	enum
@@ -339,7 +346,7 @@ public:
 
 	virtual bool ParseField (char *Key, char *Value)
 	{
-		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+		return (CBrushModel::ParseField (Key, Value) || CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 	}
 
 	enum
@@ -420,7 +427,7 @@ public:
 
 	virtual bool ParseField (char *Key, char *Value)
 	{
-		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+		return (CBrushModel::ParseField (Key, Value) || CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 	}
 
 	bool Run ();
@@ -435,7 +442,7 @@ public:
 
 	virtual bool ParseField (char *Key, char *Value)
 	{
-		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+		return (CBrushModel::ParseField (Key, Value) || CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 	}
 
 	void Use (CBaseEntity *other, CBaseEntity *activator);
@@ -471,7 +478,7 @@ public:
 
 	virtual bool ParseField (char *Key, char *Value)
 	{
-		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+		return (CBrushModel::ParseField (Key, Value) || CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 	}
 
 	void Use (CBaseEntity *other, CBaseEntity *activator);
@@ -494,7 +501,7 @@ public:
 
 	virtual bool ParseField (char *Key, char *Value)
 	{
-		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+		return (CBrushModel::ParseField (Key, Value) || CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 	}
 
 	bool Run ();

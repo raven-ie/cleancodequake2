@@ -60,15 +60,15 @@ public:
 
 	byte	numIndexes;
 
-	int		AddToList (char *String, MediaIndex Index);
-	int		GetIndex (char *String);
+	int		AddToList (const char *String, MediaIndex Index);
+	int		GetIndex (const char *String);
 
 	void	Clear ();
 };
 
-MediaIndex ModelIndex (char *string);
-MediaIndex SoundIndex (char *string);
-MediaIndex ImageIndex (char *string);
+MediaIndex ModelIndex (const char *string);
+MediaIndex SoundIndex (const char *string);
+MediaIndex ImageIndex (const char *string);
 void ClearList ();
 
 #else

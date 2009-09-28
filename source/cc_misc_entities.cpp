@@ -51,7 +51,8 @@ public:
 	CThinkableEntity(),
 	CHurtableEntity (),
 	CStepPhysics(),
-	Explosivity(100)
+	Explosivity(100),
+	Shooter(NULL)
 	{
 	};
 
@@ -62,7 +63,8 @@ public:
 	CThinkableEntity(),
 	CHurtableEntity(Index),
 	CStepPhysics(Index),
-	Explosivity(100)
+	Explosivity(100),
+	Shooter(NULL)
 	{
 	};
 
@@ -269,8 +271,8 @@ public:
 			return;
 		}
 
-		if (!gameEntity->speed)
-			gameEntity->speed = 300;
+		if (!Speed)
+			Speed = 300;
 
 		PhysicsType = PHYSICS_PUSH;
 		Touchable = true;
@@ -281,7 +283,7 @@ public:
 
 		NextThink = level.framenum + FRAMETIME;
 		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
-		Accel = Decel = Speed = gameEntity->speed;
+		Accel = Decel = Speed;
 
 		Link ();
 	};

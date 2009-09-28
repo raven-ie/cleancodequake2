@@ -69,8 +69,8 @@ public:
 	void Spawn ()
 	{
 		// we must have some delay to make sure our use targets are present
-		if (gameEntity->delay < 0.2f)
-			gameEntity->delay = 0.2f;
+		if (Delay < 2)
+			Delay = 2;
 
 		UseTargets (this, Message);
 	};
@@ -89,9 +89,10 @@ public:
 
 		TRIGGER_THINK_CUSTOM
 	};
-	uint32 ThinkType;
-	bool Touchable;
-	vec3f MoveDir;
+	uint32			ThinkType;
+	bool			Touchable;
+	vec3f			MoveDir;
+	FrameNumber_t	Wait;
 
 	CTriggerBase () :
 	  CBaseEntity (),
@@ -115,10 +116,9 @@ public:
 	{
 	};
 
-	virtual bool ParseField (char *Key, char *Value)
-	{
-		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
-	}
+  	static const class CEntityField FieldsForParsing[];
+	static const size_t FieldsForParsingSize;
+	virtual bool			ParseField (char *Key, char *Value);
 
 	bool Run ()
 	{
@@ -190,6 +190,7 @@ public:
 
 		SetSvFlags (SVF_NOCLIENT);
 	};
+
 	// the trigger was just activated
 	// ent->activator should be set to the activator so it can be held through a delay
 	// so wait for the delay time before firing
@@ -200,12 +201,12 @@ public:
 
 		UseTargets (Activator, Message);
 
-		if (gameEntity->wait > 0)	
+		if (Wait > 0)	
 		{
 			ThinkType = TRIGGER_THINK_WAIT;
 
 			// Paril: backwards compatibility
-			NextThink = level.framenum + (gameEntity->wait * 10);
+			NextThink = level.framenum + Wait;
 		}
 		else
 		{	// we can't just remove (self) here, because this is a touch function
@@ -218,6 +219,28 @@ public:
 
 	virtual void Spawn () = 0;
 };
+
+const CEntityField CTriggerBase::FieldsForParsing[] =
+{
+	CEntityField ("wait", EntityMemberOffset(CTriggerBase,Wait), FTTime),
+};
+const size_t CTriggerBase::FieldsForParsingSize = (sizeof(CTriggerBase::FieldsForParsing) / sizeof(CTriggerBase::FieldsForParsing[0]));
+
+bool			CTriggerBase::ParseField (char *Key, char *Value)
+{
+	for (size_t i = 0; i < CTriggerBase::FieldsForParsingSize; i++)
+	{
+		if (strcmp (Key, CTriggerBase::FieldsForParsing[i].Name) == 0)
+		{
+			CTriggerBase::FieldsForParsing[i].Create<CTriggerBase> (this, Value);
+			return true;
+		}
+	}
+
+	// Couldn't find it here
+	return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+};
+
 
 /*QUAKED trigger_multiple (.5 .5 .5) ? MONSTER NOT_PLAYER TRIGGERED
 Variable sized repeatable trigger.  Must be targeted at one or more entities.
@@ -237,13 +260,15 @@ public:
 
 	CTriggerMultiple () :
 	  CBaseEntity (),
-	  CTriggerBase ()
+	  CTriggerBase (),
+	  ActivateUse(false)
 	  {
 	  };
 
 	CTriggerMultiple (int Index) :
 	  CBaseEntity(Index),
-	  CTriggerBase (Index)
+	  CTriggerBase (Index),
+	  ActivateUse(false)
 	  {
 	  };
 
@@ -262,14 +287,14 @@ public:
 	virtual void Spawn ()
 	{
 		if (gameEntity->sounds == 1)
-			gameEntity->noise_index = SoundIndex ("misc/secret.wav");
+			NoiseIndex = SoundIndex ("misc/secret.wav");
 		else if (gameEntity->sounds == 2)
-			gameEntity->noise_index = SoundIndex ("misc/talk.wav");
+			NoiseIndex = SoundIndex ("misc/talk.wav");
 		else if (gameEntity->sounds == 3)
-			gameEntity->noise_index = SoundIndex ("misc/trigger1.wav");
+			NoiseIndex = SoundIndex ("misc/trigger1.wav");
 		
-		if (!gameEntity->wait)
-			gameEntity->wait = 0.2f;
+		if (!Wait)
+			Wait = 2;
 
 		if (!map_debug->Boolean())
 			SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
@@ -339,7 +364,7 @@ public:
 			MapPrint (MAPPRINT_WARNING, this, GetMins().MultiplyAngles (0.5f, GetSize()), "Fixed TRIGGERED flag\n");
 		}
 
-		gameEntity->wait = -1;
+		Wait = -1;
 		CTriggerMultiple::Spawn ();
 	};
 };
@@ -406,7 +431,7 @@ public:
 
 	void Spawn ()
 	{
-		gameEntity->wait = -1;
+		Wait = -1;
 		if (!gameEntity->count)
 			gameEntity->count = 2;
 	};
@@ -424,6 +449,7 @@ class CTriggerPush : public CTriggerMultiple
 {
 public:
 	bool	Q3Touch;
+	float	Speed;
 
 	CTriggerPush () :
 	  CBaseEntity (),
@@ -439,9 +465,14 @@ public:
 	  {
 	  };
 
+	static const class CEntityField FieldsForParsing[];
+	static const size_t FieldsForParsingSize;
+	virtual bool			ParseField (char *Key, char *Value);
+
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
-		vec3f vel = vec3f(MoveDir) * (gameEntity->speed * 10);
+		vec3f vel = vec3f(MoveDir) * Speed;
+
 		if (Q3Touch)
 		{
 			if (other->EntityFlags & ENT_PHYSICS)
@@ -493,8 +524,9 @@ public:
 	{
 		Init ();
 
-		if (!gameEntity->speed)
-			gameEntity->speed = 1000;
+		if (!Speed)
+			Speed = 1000;
+		Speed *= 10;
 
 		CBaseEntity *target;
 		if (!gameEntity->target)
@@ -511,6 +543,27 @@ public:
 
 		Link ();
 	};
+};
+
+const CEntityField CTriggerPush::FieldsForParsing[] =
+{
+	CEntityField ("speed", EntityMemberOffset(CTriggerPush,Speed), FTFloat),
+};
+const size_t CTriggerPush::FieldsForParsingSize = (sizeof(CTriggerPush::FieldsForParsing) / sizeof(CTriggerPush::FieldsForParsing[0]));
+
+bool			CTriggerPush::ParseField (char *Key, char *Value)
+{
+	for (size_t i = 0; i < CTriggerPush::FieldsForParsingSize; i++)
+	{
+		if (strcmp (Key, CTriggerPush::FieldsForParsing[i].Name) == 0)
+		{
+			CTriggerPush::FieldsForParsing[i].Create<CTriggerPush> (this, Value);
+			return true;
+		}
+	}
+
+	// Couldn't find it here
+	return CTriggerBase::ParseField (Key, Value);
 };
 
 LINK_CLASSNAME_TO_CLASS ("trigger_push", CTriggerPush);
@@ -558,7 +611,7 @@ public:
 		if (!(SpawnFlags & 4))
 		{
 			if ((level.framenum % 10) == 0)
-				other->PlaySound (CHAN_AUTO, gameEntity->noise_index);
+				other->PlaySound (CHAN_AUTO, NoiseIndex);
 		}
 
 		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(),
@@ -581,7 +634,7 @@ public:
 	void Spawn ()
 	{
 		Init ();
-		gameEntity->noise_index = SoundIndex ("world/electro.wav");
+		NoiseIndex = SoundIndex ("world/electro.wav");
 
 		if (!gameEntity->dmg)
 			gameEntity->dmg = 5;
@@ -603,6 +656,8 @@ Walking monsters that touch this will jump in the direction of the trigger's ang
 class CTriggerMonsterJump : public CTriggerMultiple
 {
 public:
+	float	Speed;
+
 	CTriggerMonsterJump () :
 	  CBaseEntity (),
 	  CTriggerMultiple ()
@@ -614,6 +669,10 @@ public:
 	  CTriggerMultiple (Index)
 	  {
 	  };
+
+  	static const class CEntityField FieldsForParsing[];
+	static const size_t FieldsForParsingSize;
+	virtual bool			ParseField (char *Key, char *Value);
 
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
@@ -630,7 +689,7 @@ public:
 
 	// set XY even if not on ground, so the jump will clear lips
 		CMonsterEntity *Monster = dynamic_cast<CMonsterEntity*>(other);
-		Monster->Velocity = MoveDir * gameEntity->speed;
+		Monster->Velocity = MoveDir * Speed;
 		
 		if (!Monster->GroundEntity)
 			return;
@@ -641,8 +700,10 @@ public:
 
 	void Spawn ()
 	{
-		if (!gameEntity->speed)
-			gameEntity->speed = 200;
+		if (!Speed)
+			Speed = 200;
+		Speed *= 10;
+
 		if (!st.height)
 			st.height = 200;
 		if (State.GetAngles().Y == 0)
@@ -654,6 +715,27 @@ public:
 		Init ();
 		MoveDir.Z = st.height;
 	};
+};
+
+const CEntityField CTriggerMonsterJump::FieldsForParsing[] =
+{
+	CEntityField ("speed", EntityMemberOffset(CTriggerMonsterJump,Speed), FTFloat),
+};
+const size_t CTriggerMonsterJump::FieldsForParsingSize = (sizeof(CTriggerMonsterJump::FieldsForParsing) / sizeof(CTriggerMonsterJump::FieldsForParsing[0]));
+
+bool			CTriggerMonsterJump::ParseField (char *Key, char *Value)
+{
+	for (size_t i = 0; i < CTriggerMonsterJump::FieldsForParsingSize; i++)
+	{
+		if (strcmp (Key, CTriggerMonsterJump::FieldsForParsing[i].Name) == 0)
+		{
+			CTriggerMonsterJump::FieldsForParsing[i].Create<CTriggerMonsterJump> (this, Value);
+			return true;
+		}
+	}
+
+	// Couldn't find it here
+	return CTriggerBase::ParseField (Key, Value);
 };
 
 LINK_CLASSNAME_TO_CLASS ("trigger_monsterjump", CTriggerMonsterJump);
@@ -728,7 +810,8 @@ public:
 	  CMapEntity (),
 	  CUsableEntity (),
 	  Usable(true),
-	  TouchDebounce(0)
+	  TouchDebounce(0),
+	  Item(NULL)
 	{
 	};
 
@@ -737,7 +820,8 @@ public:
 	  CMapEntity (Index),
 	  CUsableEntity (Index),
 	  Usable(true),
-	  TouchDebounce(0)
+	  TouchDebounce(0),
+	  Item(NULL)
 	{
 	};
 

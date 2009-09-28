@@ -52,67 +52,87 @@ Multiple identical looping sounds will just increase volume without any speed co
 class CTargetSpeaker : public CMapEntity, public CUsableEntity
 {
 public:
+	float		Volume;
+	float		Attenuation;
+
 	CTargetSpeaker () :
 	  CBaseEntity (),
 	  CMapEntity (),
-	  CUsableEntity ()
+	  CUsableEntity (),
+	  Volume(0),
+	  Attenuation(0)
 	  {
 	  };
 
 	CTargetSpeaker (int Index) :
 	  CBaseEntity (Index),
 	  CMapEntity (Index),
-	  CUsableEntity (Index)
+	  CUsableEntity (Index),
+	  Volume(0),
+	  Attenuation(0)
 	  {
 	  };
 
-	virtual bool ParseField (char *Key, char *Value)
-	{
-		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
-	}
+	static const CEntityField FieldsForParsing[];
+	static const size_t FieldsForParsingSize;
+	virtual bool ParseField (char *Key, char *Value);
 
 	void Use (CBaseEntity *other, CBaseEntity *activator)
 	{
 		if (SpawnFlags & 3) // looping sound toggles
-			State.SetSound (State.GetSound() ? 0 : gameEntity->noise_index); // start or stop it
+			State.SetSound (State.GetSound() ? 0 : NoiseIndex); // start or stop it
 		else
 			// use a positioned_sound, because this entity won't normally be
 			// sent to any clients because it is invisible
-			PlayPositionedSound (State.GetOrigin(), (SpawnFlags & 4) ? CHAN_VOICE|CHAN_RELIABLE : CHAN_VOICE, gameEntity->noise_index, gameEntity->volume, gameEntity->attenuation);
+			PlayPositionedSound (State.GetOrigin(), (SpawnFlags & 4) ? CHAN_VOICE|CHAN_RELIABLE : CHAN_VOICE, NoiseIndex, Volume, Attenuation);
 	};
 
 	void Spawn ()
 	{
-		if(!st.noise)
+		if(!NoiseIndex)
 		{
 			//gi.dprintf("target_speaker with no noise set at (%f %f %f)\n", ent->state.origin[0], ent->state.origin[1], ent->state.origin[2]);
-			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No noise set\n");
+			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No or missing noise set\n");
 			return;
 		}
 
-		char	buffer[MAX_QPATH];
-		if (!strstr (st.noise, ".wav"))
-			Q_snprintfz (buffer, sizeof(buffer), "%s.wav", st.noise);
-		else
-			Q_strncpyz (buffer, st.noise, sizeof(buffer));
-		gameEntity->noise_index = SoundIndex (buffer);
+		if (!Volume)
+			Volume = 1.0;
 
-		if (!gameEntity->volume)
-			gameEntity->volume = 1.0;
-
-		if (!gameEntity->attenuation)
-			gameEntity->attenuation = 1.0;
-		else if (gameEntity->attenuation == -1)	// use -1 so 0 defaults to 1
-			gameEntity->attenuation = 0;
+		if (!Attenuation)
+			Attenuation = 1.0;
+		else if (Attenuation == -1)	// use -1 so 0 defaults to 1
+			Attenuation = 0;
 
 		// check for prestarted looping sound
 		if (SpawnFlags & 1)
-			State.SetSound (gameEntity->noise_index);
+			State.SetSound (NoiseIndex);
 
 		// must link the entity so we get areas and clusters so
 		// the server can determine who to send updates to
 		Link ();
 	};
+};
+
+const CEntityField CTargetSpeaker::FieldsForParsing[] =
+{
+	CEntityField ("volume", EntityMemberOffset(CTargetSpeaker,Volume), FTFloat),
+	CEntityField ("attenuation", EntityMemberOffset(CTargetSpeaker,Attenuation), FTFloat)
+};
+const size_t CTargetSpeaker::FieldsForParsingSize = (sizeof(CTargetSpeaker::FieldsForParsing) / sizeof(CTargetSpeaker::FieldsForParsing[0]));
+
+bool			CTargetSpeaker::ParseField (char *Key, char *Value)
+{
+	for (size_t i = 0; i < CTargetSpeaker::FieldsForParsingSize; i++)
+	{
+		if (strcmp (Key, CTargetSpeaker::FieldsForParsing[i].Name) == 0)
+		{
+			CTargetSpeaker::FieldsForParsing[i].Create<CTargetSpeaker> (this, Value);
+			return true;
+		}
+	}
+
+	return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 };
 
 LINK_CLASSNAME_TO_CLASS ("target_speaker", CTargetSpeaker);
@@ -153,24 +173,23 @@ public:
 
 		T_RadiusDamage (this, Activator, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_EXPLOSIVE);
 
-		float save = gameEntity->delay;
-		gameEntity->delay = 0;
+		FrameNumber_t save = Delay;
+		Delay = 0;
 		UseTargets (Activator, Message);
-		gameEntity->delay = save;
+		Delay = save;
 	};
 
 	void Use (CBaseEntity *other, CBaseEntity *activator)
 	{
 		Activator = activator;
 
-		if (!gameEntity->delay)
+		if (!Delay)
 		{
 			Think ();
 			return;
 		}
 
-		// Backwards compatibility
-		NextThink = level.framenum + (gameEntity->delay * 10);
+		NextThink = level.framenum + Delay;
 	};
 
 	void Spawn ()
@@ -198,6 +217,7 @@ class CTargetSpawner : public CMapEntity, public CUsableEntity
 {
 public:
 	vec3f	MoveDir;
+	float	Speed;
 
 	CTargetSpawner () :
 	  CBaseEntity (),
@@ -213,10 +233,9 @@ public:
 	{
 	};
 
-	virtual bool ParseField (char *Key, char *Value)
-	{
-		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
-	}
+	static const class CEntityField FieldsForParsing[];
+	static const size_t FieldsForParsingSize;
+	virtual bool			ParseField (char *Key, char *Value);
 
 	bool Run ()
 	{
@@ -236,21 +255,42 @@ public:
 		KillBox (Entity);
 		Entity->Link ();
 
-		if (gameEntity->speed && (Entity->EntityFlags & ENT_PHYSICS))
+		if (Speed && (Entity->EntityFlags & ENT_PHYSICS))
 			dynamic_cast<CPhysicsEntity*>(Entity)->Velocity = MoveDir;
 	};
 
 	void Spawn ()
 	{
 		SetSvFlags (SVF_NOCLIENT);
-		if (gameEntity->speed)
+		if (Speed)
 		{
 			vec3f angles = State.GetAngles();
 			G_SetMovedir (angles, MoveDir);
-			MoveDir *= gameEntity->speed;
+			MoveDir *= Speed;
 			State.SetAngles (angles);
 		}
 	};
+};
+
+const CEntityField CTargetSpawner::FieldsForParsing[] =
+{
+	CEntityField ("speed", EntityMemberOffset(CTargetSpawner,Speed), FTFloat),
+};
+const size_t CTargetSpawner::FieldsForParsingSize = (sizeof(CTargetSpawner::FieldsForParsing) / sizeof(CTargetSpawner::FieldsForParsing[0]));
+
+bool			CTargetSpawner::ParseField (char *Key, char *Value)
+{
+	for (size_t i = 0; i < CTargetSpawner::FieldsForParsingSize; i++)
+	{
+		if (strcmp (Key, CTargetSpawner::FieldsForParsing[i].Name) == 0)
+		{
+			CTargetSpawner::FieldsForParsing[i].Create<CTargetSpawner> (this, Value);
+			return true;
+		}
+	}
+
+	// Couldn't find it here
+	return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 };
 
 LINK_CLASSNAME_TO_CLASS ("target_spawner", CTargetSpawner);
@@ -542,12 +582,12 @@ public:
 
 	void Spawn ()
 	{
-		if (!gameEntity->delay)
-			gameEntity->delay = 1;
+		if (!Delay)
+			Delay = 1;
 		SetSvFlags (SVF_NOCLIENT);
 		
 		// Paril: backwards compatibility
-		NextThink = level.framenum + (gameEntity->delay * 10);
+		NextThink = level.framenum + Delay;
 	};
 };
 
@@ -574,10 +614,7 @@ public:
 	{
 	};
 
-	virtual bool ParseField (char *Key, char *Value)
-	{
-		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
-	}
+	virtual bool ParseField (char *Key, char *Value);
 
 	bool Run ()
 	{
@@ -586,7 +623,7 @@ public:
 
 	void Use (CBaseEntity *other, CBaseEntity *activator)
 	{
-		PlaySound (CHAN_VOICE, gameEntity->noise_index);
+		PlaySound (CHAN_VOICE, NoiseIndex);
 
 		level.found_secrets++;
 
@@ -602,9 +639,9 @@ public:
 			return;
 		}
 
-		if (!st.noise)
-			st.noise = "misc/secret.wav";
-		gameEntity->noise_index = SoundIndex (st.noise);
+		if (!NoiseIndex)
+			NoiseIndex = SoundIndex("misc/secret.wav");
+
 		SetSvFlags (SVF_NOCLIENT);
 		level.total_secrets++;
 		// map bug hack
@@ -614,6 +651,11 @@ public:
 			Message = "You have found a secret area.";
 	};
 };
+
+bool			CTargetSecret::ParseField (char *Key, char *Value)
+{
+	return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+}
 
 LINK_CLASSNAME_TO_CLASS ("target_secret", CTargetSecret);
 
@@ -638,10 +680,7 @@ public:
 	{
 	};
 
-	virtual bool ParseField (char *Key, char *Value)
-	{
-		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
-	}
+	virtual bool ParseField (char *Key, char *Value);
 
 	bool Run ()
 	{
@@ -650,7 +689,7 @@ public:
 
 	void Use (CBaseEntity *other, CBaseEntity *activator)
 	{
-		PlaySound (CHAN_VOICE, gameEntity->noise_index);
+		PlaySound (CHAN_VOICE, NoiseIndex);
 
 		level.found_goals++;
 
@@ -669,13 +708,18 @@ public:
 			return;
 		}
 
-		if (!st.noise)
-			st.noise = "misc/secret.wav";
-		gameEntity->noise_index = SoundIndex (st.noise);
+		if (!NoiseIndex)
+			NoiseIndex = SoundIndex ("misc/secret.wav");
+
 		SetSvFlags (SVF_NOCLIENT);
 		level.total_goals++;
 	};
 };
+
+bool			CTargetGoal::ParseField (char *Key, char *Value)
+{
+	return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+}
 
 LINK_CLASSNAME_TO_CLASS ("target_goal", CTargetGoal);
 
@@ -688,7 +732,9 @@ speed	default is 1000
 class CTargetBlaster : public CMapEntity, public CUsableEntity
 {
 public:
-	vec3f MoveDir;
+	vec3f		MoveDir;
+	float		Speed;
+	int			Damage;
 
 	CTargetBlaster () :
 	  CBaseEntity (),
@@ -704,10 +750,9 @@ public:
 	{
 	};
 
-	virtual bool ParseField (char *Key, char *Value)
-	{
-		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
-	}
+	static const class CEntityField FieldsForParsing[];
+	static const size_t FieldsForParsingSize;
+	virtual bool			ParseField (char *Key, char *Value);
 
 	bool Run ()
 	{
@@ -716,8 +761,8 @@ public:
 
 	void Use (CBaseEntity *other, CBaseEntity *activator)
 	{
-		CBlasterProjectile::Spawn (this, State.GetOrigin(), MoveDir, gameEntity->dmg, gameEntity->speed, (SpawnFlags & 2) ? 0 : ((SpawnFlags & 1) ? EF_HYPERBLASTER : EF_BLASTER), true);
-		PlaySound (CHAN_VOICE, gameEntity->noise_index);
+		CBlasterProjectile::Spawn (this, State.GetOrigin(), MoveDir, Damage, Speed, (SpawnFlags & 2) ? 0 : ((SpawnFlags & 1) ? EF_HYPERBLASTER : EF_BLASTER), true);
+		PlaySound (CHAN_VOICE, NoiseIndex);
 	};
 
 	void Spawn ()
@@ -726,15 +771,37 @@ public:
 		G_SetMovedir (ang, MoveDir);
 		State.SetAngles (ang);
 
-		gameEntity->noise_index = SoundIndex ("weapons/laser2.wav");
+		NoiseIndex = SoundIndex ("weapons/laser2.wav");
 
-		if (!gameEntity->dmg)
-			gameEntity->dmg = 15;
-		if (!gameEntity->speed)
-			gameEntity->speed = 1000;
+		if (!Damage)
+			Damage = 15;
+		if (!Speed)
+			Speed = 1000;
 
 		SetSvFlags (SVF_NOCLIENT);
 	};
+};
+
+const CEntityField CTargetBlaster::FieldsForParsing[] =
+{
+	CEntityField ("speed", EntityMemberOffset(CTargetBlaster,Speed), FTFloat),
+	CEntityField ("dmg", EntityMemberOffset(CTargetBlaster,Damage), FTInteger),
+};
+const size_t CTargetBlaster::FieldsForParsingSize = (sizeof(CTargetBlaster::FieldsForParsing) / sizeof(CTargetBlaster::FieldsForParsing[0]));
+
+bool			CTargetBlaster::ParseField (char *Key, char *Value)
+{
+	for (size_t i = 0; i < CTargetBlaster::FieldsForParsingSize; i++)
+	{
+		if (strcmp (Key, CTargetBlaster::FieldsForParsing[i].Name) == 0)
+		{
+			CTargetBlaster::FieldsForParsing[i].Create<CTargetBlaster> (this, Value);
+			return true;
+		}
+	}
+
+	// Couldn't find it here
+	return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 };
 
 LINK_CLASSNAME_TO_CLASS ("target_blaster", CTargetBlaster);
@@ -1013,6 +1080,7 @@ class CTargetEarthquake : public CMapEntity, public CThinkableEntity, public CUs
 public:
 	FrameNumber_t		LastShakeTime;
 	FrameNumber_t		TimeStamp;
+	float				Speed;
 
 	CTargetEarthquake () :
 	  CBaseEntity (),
@@ -1032,10 +1100,9 @@ public:
 	{
 	};
 
-	virtual bool ParseField (char *Key, char *Value)
-	{
-		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
-	}
+	static const class CEntityField FieldsForParsing[];
+	static const size_t FieldsForParsingSize;
+	virtual bool			ParseField (char *Key, char *Value);
 
 	bool Run ()
 	{
@@ -1049,7 +1116,7 @@ public:
 
 		if (LastShakeTime < level.framenum)
 		{
-			PlayPositionedSound (State.GetOrigin(), CHAN_AUTO, gameEntity->noise_index, 1.0, ATTN_NONE);
+			PlayPositionedSound (State.GetOrigin(), CHAN_AUTO, NoiseIndex, 1.0, ATTN_NONE);
 			LastShakeTime = level.framenum + 5;
 		}
 
@@ -1073,7 +1140,7 @@ public:
 			Player->GroundEntity = NULL;
 			Player->Velocity.X += crandom()* 150;
 			Player->Velocity.Y += crandom()* 150;
-			Player->Velocity.Z = gameEntity->speed * (100.0 / Player->Mass);
+			Player->Velocity.Z = Speed * (100.0 / Player->Mass);
 		}
 
 		if (level.framenum < TimeStamp)
@@ -1097,13 +1164,34 @@ public:
 		if (!gameEntity->count)
 			gameEntity->count = 5;
 
-		if (!gameEntity->speed)
-			gameEntity->speed = 200;
+		if (!Speed)
+			Speed = 200;
 
 		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
 
-		gameEntity->noise_index = SoundIndex ("world/quake.wav");
+		NoiseIndex = SoundIndex ("world/quake.wav");
 	};
+};
+
+const CEntityField CTargetEarthquake::FieldsForParsing[] =
+{
+	CEntityField ("speed", EntityMemberOffset(CTargetEarthquake,Speed), FTFloat),
+};
+const size_t CTargetEarthquake::FieldsForParsingSize = (sizeof(CTargetEarthquake::FieldsForParsing) / sizeof(CTargetEarthquake::FieldsForParsing[0]));
+
+bool			CTargetEarthquake::ParseField (char *Key, char *Value)
+{
+	for (size_t i = 0; i < CTargetEarthquake::FieldsForParsingSize; i++)
+	{
+		if (strcmp (Key, CTargetEarthquake::FieldsForParsing[i].Name) == 0)
+		{
+			CTargetEarthquake::FieldsForParsing[i].Create<CTargetEarthquake> (this, Value);
+			return true;
+		}
+	}
+
+	// Couldn't find it here
+	return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 };
 
 LINK_CLASSNAME_TO_CLASS ("target_earthquake", CTargetEarthquake);

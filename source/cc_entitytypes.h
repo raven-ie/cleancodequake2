@@ -89,8 +89,10 @@ public:
 class CUsableEntity abstract : public virtual CBaseEntity
 {
 public:
+	FrameNumber_t		Delay;
 	char		*Message;
 	CBaseEntity	*Activator;
+	MediaIndex	NoiseIndex;
 
 	static const class CEntityField FieldsForParsing[];
 	static const size_t FieldsForParsingSize;

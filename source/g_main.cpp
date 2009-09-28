@@ -558,13 +558,35 @@ Advances the world by 0.1 seconds
 ================
 */
 
+#if defined (_M_IX86)
+#define _DbgBreak() __asm { int 3 }
+#elif defined (_M_IA64)
+void __break(int);
+#pragma intrinsic (__break)
+#define _DbgBreak() __break(0x80016)
+#else  /* defined (_M_IA64) */
+#define _DbgBreak() DebugBreak()
+#endif  /* defined (_M_IA64) */
+
+extern bool requestedBreak;
 void RunFrame ()
 {
-	if (level.framenum == 3 && map_debug->Boolean())
+	if (requestedBreak)
 	{
+		requestedBreak = false;
+		_DbgBreak();
+	}
+
+	if (level.framenum >= 3 && map_debug->Boolean())
+	{
+		level.framenum ++;
 		// Run the players only
 		// build the playerstate_t structures for all players
 		ClientEndServerFrames ();
+
+#ifdef MONSTERS_USE_PATHFINDING
+		RunNodes();
+#endif
 		return;
 	}
 

@@ -170,11 +170,13 @@ public:
 	bool Red;
 
 	CDroppedFlagEntity() :
-	CFlagEntity()
+	CFlagEntity(),
+	Red(false)
 	{
 	};
 	CDroppedFlagEntity(int Index) :
-	CFlagEntity(Index)
+	CFlagEntity(Index),
+	Red(false)
 	{
 	};
 
@@ -204,7 +206,6 @@ public:
 
 	void Spawn ()
 	{
-		Red = false;
 	};
 };
 
