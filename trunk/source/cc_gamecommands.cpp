@@ -360,7 +360,8 @@ public:
 	CPlayerListCallback (char *Text, size_t SizeOf, CPlayerEntity *Ent) :
 	Text(Text),
 	SizeOf(SizeOf),
-	Ent(Ent)
+	Ent(Ent),
+	Spectator(false)
 	{
 	};
 

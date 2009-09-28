@@ -36,6 +36,10 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_menu.h"
 #include "cc_ban.h"
 
+#ifndef USE_EXTENDED_GAME_IMPORTS
+#include "cc_pmove.h"
+#endif
+
 CPlayerState::CPlayerState (playerState_t *playerState) :
 playerState(playerState)
 {
@@ -2866,7 +2870,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 #ifdef USE_EXTENDED_GAME_IMPORTS
 	gi.Pmove (&pm);
 #else
-	SV_Pmove (gameEntity, &pm, CCvar("sv_airaccelerate", 0, 0).Float());
+	SV_Pmove (this, &pm, CCvar("sv_airaccelerate", 0, 0).Float());
 #endif
 
 	// save results of pmove
@@ -3420,8 +3424,7 @@ void CPlayerEntity::PrintToClient (EGamePrintLevel printLevel, char *fmt, ...)
 
 void CPlayerEntity::UpdateChaseCam()
 {
-	vec3f forward, right, oldgoal, angles, o, ownerv, goal;
-	CTrace trace;
+	vec3f forward, right;
 	CPlayerEntity *targ;
 
 	// is our chase target gone?
@@ -3446,137 +3449,140 @@ void CPlayerEntity::UpdateChaseCam()
 	switch (Client.chase_mode)
 	{
 	case 0:
-		ownerv = targ->State.GetOrigin();
-		oldgoal = State.GetOrigin();
-
-		ownerv.Z += targ->gameEntity->viewheight;
-
-		angles = targ->Client.ViewAngle;
-
-		if(angles.X > 56)
-			angles.X = 56;
-
-		angles.ToVectors (&forward, &right, NULL);
-		forward.NormalizeFast ();
-		o = ownerv.MultiplyAngles (-30, forward);
-
-		if(o.Z < targ->State.GetOrigin().Z + 20)
-			o.Z = targ->State.GetOrigin().Z + 20;
-
-		if (!targ->GroundEntity)
-			o.Z += 16;
-
-		trace = CTrace(ownerv, o, targ->gameEntity, CONTENTS_MASK_SOLID);
-
-		goal = trace.EndPos;
-		goal = goal.MultiplyAngles (2, forward);
-
-		o = goal + vec3f(0, 0, 6);
-		trace = CTrace (goal, o, targ->gameEntity, CONTENTS_MASK_SOLID);
-
-		if (trace.fraction < 1)
-			goal = trace.EndPos - vec3f(0, 0, 6);
-
-		o = goal - vec3f(0, 0, 6);
-		trace = CTrace(goal, o, targ->gameEntity, CONTENTS_MASK_SOLID);
-
-		if(trace.fraction < 1)
-			goal = trace.EndPos + vec3f(0, 0, 6);
-
-		if (targ->DeadFlag)
-			Client.PlayerState.GetPMove()->pmType = PMT_DEAD;
-		else
-			Client.PlayerState.GetPMove()->pmType = PMT_FREEZE;
-
-		State.SetOrigin (goal);
-
-		for (int i = 0; i < 3; i++)
-			Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(targ->Client.ViewAngle[i] - Client.resp.cmd_angles[i]);
-
-		if (targ->DeadFlag)
-			Client.PlayerState.SetViewAngles (vec3f(-15, targ->Client.KillerYaw, 40));
-		else
 		{
-			angles = targ->Client.ViewAngle + targ->Client.KickAngles;
-			Client.PlayerState.SetViewAngles (angles);
-			Client.ViewAngle = angles;
+			vec3f ownerv = targ->State.GetOrigin();
+			vec3f oldgoal = State.GetOrigin();
+			ownerv.Z += targ->gameEntity->viewheight;
+
+			vec3f angles = targ->Client.ViewAngle;
+
+			if(angles.X > 56)
+				angles.X = 56;
+
+			angles.ToVectors (&forward, &right, NULL);
+			forward.NormalizeFast ();
+			vec3f o = ownerv.MultiplyAngles (-30, forward);
+
+			if(o.Z < targ->State.GetOrigin().Z + 20)
+				o.Z = targ->State.GetOrigin().Z + 20;
+
+			if (!targ->GroundEntity)
+				o.Z += 16;
+
+			CTrace trace (ownerv, o, targ->gameEntity, CONTENTS_MASK_SOLID);
+
+			vec3f goal = trace.EndPos.MultiplyAngles (2, forward);
+			o = goal + vec3f(0, 0, 6);
+			trace = CTrace (goal, o, targ->gameEntity, CONTENTS_MASK_SOLID);
+
+			if (trace.fraction < 1)
+				goal = trace.EndPos - vec3f(0, 0, 6);
+
+			o = goal - vec3f(0, 0, 6);
+			trace = CTrace(goal, o, targ->gameEntity, CONTENTS_MASK_SOLID);
+
+			if(trace.fraction < 1)
+				goal = trace.EndPos + vec3f(0, 0, 6);
+
+			if (targ->DeadFlag)
+				Client.PlayerState.GetPMove()->pmType = PMT_DEAD;
+			else
+				Client.PlayerState.GetPMove()->pmType = PMT_FREEZE;
+
+			State.SetOrigin (goal);
+
+			for (int i = 0; i < 3; i++)
+				Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(targ->Client.ViewAngle[i] - Client.resp.cmd_angles[i]);
+
+			if (targ->DeadFlag)
+				Client.PlayerState.SetViewAngles (vec3f(-15, targ->Client.KillerYaw, 40));
+			else
+			{
+				angles = targ->Client.ViewAngle + targ->Client.KickAngles;
+				Client.PlayerState.SetViewAngles (angles);
+				Client.ViewAngle = angles;
+			}
 		}
 		break;
 	case 1:
-		Client.PlayerState.SetFov (90);
+		{
+			Client.PlayerState.SetFov (90);
 
-		if(Client.resp.cmd_angles[PITCH] > 89)
-			Client.resp.cmd_angles[PITCH] = 89;
+			if(Client.resp.cmd_angles[PITCH] > 89)
+				Client.resp.cmd_angles[PITCH] = 89;
 
-		if(Client.resp.cmd_angles[PITCH] < -89)
-			Client.resp.cmd_angles[PITCH] = -89;
+			if(Client.resp.cmd_angles[PITCH] < -89)
+				Client.resp.cmd_angles[PITCH] = -89;
 
-		ownerv = targ->State.GetOrigin() + vec3f(0, 0, targ->gameEntity->viewheight);
+			vec3f ownerv = targ->State.GetOrigin() + vec3f(0, 0, targ->gameEntity->viewheight);
 
-		angles = Client.PlayerState.GetViewAngles();
-		angles.ToVectors (&forward, &right, NULL);
-		forward.NormalizeFast ();
-		o = ownerv.MultiplyAngles (-150, forward);
+			vec3f angles = Client.PlayerState.GetViewAngles();
+			angles.ToVectors (&forward, &right, NULL);
+			forward.NormalizeFast ();
+			vec3f o = ownerv.MultiplyAngles (-150, forward);
 
-		if (!targ->GroundEntity)
-			o.Z += 16;
+			if (!targ->GroundEntity)
+				o.Z += 16;
 
-		trace = CTrace(ownerv, o, targ->gameEntity, CONTENTS_MASK_SOLID);
+			CTrace trace(ownerv, o, targ->gameEntity, CONTENTS_MASK_SOLID);
 
-		goal = trace.EndPos.MultiplyAngles (2, forward);
-		o = goal + vec3f(0, 0, 6);
+			vec3f goal = trace.EndPos.MultiplyAngles (2, forward);
+			o = goal + vec3f(0, 0, 6);
 
-		trace = CTrace(goal, o, targ->gameEntity, CONTENTS_MASK_SOLID);
+			trace = CTrace(goal, o, targ->gameEntity, CONTENTS_MASK_SOLID);
 
-		if(trace.fraction < 1)
-			goal = trace.EndPos - vec3f(0, 0, 6);
+			if(trace.fraction < 1)
+				goal = trace.EndPos - vec3f(0, 0, 6);
 
-		o = goal - vec3f(0, 0, 6);
+			o = goal - vec3f(0, 0, 6);
 
-		trace = CTrace(goal, o, targ->gameEntity, CONTENTS_MASK_SOLID);
+			trace = CTrace(goal, o, targ->gameEntity, CONTENTS_MASK_SOLID);
 
-		if(trace.fraction < 1)
-			goal = trace.EndPos + vec3f(0, 0, 6);
+			if(trace.fraction < 1)
+				goal = trace.EndPos + vec3f(0, 0, 6);
 
-		if (targ->DeadFlag)
-			Client.PlayerState.GetPMove()->pmType = PMT_DEAD;
-		else
-			Client.PlayerState.GetPMove()->pmType = PMT_FREEZE;
+			if (targ->DeadFlag)
+				Client.PlayerState.GetPMove()->pmType = PMT_DEAD;
+			else
+				Client.PlayerState.GetPMove()->pmType = PMT_FREEZE;
 
-		State.SetOrigin (goal);
+			State.SetOrigin (goal);
 
-		for (int i = 0; i < 3; i++)
-			Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(targ->Client.ViewAngle[i] - Client.resp.cmd_angles[i]);
+			for (int i = 0; i < 3; i++)
+				Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(targ->Client.ViewAngle[i] - Client.resp.cmd_angles[i]);
 
-		Client.PlayerState.SetViewAngles (Client.resp.cmd_angles);
+			Client.PlayerState.SetViewAngles (Client.resp.cmd_angles);
+		}
 		break;
 	default:
-		ownerv = targ->State.GetOrigin();
-		angles = targ->Client.ViewAngle;
-
-		angles.ToVectors (&forward, &right, NULL);
-		angles.NormalizeFast ();
-		o = ownerv.MultiplyAngles (16, forward);
-		o.Z += targ->gameEntity->viewheight;
-
-		State.SetOrigin (o);
-		Client.PlayerState.SetFov (targ->Client.PlayerState.GetFov());
-
-		Client.PlayerState.SetGunIndex (targ->Client.PlayerState.GetGunIndex());
-		Client.PlayerState.SetGunAngles (targ->Client.PlayerState.GetGunAngles());
-		Client.PlayerState.SetGunFrame (targ->Client.PlayerState.GetGunFrame());
-		Client.PlayerState.SetGunOffset (targ->Client.PlayerState.GetGunOffset());
-
-		for (int i = 0; i < 3; i++)
-			Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(targ->Client.ViewAngle[i] - Client.resp.cmd_angles[i]);
-
-		if (targ->DeadFlag)
-			Client.PlayerState.SetViewAngles (vec3f(-15, targ->Client.KillerYaw, 40));
-		else
 		{
-			angles = targ->Client.ViewAngle + targ->Client.KickAngles;
-			Client.PlayerState.SetViewAngles (angles);
-			Client.ViewAngle = angles;
+			vec3f ownerv = targ->State.GetOrigin();
+			vec3f angles = targ->Client.ViewAngle;
+
+			angles.ToVectors (&forward, &right, NULL);
+			forward.NormalizeFast ();
+			vec3f o = ownerv.MultiplyAngles (16, forward);
+			o.Z += targ->gameEntity->viewheight;
+
+			State.SetOrigin (o);
+			Client.PlayerState.SetFov (targ->Client.PlayerState.GetFov());
+
+			Client.PlayerState.SetGunIndex (targ->Client.PlayerState.GetGunIndex());
+			Client.PlayerState.SetGunAngles (targ->Client.PlayerState.GetGunAngles());
+			Client.PlayerState.SetGunFrame (targ->Client.PlayerState.GetGunFrame());
+			Client.PlayerState.SetGunOffset (targ->Client.PlayerState.GetGunOffset());
+
+			for (int i = 0; i < 3; i++)
+				Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(targ->Client.ViewAngle[i] - Client.resp.cmd_angles[i]);
+
+			if (targ->DeadFlag)
+				Client.PlayerState.SetViewAngles (vec3f(-15, targ->Client.KillerYaw, 40));
+			else
+			{
+				angles = targ->Client.ViewAngle + targ->Client.KickAngles;
+				Client.PlayerState.SetViewAngles (angles);
+				Client.ViewAngle = angles;
+			}
 		}
 		break;
 	};

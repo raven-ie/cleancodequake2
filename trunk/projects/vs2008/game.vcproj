@@ -979,10 +979,6 @@
 					>
 				</File>
 			</Filter>
-			<Filter
-				Name="RandomNumbers"
-				>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="Resources"

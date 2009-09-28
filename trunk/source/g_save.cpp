@@ -26,9 +26,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 field_t fields[] = {
 	{"classname", FOFS(classname), F_LSTRING},
-	{"speed", FOFS(speed), F_FLOAT},
-	{"accel", FOFS(accel), F_FLOAT},
-	{"decel", FOFS(decel), F_FLOAT},
 	{"target", FOFS(target), F_LSTRING},
 	{"targetname", FOFS(targetname), F_LSTRING},
 	{"pathtarget", FOFS(pathtarget), F_LSTRING},
@@ -36,15 +33,10 @@ field_t fields[] = {
 	{"killtarget", FOFS(killtarget), F_LSTRING},
 	{"combattarget", FOFS(combattarget), F_LSTRING},
 	{"team", FOFS(team), F_LSTRING},
-	{"wait", FOFS(wait), F_FLOAT},
-	{"delay", FOFS(delay), F_FLOAT},
-	{"random", FOFS(random), F_FLOAT},
 	{"style", FOFS(style), F_INT},
 	{"count", FOFS(count), F_INT},
 	{"sounds", FOFS(sounds), F_INT},
 	{"dmg", FOFS(dmg), F_INT},
-	{"volume", FOFS(volume), F_FLOAT},
-	{"attenuation", FOFS(attenuation), F_FLOAT},
 	{"map", FOFS(map), F_LSTRING},
 
 	{"goalentity", FOFS(goalentity), F_EDICT, FFL_NOSPAWN},
@@ -55,10 +47,7 @@ field_t fields[] = {
 
 	// temp spawn vars -- only valid when the spawn function is called
 	{"lip", STOFS(lip), F_INT, FFL_SPAWNTEMP},
-	{"distance", STOFS(distance), F_INT, FFL_SPAWNTEMP},
 	{"height", STOFS(height), F_INT, FFL_SPAWNTEMP},
-	{"noise", STOFS(noise), F_LSTRING, FFL_SPAWNTEMP},
-	{"pausetime", STOFS(pausetime), F_FLOAT, FFL_SPAWNTEMP},
 	{"item", STOFS(item), F_LSTRING, FFL_SPAWNTEMP},
 
 //need for item field in edict struct, FFL_SPAWNTEMP item will be skipped on saves

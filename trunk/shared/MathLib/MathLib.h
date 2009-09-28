@@ -507,12 +507,11 @@ double	Q_RSqrtd (double number);
 int		Q_log2 (int val);
 
 template<typename TType>
-inline TType Q_NearestPow(const TType Value, const bool bRoundDown)
+inline TType Q_NearestPow(const TType &Value, const bool bRoundDown)
 {
 	TType Result;
 	for (Result=1 ; Result<Value ; Result<<=1) ;
 
-	// If it
 	if (bRoundDown && Result > Value)
 		Result >>= 1;
 

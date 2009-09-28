@@ -34,16 +34,17 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 class CFuncTimer : public CMapEntity, public CThinkableEntity, public CUsableEntity
 {
 public:
+	FrameNumber_t	Wait, Random, PauseTime;
+
 	CFuncTimer ();
 	CFuncTimer (int Index);
 
+	static const class CEntityField FieldsForParsing[];
+	static const size_t FieldsForParsingSize;
+	virtual bool			ParseField (char *Key, char *Value);
+
 	void Think ();
 	void Use (CBaseEntity *other, CBaseEntity *activator);
-
-	virtual bool ParseField (char *Key, char *Value)
-	{
-		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
-	}
 
 	bool Run ();
 	void Spawn ();
@@ -77,6 +78,8 @@ public:
 class CFuncClock : public CMapEntity, public CUsableEntity, public CThinkableEntity
 {
 public:
+	FrameNumber_t	Wait;
+
 	int				Seconds;
 	CTargetString	*String;
 	bool			Usable;

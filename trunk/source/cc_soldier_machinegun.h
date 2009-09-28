@@ -37,6 +37,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 class CSoldierMachinegun : public CSoldierBase
 {
 public:
+	FrameNumber_t	Wait;
+
 	CSoldierMachinegun(uint32 ID);
 
 	void Attack ();

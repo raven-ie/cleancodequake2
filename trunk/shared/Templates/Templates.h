@@ -29,87 +29,87 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ==============================================================================
 */
 template<typename TType>
-static inline TType Align(const TType Number, const TType Alignment)
+static inline TType Align(const TType &Number, const TType &Alignment)
 {
 	return (TType)(((intptr)Number + Alignment-1) & ~(Alignment-1));
 }
 
 template<typename TType>
-static inline TType Min(const TType A, const TType B)
+static inline TType Min(const TType &A, const TType &B)
 {
 	return (A<=B) ? A : B;
 }
 template<>
-static inline float Min(const float A, const float B)
+static inline float Min(const float &A, const float &B)
 {
 	return (A<=B) ? A : B;
 }
 template<>
-static inline int Min(const int A, const int B)
+static inline int Min(const int &A, const int &B)
 {
 	return (A<=B) ? A : B;
 }
 
 template<typename TType>
-static inline TType Max(const TType A, const TType B)
+static inline TType Max(const TType &A, const TType &B)
 {
 	return (A>=B) ? A : B;
 }
 template<>
-static inline float Max(const float A, const float B)
+static inline float Max(const float &A, const float &B)
 {
 	return (A>=B) ? A : B;
 }
 template<>
-static inline int Max(const int A, const int B)
+static inline int Max(const int &A, const int &B)
 {
 	return (A>=B) ? A : B;
 }
 
 template<typename TType>
-static inline TType Clamp(const TType V, const TType L, const TType H)
+static inline TType Clamp(const TType &V, const TType &L, const TType &H)
 {
 	return (V<L) ? L : (V>H) ? H : V;
 }
 template<>
-static inline float Clamp(const float V, const float L, const float H)
+static inline float Clamp(const float &V, const float &L, const float &H)
 {
 	return (V<L) ? L : (V>H) ? H : V;
 }
 template<>
-static inline int Clamp(const int V, const int L, const int H)
+static inline int Clamp(const int &V, const int &L, const int &H)
 {
 	return (V<L) ? L : (V>H) ? H : V;
 }
 
 template<typename TType>
-static inline TType Bound(const TType V, const TType L, const TType H)
+static inline TType Bound(const TType &V, const TType &L, const TType &H)
 {
 	return (V>=H) ? V : (L<V) ? V : (L>H) ? H : L;
 }
 template<>
-static inline float Bound(const float V, const float L, const float H)
+static inline float Bound(const float &V, const float &L, const float &H)
 {
 	return (V>=H) ? V : (L<V) ? V : (L>H) ? H : L;
 }
 template<>
-static inline int Bound(const int V, const int L, const int H)
+static inline int Bound(const int &V, const int &L, const int &H)
 {
 	return (V>=H) ? V : (L<V) ? V : (L>H) ? H : L;
 }
 
 template<typename TType>
-static inline bool IsPowOfTwo(const TType Value)
+static inline bool IsPowOfTwo(const TType &Value)
 {
 	return (bool)(Value > 0 && (Value & (Value-1)) == 0);
 }
 template<>
-static inline bool IsPowOfTwo(const int Value)
+static inline bool IsPowOfTwo(const int &Value)
 {
 	return (bool)(Value > 0 && (Value & (Value-1)) == 0);
 }
 template<>
-static inline bool IsPowOfTwo(const uint32 Value)
+static inline bool IsPowOfTwo(const uint32 &Value)
 {
 	return (bool)(Value > 0 && (Value & (Value-1)) == 0);
 }

@@ -108,6 +108,7 @@ CTurretEntityBase (),
 FinishInit(true),
 ShouldFire(false)
 {
+	PitchOptions[0] = PitchOptions[1] = PitchOptions[2] = PitchOptions[3] = 0;
 };
 
 CTurretBreach::CTurretBreach (int Index) :
@@ -116,6 +117,7 @@ CTurretEntityBase (Index),
 FinishInit(true),
 ShouldFire(false)
 {
+	PitchOptions[0] = PitchOptions[1] = PitchOptions[2] = PitchOptions[3] = 0;
 };
 
 void CTurretBreach::Fire ()
@@ -212,14 +214,14 @@ void CTurretBreach::Think ()
 			delta.Y -= 360;
 		delta.Z = 0;
 
-		if (delta.X > gameEntity->speed * 0.1f)
-			delta.X = gameEntity->speed * 0.1f;
-		if (delta.X < -1 * gameEntity->speed * 0.1f)
-			delta.X = -1 * gameEntity->speed * 0.1f;
-		if (delta.Y > gameEntity->speed * 0.1f)
-			delta.Y = gameEntity->speed * 0.1f;
-		if (delta.Y < -1 * gameEntity->speed * 0.1f)
-			delta.Y = -1 * gameEntity->speed * 0.1f;
+		if (delta.X > Speed * 0.1f)
+			delta.X = Speed * 0.1f;
+		if (delta.X < -1 * Speed * 0.1f)
+			delta.X = -1 * Speed * 0.1f;
+		if (delta.Y > Speed * 0.1f)
+			delta.Y = Speed * 0.1f;
+		if (delta.Y < -1 * Speed * 0.1f)
+			delta.Y = -1 * Speed * 0.1f;
 
 		//Vec3Scale (delta, 1, gameEntity->avelocity);
 		AngularVelocity = delta;
@@ -301,8 +303,8 @@ void CTurretBreach::Spawn ()
 	PhysicsType = PHYSICS_PUSH;
 	SetModel (gameEntity, gameEntity->model);
 
-	if (!gameEntity->speed)
-		gameEntity->speed = 50;
+	if (!Speed)
+		Speed = 50;
 	if (!gameEntity->dmg)
 		gameEntity->dmg = 10;
 

@@ -310,9 +310,6 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 	bool isClient = !!(EntityFlags & ENT_PLAYER);
 	CClient *Client = (isClient) ? &(dynamic_cast<CPlayerEntity*>(this)->Client) : NULL;
 
-	vec3_t test;
-	Vec3Copy (vec3Origin, test);
-	VectorNormalizef (test, test);
 	dir.Normalize ();
 
 // bonus damage for surprising a monster
@@ -361,12 +358,7 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 			Phys->PhysicsType == PHYSICS_BOUNCE ||
 			Phys->PhysicsType == PHYSICS_PUSH ||
 			Phys->PhysicsType == PHYSICS_STOP))
-		{
-			const float	mass = Clamp<float> (Phys->Mass, 50.0f, Phys->Mass);
-			vec3f	kvel = dir * (((isClient && (attacker == this)) ? 1600.0f : 500.0f) * (float)knockback / mass);
-			
-			Phys->Velocity += kvel;
-		}
+			Phys->Velocity += dir * (((isClient && (attacker == this)) ? 1600.0f : 500.0f) * (float)knockback / Clamp<float> (Phys->Mass, 50, Phys->Mass));
 	}
 
 	take = damage;
@@ -1356,15 +1348,6 @@ bool Push (std::vector<CPushed> &Pushed, CBaseEntity *Entity, vec3f &move, vec3f
 		// move back any entities we already moved
 		// go backwards, so if the same entity was pushed
 		// twice, it goes back to the original position
-		/*for (pushed_t *p = pushed_p - 1; p >= pushed; p--)
-		{
-			p->ent->State.SetOrigin (p->origin);
-			p->ent->State.SetAngles (p->angles);
-			if (p->ent->EntityFlags & ENT_PLAYER)
-				(dynamic_cast<CPlayerEntity*>(p->ent))->Client.PlayerState.GetPMove()->deltaAngles[YAW] = p->deltayaw;
-			p->ent->Link ();
-		}*/
-
 		for (std::vector<CPushed>::reverse_iterator it = Pushed.rbegin(); it < Pushed.rend(); ++it)
 		{
 			CPushed &PushedEntity = *it;
@@ -1379,12 +1362,7 @@ bool Push (std::vector<CPushed> &Pushed, CBaseEntity *Entity, vec3f &move, vec3f
 		return false;
 	}
 
-	//FIXME: is there a better way to handle this?
 	// see if anything we moved has touched a trigger
-
-	//for (pushed_t *p = pushed_p - 1; p >= pushed; p--)
-	//	G_TouchTriggers (p->ent);
-
 	for (std::vector<CPushed>::reverse_iterator it = Pushed.rbegin(); it < Pushed.rend(); ++it)
 	{
 		CPushed &PushedEntity = *it;
@@ -1409,13 +1387,17 @@ bool CPushPhysics::Run ()
 	// if the move is blocked, all moved objects will be backed out
 	for (part = this; part; part = part->TeamChain)
 	{
-		if ((Velocity != vec3fOrigin) ||
-			(AngularVelocity != vec3fOrigin))
+		if (!(part->EntityFlags & ENT_PHYSICS))
+			continue;
+
+		CPhysicsEntity *Phys = dynamic_cast<CPhysicsEntity*>(part);
+
+		if ((Phys->Velocity.X || Phys->Velocity.Y || Phys->Velocity.Z) ||
+			(Phys->AngularVelocity.X || Phys->AngularVelocity.Y || Phys->AngularVelocity.Z))
 		{
 			// object is moving
 			if (part->EntityFlags & ENT_PHYSICS)
 			{
-				CPhysicsEntity *Phys = dynamic_cast<CPhysicsEntity*>(part);
 				move = Phys->Velocity;
 				amove = Phys->AngularVelocity;
 			}
@@ -1496,13 +1478,17 @@ CBaseEntity (Index)
 }
 
 CUsableEntity::CUsableEntity () :
-CBaseEntity ()
+CBaseEntity (),
+NoiseIndex (0),
+Delay (0)
 {
 	EntityFlags |= ENT_USABLE;
 }
 
 CUsableEntity::CUsableEntity (int Index) :
-CBaseEntity (Index)
+CBaseEntity (Index),
+NoiseIndex (0),
+Delay (0)
 {
 	EntityFlags |= ENT_USABLE;
 }
@@ -1510,6 +1496,8 @@ CBaseEntity (Index)
 const CEntityField CUsableEntity::FieldsForParsing[] =
 {
 	CEntityField ("message", EntityMemberOffset(CUsableEntity,Message), FTStringL),
+	CEntityField ("noise", EntityMemberOffset(CUsableEntity,NoiseIndex), FTStringToSound),
+	CEntityField ("delay", EntityMemberOffset(CUsableEntity,Delay), FTTime),
 };
 const size_t CUsableEntity::FieldsForParsingSize = (sizeof(CUsableEntity::FieldsForParsing) / sizeof(CUsableEntity::FieldsForParsing[0]));
 
@@ -1559,14 +1547,14 @@ void CUsableEntity::UseTargets (CBaseEntity *activator, char *Message)
 //
 // check for a delay
 //
-	if (gameEntity->delay)
+	if (Delay)
 	{
 	// create a temp object to fire at a later time
 		CDelayedUse *t = QNew (com_levelPool, 0) CDelayedUse;
 		t->gameEntity->classname = "DelayedUse";
 
 		// Paril: for compatibility
-		t->NextThink = level.framenum + (gameEntity->delay * 10);
+		t->NextThink = level.framenum + Delay;
 		t->Activator = activator;
 		if (!activator)
 			DebugPrintf ("DelayedUse with no activator\n");
@@ -1583,10 +1571,7 @@ void CUsableEntity::UseTargets (CBaseEntity *activator, char *Message)
 	{
 		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(activator);
 		Player->PrintToClient (PRINT_CENTER, "%s", Message);
-		if (gameEntity->noise_index)
-			Player->PlaySound (CHAN_AUTO, gameEntity->noise_index);
-		else
-			Player->PlaySound (CHAN_AUTO, SoundIndex ("misc/talk1.wav"));
+		Player->PlaySound (CHAN_AUTO, (NoiseIndex) ? NoiseIndex : SoundIndex ("misc/talk1.wav"));
 	}
 
 //

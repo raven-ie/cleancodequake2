@@ -212,10 +212,7 @@ typedef struct
 	char		*nextmap;
 
 	int			lip;
-	int			distance;
 	int			height;
-	char		*noise;
-	float		pausetime;
 	char		*item;
 	char		*gravity;
 } spawn_temp_t;
@@ -537,8 +534,6 @@ struct edict_s
 	char		*deathtarget;
 	char		*combattarget;
 
-	float		speed, accel, decel;
-
 	float		gravity;		// per entity gravity multiplier (1.0 is normal)
 								// use for lowgrav artifact, flares
 
@@ -560,16 +555,6 @@ struct edict_s
 	float		dmg_radius;
 	int			sounds;			//make this a spawntemp var?
 	int			count;
-
-	MediaIndex			noise_index;
-	MediaIndex			noise_index2;
-	float		volume;
-	float		attenuation;
-
-	// timing variables
-	float		wait;
-	float		delay;			// before firing targets
-	float		random;
 
 	FrameNumber_t		teleport_time;
 

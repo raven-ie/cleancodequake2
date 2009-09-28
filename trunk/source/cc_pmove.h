@@ -34,9 +34,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #if !defined(__CC_PMOVE_H__) || !defined(INCLUDE_GUARDS)
 #define __CC_PMOVE_H__
 
-#ifndef USE_EXTENDED_GAME_IMPORTS
-void SV_Pmove (edict_t *ent, pMoveNew_t *pMove, float airAcceleration);
-#endif
+void SV_Pmove (CPlayerEntity *ent, pMoveNew_t *pMove, float airAcceleration);
 
 #else
 FILE_WARNING

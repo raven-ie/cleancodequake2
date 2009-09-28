@@ -253,33 +253,6 @@ public:
 	virtual bool			CheckValidity ();
 };
 
-inline uint32 atou (const char *Str)
-{
-	return (uint32)atol(Str);
-}
-
-#define EntityMemberOffset(y,x) (size_t)&(((y*)0)->x)
-
-typedef uint32 EFieldType;
-enum// EFieldType
-{
-	FTInteger,
-	FTUInteger,
-	FTString,
-	FTFloat,
-	FTVector,
-	FTIgnore,
-	FTStringL,
-	FTStringG,
-
-	FT_LAST,
-
-	FTGVector = 666,
-	FTGAngleHack,
-	FTGStringL,
-	FTGStringG,
-};
-
 inline char *CopyStr (char *In, struct memPool_s *Pool)
 {
 	std::string newString (In);
@@ -305,6 +278,38 @@ inline char *CopyStr (char *In, struct memPool_s *Pool)
 	return string;
 }
 
+inline uint32 atou (const char *Str)
+{
+	return (uint32)atol(Str);
+}
+
+#define EntityMemberOffset(y,x) (size_t)&(((y*)0)->x)
+
+typedef uint32 EFieldType;
+enum// EFieldType
+{
+	FTInteger,			// Stores value as integer
+	FTUInteger,			// Stores value as unsigned integer
+	FTFloat,			// Stores value as float
+	FTVector,			// Stores value as vec3f (or float[3])
+	FTAngleHack,		// Only stores yaw, vec3f or float[3]
+	FTIgnore,			// Nothing happens
+	FTStringL,			// String allocated on level pool
+	FTStringG,			// Ditto, on game pool
+	FTStringToSound,	// String stored as sound index
+	FTStringToImage,	// String stored as image index
+	FTStringToModel,	// String stored as model index
+	FTTime,				// Stores value as FrameNumber (val * 10)
+
+	FTLast,
+
+	// These are gameEntity things, not used for anything else except CBaseEntity.
+	FTGVector = 666,
+	FTGAngleHack,
+	FTGStringL,
+	FTGStringG,
+};
+
 class CEntityField
 {
 public:
@@ -319,8 +324,6 @@ public:
 	{
 	};
 
-	void CreateMemCpy (bool Game, byte *Memory, char *Value);
-
 	template <class TClass>
 	void Create (TClass *Entity, char *Value) const
 	{
@@ -332,11 +335,48 @@ public:
 		case FTUInteger:
 			*((uint32*)(((byte*)Entity) + Offset)) = atou(Value);
 			break;
+		case FTFloat:
+			*((float*)(((byte*)Entity) + Offset)) = atof(Value);
+			break;
+		case FTVector:
+			{
+				vec3f v;
+				sscanf_s (Value, "%f %f %f", &v.X, &v.Y, &v.Z);
+				memcpy (((byte*)Entity) + Offset, &v, sizeof(float)*3);
+			}
+			break;
+		case FTAngleHack:
+			{
+				vec3f v (0, atof(Value), 0);
+				memcpy (((byte*)Entity) + Offset, &v, sizeof(float)*3);
+			}
+			break;
 		case FTIgnore:
 			break;
 		case FTStringL:
 		case FTStringG:
 			*((char **)(((byte*)Entity) + Offset)) = CopyStr(Value, (FieldType == FTStringL) ? com_levelPool : com_gamePool);
+			break;
+		case FTStringToSound:
+			{
+				std::string temp = Value;
+				if (!temp.find (".wav"))
+					temp.append (".wav");
+
+				*((MediaIndex *)(((byte*)Entity) + Offset)) = SoundIndex (temp.c_str());
+			}
+			break;
+		case FTStringToImage:
+			*((MediaIndex *)(((byte*)Entity) + Offset)) = ImageIndex (Value);
+			break;
+		case FTStringToModel:
+			*((MediaIndex *)(((byte*)Entity) + Offset)) = ModelIndex (Value);
+			break;
+		case FTTime:
+			{
+				float Val = atof (Value);
+				*((FrameNumber_t *)(((byte*)Entity) + Offset)) = (Val != -1) ? (Val * 10) : -1;
+			}
 			break;
 		};
 	};
@@ -346,18 +386,6 @@ public:
 	{
 		switch (FieldType)
 		{
-		case FTInteger:
-			*((int*)(((byte*)Entity) + Offset)) = atoi(Value);
-			break;
-		case FTUInteger:
-			*((uint32*)(((byte*)Entity) + Offset)) = atou(Value);
-			break;
-		case FTIgnore:
-			break;
-		case FTStringL:
-		case FTStringG:
-			*((char **)(((byte*)Entity) + Offset)) = CopyStr(Value, (FieldType == FTStringL) ? com_levelPool : com_gamePool);
-			break;
 		case FTGVector:
 			{
 				vec3f v;
@@ -374,6 +402,56 @@ public:
 		case FTGStringL:
 		case FTGStringG:
 			*((char **)(((byte*)Entity->gameEntity) + Offset)) = CopyStr(Value, (FieldType == FTGStringL) ? com_levelPool : com_gamePool);
+			break;
+
+		case FTInteger:
+			*((int*)(((byte*)Entity) + Offset)) = atoi(Value);
+			break;
+		case FTUInteger:
+			*((uint32*)(((byte*)Entity) + Offset)) = atou(Value);
+			break;
+		case FTFloat:
+			*((float*)(((byte*)Entity) + Offset)) = atof(Value);
+			break;
+		case FTVector:
+			{
+				vec3f v;
+				sscanf_s (Value, "%f %f %f", &v.X, &v.Y, &v.Z);
+				memcpy (((byte*)Entity) + Offset, &v, sizeof(float)*3);
+			}
+			break;
+		case FTAngleHack:
+			{
+				vec3f v (0, atof(Value), 0);
+				memcpy (((byte*)Entity) + Offset, &v, sizeof(float)*3);
+			}
+			break;
+		case FTIgnore:
+			break;
+		case FTStringL:
+		case FTStringG:
+			*((char **)(((byte*)Entity) + Offset)) = CopyStr(Value, (FieldType == FTStringL) ? com_levelPool : com_gamePool);
+			break;
+		case FTStringToSound:
+			{
+				std::string temp = Value;
+				if (!temp.find (".wav"))
+					temp.append (".wav");
+
+				*((MediaIndex *)(((byte*)Entity) + Offset)) = SoundIndex (temp.c_str());
+			}
+			break;
+		case FTStringToImage:
+			*((MediaIndex *)(((byte*)Entity) + Offset)) = ImageIndex (Value);
+			break;
+		case FTStringToModel:
+			*((MediaIndex *)(((byte*)Entity) + Offset)) = ModelIndex (Value);
+			break;
+		case FTTime:
+			{
+				float Val = atof (Value);
+				*((FrameNumber_t *)(((byte*)Entity) + Offset)) = (Val != -1) ? (Val * 10) : -1;
+			}
 			break;
 		};
 	};

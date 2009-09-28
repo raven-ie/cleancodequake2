@@ -259,6 +259,12 @@ void SvCmd_Dump_f ()
 	FS_CloseFile (f);
 }
 
+bool requestedBreak = false;
+void SvCmd_Break_f ()
+{
+	requestedBreak = true;
+}
+
 void SvCmd_IndexList_f ();
 
 void SvCmd_Register ()
@@ -266,6 +272,7 @@ void SvCmd_Register ()
 	SvCmd_AddCommand ("entlist", SvCmd_EntList_f);
 	SvCmd_AddCommand ("indexlist", SvCmd_IndexList_f);
 	SvCmd_AddCommand ("dump", SvCmd_Dump_f);
+	SvCmd_AddCommand ("break", SvCmd_Break_f);
 }
 
 /*
