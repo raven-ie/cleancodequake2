@@ -154,13 +154,6 @@ void CreateCTFStatusbar ()
 	CTFBar.Send ();
 }
 
-void stuffcmd(edict_t *ent, char *s) 	
-{
-   	WriteByte (SVC_STUFFTEXT);	        
-	WriteString (s);
-    Cast (CASTFLAG_RELIABLE, ent);	
-}
-
 /*--------------------------------------------------------------------------*/
 
 /*
@@ -232,7 +225,7 @@ bool loc_CanSee (CBaseEntity *targ, CBaseEntity *inflictor)
 	vec3f	targpoints[8];
 	loc_buildboxpoints(targpoints, targ->State.GetOrigin(), targ->GetMins(), targ->GetMaxs());
 	
-	vec3f viewpoint = inflictor->State.GetOrigin() + vec3f(0,0,inflictor->gameEntity->viewheight);
+	vec3f viewpoint = inflictor->State.GetOrigin() + vec3f(0,0,inflictor->ViewHeight);
 	for (int i = 0; i < 8; i++) {
 		CTrace trace (viewpoint, targpoints[i], inflictor->gameEntity, CONTENTS_MASK_SOLID);
 		if (trace.fraction == 1.0)

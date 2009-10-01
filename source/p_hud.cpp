@@ -56,7 +56,7 @@ void BeginIntermission (CTargetChangeLevel *targ)
 	}
 
 	level.intermissiontime = level.framenum;
-	level.changemap = targ->gameEntity->map;
+	level.changemap = targ->Map;
 
 	if (strstr(level.changemap, "*"))
 	{

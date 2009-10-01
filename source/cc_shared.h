@@ -70,6 +70,7 @@ typedef int64	FrameNumber_t;
 #endif
 #include "cc_sbar.h"
 #include "cc_weaponmain.h"
+#include "cc_tent.h"
 #include "cc_baseentity.h"
 #include "cc_trace.h"
 #include "cc_cmds.h"
@@ -81,7 +82,6 @@ typedef int64	FrameNumber_t;
 #include "cc_gamecommands.h"
 #include "cc_print.h"
 #include "cc_sound.h"
-#include "cc_tent.h"
 #include "cc_gameapi.h"
 #include "cc_mapprint.h"
 #ifdef CLEANCTF_ENABLED

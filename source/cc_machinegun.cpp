@@ -121,7 +121,7 @@ void CMachinegun::Fire (CPlayerEntity *ent)
 	}
 
 	// get start / end positions
-	vec3f start, forward, right, offset (0, 8, ent->gameEntity->viewheight-8), 
+	vec3f start, forward, right, offset (0, 8, ent->ViewHeight-8), 
 		angles = ent->Client.ViewAngle + ent->Client.KickAngles;
 	angles.ToVectors (&forward, &right, NULL);
 	ent->P_ProjectSource (offset, forward, right, start);

@@ -20,7 +20,55 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 #include "cc_exceptionhandler.h"
-#include "cc_ban.h"
+
+CCvar	*deathmatch;
+CCvar	*coop;
+CCvar	*dmflags;
+CCvar	*skill;
+CCvar	*fraglimit;
+CCvar	*timelimit;
+CCvar	*password;
+CCvar	*spectator_password;
+CCvar	*needpass;
+CCvar	*maxclients;
+CCvar	*maxspectators;
+CCvar	*maxentities;
+CCvar	*g_select_empty;
+CCvar	*dedicated;
+CCvar	*developer;
+
+CCvar	*filterban;
+
+CCvar	*sv_gravity;
+
+CCvar	*sv_rollspeed;
+CCvar	*sv_rollangle;
+CCvar	*gun_x;
+CCvar	*gun_y;
+CCvar	*gun_z;
+
+CCvar	*run_pitch;
+CCvar	*run_roll;
+CCvar	*bob_up;
+CCvar	*bob_pitch;
+CCvar	*bob_roll;
+
+CCvar	*sv_cheats;
+
+CCvar	*flood_msgs;
+CCvar	*flood_persecond;
+CCvar	*flood_waitdelay;
+
+CCvar	*sv_maplist;
+CCvar	*map_debug;
+CCvar	*cc_techflags;
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+CCvar	*capturelimit;
+CCvar	*instantweap;
+//ZOID
+#endif
 
 #define Function(f) {#f, f}
 
@@ -36,8 +84,6 @@ field_t fields[] = {
 	{"style", FOFS(style), F_INT},
 	{"count", FOFS(count), F_INT},
 	{"sounds", FOFS(sounds), F_INT},
-	{"dmg", FOFS(dmg), F_INT},
-	{"map", FOFS(map), F_LSTRING},
 
 	{"goalentity", FOFS(goalentity), F_EDICT, FFL_NOSPAWN},
 	{"movetarget", FOFS(movetarget), F_EDICT, FFL_NOSPAWN},
@@ -74,215 +120,6 @@ field_t		levelfields[] =
 
 	{NULL, 0, F_INT}
 };
-
-void SetupGamemode ()
-{
-	int dmInt = deathmatch->Integer(),
-		coopInt = coop->Integer();
-#ifdef CLEANCTF_ENABLED
-	int ctfInt = ctf->Integer();
-#endif
-
-	// Did we request deathmatch?
-	if (dmInt)
-	{
-		// Did we also request coop?
-		if (coopInt)
-		{
-			// Which one takes priority?
-			if (dmInt > coopInt)
-			{
-				// We want deathmatch
-				coop->Set (0, false);
-				// Let it fall through
-			}
-			else if (coopInt > dmInt)
-			{
-				// We want coop
-				deathmatch->Set (0, false);
-				game.mode = GAME_COOPERATIVE;
-				return;
-			}
-			// We don't know what we want, forcing DM
-			else
-			{
-				coop->Set (0, false);
-				DebugPrintf		("CleanCode Warning: Both deathmatch and coop are 1; forcing to deathmatch.\n"
-								 "Did you know you can make one take priority if you intend to only set one?\n"
-								 "If deathmatch is 1 and you want to switch to coop, just type \"coop 2\" and change maps!\n");
-				// Let it fall through
-			}
-		}
-		game.mode = GAME_DEATHMATCH;
-	}
-	// Did we request cooperative?
-	else if (coopInt)
-	{
-		// All the above code handles the case if deathmatch is true.
-		game.mode = GAME_COOPERATIVE;
-		return;
-	}
-	else
-	{
-		game.mode = GAME_SINGLEPLAYER;
-		return;
-	}
-
-	// If we reached here, we wanted deathmatch
-#ifdef CLEANCTF_ENABLED
-	if (ctfInt)
-		game.mode |= GAME_CTF;
-#endif
-}
-
-/*
-============
-InitGame
-
-This will be called when the dll is first loaded, which
-only happens when a new game is started or a save game
-is loaded.
-============
-*/
-// Registers all cvars and commands
-void G_Register ()
-{
-	gun_x = QNew (com_gamePool, 0) CCvar ("gun_x", "0", 0);
-	gun_y = QNew (com_gamePool, 0) CCvar ("gun_y", "0", 0);
-	gun_z = QNew (com_gamePool, 0) CCvar ("gun_z", "0", 0);
-
-	//FIXME: sv_ prefix is wrong for these
-	sv_rollspeed = QNew (com_gamePool, 0) CCvar ("sv_rollspeed", "200", 0);
-	sv_rollangle = QNew (com_gamePool, 0) CCvar ("sv_rollangle", "2", 0);
-	sv_gravity = QNew (com_gamePool, 0) CCvar ("sv_gravity", "800", 0);
-
-	// noset vars
-	dedicated = QNew (com_gamePool, 0) CCvar ("dedicated", "0", CVAR_READONLY);
-
-	developer = QNew (com_gamePool, 0) CCvar ("developer", "0", 0);
-
-	// latched vars
-	sv_cheats = QNew (com_gamePool, 0) CCvar ("cheats", "0", CVAR_SERVERINFO|CVAR_LATCH_SERVER);
-	CCvar ("gamename", GAMEVERSION , CVAR_SERVERINFO|CVAR_LATCH_SERVER);
-	CCvar ("gamedate", __DATE__ , CVAR_SERVERINFO|CVAR_LATCH_SERVER);
-
-	maxclients = QNew (com_gamePool, 0) CCvar ("maxclients", "4", CVAR_SERVERINFO | CVAR_LATCH_SERVER);
-	maxspectators = QNew (com_gamePool, 0) CCvar ("maxspectators", "4", CVAR_SERVERINFO);
-	skill = QNew (com_gamePool, 0) CCvar ("skill", "1", CVAR_LATCH_SERVER);
-	maxentities = QNew (com_gamePool, 0) CCvar ("maxentities", 1024, CVAR_LATCH_SERVER);
-
-	// change anytime vars
-	dmflags = QNew (com_gamePool, 0) CCvar ("dmflags", "0", CVAR_SERVERINFO);
-	fraglimit = QNew (com_gamePool, 0) CCvar ("fraglimit", "0", CVAR_SERVERINFO);
-	timelimit = QNew (com_gamePool, 0) CCvar ("timelimit", "0", CVAR_SERVERINFO);
-	password = QNew (com_gamePool, 0) CCvar ("password", "", CVAR_USERINFO);
-	spectator_password = QNew (com_gamePool, 0) CCvar ("spectator_password", "", CVAR_USERINFO);
-	needpass = QNew (com_gamePool, 0) CCvar ("needpass", "0", CVAR_SERVERINFO);
-	filterban = QNew (com_gamePool, 0) CCvar ("filterban", "1", 0);
-
-	g_select_empty = QNew (com_gamePool, 0) CCvar ("g_select_empty", "0", CVAR_ARCHIVE);
-
-	run_pitch = QNew (com_gamePool, 0) CCvar ("run_pitch", "0.002", 0);
-	run_roll = QNew (com_gamePool, 0) CCvar ("run_roll", "0.005", 0);
-	bob_up  = QNew (com_gamePool, 0) CCvar ("bob_up", "0.005", 0);
-	bob_pitch = QNew (com_gamePool, 0) CCvar ("bob_pitch", "0.002", 0);
-	bob_roll = QNew (com_gamePool, 0) CCvar ("bob_roll", "0.002", 0);
-
-	// flood control
-	flood_msgs = QNew (com_gamePool, 0) CCvar ("flood_msgs", "4", 0);
-	flood_persecond = QNew (com_gamePool, 0) CCvar ("flood_persecond", "4", 0);
-	flood_waitdelay = QNew (com_gamePool, 0) CCvar ("flood_waitdelay", "10", 0);
-
-	// dm map list
-	sv_maplist = QNew (com_gamePool, 0) CCvar ("sv_maplist", "", 0);
-	
-	map_debug = QNew (com_gamePool, 0) CCvar ("map_debug", "0", CVAR_LATCH_SERVER);
-	cc_techflags = QNew (com_gamePool, 0) CCvar ("cc_techflags", "0", CVAR_LATCH_SERVER);
-
-	SetupArg ();
-	Cmd_Register ();
-	SvCmd_Register ();
-
-	// Gamemodes
-	deathmatch = QNew (com_gamePool, 0) CCvar ("deathmatch", "0", CVAR_SERVERINFO|CVAR_LATCH_SERVER);
-	coop = QNew (com_gamePool, 0) CCvar ("coop", "0", CVAR_LATCH_SERVER);
-
-#ifdef CLEANCTF_ENABLED
-//ZOID
-	capturelimit = QNew (com_gamePool, 0) CCvar ("capturelimit", "0", CVAR_SERVERINFO);
-	instantweap = QNew (com_gamePool, 0) CCvar ("instantweap", "0", CVAR_SERVERINFO);
-
-	// Setup CTF if we have it
-	CTFInit();
-#endif
-
-#ifdef MONSTERS_USE_PATHFINDING
-	Nodes_Register ();
-#endif
-}
-
-void CC_InitGame ()
-{
-	Mem_Init ();
-	DebugPrintf ("==== InitGame ====\n");
-	DebugPrintf ("Running CleanCode Quake2, built on %s (%s %s)\nInitializing game...", __TIMESTAMP__, BUILDSTRING, CPUSTRING);
-	uint32 start = Sys_Milliseconds();
-
-	seedMT (time(NULL));
-
-	// Register cvars/commands
-	G_Register();
-
-	// File-system
-	FS_Init ();
-
-	// Setup the gamemode
-	SetupGamemode ();
-
-	// items
-	InitItemlist ();
-
-	Q_snprintfz (game.helpmessage1, sizeof(game.helpmessage1), "");
-
-	Q_snprintfz (game.helpmessage2, sizeof(game.helpmessage2), "");
-
-	// initialize all entities for this game
-	game.maxentities = maxentities->Integer();
-	g_edicts = QNew (com_gamePool, 0) edict_t[game.maxentities];//(edict_t*)gi.TagMalloc (game.maxentities * sizeof(g_edicts[0]), TAG_GAME);
-	globals.edicts = g_edicts;
-	globals.maxEdicts = game.maxentities;
-
-	// initialize all clients for this game
-	game.maxclients = maxclients->Integer();
-	game.clients = QNew (com_gamePool, 0) gclient_t[game.maxclients];//(gclient_t*)gi.TagMalloc (game.maxclients * sizeof(game.clients[0]), TAG_GAME);
-	globals.numEdicts = game.maxclients+1;
-
-	// Vars
-	game.maxspectators = maxspectators->Integer();
-	game.cheats = (sv_cheats->Integer()) ? true : false;
-
-	Bans.LoadFromFile ();
-
-	Mem_Register ();
-
-	DebugPrintf ("\nGame initialized in %ums.\n", Sys_Milliseconds()-start);
-}
-
-void InitGame (void)
-{
-#ifdef CC_USE_EXCEPTION_HANDLER
-__try
-{
-#endif
-	CC_InitGame ();
-#ifdef CC_USE_EXCEPTION_HANDLER
-}
-__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
-{
-	return;
-}
-#endif
-}
 
 //=========================================================
 
@@ -593,9 +430,9 @@ void WriteGame (char *filename, BOOL autosave)
 {
 #if 0
 #ifdef CC_USE_EXCEPTION_HANDLER
-__try
-{
+CC_EXCEPTION_HANDLER_BEGIN
 #endif
+
 	fileHandle_t f;
 	int		i;
 	char	str[16];
@@ -623,12 +460,9 @@ __try
 		WriteClient (f, dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity));
 
 	FS_CloseFile (f);
+
 #ifdef CC_USE_EXCEPTION_HANDLER
-}
-__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
-{
-	return;
-}
+CC_EXCEPTION_HANDLER_END
 #endif
 #endif
 }
@@ -638,9 +472,9 @@ void ReadGame (char *filename)
 {
 #if 0
 #ifdef CC_USE_EXCEPTION_HANDLER
-__try
-{
+CC_EXCEPTION_HANDLER_BEGIN
 #endif
+
 	fileHandle_t	f;
 	char	str[16];
 
@@ -668,12 +502,9 @@ __try
 		ReadClient (f, dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity));
 
 	FS_CloseFile (f);
+
 #ifdef CC_USE_EXCEPTION_HANDLER
-}
-__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
-{
-	return;
-}
+CC_EXCEPTION_HANDLER_END
 #endif
 #endif
 }
@@ -811,9 +642,9 @@ void WriteLevel (char *filename)
 {
 #if 0
 #ifdef CC_USE_EXCEPTION_HANDLER
-__try
-{
+CC_EXCEPTION_HANDLER_BEGIN
 #endif
+
 	int		i;
 	edict_t	*ent;
 	fileHandle_t	f;
@@ -848,12 +679,9 @@ __try
 	FS_Write (&i, sizeof(i), f);
 
 	FS_CloseFile (f);
+
 #ifdef CC_USE_EXCEPTION_HANDLER
-}
-__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
-{
-	return;
-}
+CC_EXCEPTION_HANDLER_END
 #endif
 #endif
 }
@@ -879,9 +707,9 @@ void ReadLevel (char *filename)
 {
 #if 0
 #ifdef CC_USE_EXCEPTION_HANDLER
-__try
-{
+CC_EXCEPTION_HANDLER_BEGIN
 #endif
+
 	int		entNum;
 	fileHandle_t	f;
 	int		i;
@@ -975,12 +803,9 @@ __try
 				dynamic_cast<CThinkableEntity*>(ent->Entity)->NextThink = level.framenum + (ent->delay * 10);
 			}
 	}
+
 #ifdef CC_USE_EXCEPTION_HANDLER
-}
-__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
-{
-	return;
-}
+CC_EXCEPTION_HANDLER_END
 #endif
 #endif
 }

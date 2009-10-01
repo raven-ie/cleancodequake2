@@ -90,11 +90,26 @@ public:
 
 	/// The sound on pickup
 	char		*PickupSound;
-	int			PickupSoundIndex;
+private:
+	MediaIndex	PickupSoundIndex;
+
+public:
+	inline MediaIndex GetPickupSound ()
+	{
+		return (PickupSound && !PickupSoundIndex) ? (PickupSoundIndex = SoundIndex(PickupSound)) : PickupSoundIndex;
+	}
 
 	/// HUD Icon
 	char		*Icon;
+private:
 	MediaIndex	IconIndex;
+
+public:
+	inline MediaIndex GetIconIndex ()
+	{
+		return (Icon && !IconIndex) ? (IconIndex = ImageIndex(Icon)) : IconIndex;
+	}
+
 	/// Name on pickup
 	char		*Name;
 

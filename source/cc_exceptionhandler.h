@@ -35,12 +35,27 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #define __CC_EXCEPTIONHANDLER_H__
 
 #ifdef CC_USE_EXCEPTION_HANDLER
-#define CC_HANDLE_EXCEPTIONS(x) __try { x } __except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation())) { return; }
+#define CC_EXCEPTION_HANDLER_BEGIN		__try		\
+										{
+
+#define CC_EXCEPTION_HANDLER_END		}			\
+										__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))	\
+										{			\
+											return;	\
+										}
+
+#define CC_EXCEPTION_HANDLER_END_CUSTOM(x)	}			\
+											__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))	\
+											{			\
+												x		\
+											}
 
 #include <windows.h>
 DWORD EGLExceptionHandler (DWORD exceptionCode, LPEXCEPTION_POINTERS exceptionInfo);
 #else
-#define CC_HANDLE_EXCEPTIONS(x) x
+#define CC_EXCEPTION_HANDLER_BEGIN
+#define CC_EXCEPTION_HANDLER_END
+#define CC_EXCEPTION_HANDLER_END_CUSTOM __noop
 #endif
 
 #else

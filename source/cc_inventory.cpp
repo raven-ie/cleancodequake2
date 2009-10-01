@@ -75,7 +75,7 @@ void CInventory::Draw (CPlayerEntity *ent)
 	WriteByte (SVC_INVENTORY);
 	for (int i=0 ; i<MAX_CS_ITEMS ; i++)
 		WriteShort (Array[i]);
-	Cast (CASTFLAG_RELIABLE, ent->gameEntity);
+	ent->CastTo (CASTFLAG_RELIABLE);
 }
 
 void CInventory::SelectNextItem(EItemFlags Flags)

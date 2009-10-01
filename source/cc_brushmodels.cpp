@@ -96,19 +96,14 @@ const CEntityField CBrushModel::FieldsForParsing[] =
 	CEntityField ("accel", EntityMemberOffset(CBrushModel,Accel), FTFloat),
 	CEntityField ("decel", EntityMemberOffset(CBrushModel,Decel), FTFloat),
 	CEntityField ("distance", EntityMemberOffset(CBrushModel,Distance), FTInteger),
+	CEntityField ("dmg", EntityMemberOffset(CBrushModel,Damage), FTInteger),
 };
-const size_t CBrushModel::FieldsForParsingSize = (sizeof(CBrushModel::FieldsForParsing) / sizeof(CBrushModel::FieldsForParsing[0]));
+const size_t CBrushModel::FieldsForParsingSize = FieldSize<CBrushModel>();
 
 bool			CBrushModel::ParseField (char *Key, char *Value)
 {
-	for (size_t i = 0; i < CBrushModel::FieldsForParsingSize; i++)
-	{
-		if (strcmp (Key, CBrushModel::FieldsForParsing[i].Name) == 0)
-		{
-			CBrushModel::FieldsForParsing[i].Create<CBrushModel> (this, Value);
-			return true;
-		}
-	}
+	if (CheckFields<CBrushModel> (this, Key, Value))
+		return true;
 
 	// Couldn't find it here
 	return false;
@@ -414,7 +409,7 @@ void CPlatForm::Blocked (CBaseEntity *other)
 	}
 
 	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
-		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, gameEntity->dmg, 1, 0, MOD_CRUSH);
+		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, Damage, 1, 0, MOD_CRUSH);
 
 	if (MoveState == STATE_UP)
 		GoDown ();
@@ -576,7 +571,7 @@ void CPlatForm::Spawn ()
 	SetSolid (SOLID_BSP);
 	PhysicsType = PHYSICS_PUSH;
 
-	SetModel (gameEntity, gameEntity->model);
+	SetBrushModel ();
 
 	if (!Speed)
 		Speed = 20;
@@ -593,8 +588,8 @@ void CPlatForm::Spawn ()
 	else
 		Decel *= 0.1f;
 
-	if (!gameEntity->dmg)
-		gameEntity->dmg = 2;
+	if (!Damage)
+		Damage = 2;
 
 	if (!st.lip)
 		st.lip = 8;
@@ -909,7 +904,7 @@ void CDoor::Blocked (CBaseEntity *other)
 	}
 
 	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
-		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, gameEntity->dmg, 1, 0, MOD_CRUSH);
+		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, Damage, 1, 0, MOD_CRUSH);
 
 	if (SpawnFlags & DOOR_CRUSHER)
 		return;
@@ -1006,7 +1001,7 @@ void CDoor::Spawn ()
 
 	PhysicsType = PHYSICS_PUSH;
 	SetSolid (SOLID_BSP);
-	SetModel (gameEntity, gameEntity->model);
+	SetBrushModel ();
 	
 	if (!Speed)
 		Speed = 100;
@@ -1022,8 +1017,8 @@ void CDoor::Spawn ()
 		Wait = 30;
 	if (!st.lip)
 		st.lip = 8;
-	if (!gameEntity->dmg)
-		gameEntity->dmg = 2;
+	if (!Damage)
+		Damage = 2;
 
 	// calculate second position
 	Positions[0] = State.GetOrigin ();
@@ -1164,7 +1159,7 @@ void CRotatingDoor::Spawn ()
 
 	PhysicsType = PHYSICS_PUSH;
 	SetSolid (SOLID_BSP);
-	SetModel (gameEntity, gameEntity->model);
+	SetBrushModel ();
 
 	if (!Speed)
 		Speed = 100;
@@ -1175,8 +1170,8 @@ void CRotatingDoor::Spawn ()
 
 	if (!Wait)
 		Wait = 30;
-	if (!gameEntity->dmg)
-		gameEntity->dmg = 2;
+	if (!Damage)
+		Damage = 2;
 
 	if (gameEntity->sounds != 1)
 	{
@@ -1255,7 +1250,7 @@ void CMovableWater::Spawn ()
 
 	PhysicsType = PHYSICS_PUSH;
 	SetSolid (SOLID_BSP);
-	SetModel (gameEntity, gameEntity->model);
+	SetBrushModel ();
 
 	switch (gameEntity->sounds)
 	{
@@ -1418,7 +1413,7 @@ void CDoorSecret::Blocked (CBaseEntity *other)
 	TouchDebounce = level.framenum + 5;
 
 	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
-		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, State.GetOrigin(), vec3fOrigin, gameEntity->dmg, 1, 0, MOD_CRUSH);
+		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, State.GetOrigin(), vec3fOrigin, Damage, 1, 0, MOD_CRUSH);
 }
 
 void CDoorSecret::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
@@ -1435,7 +1430,7 @@ void CDoorSecret::Spawn ()
 
 	PhysicsType = PHYSICS_PUSH;
 	SetSolid (SOLID_BSP);
-	SetModel (gameEntity, gameEntity->model);
+	SetBrushModel ();
 
 	if (!(gameEntity->targetname) || (SpawnFlags & SECRET_ALWAYS_SHOOT))
 	{
@@ -1445,8 +1440,8 @@ void CDoorSecret::Spawn ()
 
 	Touchable = false;
 
-	if (!gameEntity->dmg)
-		gameEntity->dmg = 2;
+	if (!Damage)
+		Damage = 2;
 
 	if (!Wait)
 		Wait = 50;
@@ -1628,7 +1623,7 @@ void CButton::Spawn ()
 
 	PhysicsType = PHYSICS_STOP;
 	SetSolid (SOLID_BSP);
-	SetModel (gameEntity, gameEntity->model);
+	SetBrushModel ();
 
 	if (gameEntity->sounds != 1)
 		SoundStart = SoundIndex ("switches/butn2.wav");
@@ -1729,12 +1724,13 @@ void CTrainBase::Blocked (CBaseEntity *other)
 	if (level.framenum < TouchDebounce)
 		return;
 
-	if (!gameEntity->dmg)
+	if (!Damage)
 		return;
+
 	TouchDebounce = level.framenum + 5;
 
 	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
-		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, gameEntity->dmg, 1, 0, MOD_CRUSH);
+		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, Damage, 1, 0, MOD_CRUSH);
 }
 
 void CTrainBase::TrainWait ()
@@ -1950,14 +1946,14 @@ void CTrain::Spawn ()
 
 	State.SetAngles (vec3fOrigin);
 	if (SpawnFlags & TRAIN_BLOCK_STOPS)
-		gameEntity->dmg = 0;
+		Damage = 0;
 	else
 	{
-		if (!gameEntity->dmg)
-			gameEntity->dmg = 100;
+		if (!Damage)
+			Damage = 100;
 	}
 	SetSolid (SOLID_BSP);
-	SetModel (gameEntity, gameEntity->model);
+	SetBrushModel ();
 
 	if (NoiseIndex)
 		SoundMiddle = NoiseIndex;
@@ -2084,18 +2080,12 @@ const CEntityField CWorldEntity::FieldsForParsing[] =
 {
 	CEntityField ("message", EntityMemberOffset(CWorldEntity,Message), FTStringL),
 };
-const size_t CWorldEntity::FieldsForParsingSize = (sizeof(CWorldEntity::FieldsForParsing) / sizeof(CWorldEntity::FieldsForParsing[0]));
+const size_t CWorldEntity::FieldsForParsingSize = FieldSize<CWorldEntity>();
 
 bool			CWorldEntity::ParseField (char *Key, char *Value)
 {
-	for (size_t i = 0; i < CWorldEntity::FieldsForParsingSize; i++)
-	{
-		if (strcmp (Key, CWorldEntity::FieldsForParsing[i].Name) == 0)
-		{
-			CWorldEntity::FieldsForParsing[i].Create<CWorldEntity> (this, Value);
-			return true;
-		}
-	}
+	if (CheckFields<CWorldEntity> (this, Key, Value))
+		return true;
 
 	// Couldn't find it here
 	return CMapEntity::ParseField (Key, Value);
@@ -2109,7 +2099,6 @@ bool CWorldEntity::Run ()
 void CreateDMStatusbar ();
 void CreateSPStatusbar ();
 void SetItemNames ();
-void Init_Junk();
 
 void SetupLights ()
 {
@@ -2308,13 +2297,13 @@ void CRotatingBrush::Blocked (CBaseEntity *other)
 		return;
 
 	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
-		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, gameEntity->dmg, 1, 0, MOD_CRUSH);
+		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, Damage, 1, 0, MOD_CRUSH);
 }
 
 void CRotatingBrush::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 {
 	if ((AngularVelocity != vec3fOrigin) && ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage))
-		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, gameEntity->dmg, 1, 0, MOD_CRUSH);
+		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, Damage, 1, 0, MOD_CRUSH);
 }
 
 void CRotatingBrush::Use (CBaseEntity *other, CBaseEntity *activator)
@@ -2360,11 +2349,11 @@ void CRotatingBrush::Spawn ()
 
 	if (!Speed)
 		Speed = 100;
-	if (!gameEntity->dmg)
-		gameEntity->dmg = 2;
+	if (!Damage)
+		Damage = 2;
 
 	Blockable = false;
-	if (gameEntity->dmg)
+	if (Damage)
 		Blockable = true;
 
 	if (SpawnFlags & 1)
@@ -2375,7 +2364,7 @@ void CRotatingBrush::Spawn ()
 	if (SpawnFlags & 128)
 		State.AddEffects (EF_ANIM_ALLFAST);
 
-	SetModel (gameEntity, gameEntity->model);
+	SetBrushModel ();
 	Link ();
 }
 
@@ -2438,7 +2427,7 @@ void CConveyor::Spawn ()
 		Speed = 0;
 	}
 
-	SetModel (gameEntity, gameEntity->model);
+	SetBrushModel ();
 	SetSolid (SOLID_BSP);
 	Link ();
 }
@@ -2551,7 +2540,7 @@ bool CFuncWall::Run ()
 void CFuncWall::Spawn ()
 {
 	PhysicsType = PHYSICS_PUSH;
-	SetModel (gameEntity, gameEntity->model);
+	SetBrushModel ();
 
 	if (SpawnFlags & 8)
 		State.AddEffects (EF_ANIM_ALL);
@@ -2642,7 +2631,7 @@ void CFuncObject::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *sur
 	if (!dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
 		return;
 
-	dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3Origin, State.GetOrigin(), vec3fOrigin, gameEntity->dmg, 1, 0, MOD_CRUSH);
+	dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3Origin, State.GetOrigin(), vec3fOrigin, Damage, 1, 0, MOD_CRUSH);
 };
 
 void CFuncObject::Think ()
@@ -2663,13 +2652,13 @@ void CFuncObject::Use (CBaseEntity *other, CBaseEntity *activator)
 void CFuncObject::Spawn ()
 {
 	Touchable = false;
-	SetModel (gameEntity, gameEntity->model);
+	SetBrushModel ();
 
 	SetMins (GetMins() + vec3f(1,1,1));
 	SetMaxs (GetMaxs() - vec3f(1,1,1));
 
-	if (!gameEntity->dmg)
-		gameEntity->dmg = 100;
+	if (!Damage)
+		Damage = 100;
 
 	if (SpawnFlags == 0)
 	{
@@ -2736,20 +2725,14 @@ const CEntityField CFuncExplosive::FieldsForParsing[] =
 {
 	CEntityField ("mass", EntityMemberOffset(CFuncExplosive,Explosivity), FTInteger),
 };
-const size_t CFuncExplosive::FieldsForParsingSize = (sizeof(CFuncExplosive::FieldsForParsing) / sizeof(CFuncExplosive::FieldsForParsing[0]));
+const size_t CFuncExplosive::FieldsForParsingSize = FieldSize<CFuncExplosive>();
 
 bool			CFuncExplosive::ParseField (char *Key, char *Value)
 {
-	for (size_t i = 0; i < CFuncExplosive::FieldsForParsingSize; i++)
-	{
-		if (strcmp (Key, CFuncExplosive::FieldsForParsing[i].Name) == 0)
-		{
-			CHurtableEntity::FieldsForParsing[i].Create<CFuncExplosive> (this, Value);
-			return true;
-		}
-	}
+	if (CheckFields<CFuncExplosive> (this, Key, Value))
+		return true;
 
-	return (CUsableEntity::ParseField (Key, Value) || CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+	return (CBrushModel::ParseField (Key, Value) || CUsableEntity::ParseField (Key, Value) || CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 };
 
 void CFuncExplosive::Pain (CBaseEntity *other, float kick, int damage)
@@ -2763,8 +2746,8 @@ void CFuncExplosive::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dam
 
 	CanTakeDamage = false;
 
-	if (gameEntity->dmg)
-		T_RadiusDamage (this, attacker->gameEntity->Entity, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_EXPLOSIVE);
+	if (Damage)
+		T_RadiusDamage (this, attacker->gameEntity->Entity, Damage, NULL, Damage+40, MOD_EXPLOSIVE);
 
 	Velocity = State.GetOrigin() - inflictor->State.GetOrigin();
 	Velocity.Normalize ();
@@ -2795,7 +2778,7 @@ void CFuncExplosive::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dam
 
 	UseTargets (attacker, Message);
 
-	if (gameEntity->dmg)
+	if (Damage)
 		BecomeExplosion (true);
 	else
 		Free ();
@@ -2856,7 +2839,7 @@ void CFuncExplosive::Spawn ()
 			UseType = FUNCEXPLOSIVE_USE_EXPLODE;
 	}
 
-	SetModel (gameEntity, gameEntity->model);
+	SetBrushModel ();
 
 	if (SpawnFlags & 2)
 		State.AddEffects (EF_ANIM_ALL);
@@ -2902,7 +2885,7 @@ void CKillbox::Use (CBaseEntity *other, CBaseEntity *activator)
 
 void CKillbox::Spawn ()
 {
-	SetModel (gameEntity, gameEntity->model);
+	SetBrushModel ();
 	SetSvFlags (SVF_NOCLIENT);
 }
 

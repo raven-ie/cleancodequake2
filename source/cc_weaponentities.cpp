@@ -725,6 +725,16 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 				vec3f oldFrom = from;
 				from = origin;
 
+				// Revision: Stop on solids
+				if (Target->GetSolid() == SOLID_BSP)
+				{
+					// Draw the effect
+					DoEffect (from, oldFrom, false);
+
+					DoSolidHit (&Trace);
+					break;
+				}
+
 				DoEffect (from, oldFrom, Water);
 
 				// and ignore the bastard
@@ -740,6 +750,16 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 			// Set up the start from where we are now
 			vec3f oldFrom = from;
 			from = Trace.EndPos;
+
+			// Revision: Stop on solids
+			if (Target->GetSolid() == SOLID_BSP)
+			{
+				// Draw the effect
+				DoEffect (from, oldFrom, false);
+
+				DoSolidHit (&Trace);
+				break;
+			}
 
 			DoEffect (from, oldFrom, Water);
 
@@ -769,6 +789,7 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 
 					// Draw the effect
 					DoEffect (lastWaterStart, lastWaterEnd, true);
+
 					DoSolidHit (&Trace);
 
 					break; // We're done
@@ -791,6 +812,7 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 
 					// Draw the effect
 					DoEffect (lastWaterStart, lastWaterEnd, false);
+
 					DoSolidHit (&Trace);
 
 					break; // We're done
@@ -810,6 +832,7 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 
 			// Draw the effect
 			DoEffect (lastWaterStart, lastWaterEnd, false);
+
 			DoWaterHit (&Trace);
 
 			// Set up the start from where we are now
@@ -891,6 +914,7 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 		{
 			// Draw the effect
 			DoEffect (from, Trace.EndPos, false);
+
 			DoSolidHit (&Trace);
 			break; // We're done
 		}
@@ -1368,7 +1392,7 @@ void CGrappleEntity::GrappleDrawCable()
 	vec3f	start, end, f, r, origin = Player->State.GetOrigin ();
 	
 	Player->Client.ViewAngle.ToVectors (&f, &r, NULL);
-	Player->P_ProjectSource (vec3f(16, 16, Player->gameEntity->viewheight-8), f, r, start);
+	Player->P_ProjectSource (vec3f(16, 16, Player->ViewHeight-8), f, r, start);
 
 	vec3f offset = start - origin;
 	vec3f dir = start - State.GetOrigin();
@@ -1440,7 +1464,7 @@ void CGrappleEntity::GrapplePull()
 
 		Player->Client.ViewAngle.ToVectors (&forward, &up, NULL);
 		vec3f v = Player->State.GetOrigin ();
-		v.Z += Player->gameEntity->viewheight;
+		v.Z += Player->ViewHeight;
 		vec3f hookdir = State.GetOrigin() - v;
 
 		float vlen = hookdir.LengthFast();

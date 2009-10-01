@@ -41,8 +41,10 @@ class CMiscExploBox : public CMapEntity, public CStepPhysics, public CHurtableEn
 {
 	bool		Dropped;
 	CBaseEntity	*Shooter;
+
 public:
 	int			Explosivity;
+	int			Damage;
 
 	CMiscExploBox () :
 	Dropped(false),
@@ -146,7 +148,7 @@ public:
 			Link();
 			return;
 		}
-		T_RadiusDamage (this, Shooter, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_BARREL);
+		T_RadiusDamage (this, Shooter, Damage, NULL, Damage+40, MOD_BARREL);
 
 		vec3f origin = State.GetOrigin ();
 		CTempEnt_Explosions::GrenadeExplosion (origin, gameEntity);
@@ -186,10 +188,12 @@ public:
 		if (!Explosivity)
 			Explosivity = 400;
 		Mass = Explosivity;
+
 		if (!Health)
 			Health = 10;
-		if (!gameEntity->dmg)
-			gameEntity->dmg = 150;
+
+		if (!Damage)
+			Damage = 150;
 
 		CanTakeDamage = true;
 		NextThink = level.framenum + FRAMETIME;
@@ -201,19 +205,14 @@ public:
 const CEntityField CMiscExploBox::FieldsForParsing[] =
 {
 	CEntityField ("mass", EntityMemberOffset(CMiscExploBox,Explosivity), FTInteger),
+	CEntityField ("dmg", EntityMemberOffset(CMiscExploBox,Damage), FTInteger),
 };
-const size_t CMiscExploBox::FieldsForParsingSize = (sizeof(CMiscExploBox::FieldsForParsing) / sizeof(CMiscExploBox::FieldsForParsing[0]));
+const size_t CMiscExploBox::FieldsForParsingSize = FieldSize<CMiscExploBox>();
 
 bool			CMiscExploBox::ParseField (char *Key, char *Value)
 {
-	for (size_t i = 0; i < CMiscExploBox::FieldsForParsingSize; i++)
-	{
-		if (strcmp (Key, CMiscExploBox::FieldsForParsing[i].Name) == 0)
-		{
-			CMiscExploBox::FieldsForParsing[i].Create<CMiscExploBox> (this, Value);
-			return true;
-		}
-	}
+	if (CheckFields<CMiscExploBox> (this, Key, Value))
+		return true;
 
 	return (CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 };
@@ -839,11 +838,12 @@ LINK_CLASSNAME_TO_CLASS ("misc_bigviper", CMiscBigViper);
 class CMiscViperBomb : public CMapEntity, public CThinkableEntity, public CTouchableEntity, public CUsableEntity, public CTossProjectile
 {
 public:
-	bool PreThinkable;
-	FrameNumber_t TimeStamp;
-	vec3f MoveDir;
-	bool Usable;
-	bool Touchable;
+	bool			PreThinkable;
+	FrameNumber_t	TimeStamp;
+	vec3f			MoveDir;
+	bool			Usable;
+	bool			Touchable;
+	int				Damage;
 
 	CMiscViperBomb () :
 	  CBaseEntity (),
@@ -875,10 +875,10 @@ public:
 	{
 	};
 
-	virtual bool ParseField (char *Key, char *Value)
-	{
-		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
-	}
+	static const class CEntityField FieldsForParsing[];
+	static const size_t FieldsForParsingSize;
+
+	virtual bool			ParseField (char *Key, char *Value);
 
 	bool Run ()
 	{
@@ -911,7 +911,7 @@ public:
 		UseTargets (Activator, Message);
 
 		State.SetOrigin (vec3f(State.GetOrigin().X, State.GetOrigin().Y, GetAbsMin().Z + 1));
-		T_RadiusDamage (this, this, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_BOMB);
+		T_RadiusDamage (this, this, Damage, NULL, Damage+40, MOD_BOMB);
 		BecomeExplosion (true);
 	};
 
@@ -947,12 +947,27 @@ public:
 
 		State.SetModelIndex (ModelIndex ("models/objects/bomb/tris.md2"));
 
-		if (!gameEntity->dmg)
-			gameEntity->dmg = 1000;
+		if (!Damage)
+			Damage = 1000;
 
 		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
 		Link ();
 	};
+};
+
+const CEntityField CMiscViperBomb::FieldsForParsing[] =
+{
+	CEntityField ("dmg", EntityMemberOffset(CMiscViperBomb,Damage), FTInteger),
+};
+const size_t CMiscViperBomb::FieldsForParsingSize = FieldSize<CMiscViperBomb>();
+
+bool			CMiscViperBomb::ParseField (char *Key, char *Value)
+{
+	if (CheckFields<CMiscViperBomb> (this, Key, Value))
+		return true;
+
+	// Couldn't find it here
+	return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 };
 
 LINK_CLASSNAME_TO_CLASS ("misc_viper_bomb", CMiscViperBomb);

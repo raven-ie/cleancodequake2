@@ -259,14 +259,14 @@ void CMakron::Pain (CBaseEntity *other, float kick, int damage)
 	if (Entity->Health < (Entity->MaxHealth / 2))
 			Entity->State.SetSkinNum (1);
 
-	if (level.framenum < Entity->gameEntity->pain_debounce_time)
+	if (level.framenum < PainDebounceTime)
 			return;
 
 	// Lessen the chance of him going into his pain frames
 	if ((damage <= 25) && (random() < 0.2f))
 		return;
 
-	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
+	PainDebounceTime = level.framenum + 30;
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
 
@@ -448,7 +448,7 @@ void CMakron::FireBFG ()
 
 	Entity->PlaySound (CHAN_VOICE, SoundAttackBfg, 1, ATTN_NORM, 0);
 	MonsterFireBfg (start,
-		((Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->gameEntity->viewheight)) - start).GetNormalized(),
+		((Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->ViewHeight)) - start).GetNormalized(),
 		50, 300, 100, 300, MZ2_MAKRON_BFG);
 }	
 
@@ -508,7 +508,7 @@ void CMakron::FireHyperblaster ()
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
 	if (Entity->Enemy)
-		dir.X = (Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->gameEntity->viewheight) - start).ToAngles().X;
+		dir.X = (Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->ViewHeight) - start).ToAngles().X;
 	else
 		dir.X = 0;
 
@@ -545,7 +545,7 @@ CAnim MakronMoveAttack5 (FRAME_attak501, FRAME_attak516, MakronFramesAttack5, &C
 
 void CMakron::SavePosition ()
 {
-	SavedLoc = Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->gameEntity->viewheight);
+	SavedLoc = Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->ViewHeight);
 };
 
 // FIXME: He's not firing from the proper Z
@@ -695,9 +695,9 @@ bool CMakron::CheckAttack ()
 	{
 	// see if any entities are in the way of the shot
 		spot1 = Entity->State.GetOrigin();
-		spot1.Z += Entity->gameEntity->viewheight;
+		spot1.Z += Entity->ViewHeight;
 		spot2 = Entity->Enemy->State.GetOrigin();
-		spot2.Z += Entity->Enemy->gameEntity->viewheight;
+		spot2.Z += Entity->Enemy->ViewHeight;
 
 		tr = CTrace(spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
 
@@ -777,8 +777,8 @@ bool CMakron::CheckAttack ()
 	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0)
 	{
 	// see if any entities are in the way of the shot
-		vec3f	spot1 = Entity->State.GetOrigin() + vec3f(0, 0, Entity->gameEntity->viewheight);
-		vec3f	spot2 = Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->gameEntity->viewheight);
+		vec3f	spot1 = Entity->State.GetOrigin() + vec3f(0, 0, Entity->ViewHeight);
+		vec3f	spot2 = Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->ViewHeight);
 
 		CTrace tr (spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
 

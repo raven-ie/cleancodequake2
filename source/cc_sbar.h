@@ -43,7 +43,7 @@ class CStatusBar
 public:
 	CStatusBar();
 	void Send ();
-	void SendMsg (edict_t *ent, bool reliable = true);
+	void SendMsg (CPlayerEntity *ent, bool reliable = true);
 
 	void AddToBarBuffer (char *string);
 	void AddVirtualPoint_Y (int y);

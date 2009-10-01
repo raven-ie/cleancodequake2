@@ -992,6 +992,14 @@
 			Name="CleanCode Files"
 			>
 			<File
+				RelativePath="..\..\source\cc_game.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\cc_game.h"
+				>
+			</File>
+			<File
 				RelativePath=".\..\..\source\cc_local.h"
 				>
 			</File>
@@ -1001,10 +1009,6 @@
 			</File>
 			<File
 				RelativePath=".\..\..\source\cc_shared.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\source\cc_stl.h"
 				>
 			</File>
 			<File
@@ -1934,6 +1938,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\source\cc_stl.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\source\cc_utils.cpp"
 					>
 				</File>
@@ -1949,10 +1957,6 @@
 			<Filter
 				Name="CPP"
 				>
-				<File
-					RelativePath=".\..\..\source\g_main.cpp"
-					>
-				</File>
 				<File
 					RelativePath=".\..\..\source\g_save.cpp"
 					>

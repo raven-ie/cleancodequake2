@@ -267,6 +267,8 @@ public:
 	uint32				MonsterFlags;
 	char				*MonsterName;
 
+	FrameNumber_t		PainDebounceTime;
+
 #ifdef MONSTERS_USE_PATHFINDING
 	// Pathfinding
 	class CPath				*P_CurrentPath;

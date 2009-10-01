@@ -119,7 +119,7 @@ void CSoldierLight::FireGun (int FlashNumber)
 			CBaseEntity *Enemy = Entity->Enemy;
 			vec3f end;
 
-			end = Enemy->State.GetOrigin() + vec3f(0, 0, Enemy->gameEntity->viewheight);
+			end = Enemy->State.GetOrigin() + vec3f(0, 0, Enemy->ViewHeight);
 			aim = (end - start);
 
 			vec3f dir;

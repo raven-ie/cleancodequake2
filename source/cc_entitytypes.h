@@ -59,6 +59,10 @@ public:
 	virtual int CheckPowerArmor (vec3f &point, vec3f &normal, int damage, int dflags);
 	virtual void Killed (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point);
 
+	// An "extension" of sorts to TakeDamage
+	// which handles the effects when we are hurt
+	virtual void DamageEffect (vec3f &dir, vec3f &point, vec3f &normal, int &damage, int &dflags);
+
 	// Takes damage.
 	// For this, "this" is target. Use this if the
 	// entity can be casted to CHurtableEntity or is CHurtableEntity

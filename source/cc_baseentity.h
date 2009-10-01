@@ -129,6 +129,7 @@ public:
 	int				GroundEntityLinkCount;
 	uint32			SpawnFlags;
 	CBaseEntity		*Enemy;
+	int				ViewHeight;
 
 	CBaseEntity ();
 	CBaseEntity (int Index);
@@ -209,6 +210,10 @@ public:
 	void			PlayPositionedSound (vec3_t origin, EEntSndChannel channel, MediaIndex soundIndex, float volume = 1.0f, int attenuation = ATTN_NORM, float timeOfs = 0.0f);
 
 	virtual void	BecomeExplosion (bool grenade);
+
+	void			SetBrushModel ();
+	void			CastTo (ECastFlags castFlags);
+	void			StuffText (char *text);
 };
 
 // EntityFlags values
@@ -284,6 +289,8 @@ inline uint32 atou (const char *Str)
 }
 
 #define EntityMemberOffset(y,x) (size_t)&(((y*)0)->x)
+#define GameEntityMemberOffset(x) (size_t)&(((edict_t*)0)->x)
+#define SpawnTempMemberOffset(x) (size_t)&(((spawn_temp_t*)0)->x)
 
 typedef uint32 EFieldType;
 enum// EFieldType
@@ -303,11 +310,11 @@ enum// EFieldType
 
 	FTLast,
 
-	// These are gameEntity things, not used for anything else except CBaseEntity.
-	FTGVector = 666,
-	FTGAngleHack,
-	FTGStringL,
-	FTGStringG,
+	// Flags
+	FTGameEntity	=	BIT(10),		// Stored in gameEntity instead of TClass
+	FTSpawnTemp		=	BIT(11),		// Stored in SpawnTemp instead of TClass
+	FTSavable		=	BIT(12),		// Field doubles as a game field and a save field
+	FTNoSpawn		=	BIT(13),		// Field cannot be used as a spawn field
 };
 
 class CEntityField
@@ -315,47 +322,57 @@ class CEntityField
 public:
 	char			*Name;
 	size_t			Offset;
-	EFieldType		FieldType;
+	EFieldType		FieldType, StrippedFields;
 
 	CEntityField (char *Name, size_t Offset, EFieldType FieldType) :
 	Name(Name),
 	Offset(Offset),
-	FieldType(FieldType)
+	FieldType(FieldType),
+	StrippedFields(FieldType & ~(FTGameEntity | FTSpawnTemp | FTSavable | FTNoSpawn))
 	{
 	};
 
 	template <class TClass>
 	void Create (TClass *Entity, char *Value) const
 	{
-		switch (FieldType)
+		byte *ClassOffset = (byte*)Entity;
+
+		if (FieldType & FTGameEntity)
+			ClassOffset = (byte*)Entity->gameEntity;
+		else if (FieldType & FTSpawnTemp)
+			ClassOffset = (byte*)&st;
+
+		ClassOffset += Offset;
+
+		switch (StrippedFields)
 		{
 		case FTInteger:
-			*((int*)(((byte*)Entity) + Offset)) = atoi(Value);
+			*((int*)(ClassOffset)) = atoi(Value);
 			break;
 		case FTUInteger:
-			*((uint32*)(((byte*)Entity) + Offset)) = atou(Value);
+			*((uint32*)(ClassOffset)) = atou(Value);
 			break;
 		case FTFloat:
-			*((float*)(((byte*)Entity) + Offset)) = atof(Value);
+			*((float*)(ClassOffset)) = atof(Value);
 			break;
 		case FTVector:
 			{
 				vec3f v;
 				sscanf_s (Value, "%f %f %f", &v.X, &v.Y, &v.Z);
-				memcpy (((byte*)Entity) + Offset, &v, sizeof(float)*3);
+				memcpy (ClassOffset, &v, sizeof(float)*3);
 			}
 			break;
 		case FTAngleHack:
 			{
 				vec3f v (0, atof(Value), 0);
-				memcpy (((byte*)Entity) + Offset, &v, sizeof(float)*3);
+				memcpy (ClassOffset, &v, sizeof(float)*3);
 			}
 			break;
 		case FTIgnore:
 			break;
 		case FTStringL:
 		case FTStringG:
-			*((char **)(((byte*)Entity) + Offset)) = CopyStr(Value, (FieldType == FTStringL) ? com_levelPool : com_gamePool);
+			*((char **)(ClassOffset)) = CopyStr(Value, (FieldType == FTStringL) ? com_levelPool : com_gamePool);
 			break;
 		case FTStringToSound:
 			{
@@ -363,99 +380,58 @@ public:
 				if (!temp.find (".wav"))
 					temp.append (".wav");
 
-				*((MediaIndex *)(((byte*)Entity) + Offset)) = SoundIndex (temp.c_str());
+				*((MediaIndex *)(ClassOffset)) = SoundIndex (temp.c_str());
 			}
 			break;
 		case FTStringToImage:
-			*((MediaIndex *)(((byte*)Entity) + Offset)) = ImageIndex (Value);
+			*((MediaIndex *)(ClassOffset)) = ImageIndex (Value);
 			break;
 		case FTStringToModel:
-			*((MediaIndex *)(((byte*)Entity) + Offset)) = ModelIndex (Value);
+			*((MediaIndex *)(ClassOffset)) = ModelIndex (Value);
 			break;
 		case FTTime:
 			{
 				float Val = atof (Value);
-				*((FrameNumber_t *)(((byte*)Entity) + Offset)) = (Val != -1) ? (Val * 10) : -1;
-			}
-			break;
-		};
-	};
-
-	template <>
-	void Create<CBaseEntity> (CBaseEntity *Entity, char *Value) const
-	{
-		switch (FieldType)
-		{
-		case FTGVector:
-			{
-				vec3f v;
-				sscanf_s (Value, "%f %f %f", &v.X, &v.Y, &v.Z);
-				memcpy (((byte*)Entity->gameEntity)+Offset, &v, sizeof(float)*3);
-			}
-			break;
-		case FTGAngleHack:
-			{
-				vec3f v (0, atof(Value), 0);
-				memcpy (((byte*)Entity->gameEntity)+Offset, &v, sizeof(float)*3);
-			}
-			break;
-		case FTGStringL:
-		case FTGStringG:
-			*((char **)(((byte*)Entity->gameEntity) + Offset)) = CopyStr(Value, (FieldType == FTGStringL) ? com_levelPool : com_gamePool);
-			break;
-
-		case FTInteger:
-			*((int*)(((byte*)Entity) + Offset)) = atoi(Value);
-			break;
-		case FTUInteger:
-			*((uint32*)(((byte*)Entity) + Offset)) = atou(Value);
-			break;
-		case FTFloat:
-			*((float*)(((byte*)Entity) + Offset)) = atof(Value);
-			break;
-		case FTVector:
-			{
-				vec3f v;
-				sscanf_s (Value, "%f %f %f", &v.X, &v.Y, &v.Z);
-				memcpy (((byte*)Entity) + Offset, &v, sizeof(float)*3);
-			}
-			break;
-		case FTAngleHack:
-			{
-				vec3f v (0, atof(Value), 0);
-				memcpy (((byte*)Entity) + Offset, &v, sizeof(float)*3);
-			}
-			break;
-		case FTIgnore:
-			break;
-		case FTStringL:
-		case FTStringG:
-			*((char **)(((byte*)Entity) + Offset)) = CopyStr(Value, (FieldType == FTStringL) ? com_levelPool : com_gamePool);
-			break;
-		case FTStringToSound:
-			{
-				std::string temp = Value;
-				if (!temp.find (".wav"))
-					temp.append (".wav");
-
-				*((MediaIndex *)(((byte*)Entity) + Offset)) = SoundIndex (temp.c_str());
-			}
-			break;
-		case FTStringToImage:
-			*((MediaIndex *)(((byte*)Entity) + Offset)) = ImageIndex (Value);
-			break;
-		case FTStringToModel:
-			*((MediaIndex *)(((byte*)Entity) + Offset)) = ModelIndex (Value);
-			break;
-		case FTTime:
-			{
-				float Val = atof (Value);
-				*((FrameNumber_t *)(((byte*)Entity) + Offset)) = (Val != -1) ? (Val * 10) : -1;
+				*((FrameNumber_t *)(ClassOffset)) = (Val != -1) ? (Val * 10) : -1;
 			}
 			break;
 		};
 	};
 };
+
+template <class TClass, class TPassClass>
+bool CheckFields (TClass *Me, char *Key, char *Value)
+{
+	for (size_t i = 0; i < TClass::FieldsForParsingSize; i++)
+	{
+		if (!(TClass::FieldsForParsing[i].FieldType & FTNoSpawn) && (strcmp (Key, TClass::FieldsForParsing[i].Name) == 0))
+		{
+			TClass::FieldsForParsing[i].Create<TPassClass> (Me, Value);
+			return true;
+		}
+	}
+	return false;
+};
+
+template <class TClass>
+bool CheckFields (TClass *Me, char *Key, char *Value)
+{
+	for (size_t i = 0; i < TClass::FieldsForParsingSize; i++)
+	{
+		if (!(TClass::FieldsForParsing[i].FieldType & FTNoSpawn) && (strcmp (Key, TClass::FieldsForParsing[i].Name) == 0))
+		{
+			TClass::FieldsForParsing[i].Create<TClass> (Me, Value);
+			return true;
+		}
+	}
+	return false;
+};
+
+template <class TClass>
+const size_t FieldSize ()
+{
+	return (sizeof(TClass::FieldsForParsing) / sizeof(TClass::FieldsForParsing[0]));
+}
 
 // An entity completely privatized.
 // Does not take up a g_edicts space.

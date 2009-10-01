@@ -419,8 +419,8 @@ returns 1 if the entity is visible to self, even if not infront ()
 */
 bool IsVisible (CBaseEntity *self, CBaseEntity *other)
 {	
-	return (CTrace (self->State.GetOrigin() + vec3f(0, 0, self->gameEntity->viewheight),
-		other->State.GetOrigin() + vec3f(0, 0, other->gameEntity->viewheight),
+	return (CTrace (self->State.GetOrigin() + vec3f(0, 0, self->ViewHeight),
+		other->State.GetOrigin() + vec3f(0, 0, other->ViewHeight),
 		self->gameEntity, CONTENTS_MASK_OPAQUE).fraction == 1.0);
 }
 
@@ -449,7 +449,7 @@ void DebugTrailAll (vec3f &left, vec3f &right)
 	WriteByte (TE_DEBUGTRAIL);
 	WritePosition (left);
 	WritePosition (right);
-	Cast (CASTFLAG_UNRELIABLE, &g_edicts[0]);
+	World->CastTo (CASTFLAG_UNRELIABLE);
 }
 
 void DrawRadiusDebug (vec3f &origin, float radius)

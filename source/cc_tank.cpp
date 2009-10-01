@@ -272,7 +272,7 @@ void CTank::Pain (CBaseEntity *other, float kick, int damage)
 	if (damage <= 10)
 		return;
 
-	if (level.framenum < Entity->gameEntity->pain_debounce_time)
+	if (level.framenum < PainDebounceTime)
 			return;
 
 	if (damage <= 30 && random() > 0.2)
@@ -287,7 +287,7 @@ void CTank::Pain (CBaseEntity *other, float kick, int damage)
 			return;
 	}
 
-	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
+	PainDebounceTime = level.framenum + 30;
 	Entity->PlaySound (CHAN_VOICE, SoundPain);
 
 	if (skill->Integer() == 3)
@@ -329,7 +329,7 @@ void CTank::Blaster ()
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
 	end = Entity->Enemy->State.GetOrigin();
-	end.Z += Entity->Enemy->gameEntity->viewheight;
+	end.Z += Entity->Enemy->ViewHeight;
 	dir = end - start;
 
 	MonsterFireBlaster (start, dir, 30, 800, flash_number, EF_BLASTER);
@@ -382,7 +382,7 @@ void CTank::Rocket ()
 	else if(random() < 0.66 || (start[2] < Entity->Enemy->GetAbsMin().Z))
 	{
 		vec = Entity->Enemy->State.GetOrigin();
-		vec.Z += Entity->Enemy->gameEntity->viewheight;
+		vec.Z += Entity->Enemy->ViewHeight;
 		dir = vec - start;
 	}
 	else
@@ -456,7 +456,7 @@ void CTank::Rocket ()
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
 
 	vec = Entity->Enemy->state.origin;
-	vec.Z += Entity->Enemy->gameEntity->viewheight;
+	vec.Z += Entity->Enemy->ViewHeight;
 	dir = vec - start;
 	dir.NormalizeFast ();
 
@@ -475,7 +475,7 @@ void CTank::MachineGun ()
 	if (Entity->Enemy)
 	{
 		vec3f vec = Entity->Enemy->State.GetOrigin();
-		vec.Z += Entity->Enemy->gameEntity->viewheight;
+		vec.Z += Entity->Enemy->ViewHeight;
 		vec -= start;
 		vec = vec.ToAngles ();
 		dir.X = vec.X;
@@ -764,7 +764,7 @@ void CTank::Attack ()
 		AIFlags |= AI_MANUAL_STEERING;
 		CurrentMove = &TankMoveAttackFireRocket;
 		AttackFinished = level.framenum + 30 + ((2*random())*10);
-		Entity->gameEntity->pain_debounce_time = level.framenum + 50;	// no pain for a while
+		PainDebounceTime = level.framenum + 50;	// no pain for a while
 		return;
 	}
 	// pmm
@@ -794,7 +794,7 @@ void CTank::Attack ()
 		else if (r < 0.66)
 		{
 			CurrentMove = &TankMoveAttackPreRocket;
-			Entity->gameEntity->pain_debounce_time = level.framenum + 50;	// no pain for a while
+			PainDebounceTime = level.framenum + 50;	// no pain for a while
 		}
 		else
 			CurrentMove = &TankMoveAttackBlast;

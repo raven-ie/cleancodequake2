@@ -345,14 +345,14 @@ void CSoldierBase::Pain (CBaseEntity *other, float kick, int damage)
 		UnDuck();
 #endif
 
-	if (level.framenum < Entity->gameEntity->pain_debounce_time)
+	if (level.framenum < PainDebounceTime)
 	{
 		if ((Entity->Velocity.Z > 100) && ( (CurrentMove == &SoldierMovePain1) || (CurrentMove == &SoldierMovePain2) || (CurrentMove == &SoldierMovePain3)))
 			CurrentMove = &SoldierMovePain4;
 		return;
 	}
 
-	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
+	PainDebounceTime = level.framenum + 30;
 	Entity->PlaySound (CHAN_VOICE, SoundPain);
 
 	if (Entity->Velocity.Z > 100)
@@ -1053,7 +1053,7 @@ void CSoldierBase::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damag
 
 	Entity->PlaySound (CHAN_VOICE, SoundDeath);
 
-	if (Q_fabs((Entity->State.GetOrigin().Z + Entity->gameEntity->viewheight) - point[2]) <= 4)
+	if (Q_fabs((Entity->State.GetOrigin().Z + Entity->ViewHeight) - point[2]) <= 4)
 	{
 		// head shot
 		CurrentMove = &SoldierMoveDeath3;

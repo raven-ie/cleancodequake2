@@ -20,6 +20,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
+spawn_temp_t	st;
+
 /*
 ===============
 ED_CallSpawn
@@ -249,14 +251,7 @@ void G_FindTeams (void)
 }
 
 
-/*
-==============
-SpawnEntities
 
-Creates a server's entity / program execution context by
-parsing textual entity definitions out of an ent file.
-==============
-*/
 #include "cc_exceptionhandler.h"
 #include "cc_brushmodels.h"
 
@@ -285,12 +280,17 @@ void InitEntities ()
 extern clientPersistent_t *SavedClients;
 
 char *gEntString;
-void SpawnEntities (char *mapname, char *entities, char *spawnpoint)
+
+/*
+==============
+SpawnEntities
+
+Creates a server's entity / program execution context by
+parsing textual entity definitions out of an ent file.
+==============
+*/
+void CC_SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 {
-#ifdef CC_USE_EXCEPTION_HANDLER
-__try
-{
-#endif
 	edict_t		*ent;
 	char		*token;
 	int			i;
@@ -370,7 +370,7 @@ __try
 		}
 	}
 
-	DebugPrintf ("%i entities removed\n", level.inhibit);
+	DebugPrintf ("%i entities removed (out of %i total)\n", level.inhibit, level.EntityNumber);
 
 #ifdef DEBUG
 	i = 1;
@@ -398,13 +398,6 @@ __try
 #endif
 
 	DebugPrintf ("Finished server initialization in %d ms\n", Sys_Milliseconds() - startTime);
-#ifdef CC_USE_EXCEPTION_HANDLER
-	}
-	__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
-	{
-		return;
-	}
-#endif
 }
 
 

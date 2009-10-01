@@ -60,7 +60,7 @@ void CBoss2::FireRocket ()
 
 	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_BOSS2_ROCKET_1], forward, right, start);
 	vec3f vec = Entity->Enemy->State.GetOrigin();
-	vec.Z += Entity->gameEntity->viewheight;
+	vec.Z += Entity->ViewHeight;
 	vec3f dir = vec - start;
 	dir.Normalize();
 	MonsterFireRocket (start, dir, 50, 500, MZ2_BOSS2_ROCKET_1);
@@ -68,7 +68,7 @@ void CBoss2::FireRocket ()
 //2
 	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_BOSS2_ROCKET_2], forward, right, start);
 	vec = Entity->Enemy->State.GetOrigin();
-	vec.Z += Entity->gameEntity->viewheight;
+	vec.Z += Entity->ViewHeight;
 	dir = vec - start;
 	dir.Normalize();
 	MonsterFireRocket (start, dir, 50, 500, MZ2_BOSS2_ROCKET_2);
@@ -76,7 +76,7 @@ void CBoss2::FireRocket ()
 //3
 	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_BOSS2_ROCKET_3], forward, right, start);
 	vec = Entity->Enemy->State.GetOrigin();
-	vec.Z += Entity->gameEntity->viewheight;
+	vec.Z += Entity->ViewHeight;
 	dir = vec - start;
 	dir.Normalize();
 	MonsterFireRocket (start, dir, 50, 500, MZ2_BOSS2_ROCKET_3);
@@ -84,7 +84,7 @@ void CBoss2::FireRocket ()
 //4
 	G_ProjectSource (origin, dumb_and_hacky_monster_MuzzFlashOffset[MZ2_BOSS2_ROCKET_4], forward, right, start);
 	vec = Entity->Enemy->State.GetOrigin();
-	vec.Z += Entity->gameEntity->viewheight;
+	vec.Z += Entity->ViewHeight;
 	dir = vec - start;
 	dir.Normalize();
 	MonsterFireRocket (start, dir, 50, 500, MZ2_BOSS2_ROCKET_4);
@@ -102,7 +102,7 @@ void CBoss2::FireBulletRight ()
 	if (Entity->Enemy->EntityFlags & ENT_PHYSICS)
 		tempTarget = tempTarget.MultiplyAngles (-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->Enemy)->Velocity);
 	target = tempTarget;
-	target.Z += Entity->Enemy->gameEntity->viewheight;
+	target.Z += Entity->Enemy->ViewHeight;
 	forward = target - start;
 	forward.Normalize();
 
@@ -121,7 +121,7 @@ void CBoss2::FireBulletLeft ()
 	if (Entity->Enemy->EntityFlags & ENT_PHYSICS)
 		tempTarget = tempTarget.MultiplyAngles (-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->Enemy)->Velocity);
 	target = tempTarget;
-	target.Z += Entity->Enemy->gameEntity->viewheight;
+	target.Z += Entity->Enemy->ViewHeight;
 	forward = target - start;
 	forward.Normalize();
 
@@ -490,10 +490,10 @@ void CBoss2::Pain (CBaseEntity *other, float kick, int damage)
 	if (Entity->Health < (Entity->MaxHealth / 2))
 		Entity->State.SetSkinNum(1);
 
-	if (level.framenum < Entity->gameEntity->pain_debounce_time)
+	if (level.framenum < PainDebounceTime)
 		return;
 
-	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
+	PainDebounceTime = level.framenum + 30;
 
 // American wanted these at no attenuation
 	Entity->PlaySound (CHAN_VOICE, (damage < 10) ? SoundPain3 : ((damage < 30) ? SoundPain1 : SoundPain2), 1, ATTN_NONE, 0);
@@ -531,9 +531,9 @@ bool CBoss2::CheckAttack ()
 	{
 	// see if any entities are in the way of the shot
 		vec3f spot1 = Entity->State.GetOrigin();
-		spot1.Z += Entity->gameEntity->viewheight;
+		spot1.Z += Entity->ViewHeight;
 		vec3f spot2 = Entity->Enemy->State.GetOrigin();
-		spot2.Z += Entity->Enemy->gameEntity->viewheight;
+		spot2.Z += Entity->Enemy->ViewHeight;
 
 		CTrace tr (spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA);
 

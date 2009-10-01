@@ -949,7 +949,7 @@ void CMonster::WalkMonsterStartGo ()
 	
 	if (!YawSpeed)
 		YawSpeed = 20;
-	Entity->gameEntity->viewheight = 25;
+	Entity->ViewHeight = 25;
 
 	MonsterStartGo ();
 
@@ -968,7 +968,7 @@ void CMonster::SwimMonsterStartGo ()
 {
 	if (!YawSpeed)
 		YawSpeed = 10;
-	Entity->gameEntity->viewheight = 10;
+	Entity->ViewHeight = 10;
 
 	MonsterStartGo ();
 
@@ -990,7 +990,7 @@ void CMonster::FlyMonsterStartGo ()
 
 	if (!YawSpeed)
 		YawSpeed = 10;
-	Entity->gameEntity->viewheight = 25;
+	Entity->ViewHeight = 25;
 
 	MonsterStartGo ();
 
@@ -1096,7 +1096,7 @@ void CMonster::MonsterStartGo ()
 
 void CMonster::MonsterStart ()
 {
-	DebugPrintf ("%s spawned with ID %u\n", MonsterName, MonsterID);
+//	DebugPrintf ("%s spawned with ID %u\n", MonsterName, MonsterID);
 	if (game.mode & GAME_DEATHMATCH)
 	{
 		Entity->Free ();
@@ -1402,9 +1402,9 @@ bool CMonster::CheckAttack ()
 	{
 	// see if any entities are in the way of the shot
 		spot1 = Entity->State.GetOrigin();
-		spot1.Z += Entity->gameEntity->viewheight;
+		spot1.Z += Entity->ViewHeight;
 		spot2 = Entity->Enemy->State.GetOrigin();
-		spot2.Z += Entity->Enemy->gameEntity->viewheight;
+		spot2.Z += Entity->Enemy->ViewHeight;
 
 		tr = CTrace(spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
 
@@ -1486,9 +1486,9 @@ bool CMonster::CheckAttack ()
 	// see if any entities are in the way of the shot
 		vec3f	spot1, spot2;
 		spot1 = Entity->State.GetOrigin ();
-		spot1.Z += Entity->gameEntity->viewheight;
+		spot1.Z += Entity->ViewHeight;
 		spot2 = Entity->Enemy->State.GetOrigin();
-		spot2.Z += Entity->Enemy->gameEntity->viewheight;
+		spot2.Z += Entity->Enemy->ViewHeight;
 
 		CTrace tr (spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
 
@@ -3150,13 +3150,13 @@ void CMonster::WorldEffects()
 				Entity->AirFinished = level.framenum + 120;
 			else if (Entity->AirFinished < level.framenum)
 			{
-				if (Entity->gameEntity->pain_debounce_time < level.framenum)
+				if (PainDebounceTime < level.framenum)
 				{
 					int dmg = 2 + 2 * (level.framenum - Entity->AirFinished);
 					if (dmg > 15)
 						dmg = 15;
 					Entity->TakeDamage (World, World, vec3fOrigin, origin, vec3fOrigin, dmg, 0, DAMAGE_NO_ARMOR, MOD_WATER);
-					Entity->gameEntity->pain_debounce_time = level.framenum + 10;
+					PainDebounceTime = level.framenum + 10;
 				}
 			}
 		}
@@ -3166,13 +3166,13 @@ void CMonster::WorldEffects()
 				Entity->AirFinished = level.framenum + 90;
 			else if (Entity->AirFinished < level.framenum)
 			{	// suffocate!
-				if (Entity->gameEntity->pain_debounce_time < level.framenum)
+				if (PainDebounceTime < level.framenum)
 				{
 					int dmg = 2 + 2 * (level.framenum - Entity->AirFinished);
 					if (dmg > 15)
 						dmg = 15;
 					Entity->TakeDamage (World, World, vec3fOrigin, origin, vec3fOrigin, dmg, 0, DAMAGE_NO_ARMOR, MOD_WATER);
-					Entity->gameEntity->pain_debounce_time = level.framenum + 10;
+					PainDebounceTime = level.framenum + 10;
 				}
 			}
 		}

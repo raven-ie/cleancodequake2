@@ -67,7 +67,7 @@ bool CRocketLauncher::CanStopFidgetting (CPlayerEntity *ent)
 
 void CRocketLauncher::Fire (CPlayerEntity *ent)
 {
-	vec3f	offset (8, 8, ent->gameEntity->viewheight-8), start, forward, right;
+	vec3f	offset (8, 8, ent->ViewHeight-8), start, forward, right;
 	const int	damage = (isQuad) ? (400 + (int)(random() * 80.0)) : (100 + (int)(random() * 20.0)),
 				radius_damage = (isQuad) ? 480 : 120;
 	const float	damage_radius = 120;

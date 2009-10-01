@@ -279,7 +279,6 @@ public:
 	float		bonus_alpha;
 	float		bobtime;			// so off-ground doesn't change it
 
-	float		next_drown_time;
 	int			old_waterlevel;
 	int			breather_sound;
 
@@ -338,6 +337,9 @@ public:
 	FrameNumber_t		FlySoundDebounceTime;
 	FrameNumber_t		DamageDebounceTime;
 	FrameNumber_t		AirFinished;
+	FrameNumber_t		NextDrownTime;
+	int					NextDrownDamage;
+	FrameNumber_t		PainDebounceTime;
 
 	CPlayerEntity (int Index);
 	bool Run ();
@@ -421,6 +423,8 @@ public:
 	void P_ProjectSource (vec3f distance, vec3f &forward, vec3f &right, vec3f &result);
 	void PlayerNoiseAt (vec3f Where, int type);
 };
+
+void ClientEndServerFrames ();
 
 #else
 FILE_WARNING

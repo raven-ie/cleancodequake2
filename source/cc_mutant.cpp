@@ -594,10 +594,10 @@ void CMutant::Pain (CBaseEntity *other, float kick, int damage)
 	if (Entity->Health < (Entity->MaxHealth / 2))
 		Entity->State.SetSkinNum(1);
 
-	if (level.framenum < Entity->gameEntity->pain_debounce_time)
+	if (level.framenum < PainDebounceTime)
 		return;
 
-	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
+	PainDebounceTime = level.framenum + 30;
 
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare

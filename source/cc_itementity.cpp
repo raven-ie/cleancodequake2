@@ -90,7 +90,7 @@ void CItemEntity::Touch(CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf
 	Player->Client.bonus_alpha = 0.25;	
 
 	// show icon and name on status bar
-	Player->Client.PlayerState.SetStat(STAT_PICKUP_ICON, gameEntity->item->IconIndex);
+	Player->Client.PlayerState.SetStat(STAT_PICKUP_ICON, gameEntity->item->GetIconIndex());
 	Player->Client.PlayerState.SetStat(STAT_PICKUP_STRING, gameEntity->item->GetConfigStringNumber());
 	Player->Client.pickup_msg_time = level.framenum + 30;
 
@@ -102,7 +102,7 @@ void CItemEntity::Touch(CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf
 	}
 
 	if (gameEntity->item->PickupSound)
-		Player->PlaySound(CHAN_ITEM, gameEntity->item->PickupSoundIndex
+		Player->PlaySound(CHAN_ITEM, gameEntity->item->GetPickupSound()
 #ifdef CLEANCTF_ENABLED
 		, 1, (gameEntity->item == NItems::RedFlag || gameEntity->item == NItems::BlueFlag) ? ATTN_NONE : ATTN_NORM
 #endif

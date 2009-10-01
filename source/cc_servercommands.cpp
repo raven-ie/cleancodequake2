@@ -32,6 +32,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 //
 
 #include "cc_local.h"
+#include "cc_exceptionhandler.h"
 
 void CServerCmd::Run ()
 {
@@ -284,22 +285,10 @@ The game can issue gi.argc() / gi.argv() commands to get the rest
 of the parameters
 =================
 */
-#include "cc_exceptionhandler.h"
-void ServerCommand (void)
+void CC_ServerCommand (void)
 {
-#ifdef CC_USE_EXCEPTION_HANDLER
-__try
-{
-#endif
 	InitArg ();
 	SvCmd_RunCommand (ArgGets(1));
 	EndArg ();
-#ifdef CC_USE_EXCEPTION_HANDLER
-}
-__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
-{
-	return;
-}
-#endif
 }
 

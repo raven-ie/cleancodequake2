@@ -467,10 +467,10 @@ void CInsane::Pain (CBaseEntity *other, float kick, int damage)
 //	if (self->health < (self->max_health / 2))
 //		self->state.skinnum = 1;
 
-	if (level.framenum < Entity->gameEntity->pain_debounce_time)
+	if (level.framenum < PainDebounceTime)
 		return;
 
-	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
+	PainDebounceTime = level.framenum + 30;
 
 	// Paril
 	// As much as I hate this, this needs to stay

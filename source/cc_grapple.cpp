@@ -80,7 +80,7 @@ void CGrapple::PlayerResetGrapple(CPlayerEntity *ent)
 
 void CGrapple::Fire (CPlayerEntity *Player)
 {
-	vec3f	forward, right, start, offset (24, 8, Player->gameEntity->viewheight-6);
+	vec3f	forward, right, start, offset (24, 8, Player->ViewHeight-6);
 
 	if (Player->Client.ctf_grapplestate > CTF_GRAPPLE_STATE_FLY)
 		return; // it's already out

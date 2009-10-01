@@ -280,10 +280,10 @@ void CGunner::Pain (CBaseEntity *other, float kick, int damage)
 	DoneDodge();
 #endif
 
-	if (level.framenum < Entity->gameEntity->pain_debounce_time)
+	if (level.framenum < PainDebounceTime)
 		return;
 
-	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
+	PainDebounceTime = level.framenum + 30;
 	Entity->PlaySound (CHAN_VOICE, (irandom(2)) ? SoundPain : SoundPain2);
 
 	if (skill->Integer() == 3)
@@ -464,7 +464,7 @@ bool CGunner::GrenadeCheck()
 	// check for flag telling us that we're blindfiring
 	if (AIFlags & AI_MANUAL_STEERING)
 	{
-		if ((Entity->State.GetOrigin().Z + Entity->gameEntity->viewheight) < BlindFireTarget.Z)
+		if ((Entity->State.GetOrigin().Z + Entity->ViewHeight) < BlindFireTarget.Z)
 			return false;
 	}
 	else if(Entity->GetAbsMax().Z <= Entity->Enemy->GetAbsMin().Z)
@@ -502,7 +502,7 @@ void CGunner::Fire ()
 	// project enemy back a bit and target there
 	target = Entity->Enemy->State.GetOrigin();
 	target = target.MultiplyAngles (-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->Enemy)->Velocity);
-	target.Z += Entity->Enemy->gameEntity->viewheight;
+	target.Z += Entity->Enemy->ViewHeight;
 
 	aim = target - start;
 	aim.NormalizeFast ();

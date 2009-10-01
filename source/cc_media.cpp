@@ -72,13 +72,7 @@ void InitGameMedia ()
 
 	// Hud stuff
 	gMedia.Hud.HealthPic		=	ImageIndex ("i_health");
-	gMedia.Hud.EnviroPic		=	ImageIndex ("p_envirosuit");
 	gMedia.Hud.HelpPic			=	ImageIndex ("i_help");
-	gMedia.Hud.InvulPic			=	ImageIndex ("p_invulnerability");
-	gMedia.Hud.PowerShieldPic	=	ImageIndex ("i_powershield");
-	gMedia.Hud.QuadPic			=	ImageIndex ("p_quad");
-	gMedia.Hud.RebreatherPic	=	ImageIndex ("p_rebreather");
-	gMedia.Hud.SilencerPic		=	ImageIndex ("p_silencer");
 
 	InitItemMedia ();
 }
