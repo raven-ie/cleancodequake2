@@ -212,30 +212,4 @@ void SetItemNames ()
 
 void InitItemMedia ()
 {
-	for (int i = 0; i < ItemList->numItems; i++)
-	{
-		CBaseItem *Item = ItemList->Items[i];
-		Item->IconIndex = ImageIndex(Item->Icon);
-
-		if (Item->PickupSound)
-			Item->PickupSoundIndex = SoundIndex(Item->PickupSound);
-
-		if (Item->Flags & ITEMFLAG_WEAPON)
-		{
-			if (Item->Flags & ITEMFLAG_AMMO)
-			{
-				CAmmo *Weap = dynamic_cast<CAmmo*>(Item);
-				if (Weap->Weapon->WeaponSound)
-					Weap->Weapon->WeaponSoundIndex = SoundIndex(Weap->Weapon->WeaponSound);
-				Weap->Weapon->WeaponModelIndex = ModelIndex(Weap->Weapon->WeaponModelString);
-			}
-			else
-			{
-				CWeaponItem *Weap = dynamic_cast<CWeaponItem*>(Item);
-				if (Weap->Weapon->WeaponSound)
-					Weap->Weapon->WeaponSoundIndex = SoundIndex(Weap->Weapon->WeaponSound);
-				Weap->Weapon->WeaponModelIndex = ModelIndex(Weap->Weapon->WeaponModelString);
-			}
-		}
-	}
 }

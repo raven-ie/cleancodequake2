@@ -342,7 +342,7 @@ void CFlyer::Fire (int FlashNumber)
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[FlashNumber], forward, right, start);
 	
 	end = Entity->Enemy->State.GetOrigin();
-	end.Z += Entity->Enemy->gameEntity->viewheight;
+	end.Z += Entity->Enemy->ViewHeight;
 	dir = end - start;
 
 	MonsterFireBlaster (start, dir, 1, 1000, FlashNumber, effect);
@@ -465,10 +465,10 @@ void CFlyer::Pain (CBaseEntity *other, float kick, int damage)
 	if (Entity->Health < (Entity->MaxHealth / 2))
 		Entity->State.SetSkinNum(1);
 
-	if (level.framenum < Entity->gameEntity->pain_debounce_time)
+	if (level.framenum < PainDebounceTime)
 		return;
 
-	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
+	PainDebounceTime = level.framenum + 30;
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
 

@@ -254,10 +254,10 @@ void CMaiden::Pain (CBaseEntity *other, float kick, int damage)
 	if (Entity->Health < (Entity->MaxHealth / 2))
 		Entity->State.SetSkinNum(1);
 
-	if (level.framenum < Entity->gameEntity->pain_debounce_time)
+	if (level.framenum < PainDebounceTime)
 		return;
 
-	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
+	PainDebounceTime = level.framenum + 30;
 
 	int r = irandom(3);
 	switch (r)
@@ -569,7 +569,7 @@ void CMaiden::Rocket ()
 	else if(random() < 0.33 || (start[2] < Entity->Enemy->GetAbsMin().Z))
 	{
 		vec = target;
-		vec.Z += Entity->Enemy->gameEntity->viewheight;
+		vec.Z += Entity->Enemy->ViewHeight;
 		dir = vec - start;
 	}
 	else
@@ -631,7 +631,7 @@ void CMaiden::Rocket ()
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_CHICK_ROCKET_1], forward, right, start);
 
 	vec = Entity->Enemy->state.origin;
-	vec.Z += Entity->Enemy->gameEntity->viewheight;
+	vec.Z += Entity->Enemy->ViewHeight;
 	dir = vec - start;
 	dir.NormalizeFast ();
 

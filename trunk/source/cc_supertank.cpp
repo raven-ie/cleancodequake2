@@ -342,7 +342,7 @@ void CSuperTank::Grenade ()
 	if (Entity->Enemy)
 	{
 		vec3f vec = Entity->Enemy->State.GetOrigin();
-		vec.Z += Entity->Enemy->gameEntity->viewheight;
+		vec.Z += Entity->Enemy->ViewHeight;
 		forward = vec - start;
 		forward.Normalize ();
 	}
@@ -460,7 +460,7 @@ void CSuperTank::Pain (CBaseEntity *other, float kick, int damage)
 	if (Entity->Health < (Entity->MaxHealth / 2))
 			Entity->State.SetSkinNum(1);
 
-	if (level.framenum < Entity->gameEntity->pain_debounce_time)
+	if (level.framenum < PainDebounceTime)
 			return;
 
 	// Lessen the chance of him going into his pain frames
@@ -471,7 +471,7 @@ void CSuperTank::Pain (CBaseEntity *other, float kick, int damage)
 	if (skill->Integer() >= 2 && (Entity->State.GetFrame() >= FRAME_attak2_1) && (Entity->State.GetFrame() <= FRAME_attak2_14) )
 		return;
 
-	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
+	PainDebounceTime = level.framenum + 30;
 
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
@@ -562,14 +562,14 @@ void CSuperTank::Rocket ()
 	{
 //		gi.dprintf("normal shot\n");
 		vec = Entity->Enemy->State.GetOrigin();
-		vec.Z += Entity->Enemy->gameEntity->viewheight;
+		vec.Z += Entity->Enemy->ViewHeight;
 		dir = vec - start;
 	}
 	else
 	{
 //		gi.dprintf("shooting at feet!\n");
 		vec = Entity->Enemy->State.GetOrigin();
-		vec.Z = Entity->Enemy->gameEntity->viewheight;
+		vec.Z = Entity->Enemy->ViewHeight;
 		dir = vec - start;
 	}
 //PGM
@@ -635,7 +635,7 @@ void CSuperTank::MachineGun ()
 	if (Entity->Enemy)
 	{
 		vec3f vec = Entity->Enemy->State.GetOrigin();
-		vec.Z += Entity->Enemy->gameEntity->viewheight;
+		vec.Z += Entity->Enemy->ViewHeight;
 		forward = vec - start;
 		forward.Normalize ();
 	}

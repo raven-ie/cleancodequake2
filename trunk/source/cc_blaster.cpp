@@ -74,7 +74,7 @@ void CBlaster::Fire (CPlayerEntity *ent)
 			(isQuad) ? 60 : 15
 			:
 			(isQuad) ? 40 : 10;
-	vec3f	Forward, Start, Right, Offset (24, 8, ent->gameEntity->viewheight - 8);
+	vec3f	Forward, Start, Right, Offset (24, 8, ent->ViewHeight - 8);
 
 	ent->Client.ViewAngle.ToVectors (&Forward, &Right, NULL);
 	ent->P_ProjectSource (Offset, Forward, Right, Start);

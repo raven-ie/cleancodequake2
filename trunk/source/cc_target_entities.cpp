@@ -119,18 +119,12 @@ const CEntityField CTargetSpeaker::FieldsForParsing[] =
 	CEntityField ("volume", EntityMemberOffset(CTargetSpeaker,Volume), FTFloat),
 	CEntityField ("attenuation", EntityMemberOffset(CTargetSpeaker,Attenuation), FTFloat)
 };
-const size_t CTargetSpeaker::FieldsForParsingSize = (sizeof(CTargetSpeaker::FieldsForParsing) / sizeof(CTargetSpeaker::FieldsForParsing[0]));
+const size_t CTargetSpeaker::FieldsForParsingSize = FieldSize<CTargetSpeaker>();
 
 bool			CTargetSpeaker::ParseField (char *Key, char *Value)
 {
-	for (size_t i = 0; i < CTargetSpeaker::FieldsForParsingSize; i++)
-	{
-		if (strcmp (Key, CTargetSpeaker::FieldsForParsing[i].Name) == 0)
-		{
-			CTargetSpeaker::FieldsForParsing[i].Create<CTargetSpeaker> (this, Value);
-			return true;
-		}
-	}
+	if (CheckFields<CTargetSpeaker> (this, Key, Value))
+		return true;
 
 	return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 };
@@ -140,6 +134,8 @@ LINK_CLASSNAME_TO_CLASS ("target_speaker", CTargetSpeaker);
 class CTargetExplosion : public CMapEntity, public CThinkableEntity, public CUsableEntity
 {
 public:
+	int			Damage;
+
 	CTargetExplosion () :
 	  CBaseEntity (),
 	  CMapEntity (),
@@ -156,10 +152,9 @@ public:
 	{
 	};
 
-	virtual bool ParseField (char *Key, char *Value)
-	{
-		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
-	}
+	static const CEntityField FieldsForParsing[];
+	static const size_t FieldsForParsingSize;
+	virtual bool ParseField (char *Key, char *Value);
 
 	bool Run ()
 	{
@@ -171,7 +166,8 @@ public:
 		vec3f or = State.GetOrigin();
 		CTempEnt_Explosions::RocketExplosion (or, this);
 
-		T_RadiusDamage (this, Activator, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_EXPLOSIVE);
+		if (Damage)
+			T_RadiusDamage (this, Activator, Damage, NULL, Damage+40, MOD_EXPLOSIVE);
 
 		FrameNumber_t save = Delay;
 		Delay = 0;
@@ -197,6 +193,21 @@ public:
 		SetSvFlags (SVF_NOCLIENT);
 	};
 };
+
+const CEntityField CTargetExplosion::FieldsForParsing[] =
+{
+	CEntityField ("dmg", EntityMemberOffset(CTargetExplosion,Damage), FTInteger),
+};
+const size_t CTargetExplosion::FieldsForParsingSize = FieldSize<CTargetExplosion>();
+
+bool			CTargetExplosion::ParseField (char *Key, char *Value)
+{
+	if (CheckFields<CTargetExplosion> (this, Key, Value))
+		return true;
+
+	return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+};
+
 
 LINK_CLASSNAME_TO_CLASS ("target_explosion", CTargetExplosion);
 
@@ -276,18 +287,12 @@ const CEntityField CTargetSpawner::FieldsForParsing[] =
 {
 	CEntityField ("speed", EntityMemberOffset(CTargetSpawner,Speed), FTFloat),
 };
-const size_t CTargetSpawner::FieldsForParsingSize = (sizeof(CTargetSpawner::FieldsForParsing) / sizeof(CTargetSpawner::FieldsForParsing[0]));
+const size_t CTargetSpawner::FieldsForParsingSize = FieldSize<CTargetSpawner>();
 
 bool			CTargetSpawner::ParseField (char *Key, char *Value)
 {
-	for (size_t i = 0; i < CTargetSpawner::FieldsForParsingSize; i++)
-	{
-		if (strcmp (Key, CTargetSpawner::FieldsForParsing[i].Name) == 0)
-		{
-			CTargetSpawner::FieldsForParsing[i].Create<CTargetSpawner> (this, Value);
-			return true;
-		}
-	}
+	if (CheckFields<CTargetSpawner> (this, Key, Value))
+		return true;
 
 	// Couldn't find it here
 	return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
@@ -313,7 +318,8 @@ Set "sounds" to one of the following:
 class CTargetSplash : public CMapEntity, public CUsableEntity
 {
 public:
-	vec3f MoveDir;
+	vec3f	MoveDir;
+	int		Damage;
 
 	CTargetSplash () :
 	  CBaseEntity (),
@@ -329,10 +335,9 @@ public:
 	{
 	};
 
-	virtual bool ParseField (char *Key, char *Value)
-	{
-		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
-	}
+  	static const CEntityField FieldsForParsing[];
+	static const size_t FieldsForParsingSize;
+	virtual bool ParseField (char *Key, char *Value);
 
 	bool Run ()
 	{
@@ -343,8 +348,8 @@ public:
 	{
 		CTempEnt_Splashes::Splash (State.GetOrigin(), MoveDir, (CTempEnt_Splashes::ESplashType)gameEntity->sounds, gameEntity->count);
 
-		if (gameEntity->dmg)
-			T_RadiusDamage (this, activator, gameEntity->dmg, NULL, gameEntity->dmg+40, MOD_SPLASH);
+		if (Damage)
+			T_RadiusDamage (this, activator, Damage, NULL, Damage+40, MOD_SPLASH);
 	};
 
 	void Spawn ()
@@ -358,6 +363,21 @@ public:
 
 		SetSvFlags (SVF_NOCLIENT);
 	};
+};
+
+const CEntityField CTargetSplash::FieldsForParsing[] =
+{
+	CEntityField ("dmg", EntityMemberOffset(CTargetSplash,Damage), FTInteger),
+};
+const size_t CTargetSplash::FieldsForParsingSize = FieldSize<CTargetSplash>();
+
+bool			CTargetSplash::ParseField (char *Key, char *Value)
+{
+	if (CheckFields<CTargetSplash> (this, Key, Value))
+		return true;
+
+	// Couldn't find it here
+	return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 };
 
 LINK_CLASSNAME_TO_CLASS ("target_splash", CTargetSplash);
@@ -465,7 +485,7 @@ void CTargetChangeLevel::Use (CBaseEntity *other, CBaseEntity *activator)
 	}
 
 	// if going to a new unit, clear cross triggers
-	if (strstr(gameEntity->map, "*"))	
+	if (strstr(Map, "*"))	
 		game.serverflags &= ~(SFL_CROSS_TRIGGER_MASK);
 
 	BeginIntermission (this);
@@ -473,7 +493,7 @@ void CTargetChangeLevel::Use (CBaseEntity *other, CBaseEntity *activator)
 
 void CTargetChangeLevel::Spawn ()
 {
-	if (!gameEntity->map)
+	if (!Map)
 	{
 		//gi.dprintf("target_changelevel with no map at (%f %f %f)\n", ent->state.origin[0], ent->state.origin[1], ent->state.origin[2]);
 		MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No map\n");
@@ -482,13 +502,39 @@ void CTargetChangeLevel::Spawn ()
 	}
 
 	// ugly hack because *SOMEBODY* screwed up their map
-   if((Q_stricmp(level.mapname, "fact1") == 0) && (Q_stricmp(gameEntity->map, "fact3") == 0))
-	   gameEntity->map = "fact3$secret1";
+   if((Q_stricmp(level.mapname, "fact1") == 0) && (Q_stricmp(Map, "fact3") == 0))
+	   Map = "fact3$secret1";
 
 	SetSvFlags (SVF_NOCLIENT);
 };
 
+const CEntityField CTargetChangeLevel::FieldsForParsing[] =
+{
+	CEntityField ("map", EntityMemberOffset(CTargetChangeLevel,Map), FTStringL),
+};
+const size_t CTargetChangeLevel::FieldsForParsingSize = FieldSize<CTargetChangeLevel>();
+
+bool			CTargetChangeLevel::ParseField (char *Key, char *Value)
+{
+	if (CheckFields<CTargetChangeLevel> (this, Key, Value))
+		return true;
+
+	// Couldn't find it here
+	return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+};
+
 LINK_CLASSNAME_TO_CLASS ("target_changelevel", CTargetChangeLevel);
+
+CTargetChangeLevel *CreateTargetChangeLevel(char *map)
+{
+	CTargetChangeLevel *Temp = QNew (com_levelPool, 0) CTargetChangeLevel;
+	Temp->gameEntity->classname = "target_changelevel";
+
+	Q_snprintfz (level.nextmap, sizeof(level.nextmap), "%s", map);
+	Temp->Map = level.nextmap;
+
+	return Temp;
+}
 
 /*QUAKED target_crosslevel_trigger (.5 .5 .5) (-8 -8 -8) (8 8 8) trigger1 trigger2 trigger3 trigger4 trigger5 trigger6 trigger7 trigger8
 Once this trigger is touched/used, any trigger_crosslevel_target with the same trigger number is automatically used when a level is started within the same unit.  It is OK to check multiple triggers.  Message, delay, target, and killtarget also work.
@@ -787,18 +833,12 @@ const CEntityField CTargetBlaster::FieldsForParsing[] =
 	CEntityField ("speed", EntityMemberOffset(CTargetBlaster,Speed), FTFloat),
 	CEntityField ("dmg", EntityMemberOffset(CTargetBlaster,Damage), FTInteger),
 };
-const size_t CTargetBlaster::FieldsForParsingSize = (sizeof(CTargetBlaster::FieldsForParsing) / sizeof(CTargetBlaster::FieldsForParsing[0]));
+const size_t CTargetBlaster::FieldsForParsingSize = FieldSize<CTargetBlaster>();
 
 bool			CTargetBlaster::ParseField (char *Key, char *Value)
 {
-	for (size_t i = 0; i < CTargetBlaster::FieldsForParsingSize; i++)
-	{
-		if (strcmp (Key, CTargetBlaster::FieldsForParsing[i].Name) == 0)
-		{
-			CTargetBlaster::FieldsForParsing[i].Create<CTargetBlaster> (this, Value);
-			return true;
-		}
-	}
+	if (CheckFields<CTargetBlaster> (this, Key, Value))
+		return true;
 
 	// Couldn't find it here
 	return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
@@ -821,9 +861,10 @@ or a direction.
 class CTargetLaser : public CMapEntity, public CThinkableEntity, public CUsableEntity
 {
 public:
-	bool StartLaser;
-	bool Usable;
-	vec3f MoveDir;
+	bool		StartLaser;
+	bool		Usable;
+	vec3f		MoveDir;
+	int			Damage;
 
 	CTargetLaser () :
 	  CBaseEntity (),
@@ -845,10 +886,9 @@ public:
 	{
 	};
 
-	virtual bool ParseField (char *Key, char *Value)
-	{
-		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
-	}
+  	static const CEntityField FieldsForParsing[];
+	static const size_t FieldsForParsingSize;
+	virtual bool ParseField (char *Key, char *Value);
 
 	bool Run ()
 	{
@@ -894,7 +934,7 @@ public:
 			CBaseEntity *Entity = tr.ent->Entity;
 			// hurt it if we can
 			if (((Entity->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(Entity)->CanTakeDamage) && !(Entity->Flags & FL_IMMUNE_LASER))
-				dynamic_cast<CHurtableEntity*>(Entity)->TakeDamage (this, Activator, MoveDir, tr.EndPos, vec3fOrigin, gameEntity->dmg, 1, DAMAGE_ENERGY, MOD_TARGET_LASER);
+				dynamic_cast<CHurtableEntity*>(Entity)->TakeDamage (this, Activator, MoveDir, tr.EndPos, vec3fOrigin, Damage, 1, DAMAGE_ENERGY, MOD_TARGET_LASER);
 
 			// if we hit something that's not a monster or player or is immune to lasers, we're done
 			if (!(Entity->EntityFlags & ENT_MONSTER) && (!(Entity->EntityFlags & ENT_PLAYER)))
@@ -990,8 +1030,8 @@ public:
 		Usable = true;
 		StartLaser = false;
 
-		if (!gameEntity->dmg)
-			gameEntity->dmg = 1;
+		if (!Damage)
+			Damage = 1;
 
 		SetMins (vec3f(-8, -8, -8));
 		SetMaxs (vec3f(8, 8, 8));
@@ -1010,22 +1050,37 @@ public:
 	};
 };
 
+const CEntityField CTargetLaser::FieldsForParsing[] =
+{
+	CEntityField ("dmg", EntityMemberOffset(CTargetLaser,Damage), FTInteger),
+};
+const size_t CTargetLaser::FieldsForParsingSize = FieldSize<CTargetLaser>();
+
+bool			CTargetLaser::ParseField (char *Key, char *Value)
+{
+	if (CheckFields<CTargetLaser> (this, Key, Value))
+		return true;
+
+	// Couldn't find it here
+	return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
+};
+
 LINK_CLASSNAME_TO_CLASS ("target_laser", CTargetLaser);
 
 /*QUAKED target_help (1 0 1) (-16 -16 -24) (16 16 24) help1
 When fired, the "message" key becomes the current personal computer string, and the message light will be set on all clients status bars.
 */
-class CTargeHelp : public CMapEntity, public CUsableEntity
+class CTargetHelp : public CMapEntity, public CUsableEntity
 {
 public:
-	CTargeHelp () :
+	CTargetHelp () :
 	  CBaseEntity (),
 	  CMapEntity (),
 	  CUsableEntity ()
 	{
 	};
 
-	CTargeHelp (int Index) :
+	CTargetHelp (int Index) :
 	  CBaseEntity (Index),
 	  CMapEntity (Index),
 	  CUsableEntity (Index)
@@ -1065,7 +1120,7 @@ public:
 	};
 };
 
-LINK_CLASSNAME_TO_CLASS ("target_help", CTargeHelp);
+LINK_CLASSNAME_TO_CLASS ("target_help", CTargetHelp);
 
 //==========================================================
 
@@ -1177,18 +1232,12 @@ const CEntityField CTargetEarthquake::FieldsForParsing[] =
 {
 	CEntityField ("speed", EntityMemberOffset(CTargetEarthquake,Speed), FTFloat),
 };
-const size_t CTargetEarthquake::FieldsForParsingSize = (sizeof(CTargetEarthquake::FieldsForParsing) / sizeof(CTargetEarthquake::FieldsForParsing[0]));
+const size_t CTargetEarthquake::FieldsForParsingSize = FieldSize<CTargetEarthquake>();
 
 bool			CTargetEarthquake::ParseField (char *Key, char *Value)
 {
-	for (size_t i = 0; i < CTargetEarthquake::FieldsForParsingSize; i++)
-	{
-		if (strcmp (Key, CTargetEarthquake::FieldsForParsing[i].Name) == 0)
-		{
-			CTargetEarthquake::FieldsForParsing[i].Create<CTargetEarthquake> (this, Value);
-			return true;
-		}
-	}
+	if (CheckFields<CTargetEarthquake> (this, Key, Value))
+		return true;
 
 	// Couldn't find it here
 	return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));

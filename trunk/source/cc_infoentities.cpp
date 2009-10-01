@@ -86,9 +86,11 @@ public:
 
 LINK_CLASSNAME_TO_CLASS ("misc_teleporter_dest", CTeleporterDest);
 
-class CTeleporterTrigger : public CMapEntity, public CTouchableEntity
+class CTeleporterTrigger : public CMapEntity, public CTouchableEntity, public CThinkableEntity
 {
 public:
+	CBaseEntity		*Dest;
+
 	CTeleporterTrigger() :
 	  CBaseEntity (),
 	  CMapEntity(),
@@ -105,13 +107,6 @@ public:
 
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
-		CBaseEntity		*dest = CC_Find (NULL, FOFS(targetname), gameEntity->target);
-		if (!dest)
-		{
-			DebugPrintf ("Couldn't find destination\n");
-			return;
-		}
-
 		CPlayerEntity	*Player = NULL;
 		if (other->EntityFlags & ENT_PLAYER)
 			Player = dynamic_cast<CPlayerEntity*>(other);
@@ -126,8 +121,8 @@ public:
 		// unlink to make sure it can't possibly interfere with KillBox
 		other->Unlink ();
 
-		other->State.SetOrigin (dest->State.GetOrigin() + vec3f(0,0,10));
-		other->State.SetOldOrigin (dest->State.GetOrigin());
+		other->State.SetOrigin (Dest->State.GetOrigin() + vec3f(0,0,10));
+		other->State.SetOldOrigin (Dest->State.GetOrigin());
 
 		// clear the velocity and hold them in place briefly
 		if (other->EntityFlags & ENT_PHYSICS)
@@ -145,7 +140,7 @@ public:
 		if (other->EntityFlags & ENT_PLAYER)
 		{
 			for (int i=0 ; i<3 ; i++)
-				Player->Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(dest->State.GetAngles()[i] - Player->Client.resp.cmd_angles[i]);
+				Player->Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(Dest->State.GetAngles()[i] - Player->Client.resp.cmd_angles[i]);
 		}
 
 		other->State.SetAngles(vec3fOrigin);
@@ -161,8 +156,17 @@ public:
 		other->Link ();
 	};
 
+	void Think ()
+	{
+		Dest = CC_Find (NULL, FOFS(targetname), gameEntity->target);
+	
+		if (!Dest)
+			DebugPrintf ("Couldn't find teleporter\n");
+	};
+
 	virtual void Spawn ()
 	{
+		NextThink = level.framenum + 1;
 	};
 };
 
@@ -209,6 +213,7 @@ public:
 		trig->State.SetOrigin (State.GetOrigin());
 		trig->SetMins (vec3f(-8, -8, 8));
 		trig->SetMaxs (vec3f(8, 8, 24));
+		trig->NextThink = level.framenum + 1;
 		trig->Link ();
 	};
 };
@@ -253,7 +258,7 @@ public:
 		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
 		SetSolid (SOLID_TRIGGER);
 		Touchable = true;
-		SetModel (gameEntity, gameEntity->model);
+		SetBrushModel ();
 		Link ();
 
 		// noise maker and splash effect dude
@@ -658,18 +663,12 @@ const CEntityField CPathCorner::FieldsForParsing[] =
 {
 	CEntityField ("wait", EntityMemberOffset(CPathCorner,Wait), FTTime),
 };
-const size_t CPathCorner::FieldsForParsingSize = (sizeof(CPathCorner::FieldsForParsing) / sizeof(CPathCorner::FieldsForParsing[0]));
+const size_t CPathCorner::FieldsForParsingSize = FieldSize<CPathCorner>();
 
 bool			CPathCorner::ParseField (char *Key, char *Value)
 {
-	for (size_t i = 0; i < CPathCorner::FieldsForParsingSize; i++)
-	{
-		if (strcmp (Key, CPathCorner::FieldsForParsing[i].Name) == 0)
-		{
-			CPathCorner::FieldsForParsing[i].Create<CPathCorner> (this, Value);
-			return true;
-		}
-	}
+	if (CheckFields<CPathCorner> (this, Key, Value))
+		return true;
 
 	// Couldn't find it here
 	return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
@@ -1018,18 +1017,12 @@ const CEntityField CTargetLightRamp::FieldsForParsing[] =
 {
 	CEntityField ("speed", EntityMemberOffset(CTargetLightRamp,Speed), FTFloat),
 };
-const size_t CTargetLightRamp::FieldsForParsingSize = (sizeof(CTargetLightRamp::FieldsForParsing) / sizeof(CTargetLightRamp::FieldsForParsing[0]));
+const size_t CTargetLightRamp::FieldsForParsingSize = FieldSize<CTargetLightRamp>();
 
 bool			CTargetLightRamp::ParseField (char *Key, char *Value)
 {
-	for (size_t i = 0; i < CTargetLightRamp::FieldsForParsingSize; i++)
-	{
-		if (strcmp (Key, CTargetLightRamp::FieldsForParsing[i].Name) == 0)
-		{
-			CTargetLightRamp::FieldsForParsing[i].Create<CTargetLightRamp> (this, Value);
-			return true;
-		}
-	}
+	if (CheckFields<CTargetLightRamp> (this, Key, Value))
+		return true;
 
 	// Couldn't find it here
 	return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));

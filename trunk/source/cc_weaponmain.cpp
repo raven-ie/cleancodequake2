@@ -57,7 +57,7 @@ WeaponSound(WeaponSound)
 void CWeapon::InitWeapon (CPlayerEntity *Player)
 {
 	Player->Client.PlayerState.SetGunFrame (ActivationStart);
-	Player->Client.PlayerState.SetGunIndex (WeaponModelIndex);
+	Player->Client.PlayerState.SetGunIndex (GetWeaponModel ());
 	Player->Client.weaponstate = WS_ACTIVATING;
 }
 

@@ -146,7 +146,7 @@ void CChaingun::Fire (CPlayerEntity *ent)
 	{
 		// get start / end positions
 		ent->Client.ViewAngle.ToVectors (&forward, &right, &up);
-		offset.Set (0, 7 + crandom()*4, crandom()*4 + ent->gameEntity->viewheight-8);
+		offset.Set (0, 7 + crandom()*4, crandom()*4 + ent->ViewHeight-8);
 		ent->P_ProjectSource (offset, forward, right, start);
 
 		CBullet::Fire (ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_CHAINGUN);

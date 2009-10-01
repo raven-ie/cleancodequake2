@@ -78,18 +78,12 @@ const CEntityField CFuncTimer::FieldsForParsing[] =
 	CEntityField ("pausetime", EntityMemberOffset(CFuncTimer,PauseTime), FTTime),
 	CEntityField ("wait", EntityMemberOffset(CFuncTimer,Wait), FTTime),
 };
-const size_t CFuncTimer::FieldsForParsingSize = (sizeof(CFuncTimer::FieldsForParsing) / sizeof(CFuncTimer::FieldsForParsing[0]));
+const size_t CFuncTimer::FieldsForParsingSize = FieldSize<CFuncTimer>();
 
 bool			CFuncTimer::ParseField (char *Key, char *Value)
 {
-	for (size_t i = 0; i < CFuncTimer::FieldsForParsingSize; i++)
-	{
-		if (strcmp (Key, CFuncTimer::FieldsForParsing[i].Name) == 0)
-		{
-			CFuncTimer::FieldsForParsing[i].Create<CFuncTimer> (this, Value);
-			return true;
-		}
-	}
+	if (CheckFields<CFuncTimer> (this, Key, Value))
+		return true;
 
 	// Couldn't find it here
 	return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
@@ -179,7 +173,7 @@ bool CTargetCharacter::Run ()
 void CTargetCharacter::Spawn ()
 {
 	PhysicsType = PHYSICS_PUSH;
-	SetModel (gameEntity, gameEntity->model);
+	SetBrushModel ();
 	SetSolid (SOLID_BSP);
 	State.SetFrame (12);
 	Link ();

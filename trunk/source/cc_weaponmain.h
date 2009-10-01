@@ -60,10 +60,30 @@ public:
 	bool			isQuad, isSilenced;
 	CBaseItem		*Item;
 	CWeaponItem		*WeaponItem; // The weapon that is linked to this weapon.
+
 	char			*WeaponSound;
+private:
 	MediaIndex		WeaponSoundIndex;
+
+public:
+	inline MediaIndex		GetWeaponSound ()
+	{
+		return (WeaponSound) ?
+			(WeaponSoundIndex) ? WeaponSoundIndex : (WeaponSoundIndex = SoundIndex(WeaponSound))
+			: 0;
+	};
+
 	char			*WeaponModelString; // Temporary
+private:
 	MediaIndex		WeaponModelIndex;
+
+public:
+	inline MediaIndex		GetWeaponModel ()
+	{
+		return (WeaponModelString) ?
+			(WeaponModelIndex) ? WeaponModelIndex : (WeaponModelIndex = ModelIndex(WeaponModelString))
+			: 0;
+	};
 
 	MediaIndex		vwepIndex;
 

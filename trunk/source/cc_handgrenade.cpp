@@ -86,7 +86,7 @@ void CHandGrenade::Hold (CPlayerEntity *ent)
 
 void CHandGrenade::FireGrenade (CPlayerEntity *ent, bool inHand)
 {
-	vec3f	offset (8, 8, ent->gameEntity->viewheight-8), forward, right, start;
+	vec3f	offset (8, 8, ent->ViewHeight-8), forward, right, start;
 	const int		damage = (isQuad) ? 500 : 125;
 	const float		radius = 165;
 

@@ -50,11 +50,11 @@ void CStatusBar::Send ()
 	ConfigString (CS_STATUSBAR, bar);
 }
 
-void CStatusBar::SendMsg (edict_t *ent, bool reliable)
+void CStatusBar::SendMsg (CPlayerEntity *ent, bool reliable)
 {
 	WriteByte (SVC_LAYOUT);
 	WriteString (bar);
-	Cast ((reliable) ? CASTFLAG_RELIABLE : CASTFLAG_UNRELIABLE, ent);
+	ent->CastTo ((reliable) ? CASTFLAG_RELIABLE : CASTFLAG_UNRELIABLE);
 }
 
 void CStatusBar::AddToBarBuffer (char *string)
@@ -356,5 +356,5 @@ void HelpComputer (CPlayerEntity *ent)
 
 	Scoreboard.AddString (tempBuffer, true);
 
-	Scoreboard.SendMsg (ent->gameEntity, true);
+	Scoreboard.SendMsg (ent, true);
 }

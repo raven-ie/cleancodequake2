@@ -580,29 +580,47 @@ void CBaseEntity::BecomeExplosion (bool grenade)
 	Free ();
 }
 
-#define GameEntityMemberOffset(y,x) (size_t)&(((y*)0)->x)
+void CBaseEntity::SetBrushModel ()
+{
+	if (!gameEntity->model || gameEntity->model[0] != '*')
+	{
+		DebugPrintf ("CleanCode warning: SetBrushModel on a non-brush model!\n");
+		State.SetModelIndex (ModelIndex(gameEntity->model));
+		return;
+	}
+
+_CC_DISABLE_DEPRECATION
+	gi.setmodel (gameEntity, gameEntity->model);
+_CC_ENABLE_DEPRECATION
+}
+
+void CBaseEntity::CastTo (ECastFlags CastFlags)
+{
+	Cast (CastFlags, gameEntity);
+}
+
+void CBaseEntity::StuffText (char *text)
+{
+   	WriteByte (SVC_STUFFTEXT);	        
+	WriteString (text);
+    CastTo (CASTFLAG_RELIABLE);	
+}
 
 const CEntityField CMapEntity::FieldsForParsing[] =
 {
 	CEntityField ("spawnflags", EntityMemberOffset(CBaseEntity,SpawnFlags), FTUInteger),
-	CEntityField ("origin", GameEntityMemberOffset(edict_t,state.origin), FTGVector),
-	CEntityField ("angles", GameEntityMemberOffset(edict_t,state.angles), FTGVector),
-	CEntityField ("angle", GameEntityMemberOffset(edict_t,state.angles), FTGAngleHack),
+	CEntityField ("origin", GameEntityMemberOffset(state.origin), FTVector | FTGameEntity),
+	CEntityField ("angles", GameEntityMemberOffset(state.angles), FTVector | FTGameEntity),
+	CEntityField ("angle", GameEntityMemberOffset(state.angles), FTAngleHack | FTGameEntity),
 	CEntityField ("light", 0, FTIgnore),
-	CEntityField ("model", GameEntityMemberOffset(edict_t,model), FTGStringL),
+	CEntityField ("model", GameEntityMemberOffset(model), FTStringL | FTGameEntity),
 };
-const size_t CMapEntity::FieldsForParsingSize = (sizeof(CMapEntity::FieldsForParsing) / sizeof(CMapEntity::FieldsForParsing[0]));
+const size_t CMapEntity::FieldsForParsingSize = FieldSize<CMapEntity>();
 
 bool			CMapEntity::ParseField (char *Key, char *Value)
 {
-	for (size_t i = 0; i < CMapEntity::FieldsForParsingSize; i++)
-	{
-		if (strcmp (Key, CMapEntity::FieldsForParsing[i].Name) == 0)
-		{
-			CMapEntity::FieldsForParsing[i].Create<CBaseEntity> (this, Value);
-			return true;
-		}
-	}
+	if (CheckFields<CMapEntity, CBaseEntity> (this, Key, Value))
+		return true;
 
 	// Couldn't find it here
 	return false;

@@ -57,6 +57,11 @@ void SetupArg ()
 void InitArg ()
 {
 _CC_DISABLE_DEPRECATION
+	if (numArgv)
+	{
+		DebugPrintf ("CleanCode Warning: InitArg() called before previous arg session completed!\n");
+		EndArg ();
+	}
 
 	numArgv = gi.argc();
 

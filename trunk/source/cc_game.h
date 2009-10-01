@@ -8,7 +8,7 @@ of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 See the GNU General Public License for more details.
 
@@ -27,16 +27,17 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_bodyqueue.h
-// Bodyqueue class
+// cc_game.h
+// Contains actual game code; the code needed to make Q2 go anywhere.
 //
 
-#if !defined(__CC_BODYQUEUE_H__) || !defined(INCLUDE_GUARDS)
-#define __CC_BODYQUEUE_H__
+#if !defined(__CC_GAME_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_GAME_H__
 
-void BodyQueue_Init ();
-void ShutdownBodyQueue ();
-void CopyToBodyQueue (CPlayerEntity *Player);
+void CC_RunFrame ();
+void CC_InitGame ();
+void CC_ShutdownGame ();
+void CC_SpawnEntities (char *mapname, char *entities, char *spawnpoint);
 
 #else
 FILE_WARNING

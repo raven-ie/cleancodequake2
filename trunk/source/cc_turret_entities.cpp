@@ -83,7 +83,7 @@ void CTurretEntityBase::Blocked (CBaseEntity *other)
 {
 	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
 		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, (TeamMaster->GetOwner()) ? TeamMaster->GetOwner() : TeamMaster,
-					vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, TeamMaster->gameEntity->dmg, 10, 0, MOD_CRUSH);
+					vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, dynamic_cast<CBrushModel*>(TeamMaster)->Damage, 10, 0, MOD_CRUSH);
 }
 
 /*QUAKED turret_breach (0 0 0) ?
@@ -155,6 +155,7 @@ void CTurretBreach::Think ()
 	if (FinishInit)
 	{
 		FinishInit = false;
+
 		// get and save info for muzzle location
 		if (!gameEntity->target)
 		{
@@ -168,7 +169,7 @@ void CTurretBreach::Think ()
 			targ->Free();
 		}
 
-		TeamMaster->gameEntity->dmg = gameEntity->dmg;
+		dynamic_cast<CBrushModel*>(TeamMaster)->Damage = Damage;
 		Think ();
 	}
 	else
@@ -280,33 +281,27 @@ const CEntityField CTurretBreach::FieldsForParsing[] =
 	CEntityField ("minyaw", EntityMemberOffset(CTurretBreach,PitchOptions[2]), FTFloat),
 	CEntityField ("maxyaw", EntityMemberOffset(CTurretBreach,PitchOptions[3]), FTFloat),
 };
-const size_t CTurretBreach::FieldsForParsingSize = (sizeof(CTurretBreach::FieldsForParsing) / sizeof(CTurretBreach::FieldsForParsing[0]));
+const size_t CTurretBreach::FieldsForParsingSize = FieldSize<CTurretBreach>();
 
 bool			CTurretBreach::ParseField (char *Key, char *Value)
 {
-	for (size_t i = 0; i < CTurretBreach::FieldsForParsingSize; i++)
-	{
-		if (strcmp (Key, CTurretBreach::FieldsForParsing[i].Name) == 0)
-		{
-			CTurretBreach::FieldsForParsing[i].Create<CTurretBreach> (this, Value);
-			return true;
-		}
-	}
+	if (CheckFields<CTurretBreach> (this, Key, Value))
+		return true;
 
 	// Couldn't find it here
-	return (CMapEntity::ParseField (Key, Value));
+	return (CBrushModel::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 };
 
 void CTurretBreach::Spawn ()
 {
 	SetSolid (SOLID_BSP);
 	PhysicsType = PHYSICS_PUSH;
-	SetModel (gameEntity, gameEntity->model);
+	SetBrushModel ();
 
 	if (!Speed)
 		Speed = 50;
-	if (!gameEntity->dmg)
-		gameEntity->dmg = 10;
+	if (!Damage)
+		Damage = 10;
 
 	if (!PitchOptions[0])
 		PitchOptions[0] = -30;
@@ -350,7 +345,7 @@ void CTurretBase::Spawn ()
 {
 	SetSolid (SOLID_BSP);
 	PhysicsType = PHYSICS_PUSH;
-	SetModel (gameEntity, gameEntity->model);
+	SetBrushModel ();
 	Link ();
 }
 
@@ -403,6 +398,7 @@ void CTurretDriver::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 	ent->TeamChain = NULL;
 	Entity->TeamMaster = NULL;
 	Entity->Flags &= ~FL_TEAMSLAVE;
+	Entity->Velocity.Clear ();
 
 	TargetedBreach->SetOwner (NULL);
 	TargetedBreach->TeamMaster->SetOwner (NULL);
@@ -417,10 +413,10 @@ void CTurretDriver::Pain (CBaseEntity *other, float kick, int damage)
 	if (Entity->Health < (Entity->MaxHealth / 2))
 		Entity->State.SetSkinNum(1);
 
-	if (level.framenum < Entity->gameEntity->pain_debounce_time)
+	if (level.framenum < PainDebounceTime)
 		return;
 
-	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
+	PainDebounceTime = level.framenum + 30;
 	Entity->PlaySound (CHAN_VOICE, (!irandom(2) == 0) ? SoundPain1 : SoundPain2);
 }
 
@@ -457,7 +453,7 @@ void CTurretDriver::TurretThink ()
 
 	// let the turret know where we want it to aim
 	vec3f dir = (Entity->Enemy->State.GetOrigin() +
-		vec3f(0, 0, Entity->Enemy->gameEntity->viewheight)) -
+		vec3f(0, 0, Entity->Enemy->ViewHeight)) -
 		TargetedBreach->State.GetOrigin();
 
 	vec3f ang = dir.ToAngles ();
@@ -523,7 +519,7 @@ void CTurretDriver::Spawn ()
 	Entity->Health = Entity->MaxHealth = 100;
 	Entity->GibHealth = -40;
 	Entity->Mass = 200;
-	Entity->gameEntity->viewheight = 24;
+	Entity->ViewHeight = 24;
 
 	SoundPain1 = SoundIndex ("infantry/infpain1.wav");
 	SoundPain2 = SoundIndex ("infantry/infpain2.wav");

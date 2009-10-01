@@ -187,7 +187,7 @@ void CGladiator::Attack ()
 
 	// charge up the railgun
 	Entity->PlaySound (CHAN_WEAPON, SoundGun);
-	SavedFirePosition = Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->gameEntity->viewheight);
+	SavedFirePosition = Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->ViewHeight);
 	CurrentMove = &GladiatorMoveAttackGun;
 }
 
@@ -219,14 +219,14 @@ void CGladiator::Pain (CBaseEntity *other, float kick, int damage)
 	if (Entity->Health < (Entity->MaxHealth / 2))
 		Entity->State.SetSkinNum(1);
 
-	if (level.framenum < Entity->gameEntity->pain_debounce_time)
+	if (level.framenum < PainDebounceTime)
 	{
 		if ((Entity->Velocity.Z > 100) && (CurrentMove == &GladiatorMovePain))
 			CurrentMove = &GladiatorMovePainAir;
 		return;
 	}
 
-	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
+	PainDebounceTime = level.framenum + 30;
 
 	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundPain1 : SoundPain2);
 	if (skill->Integer() == 3)

@@ -441,7 +441,7 @@ public:
 		CStatusBar Bar;
 
 		DrawItems(&Bar);
-		Bar.SendMsg(ent->gameEntity, reliable);
+		Bar.SendMsg(ent, reliable);
 	};
 };
 
@@ -728,7 +728,7 @@ public:
 		CStatusBar Bar;
 
 		DrawItems(&Bar);
-		Bar.SendMsg(ent->gameEntity, reliable);
+		Bar.SendMsg(ent, reliable);
 	};
 };
 

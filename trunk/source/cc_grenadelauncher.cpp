@@ -66,7 +66,7 @@ bool CGrenadeLauncher::CanStopFidgetting (CPlayerEntity *ent)
 
 void CGrenadeLauncher::Fire (CPlayerEntity *ent)
 {
-	vec3f	offset (8, 8, ent->gameEntity->viewheight-8), forward, right, start;
+	vec3f	offset (8, 8, ent->ViewHeight-8), forward, right, start;
 	const int	damage = (isQuad) ? 480 : 120;
 	const float	radius = 160;
 

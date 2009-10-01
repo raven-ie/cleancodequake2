@@ -51,18 +51,12 @@ const CEntityField CHurtableEntity::FieldsForParsing[] =
 {
 	CEntityField ("health", EntityMemberOffset(CHurtableEntity,Health), FTInteger),
 };
-const size_t CHurtableEntity::FieldsForParsingSize = (sizeof(CHurtableEntity::FieldsForParsing) / sizeof(CHurtableEntity::FieldsForParsing[0]));
+const size_t CHurtableEntity::FieldsForParsingSize = FieldSize<CHurtableEntity>();
 
 bool			CHurtableEntity::ParseField (char *Key, char *Value)
 {
-	for (size_t i = 0; i < CHurtableEntity::FieldsForParsingSize; i++)
-	{
-		if (strcmp (Key, CHurtableEntity::FieldsForParsing[i].Name) == 0)
-		{
-			CHurtableEntity::FieldsForParsing[i].Create<CHurtableEntity> (this, Value);
-			return true;
-		}
-	}
+	if (CheckFields<CHurtableEntity> (this, Key, Value))
+		return true;
 
 	// Couldn't find it here
 	return false;
@@ -268,6 +262,14 @@ void CHurtableEntity::Killed (CBaseEntity *inflictor, CBaseEntity *attacker, int
 		(dynamic_cast<CHurtableEntity*>(this))->Die (inflictor, attacker, damage, point);
 }
 
+void CHurtableEntity::DamageEffect (vec3f &dir, vec3f &point, vec3f &normal, int &damage, int &dflags)
+{
+	if ((EntityFlags & ENT_MONSTER) || (EntityFlags & ENT_PLAYER))
+		CTempEnt_Splashes::Blood (point, normal);
+	else
+		CTempEnt_Splashes::Sparks (point, normal, (dflags & DAMAGE_BULLET) ? CTempEnt_Splashes::STBulletSparks : CTempEnt_Splashes::STSparks, CTempEnt_Splashes::SPTSparks);
+}
+
 void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 								vec3f dir, vec3f point, vec3f normal, int damage,
 								int knockback, int dflags, EMeansOfDeath mod)
@@ -281,6 +283,10 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 	if (!CanTakeDamage)
 		return;
 
+	bool isClient = !!(EntityFlags & ENT_PLAYER);
+	CPlayerEntity *Player = (isClient) ? dynamic_cast<CPlayerEntity*>(this) : NULL;
+	CClient *Client = (isClient) ? &(Player->Client) : NULL;
+
 	// friendly fire avoidance
 	// if enabled you can't hurt teammates (but you can hurt yourself)
 	// knockback still occurs
@@ -288,7 +294,7 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 	{
 		if ((EntityFlags & ENT_PLAYER) && (attacker->EntityFlags & ENT_PLAYER))
 		{
-			if (OnSameTeam (dynamic_cast<CPlayerEntity*>(this), dynamic_cast<CPlayerEntity*>(attacker)))
+			if (OnSameTeam (Player, dynamic_cast<CPlayerEntity*>(attacker)))
 			{
 				if (dmFlags.dfNoFriendlyFire)
 					damage = 0;
@@ -306,9 +312,6 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 		if (!damage)
 			damage = 1;
 	}
-
-	bool isClient = !!(EntityFlags & ENT_PLAYER);
-	CClient *Client = (isClient) ? &(dynamic_cast<CPlayerEntity*>(this)->Client) : NULL;
 
 	dir.Normalize ();
 
@@ -336,14 +339,14 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 		if (isClient)
 		{
 			if (Client->pers.Tech && (Client->pers.Tech->TechType == CTech::TechAggressive))
-				Client->pers.Tech->DoAggressiveTech (dynamic_cast<CPlayerEntity*>(this), attacker, false, damage, knockback, dflags, mod, true);
+				Client->pers.Tech->DoAggressiveTech (Player, attacker, false, damage, knockback, dflags, mod, true);
 		}
 
 		if (attacker->EntityFlags & ENT_PLAYER)
 		{
 			CPlayerEntity *Atk = dynamic_cast<CPlayerEntity*>(attacker);
 			if (Atk->Client.pers.Tech && (Atk->Client.pers.Tech->TechType == CTech::TechAggressive))
-				dynamic_cast<CPlayerEntity*>(attacker)->Client.pers.Tech->DoAggressiveTech (Atk, dynamic_cast<CPlayerEntity*>(this), false, damage, knockback, dflags, mod, false);
+				dynamic_cast<CPlayerEntity*>(attacker)->Client.pers.Tech->DoAggressiveTech (Atk, Player, false, damage, knockback, dflags, mod, false);
 		}
 	}
 
@@ -375,10 +378,10 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 	// check for invincibility
 	if ((isClient && (Client->invincible_framenum > level.framenum) ) && !(dflags & DAMAGE_NO_PROTECTION))
 	{
-		if (gameEntity->pain_debounce_time < level.framenum)
+		if (Player->PainDebounceTime < level.framenum)
 		{
 			PlaySound (CHAN_ITEM, SoundIndex("items/protect4.wav"), 1, ATTN_NORM);
-			gameEntity->pain_debounce_time = level.framenum + 20;
+			Player->PainDebounceTime = level.framenum + 20;
 		}
 		take = 0;
 		save = damage;
@@ -447,10 +450,7 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 // do the damage
 	if (take)
 	{
-		if ((EntityFlags & ENT_MONSTER) || (isClient))
-			CTempEnt_Splashes::Blood (point, normal);
-		else
-			CTempEnt_Splashes::Sparks (point, normal, (dflags & DAMAGE_BULLET) ? CTempEnt_Splashes::STBulletSparks : CTempEnt_Splashes::STSparks, CTempEnt_Splashes::SPTSparks);
+		DamageEffect (dir, point, normal, take, dflags);
 
 		Health -= take;
 			
@@ -471,7 +471,7 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 		{
 			Pain (attacker, knockback, take);
 			if (skill->Integer() == 3)
-				gameEntity->pain_debounce_time = level.framenum + 50;
+				Monster->PainDebounceTime = level.framenum + 50;
 		}
 	}
 	else if (take)
@@ -1499,18 +1499,12 @@ const CEntityField CUsableEntity::FieldsForParsing[] =
 	CEntityField ("noise", EntityMemberOffset(CUsableEntity,NoiseIndex), FTStringToSound),
 	CEntityField ("delay", EntityMemberOffset(CUsableEntity,Delay), FTTime),
 };
-const size_t CUsableEntity::FieldsForParsingSize = (sizeof(CUsableEntity::FieldsForParsing) / sizeof(CUsableEntity::FieldsForParsing[0]));
+const size_t CUsableEntity::FieldsForParsingSize = FieldSize<CUsableEntity>();
 
 bool			CUsableEntity::ParseField (char *Key, char *Value)
 {
-	for (size_t i = 0; i < CUsableEntity::FieldsForParsingSize; i++)
-	{
-		if (strcmp (Key, CUsableEntity::FieldsForParsing[i].Name) == 0)
-		{
-			CUsableEntity::FieldsForParsing[i].Create<CUsableEntity> (this, Value);
-			return true;
-		}
-	}
+	if (CheckFields<CUsableEntity> (this, Key, Value))
+		return true;
 
 	// Couldn't find it here
 	return false;

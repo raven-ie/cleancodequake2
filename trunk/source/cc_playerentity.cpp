@@ -405,9 +405,7 @@ void CPlayerEntity::SpectatorRespawn ()
 		{
 			PrintToClient (PRINT_HIGH, "Spectator password incorrect.\n");
 			Client.pers.spectator = false;
-			WriteByte (SVC_STUFFTEXT);
-			WriteString ("spectator 0\n");
-			Cast(CASTFLAG_RELIABLE, gameEntity);
+			StuffText ("spectator 0\n");
 			return;
 		}
 
@@ -425,9 +423,7 @@ void CPlayerEntity::SpectatorRespawn ()
 			PrintToClient (PRINT_HIGH, "Server spectator limit is full.");
 			Client.pers.spectator = false;
 			// reset his spectator var
-			WriteByte (SVC_STUFFTEXT);
-			WriteString ("spectator 0\n");
-			Cast(CASTFLAG_RELIABLE, gameEntity);
+			StuffText ("spectator 0\n");
 			return;
 		}
 	}
@@ -441,9 +437,7 @@ void CPlayerEntity::SpectatorRespawn ()
 		{
 			PrintToClient (PRINT_HIGH, "Password incorrect.\n");
 			Client.pers.spectator = true;
-			WriteByte (SVC_STUFFTEXT);
-			WriteString ("spectator 1\n");
-			Cast(CASTFLAG_RELIABLE, gameEntity);
+			StuffText ("spectator 1\n");
 			return;
 		}
 	}
@@ -541,7 +535,7 @@ void CPlayerEntity::PutInServer ()
 	CanTakeDamage = true;
 	NoClip = false;
 	TossPhysics = false;
-	gameEntity->viewheight = 22;
+	ViewHeight = 22;
 	SetInUse (true);
 	gameEntity->classname = "player";
 	Mass = 200;
@@ -927,9 +921,9 @@ inline void CPlayerEntity::DamageFeedback (vec3f &forward, vec3f &right)
 		count = 10;	// always make a visible effect
 
 	// play an apropriate pain sound
-	if ((level.framenum > gameEntity->pain_debounce_time) && !(Flags & FL_GODMODE) && (Client.invincible_framenum <= level.framenum))
+	if ((level.framenum > PainDebounceTime) && !(Flags & FL_GODMODE) && (Client.invincible_framenum <= level.framenum))
 	{
-		gameEntity->pain_debounce_time = level.framenum + 7;
+		PainDebounceTime = level.framenum + 7;
 
 		int l = Clamp<int>(((floorf((Max<>(0, Health-1)) / 25))), 0, 3);
 		PlaySound (CHAN_VOICE, gMedia.Player.Pain[l][(irandom(2))]);
@@ -1065,7 +1059,7 @@ inline void CPlayerEntity::CalcViewOffset (vec3f &forward, vec3f &right, vec3f &
 //===================================
 
 	// add view height
-	v.Z += gameEntity->viewheight;
+	v.Z += ViewHeight;
 
 	// add fall height
 	ratio = (float)(Client.fall_time - level.framenum) / FALL_TIME;
@@ -1351,7 +1345,7 @@ inline void CPlayerEntity::FallingDamage ()
 			else
 				State.SetEvent (EV_FALL);
 		}
-		gameEntity->pain_debounce_time = level.framenum;	// no normal pain sound
+		PainDebounceTime = level.framenum;	// no normal pain sound
 		int damage = (delta-30)/2;
 		if (damage < 1)
 			damage = 1;
@@ -1408,7 +1402,7 @@ inline void CPlayerEntity::WorldEffects ()
 		Flags |= FL_INWATER;
 
 		// clear damage_debounce, so the pain sound will play immediately
-		gameEntity->pain_debounce_time = level.framenum - 1;
+		PainDebounceTime = level.framenum - 1;
 	}
 
 	//
@@ -1462,32 +1456,32 @@ inline void CPlayerEntity::WorldEffects ()
 		// if out of air, start drowning
 		if (AirFinished < level.framenum)
 		{	// drown!
-			if (Client.next_drown_time < level.framenum 
+			if (NextDrownTime < level.framenum 
 				&& Health > 0)
 			{
-				Client.next_drown_time = level.framenum + 10;
+				NextDrownTime = level.framenum + 10;
 
 				// take more damage the longer underwater
-				gameEntity->dmg += 2;
-				if (gameEntity->dmg > 15)
-					gameEntity->dmg = 15;
+				NextDrownDamage += 2;
+				if (NextDrownDamage > 15)
+					NextDrownDamage = 15;
 
 				// play a gurp sound instead of a normal pain sound
-				if (Health <= gameEntity->dmg)
+				if (Health <= NextDrownDamage)
 					PlaySound (CHAN_VOICE, SoundIndex("player/drown1.wav"));
 				else
 					PlaySound (CHAN_VOICE, gMedia.Player.Gurp[(irandom(2))]);
 
-				gameEntity->pain_debounce_time = level.framenum;
+				PainDebounceTime = level.framenum;
 
-				TakeDamage (World, World, vec3fOrigin, origin, vec3fOrigin, gameEntity->dmg, 0, DAMAGE_NO_ARMOR, MOD_WATER);
+				TakeDamage (World, World, vec3fOrigin, origin, vec3fOrigin, NextDrownDamage, 0, DAMAGE_NO_ARMOR, MOD_WATER);
 			}
 		}
 	}
 	else
 	{
 		AirFinished = level.framenum + 120;
-		gameEntity->dmg = 2;
+		NextDrownDamage = 2;
 	}
 
 	//
@@ -1498,11 +1492,11 @@ inline void CPlayerEntity::WorldEffects ()
 		if (gameEntity->watertype & CONTENTS_LAVA)
 		{
 			if (Health > 0
-				&& gameEntity->pain_debounce_time <= level.framenum
+				&& PainDebounceTime <= level.framenum
 				&& Client.invincible_framenum < level.framenum)
 			{
 				PlaySound (CHAN_VOICE, SoundIndex((irandom(2)) ? "player/burn1.wav" : "player/burn2.wav"));
-				gameEntity->pain_debounce_time = level.framenum + 10;
+				PainDebounceTime = level.framenum + 10;
 			}
 
 			// take 1/3 damage with envirosuit
@@ -1631,8 +1625,8 @@ inline void CPlayerEntity::SetClientSound ()
 
 	if (gameEntity->waterlevel && (gameEntity->watertype & (CONTENTS_LAVA|CONTENTS_SLIME)))
 		State.SetSound (gMedia.FrySound());
-	else if (Client.pers.Weapon && Client.pers.Weapon->WeaponSoundIndex)
-		State.SetSound (Client.pers.Weapon->WeaponSoundIndex);
+	else if (Client.pers.Weapon && Client.pers.Weapon->GetWeaponSound ())
+		State.SetSound (Client.pers.Weapon->GetWeaponSound ());
 	else if (Client.weapon_sound)
 		State.SetSound (Client.weapon_sound);
 	else
@@ -2090,7 +2084,7 @@ void CPlayerEntity::CTFScoreboardMessage (bool reliable)
 		Bar.AddString (str, false, false);
 	}
 
-	Bar.SendMsg (gameEntity, reliable);
+	Bar.SendMsg (this, reliable);
 }
 #endif
 
@@ -2174,7 +2168,7 @@ void CPlayerEntity::DeathmatchScoreboardMessage (bool reliable)
 		Scoreboard.AddClientBlock (x, y, sorted[i], cl_ent->Client.resp.score, cl_ent->Client.GetPing(), (level.framenum - cl_ent->Client.resp.enterframe)/600);
 	}
 
-	Scoreboard.SendMsg (gameEntity, reliable);
+	Scoreboard.SendMsg (this, reliable);
 }
 
 void CPlayerEntity::SetStats ()
@@ -2192,12 +2186,12 @@ void CPlayerEntity::SetStats ()
 	{
 		if (Client.pers.Weapon->WeaponItem && Client.pers.Weapon->WeaponItem->Ammo)
 		{
-			Client.PlayerState.SetStat(STAT_AMMO_ICON, Client.pers.Weapon->WeaponItem->Ammo->IconIndex);
+			Client.PlayerState.SetStat(STAT_AMMO_ICON, Client.pers.Weapon->WeaponItem->Ammo->GetIconIndex());
 			Client.PlayerState.SetStat(STAT_AMMO, Client.pers.Inventory.Has(Client.pers.Weapon->WeaponItem->Ammo->GetIndex()));
 		}
 		else if (Client.pers.Weapon->Item && (Client.pers.Weapon->Item->Flags & ITEMFLAG_AMMO))
 		{
-			Client.PlayerState.SetStat(STAT_AMMO_ICON, Client.pers.Weapon->Item->IconIndex);
+			Client.PlayerState.SetStat(STAT_AMMO_ICON, Client.pers.Weapon->Item->GetIconIndex());
 			Client.PlayerState.SetStat(STAT_AMMO, Client.pers.Inventory.Has(Client.pers.Weapon->Item->GetIndex()));
 		}
 		else
@@ -2231,12 +2225,12 @@ void CPlayerEntity::SetStats ()
 	CArmor *Armor = Client.pers.Armor;
 	if (power_armor_type && (!Armor || (level.framenum & 8) ) )
 	{	// flash between power armor and other armor icon
-		Client.PlayerState.SetStat(STAT_ARMOR_ICON, gMedia.Hud.PowerShieldPic);
+		Client.PlayerState.SetStat(STAT_ARMOR_ICON, NItems::PowerShield->GetIconIndex());
 		Client.PlayerState.SetStat(STAT_ARMOR, cells);
 	}
 	else if (Armor)
 	{
-		Client.PlayerState.SetStat(STAT_ARMOR_ICON, Armor->IconIndex);
+		Client.PlayerState.SetStat(STAT_ARMOR_ICON, Armor->GetIconIndex());
 		Client.PlayerState.SetStat(STAT_ARMOR, Client.pers.Inventory.Has(Armor));
 	}
 	else
@@ -2259,28 +2253,28 @@ void CPlayerEntity::SetStats ()
 	//
 	if (Client.quad_framenum > level.framenum)
 	{
-		Client.PlayerState.SetStat(STAT_TIMER_ICON, gMedia.Hud.QuadPic);
+		Client.PlayerState.SetStat(STAT_TIMER_ICON, NItems::Quad->GetIconIndex());
 		Client.PlayerState.SetStat(STAT_TIMER, (Client.quad_framenum - level.framenum)/10);
 	}
 	else if (Client.invincible_framenum > level.framenum)
 	{
-		Client.PlayerState.SetStat(STAT_TIMER_ICON, gMedia.Hud.InvulPic);
+		Client.PlayerState.SetStat(STAT_TIMER_ICON, NItems::Invul->GetIconIndex());
 		Client.PlayerState.SetStat(STAT_TIMER, (Client.invincible_framenum - level.framenum)/10);
 	}
 	else if (Client.enviro_framenum > level.framenum)
 	{
-		Client.PlayerState.SetStat(STAT_TIMER_ICON, gMedia.Hud.EnviroPic);
+		Client.PlayerState.SetStat(STAT_TIMER_ICON, NItems::EnvironmentSuit->GetIconIndex());
 		Client.PlayerState.SetStat(STAT_TIMER, (Client.enviro_framenum - level.framenum)/10);
 	}
 	else if (Client.breather_framenum > level.framenum)
 	{
-		Client.PlayerState.SetStat(STAT_TIMER_ICON, gMedia.Hud.RebreatherPic);
+		Client.PlayerState.SetStat(STAT_TIMER_ICON, NItems::Rebreather->GetIconIndex());
 		Client.PlayerState.SetStat(STAT_TIMER, (Client.breather_framenum - level.framenum)/10);
 	}
 	// Paril, show silencer
 	else if (Client.silencer_shots)
 	{
-		Client.PlayerState.SetStat(STAT_TIMER_ICON, gMedia.Hud.SilencerPic);
+		Client.PlayerState.SetStat(STAT_TIMER_ICON, NItems::Silencer->GetIconIndex());
 		Client.PlayerState.SetStat(STAT_TIMER, Client.silencer_shots);
 	}
 	// Paril
@@ -2296,7 +2290,7 @@ void CPlayerEntity::SetStats ()
 	if (Client.pers.Inventory.SelectedItem == -1)
 		Client.PlayerState.SetStat(STAT_SELECTED_ICON, 0);
 	else
-		Client.PlayerState.SetStat(STAT_SELECTED_ICON, GetItemByIndex(Client.pers.Inventory.SelectedItem)->IconIndex);
+		Client.PlayerState.SetStat(STAT_SELECTED_ICON, GetItemByIndex(Client.pers.Inventory.SelectedItem)->GetIconIndex());
 
 	Client.PlayerState.SetStat(STAT_SELECTED_ITEM, Client.pers.Inventory.SelectedItem);
 
@@ -2325,7 +2319,7 @@ void CPlayerEntity::SetStats ()
 
 	else if ( (Client.pers.hand == CENTER_HANDED || Client.PlayerState.GetFov() > 91)
 		&& Client.pers.Weapon)
-		Client.PlayerState.SetStat(STAT_HELPICON, Client.pers.Weapon->Item->IconIndex);
+		Client.PlayerState.SetStat(STAT_HELPICON, Client.pers.Weapon->Item->GetIconIndex());
 	else
 		Client.PlayerState.SetStat(STAT_HELPICON, 0);
 
@@ -2333,7 +2327,7 @@ void CPlayerEntity::SetStats ()
 
 	Client.PlayerState.SetStat(STAT_TECH, 0);
 	if (Client.pers.Tech)
-		Client.PlayerState.SetStat(STAT_TECH, Client.pers.Tech->IconIndex);
+		Client.PlayerState.SetStat(STAT_TECH, Client.pers.Tech->GetIconIndex());
 
 #ifdef CLEANCTF_ENABLED
 //ZOID
@@ -2622,7 +2616,7 @@ void CPlayerEntity::MoveToIntermission ()
 	Client.grenade_blew_up = Client.grenade_thrown = false;
 	Client.grenade_time = 0;
 
-	gameEntity->viewheight = 0;
+	ViewHeight = 0;
 	State.SetModelIndex (0);
 	State.SetModelIndex (0, 2);
 	State.SetModelIndex (0, 3);
@@ -2894,7 +2888,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 		PlayerNoiseAt (State.GetOrigin(), PNOISE_SELF);
 	}
 
-	gameEntity->viewheight = pm.viewHeight;
+	ViewHeight = pm.viewHeight;
 	gameEntity->waterlevel = pm.waterLevel;
 	gameEntity->watertype = pm.waterType;
 	GroundEntity = (pm.groundEntity) ? pm.groundEntity->Entity : NULL;
@@ -3277,6 +3271,7 @@ void CPlayerEntity::TossHead (int damage)
 	Link ();
 }
 
+EMeansOfDeath meansOfDeath;
 void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 	CanTakeDamage = true;
@@ -3452,7 +3447,7 @@ void CPlayerEntity::UpdateChaseCam()
 		{
 			vec3f ownerv = targ->State.GetOrigin();
 			vec3f oldgoal = State.GetOrigin();
-			ownerv.Z += targ->gameEntity->viewheight;
+			ownerv.Z += targ->ViewHeight;
 
 			vec3f angles = targ->Client.ViewAngle;
 
@@ -3514,7 +3509,7 @@ void CPlayerEntity::UpdateChaseCam()
 			if(Client.resp.cmd_angles[PITCH] < -89)
 				Client.resp.cmd_angles[PITCH] = -89;
 
-			vec3f ownerv = targ->State.GetOrigin() + vec3f(0, 0, targ->gameEntity->viewheight);
+			vec3f ownerv = targ->State.GetOrigin() + vec3f(0, 0, targ->ViewHeight);
 
 			vec3f angles = Client.PlayerState.GetViewAngles();
 			angles.ToVectors (&forward, &right, NULL);
@@ -3562,7 +3557,7 @@ void CPlayerEntity::UpdateChaseCam()
 			angles.ToVectors (&forward, &right, NULL);
 			forward.NormalizeFast ();
 			vec3f o = ownerv.MultiplyAngles (16, forward);
-			o.Z += targ->gameEntity->viewheight;
+			o.Z += targ->ViewHeight;
 
 			State.SetOrigin (o);
 			Client.PlayerState.SetFov (targ->Client.PlayerState.GetFov());
@@ -3587,7 +3582,7 @@ void CPlayerEntity::UpdateChaseCam()
 		break;
 	};
 
-	gameEntity->viewheight = 0;
+	ViewHeight = 0;
 	Client.PlayerState.GetPMove()->pmFlags |= PMF_NO_PREDICTION;
 	Link ();
 
@@ -3602,7 +3597,7 @@ void CPlayerEntity::UpdateChaseCam()
 		Chasing.AddVirtualPoint_X (0);
 		Chasing.AddVirtualPoint_Y (-68);
 		Chasing.AddString (temp, true, false);
-		Chasing.SendMsg (gameEntity, false);
+		Chasing.SendMsg (this, false);
 
 		Client.update_chase = false;
 	}

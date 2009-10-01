@@ -309,10 +309,10 @@ void CBerserker::Pain (CBaseEntity *other, float kick, int damage)
 	if (Entity->Health < (Entity->MaxHealth / 2))
 		Entity->State.SetSkinNum(1);
 
-	if (level.framenum < Entity->gameEntity->pain_debounce_time)
+	if (level.framenum < PainDebounceTime)
 		return;
 
-	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
+	PainDebounceTime = level.framenum + 30;
 	Entity->PlaySound (CHAN_VOICE, SoundPain, 1, ATTN_NORM, 0);
 
 	if (skill->Integer() == 3)

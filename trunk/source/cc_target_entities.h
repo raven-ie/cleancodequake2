@@ -34,6 +34,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 class CTargetChangeLevel : public CMapEntity, public CUsableEntity
 {
 public:
+	char		*Map;
+
 	CTargetChangeLevel ();
 	CTargetChangeLevel (int Index);
 
@@ -41,10 +43,11 @@ public:
 
 	void Use (CBaseEntity *other, CBaseEntity *activator);
 
-	virtual bool ParseField (char *Key, char *Value)
-	{
-		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
-	}
+	static const class CEntityField FieldsForParsing[];
+	static const size_t FieldsForParsingSize;
+	virtual bool			ParseField (char *Key, char *Value);
 
 	void Spawn ();
 };
+
+CTargetChangeLevel *CreateTargetChangeLevel(char *map);

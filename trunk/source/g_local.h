@@ -540,19 +540,9 @@ struct edict_s
 	edict_t		*goalentity;
 	edict_t		*movetarget;
 
-	FrameNumber_t		pain_debounce_time;
-	FrameNumber_t		damage_debounce_time;
-
 	int			show_hostile;
-
 	FrameNumber_t		powerarmor_time;
 
-	char		*map;			// target_changelevel
-
-	int			viewheight;		// height above origin where eyesight is determined
-	int			dmg;
-	int			radius_dmg;
-	float		dmg_radius;
 	int			sounds;			//make this a spawntemp var?
 	int			count;
 

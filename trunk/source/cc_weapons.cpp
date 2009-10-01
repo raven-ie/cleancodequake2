@@ -161,15 +161,15 @@ void CWeaponItem::Use (CPlayerEntity *ent)
 
 void CWeaponItem::Drop (CPlayerEntity *ent)
 {
+	if ((Weapon == ent->Client.pers.Weapon) && (ent->Client.weaponstate != WS_IDLE))
+		return;
+
 	DropItem(ent);
 
-	//if (ent->Client)
-	//{
-		ent->Client.pers.Inventory -= this;
+	ent->Client.pers.Inventory -= this;
 
-		if (Weapon == ent->Client.pers.Weapon)
-			ent->Client.pers.Weapon->NoAmmoWeaponChange(ent);
-	//}
+	if (Weapon == ent->Client.pers.Weapon)
+		ent->Client.pers.Weapon->NoAmmoWeaponChange(ent);
 }
 
 int maxBackpackAmmoValues[AMMOTAG_MAX] =

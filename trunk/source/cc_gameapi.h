@@ -43,8 +43,6 @@ void Cast (ECastFlags castFlags, CBaseEntity *Ent);
 void Cast (ECastFlags castFlags, vec3f *Origin);
 void Cast (ECastType castType, ECastFlags castFlags, vec3f *Origin, CBaseEntity *Ent);
 
-void SetModel (edict_t *ent, char *model);
-
 int PointContents (vec3_t start);
 int PointContents (vec3f &start);
 

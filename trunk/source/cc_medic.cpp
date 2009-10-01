@@ -103,8 +103,8 @@ bool CMedic::CanReach (CBaseEntity *other)
 	vec3f	spot1 = Entity->State.GetOrigin();
 	vec3f	spot2 = other->State.GetOrigin();
 
-	spot1.Z += Entity->gameEntity->viewheight;
-	spot2.Z += other->gameEntity->viewheight;
+	spot1.Z += Entity->ViewHeight;
+	spot2.Z += other->ViewHeight;
 	CTrace trace (spot1, spot2, Entity->gameEntity, CONTENTS_MASK_SHOT|CONTENTS_MASK_WATER);
 	
 	if (trace.fraction == 1.0 || trace.ent == other->gameEntity)		// PGM
@@ -388,10 +388,10 @@ void CMedic::Pain(CBaseEntity *other, float kick, int damage)
 	if (Entity->Health < (Entity->MaxHealth / 2))
 		Entity->State.SetSkinNum (1);
 
-	if (level.framenum < Entity->gameEntity->pain_debounce_time)
+	if (level.framenum < PainDebounceTime)
 		return;
 
-	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
+	PainDebounceTime = level.framenum + 30;
 
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
@@ -429,7 +429,7 @@ void CMedic::FireBlaster ()
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_MEDIC_BLASTER_1], forward, right, start);
 
 	end = Entity->Enemy->State.GetOrigin();
-	end.Z += Entity->Enemy->gameEntity->viewheight;
+	end.Z += Entity->Enemy->ViewHeight;
 	dir = end - start;
 
 	MonsterFireBlaster (start, dir, 2, 1000, MZ2_MEDIC_BLASTER_1, effect);

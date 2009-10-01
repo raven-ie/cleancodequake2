@@ -217,10 +217,10 @@ void CInfantry::Pain (CBaseEntity *other, float kick, int damage)
 	DoneDodge();
 #endif
 
-	if (level.framenum < Entity->gameEntity->pain_debounce_time)
+	if (level.framenum < PainDebounceTime)
 		return;
 
-	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
+	PainDebounceTime = level.framenum + 30;
 	
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
@@ -266,7 +266,7 @@ void CInfantry::MachineGun ()
 		{
 			vec3f target = Entity->Enemy->State.GetOrigin();
 			target = target.MultiplyAngles (-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->Enemy)->Velocity);
-			target.Z += Entity->Enemy->gameEntity->viewheight;
+			target.Z += Entity->Enemy->ViewHeight;
 
 			forward = target - start;
 			forward.NormalizeFast ();

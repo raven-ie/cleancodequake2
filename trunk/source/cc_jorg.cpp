@@ -274,7 +274,7 @@ void CJorg::Pain (CBaseEntity *other, float kick, int damage)
 	
 	Entity->State.SetSound (0);
 
-	if (level.framenum < Entity->gameEntity->pain_debounce_time)
+	if (level.framenum < PainDebounceTime)
 			return;
 
 	// Lessen the chance of him going into his pain frames if he takes little damage
@@ -296,7 +296,7 @@ void CJorg::Pain (CBaseEntity *other, float kick, int damage)
 	if (((frame >= FRAME_attak201) && (frame <= FRAME_attak208)) && (random() <= 0.005))
 		return;
 
-	Entity->gameEntity->pain_debounce_time = level.framenum + 30;
+	PainDebounceTime = level.framenum + 30;
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
 
@@ -527,7 +527,7 @@ void CJorg::FireBFG ()
 	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_JORG_BFG_1], forward, right, start);
 
-	dir = ((Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->gameEntity->viewheight)) - start).GetNormalized();
+	dir = ((Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->ViewHeight)) - start).GetNormalized();
 	Entity->PlaySound (CHAN_VOICE, SoundAttack2, 1, ATTN_NORM, 0);
 	MonsterFireBfg (start, dir, 50, 300, 100, 200, MZ2_JORG_BFG_1);
 }
@@ -541,7 +541,7 @@ void CJorg::FireBullet ()
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_JORG_MACHINEGUN_R1], forward, right, start);
 
 	target = Entity->Enemy->State.GetOrigin().MultiplyAngles(-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->Enemy)->Velocity);
-	target[2] += Entity->Enemy->gameEntity->viewheight;
+	target[2] += Entity->Enemy->ViewHeight;
 	forward = (target - start);
 	forward.Normalize();
 
@@ -551,7 +551,7 @@ void CJorg::FireBullet ()
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_JORG_MACHINEGUN_L1], forward, right, start);
 
 	target = Entity->Enemy->State.GetOrigin().MultiplyAngles(-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->Enemy)->Velocity);
-	target[2] += Entity->Enemy->gameEntity->viewheight;
+	target[2] += Entity->Enemy->ViewHeight;
 	forward = (target - start);
 	forward.Normalize();
 
@@ -584,9 +584,9 @@ bool CJorg::CheckAttack ()
 	{
 	// see if any entities are in the way of the shot
 		spot1 = Entity->State.GetOrigin();
-		spot1.Z += Entity->gameEntity->viewheight;
+		spot1.Z += Entity->ViewHeight;
 		spot2 = Entity->Enemy->State.GetOrigin();
-		spot2.Z += Entity->Enemy->gameEntity->viewheight;
+		spot2.Z += Entity->Enemy->ViewHeight;
 
 		tr = CTrace(spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
 
@@ -667,9 +667,9 @@ bool CJorg::CheckAttack ()
 	{
 		// see if any entities are in the way of the shot
 		vec3f spot1 = Entity->State.GetOrigin ();
-		spot1.Z += Entity->gameEntity->viewheight;
+		spot1.Z += Entity->ViewHeight;
 		vec3f spot2 = Entity->Enemy->State.GetOrigin();
-		spot2.Z += Entity->Enemy->gameEntity->viewheight;
+		spot2.Z += Entity->Enemy->ViewHeight;
 
 		CTrace tr (spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
 

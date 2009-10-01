@@ -62,6 +62,7 @@ public:
 	float		Speed;
 	float		Decel;
 	int			Distance;
+	int			Damage;
 
 	FrameNumber_t		Wait;
 
@@ -244,8 +245,6 @@ public:
 class CRotatingDoor : public CDoor
 {
 public:
-	int			Distance;
-
 	CRotatingDoor ();
 	CRotatingDoor (int Index);
 

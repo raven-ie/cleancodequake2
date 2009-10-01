@@ -186,7 +186,7 @@ public:
 		}
 
 		SetSolid (SOLID_TRIGGER);
-		SetModel (gameEntity, gameEntity->model);
+		SetBrushModel ();
 
 		SetSvFlags (SVF_NOCLIENT);
 	};
@@ -224,18 +224,12 @@ const CEntityField CTriggerBase::FieldsForParsing[] =
 {
 	CEntityField ("wait", EntityMemberOffset(CTriggerBase,Wait), FTTime),
 };
-const size_t CTriggerBase::FieldsForParsingSize = (sizeof(CTriggerBase::FieldsForParsing) / sizeof(CTriggerBase::FieldsForParsing[0]));
+const size_t CTriggerBase::FieldsForParsingSize = FieldSize<CTriggerBase>();
 
 bool			CTriggerBase::ParseField (char *Key, char *Value)
 {
-	for (size_t i = 0; i < CTriggerBase::FieldsForParsingSize; i++)
-	{
-		if (strcmp (Key, CTriggerBase::FieldsForParsing[i].Name) == 0)
-		{
-			CTriggerBase::FieldsForParsing[i].Create<CTriggerBase> (this, Value);
-			return true;
-		}
-	}
+	if (CheckFields<CTriggerBase> (this, Key, Value))
+		return true;
 
 	// Couldn't find it here
 	return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
@@ -317,7 +311,7 @@ public:
 			State.SetAngles (angles);
 		}
 
-		SetModel (gameEntity, gameEntity->model);
+		SetBrushModel ();
 		Link ();
 	};
 };
@@ -549,18 +543,12 @@ const CEntityField CTriggerPush::FieldsForParsing[] =
 {
 	CEntityField ("speed", EntityMemberOffset(CTriggerPush,Speed), FTFloat),
 };
-const size_t CTriggerPush::FieldsForParsingSize = (sizeof(CTriggerPush::FieldsForParsing) / sizeof(CTriggerPush::FieldsForParsing[0]));
+const size_t CTriggerPush::FieldsForParsingSize = FieldSize<CTriggerPush>();
 
 bool			CTriggerPush::ParseField (char *Key, char *Value)
 {
-	for (size_t i = 0; i < CTriggerPush::FieldsForParsingSize; i++)
-	{
-		if (strcmp (Key, CTriggerPush::FieldsForParsing[i].Name) == 0)
-		{
-			CTriggerPush::FieldsForParsing[i].Create<CTriggerPush> (this, Value);
-			return true;
-		}
-	}
+	if (CheckFields<CTriggerPush> (this, Key, Value))
+		return true;
 
 	// Couldn't find it here
 	return CTriggerBase::ParseField (Key, Value);
@@ -584,6 +572,7 @@ class CTriggerHurt : public CTriggerMultiple
 {
 public:
 	FrameNumber_t		NextHurt;
+	int					Damage;
 
 	CTriggerHurt () :
 	  CBaseEntity (),
@@ -598,6 +587,10 @@ public:
 	  NextHurt(0)
 	  {
 	  };
+
+  	static const CEntityField FieldsForParsing[];
+	static const size_t FieldsForParsingSize;
+	virtual bool ParseField (char *Key, char *Value);
 
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
@@ -615,7 +608,7 @@ public:
 		}
 
 		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(),
-															vec3fOrigin, gameEntity->dmg, gameEntity->dmg,
+															vec3fOrigin, Damage, Damage,
 															(SpawnFlags & 8) ? DAMAGE_NO_PROTECTION : 0, MOD_TRIGGER_HURT);
 	};
 
@@ -636,14 +629,29 @@ public:
 		Init ();
 		NoiseIndex = SoundIndex ("world/electro.wav");
 
-		if (!gameEntity->dmg)
-			gameEntity->dmg = 5;
+		if (!Damage)
+			Damage = 5;
 
 		SetSolid ((SpawnFlags & 1) ? SOLID_NOT : SOLID_TRIGGER);
 
 		ActivateUse = (SpawnFlags & 2) ? false : true;
 		Link ();
 	};
+};
+
+const CEntityField CTriggerHurt::FieldsForParsing[] =
+{
+	CEntityField ("dmg", EntityMemberOffset(CTriggerHurt,Damage), FTInteger),
+};
+const size_t CTriggerHurt::FieldsForParsingSize = FieldSize<CTriggerHurt>();
+
+bool			CTriggerHurt::ParseField (char *Key, char *Value)
+{
+	if (CheckFields<CTriggerHurt> (this, Key, Value))
+		return true;
+
+	// Couldn't find it here
+	return CTriggerBase::ParseField (Key, Value);
 };
 
 LINK_CLASSNAME_TO_CLASS ("trigger_hurt", CTriggerHurt);
@@ -721,18 +729,12 @@ const CEntityField CTriggerMonsterJump::FieldsForParsing[] =
 {
 	CEntityField ("speed", EntityMemberOffset(CTriggerMonsterJump,Speed), FTFloat),
 };
-const size_t CTriggerMonsterJump::FieldsForParsingSize = (sizeof(CTriggerMonsterJump::FieldsForParsing) / sizeof(CTriggerMonsterJump::FieldsForParsing[0]));
+const size_t CTriggerMonsterJump::FieldsForParsingSize = FieldSize<CTriggerMonsterJump>();
 
 bool			CTriggerMonsterJump::ParseField (char *Key, char *Value)
 {
-	for (size_t i = 0; i < CTriggerMonsterJump::FieldsForParsingSize; i++)
-	{
-		if (strcmp (Key, CTriggerMonsterJump::FieldsForParsing[i].Name) == 0)
-		{
-			CTriggerMonsterJump::FieldsForParsing[i].Create<CTriggerMonsterJump> (this, Value);
-			return true;
-		}
-	}
+	if (CheckFields<CTriggerMonsterJump> (this, Key, Value))
+		return true;
 
 	// Couldn't find it here
 	return CTriggerBase::ParseField (Key, Value);

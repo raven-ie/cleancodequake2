@@ -55,6 +55,9 @@ public:
 	static void Spawn (CBaseEntity *Owner, MediaIndex gibIndex, int damage, int type);
 };
 
+void Init_Junk();
+void Shutdown_Junk ();
+
 #else
 FILE_WARNING
 #endif

@@ -121,13 +121,8 @@ void Cmd_PutAway_f (CPlayerEntity *ent)
 
 int PlayerSort (void const *a, void const *b)
 {
-	int		anum, bnum;
-
-	anum = *(int *)a;
-	bnum = *(int *)b;
-
-	anum = game.clients[anum].playerState.stats[STAT_FRAGS];
-	bnum = game.clients[bnum].playerState.stats[STAT_FRAGS];
+	int anum = game.clients[*(int *)a].playerState.stats[STAT_FRAGS];
+	int bnum = game.clients[*(int *)b].playerState.stats[STAT_FRAGS];
 
 	if (anum < bnum)
 		return -1;
@@ -308,10 +303,7 @@ void Cmd_Say_f (CPlayerEntity *ent, bool team, bool arg0)
 	if (!(dmFlags.dfSkinTeams || dmFlags.dfModelTeams))
 		team = false;
 
-	if (team)
-		Q_snprintfz (text, sizeof(text), "(%s): ", ent->Client.pers.netname);
-	else
-		Q_snprintfz (text, sizeof(text), "%s: ", ent->Client.pers.netname);
+	Q_snprintfz (text, sizeof(text), (team) ? "(%s): " : "%s: ", ent->Client.pers.netname);
 
 	if (arg0)
 	{
@@ -430,46 +422,8 @@ void Cmd_PlayerList_f(CPlayerEntity *ent)
 
 	Q_snprintfz (text, sizeof(text), "Spawned:\n");
 	CPlayerListCallback(text, sizeof(text), ent).DoQuery (false);
-	/*for (i = 0; i < game.maxclients; i++)
-	{
-		CPlayerEntity *e2 = dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity);
-		if (!e2->IsInUse())
-			continue;
-		if (e2->Client.pers.state != SVCS_SPAWNED)
-			continue;
-
-		Q_snprintfz(st, sizeof(st), " - %02d:%02d %4d %3d %s%s\n",
-			(level.framenum - e2->Client.resp.enterframe) / 600,
-			((level.framenum - e2->Client.resp.enterframe) % 600)/10,
-			e2->Client.GetPing(),
-			e2->Client.resp.score,
-			e2->Client.pers.netname,
-			e2->Client.resp.spectator ? " (spectator)" : "");
-		if (strlen(text) + strlen(st) > sizeof(text) - 50) {
-			Q_snprintfz (text+strlen(text), sizeof(text), "And more...\n");
-			ent->PrintToClient (PRINT_HIGH, "%s", text);
-			return;
-		}
-		Q_strcatz(text, st, sizeof(text));
-	}*/
 
 	Q_strcatz (text, "Connecting:\n", sizeof(text));
-	/*for (i = 0; i < game.maxclients; i++)
-	{
-		CPlayerEntity *e2 = dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity);
-		if (e2->Client.pers.state == SVCS_SPAWNED)
-			continue;
-
-		Q_snprintfz(st, sizeof(st), " - %s%s\n",
-			e2->Client.pers.netname,
-			e2->Client.resp.spectator ? " (spectator)" : "");
-		if (strlen(text) + strlen(st) > sizeof(text) - 50) {
-			Q_snprintfz (text+strlen(text), sizeof(text), "And more...\n");
-			ent->PrintToClient (PRINT_HIGH, "%s", text);
-			return;
-		}
-		Q_strcatz(text, st, sizeof(text));
-	}*/
 	if (!CPlayerListCallback(text, sizeof(text), ent).DoQuery (true))
 		ent->PrintToClient (PRINT_HIGH, "%s", text);
 }
@@ -531,18 +485,6 @@ void Cmd_Test_f (CPlayerEntity *ent)
 		randomtime, crandomtime, frandtime, crandtime);
 		*/
 	//DebugPrintf ("%i %i %i\n", (int)ent->State.GetOrigin().X, (int)ent->State.GetOrigin().Y, (int)ent->State.GetOrigin().Z);
-
-	uint32 time1 = Sys_Milliseconds ();
-	for (uint32 i = 0; i < 80000; i++)
-		gMedia.FlySound();
-	time1 = Sys_Milliseconds() - time1;
-
-	uint32 time2 = Sys_Milliseconds ();
-	for (uint32 i = 0; i < 80000; i++)
-		SoundIndex ("misc/windfly.wav");
-	time2 = Sys_Milliseconds() - time2;
-
-	DebugPrintf ("%ums vs %ums\n", time1, time2);
 }
 
 void GCTFSay_Team (CPlayerEntity *ent);
@@ -621,25 +563,12 @@ void Cmd_Register ()
 ClientCommand
 =================
 */
-#include "cc_exceptionhandler.h"
-void ClientCommand (edict_t *ent)
+void CC_ClientCommand (edict_t *ent)
 {
-#ifdef CC_USE_EXCEPTION_HANDLER
-__try
-{
-#endif
 	if (!ent->client)
 		return;		// not fully in game yet
 
 	InitArg ();
 	Cmd_RunCommand (ArgGets(0), dynamic_cast<CPlayerEntity*>(ent->Entity));
 	EndArg ();
-#ifdef CC_USE_EXCEPTION_HANDLER
-}
-__except (EGLExceptionHandler(GetExceptionCode(), GetExceptionInformation()))
-{
-	EndArg ();
-	return;
-}
-#endif
 }

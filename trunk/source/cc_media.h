@@ -54,12 +54,6 @@ typedef struct SPlayerMedia_s
 typedef struct SHudMedia_s
 {
 	MediaIndex	HealthPic;
-	MediaIndex	PowerShieldPic;
-	MediaIndex	QuadPic;
-	MediaIndex	InvulPic;
-	MediaIndex	EnviroPic;
-	MediaIndex	RebreatherPic;
-	MediaIndex	SilencerPic;
 	MediaIndex	HelpPic;
 } SHudMedia_t;
 
