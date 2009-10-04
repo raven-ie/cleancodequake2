@@ -214,6 +214,8 @@ public:
 	void			SetBrushModel ();
 	void			CastTo (ECastFlags castFlags);
 	void			StuffText (char *text);
+
+	void			KillBox ();
 };
 
 // EntityFlags values
@@ -230,6 +232,26 @@ enum
 	ENT_USABLE		=	BIT(8), // Can be casted to CUsableEntity
 	ENT_ITEM		=	BIT(9), // Can be casted to CItemEntity
 };
+
+template <class TType>
+inline TType *entity_cast (CBaseEntity *Entity)
+{
+	if (Entity == NULL)
+		return NULL;
+
+	TType *Casted = dynamic_cast<TType*> (Entity);
+
+	if (Casted == NULL)
+		assert (0);
+
+	return Casted;
+}
+
+template <>
+inline CBaseEntity *entity_cast<CBaseEntity> (CBaseEntity *Entity)
+{
+	return Entity; // Implicit cast already done
+}
 
 // Base classes
 #include "cc_entitytypes.h"
@@ -295,26 +317,26 @@ inline uint32 atou (const char *Str)
 typedef uint32 EFieldType;
 enum// EFieldType
 {
-	FTInteger,			// Stores value as integer
-	FTUInteger,			// Stores value as unsigned integer
-	FTFloat,			// Stores value as float
-	FTVector,			// Stores value as vec3f (or float[3])
-	FTAngleHack,		// Only stores yaw, vec3f or float[3]
-	FTIgnore,			// Nothing happens
-	FTStringL,			// String allocated on level pool
-	FTStringG,			// Ditto, on game pool
-	FTStringToSound,	// String stored as sound index
-	FTStringToImage,	// String stored as image index
-	FTStringToModel,	// String stored as model index
-	FTTime,				// Stores value as FrameNumber (val * 10)
-
-	FTLast,
+	FT_INT,				// Stores value as integer
+	FT_UINT,			// Stores value as unsigned integer
+	FT_FLOAT,			// Stores value as float
+	FT_VECTOR,			// Stores value as vec3f (or float[3])
+	FT_YAWANGLE,		// Only stores yaw, vec3f or float[3]
+	FT_IGNORE,			// Nothing happens
+	FT_LEVEL_STRING,	// String allocated on level pool
+	FT_GAME_STRING,		// Ditto, on game pool
+	FT_SOUND_INDEX,		// String stored as sound index
+	FT_IMAGE_INDEX,		// String stored as image index
+	FT_MODEL_INDEX,		// String stored as model index
+	FT_FRAMENUMBER,		// Stores value as FrameNumber (val * 10)
+	FT_ITEM,			// Stores value as CBaseItem (finds the item and stores it in the ptr)
+	FT_ENTITY,			// Saved as an index to an entity
 
 	// Flags
-	FTGameEntity	=	BIT(10),		// Stored in gameEntity instead of TClass
-	FTSpawnTemp		=	BIT(11),		// Stored in SpawnTemp instead of TClass
-	FTSavable		=	BIT(12),		// Field doubles as a game field and a save field
-	FTNoSpawn		=	BIT(13),		// Field cannot be used as a spawn field
+	FT_GAME_ENTITY	=	BIT(10),		// Stored in gameEntity instead of TClass
+	FT_SPAWNTEMP	=	BIT(11),		// Stored in SpawnTemp instead of TClass
+	FT_SAVABLE		=	BIT(12),		// Field will be saved/loaded
+	FT_NOSPAWN		=	BIT(13),		// Field cannot be used as a spawn field
 };
 
 class CEntityField
@@ -328,7 +350,7 @@ public:
 	Name(Name),
 	Offset(Offset),
 	FieldType(FieldType),
-	StrippedFields(FieldType & ~(FTGameEntity | FTSpawnTemp | FTSavable | FTNoSpawn))
+	StrippedFields(FieldType & ~(FT_GAME_ENTITY | FT_SPAWNTEMP | FT_SAVABLE | FT_NOSPAWN))
 	{
 	};
 
@@ -337,44 +359,44 @@ public:
 	{
 		byte *ClassOffset = (byte*)Entity;
 
-		if (FieldType & FTGameEntity)
+		if (FieldType & FT_GAME_ENTITY)
 			ClassOffset = (byte*)Entity->gameEntity;
-		else if (FieldType & FTSpawnTemp)
+		else if (FieldType & FT_SPAWNTEMP)
 			ClassOffset = (byte*)&st;
 
 		ClassOffset += Offset;
 
 		switch (StrippedFields)
 		{
-		case FTInteger:
+		case FT_INT:
 			*((int*)(ClassOffset)) = atoi(Value);
 			break;
-		case FTUInteger:
+		case FT_UINT:
 			*((uint32*)(ClassOffset)) = atou(Value);
 			break;
-		case FTFloat:
+		case FT_FLOAT:
 			*((float*)(ClassOffset)) = atof(Value);
 			break;
-		case FTVector:
+		case FT_VECTOR:
 			{
 				vec3f v;
 				sscanf_s (Value, "%f %f %f", &v.X, &v.Y, &v.Z);
 				memcpy (ClassOffset, &v, sizeof(float)*3);
 			}
 			break;
-		case FTAngleHack:
+		case FT_YAWANGLE:
 			{
 				vec3f v (0, atof(Value), 0);
 				memcpy (ClassOffset, &v, sizeof(float)*3);
 			}
 			break;
-		case FTIgnore:
+		case FT_IGNORE:
 			break;
-		case FTStringL:
-		case FTStringG:
-			*((char **)(ClassOffset)) = CopyStr(Value, (FieldType == FTStringL) ? com_levelPool : com_gamePool);
+		case FT_LEVEL_STRING:
+		case FT_GAME_STRING:
+			*((char **)(ClassOffset)) = CopyStr(Value, (FieldType == FT_LEVEL_STRING) ? com_levelPool : com_gamePool);
 			break;
-		case FTStringToSound:
+		case FT_SOUND_INDEX:
 			{
 				std::string temp = Value;
 				if (!temp.find (".wav"))
@@ -383,18 +405,33 @@ public:
 				*((MediaIndex *)(ClassOffset)) = SoundIndex (temp.c_str());
 			}
 			break;
-		case FTStringToImage:
+		case FT_IMAGE_INDEX:
 			*((MediaIndex *)(ClassOffset)) = ImageIndex (Value);
 			break;
-		case FTStringToModel:
+		case FT_MODEL_INDEX:
 			*((MediaIndex *)(ClassOffset)) = ModelIndex (Value);
 			break;
-		case FTTime:
+		case FT_FRAMENUMBER:
 			{
 				float Val = atof (Value);
 				*((FrameNumber_t *)(ClassOffset)) = (Val != -1) ? (Val * 10) : -1;
 			}
 			break;
+		case FT_ITEM:
+			{
+				CBaseItem *Item = FindItemByClassname (Value);
+
+				if (!Item)
+					Item = FindItem (Value);
+
+				if (!Item)
+				{
+					MapPrint (MAPPRINT_WARNING, Entity, Entity->State.GetOrigin(), "Bad item: \"%s\"\n", Value);
+					break;
+				}
+
+				*((CBaseItem **)(ClassOffset)) = Item;
+			}
 		};
 	};
 };
@@ -404,7 +441,7 @@ bool CheckFields (TClass *Me, char *Key, char *Value)
 {
 	for (size_t i = 0; i < TClass::FieldsForParsingSize; i++)
 	{
-		if (!(TClass::FieldsForParsing[i].FieldType & FTNoSpawn) && (strcmp (Key, TClass::FieldsForParsing[i].Name) == 0))
+		if (!(TClass::FieldsForParsing[i].FieldType & FT_NOSPAWN) && (strcmp (Key, TClass::FieldsForParsing[i].Name) == 0))
 		{
 			TClass::FieldsForParsing[i].Create<TPassClass> (Me, Value);
 			return true;
@@ -418,7 +455,7 @@ bool CheckFields (TClass *Me, char *Key, char *Value)
 {
 	for (size_t i = 0; i < TClass::FieldsForParsingSize; i++)
 	{
-		if (!(TClass::FieldsForParsing[i].FieldType & FTNoSpawn) && (strcmp (Key, TClass::FieldsForParsing[i].Name) == 0))
+		if (!(TClass::FieldsForParsing[i].FieldType & FT_NOSPAWN) && (strcmp (Key, TClass::FieldsForParsing[i].Name) == 0))
 		{
 			TClass::FieldsForParsing[i].Create<TClass> (Me, Value);
 			return true;

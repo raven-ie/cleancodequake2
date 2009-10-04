@@ -171,7 +171,7 @@ void Cmd_Players_f (CPlayerEntity *ent)
 
 	for (int i = 0 ; i < count ; i++)
 	{
-		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity);
+		CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i+1].Entity);
 		Q_snprintfz (small, sizeof(small), "%3i %s\n",
 			Player->Client.PlayerState.GetStat(STAT_FRAGS),
 			Player->Client.pers.netname);
@@ -390,7 +390,7 @@ public:
 		this->Spectator = Spectator;
 		for (byte i = 1; i <= game.maxclients; i++)
 		{
-			CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+			CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 
 			if (Spectator && (!Player->IsInUse() || Player->Client.pers.state != SVCS_SPAWNED))
 				continue;
@@ -438,53 +438,80 @@ void GCmd_SayTeam_f (CPlayerEntity *ent)
 	Cmd_Say_f (ent, true, false);
 }
 
+uint32 MurmurHash2 (const char *data, const int len, uint32 seed);
 void Cmd_Test_f (CPlayerEntity *ent)
 {
-	/*char *sound = ArgGets(1);
+}
 
-	if (!sound || !sound[0])
-		return;
+#include "cc_menu.h"
 
-	gi.configstring (CS_SOUNDS+70, sound);
-	PlaySoundFrom (ent->gameEntity, CHAN_AUTO, 70, 1, ATTN_NONE);*/
-	//vec3f or = ent->State.GetOrigin();
-	//BroadcastPrintf (PRINT_CENTER, "(%s)\nis at (%.0f %.0f %.0f)", ent->Client.pers.netname, or.X, or.Y, or.Z);
-	//CGibEntity::Spawn (ent, gMedia.Gib_SmallMeat, ArgGeti(1), GIB_ORGANIC);
+
 /*
-	DebugPrintf (		"random       crandom          frand           crand\n"
-						"------       -------          ------         ------\n");
-	for (int i = 0; i < 12; i++)
+==================
+Cmd_Score_f
+
+Display the scoreboard
+==================
+*/
+void Cmd_Score_f (CPlayerEntity *ent)
+{
+	ent->Client.showinventory = false;
+	ent->Client.showhelp = false;
+
+	if (ent->Client.resp.MenuState.InMenu)
 	{
-		DebugPrintf(	"%5.2f        %6.2f            %5.2f          %5.2f\n",
-			random(), crandom(), frand(), crand());
+		ent->Client.resp.MenuState.CloseMenu();
+		return;
 	}
 
-	uint32 randomtime, crandomtime, frandtime, crandtime;
-	
-	randomtime = Sys_Milliseconds ();
-	for (uint32 i = 0; i < 8000000; i++)
-		random ();
-	randomtime = Sys_Milliseconds () - randomtime;
-		
-	crandomtime = Sys_Milliseconds ();
-	for (uint32 i = 0; i < 8000000; i++)
-		crandom ();
-	crandomtime = Sys_Milliseconds () - crandomtime;
+	if (game.mode == GAME_SINGLEPLAYER)
+		return;
 
-	frandtime = Sys_Milliseconds ();
-	for (uint32 i = 0; i < 8000000; i++)
-		frand ();
-	frandtime = Sys_Milliseconds () - frandtime;
-		
-	crandtime = Sys_Milliseconds ();
-	for (uint32 i = 0; i < 8000000; i++)
-		crand ();
-	crandtime = Sys_Milliseconds () - crandtime;
+	if (ent->Client.showscores)
+	{
+		ent->Client.showscores = false;
+		ent->Client.update_chase = true;
+		return;
+	}
 
-	DebugPrintf(	"%5u        %6u            %5u          %5u\n",
-		randomtime, crandomtime, frandtime, crandtime);
-		*/
-	//DebugPrintf ("%i %i %i\n", (int)ent->State.GetOrigin().X, (int)ent->State.GetOrigin().Y, (int)ent->State.GetOrigin().Z);
+	ent->Client.showscores = true;
+	ent->DeathmatchScoreboardMessage (true);
+}
+
+/*
+==================
+Cmd_Help_f
+
+Display the current help message
+==================
+*/
+void Cmd_Help_f (CPlayerEntity *ent)
+{
+	// this is for backwards compatability
+	if (game.mode & GAME_DEATHMATCH)
+	{
+		Cmd_Score_f (ent);
+		return;
+	}
+
+	ent->Client.showinventory = false;
+	ent->Client.showscores = false;
+
+	if (ent->Client.resp.MenuState.InMenu)
+	{
+		ent->Client.resp.MenuState.CloseMenu();
+		return;
+	}
+
+	if (ent->Client.showhelp && (ent->Client.pers.game_helpchanged == game.helpchanged))
+	{
+		ent->Client.showhelp = false;
+		return;
+	}
+
+	ent->Client.showhelp = true;
+	ent->Client.pers.helpchanged = 0;
+	HelpComputer (ent);
 }
 
 void GCTFSay_Team (CPlayerEntity *ent);
@@ -569,6 +596,6 @@ void CC_ClientCommand (edict_t *ent)
 		return;		// not fully in game yet
 
 	InitArg ();
-	Cmd_RunCommand (ArgGets(0), dynamic_cast<CPlayerEntity*>(ent->Entity));
+	Cmd_RunCommand (ArgGets(0), entity_cast<CPlayerEntity>(ent->Entity));
 	EndArg ();
 }

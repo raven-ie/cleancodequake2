@@ -59,8 +59,11 @@ enum// EItemFlags
 /// \author	Paril
 /// \date	5/9/2009
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+void InvalidateItemMedia ();
+
 class CBaseItem
 {
+	friend void InvalidateItemMedia ();
 private:
 	/// The index of this item in the item list. 
 	int			Index;

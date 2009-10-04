@@ -1962,15 +1962,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\..\..\source\g_spawn.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\..\..\source\m_flash.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\..\..\source\p_hud.cpp"
 					>
 				</File>
 			</Filter>

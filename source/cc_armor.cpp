@@ -133,7 +133,7 @@ int CArmor::CheckArmor (CPlayerEntity *Player, vec3f &point, vec3f &normal, int 
 		return 0;
 
 	Player->Client.pers.Inventory.Remove(GetIndex(), save);
-	CTempEnt_Splashes::Sparks (point, normal, (dflags & DAMAGE_BULLET) ? CTempEnt_Splashes::STBulletSparks : CTempEnt_Splashes::STSparks, CTempEnt_Splashes::SPTSparks);
+	CTempEnt_Splashes::Sparks (point, normal, (dflags & DAMAGE_BULLET) ? CTempEnt_Splashes::ST_BULLET_SPARKS : CTempEnt_Splashes::ST_SPARKS, CTempEnt_Splashes::SPT_SPARKS);
 
 	// Ran out of armor?
 	if (!Player->Client.pers.Inventory.Has(this))
@@ -168,7 +168,7 @@ public:
 		gameEntity->item = item;
 		NextThink = level.framenum + 2;    // items start after other solids
 		ThinkState = ITS_DROPTOFLOOR;
-		NoPhysics = true;
+		PhysicsType = PHYSICS_NONE;
 
 		State.SetEffects(item->EffectFlags);
 		State.SetRenderEffects(RF_GLOW);

@@ -63,7 +63,8 @@ or the midpoint of the entity box for bmodels.
 
 // sound communication
 // a sound without an ent or pos will be a local only sound
-enum {
+enum
+{
 	SND_VOLUME			= BIT(0),	// a byte
 	SND_ATTENUATION		= BIT(1),	// a byte
 	SND_POS				= BIT(2),	// three coordinates
@@ -212,7 +213,7 @@ static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channe
 	// Cycle through the different targets and do attenuation calculations
 	for (i=1, client=&g_edicts[1] ; i<=game.maxclients ; i++, client++)
 	{
-		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(client->Entity);
+		CPlayerEntity *Player = entity_cast<CPlayerEntity>(client->Entity);
 		if (Player->Client.pers.state == SVCS_FREE)
 			continue;
 

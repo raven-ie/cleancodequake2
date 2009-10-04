@@ -250,19 +250,22 @@ edict_t *G_Spawn (void)
 	edict_t		*e;
 
 	e = &g_edicts[game.maxclients+1];
-	for ( i=game.maxclients+1 ; i<globals.numEdicts ; i++, e++)
+	for (i = game.maxclients+1; i < globals.numEdicts; i++, e++)
 	{
 		// the first couple seconds of server time can involve a lot of
 		// freeing and allocating, so relax the replacement policy
-		if (!e->inUse && ( e->freetime < 20 || level.framenum - e->freetime > 5 ) )
+		if (!e->inUse && (e->freetime < 20 || level.framenum - e->freetime > 5))
 		{
 			if (e->Entity && e->Entity->Freed)
 			{
 				QDelete e->Entity;
 				e->Entity = NULL;
 			}
+
+_CC_DISABLE_DEPRECATION
 			G_InitEdict (e);
-			//DebugPrintf ("Entity %i reused\n", i);
+_CC_ENABLE_DEPRECATION
+
 			return e;
 		}
 	}
@@ -270,9 +273,12 @@ edict_t *G_Spawn (void)
 	if (i == game.maxentities)
 		GameError ("ED_Alloc: no free edicts");
 		
-	//DebugPrintf ("Entity %i allocated\n", i);
 	globals.numEdicts++;
+
+_CC_DISABLE_DEPRECATION
 	G_InitEdict (e);
+_CC_ENABLE_DEPRECATION
+
 	return e;
 }
 
@@ -300,7 +306,9 @@ void G_FreeEdict (edict_t *ed)
 // Creating a new entity via constructor.
 CBaseEntity::CBaseEntity ()
 {
+_CC_DISABLE_DEPRECATION
 	gameEntity = G_Spawn ();
+_CC_ENABLE_DEPRECATION
 	gameEntity->Entity = this;
 
 	Freed = false;
@@ -323,7 +331,10 @@ CBaseEntity::CBaseEntity (int Index)
 CBaseEntity::~CBaseEntity ()
 {
 	gameEntity->Entity = NULL;
+
+_CC_DISABLE_DEPRECATION
 	G_FreeEdict (gameEntity); // "delete" the entity
+_CC_ENABLE_DEPRECATION
 };
 
 // Funtions below are to link the private gameEntity together
@@ -537,6 +548,27 @@ void	CBaseEntity::PlayPositionedSound (vec3_t origin, EEntSndChannel channel, Me
 	PlaySoundAt (origin, gameEntity, channel, soundIndex, volume, attenuation, timeOfs);
 };
 
+void	CBaseEntity::KillBox ()
+{
+	CTrace		tr;
+
+	while (1)
+	{
+		tr = CTrace (State.GetOrigin(), GetMins(), GetMaxs(), State.GetOrigin(), NULL, CONTENTS_MASK_PLAYERSOLID);
+		if (!tr.ent || !tr.Ent)
+			break;
+
+		if ((tr.Ent->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(tr.Ent)->CanTakeDamage)
+		{
+			// nail it
+			entity_cast<CHurtableEntity>(tr.Ent)->TakeDamage (this, this, vec3fOrigin, State.GetOrigin(),
+																vec3fOrigin, 100000, 0, DAMAGE_NO_PROTECTION, MOD_TELEFRAG);
+		}
+
+		if (tr.Ent->GetSolid())
+			break;
+	}
+};
 
 CMapEntity::CMapEntity () : 
 CBaseEntity()
@@ -608,12 +640,38 @@ void CBaseEntity::StuffText (char *text)
 
 const CEntityField CMapEntity::FieldsForParsing[] =
 {
-	CEntityField ("spawnflags", EntityMemberOffset(CBaseEntity,SpawnFlags), FTUInteger),
-	CEntityField ("origin", GameEntityMemberOffset(state.origin), FTVector | FTGameEntity),
-	CEntityField ("angles", GameEntityMemberOffset(state.angles), FTVector | FTGameEntity),
-	CEntityField ("angle", GameEntityMemberOffset(state.angles), FTAngleHack | FTGameEntity),
-	CEntityField ("light", 0, FTIgnore),
-	CEntityField ("model", GameEntityMemberOffset(model), FTStringL | FTGameEntity),
+	CEntityField ("spawnflags",		EntityMemberOffset(CBaseEntity,SpawnFlags),		FT_UINT),
+	CEntityField ("origin",			GameEntityMemberOffset(state.origin),			FT_VECTOR | FT_GAME_ENTITY),
+	CEntityField ("angles",			GameEntityMemberOffset(state.angles),			FT_VECTOR | FT_GAME_ENTITY),
+	CEntityField ("angle",			GameEntityMemberOffset(state.angles),			FT_YAWANGLE | FT_GAME_ENTITY),
+	CEntityField ("model",			GameEntityMemberOffset(model),					FT_LEVEL_STRING | FT_GAME_ENTITY),
+	CEntityField ("light",			0,												FT_IGNORE),
+
+	CEntityField ("item",			GameEntityMemberOffset(item),					FT_ITEM | FT_GAME_ENTITY),
+	CEntityField ("target",			GameEntityMemberOffset(target),					FT_LEVEL_STRING | FT_GAME_ENTITY),
+	CEntityField ("targetname",		GameEntityMemberOffset(targetname),				FT_LEVEL_STRING | FT_GAME_ENTITY),
+	CEntityField ("pathtarget",		GameEntityMemberOffset(pathtarget),				FT_LEVEL_STRING | FT_GAME_ENTITY),
+	CEntityField ("deathtarget",	GameEntityMemberOffset(deathtarget),			FT_LEVEL_STRING | FT_GAME_ENTITY),
+	CEntityField ("killtarget",		GameEntityMemberOffset(killtarget),				FT_LEVEL_STRING | FT_GAME_ENTITY),
+	CEntityField ("combattarget",	GameEntityMemberOffset(combattarget),			FT_LEVEL_STRING | FT_GAME_ENTITY),
+	CEntityField ("team",			GameEntityMemberOffset(team),					FT_LEVEL_STRING | FT_GAME_ENTITY),
+	CEntityField ("style",			GameEntityMemberOffset(style),					FT_INT | FT_GAME_ENTITY),
+	CEntityField ("count",			GameEntityMemberOffset(count),					FT_INT | FT_GAME_ENTITY),
+	CEntityField ("sounds",			GameEntityMemberOffset(sounds),					FT_INT | FT_GAME_ENTITY),
+
+	CEntityField ("goalentity",		GameEntityMemberOffset(goalentity),				FT_ENTITY | FT_GAME_ENTITY | FT_NOSPAWN | FT_SAVABLE),
+	CEntityField ("movetarget",		GameEntityMemberOffset(movetarget),				FT_ENTITY | FT_GAME_ENTITY | FT_NOSPAWN | FT_SAVABLE),
+	CEntityField ("owner",			GameEntityMemberOffset(owner),					FT_ENTITY | FT_GAME_ENTITY | FT_NOSPAWN | FT_SAVABLE),
+
+	// temp spawn vars -- only valid when the spawn function is called
+	CEntityField ("lip",			SpawnTempMemberOffset(lip),						FT_INT | FT_SPAWNTEMP),
+	CEntityField ("height",			SpawnTempMemberOffset(height),					FT_INT | FT_SPAWNTEMP),
+
+	CEntityField ("gravity",		SpawnTempMemberOffset(gravity),					FT_LEVEL_STRING | FT_SPAWNTEMP),
+	CEntityField ("sky",			SpawnTempMemberOffset(sky),						FT_LEVEL_STRING | FT_SPAWNTEMP),
+	CEntityField ("skyrotate",		SpawnTempMemberOffset(skyrotate),				FT_FLOAT | FT_SPAWNTEMP),
+	CEntityField ("skyaxis",		SpawnTempMemberOffset(skyaxis),					FT_VECTOR | FT_SPAWNTEMP),
+	CEntityField ("nextmap",		SpawnTempMemberOffset(nextmap),					FT_LEVEL_STRING | FT_SPAWNTEMP),
 };
 const size_t CMapEntity::FieldsForParsingSize = FieldSize<CMapEntity>();
 
@@ -681,7 +739,7 @@ void CMapEntity::ParseFields ()
 	// and report ones that are still there.
 	if (gameEntity->ParseData->size())
 	{
-		for (std::list<CKeyValuePair*>::iterator it = gameEntity->ParseData->begin(); it != gameEntity->ParseData->end(); it++)
+		for (std::list<CKeyValuePair*>::iterator it = gameEntity->ParseData->begin(); it != gameEntity->ParseData->end(); ++it)
 		{
 			CKeyValuePair *PairPtr = (*it);
 			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "\"%s\" is not a field (value = \"%s\")\n", PairPtr->Key, PairPtr->Value);

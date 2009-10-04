@@ -583,7 +583,7 @@ void CMaiden::Rocket ()
 	// 20, 35, 50, 65 chance of leading
 	if((!blindfire) && ((random() < (0.2 + ((3 - skill->Integer()) * 0.15)))))
 	{
-		vec = vec.MultiplyAngles (dir.Length() / rocketSpeed, dynamic_cast<CPhysicsEntity*>(Entity->Enemy)->Velocity);
+		vec = vec.MultiplyAngles (dir.Length() / rocketSpeed, entity_cast<CPhysicsEntity>(Entity->Enemy)->Velocity);
 		dir = vec - start;
 	}
 
@@ -656,7 +656,7 @@ void CMaiden::ReRocket()
 		AIFlags &= ~AI_MANUAL_STEERING;
 	else
 #endif
-	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0)
+	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0)
 	{
 		if (Range (Entity, Entity->Enemy) > RANGE_MELEE &&
 			IsVisible (Entity, Entity->Enemy) &&
@@ -699,7 +699,7 @@ CAnim ChickMoveEndSlash (FRAME_attak213, FRAME_attak216, ChickFramesEndSlash, Co
 
 void CMaiden::ReSlash()
 {
-	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0 && (Range (Entity, Entity->Enemy) == RANGE_MELEE) && (random() <= 0.9))
+	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0 && (Range (Entity, Entity->Enemy) == RANGE_MELEE) && (random() <= 0.9))
 		CurrentMove = &ChickMoveSlash;
 	else
 		CurrentMove = &ChickMoveEndSlash;

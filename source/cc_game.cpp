@@ -109,7 +109,7 @@ void EndDMLevel (void)
 		BeginIntermission (CreateTargetChangeLevel (level.nextmap) );
 	else
 	{	// search for a changelevel
-		CTargetChangeLevel *ent = dynamic_cast<CTargetChangeLevel*>(CC_Find (NULL, FOFS(classname), "target_changelevel"));
+		CTargetChangeLevel *ent = entity_cast<CTargetChangeLevel>(CC_Find (NULL, FOFS(classname), "target_changelevel"));
 		if (!ent)
 		{	// the map designer didn't include a changelevel,
 			// so create a fake ent that goes back to the same level
@@ -159,7 +159,7 @@ void CheckDMRules (void)
 	{
 		for (int i=0 ; i<game.maxclients ; i++)
 		{
-			CPlayerEntity *cl = dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity);
+			CPlayerEntity *cl = entity_cast<CPlayerEntity>(g_edicts[i+1].Entity);
 			if (!cl->IsInUse())
 				continue;
 
@@ -180,7 +180,9 @@ ExitLevel
 */
 void ExitLevel (void)
 {
-	int		i;
+	if (CTFNextMap())
+		return;
+
 	char	command [256];
 
 	Q_snprintfz (command, sizeof(command), "gamemap \"%s\"\n", level.changemap);
@@ -191,9 +193,9 @@ void ExitLevel (void)
 	ClientEndServerFrames ();
 
 	// clear some things before going to next level
-	for (i=0 ; i<game.maxclients ; i++)
+	for (int i = 0; i < game.maxclients; i++)
 	{
-		CPlayerEntity *ent = dynamic_cast<CPlayerEntity*>(g_edicts[1 + i].Entity);
+		CPlayerEntity *ent = entity_cast<CPlayerEntity>(g_edicts[1 + i].Entity);
 		if (!ent->IsInUse())
 			continue;
 		if (ent->Health > ent->Client.pers.max_health)
@@ -233,7 +235,7 @@ void ClientEndServerFrames ()
 	// and damage has been added
 	for (int i = 1; i <= game.maxclients ; i++)
 	{
-		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+		CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 		if (!Player->IsInUse())
 			continue;
 		Player->EndServerFrame ();
@@ -323,16 +325,16 @@ void CC_RunFrame ()
 			{
 				Entity->GroundEntity = NULL;
 				if ( !(Entity->Flags & (FL_SWIM|FL_FLY)) && (Entity->EntityFlags & ENT_MONSTER))
-					(dynamic_cast<CMonsterEntity*>(Entity))->Monster->CheckGround ();
+					(entity_cast<CMonsterEntity>(Entity))->Monster->CheckGround ();
 			}
 
 			if (!Entity->Freed && (Entity->EntityFlags & ENT_THINKABLE)) 
-				dynamic_cast<CThinkableEntity*>(Entity)->PreThink ();
+				entity_cast<CThinkableEntity>(Entity)->PreThink ();
 
 			Entity->Run ();
 
 			if (!Entity->Freed && (Entity->EntityFlags & ENT_THINKABLE))
-				dynamic_cast<CThinkableEntity*>(Entity)->RunThink ();
+				entity_cast<CThinkableEntity>(Entity)->RunThink ();
 
 			// Were we freed?
 			// This has to be processed after thinking and running, because
@@ -436,6 +438,56 @@ only happens when a new game is started or a save game
 is loaded.
 ============
 */
+
+CCvar	*deathmatch;
+CCvar	*coop;
+CCvar	*dmflags;
+CCvar	*skill;
+CCvar	*fraglimit;
+CCvar	*timelimit;
+CCvar	*password;
+CCvar	*spectator_password;
+CCvar	*needpass;
+CCvar	*maxclients;
+CCvar	*maxspectators;
+CCvar	*maxentities;
+CCvar	*g_select_empty;
+CCvar	*dedicated;
+CCvar	*developer;
+
+CCvar	*filterban;
+
+CCvar	*sv_gravity;
+
+CCvar	*sv_rollspeed;
+CCvar	*sv_rollangle;
+CCvar	*gun_x;
+CCvar	*gun_y;
+CCvar	*gun_z;
+
+CCvar	*run_pitch;
+CCvar	*run_roll;
+CCvar	*bob_up;
+CCvar	*bob_pitch;
+CCvar	*bob_roll;
+
+CCvar	*sv_cheats;
+
+CCvar	*flood_msgs;
+CCvar	*flood_persecond;
+CCvar	*flood_waitdelay;
+
+CCvar	*sv_maplist;
+CCvar	*map_debug;
+CCvar	*cc_techflags;
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+CCvar	*capturelimit;
+CCvar	*instantweap;
+//ZOID
+#endif
+
 // Registers all cvars and commands
 void G_Register ()
 {

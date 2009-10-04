@@ -79,10 +79,8 @@ class CFuncClock : public CMapEntity, public CUsableEntity, public CThinkableEnt
 {
 public:
 	FrameNumber_t	Wait;
-
 	int				Seconds;
 	CTargetString	*String;
-	bool			Usable;
 
 	CFuncClock ();
 	CFuncClock (int Index);

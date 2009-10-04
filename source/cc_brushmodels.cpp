@@ -91,12 +91,12 @@ CStopPhysics (Index)
 
 const CEntityField CBrushModel::FieldsForParsing[] =
 {
-	CEntityField ("wait", EntityMemberOffset(CBrushModel,Wait), FTTime),
-	CEntityField ("speed", EntityMemberOffset(CBrushModel,Speed), FTFloat),
-	CEntityField ("accel", EntityMemberOffset(CBrushModel,Accel), FTFloat),
-	CEntityField ("decel", EntityMemberOffset(CBrushModel,Decel), FTFloat),
-	CEntityField ("distance", EntityMemberOffset(CBrushModel,Distance), FTInteger),
-	CEntityField ("dmg", EntityMemberOffset(CBrushModel,Damage), FTInteger),
+	CEntityField ("wait", EntityMemberOffset(CBrushModel,Wait), FT_FRAMENUMBER),
+	CEntityField ("speed", EntityMemberOffset(CBrushModel,Speed), FT_FLOAT),
+	CEntityField ("accel", EntityMemberOffset(CBrushModel,Accel), FT_FLOAT),
+	CEntityField ("decel", EntityMemberOffset(CBrushModel,Decel), FT_FLOAT),
+	CEntityField ("distance", EntityMemberOffset(CBrushModel,Distance), FT_INT),
+	CEntityField ("dmg", EntityMemberOffset(CBrushModel,Damage), FT_INT),
 };
 const size_t CBrushModel::FieldsForParsingSize = FieldSize<CBrushModel>();
 
@@ -399,8 +399,8 @@ void CPlatForm::Blocked (CBaseEntity *other)
 	if (!(other->GetSvFlags() & SVF_MONSTER) && !(other->EntityFlags & ENT_PLAYER) )
 	{
 		// give it a chance to go away on it's own terms (like gibs)
-		if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
-			dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, 100000, 1, 0, MOD_CRUSH);
+		if ((other->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(other)->CanTakeDamage)
+			entity_cast<CHurtableEntity>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, 100000, 1, 0, MOD_CRUSH);
 
 		// if it's still there, nuke it
 		if (!other->Freed)
@@ -408,8 +408,8 @@ void CPlatForm::Blocked (CBaseEntity *other)
 		return;
 	}
 
-	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
-		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, Damage, 1, 0, MOD_CRUSH);
+	if ((other->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(other)->CanTakeDamage)
+		entity_cast<CHurtableEntity>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, Damage, 1, 0, MOD_CRUSH);
 
 	if (MoveState == STATE_UP)
 		GoDown ();
@@ -512,7 +512,7 @@ CTouchableEntity(Index)
 
 void CPlatForm::CPlatFormInsideTrigger::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 {
-	if (!(other->EntityFlags & ENT_HURTABLE) || dynamic_cast<CHurtableEntity*>(other)->Health <= 0)
+	if (!(other->EntityFlags & ENT_HURTABLE) || entity_cast<CHurtableEntity>(other)->Health <= 0)
 		return;
 	if (!other->gameEntity->client)
 		return;
@@ -767,7 +767,7 @@ void CDoor::Use (CBaseEntity *other, CBaseEntity *activator)
 		if (MoveState == STATE_UP || MoveState == STATE_TOP)
 		{
 			// trigger all paired doors
-			for (CDoor *Door = this ; Door ; Door = dynamic_cast<CDoor*>(Door->TeamChain))	
+			for (CDoor *Door = this ; Door ; Door = entity_cast<CDoor>(Door->TeamChain))	
 			{
 				if (Door->Message)
 					QDelete Door->Message;
@@ -780,7 +780,7 @@ void CDoor::Use (CBaseEntity *other, CBaseEntity *activator)
 	}
 	
 	// trigger all paired doors
-	for (CDoor *Door = this; Door; Door = dynamic_cast<CDoor*>(Door->TeamChain))
+	for (CDoor *Door = this; Door; Door = entity_cast<CDoor>(Door->TeamChain))
 	{
 		if (Door->Message)
 			QDelete Door->Message;
@@ -804,7 +804,7 @@ CTouchableEntity(Index)
 
 void CDoor::CDoorTrigger::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 {
-	if (!(other->EntityFlags & ENT_HURTABLE) || dynamic_cast<CHurtableEntity*>(other)->Health <= 0)
+	if (!(other->EntityFlags & ENT_HURTABLE) || entity_cast<CHurtableEntity>(other)->Health <= 0)
 		return;
 
 	if (!(other->GetSvFlags() & SVF_MONSTER) && (!(other->EntityFlags & ENT_PLAYER)))
@@ -817,7 +817,7 @@ void CDoor::CDoorTrigger::Touch (CBaseEntity *other, plane_t *plane, cmBspSurfac
 		return;
 	TouchDebounce = level.framenum + 10;
 
-	(dynamic_cast<CDoor*>(GetOwner()))->Use (other, other);
+	(entity_cast<CDoor>(GetOwner()))->Use (other, other);
 }
 
 void CDoor::CalcMoveSpeed ()
@@ -827,7 +827,7 @@ void CDoor::CalcMoveSpeed ()
 
 	// find the smallest distance any member of the team will be moving
 	float min = Q_fabs(Distance);
-	for (CDoor *Door = dynamic_cast<CDoor*>(TeamChain); Door; Door = dynamic_cast<CDoor*>(Door->TeamChain))
+	for (CDoor *Door = entity_cast<CDoor>(TeamChain); Door; Door = entity_cast<CDoor>(Door->TeamChain))
 	{
 		float dist = Q_fabs(Door->Distance);
 		if (dist < min)
@@ -837,7 +837,7 @@ void CDoor::CalcMoveSpeed ()
 	float time = min / Speed;
 
 	// adjust speeds so they will all complete at the same time
-	for (CDoor *Door = this; Door; Door = dynamic_cast<CDoor*>(Door->TeamChain))
+	for (CDoor *Door = this; Door; Door = entity_cast<CDoor>(Door->TeamChain))
 	{
 		float newspeed = Q_fabs(Door->Distance) / time;
 		float ratio = newspeed / Door->Speed;
@@ -894,8 +894,8 @@ void CDoor::Blocked (CBaseEntity *other)
 	if (!(other->EntityFlags & ENT_PLAYER) && !(other->EntityFlags & ENT_MONSTER) )
 	{
 		// give it a chance to go away on it's own terms (like gibs)
-		if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
-			dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, 100000, 1, 0, MOD_CRUSH);
+		if ((other->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(other)->CanTakeDamage)
+			entity_cast<CHurtableEntity>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, 100000, 1, 0, MOD_CRUSH);
 
 		// if it's still there, nuke it
 		if (other->IsInUse())
@@ -903,8 +903,8 @@ void CDoor::Blocked (CBaseEntity *other)
 		return;
 	}
 
-	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
-		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, Damage, 1, 0, MOD_CRUSH);
+	if ((other->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(other)->CanTakeDamage)
+		entity_cast<CHurtableEntity>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, Damage, 1, 0, MOD_CRUSH);
 
 	if (SpawnFlags & DOOR_CRUSHER)
 		return;
@@ -917,12 +917,12 @@ void CDoor::Blocked (CBaseEntity *other)
 		if (MoveState == STATE_DOWN)
 		{
 			for (CBaseEntity *ent = TeamMaster ; ent ; ent = ent->TeamChain)
-				(dynamic_cast<CDoor*>(ent))->GoUp ((Activator) ? Activator : NULL);
+				(entity_cast<CDoor>(ent))->GoUp ((Activator) ? Activator : NULL);
 		}
 		else
 		{
 			for (CBaseEntity *ent = TeamMaster ; ent ; ent = ent->TeamChain)
-				(dynamic_cast<CDoor*>(ent))->GoDown ();
+				(entity_cast<CDoor>(ent))->GoDown ();
 		}
 	}
 }
@@ -931,12 +931,12 @@ void CDoor::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3
 {
 	for (CBaseEntity *ent = TeamMaster ; ent ; ent = ent->TeamChain)
 	{
-		CDoor *Door = dynamic_cast<CDoor*>(ent);
+		CDoor *Door = entity_cast<CDoor>(ent);
 		Door->Health = Door->MaxHealth;
 		Door->CanTakeDamage = false;
 	}
 
-	(dynamic_cast<CDoor*>(TeamMaster))->Use (attacker, attacker);
+	(entity_cast<CDoor>(TeamMaster))->Use (attacker, attacker);
 }
 
 void CDoor::Pain (CBaseEntity *other, float kick, int damage)
@@ -953,7 +953,7 @@ void CDoor::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 
 	TouchDebounce = level.framenum + 50;
 
-	(dynamic_cast<CPlayerEntity*>(other))->PrintToClient (PRINT_CENTER, "%s", Message);
+	(entity_cast<CPlayerEntity>(other))->PrintToClient (PRINT_CENTER, "%s", Message);
 	other->PlaySound (CHAN_AUTO, SoundIndex ("misc/talk1.wav"));
 }
 
@@ -1399,8 +1399,8 @@ void CDoorSecret::Blocked (CBaseEntity *other)
 	if (!(other->EntityFlags & ENT_MONSTER) && (!(other->EntityFlags & ENT_PLAYER)) )
 	{
 		// give it a chance to go away on it's own terms (like gibs)
-		if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
-			dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, State.GetOrigin(), vec3fOrigin, 100000, 1, 0, MOD_CRUSH);
+		if ((other->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(other)->CanTakeDamage)
+			entity_cast<CHurtableEntity>(other)->TakeDamage (this, this, vec3fOrigin, State.GetOrigin(), vec3fOrigin, 100000, 1, 0, MOD_CRUSH);
 
 		// if it's still there, nuke it
 		if (other->IsInUse())
@@ -1412,8 +1412,8 @@ void CDoorSecret::Blocked (CBaseEntity *other)
 		return;
 	TouchDebounce = level.framenum + 5;
 
-	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
-		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, State.GetOrigin(), vec3fOrigin, Damage, 1, 0, MOD_CRUSH);
+	if ((other->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(other)->CanTakeDamage)
+		entity_cast<CHurtableEntity>(other)->TakeDamage (this, this, vec3fOrigin, State.GetOrigin(), vec3fOrigin, Damage, 1, 0, MOD_CRUSH);
 }
 
 void CDoorSecret::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
@@ -1602,7 +1602,7 @@ void CButton::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	if (!(other->EntityFlags & ENT_PLAYER))
 		return;
 
-	if (dynamic_cast<CPlayerEntity*>(other)->Health <= 0)
+	if (entity_cast<CPlayerEntity>(other)->Health <= 0)
 		return;
 
 	Activator = other;
@@ -1712,8 +1712,8 @@ void CTrainBase::Blocked (CBaseEntity *other)
 	if (!(other->EntityFlags & ENT_MONSTER) && (!(other->EntityFlags & ENT_PLAYER)) )
 	{
 		// give it a chance to go away on it's own terms (like gibs)
-		if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
-			dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, 100000, 1, 0, MOD_CRUSH);
+		if ((other->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(other)->CanTakeDamage)
+			entity_cast<CHurtableEntity>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, 100000, 1, 0, MOD_CRUSH);
 
 		// if it's still there, nuke it
 		if (other->IsInUse())
@@ -1729,8 +1729,8 @@ void CTrainBase::Blocked (CBaseEntity *other)
 
 	TouchDebounce = level.framenum + 5;
 
-	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
-		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, Damage, 1, 0, MOD_CRUSH);
+	if ((other->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(other)->CanTakeDamage)
+		entity_cast<CHurtableEntity>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, Damage, 1, 0, MOD_CRUSH);
 }
 
 void CTrainBase::TrainWait ()
@@ -1742,7 +1742,7 @@ void CTrainBase::TrainWait ()
 		savetarget = ent->gameEntity->target;
 		ent->gameEntity->target = ent->gameEntity->pathtarget;
 		if (TargetEntity->EntityFlags & ENT_USABLE)
-			dynamic_cast<CUsableEntity*>(TargetEntity)->UseTargets (Activator, Message);
+			entity_cast<CUsableEntity>(TargetEntity)->UseTargets (Activator, Message);
 		ent->gameEntity->target = savetarget;
 
 		// make sure we didn't get killed by a killtarget
@@ -1815,7 +1815,7 @@ void CTrainBase::Next ()
 		break;
 	}
 
-	CPathCorner *Corner = dynamic_cast<CPathCorner*>(ent);
+	CPathCorner *Corner = entity_cast<CPathCorner>(ent);
 
 	if (Corner)
 		Wait = Corner->Wait;
@@ -2047,7 +2047,7 @@ void CTriggerElevator::Think ()
 		return;
 	}
 
-	MoveTarget = dynamic_cast<CTrain*>(newTarg);
+	MoveTarget = entity_cast<CTrain>(newTarg);
 	Usable = true;
 	SetSvFlags (SVF_NOCLIENT);
 }
@@ -2078,7 +2078,7 @@ CBrushModel(Index)
 
 const CEntityField CWorldEntity::FieldsForParsing[] =
 {
-	CEntityField ("message", EntityMemberOffset(CWorldEntity,Message), FTStringL),
+	CEntityField ("message", EntityMemberOffset(CWorldEntity,Message), FT_LEVEL_STRING),
 };
 const size_t CWorldEntity::FieldsForParsingSize = FieldSize<CWorldEntity>();
 
@@ -2140,6 +2140,7 @@ void CWorldEntity::Spawn ()
 {
 	World = this;
 	ClearList(); // Do this before ANYTHING
+	InvalidateItemMedia ();
 
 	PhysicsType = PHYSICS_PUSH;
 	SetSolid (SOLID_BSP);
@@ -2248,8 +2249,8 @@ void CWorldEntity::Spawn ()
 
 void SpawnWorld ()
 {
-	(dynamic_cast<CWorldEntity*>(g_edicts[0].Entity))->ParseFields ();
-	(dynamic_cast<CWorldEntity*>(g_edicts[0].Entity))->Spawn ();
+	(entity_cast<CWorldEntity>(g_edicts[0].Entity))->ParseFields ();
+	(entity_cast<CWorldEntity>(g_edicts[0].Entity))->Spawn ();
 };
 #pragma endregion World
 
@@ -2296,14 +2297,14 @@ void CRotatingBrush::Blocked (CBaseEntity *other)
 	if (!Blockable)
 		return;
 
-	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
-		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, Damage, 1, 0, MOD_CRUSH);
+	if ((other->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(other)->CanTakeDamage)
+		entity_cast<CHurtableEntity>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, Damage, 1, 0, MOD_CRUSH);
 }
 
 void CRotatingBrush::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 {
-	if ((AngularVelocity != vec3fOrigin) && ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage))
-		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, Damage, 1, 0, MOD_CRUSH);
+	if ((AngularVelocity != vec3fOrigin) && ((other->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(other)->CanTakeDamage))
+		entity_cast<CHurtableEntity>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, Damage, 1, 0, MOD_CRUSH);
 }
 
 void CRotatingBrush::Use (CBaseEntity *other, CBaseEntity *activator)
@@ -2496,8 +2497,7 @@ CFuncWall::CFuncWall () :
 	CBaseEntity (),
 	CMapEntity (),
 	CBrushModel (),
-	CUsableEntity (),
-	Usable(true)
+	CUsableEntity ()
 	{
 	};
 
@@ -2505,8 +2505,7 @@ CFuncWall::CFuncWall (int Index) :
 	CBaseEntity (Index),
 	CMapEntity (Index),
 	CBrushModel (Index),
-	CUsableEntity (Index),
-	Usable(true)
+	CUsableEntity (Index)
 	{
 	};
 
@@ -2519,7 +2518,7 @@ void CFuncWall::Use (CBaseEntity *other, CBaseEntity *activator)
 	{
 		SetSolid (SOLID_BSP);
 		SetSvFlags (GetSvFlags() & ~SVF_NOCLIENT);
-		KillBox (this);
+		KillBox ();
 	}
 	else
 	{
@@ -2592,8 +2591,7 @@ CFuncObject::CFuncObject () :
 	CBrushModel (),
 	CTouchableEntity (),
 	CUsableEntity (),
-	CTossProjectile (),
-	Usable(true)
+	CTossProjectile ()
 	{
 	};
 
@@ -2603,8 +2601,7 @@ CFuncObject::CFuncObject (int Index) :
 	CBrushModel (Index),
 	CTouchableEntity (Index),
 	CUsableEntity (Index),
-	CTossProjectile (Index),
-	Usable(true)
+	CTossProjectile (Index)
 	{
 	};
 
@@ -2628,10 +2625,10 @@ void CFuncObject::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *sur
 		return;
 	if (!(other->EntityFlags & ENT_HURTABLE))
 		return;
-	if (!dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
+	if (!entity_cast<CHurtableEntity>(other)->CanTakeDamage)
 		return;
 
-	dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3Origin, State.GetOrigin(), vec3fOrigin, Damage, 1, 0, MOD_CRUSH);
+	entity_cast<CHurtableEntity>(other)->TakeDamage (this, this, vec3Origin, State.GetOrigin(), vec3fOrigin, Damage, 1, 0, MOD_CRUSH);
 };
 
 void CFuncObject::Think ()
@@ -2645,7 +2642,7 @@ void CFuncObject::Use (CBaseEntity *other, CBaseEntity *activator)
 	SetSolid (SOLID_BSP);
 	SetSvFlags (GetSvFlags() & ~SVF_NOCLIENT);
 	Usable = false;
-	KillBox (this);
+	KillBox ();
 	Think (); // release us
 }
 
@@ -2723,7 +2720,7 @@ CFuncExplosive::CFuncExplosive (int Index) :
 
 const CEntityField CFuncExplosive::FieldsForParsing[] =
 {
-	CEntityField ("mass", EntityMemberOffset(CFuncExplosive,Explosivity), FTInteger),
+	CEntityField ("mass", EntityMemberOffset(CFuncExplosive,Explosivity), FT_INT),
 };
 const size_t CFuncExplosive::FieldsForParsingSize = FieldSize<CFuncExplosive>();
 
@@ -2804,7 +2801,7 @@ void CFuncExplosive::DoSpawn ()
 	SetSolid (SOLID_BSP);
 	SetSvFlags (GetSvFlags() & ~SVF_NOCLIENT);
 	UseType = FUNCEXPLOSIVE_USE_NONE;
-	KillBox (this);
+	KillBox ();
 	Link ();
 }
 
@@ -2880,7 +2877,7 @@ CKillbox::CKillbox (int Index) :
 
 void CKillbox::Use (CBaseEntity *other, CBaseEntity *activator)
 {
-	KillBox (this);
+	KillBox ();
 }
 
 void CKillbox::Spawn ()

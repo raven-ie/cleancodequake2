@@ -40,8 +40,7 @@ CMapEntity(),
 CTossProjectile(),
 CTouchableEntity(),
 CThinkableEntity(),
-CUsableEntity(),
-NoPhysics(false)
+CUsableEntity()
 {
 	EntityFlags |= ENT_ITEM;
 };
@@ -52,8 +51,7 @@ CMapEntity(Index),
 CTossProjectile(Index),
 CTouchableEntity(Index),
 CThinkableEntity(Index),
-CUsableEntity(Index),
-NoPhysics(false)
+CUsableEntity(Index)
 {
 	EntityFlags |= ENT_ITEM;
 };
@@ -72,7 +70,7 @@ void CItemEntity::Touch(CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf
 	if (!(gameEntity->item->Flags & ITEMFLAG_GRABBABLE))
 		return;		// not a grabbable item?
 
-	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(other);
+	CPlayerEntity *Player = entity_cast<CPlayerEntity>(other);
 
 	if (Player->Health <= 0)
 		return; // Dead players can't grab items
@@ -120,9 +118,7 @@ void CItemEntity::Touch(CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf
 
 bool CItemEntity::Run ()
 {
-	if (NoPhysics)
-		return false;
-	return CTossProjectile::Run();
+	return (PhysicsType == PHYSICS_TOSS) ? CTossProjectile::Run() : false;
 }
 
 void CItemEntity::Use (CBaseEntity *other, CBaseEntity *activator)
@@ -147,14 +143,14 @@ void CItemEntity::Use (CBaseEntity *other, CBaseEntity *activator)
 // Returns a random team member of ent
 CItemEntity *CItemEntity::GetRandomTeamMember (CItemEntity *Master)
 {
-	CItemEntity *Member = Master;
+	CBaseEntity *Member = Master;
 	int count = 0;
 
-	for (count = 0, Member = Master; Member; Member = dynamic_cast<CItemEntity*>(Member->Chain), count++);
+	for (count = 0, Member = Master; Member; Member = Member->TeamChain, count++);
 	int choice = irandom(count);
-	for (count = 0, Member = Master; count < choice; Member = dynamic_cast<CItemEntity*>(Member->Chain), count++);
+	for (count = 0, Member = Master; count < choice; Member = Member->TeamChain, count++);
 
-	return Member;
+	return entity_cast<CItemEntity>(Member);
 }
 
 void CItemEntity::Think ()
@@ -170,8 +166,8 @@ void CItemEntity::Think ()
 
 			State.SetModelIndex (ModelIndex((gameEntity->model) ? gameEntity->model : gameEntity->item->WorldModel));
 			SetSolid (SOLID_TRIGGER); 
-			NoTouch = false;
-			NoPhysics = false;
+			Touchable = true;
+			PhysicsType = PHYSICS_TOSS;
 
 			CTrace tr = CTrace (State.GetOrigin(), GetMins(), GetMaxs(), (State.GetOrigin() + vec3f(0,0,-128)), gameEntity, CONTENTS_MASK_SOLID);
 			if (tr.startSolid)
@@ -187,9 +183,6 @@ void CItemEntity::Think ()
 			if (gameEntity->team)
 			{
 				Flags &= ~FL_TEAMSLAVE;
-				Chain = TeamChain;
-				TeamChain = NULL;
-
 				SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
 				SetSolid (SOLID_NOT);
 				if (TeamMaster == this)
@@ -202,7 +195,7 @@ void CItemEntity::Think ()
 			if (SpawnFlags & ITEM_NO_TOUCH)
 			{
 				SetSolid (SOLID_BBOX);
-				NoTouch = true;
+				Touchable = false;
 				State.RemoveEffects (EF_ROTATE);
 				State.RemoveRenderEffects (RF_GLOW);
 			}
@@ -238,7 +231,7 @@ void CItemEntity::Think ()
 				else
 		//ZOID
 		#endif
-				RespawnedEntity = GetRandomTeamMember(dynamic_cast<CItemEntity*>(Master));
+				RespawnedEntity = GetRandomTeamMember(entity_cast<CItemEntity>(Master));
 			}
 
 			RespawnedEntity->SetSvFlags (RespawnedEntity->GetSvFlags() & ~SVF_NOCLIENT);
@@ -264,7 +257,7 @@ void CItemEntity::Spawn (CBaseItem *item)
 	assert (item != NULL);
 	NextThink = level.framenum + 2;    // items start after other solids
 	ThinkState = ITS_DROPTOFLOOR;
-	NoPhysics = true;
+	PhysicsType = PHYSICS_NONE;
 
 	State.SetEffects(item->EffectFlags);
 	State.SetRenderEffects(RF_GLOW);

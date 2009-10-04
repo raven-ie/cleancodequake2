@@ -133,7 +133,7 @@ void CTempEnt_Splashes::Blaster (vec3_t Origin, vec3_t Plane, EBlasterType Blast
 
 	// ...
 	// ID, you impress me.
-	if (BlasterType == BLBlueHyperblaster)
+	if (BlasterType == BL_BLUE_HYPERBLASTER)
 		WritePosition (Plane ? Plane : vec3Origin);
 	else
 		WriteDirection (Plane ? Plane : vec3Origin);
@@ -143,7 +143,7 @@ void CTempEnt_Splashes::Sparks (vec3_t Origin, vec3_t Plane, ESparkType SparkTyp
 {
 	TECast cast(Origin, SparkType);
 
-	if (SparkType != STLaserSparks && SparkType != STWeldingSparks && SparkType != STTunnelSparks)
+	if (SparkType != ST_LASER_SPARKS && SparkType != ST_WELDING_SPARKS && SparkType != ST_TUNNEL_SPARKS)
 	{
 		WritePosition (Origin);
 		WriteDirection (Plane ? Plane : vec3Origin);
@@ -384,7 +384,7 @@ void CTempEnt_Splashes::Blaster (vec3f &Origin, vec3f &Plane, EBlasterType Blast
 
 	// ...
 	// ID, you impress me.
-	if (BlasterType == BLBlueHyperblaster)
+	if (BlasterType == BL_BLUE_HYPERBLASTER)
 		WritePosition (Plane ? Plane : vec3fOrigin);
 	else
 		WriteDirection (Plane ? Plane : vec3fOrigin);
@@ -394,7 +394,7 @@ void CTempEnt_Splashes::Sparks (vec3f &Origin, vec3f &Plane, ESparkType SparkTyp
 {
 	TECast cast(Origin, SparkType);
 
-	if (SparkType != STLaserSparks && SparkType != STWeldingSparks && SparkType != STTunnelSparks)
+	if (SparkType != ST_LASER_SPARKS && SparkType != ST_WELDING_SPARKS && SparkType != ST_TUNNEL_SPARKS)
 	{
 		WritePosition (Origin);
 		WriteDirection (Plane ? Plane : vec3fOrigin);

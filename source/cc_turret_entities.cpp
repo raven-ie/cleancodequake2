@@ -81,9 +81,9 @@ bool CTurretEntityBase::Run ()
 
 void CTurretEntityBase::Blocked (CBaseEntity *other)
 {
-	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
-		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, (TeamMaster->GetOwner()) ? TeamMaster->GetOwner() : TeamMaster,
-					vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, dynamic_cast<CBrushModel*>(TeamMaster)->Damage, 10, 0, MOD_CRUSH);
+	if ((other->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(other)->CanTakeDamage)
+		entity_cast<CHurtableEntity>(other)->TakeDamage (this, (TeamMaster->GetOwner()) ? TeamMaster->GetOwner() : TeamMaster,
+					vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, entity_cast<CBrushModel>(TeamMaster)->Damage, 10, 0, MOD_CRUSH);
 }
 
 /*QUAKED turret_breach (0 0 0) ?
@@ -146,7 +146,7 @@ public:
 	void Callback (CBaseEntity *Entity)
 	{
 		if (Entity->EntityFlags & ENT_PHYSICS)
-			dynamic_cast<CPhysicsEntity*>(Entity)->AngularVelocity.Y = avelYaw;
+			entity_cast<CPhysicsEntity>(Entity)->AngularVelocity.Y = avelYaw;
 	};
 };
 
@@ -169,7 +169,7 @@ void CTurretBreach::Think ()
 			targ->Free();
 		}
 
-		dynamic_cast<CBrushModel*>(TeamMaster)->Damage = Damage;
+		entity_cast<CBrushModel>(TeamMaster)->Damage = Damage;
 		Think ();
 	}
 	else
@@ -239,7 +239,7 @@ void CTurretBreach::Think ()
 			float	diff;
 			vec3f	target;
 			vec3f	dir;
-			CMonsterEntity *TheDriver = dynamic_cast<CMonsterEntity*>(GetOwner());
+			CMonsterEntity *TheDriver = entity_cast<CMonsterEntity>(GetOwner());
 			CTurretDriver *Driver = dynamic_cast<CTurretDriver*>(TheDriver->Monster);
 
 			// angular is easy, just copy ours
@@ -276,10 +276,10 @@ void CTurretBreach::Think ()
 
 const CEntityField CTurretBreach::FieldsForParsing[] =
 {
-	CEntityField ("minpitch", EntityMemberOffset(CTurretBreach,PitchOptions[0]), FTFloat),
-	CEntityField ("maxpitch", EntityMemberOffset(CTurretBreach,PitchOptions[1]), FTFloat),
-	CEntityField ("minyaw", EntityMemberOffset(CTurretBreach,PitchOptions[2]), FTFloat),
-	CEntityField ("maxyaw", EntityMemberOffset(CTurretBreach,PitchOptions[3]), FTFloat),
+	CEntityField ("minpitch", EntityMemberOffset(CTurretBreach,PitchOptions[0]), FT_FLOAT),
+	CEntityField ("maxpitch", EntityMemberOffset(CTurretBreach,PitchOptions[1]), FT_FLOAT),
+	CEntityField ("minyaw", EntityMemberOffset(CTurretBreach,PitchOptions[2]), FT_FLOAT),
+	CEntityField ("maxyaw", EntityMemberOffset(CTurretBreach,PitchOptions[3]), FT_FLOAT),
 };
 const size_t CTurretBreach::FieldsForParsingSize = FieldSize<CTurretBreach>();
 
@@ -424,7 +424,7 @@ void CTurretDriver::TurretThink ()
 {
 	Entity->NextThink = level.framenum + FRAMETIME;
 
-	if (Entity->Enemy && (!Entity->Enemy->IsInUse() || dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= 0))
+	if (Entity->Enemy && (!Entity->Enemy->IsInUse() || entity_cast<CHurtableEntity>(Entity->Enemy)->Health <= 0))
 		Entity->Enemy = NULL;
 
 	if (!Entity->Enemy)
@@ -477,7 +477,7 @@ void CTurretDriver::TurretLink ()
 	Think = static_cast<void (__thiscall CMonster::* )(void)>(&CTurretDriver::TurretThink);
 	Entity->NextThink = level.framenum + FRAMETIME;
 
-	TargetedBreach = dynamic_cast<CTurretBreach*>(CC_PickTarget (Entity->gameEntity->target));
+	TargetedBreach = entity_cast<CTurretBreach>(CC_PickTarget (Entity->gameEntity->target));
 	TargetedBreach->SetOwner (Entity);
 	TargetedBreach->TeamMaster->SetOwner (Entity);
 	Entity->State.SetAngles (TargetedBreach->State.GetAngles());
@@ -536,13 +536,6 @@ void CTurretDriver::Spawn ()
 	Entity->SetClipmask (CONTENTS_MASK_MONSTERSOLID);
 	Entity->State.SetOldOrigin (Entity->State.GetOrigin ());
 	AIFlags |= (AI_STAND_GROUND);
-
-	if (st.item)
-	{
-		Entity->gameEntity->item = FindItemByClassname (st.item);
-		if (!Entity->gameEntity->item)
-			MapPrint (MAPPRINT_WARNING, Entity, Entity->State.GetOrigin(), "has bad item: %s\n", st.item);
-	}
 
 	Think = static_cast<void (__thiscall CMonster::* )(void)>(&CTurretDriver::TurretLink);
 	Entity->NextThink = level.framenum + FRAMETIME;

@@ -486,10 +486,10 @@ void CFloater::Zap ()
 	G_ProjectSource (Entity->State.GetOrigin(), offset, forward, right, origin);
 
 	Entity->PlaySound (CHAN_WEAPON, SoundAttack2);
-	CTempEnt_Splashes::Splash (origin, vec3Origin, CTempEnt_Splashes::SPTSparks, 32);
+	CTempEnt_Splashes::Splash (origin, vec3Origin, CTempEnt_Splashes::SPT_SPARKS, 32);
 
 	if (Entity->Enemy && (Entity->Enemy->EntityFlags & ENT_HURTABLE))
-		dynamic_cast<CHurtableEntity*>(Entity->Enemy)->TakeDamage (Entity, Entity, vec3fOrigin,
+		entity_cast<CHurtableEntity>(Entity->Enemy)->TakeDamage (Entity, Entity, vec3fOrigin,
 		Entity->Enemy->State.GetOrigin(), vec3fOrigin, 5 + irandom(6), -10, DAMAGE_ENERGY, MOD_UNKNOWN);
 }
 

@@ -162,7 +162,7 @@ CItemEntity *CBaseItem::DropItem (CBaseEntity *ent)
 
 	if (ent->EntityFlags & ENT_PLAYER)
 	{
-		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(ent);
+		CPlayerEntity *Player = entity_cast<CPlayerEntity>(ent);
 		CTrace	trace;
 
 		Player->Client.ViewAngle.ToVectors (&forward, &right, NULL);

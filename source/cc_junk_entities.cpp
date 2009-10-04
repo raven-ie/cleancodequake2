@@ -61,13 +61,21 @@ public:
 			g_edicts[number].Entity->Free();
 			QDelete g_edicts[number].Entity;
 			Junk = QNew (com_levelPool, 0) JunkClassType(number);
+
+_CC_DISABLE_DEPRECATION
 			G_InitEdict (&g_edicts[number]);
+_CC_ENABLE_DEPRECATION
+
 			g_edicts[number].Entity = Junk;
 		}
 		else
 		{
 			Junk = QNew (com_levelPool, 0) JunkClassType(number);
+
+_CC_DISABLE_DEPRECATION
 			G_InitEdict (&g_edicts[number]);
+_CC_ENABLE_DEPRECATION
+
 			g_edicts[number].Entity = Junk;
 		}
 		return Junk;
@@ -238,7 +246,7 @@ void CGibEntity::Spawn (CBaseEntity *Owner, MediaIndex gibIndex, int damage, int
 
 	vec3f vd = VelocityForDamage (damage);
 
-	vec3f velocity = ((Owner->EntityFlags & ENT_PHYSICS) ? (dynamic_cast<CPhysicsEntity*>(Owner)->Velocity) : vec3fOrigin);
+	vec3f velocity = ((Owner->EntityFlags & ENT_PHYSICS) ? (entity_cast<CPhysicsEntity>(Owner)->Velocity) : vec3fOrigin);
 	velocity.MultiplyAngles (vscale, vd);
 	Junk->Velocity = velocity;
 	ClipGibVelocity (Junk);

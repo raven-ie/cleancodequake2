@@ -219,7 +219,7 @@ static void loc_buildboxpoints(vec3f p[8], vec3f org, vec3f mins, vec3f maxs)
 bool loc_CanSee (CBaseEntity *targ, CBaseEntity *inflictor)
 {
 	// bmodels need special checking because their origin is 0,0,0
-	if ((targ->EntityFlags & ENT_PHYSICS) && (dynamic_cast<CPhysicsEntity*>(targ))->PhysicsType == PHYSICS_PUSH)
+	if ((targ->EntityFlags & ENT_PHYSICS) && (entity_cast<CPhysicsEntity>(targ))->PhysicsType == PHYSICS_PUSH)
 		return false; // bmodels not supported
 
 	vec3f	targpoints[8];
@@ -341,7 +341,7 @@ void CTFFragBonuses(CPlayerEntity *targ, CPlayerEntity *attacker)
 		// field on the other team
 		for (i = 1; i <= game.maxclients; i++)
 		{
-			CPlayerEntity *ent = dynamic_cast<CPlayerEntity*>((g_edicts + i)->Entity);
+			CPlayerEntity *ent = entity_cast<CPlayerEntity>((g_edicts + i)->Entity);
 			if (ent->IsInUse() && ent->Client.resp.ctf_team == otherteam)
 				ent->Client.resp.ctf_lasthurtcarrier = 0;
 		}
@@ -378,7 +378,7 @@ void CTFFragBonuses(CPlayerEntity *targ, CPlayerEntity *attacker)
 	}
 
 	CFlagEntity *flag = NULL;
-	while ((flag = dynamic_cast<CFlagEntity*>(CC_Find (flag, FOFS(classname), c))) != NULL)
+	while ((flag = entity_cast<CFlagEntity>(CC_Find (flag, FOFS(classname), c))) != NULL)
 	{
 		if (!(flag->SpawnFlags & DROPPED_ITEM))
 			break;
@@ -391,7 +391,7 @@ void CTFFragBonuses(CPlayerEntity *targ, CPlayerEntity *attacker)
 	CPlayerEntity *carrier = NULL;
 	for (i = 1; i <= game.maxclients; i++)
 	{
-		carrier = dynamic_cast<CPlayerEntity*>((g_edicts + i)->Entity);
+		carrier = entity_cast<CPlayerEntity>((g_edicts + i)->Entity);
 		if (carrier->IsInUse() && 
 			carrier->Client.pers.Inventory.Has(flag_item))
 			break;
@@ -477,7 +477,7 @@ void CTFResetFlag(int ctf_team)
 	}
 
 	CFlagEntity *ent = NULL;
-	while ((ent = dynamic_cast<CFlagEntity*>(CC_Find (ent, FOFS(classname), c))) != NULL)
+	while ((ent = entity_cast<CFlagEntity>(CC_Find (ent, FOFS(classname), c))) != NULL)
 	{
 		if (ent->SpawnFlags & DROPPED_ITEM)
 			ent->Free ();
@@ -515,7 +515,7 @@ void CTFCalcScores(void)
 	ctfgame.total1 = ctfgame.total2 = 0;
 	for (int i = 0; i < game.maxclients; i++)
 	{
-		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity);
+		CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i+1].Entity);
 
 		if (!Player->IsInUse())
 			continue;
@@ -712,8 +712,8 @@ static inline void CTFSay_Team_Location(CPlayerEntity *who, char *buf, size_t bu
 			continue;
 		// if we are here, there is more than one, find out if hot
 		// is closer to red flag or blue flag
-		if ((flag1 = dynamic_cast<CFlagEntity*>(CC_Find(NULL, FOFS(classname), "item_flag_team1"))) != NULL &&
-			(flag2 = dynamic_cast<CFlagEntity*>(CC_Find(NULL, FOFS(classname), "item_flag_team2"))) != NULL)
+		if ((flag1 = entity_cast<CFlagEntity>(CC_Find(NULL, FOFS(classname), "item_flag_team1"))) != NULL &&
+			(flag2 = entity_cast<CFlagEntity>(CC_Find(NULL, FOFS(classname), "item_flag_team2"))) != NULL)
 		{
 			hotdist = (hot->State.GetOrigin() - flag1->State.GetOrigin()).Length();
 			newdist = (hot->State.GetOrigin() - flag2->State.GetOrigin()).Length();
@@ -824,7 +824,7 @@ static inline void CTFSay_Team_Sight(CPlayerEntity *who, char *buf, size_t bufSi
 	*s = *s2 = 0;
 	for (i = 1; i <= game.maxclients; i++)
 	{
-		CPlayerEntity *targ = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+		CPlayerEntity *targ = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 		if (!targ->IsInUse() || 
 			targ == who ||
 			!loc_CanSee(targ, who))
@@ -924,7 +924,7 @@ void CTFSay_Team(CPlayerEntity *who, char *msg)
 	*p = 0;
 
 	for (i = 0; i < game.maxclients; i++) {
-		CPlayerEntity *cl_ent = dynamic_cast<CPlayerEntity*>((g_edicts + 1 + i)->Entity);
+		CPlayerEntity *cl_ent = entity_cast<CPlayerEntity>((g_edicts + 1 + i)->Entity);
 		if (!cl_ent->IsInUse())
 			continue;
 		if (cl_ent->Client.pers.state != SVCS_SPAWNED)
@@ -1046,7 +1046,7 @@ bool CTFBeginElection(CPlayerEntity *ent, elect_t type, char *msg)
 	count = 0;
 	for (i = 1; i <= game.maxclients; i++)
 	{
-		CPlayerEntity *e = dynamic_cast<CPlayerEntity*>((g_edicts + i)->Entity);
+		CPlayerEntity *e = entity_cast<CPlayerEntity>((g_edicts + i)->Entity);
 		e->Client.resp.voted = false;
 		if (e->IsInUse())
 			count++;
@@ -1078,7 +1078,7 @@ void CTFResetAllPlayers(void)
 {
 	for (int i = 1; i <= game.maxclients; i++)
 	{
-		CPlayerEntity *ent = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+		CPlayerEntity *ent = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 		if (!ent->IsInUse())
 			continue;
 
@@ -1109,7 +1109,7 @@ void CTFResetAllPlayers(void)
 
 		if (ent && ent->IsInUse() && (ent->EntityFlags & ENT_ITEM))
 		{
-			CItemEntity *Item = dynamic_cast<CItemEntity*>(ent);
+			CItemEntity *Item = entity_cast<CItemEntity>(ent);
 			if (Item->GetSolid() == SOLID_NOT && Item->ThinkState == ITS_RESPAWN &&
 				Item->NextThink >= level.framenum)
 			{
@@ -1134,7 +1134,7 @@ void CTFStartMatch(void)
 
 	for (int i = 1; i <= game.maxclients; i++)
 	{
-		CPlayerEntity *ent = dynamic_cast<CPlayerEntity*>((g_edicts + i)->Entity);
+		CPlayerEntity *ent = entity_cast<CPlayerEntity>((g_edicts + i)->Entity);
 		if (!ent->IsInUse())
 			continue;
 
@@ -1315,7 +1315,7 @@ void CTFReady(CPlayerEntity *ent)
 	t1 = t2 = 0;
 	for (j = 0, i = 1; i <= game.maxclients; i++)
 	{
-		CPlayerEntity *e = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+		CPlayerEntity *e = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 		if (!e->IsInUse())
 			continue;
 		if (e->Client.resp.ctf_team != CTF_NOTEAM && !e->Client.resp.ready)
@@ -1505,7 +1505,7 @@ bool CTFCheckRules(void)
 			int j, i;
 			for (j = 0, i = 1; i <= game.maxclients; i++)
 			{
-				CPlayerEntity *ent = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+				CPlayerEntity *ent = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 				if (!ent->IsInUse())
 					continue;
 				if (ent->Client.resp.ctf_team != CTF_NOTEAM &&
@@ -1561,7 +1561,7 @@ void CTFStats(CPlayerEntity *ent)
 	{
 		for (i = 1; i <= game.maxclients; i++)
 		{
-			CPlayerEntity *e2 = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+			CPlayerEntity *e2 = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 			if (!e2->IsInUse())
 				continue;
 			if (!e2->Client.resp.ready && e2->Client.resp.ctf_team != CTF_NOTEAM)
@@ -1635,7 +1635,7 @@ void CTFPlayerList(CPlayerEntity *ent)
 	{
 		for (i = 1; i <= game.maxclients; i++)
 		{
-			CPlayerEntity *e2 = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+			CPlayerEntity *e2 = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 			if (!e2->IsInUse())
 				continue;
 			if (!e2->Client.resp.ready && e2->Client.resp.ctf_team != CTF_NOTEAM) {
@@ -1651,7 +1651,7 @@ void CTFPlayerList(CPlayerEntity *ent)
 	*text = 0;
 	for (i = 1; i <= game.maxclients; i++)
 	{
-		CPlayerEntity *e2 = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+		CPlayerEntity *e2 = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 		if (!e2->IsInUse())
 			continue;
 
@@ -1753,7 +1753,7 @@ void CTFBoot(CPlayerEntity *ent)
 		return;
 	}
 
-	CPlayerEntity *targ = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+	CPlayerEntity *targ = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 	if (!targ->IsInUse())
 	{
 		ent->PrintToClient (PRINT_HIGH, "That player number is not connected.\n");

@@ -46,7 +46,7 @@ static void SV_ClientPrintf (edict_t *ent, EGamePrintLevel printLevel, char *fmt
 {
 	va_list		argptr;
 	char		string[MAX_COMPRINT];
-	CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(ent->Entity);
+	CPlayerEntity *Player = entity_cast<CPlayerEntity>(ent->Entity);
 
 	if (printLevel < Player->Client.resp.messageLevel)
 		return;
@@ -164,7 +164,7 @@ void BroadcastPrintf (EGamePrintLevel printLevel, char *fmt, ...)
 	int i;
 	for (i=1, cl=&g_edicts[1]; i<=game.maxclients ; i++, cl++)
 	{
-		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(cl->Entity);
+		CPlayerEntity *Player = entity_cast<CPlayerEntity>(cl->Entity);
 		if (printLevel < Player->Client.resp.messageLevel)
 			continue;
 		if (Player->Client.pers.state != SVCS_SPAWNED)

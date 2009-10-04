@@ -394,7 +394,7 @@ void CTank::Rocket ()
 
 	if (!blindfire && ((random() < (0.2 + ((3 - skill->Integer()) * 0.15)))))
 	{
-		vec = vec.MultiplyAngles (dir.Length() / rocketSpeed, dynamic_cast<CPhysicsEntity*>(Entity->Enemy)->Velocity);
+		vec = vec.MultiplyAngles (dir.Length() / rocketSpeed, entity_cast<CPhysicsEntity>(Entity->Enemy)->Velocity);
 		dir = vec - start;
 	}
 
@@ -539,7 +539,7 @@ CAnim TankMoveAttackPostBlast (FRAME_attak117, FRAME_attak122, TankFramesAttackP
 
 void CTank::ReAttackBlaster ()
 {
-	if (skill->Integer() >= 2 && IsVisible (Entity, Entity->Enemy) && dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0 && random() <= 0.6)
+	if (skill->Integer() >= 2 && IsVisible (Entity, Entity->Enemy) && entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0 && random() <= 0.6)
 	{
 		CurrentMove = &TankMoveReAttackBlast;
 		return;
@@ -716,7 +716,7 @@ void CTank::ReFireRocket ()
 #endif
 
 	// Only on hard or nightmare
-	if ( skill->Integer() >= 2 && dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0 && IsVisible(Entity, Entity->Enemy) && random() <= 0.4)
+	if ( skill->Integer() >= 2 && entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0 && IsVisible(Entity, Entity->Enemy) && random() <= 0.4)
 	{
 		CurrentMove = &TankMoveAttackFireRocket;
 		return;
@@ -734,7 +734,7 @@ void CTank::Attack ()
 	if (!Entity->Enemy || !Entity->Enemy->IsInUse())
 		return;
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health < 0)
+	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health < 0)
 	{
 		CurrentMove = &TankMoveAttackStrike;
 		AIFlags &= ~AI_BRUTAL;

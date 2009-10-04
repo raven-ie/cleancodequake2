@@ -165,11 +165,32 @@ void CGladiator::FireRail ()
 	MonsterFireRailgun (start, (SavedFirePosition - start).GetNormalized(), 50, 100, MZ2_GLADIATOR_RAILGUN_1);
 }
 
+void CGladiator::StorePosition ()
+{
+	switch (Entity->State.GetFrame())
+	{
+	case FRAME_attack1:
+		if (skill->Integer() == 1)
+			SavedFirePosition = Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->ViewHeight);
+		break;
+	case FRAME_attack2:
+		if (skill->Integer() == 2)
+			SavedFirePosition = Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->ViewHeight);
+		break;
+	case FRAME_attack3:
+		if (skill->Integer() == 3)
+			SavedFirePosition = Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->ViewHeight);
+		break;
+	default:
+		break;
+	}
+}
+
 CFrame GladiatorFramesAttackGun [] =
 {
-	CFrame (&CMonster::AI_Charge, 0),
-	CFrame (&CMonster::AI_Charge, 0),
-	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0, ConvertDerivedFunction(&CGladiator::StorePosition)),
+	CFrame (&CMonster::AI_Charge, 0, ConvertDerivedFunction(&CGladiator::StorePosition)),
+	CFrame (&CMonster::AI_Charge, 0, ConvertDerivedFunction(&CGladiator::StorePosition)),
 	CFrame (&CMonster::AI_Charge, 0, ConvertDerivedFunction(&CGladiator::FireRail)),
 	CFrame (&CMonster::AI_Charge, 0),
 	CFrame (&CMonster::AI_Charge, 0),

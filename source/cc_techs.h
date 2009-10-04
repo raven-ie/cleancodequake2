@@ -41,9 +41,9 @@ class CTech : public CBaseItem
 public:
 	enum ETechType
 	{
-		TechPassive,			// Tech's effect requires time; happens in ClientEndServerFrame
-		TechAggressive,			// Tech's effect will have a direct effect on any damage going in or out of the player.
-		TechCustom				// Tech's effect is hardcoded
+		TECH_PASSIVE,			// Tech's effect requires time; happens in ClientEndServerFrame
+		TECH_AGGRESSIVE,		// Tech's effect will have a direct effect on any damage going in or out of the player.
+		TECH_CUSTOM				// Tech's effect is hardcoded
 	};
 
 	ETechType	TechType;

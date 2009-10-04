@@ -116,8 +116,8 @@ public:
 
 const CEntityField CTargetSpeaker::FieldsForParsing[] =
 {
-	CEntityField ("volume", EntityMemberOffset(CTargetSpeaker,Volume), FTFloat),
-	CEntityField ("attenuation", EntityMemberOffset(CTargetSpeaker,Attenuation), FTFloat)
+	CEntityField ("volume", EntityMemberOffset(CTargetSpeaker,Volume), FT_FLOAT),
+	CEntityField ("attenuation", EntityMemberOffset(CTargetSpeaker,Attenuation), FT_FLOAT)
 };
 const size_t CTargetSpeaker::FieldsForParsingSize = FieldSize<CTargetSpeaker>();
 
@@ -140,7 +140,8 @@ public:
 	  CBaseEntity (),
 	  CMapEntity (),
 	  CThinkableEntity (),
-	  CUsableEntity ()
+	  CUsableEntity (),
+	  Damage(0)
 	{
 	};
 
@@ -148,7 +149,8 @@ public:
 	  CBaseEntity (Index),
 	  CMapEntity (Index),
 	  CThinkableEntity (Index),
-	  CUsableEntity (Index)
+	  CUsableEntity (Index),
+	  Damage(0)
 	{
 	};
 
@@ -196,7 +198,7 @@ public:
 
 const CEntityField CTargetExplosion::FieldsForParsing[] =
 {
-	CEntityField ("dmg", EntityMemberOffset(CTargetExplosion,Damage), FTInteger),
+	CEntityField ("dmg", EntityMemberOffset(CTargetExplosion,Damage), FT_INT),
 };
 const size_t CTargetExplosion::FieldsForParsingSize = FieldSize<CTargetExplosion>();
 
@@ -223,7 +225,6 @@ For gibs:
 	speed how fast it should be moving otherwise it
 	will just be dropped
 */
-void ED_CallSpawn (edict_t *ent);
 class CTargetSpawner : public CMapEntity, public CUsableEntity
 {
 public:
@@ -233,14 +234,16 @@ public:
 	CTargetSpawner () :
 	  CBaseEntity (),
 	  CMapEntity (),
-	  CUsableEntity ()
+	  CUsableEntity (),
+	  Speed (0)
 	{
 	};
 
 	CTargetSpawner (int Index) :
 	  CBaseEntity (Index),
 	  CMapEntity (Index),
-	  CUsableEntity (Index)
+	  CUsableEntity (Index),
+	  Speed (0)
 	{
 	};
 
@@ -255,19 +258,20 @@ public:
 
 	void Use (CBaseEntity *other, CBaseEntity *activator)
 	{
-		edict_t *ent = G_Spawn();
-		ent->classname = gameEntity->target;
-		Vec3Copy (State.GetOrigin(), ent->state.origin);
-		Vec3Copy (State.GetAngles(), ent->state.angles);
-		ED_CallSpawn (ent);
+		CBaseEntity *Entity = CreateEntityFromClassname(gameEntity->target);
 
-		CBaseEntity *Entity = ent->Entity;
+		if (!Entity)
+			return;
+
+		Entity->State.SetOrigin (State.GetOrigin());
+		Entity->State.SetAngles (State.GetAngles());
+
 		Entity->Unlink ();
-		KillBox (Entity);
+		Entity->KillBox ();
 		Entity->Link ();
 
 		if (Speed && (Entity->EntityFlags & ENT_PHYSICS))
-			dynamic_cast<CPhysicsEntity*>(Entity)->Velocity = MoveDir;
+			entity_cast<CPhysicsEntity>(Entity)->Velocity = MoveDir;
 	};
 
 	void Spawn ()
@@ -285,7 +289,7 @@ public:
 
 const CEntityField CTargetSpawner::FieldsForParsing[] =
 {
-	CEntityField ("speed", EntityMemberOffset(CTargetSpawner,Speed), FTFloat),
+	CEntityField ("speed", EntityMemberOffset(CTargetSpawner,Speed), FT_FLOAT),
 };
 const size_t CTargetSpawner::FieldsForParsingSize = FieldSize<CTargetSpawner>();
 
@@ -324,14 +328,16 @@ public:
 	CTargetSplash () :
 	  CBaseEntity (),
 	  CMapEntity (),
-	  CUsableEntity ()
+	  CUsableEntity (),
+	  Damage (0)
 	{
 	};
 
 	CTargetSplash (int Index) :
 	  CBaseEntity (Index),
 	  CMapEntity (Index),
-	  CUsableEntity (Index)
+	  CUsableEntity (Index),
+	  Damage (0)
 	{
 	};
 
@@ -346,7 +352,7 @@ public:
 
 	void Use (CBaseEntity *other, CBaseEntity *activator)
 	{
-		CTempEnt_Splashes::Splash (State.GetOrigin(), MoveDir, (CTempEnt_Splashes::ESplashType)gameEntity->sounds, gameEntity->count);
+		CTempEnt_Splashes::Splash (State.GetOrigin(), MoveDir, gameEntity->sounds, gameEntity->count);
 
 		if (Damage)
 			T_RadiusDamage (this, activator, Damage, NULL, Damage+40, MOD_SPLASH);
@@ -367,7 +373,7 @@ public:
 
 const CEntityField CTargetSplash::FieldsForParsing[] =
 {
-	CEntityField ("dmg", EntityMemberOffset(CTargetSplash,Damage), FTInteger),
+	CEntityField ("dmg", EntityMemberOffset(CTargetSplash,Damage), FT_INT),
 };
 const size_t CTargetSplash::FieldsForParsingSize = FieldSize<CTargetSplash>();
 
@@ -431,17 +437,111 @@ LINK_CLASSNAME_TO_CLASS ("target_temp_entity", CTargetTempEntity);
 /*QUAKED target_changelevel (1 0 0) (-8 -8 -8) (8 8 8)
 Changes level to "map" when fired
 */
+void BeginIntermission (CTargetChangeLevel *targ)
+{
+	CBaseEntity	*ent;
+
+	if (level.intermissiontime)
+		return;		// already activated
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	if (game.mode & GAME_CTF)
+		CTFCalcScores();
+//ZOID
+#endif
+
+	game.autosaved = false;
+
+	// respawn any dead clients
+	for (int i=0 ; i<game.maxclients ; i++)
+	{
+		CPlayerEntity *client = entity_cast<CPlayerEntity>((g_edicts + 1 + i)->Entity);
+		if (!client->IsInUse())
+			continue;
+		if (client->Health <= 0)
+			client->Respawn();
+	}
+
+	level.intermissiontime = level.framenum;
+	level.changemap = targ->Map;
+
+	if (strstr(level.changemap, "*"))
+	{
+		if (game.mode == GAME_COOPERATIVE)
+		{
+			for (int i=0 ; i<game.maxclients ; i++)
+			{
+				CPlayerEntity *client = entity_cast<CPlayerEntity>((g_edicts + 1 + i)->Entity);
+				if (!client->IsInUse())
+					continue;
+				// strip players of all keys between units
+				for (int n = 0; n < MAX_CS_ITEMS; n++)
+				{
+					if (n >= GetNumItems())
+						break;
+					if (GetItemByIndex(n)->Flags & ITEMFLAG_KEY)
+						client->Client.pers.Inventory.Set(n, 0);
+				}
+			}
+		}
+	}
+	else
+	{
+		if (!(game.mode & GAME_DEATHMATCH))
+		{
+			level.exitintermission = 1;		// go immediately to the next level
+			return;
+		}
+	}
+
+	level.exitintermission = 0;
+
+	// find an intermission spot
+	ent = CC_Find (NULL, FOFS(classname), "info_player_intermission");
+	if (!ent)
+	{	// the map creator forgot to put in an intermission point...
+		ent = CC_Find (NULL, FOFS(classname), "info_player_start");
+		if (!ent)
+			ent = CC_Find (NULL, FOFS(classname), "info_player_deathmatch");
+	}
+	else
+	{	// chose one of four spots
+		int i = irandom(4);
+		while (i--)
+		{
+			ent = CC_Find (ent, FOFS(classname), "info_player_intermission");
+			if (!ent)	// wrap around the list
+				ent = CC_Find (ent, FOFS(classname), "info_player_intermission");
+		}
+	}
+
+	level.IntermissionOrigin = ent->State.GetOrigin ();
+	level.IntermissionAngles = ent->State.GetAngles ();
+
+	// move all clients to the intermission point
+	for (int i=0 ; i<game.maxclients ; i++)
+	{
+		CPlayerEntity *client = entity_cast<CPlayerEntity>((g_edicts + 1 + i)->Entity);
+		if (!client->IsInUse())
+			continue;
+		client->MoveToIntermission();
+	}
+}
+
 CTargetChangeLevel::CTargetChangeLevel () :
 	CBaseEntity (),
 	CMapEntity (),
-	CUsableEntity ()
+	CUsableEntity (),
+	Map(NULL)
 {
 };
 
 CTargetChangeLevel::CTargetChangeLevel (int Index) :
 	CBaseEntity (Index),
 	CMapEntity (Index),
-	CUsableEntity (Index)
+	CUsableEntity (Index),
+	Map(NULL)
 {
 };
 
@@ -457,7 +557,7 @@ void CTargetChangeLevel::Use (CBaseEntity *other, CBaseEntity *activator)
 
 	if (game.mode == GAME_SINGLEPLAYER)
 	{
-		if (dynamic_cast<CPlayerEntity*>(g_edicts[1].Entity)->Health <= 0)
+		if (entity_cast<CPlayerEntity>(g_edicts[1].Entity)->Health <= 0)
 			return;
 	}
 
@@ -466,7 +566,7 @@ void CTargetChangeLevel::Use (CBaseEntity *other, CBaseEntity *activator)
 	{
 		if ((other->EntityFlags & ENT_HURTABLE))
 		{
-			CHurtableEntity *Other = dynamic_cast<CHurtableEntity*>(other);
+			CHurtableEntity *Other = entity_cast<CHurtableEntity>(other);
 
 			if (Other->CanTakeDamage)
 				Other->TakeDamage (this, this, vec3fOrigin, Other->State.GetOrigin(), vec3fOrigin, 10 * Other->MaxHealth, 1000, 0, MOD_EXIT);
@@ -479,7 +579,7 @@ void CTargetChangeLevel::Use (CBaseEntity *other, CBaseEntity *activator)
 	{
 		if (activator && (activator->EntityFlags & ENT_PLAYER))
 		{
-			CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(activator);
+			CPlayerEntity *Player = entity_cast<CPlayerEntity>(activator);
 			BroadcastPrintf (PRINT_HIGH, "%s exited the level.\n", Player->Client.pers.netname);
 		}
 	}
@@ -510,7 +610,7 @@ void CTargetChangeLevel::Spawn ()
 
 const CEntityField CTargetChangeLevel::FieldsForParsing[] =
 {
-	CEntityField ("map", EntityMemberOffset(CTargetChangeLevel,Map), FTStringL),
+	CEntityField ("map", EntityMemberOffset(CTargetChangeLevel,Map), FT_LEVEL_STRING),
 };
 const size_t CTargetChangeLevel::FieldsForParsingSize = FieldSize<CTargetChangeLevel>();
 
@@ -785,14 +885,18 @@ public:
 	CTargetBlaster () :
 	  CBaseEntity (),
 	  CMapEntity (),
-	  CUsableEntity ()
+	  CUsableEntity (),
+	  Speed (0),
+	  Damage (0)
 	{
 	};
 
 	CTargetBlaster (int Index) :
 	  CBaseEntity (Index),
 	  CMapEntity (Index),
-	  CUsableEntity (Index)
+	  CUsableEntity (Index),
+	  Speed (0),
+	  Damage (0)
 	{
 	};
 
@@ -830,8 +934,8 @@ public:
 
 const CEntityField CTargetBlaster::FieldsForParsing[] =
 {
-	CEntityField ("speed", EntityMemberOffset(CTargetBlaster,Speed), FTFloat),
-	CEntityField ("dmg", EntityMemberOffset(CTargetBlaster,Damage), FTInteger),
+	CEntityField ("speed", EntityMemberOffset(CTargetBlaster,Speed), FT_FLOAT),
+	CEntityField ("dmg", EntityMemberOffset(CTargetBlaster,Damage), FT_INT),
 };
 const size_t CTargetBlaster::FieldsForParsingSize = FieldSize<CTargetBlaster>();
 
@@ -862,7 +966,6 @@ class CTargetLaser : public CMapEntity, public CThinkableEntity, public CUsableE
 {
 public:
 	bool		StartLaser;
-	bool		Usable;
 	vec3f		MoveDir;
 	int			Damage;
 
@@ -872,7 +975,7 @@ public:
 	  CThinkableEntity (),
 	  CUsableEntity (),
 	  StartLaser(true),
-	  Usable(false)
+	  Damage (0)
 	{
 	};
 
@@ -882,7 +985,7 @@ public:
 	  CThinkableEntity (Index),
 	  CUsableEntity (Index),
 	  StartLaser(true),
-	  Usable(false)
+	  Damage (0)
 	{
 	};
 
@@ -933,8 +1036,8 @@ public:
 
 			CBaseEntity *Entity = tr.ent->Entity;
 			// hurt it if we can
-			if (((Entity->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(Entity)->CanTakeDamage) && !(Entity->Flags & FL_IMMUNE_LASER))
-				dynamic_cast<CHurtableEntity*>(Entity)->TakeDamage (this, Activator, MoveDir, tr.EndPos, vec3fOrigin, Damage, 1, DAMAGE_ENERGY, MOD_TARGET_LASER);
+			if (((Entity->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(Entity)->CanTakeDamage) && !(Entity->Flags & FL_IMMUNE_LASER))
+				entity_cast<CHurtableEntity>(Entity)->TakeDamage (this, Activator, MoveDir, tr.EndPos, vec3fOrigin, Damage, 1, DAMAGE_ENERGY, MOD_TARGET_LASER);
 
 			// if we hit something that's not a monster or player or is immune to lasers, we're done
 			if (!(Entity->EntityFlags & ENT_MONSTER) && (!(Entity->EntityFlags & ENT_PLAYER)))
@@ -944,8 +1047,8 @@ public:
 					SpawnFlags &= ~0x80000000;
 					CTempEnt_Splashes::Sparks (tr.EndPos,
 						tr.Plane.normal, 
-						CTempEnt_Splashes::STLaserSparks,
-						(CTempEnt_Splashes::ESplashType)(State.GetSkinNum() & 255),
+						CTempEnt_Splashes::ST_LASER_SPARKS,
+						(State.GetSkinNum() & 255),
 						(SpawnFlags & 0x80000000) ? 8 : 4);
 				}
 				break;
@@ -1045,6 +1148,8 @@ public:
 
 	void Spawn ()
 	{
+		Usable = false;
+
 		// let everything else get spawned before we start firing
 		NextThink = level.framenum + 10;
 	};
@@ -1052,7 +1157,7 @@ public:
 
 const CEntityField CTargetLaser::FieldsForParsing[] =
 {
-	CEntityField ("dmg", EntityMemberOffset(CTargetLaser,Damage), FTInteger),
+	CEntityField ("dmg", EntityMemberOffset(CTargetLaser,Damage), FT_INT),
 };
 const size_t CTargetLaser::FieldsForParsingSize = FieldSize<CTargetLaser>();
 
@@ -1142,7 +1247,8 @@ public:
 	  CMapEntity (),
 	  CThinkableEntity (),
 	  CUsableEntity (),
-	  LastShakeTime (0)
+	  LastShakeTime (0),
+	  Speed (0)
 	{
 	};
 
@@ -1151,7 +1257,8 @@ public:
 	  CMapEntity (Index),
 	  CThinkableEntity (Index),
 	  CUsableEntity (Index),
-	  LastShakeTime (0)
+	  LastShakeTime (0),
+	  Speed (0)
 	{
 	};
 
@@ -1190,7 +1297,7 @@ public:
 			if (!(Entity->EntityFlags & ENT_PLAYER))
 				continue;
 
-			CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(Entity);
+			CPlayerEntity *Player = entity_cast<CPlayerEntity>(Entity);
 
 			Player->GroundEntity = NULL;
 			Player->Velocity.X += crandom()* 150;
@@ -1230,7 +1337,7 @@ public:
 
 const CEntityField CTargetEarthquake::FieldsForParsing[] =
 {
-	CEntityField ("speed", EntityMemberOffset(CTargetEarthquake,Speed), FTFloat),
+	CEntityField ("speed", EntityMemberOffset(CTargetEarthquake,Speed), FT_FLOAT),
 };
 const size_t CTargetEarthquake::FieldsForParsingSize = FieldSize<CTargetEarthquake>();
 

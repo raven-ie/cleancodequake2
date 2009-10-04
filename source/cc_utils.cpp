@@ -146,7 +146,7 @@ void	G_TouchTriggers (CBaseEntity *ent)
 	// dead things don't activate triggers!
 	if (ent->EntityFlags & ENT_HURTABLE)
 	{
-		CHurtableEntity *Hurt = dynamic_cast<CHurtableEntity*>(ent);
+		CHurtableEntity *Hurt = entity_cast<CHurtableEntity>(ent);
 		if ((Hurt->CanTakeDamage) && (Hurt->Health <= 0))
 			return;
 	}
@@ -165,7 +165,7 @@ void	G_TouchTriggers (CBaseEntity *ent)
 
 		if (Entity->EntityFlags & ENT_TOUCHABLE)
 		{
-			(dynamic_cast<CTouchableEntity*>(Entity))->Touch (ent, NULL, NULL);
+			(entity_cast<CTouchableEntity>(Entity))->Touch (ent, NULL, NULL);
 			continue;
 		}
 
@@ -190,30 +190,7 @@ Kills all entities that would touch the proposed new positioning
 of ent.  Ent should be unlinked before calling this!
 =================
 */
-bool KillBox (CBaseEntity *ent)
-{
-	CTrace		tr;
 
-	while (1)
-	{
-		tr = CTrace (ent->State.GetOrigin(), ent->GetMins(), ent->GetMaxs(), ent->State.GetOrigin(), NULL, CONTENTS_MASK_PLAYERSOLID);
-		if (!tr.ent || !tr.Ent)
-			break;
-
-		if ((tr.Ent->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(tr.Ent)->CanTakeDamage)
-		{
-			// nail it
-			dynamic_cast<CHurtableEntity*>(tr.Ent)->TakeDamage (ent, ent, vec3fOrigin, ent->State.GetOrigin(),
-																vec3fOrigin, 100000, 0, DAMAGE_NO_PROTECTION, MOD_TELEFRAG);
-		}
-
-		// if we didn't kill it, fail
-		if (tr.ent->solid)
-			return false;
-	}
-
-	return true;		// all clear
-}
 
 // Calls the callback for each member of the team in "ent"
 void CForEachTeamChainCallback::Query (CBaseEntity *Master)
@@ -226,7 +203,7 @@ void CForEachPlayerCallback::Query (bool MustBeInUse)
 {
 	for (byte i = 1; i <= game.maxclients; i++)
 	{
-		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+		CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 
 		if (MustBeInUse && (!Player->IsInUse() || Player->Client.pers.state != SVCS_SPAWNED))
 			continue;
@@ -297,7 +274,7 @@ float	PlayersRangeFromSpot (CBaseEntity *spot)
 
 	for (int n = 1; n <= game.maxclients; n++)
 	{
-		CPlayerEntity *player = dynamic_cast<CPlayerEntity*>(g_edicts[n].Entity);
+		CPlayerEntity *player = entity_cast<CPlayerEntity>(g_edicts[n].Entity);
 
 		if (!player->IsInUse())
 			continue;

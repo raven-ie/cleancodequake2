@@ -74,9 +74,9 @@ CFuncTimer::CFuncTimer (int Index) :
 
 const CEntityField CFuncTimer::FieldsForParsing[] =
 {
-	CEntityField ("random", EntityMemberOffset(CFuncTimer,Random), FTTime),
-	CEntityField ("pausetime", EntityMemberOffset(CFuncTimer,PauseTime), FTTime),
-	CEntityField ("wait", EntityMemberOffset(CFuncTimer,Wait), FTTime),
+	CEntityField ("random", EntityMemberOffset(CFuncTimer,Random), FT_FRAMENUMBER),
+	CEntityField ("pausetime", EntityMemberOffset(CFuncTimer,PauseTime), FT_FRAMENUMBER),
+	CEntityField ("wait", EntityMemberOffset(CFuncTimer,Wait), FT_FRAMENUMBER),
 };
 const size_t CFuncTimer::FieldsForParsingSize = FieldSize<CFuncTimer>();
 
@@ -264,7 +264,6 @@ CFuncClock::CFuncClock () :
 	CMapEntity (),
 	CThinkableEntity (),
 	CUsableEntity (),
-	Usable(false),
 	Seconds(0),
 	String(NULL)
 	{
@@ -275,7 +274,6 @@ CFuncClock::CFuncClock (int Index) :
 	CMapEntity (Index),
 	CThinkableEntity (Index),
 	CUsableEntity (Index),
-	Usable(false),
 	Seconds(0),
 	String(NULL)
 	{
@@ -331,7 +329,7 @@ void CFuncClock::Think ()
 {
 	if (!String)
 	{
-		String = dynamic_cast<CTargetString*>(CC_Find (NULL, FOFS(targetname), gameEntity->target));
+		String = entity_cast<CTargetString>(CC_Find (NULL, FOFS(targetname), gameEntity->target));
 		if (!String)
 			return;
 	}

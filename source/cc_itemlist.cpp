@@ -213,3 +213,28 @@ void SetItemNames ()
 void InitItemMedia ()
 {
 }
+
+// This is a required function that will
+// go through each item and invalidate any variables that we used.
+void InvalidateItemMedia ()
+{
+	for (int i = 0; i < ItemList->numItems; i++)
+	{
+		CBaseItem *Item = ItemList->Items[i];
+
+		Item->IconIndex = Item->PickupSoundIndex = 0;
+		if (Item->Flags & ITEMFLAG_WEAPON)
+		{
+			if (Item->Flags & ITEMFLAG_AMMO)
+			{
+				CAmmo *Weapon = dynamic_cast<CAmmo*>(Item);
+				Weapon->Weapon->WeaponModelIndex = Weapon->Weapon->WeaponSoundIndex = 0;
+			}
+			else
+			{
+				CWeaponItem *Weapon = dynamic_cast<CWeaponItem*>(Item);
+				Weapon->Weapon->WeaponModelIndex = Weapon->Weapon->WeaponSoundIndex = 0;
+			}
+		}
+	}
+}

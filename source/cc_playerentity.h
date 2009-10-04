@@ -105,9 +105,9 @@ public:
 
 enum EGender
 {
-	GenderMale,
-	GenderFemale,
-	GenderNeutral
+	GENDER_MALE,
+	GENDER_FEMALE,
+	GENDER_NEUTRAL
 };
 
 // svClient->state options
@@ -137,7 +137,7 @@ typedef struct
 	CInventory	Inventory;
 
 	// ammo capacities
-	int			maxAmmoValues[AMMOTAG_MAX];
+	int			maxAmmoValues[CAmmo::AMMOTAG_MAX];
 
 	CWeapon		*Weapon, *LastWeapon;
 	CArmor		*Armor; // Current armor.

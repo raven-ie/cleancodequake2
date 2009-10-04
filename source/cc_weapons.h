@@ -58,34 +58,30 @@ public:
 };
 
 // Class for ammo.
-// NOTE: Insert into CAmmo? CAmmo::AmmoMaxes enum perhaps?
-typedef int EAmmoTag;
-enum
-{
-	AMMOTAG_SHELLS,
-	AMMOTAG_BULLETS,
-	AMMOTAG_GRENADES,
-	AMMOTAG_ROCKETS,
-	AMMOTAG_CELLS,
-	AMMOTAG_SLUGS,
-
-	AMMOTAG_MAX
-};
-extern int maxBackpackAmmoValues[AMMOTAG_MAX];
-extern int maxBandolierAmmoValues[AMMOTAG_MAX];
-void InitItemMaxValues (edict_t *ent);
-
 class CAmmo : public CBaseItem
 {
 public:
+	typedef uint32 EAmmoTag;
+	enum
+	{
+		AMMOTAG_SHELLS,
+		AMMOTAG_BULLETS,
+		AMMOTAG_GRENADES,
+		AMMOTAG_ROCKETS,
+		AMMOTAG_CELLS,
+		AMMOTAG_SLUGS,
+
+		AMMOTAG_MAX
+	};
+
 	CAmmo (char *Classname, char *WorldModel, int EffectFlags,
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
-			   char *Precache, int Quantity, EAmmoTag Tag, CWeapon *Weapon, int Amount, char *VWepModel);
+			   char *Precache, int Quantity, CAmmo::EAmmoTag Tag, CWeapon *Weapon, int Amount, char *VWepModel);
 
 	class		CWeapon	*Weapon; // For weapon ammo
 	int			Amount; // Taken out for weapon ammo
 	int			Quantity; // Number gotten when we pick this mother upper
-	EAmmoTag	Tag; // YUCKY tag for ammo
+	CAmmo::EAmmoTag	Tag; // YUCKY tag for ammo
 	char	*VWepModel;
 
 	// Only thing different about ammo is how it's picked up.
@@ -97,6 +93,10 @@ public:
 	bool	AddAmmo (CPlayerEntity *ent, int count);
 	int		GetMax(CPlayerEntity *ent);
 };
+
+extern int maxBackpackAmmoValues[CAmmo::AMMOTAG_MAX];
+extern int maxBandolierAmmoValues[CAmmo::AMMOTAG_MAX];
+void InitItemMaxValues (edict_t *ent);
 
 void AddAmmoToList();
 void DoWeaponVweps();
