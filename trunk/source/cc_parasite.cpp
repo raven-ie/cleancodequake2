@@ -100,11 +100,6 @@ CFrame ParasiteFramesEndFidget [] =
 };
 CAnim ParasiteMoveEndFidget (FRAME_stand28, FRAME_stand35, ParasiteFramesEndFidget, &CMonster::Stand);
 
-void CParasite::EndFidget ()
-{
-	CurrentMove = &ParasiteMoveEndFidget;
-}
-
 void CParasite::DoFidget ()
 {
 	CurrentMove = &ParasiteMoveFidget;
@@ -330,7 +325,7 @@ void CParasite::DrainAttack ()
 
 	vec3f dir = start - end;
 	if (Entity->Enemy)
-		dynamic_cast<CHurtableEntity*>(Entity->Enemy)->TakeDamage (Entity, Entity, dir, Entity->Enemy->State.GetOrigin(), vec3fOrigin, damage, 0, DAMAGE_NO_KNOCKBACK, MOD_UNKNOWN);
+		entity_cast<CHurtableEntity>(Entity->Enemy)->TakeDamage (Entity, Entity, dir, Entity->Enemy->State.GetOrigin(), vec3fOrigin, damage, 0, DAMAGE_NO_KNOCKBACK, MOD_UNKNOWN);
 }
 
 CFrame ParasiteFramesDrain [] =

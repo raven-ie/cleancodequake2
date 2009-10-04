@@ -21,94 +21,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_local.h"
 #include "cc_exceptionhandler.h"
 
-CCvar	*deathmatch;
-CCvar	*coop;
-CCvar	*dmflags;
-CCvar	*skill;
-CCvar	*fraglimit;
-CCvar	*timelimit;
-CCvar	*password;
-CCvar	*spectator_password;
-CCvar	*needpass;
-CCvar	*maxclients;
-CCvar	*maxspectators;
-CCvar	*maxentities;
-CCvar	*g_select_empty;
-CCvar	*dedicated;
-CCvar	*developer;
-
-CCvar	*filterban;
-
-CCvar	*sv_gravity;
-
-CCvar	*sv_rollspeed;
-CCvar	*sv_rollangle;
-CCvar	*gun_x;
-CCvar	*gun_y;
-CCvar	*gun_z;
-
-CCvar	*run_pitch;
-CCvar	*run_roll;
-CCvar	*bob_up;
-CCvar	*bob_pitch;
-CCvar	*bob_roll;
-
-CCvar	*sv_cheats;
-
-CCvar	*flood_msgs;
-CCvar	*flood_persecond;
-CCvar	*flood_waitdelay;
-
-CCvar	*sv_maplist;
-CCvar	*map_debug;
-CCvar	*cc_techflags;
-
-#ifdef CLEANCTF_ENABLED
-//ZOID
-CCvar	*capturelimit;
-CCvar	*instantweap;
-//ZOID
-#endif
-
-#define Function(f) {#f, f}
-
-field_t fields[] = {
-	{"classname", FOFS(classname), F_LSTRING},
-	{"target", FOFS(target), F_LSTRING},
-	{"targetname", FOFS(targetname), F_LSTRING},
-	{"pathtarget", FOFS(pathtarget), F_LSTRING},
-	{"deathtarget", FOFS(deathtarget), F_LSTRING},
-	{"killtarget", FOFS(killtarget), F_LSTRING},
-	{"combattarget", FOFS(combattarget), F_LSTRING},
-	{"team", FOFS(team), F_LSTRING},
-	{"style", FOFS(style), F_INT},
-	{"count", FOFS(count), F_INT},
-	{"sounds", FOFS(sounds), F_INT},
-
-	{"goalentity", FOFS(goalentity), F_EDICT, FFL_NOSPAWN},
-	{"movetarget", FOFS(movetarget), F_EDICT, FFL_NOSPAWN},
-	{"owner", FOFS(owner), F_EDICT, FFL_NOSPAWN},
-//	{"mynoise", FOFS(mynoise), F_EDICT, FFL_NOSPAWN},
-//	{"mynoise2", FOFS(mynoise2), F_EDICT, FFL_NOSPAWN},
-
-	// temp spawn vars -- only valid when the spawn function is called
-	{"lip", STOFS(lip), F_INT, FFL_SPAWNTEMP},
-	{"height", STOFS(height), F_INT, FFL_SPAWNTEMP},
-	{"item", STOFS(item), F_LSTRING, FFL_SPAWNTEMP},
-
-//need for item field in edict struct, FFL_SPAWNTEMP item will be skipped on saves
-	{"item", FOFS(item), F_ITEM},
-
-	{"gravity", STOFS(gravity), F_LSTRING, FFL_SPAWNTEMP},
-	{"sky", STOFS(sky), F_LSTRING, FFL_SPAWNTEMP},
-	{"skyrotate", STOFS(skyrotate), F_FLOAT, FFL_SPAWNTEMP},
-	{"skyaxis", STOFS(skyaxis), F_VECTOR, FFL_SPAWNTEMP},
-	{"nextmap", STOFS(nextmap), F_LSTRING, FFL_SPAWNTEMP},
-
-	{0, 0, F_IGNORE, 0}
-
-};
-
 field_t		levelfields[] =
 {
 	{"changemap", LLOFS(changemap), F_LSTRING},
@@ -457,7 +369,7 @@ CC_EXCEPTION_HANDLER_BEGIN
 	game.autosaved = false;
 
 	for (i=0 ; i<game.maxclients ; i++)
-		WriteClient (f, dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity));
+		WriteClient (f, entity_cast<CPlayerEntity>(g_edicts[i+1].Entity));
 
 	FS_CloseFile (f);
 
@@ -499,7 +411,7 @@ CC_EXCEPTION_HANDLER_BEGIN
 	game.clients = QNew (com_gamePool, 0) gclient_t[game.maxclients];
 	InitPlayers();
 	for (int i=0 ; i<game.maxclients ; i++)
-		ReadClient (f, dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity));
+		ReadClient (f, entity_cast<CPlayerEntity>(g_edicts[i+1].Entity));
 
 	FS_CloseFile (f);
 
@@ -783,7 +695,7 @@ CC_EXCEPTION_HANDLER_BEGIN
 		ent = &g_edicts[i+1];
 		ent->client = game.clients + i;
 
-		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(ent->Entity);
+		CPlayerEntity *Player = entity_cast<CPlayerEntity>(ent->Entity);
 		Player->Client.pers.state = SVCS_FREE;
 	}
 
@@ -800,7 +712,7 @@ CC_EXCEPTION_HANDLER_BEGIN
 			if (strcmp(ent->classname, "target_crosslevel_target") == 0)
 				// backwards compatoh you get the picture
 			{
-				dynamic_cast<CThinkableEntity*>(ent->Entity)->NextThink = level.framenum + (ent->delay * 10);
+				entity_cast<CThinkableEntity>(ent->Entity)->NextThink = level.framenum + (ent->delay * 10);
 			}
 	}
 

@@ -46,12 +46,11 @@ typedef struct
 #if !defined(__CC_BAN_H__) || !defined(INCLUDE_GUARDS)
 #define __CC_BAN_H__
 
-typedef int EBanTypeFlags;
-enum// EBanTypeFlags
+CC_ENUM (int, EBanTypeFlags)
 {
-	BAN_SQUELCH		=	1, // Banned from talking
-	BAN_SPECTATOR	=	2, // Banned from moving to spectator mode
-	BAN_ENTER		=	4, // Banned from entering the game
+	BAN_SQUELCH		=	BIT(0), // Banned from talking
+	BAN_SPECTATOR	=	BIT(1), // Banned from moving to spectator mode
+	BAN_ENTER		=	BIT(2), // Banned from entering the game
 };
 
 typedef struct BanIndex_s

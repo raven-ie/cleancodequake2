@@ -272,7 +272,7 @@ void CMutant::HitRight ()
 
 void CMutant::CheckRefire ()
 {
-	if (!Entity->Enemy || !Entity->Enemy->IsInUse() || dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= 0)
+	if (!Entity->Enemy || !Entity->Enemy->IsInUse() || entity_cast<CHurtableEntity>(Entity->Enemy)->Health <= 0)
 		return;
 
 	// Paril, this was kinda dumb because he would keep refiring on nightmare
@@ -327,7 +327,7 @@ void CMutant::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 			vec3f point = origin.MultiplyAngles (Entity->GetMaxs().X, normal);
 
 			int damage = 40 + 10 * random();
-			dynamic_cast<CHurtableEntity*>(other)->TakeDamage (Entity, Entity, Entity->Velocity, point, normal, damage, damage, 0, MOD_UNKNOWN);
+			entity_cast<CHurtableEntity>(other)->TakeDamage (Entity, Entity, Entity->Velocity, point, normal, damage, damage, 0, MOD_UNKNOWN);
 		}
 	}
 
@@ -529,7 +529,7 @@ bool CMutant::CheckJump ()
 
 bool CMutant::CheckAttack ()
 {
-	if (!Entity->Enemy || dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= 0)
+	if (!Entity->Enemy || entity_cast<CHurtableEntity>(Entity->Enemy)->Health <= 0)
 		return false;
 
 	if (CheckMelee())

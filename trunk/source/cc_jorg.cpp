@@ -365,7 +365,7 @@ CFrame JorgFramesDeath1 [] =
 	CFrame (&CMonster::AI_Move,	0),			
 	CFrame (&CMonster::AI_Move,	0),
 	CFrame (&CMonster::AI_Move,	0),
-	CFrame (&CMonster::AI_Move,	0),			
+	CFrame (&CMonster::AI_Move,	0,  ConvertDerivedFunction(&CJorg::DeathHit)),			
 	CFrame (&CMonster::AI_Move,	0),
 	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CJorg::TossMakron)),
 	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CJorg::Explode))		// 50
@@ -540,7 +540,7 @@ void CJorg::FireBullet ()
 	Entity->State.GetAngles().ToVectors(&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_JORG_MACHINEGUN_R1], forward, right, start);
 
-	target = Entity->Enemy->State.GetOrigin().MultiplyAngles(-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->Enemy)->Velocity);
+	target = Entity->Enemy->State.GetOrigin().MultiplyAngles(-0.2f, entity_cast<CPhysicsEntity>(Entity->Enemy)->Velocity);
 	target[2] += Entity->Enemy->ViewHeight;
 	forward = (target - start);
 	forward.Normalize();
@@ -550,7 +550,7 @@ void CJorg::FireBullet ()
 	Entity->State.GetAngles().ToVectors(&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_JORG_MACHINEGUN_L1], forward, right, start);
 
-	target = Entity->Enemy->State.GetOrigin().MultiplyAngles(-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->Enemy)->Velocity);
+	target = Entity->Enemy->State.GetOrigin().MultiplyAngles(-0.2f, entity_cast<CPhysicsEntity>(Entity->Enemy)->Velocity);
 	target[2] += Entity->Enemy->ViewHeight;
 	forward = (target - start);
 	forward.Normalize();
@@ -580,7 +580,7 @@ bool CJorg::CheckAttack ()
 	float	chance;
 	CTrace	tr;
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0)
+	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0)
 	{
 	// see if any entities are in the way of the shot
 		spot1 = Entity->State.GetOrigin();
@@ -663,7 +663,7 @@ bool CJorg::CheckAttack ()
 #else
 	float	chance;
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0)
+	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0)
 	{
 		// see if any entities are in the way of the shot
 		vec3f spot1 = Entity->State.GetOrigin ();

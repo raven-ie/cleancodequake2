@@ -94,14 +94,16 @@ public:
 	CTeleporterTrigger() :
 	  CBaseEntity (),
 	  CMapEntity(),
-	  CTouchableEntity ()
+	  CTouchableEntity (),
+	  Dest (NULL)
 	  {
 	  };
 
 	CTeleporterTrigger(int Index) :
 	  CBaseEntity (Index),
 	  CMapEntity(),
-	  CTouchableEntity (Index)
+	  CTouchableEntity (Index),
+	  Dest (NULL)
 	  {
 	  };
 
@@ -109,7 +111,7 @@ public:
 	{
 		CPlayerEntity	*Player = NULL;
 		if (other->EntityFlags & ENT_PLAYER)
-			Player = dynamic_cast<CPlayerEntity*>(other);
+			Player = entity_cast<CPlayerEntity>(other);
 
 	#ifdef CLEANCTF_ENABLED
 		//ZOID
@@ -126,7 +128,7 @@ public:
 
 		// clear the velocity and hold them in place briefly
 		if (other->EntityFlags & ENT_PHYSICS)
-			dynamic_cast<CPhysicsEntity*>(other)->Velocity.Clear ();
+			entity_cast<CPhysicsEntity>(other)->Velocity.Clear ();
 		if (Player)
 		{
 			Player->Client.PlayerState.GetPMove()->pmTime = 160>>3;		// hold time
@@ -151,7 +153,7 @@ public:
 		}
 
 		// kill anything at the destination
-		KillBox (other);
+		other->KillBox ();
 
 		other->Link ();
 	};
@@ -617,7 +619,7 @@ void CPathCorner::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *sur
 	{
 		if (other->EntityFlags & ENT_MONSTER)
 		{
-			CMonsterEntity *Monster = dynamic_cast<CMonsterEntity*>(other);
+			CMonsterEntity *Monster = entity_cast<CMonsterEntity>(other);
 			// Backcompat
 			Monster->Monster->PauseTime = level.framenum + Wait;
 			Monster->Monster->Stand();
@@ -629,7 +631,7 @@ void CPathCorner::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *sur
 	{
 		if (other->EntityFlags & ENT_MONSTER)
 		{
-			CMonsterEntity *Monster = dynamic_cast<CMonsterEntity*>(other);
+			CMonsterEntity *Monster = entity_cast<CMonsterEntity>(other);
 			Monster->Monster->PauseTime = level.framenum + 100000000;
 			Monster->Monster->Stand ();
 		}
@@ -637,7 +639,7 @@ void CPathCorner::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *sur
 	else
 	{
 		if (other->EntityFlags & ENT_MONSTER)
-			(dynamic_cast<CMonsterEntity*>(other))->Monster->IdealYaw = (other->gameEntity->goalentity->Entity->State.GetOrigin() - other->State.GetOrigin()).ToYaw();
+			(entity_cast<CMonsterEntity>(other))->Monster->IdealYaw = (other->gameEntity->goalentity->Entity->State.GetOrigin() - other->State.GetOrigin()).ToYaw();
 	}
 };
 
@@ -661,7 +663,7 @@ void CPathCorner::Spawn ()
 
 const CEntityField CPathCorner::FieldsForParsing[] =
 {
-	CEntityField ("wait", EntityMemberOffset(CPathCorner,Wait), FTTime),
+	CEntityField ("wait", EntityMemberOffset(CPathCorner,Wait), FT_FRAMENUMBER),
 };
 const size_t CPathCorner::FieldsForParsingSize = FieldSize<CPathCorner>();
 
@@ -717,7 +719,7 @@ public:
 		{
 			if (other->EntityFlags & ENT_MONSTER)
 			{
-				CMonster *Monster = (dynamic_cast<CMonsterEntity*>(other))->Monster;
+				CMonster *Monster = (entity_cast<CMonsterEntity>(other))->Monster;
 
 				Monster->PauseTime = level.framenum + 100000000;
 				Monster->AIFlags |= AI_STAND_GROUND;
@@ -732,7 +734,7 @@ public:
 			other->gameEntity->goalentity = other->Enemy->gameEntity;
 
 			if (other->EntityFlags & ENT_MONSTER)
-				(dynamic_cast<CMonsterEntity*>(other))->Monster->AIFlags &= ~AI_COMBAT_POINT;
+				(entity_cast<CMonsterEntity>(other))->Monster->AIFlags &= ~AI_COMBAT_POINT;
 		}
 
 		if (gameEntity->pathtarget)
@@ -745,10 +747,10 @@ public:
 			if (other->Enemy && (other->Enemy->EntityFlags & ENT_PLAYER))
 				activator = other->Enemy;
 			else if ((other->EntityFlags & ENT_MONSTER) &&
-				(dynamic_cast<CMonsterEntity*>(other)->OldEnemy) && (dynamic_cast<CMonsterEntity*>(other)->OldEnemy->EntityFlags & ENT_PLAYER))
-				activator = dynamic_cast<CMonsterEntity*>(other)->OldEnemy;
-			else if ((other->EntityFlags & ENT_USABLE) && (dynamic_cast<CUsableEntity*>(other)->Activator) && ((dynamic_cast<CUsableEntity*>(other)->Activator)->EntityFlags & ENT_PLAYER))
-				activator = (dynamic_cast<CUsableEntity*>(other)->Activator);
+				(entity_cast<CMonsterEntity>(other)->OldEnemy) && (entity_cast<CMonsterEntity>(other)->OldEnemy->EntityFlags & ENT_PLAYER))
+				activator = entity_cast<CMonsterEntity>(other)->OldEnemy;
+			else if ((other->EntityFlags & ENT_USABLE) && (entity_cast<CUsableEntity>(other)->Activator) && ((entity_cast<CUsableEntity>(other)->Activator)->EntityFlags & ENT_PLAYER))
+				activator = (entity_cast<CUsableEntity>(other)->Activator);
 			else
 				activator = other;
 			UseTargets (activator, Message);
@@ -843,13 +845,10 @@ Default _cone value is 10 (used to set size of light for spotlights)
 class CLight : public CMapEntity, public CUsableEntity
 {
 public:
-	bool Usable;
-
 	CLight (int Index) :
 	  CBaseEntity (Index),
 	  CMapEntity (Index),
-	  CUsableEntity (Index),
-	  Usable(false)
+	  CUsableEntity (Index)
 	  {
 	  };
 
@@ -911,7 +910,8 @@ public:
 	  CMapEntity (),
 	  CThinkableEntity (),
 	  CUsableEntity (),
-	  Light (NULL)
+	  Light (NULL),
+	  Speed (0)
 	{
 		RampMessage[0] = RampMessage[1] = RampMessage[2] = 0;
 	};
@@ -921,7 +921,8 @@ public:
 	  CMapEntity (Index),
 	  CThinkableEntity (Index),
 	  CUsableEntity (Index),
-	  Light (NULL)
+	  Light (NULL),
+	  Speed (0)
 	{
 		RampMessage[0] = RampMessage[1] = RampMessage[2] = 0;
 	};
@@ -959,7 +960,7 @@ public:
 			CLight *e = NULL;
 			while (1)
 			{
-				e = dynamic_cast<CLight*>(CC_Find (e, FOFS(targetname), gameEntity->target));
+				e = entity_cast<CLight>(CC_Find (e, FOFS(targetname), gameEntity->target));
 				if (!e)
 					break;
 				if (strcmp(e->gameEntity->classname, "light") != 0)
@@ -1015,7 +1016,7 @@ public:
 
 const CEntityField CTargetLightRamp::FieldsForParsing[] =
 {
-	CEntityField ("speed", EntityMemberOffset(CTargetLightRamp,Speed), FTFloat),
+	CEntityField ("speed", EntityMemberOffset(CTargetLightRamp,Speed), FT_FLOAT),
 };
 const size_t CTargetLightRamp::FieldsForParsingSize = FieldSize<CTargetLightRamp>();
 

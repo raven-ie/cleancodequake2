@@ -54,7 +54,8 @@ public:
 	CHurtableEntity (),
 	CStepPhysics(),
 	Explosivity(100),
-	Shooter(NULL)
+	Shooter(NULL),
+	Damage(50)
 	{
 	};
 
@@ -66,7 +67,8 @@ public:
 	CHurtableEntity(Index),
 	CStepPhysics(Index),
 	Explosivity(100),
-	Shooter(NULL)
+	Shooter(NULL),
+	Damage(50)
 	{
 	};
 
@@ -83,7 +85,7 @@ public:
 		if (!(other->EntityFlags & ENT_PHYSICS))
 			return;
 
-		float ratio = dynamic_cast<CPhysicsEntity*>(other)->Mass / Mass;
+		float ratio = entity_cast<CPhysicsEntity>(other)->Mass / Mass;
 		vec3f v = State.GetOrigin() - other->State.GetOrigin();
 		float Yaw = (v.ToYaw ()*M_PI*2 / 360);
 		vec3f move = vec3f( cosf(Yaw)*(20 * ratio),
@@ -204,8 +206,8 @@ public:
 
 const CEntityField CMiscExploBox::FieldsForParsing[] =
 {
-	CEntityField ("mass", EntityMemberOffset(CMiscExploBox,Explosivity), FTInteger),
-	CEntityField ("dmg", EntityMemberOffset(CMiscExploBox,Damage), FTInteger),
+	CEntityField ("mass", EntityMemberOffset(CMiscExploBox,Explosivity), FT_INT),
+	CEntityField ("dmg", EntityMemberOffset(CMiscExploBox,Damage), FT_INT),
 };
 const size_t CMiscExploBox::FieldsForParsingSize = FieldSize<CMiscExploBox>();
 
@@ -841,8 +843,6 @@ public:
 	bool			PreThinkable;
 	FrameNumber_t	TimeStamp;
 	vec3f			MoveDir;
-	bool			Usable;
-	bool			Touchable;
 	int				Damage;
 
 	CMiscViperBomb () :
@@ -855,8 +855,7 @@ public:
 	  PreThinkable (false),
 	  TimeStamp (0),
 	  MoveDir(),
-	  Usable(true),
-	  Touchable(false)
+	  Damage(0)
 	{
 	};
 
@@ -870,8 +869,7 @@ public:
 	  PreThinkable (false),
 	  TimeStamp (0),
 	  MoveDir(),
-	  Usable(true),
-	  Touchable(false)
+	  Damage(0)
 	{
 	};
 
@@ -929,7 +927,7 @@ public:
 		Touchable = true;
 		Activator = activator;
 
-		CMiscViper *viper = dynamic_cast<CMiscViper*>(CC_Find (NULL, FOFS(classname), "misc_viper"));
+		CMiscViper *viper = entity_cast<CMiscViper>(CC_Find (NULL, FOFS(classname), "misc_viper"));
 
 		Velocity = vec3f(viper->Dir) * viper->Speed;
 
@@ -941,6 +939,7 @@ public:
 	void Spawn ()
 	{
 		PhysicsType = PHYSICS_NONE;
+		Touchable = false;
 		SetSolid (SOLID_NOT);
 		SetMins (vec3f(-8, -8, -8));
 		SetMaxs (vec3f(8, 8, 8));
@@ -957,7 +956,7 @@ public:
 
 const CEntityField CMiscViperBomb::FieldsForParsing[] =
 {
-	CEntityField ("dmg", EntityMemberOffset(CMiscViperBomb,Damage), FTInteger),
+	CEntityField ("dmg", EntityMemberOffset(CMiscViperBomb,Damage), FT_INT),
 };
 const size_t CMiscViperBomb::FieldsForParsingSize = FieldSize<CMiscViperBomb>();
 

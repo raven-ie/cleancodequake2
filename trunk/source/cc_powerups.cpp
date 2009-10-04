@@ -214,7 +214,7 @@ public:
 		gameEntity->item = item;
 		NextThink = level.framenum + 2;    // items start after other solids
 		ThinkState = ITS_DROPTOFLOOR;
-		NoPhysics = true;
+		PhysicsType = PHYSICS_NONE;
 
 		State.SetEffects(item->EffectFlags);
 		State.SetRenderEffects(RF_GLOW);
@@ -225,7 +225,7 @@ public:
 // Seperate powerup classes
 void CMegaHealth::DoPickup (CItemEntity *ent, CPlayerEntity *other)
 {
-	CMegaHealthEntity *MegaHealth = dynamic_cast<CMegaHealthEntity*>(ent);
+	CMegaHealthEntity *MegaHealth = entity_cast<CMegaHealthEntity>(ent);
 
 	if ((!dmFlags.dfDmTechs
 #ifdef CLEANCTF_ENABLED
@@ -255,7 +255,7 @@ void CMegaHealth::DoPickup (CItemEntity *ent, CPlayerEntity *other)
 void CBackPack::DoPickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	// Increase their max ammo, if applicable
-	for (int i = 0; i < AMMOTAG_MAX; i++)
+	for (int i = 0; i < CAmmo::AMMOTAG_MAX; i++)
 	{
 		if (other->Client.pers.maxAmmoValues[i] < maxBackpackAmmoValues[i])
 			other->Client.pers.maxAmmoValues[i] = maxBackpackAmmoValues[i];
@@ -394,7 +394,7 @@ void CEnvironmentSuit::Use (CPlayerEntity *ent)
 void CBandolier::DoPickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	// Increase their max ammo, if applicable
-	for (int i = 0; i < AMMOTAG_MAX; i++)
+	for (int i = 0; i < CAmmo::AMMOTAG_MAX; i++)
 	{
 		if (other->Client.pers.maxAmmoValues[i] < maxBandolierAmmoValues[i])
 			other->Client.pers.maxAmmoValues[i] = maxBandolierAmmoValues[i];
@@ -493,7 +493,7 @@ public:
 		gameEntity->item = item;
 		NextThink = level.framenum + 2;    // items start after other solids
 		ThinkState = ITS_DROPTOFLOOR;
-		NoPhysics = true;
+		PhysicsType = PHYSICS_NONE;
 
 		State.SetEffects(item->EffectFlags);
 		State.SetRenderEffects(RF_GLOW);

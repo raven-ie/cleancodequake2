@@ -90,7 +90,6 @@ public:
 		TRIGGER_THINK_CUSTOM
 	};
 	uint32			ThinkType;
-	bool			Touchable;
 	vec3f			MoveDir;
 	FrameNumber_t	Wait;
 
@@ -100,8 +99,7 @@ public:
 	  CThinkableEntity (),
 	  CTouchableEntity (),
 	  CUsableEntity (),
-	  ThinkType (TRIGGER_THINK_NONE),
-	  Touchable(true)
+	  ThinkType (TRIGGER_THINK_NONE)
 	{
 	};
 
@@ -111,8 +109,7 @@ public:
 	  CThinkableEntity (Index),
 	  CTouchableEntity (Index),
 	  CUsableEntity (Index),
-	  ThinkType (TRIGGER_THINK_NONE),
-	  Touchable(true)
+	  ThinkType (TRIGGER_THINK_NONE)
 	{
 	};
 
@@ -222,7 +219,7 @@ public:
 
 const CEntityField CTriggerBase::FieldsForParsing[] =
 {
-	CEntityField ("wait", EntityMemberOffset(CTriggerBase,Wait), FTTime),
+	CEntityField ("wait", EntityMemberOffset(CTriggerBase,Wait), FT_FRAMENUMBER),
 };
 const size_t CTriggerBase::FieldsForParsingSize = FieldSize<CTriggerBase>();
 
@@ -399,7 +396,7 @@ public:
 		if (!(activator->EntityFlags & ENT_PLAYER))
 			IsClient = false;
 		
-		CPlayerEntity *Player = (IsClient) ? dynamic_cast<CPlayerEntity*>(activator) : NULL;
+		CPlayerEntity *Player = (IsClient) ? entity_cast<CPlayerEntity>(activator) : NULL;
 		gameEntity->count--;
 
 		if (gameEntity->count)
@@ -448,14 +445,16 @@ public:
 	CTriggerPush () :
 	  CBaseEntity (),
 	  CTriggerMultiple (),
-	  Q3Touch(false)
+	  Q3Touch(false),
+	  Speed (0)
 	  {
 	  };
 
 	CTriggerPush (int Index) :
 	  CBaseEntity (Index),
 	  CTriggerMultiple (Index),
-	  Q3Touch(false)
+	  Q3Touch(false),
+	  Speed (0)
 	  {
 	  };
 
@@ -470,12 +469,12 @@ public:
 		if (Q3Touch)
 		{
 			if (other->EntityFlags & ENT_PHYSICS)
-				dynamic_cast<CPhysicsEntity*>(other)->Velocity = vel;
+				entity_cast<CPhysicsEntity>(other)->Velocity = vel;
 
 			if (other->EntityFlags & ENT_PLAYER)
 			{
 				// don't take falling damage immediately from this
-				CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(other);
+				CPlayerEntity *Player = entity_cast<CPlayerEntity>(other);
 				Player->Client.OldVelocity = Player->Velocity;
 			}
 		}
@@ -485,16 +484,16 @@ public:
 			if (strcmp(other->gameEntity->classname, "grenade") == 0)
 			{
 				if (other->EntityFlags & ENT_PHYSICS)
-					dynamic_cast<CPhysicsEntity*>(other)->Velocity = vel;
+					entity_cast<CPhysicsEntity>(other)->Velocity = vel;
 			}
-			else if ((other->EntityFlags & ENT_HURTABLE) && (dynamic_cast<CHurtableEntity*>(other)->Health > 0))
+			else if ((other->EntityFlags & ENT_HURTABLE) && (entity_cast<CHurtableEntity>(other)->Health > 0))
 			{
 				if (other->EntityFlags & ENT_PHYSICS)
-					dynamic_cast<CPhysicsEntity*>(other)->Velocity = vel;
+					entity_cast<CPhysicsEntity>(other)->Velocity = vel;
 
 				if (other->EntityFlags & ENT_PLAYER)
 				{
-					CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(other);
+					CPlayerEntity *Player = entity_cast<CPlayerEntity>(other);
 
 					// don't take falling damage immediately from this
 					Player->Client.OldVelocity = Player->Velocity;
@@ -541,7 +540,7 @@ public:
 
 const CEntityField CTriggerPush::FieldsForParsing[] =
 {
-	CEntityField ("speed", EntityMemberOffset(CTriggerPush,Speed), FTFloat),
+	CEntityField ("speed", EntityMemberOffset(CTriggerPush,Speed), FT_FLOAT),
 };
 const size_t CTriggerPush::FieldsForParsingSize = FieldSize<CTriggerPush>();
 
@@ -577,14 +576,16 @@ public:
 	CTriggerHurt () :
 	  CBaseEntity (),
 	  CTriggerMultiple (),
-	  NextHurt(0)
+	  NextHurt(0),
+	  Damage (0)
 	  {
 	  };
 
 	CTriggerHurt (int Index) :
 	  CBaseEntity (Index),
 	  CTriggerMultiple (Index),
-	  NextHurt(0)
+	  NextHurt(0),
+	  Damage (0)
 	  {
 	  };
 
@@ -594,7 +595,7 @@ public:
 
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
-		if (!((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage))
+		if (!((other->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(other)->CanTakeDamage))
 			return;
 
 		if (NextHurt > level.framenum)
@@ -607,7 +608,7 @@ public:
 				other->PlaySound (CHAN_AUTO, NoiseIndex);
 		}
 
-		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(),
+		entity_cast<CHurtableEntity>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(),
 															vec3fOrigin, Damage, Damage,
 															(SpawnFlags & 8) ? DAMAGE_NO_PROTECTION : 0, MOD_TRIGGER_HURT);
 	};
@@ -641,7 +642,7 @@ public:
 
 const CEntityField CTriggerHurt::FieldsForParsing[] =
 {
-	CEntityField ("dmg", EntityMemberOffset(CTriggerHurt,Damage), FTInteger),
+	CEntityField ("dmg", EntityMemberOffset(CTriggerHurt,Damage), FT_INT),
 };
 const size_t CTriggerHurt::FieldsForParsingSize = FieldSize<CTriggerHurt>();
 
@@ -668,13 +669,15 @@ public:
 
 	CTriggerMonsterJump () :
 	  CBaseEntity (),
-	  CTriggerMultiple ()
+	  CTriggerMultiple (),
+	  Speed (0)
 	  {
 	  };
 
 	CTriggerMonsterJump (int Index) :
 	  CBaseEntity (Index),
-	  CTriggerMultiple (Index)
+	  CTriggerMultiple (Index),
+	  Speed (0)
 	  {
 	  };
 
@@ -696,7 +699,7 @@ public:
 			return;
 
 	// set XY even if not on ground, so the jump will clear lips
-		CMonsterEntity *Monster = dynamic_cast<CMonsterEntity*>(other);
+		CMonsterEntity *Monster = entity_cast<CMonsterEntity>(other);
 		Monster->Velocity = MoveDir * Speed;
 		
 		if (!Monster->GroundEntity)
@@ -727,7 +730,7 @@ public:
 
 const CEntityField CTriggerMonsterJump::FieldsForParsing[] =
 {
-	CEntityField ("speed", EntityMemberOffset(CTriggerMonsterJump,Speed), FTFloat),
+	CEntityField ("speed", EntityMemberOffset(CTriggerMonsterJump,Speed), FT_FLOAT),
 };
 const size_t CTriggerMonsterJump::FieldsForParsingSize = FieldSize<CTriggerMonsterJump>();
 
@@ -803,7 +806,6 @@ Use "item" to specify the required key, for example "key_data_cd"
 class CTriggerKey : public CMapEntity, public CUsableEntity
 {
 public:
-	bool		Usable;
 	CBaseItem	*Item;
 	FrameNumber_t		TouchDebounce;
 
@@ -811,7 +813,6 @@ public:
 	  CBaseEntity (),
 	  CMapEntity (),
 	  CUsableEntity (),
-	  Usable(true),
 	  TouchDebounce(0),
 	  Item(NULL)
 	{
@@ -821,7 +822,6 @@ public:
 	  CBaseEntity (Index),
 	  CMapEntity (Index),
 	  CUsableEntity (Index),
-	  Usable(true),
 	  TouchDebounce(0),
 	  Item(NULL)
 	{
@@ -846,7 +846,7 @@ public:
 		if (!(activator->EntityFlags & ENT_PLAYER))
 			return;
 
-		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(activator);
+		CPlayerEntity *Player = entity_cast<CPlayerEntity>(activator);
 
 		int index = Item->GetIndex();
 		if (!Player->Client.pers.Inventory.Has(index))
@@ -877,7 +877,7 @@ public:
 
 				for (int player = 1; player <= game.maxclients; player++)
 				{
-					CPlayerEntity *ent = dynamic_cast<CPlayerEntity*>(g_edicts[player].Entity);
+					CPlayerEntity *ent = entity_cast<CPlayerEntity>(g_edicts[player].Entity);
 					if (!ent->IsInUse())
 						continue;
 					if (ent->Client.pers.power_cubes & (1 << cube))
@@ -891,7 +891,7 @@ public:
 			{
 				for (int player = 1; player <= game.maxclients; player++)
 				{
-					CPlayerEntity *ent = dynamic_cast<CPlayerEntity*>(g_edicts[player].Entity);
+					CPlayerEntity *ent = entity_cast<CPlayerEntity>(g_edicts[player].Entity);
 					if (!ent->IsInUse())
 						continue;
 					ent->Client.pers.Inventory.Set(index, 0);
@@ -908,20 +908,7 @@ public:
 
 	void Spawn ()
 	{
-		if (!st.item)
-		{
-			//gi.dprintf("no key item for trigger_key at (%f %f %f)\n", self->state.origin[0], self->state.origin[1], self->state.origin[2]);
-			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No key item\n");
-			return;
-		}
-		Item = FindItemByClassname (st.item);
-
-		if (!Item)
-		{
-			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "Item \"%s\" not found\n", st.item);
-			//gi.dprintf("item %s not found for trigger_key at (%f %f %f)\n", st.item, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
-			return;
-		}
+		Item = gameEntity->item;
 
 		if (!gameEntity->target)
 		{

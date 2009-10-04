@@ -77,8 +77,7 @@ public:
 
 #ifdef MONSTER_USE_ROGUE_AI
 	void CleanupHeal (bool ChangeFrame = false);
-	void AbortHeal (bool ChangeFrame, bool Gib, bool Mark);
-	bool CanReach (CBaseEntity *other);
+	void AbortHeal (bool Gib, bool Mark);
 #endif
 
 	void Dead ();

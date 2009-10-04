@@ -24,6 +24,70 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 //
 #ifdef WIN32
 
+#define VS_UNKNOWN	0
+#define VS_5		1
+#define VS_6		2
+#define VS_7		3
+#define VS_71		4
+#define VS_8		5
+#define VS_9		6
+#define VS_10		7
+
+#define VS_UNKNOWN_STR	"Unknown Visual Studio"
+#define VS_5_STR		"Visual C++ 5.0"
+#define VS_6_STR		"Visual C++ 6.0"
+#define VS_7_STR		"Visual C++ 7.0"
+#define VS_71_STR		"Visual C++ 7.1"
+#define VS_8_STR		"Visual Studio 2005"
+#define VS_9_STR		"Visual Studio 2008"
+#define VS_10_STR		"Visual Studio 2010 BETA"
+
+#if (_MSC_VER >= 1600) // 2010
+	#define MSVS_VERSION			VS_10
+	#define MSVS_VERSION_STRING		VS_10_STR
+#elif (_MSC_VER >= 1500) // 2008
+	#define MSVS_VERSION			VS_9
+	#define MSVS_VERSION_STRING		VS_9_STR
+#elif (_MSC_VER >= 1400) // 2005
+	#define MSVS_VERSION			VS_8
+	#define MSVS_VERSION_STRING		VS_8_STR
+#elif (_MSC_VER >= 1310) // C++ 7.1
+	#define MSVS_VERSION			VS_7
+	#define MSVS_VERSION_STRING		VS_7_STR
+#elif (_MSC_VER >= 1300) // C++ 7.0
+	#define MSVS_VERSION			VS_71
+	#define MSVS_VERSION_STRING		VS_71_STR
+#elif (_MSC_VER >= 1200) // C++ 6.0
+	#define MSVS_VERSION			VS_6
+	#define MSVS_VERSION_STRING		VS_6_STR
+#elif (_MSC_VER >= 1100) // C++ 5.0
+	#define MSVS_VERSION			VS_5
+	#define MSVS_VERSION_STRING		VS_5_STR
+#else
+	#define MSVS_VERSION			VS_UNKNOWN
+	#define MSVS_VERSION_STRING		VS_UNKNOWN_STR
+#endif
+
+#if (MSVS_VERSION <= VS_9)
+
+#define CC_ENUM(type,name) \
+	typedef type name; \
+	enum
+
+#elif (MSVS_VERSION == VS_10)
+// FIXME: Make this next part real. Not sure if VS10 will support this yet...
+/*
+#define CC_ENUM(type,name) enum name : type
+*/
+
+#ifndef CC_ENUM
+#define CC_ENUM(type,name) \
+	typedef type name; \
+	enum
+#endif
+
+#endif
+
 // unknown pragmas are SUPPOSED to be ignored, but....
 # pragma warning(disable : 4244)	// 'conversion' conversion from 'type1' to 'type2', possible loss of data
 

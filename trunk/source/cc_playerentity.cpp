@@ -350,7 +350,11 @@ void CPlayerEntity::BeginServerFrame ()
 				buttonMask = -1;
 
 			if ( ( Client.latched_buttons & buttonMask ) ||
-				((game.mode & GAME_DEATHMATCH) && dmFlags.dfForceRespawn ) )
+				((game.mode & GAME_DEATHMATCH) && dmFlags.dfForceRespawn ) 
+#ifdef CLEANCTF_ENABLED
+				|| CTFMatchOn()
+#endif
+				)
 			{
 				Respawn();
 				Client.latched_buttons = 0;
@@ -413,7 +417,7 @@ void CPlayerEntity::SpectatorRespawn ()
 		int numspec = 0;
 		for (int i = 1; i <= game.maxclients; i++)
 		{
-			CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+			CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 			if (Player->IsInUse() && Player->Client.pers.spectator)
 				numspec++;
 		}
@@ -625,10 +629,7 @@ void CPlayerEntity::PutInServer ()
 	else
 		Client.resp.spectator = false;
 
-	if (!KillBox (this))
-	{	// could't spawn in?
-	}
-
+	KillBox ();
 	Link ();
 
 	// force the current weapon up
@@ -670,12 +671,12 @@ void CPlayerEntity::InitPersistent ()
 
 void CPlayerEntity::InitItemMaxValues ()
 {
-	Client.pers.maxAmmoValues[AMMOTAG_SHELLS] = 100;
-	Client.pers.maxAmmoValues[AMMOTAG_BULLETS] = 200;
-	Client.pers.maxAmmoValues[AMMOTAG_GRENADES] = 50;
-	Client.pers.maxAmmoValues[AMMOTAG_ROCKETS] = 50;
-	Client.pers.maxAmmoValues[AMMOTAG_CELLS] = 200;
-	Client.pers.maxAmmoValues[AMMOTAG_SLUGS] = 50;
+	Client.pers.maxAmmoValues[CAmmo::AMMOTAG_SHELLS] = 100;
+	Client.pers.maxAmmoValues[CAmmo::AMMOTAG_BULLETS] = 200;
+	Client.pers.maxAmmoValues[CAmmo::AMMOTAG_GRENADES] = 50;
+	Client.pers.maxAmmoValues[CAmmo::AMMOTAG_ROCKETS] = 50;
+	Client.pers.maxAmmoValues[CAmmo::AMMOTAG_CELLS] = 200;
+	Client.pers.maxAmmoValues[CAmmo::AMMOTAG_SLUGS] = 50;
 }
 
 /*
@@ -754,19 +755,19 @@ void CPlayerEntity::UserinfoChanged (char *userinfo)
 		{
 		case 'm':
 		case 'M':
-			Client.resp.Gender = GenderMale;
+			Client.resp.Gender = GENDER_MALE;
 			break;
 		case 'f':
 		case 'F':
-			Client.resp.Gender = GenderFemale;
+			Client.resp.Gender = GENDER_FEMALE;
 			break;
 		default:
-			Client.resp.Gender = GenderNeutral;
+			Client.resp.Gender = GENDER_NEUTRAL;
 			break;
 		}
 	}
 	else
-		Client.resp.Gender = GenderMale;
+		Client.resp.Gender = GENDER_MALE;
 
 	// MSG command
 	s = Info_ValueForKey (userinfo, "msg");
@@ -1861,7 +1862,7 @@ void CPlayerEntity::EndServerFrame ()
 //update chasecam follower stats
 	for (i = 1; i <= game.maxclients; i++)
 	{
-		CPlayerEntity *e = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+		CPlayerEntity *e = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 		if (!e->IsInUse() || e->Client.chase_target != this)
 			continue;
 
@@ -1889,7 +1890,7 @@ void CPlayerEntity::EndServerFrame ()
 	Client.KickOrigin.Clear();
 	Client.KickAngles.Clear();
 
-	if (((game.mode & GAME_CTF) || dmFlags.dfDmTechs) && (Client.pers.Tech && (Client.pers.Tech->TechType == CTech::TechPassive)))
+	if (((game.mode & GAME_CTF) || dmFlags.dfDmTechs) && (Client.pers.Tech && (Client.pers.Tech->TechType == CTech::TECH_PASSIVE)))
 		Client.pers.Tech->DoPassiveTech (this);
 
 	// if the scoreboard is up, update it
@@ -1924,7 +1925,7 @@ void CPlayerEntity::CTFScoreboardMessage (bool reliable)
 	totalscore[0] = totalscore[1] = 0;
 	for (int i=0 ; i<game.maxclients ; i++)
 	{
-		CPlayerEntity *cl_ent = dynamic_cast<CPlayerEntity*>((g_edicts + 1 + i)->Entity);
+		CPlayerEntity *cl_ent = entity_cast<CPlayerEntity>((g_edicts + 1 + i)->Entity);
 		if (!cl_ent->IsInUse())
 			continue;
 		if (cl_ent->Client.resp.ctf_team == CTF_TEAM1)
@@ -1996,7 +1997,7 @@ void CPlayerEntity::CTFScoreboardMessage (bool reliable)
 		// left side
 		if (i < total[0])
 		{
-			CPlayerEntity *cl_ent = dynamic_cast<CPlayerEntity*>((g_edicts + 1 + sorted[0][i])->Entity);
+			CPlayerEntity *cl_ent = entity_cast<CPlayerEntity>((g_edicts + 1 + sorted[0][i])->Entity);
 
 			Bar.AddClientBlock (0, 42 + i * 8, sorted[0][i], cl_ent->Client.resp.score, Clamp<int>(cl_ent->Client.GetPing(), 0, 999));
 
@@ -2014,7 +2015,7 @@ void CPlayerEntity::CTFScoreboardMessage (bool reliable)
 		// right side
 		if (i < total[1])
 		{
-			CPlayerEntity *cl_ent = dynamic_cast<CPlayerEntity*>((g_edicts + 1 + sorted[1][i])->Entity);
+			CPlayerEntity *cl_ent = entity_cast<CPlayerEntity>((g_edicts + 1 + sorted[1][i])->Entity);
 
 			Bar.AddClientBlock (160, 42 + i * 8, sorted[1][i], cl_ent->Client.resp.score, Clamp<int>(cl_ent->Client.GetPing(), 0, 999));
 
@@ -2042,7 +2043,7 @@ void CPlayerEntity::CTFScoreboardMessage (bool reliable)
 	{
 		for (int i = 0; i < game.maxclients; i++)
 		{
-			CPlayerEntity *cl_ent = dynamic_cast<CPlayerEntity*>((g_edicts + 1 + i)->Entity);
+			CPlayerEntity *cl_ent = entity_cast<CPlayerEntity>((g_edicts + 1 + i)->Entity);
 			if (!cl_ent->IsInUse() ||
 				cl_ent->GetSolid() != SOLID_NOT ||
 				cl_ent->Client.resp.ctf_team != CTF_NOTEAM)
@@ -2109,13 +2110,13 @@ void CPlayerEntity::DeathmatchScoreboardMessage (bool reliable)
 	int					sorted[MAX_CS_CLIENTS];
 	int					sortedscores[MAX_CS_CLIENTS];
 	int					score, total;
-	CPlayerEntity		*Killer = (Enemy) ? dynamic_cast<CPlayerEntity*>(Enemy) : NULL;
+	CPlayerEntity		*Killer = (Enemy) ? entity_cast<CPlayerEntity>(Enemy) : NULL;
 
 	// sort the clients by score
 	total = 0;
 	for (int i = 0; i < game.maxclients ; i++)
 	{
-		CPlayerEntity *cl_ent = dynamic_cast<CPlayerEntity*>((g_edicts + 1 + i)->Entity);
+		CPlayerEntity *cl_ent = entity_cast<CPlayerEntity>((g_edicts + 1 + i)->Entity);
 		if (!cl_ent->IsInUse() || cl_ent->Client.resp.spectator)
 			continue;
 		score = cl_ent->Client.resp.score;
@@ -2144,7 +2145,7 @@ void CPlayerEntity::DeathmatchScoreboardMessage (bool reliable)
 	{
 		int		x, y;
 		char	*tag;
-		CPlayerEntity *cl_ent = dynamic_cast<CPlayerEntity*>((g_edicts + 1 + sorted[i])->Entity);
+		CPlayerEntity *cl_ent = entity_cast<CPlayerEntity>((g_edicts + 1 + sorted[i])->Entity);
 
 		x = (i>=6) ? 160 : 0;
 		y = 32 + 32 * (i%6);
@@ -2414,7 +2415,7 @@ void CPlayerEntity::SetCTFStats()
 	//   flag taken
 	//   flag dropped
 	p1 = ImageIndex ("i_ctf1");
-	e = dynamic_cast<CFlagEntity*>(CC_Find(NULL, FOFS(classname), "item_flag_team1"));
+	e = entity_cast<CFlagEntity>(CC_Find(NULL, FOFS(classname), "item_flag_team1"));
 	if (e != NULL)
 	{
 		if (e->GetSolid() == SOLID_NOT)
@@ -2426,7 +2427,7 @@ void CPlayerEntity::SetCTFStats()
 			p1 = ImageIndex ("i_ctf1d"); // default to dropped
 			for (i = 1; i <= game.maxclients; i++)
 			{
-				CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+				CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 
 				if (Player->IsInUse() &&
 					(Player->Client.pers.Flag == NItems::RedFlag))
@@ -2441,7 +2442,7 @@ void CPlayerEntity::SetCTFStats()
 			p1 = ImageIndex ("i_ctf1d"); // must be dropped
 	}
 	p2 = ImageIndex ("i_ctf2");
-	e = dynamic_cast<CFlagEntity*>(CC_Find(NULL, FOFS(classname), "item_flag_team2"));
+	e = entity_cast<CFlagEntity>(CC_Find(NULL, FOFS(classname), "item_flag_team2"));
 	if (e != NULL)
 	{
 		if (e->GetSolid() == SOLID_NOT)
@@ -2453,7 +2454,7 @@ void CPlayerEntity::SetCTFStats()
 			p2 = ImageIndex ("i_ctf2d"); // default to dropped
 			for (i = 1; i <= game.maxclients; i++)
 			{
-				CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+				CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 
 				if (Player->IsInUse() &&
 					(Player->Client.pers.Flag == NItems::BlueFlag))
@@ -2538,7 +2539,7 @@ void CPlayerEntity::CTFSetIDView()
 	float bd = 0;
 	for (int i = 1; i <= game.maxclients; i++)
 	{
-		CPlayerEntity *who = dynamic_cast<CPlayerEntity*>((g_edicts + i)->Entity);
+		CPlayerEntity *who = entity_cast<CPlayerEntity>((g_edicts + i)->Entity);
 		if (!who->IsInUse() || who->GetSolid() == SOLID_NOT)
 			continue;
 		vec3f dir = who->State.GetOrigin() - State.GetOrigin();
@@ -2925,7 +2926,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 			{
 				if ((other->Entity->EntityFlags & ENT_TOUCHABLE) && other->Entity->IsInUse())
 				{
-					CTouchableEntity *Touchered = dynamic_cast<CTouchableEntity*>(other->Entity);
+					CTouchableEntity *Touchered = entity_cast<CTouchableEntity>(other->Entity);
 
 					if (Touchered->Touchable)
 						Touchered->Touch (this, NULL, NULL);
@@ -2977,7 +2978,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 	// update chase cam if being followed
 	for (int i = 1; i <= game.maxclients; i++)
 	{
-		CPlayerEntity *other = dynamic_cast<CPlayerEntity*>((g_edicts + i)->Entity);
+		CPlayerEntity *other = entity_cast<CPlayerEntity>((g_edicts + i)->Entity);
 		if (other->IsInUse() && other->Client.chase_target == this)
 			other->UpdateChaseCam();
 	}
@@ -2999,7 +3000,7 @@ void CPlayerEntity::CTFAssignTeam()
 
 	for (i = 1; i <= game.maxclients; i++)
 	{
-		CPlayerEntity *player = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+		CPlayerEntity *player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 
 		if (!player->IsInUse() || player == this)
 			continue;
@@ -3074,7 +3075,7 @@ void CPlayerEntity::SaveClientData ()
 		if (!g_edicts[1+i].Entity)
 			return; // Not set up
 
-		CPlayerEntity *ent = dynamic_cast<CPlayerEntity*>(g_edicts[1+i].Entity);
+		CPlayerEntity *ent = entity_cast<CPlayerEntity>(g_edicts[1+i].Entity);
 		if (!ent->IsInUse())
 			continue;
 
@@ -3272,6 +3273,8 @@ void CPlayerEntity::TossHead (int damage)
 }
 
 EMeansOfDeath meansOfDeath;
+void Cmd_Help_f (CPlayerEntity *ent);
+
 void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 	CanTakeDamage = true;
@@ -3301,7 +3304,7 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 #ifdef CLEANCTF_ENABLED
 		if (attacker->EntityFlags & ENT_PLAYER)
 		{
-			CPlayerEntity *Attacker = dynamic_cast<CPlayerEntity*>(attacker);
+			CPlayerEntity *Attacker = entity_cast<CPlayerEntity>(attacker);
 //ZOID
 			// if at start and same team, clear
 			if ((game.mode & GAME_CTF) && (meansOfDeath == MOD_TELEFRAG) &&
@@ -3623,7 +3626,7 @@ void CPlayerEntity::ChaseNext()
 		i++;
 		if (i > game.maxclients)
 			i = 1;
-		e = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+		e = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 		if (!e->IsInUse())
 			continue;
 		if (e->NoClip)
@@ -3648,7 +3651,7 @@ void CPlayerEntity::ChasePrev()
 		i--;
 		if (i < 1)
 			i = game.maxclients;
-		e = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+		e = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 		if (!e->IsInUse())
 			continue;
 		if (e->NoClip)
@@ -3666,7 +3669,7 @@ void CPlayerEntity::GetChaseTarget()
 {
 	for (int i = 1; i <= game.maxclients; i++)
 	{
-		CPlayerEntity *other = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+		CPlayerEntity *other = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 		if (other->IsInUse() && !other->Client.resp.spectator && !other->NoClip)
 		{
 			Client.chase_target = other;
@@ -3754,13 +3757,13 @@ void CPlayerEntity::PlayerNoiseAt (vec3f Where, int type)
 	CPlayerNoise *noise;
 	if (type == PNOISE_SELF || type == PNOISE_WEAPON)
 	{
-		noise = dynamic_cast<CPlayerNoise*>(Client.mynoise);
+		noise = entity_cast<CPlayerNoise>(Client.mynoise);
 		level.sound_entity = noise;
 		level.sound_entity_framenum = level.framenum;
 	}
 	else // type == PNOISE_IMPACT
 	{
-		noise = dynamic_cast<CPlayerNoise*>(Client.mynoise2);
+		noise = entity_cast<CPlayerNoise>(Client.mynoise2);
 		level.sound2_entity = noise;
 		level.sound2_entity_framenum = level.framenum;
 	}
@@ -3779,7 +3782,10 @@ void CPlayerEntity::PlayerNoiseAt (vec3f Where, int type)
 
 void CPlayerEntity::BeginDeathmatch ()
 {
+_CC_DISABLE_DEPRECATION
 	G_InitEdict (gameEntity);
+_CC_ENABLE_DEPRECATION
+
 	InitResp();
 
 	// locate ent at a spawn point
@@ -3824,7 +3830,11 @@ void CPlayerEntity::Begin ()
 		// a spawn point will completely reinitialize the entity
 		// except for the persistant data that was initialized at
 		// ClientConnect() time
+
+_CC_DISABLE_DEPRECATION
 		G_InitEdict (gameEntity);
+_CC_ENABLE_DEPRECATION
+
 		gameEntity->classname = "player";
 		InitResp ();
 		PutInServer ();
@@ -3901,7 +3911,7 @@ bool CPlayerEntity::Connect (char *userinfo)
 		// count spectators
 		for (i = numspec = 0; i < game.maxclients; i++)
 		{
-			CPlayerEntity *Ent = dynamic_cast<CPlayerEntity*>(g_edicts[i+1].Entity);
+			CPlayerEntity *Ent = entity_cast<CPlayerEntity>(g_edicts[i+1].Entity);
 			if (Ent->IsInUse() && Ent->Client.pers.spectator)
 				numspec++;
 		}
@@ -4023,10 +4033,10 @@ void CPlayerEntity::Obituary (CBaseEntity *attacker)
 		case MOD_G_SPLASH:
 			switch (Client.resp.Gender)
 			{
-			case GenderMale:
+			case GENDER_MALE:
 				message = "tripped on his own grenade";
 				break;
-			case GenderFemale:
+			case GENDER_FEMALE:
 				message = "tripped on her own grenade";
 				break;
 			default:
@@ -4037,10 +4047,10 @@ void CPlayerEntity::Obituary (CBaseEntity *attacker)
 		case MOD_R_SPLASH:
 			switch (Client.resp.Gender)
 			{
-			case GenderMale:
+			case GENDER_MALE:
 				message = "blew himself up";
 				break;
-			case GenderFemale:
+			case GENDER_FEMALE:
 				message = "blew herself up";
 				break;
 			default:
@@ -4054,10 +4064,10 @@ void CPlayerEntity::Obituary (CBaseEntity *attacker)
 		default:
 			switch (Client.resp.Gender)
 			{
-			case GenderMale:
+			case GENDER_MALE:
 				message = "killed himself";
 				break;
-			case GenderFemale:
+			case GENDER_FEMALE:
 				message = "killed herself";
 				break;
 			default:
@@ -4072,7 +4082,7 @@ void CPlayerEntity::Obituary (CBaseEntity *attacker)
 	}
 	else if (attacker && (attacker->EntityFlags & ENT_PLAYER))
 	{
-		CPlayerEntity *Attacker = dynamic_cast<CPlayerEntity*>(attacker);
+		CPlayerEntity *Attacker = entity_cast<CPlayerEntity>(attacker);
 		bool endsInS = (Attacker->Client.pers.netname[strlen(Attacker->Client.pers.netname)] == 's');
 		switch (meansOfDeath)
 		{
@@ -4226,7 +4236,7 @@ void CPlayerEntity::Obituary (CBaseEntity *attacker)
 			break;
 		};
 
-		CMonsterEntity *Monster = dynamic_cast<CMonsterEntity*>(attacker);
+		CMonsterEntity *Monster = entity_cast<CMonsterEntity>(attacker);
 		char *Name = Monster->Monster->MonsterName;
 
 		if (game.mode & GAME_DEATHMATCH)

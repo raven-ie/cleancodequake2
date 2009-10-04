@@ -94,3 +94,282 @@ CBaseEntity *ResolveMapEntity (edict_t *ent)
 {
 	return EntityList.Resolve (ent);
 };
+
+spawn_temp_t	st;
+
+/*
+===============
+ED_CallSpawn
+
+Finds the spawn function for the entity and calls it
+===============
+*/
+void ED_CallSpawn (edict_t *ent)
+{
+	if (!ent->classname)
+	{
+		//gi.dprintf ("ED_CallSpawn: NULL classname\n");
+		MapPrint (MAPPRINT_ERROR, ent, ent->state.origin, "NULL classname!\n");
+		return;
+	}
+
+	// Check CleanCode stuff
+	CBaseEntity *MapEntity = ResolveMapEntity(ent);
+
+	if (!MapEntity)
+	{
+		MapPrint (MAPPRINT_ERROR, ent, ent->state.origin, "Invalid entity (no spawn function)\n");
+
+_CC_DISABLE_DEPRECATION
+		G_FreeEdict (ent);
+_CC_ENABLE_DEPRECATION
+	}
+}
+
+/*
+====================
+ED_ParseEdict
+
+Parses an edict out of the given string, returning the new position
+ed should be a properly initialized empty edict.
+====================
+*/
+static char *ED_ParseEdict (char *data, edict_t *ent)
+{
+	bool	init;
+	char	keyName[256];
+	char	*token;
+
+	init = false;
+	memset (&st, 0, sizeof(st));
+
+	// Go through all the dictionary pairs
+	for ( ; ; ) {
+		// Parse key
+		token = Com_Parse (&data);
+		if (token[0] == '}')
+			break;
+		if (!data)
+			GameError ("ED_ParseEntity: EOF without closing brace");
+
+		Q_strncpyz (keyName, token, sizeof(keyName));
+		
+		// Parse value	
+		token = Com_Parse (&data);
+		if (!data)
+			GameError ("ED_ParseEntity: EOF without closing brace");
+		if (token[0] == '}')
+			GameError ("ED_ParseEntity: closing brace without data");
+
+		init = true;	
+
+		// Keynames with a leading underscore are used for utility comments,
+		// and are immediately discarded by quake
+		if (keyName[0] == '_')
+			continue;
+		else if (Q_stricmp (keyName, "classname") == 0)
+			ent->classname = Mem_PoolStrDup (token, com_levelPool, 0);
+		else
+		{
+			// push it in the list for the entity
+			if (!ent->ParseData)
+				ent->ParseData = QNew (com_gamePool, 0) std::list<CKeyValuePair *> ();
+
+			ent->ParseData->push_back (QNew (com_gamePool, 0) CKeyValuePair (keyName, token));
+		}
+	}
+
+	if (!init)
+		memset (ent, 0, sizeof(*ent));
+
+	return data;
+}
+
+
+/*
+================
+G_FindTeams
+
+Chain together all entities with a matching team field.
+
+All but the first will have the FL_TEAMSLAVE flag set.
+All but the last will have the teamchain field set to the next one
+================
+*/
+void G_FindTeams (void)
+{
+	int		c = 0, c2 = 0;
+
+	CBaseEntity *e, *e2;
+	int i, j;
+	for (i = 1, e = g_edicts[i].Entity; i < globals.numEdicts; i++, e = g_edicts[i].Entity)
+	{
+		if (!e)
+			continue;
+		if (!e->IsInUse())
+			continue;
+		if (!e->gameEntity->team)
+			continue;
+		if (e->Flags & FL_TEAMSLAVE)
+			continue;
+
+		CBaseEntity *chain = e;
+		e->TeamMaster = e;
+
+		c++;
+		c2++;
+		for (j = i + 1, e2 = g_edicts[j].Entity; j < globals.numEdicts; j++, e2 = g_edicts[j].Entity)
+		{
+			if (!e2)
+				continue;
+			if (!e2->IsInUse())
+				continue;
+			if (!e2->gameEntity->team)
+				continue;
+			if (e2->Flags & FL_TEAMSLAVE)
+				continue;
+
+			if (!strcmp(e->gameEntity->team, e2->gameEntity->team))
+			{
+				c2++;
+				chain->TeamChain = e2;
+				e2->TeamMaster = e;
+
+				chain = e2;
+				e2->Flags |= FL_TEAMSLAVE;
+			}
+		}
+	}
+
+	DebugPrintf ("%i teams with %i entities\n", c, c2);
+}
+
+
+
+#include "cc_exceptionhandler.h"
+#include "cc_brushmodels.h"
+
+void InitPlayers ()
+{
+	// Set up the client entities
+	for (int i = 1; i <= game.maxclients; i++)
+	{
+		edict_t *ent = &g_edicts[i];
+
+		if (!ent->Entity)
+			ent->Entity = QNew (com_levelPool, 0) CPlayerEntity(i);
+	}
+}
+
+void InitEntities ()
+{
+	// Set up the world
+	edict_t *theWorld = &g_edicts[0];
+	if (!theWorld->Entity)
+		theWorld->Entity = QNew (com_levelPool, 0) CWorldEntity(0);
+
+	InitPlayers();
+}
+
+extern clientPersistent_t *SavedClients;
+char *gEntString;
+
+/*
+==============
+SpawnEntities
+
+Creates a server's entity / program execution context by
+parsing textual entity definitions out of an ent file.
+==============
+*/
+void CC_SpawnEntities (char *mapname, char *entities, char *spawnpoint)
+{
+	uint32 startTime = Sys_Milliseconds();
+
+	level.EntityNumber = 0;
+	InitMapCounter();
+
+	int skill_level = Clamp (skill->Integer(), 0, 3);
+	if (skill->Integer() != skill_level)
+		skill->Set(Q_VarArgs("%i", skill_level), true);
+
+	CPlayerEntity::SaveClientData ();
+
+	Mem_FreePool (com_levelPool);
+	gEntString = Mem_PoolStrDup(entities, com_levelPool, 0);
+
+	entities = CC_ParseSpawnEntities (mapname, entities);
+
+#ifdef MONSTERS_USE_PATHFINDING
+	InitNodes ();
+#endif
+
+	memset (&level, 0, sizeof(level));
+	memset (g_edicts, 0, game.maxentities * sizeof(g_edicts[0]));
+
+	Q_strncpyz (level.mapname, mapname, sizeof(level.mapname)-1);
+	Q_strncpyz (game.spawnpoint, spawnpoint, sizeof(game.spawnpoint)-1);
+
+	InitEntities ();
+
+	// set client fields on player ents
+	for (int i = 0; i < game.maxclients; i++)
+	{
+		// Reset the entity states
+		//g_edicts[i+1].Entity = SavedClients[i];
+		CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i+1].Entity);
+		memcpy (&Player->Client.pers, &SavedClients[i], sizeof(clientPersistent_t));
+		g_edicts[i+1].client = game.clients + i;
+	}
+
+	QDelete[] SavedClients;
+	SavedClients = NULL;
+
+	level.inhibit = 0;
+
+	// Parse ents
+	while (true)
+	{
+		// Parse the opening brace
+		char *token = Com_Parse (&entities);
+		if (!entities)
+			break;
+		if (token[0] != '{')
+			GameError ("ED_LoadFromFile: found %s when expecting {", token);
+
+_CC_DISABLE_DEPRECATION
+		edict_t *ent = (!World) ? g_edicts : G_Spawn();
+_CC_ENABLE_DEPRECATION
+
+		entities = ED_ParseEdict (entities, ent);
+
+		ED_CallSpawn (ent);
+		level.EntityNumber++;
+
+		if (!ent->inUse)
+		{
+			level.inhibit++;
+			if (ent->Entity && !ent->Entity->Freed)
+				assert (0);
+		}
+	}
+
+	DebugPrintf ("%i entities removed (out of %i total)\n", level.inhibit, level.EntityNumber);
+
+	G_FindTeams ();
+
+#ifdef MONSTERS_USE_PATHFINDING
+	LoadNodes();
+	LoadPathTable ();
+#endif
+
+	SetupTechSpawn();
+
+#ifdef CLEANCTF_ENABLED
+//ZOID
+	CTFSpawn();
+//ZOID
+#endif
+
+	DebugPrintf ("Finished server initialization in %d ms\n", Sys_Milliseconds() - startTime);
+}

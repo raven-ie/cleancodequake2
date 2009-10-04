@@ -49,9 +49,9 @@ void CheckDodge (CBaseEntity *self, vec3f &start, vec3f &dir, int speed)
 	tr = CTrace (start, end, self->gameEntity, CONTENTS_MASK_SHOT);
 
 #ifdef MONSTER_USE_ROGUE_AI
-	if ((tr.ent) && (tr.ent->Entity) && (tr.ent->Entity->EntityFlags & ENT_MONSTER) && (dynamic_cast<CHurtableEntity*>(tr.ent->Entity)->Health > 0) && IsInFront(tr.Ent, self))
+	if ((tr.ent) && (tr.ent->Entity) && (tr.ent->Entity->EntityFlags & ENT_MONSTER) && (entity_cast<CHurtableEntity>(tr.ent->Entity)->Health > 0) && IsInFront(tr.Ent, self))
 	{
-		CMonsterEntity *Monster = (dynamic_cast<CMonsterEntity*>(tr.ent->Entity));
+		CMonsterEntity *Monster = (entity_cast<CMonsterEntity>(tr.ent->Entity));
 		if (Monster->Enemy != self)
 			Monster->Enemy = self;
 
@@ -60,9 +60,9 @@ void CheckDodge (CBaseEntity *self, vec3f &start, vec3f &dir, int speed)
 		Monster->Monster->Dodge (self, eta, &tr);
 	}
 #else
-	if ((tr.ent) && (tr.ent->Entity) && (tr.ent->Entity->EntityFlags & ENT_MONSTER) && (dynamic_cast<CHurtableEntity*>(tr.ent->Entity)->Health > 0) && IsInFront(tr.Ent, self))
+	if ((tr.ent) && (tr.ent->Entity) && (tr.ent->Entity->EntityFlags & ENT_MONSTER) && (entity_cast<CHurtableEntity>(tr.ent->Entity)->Health > 0) && IsInFront(tr.Ent, self))
 	{
-		CMonsterEntity *Monster = (dynamic_cast<CMonsterEntity*>(tr.ent->Entity));
+		CMonsterEntity *Monster = (entity_cast<CMonsterEntity>(tr.ent->Entity));
 		if (Monster->Enemy != self)
 			Monster->Enemy = self;
 
@@ -80,8 +80,8 @@ CGrenade
 */
 enum // EGrenadeFlags
 {
-	GRENADE_HAND = 1,
-	GRENADE_HELD = 2,
+	GRENADE_HAND = BIT(0),
+	GRENADE_HELD = BIT(1),
 };
 CGrenade::CGrenade () :
 CBounceProjectile(),
@@ -103,12 +103,12 @@ void CGrenade::Explode ()
 
 	vec3f origin = State.GetOrigin ();
 	if (gameEntity->owner && gameEntity->owner->client)
-		dynamic_cast<CPlayerEntity*>(gameEntity->owner->Entity)->PlayerNoiseAt (origin, PNOISE_IMPACT);
+		entity_cast<CPlayerEntity>(gameEntity->owner->Entity)->PlayerNoiseAt (origin, PNOISE_IMPACT);
 
 	//FIXME: if we are onground then raise our Z just a bit since we are a point?
 	if (Enemy)
 	{
-		CHurtableEntity *HurtEnemy = dynamic_cast<CHurtableEntity*>(Enemy);
+		CHurtableEntity *HurtEnemy = entity_cast<CHurtableEntity>(Enemy);
 
 		vec3f v = (HurtEnemy->GetMins() + HurtEnemy->GetMaxs());
 		v = (origin - HurtEnemy->State.GetOrigin().MultiplyAngles (0.5f, v));
@@ -148,7 +148,7 @@ void CGrenade::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 		return;
 	}
 
-	if (!((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage))
+	if (!((other->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(other)->CanTakeDamage))
 	{
 		if (SpawnFlags & GRENADE_HAND)
 		{
@@ -255,10 +255,10 @@ void CBlasterProjectile::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface
 
 	vec3f origin = State.GetOrigin ();
 	if (gameEntity->owner->client)
-		dynamic_cast<CPlayerEntity*>(gameEntity->owner->Entity)->PlayerNoiseAt (origin, PNOISE_IMPACT);
+		entity_cast<CPlayerEntity>(gameEntity->owner->Entity)->PlayerNoiseAt (origin, PNOISE_IMPACT);
 
-	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
-		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, GetOwner(), Velocity, origin, plane ? plane->normal : vec3fOrigin, Damage, 1, DAMAGE_ENERGY, (SpawnFlags & 1) ? MOD_HYPERBLASTER : MOD_BLASTER);
+	if ((other->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(other)->CanTakeDamage)
+		entity_cast<CHurtableEntity>(other)->TakeDamage (this, GetOwner(), Velocity, origin, plane ? plane->normal : vec3fOrigin, Damage, 1, DAMAGE_ENERGY, (SpawnFlags & 1) ? MOD_HYPERBLASTER : MOD_BLASTER);
 	else
 		CTempEnt_Splashes::Blaster(origin, plane ? plane->normal : vec3fOrigin);
 
@@ -342,10 +342,10 @@ void CRocket::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 
 	vec3f origin = State.GetOrigin ();
 	if (gameEntity->owner->client)
-		dynamic_cast<CPlayerEntity*>(gameEntity->owner->Entity)->PlayerNoiseAt (origin, PNOISE_IMPACT);
+		entity_cast<CPlayerEntity>(gameEntity->owner->Entity)->PlayerNoiseAt (origin, PNOISE_IMPACT);
 
-	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
-		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, GetOwner(), Velocity, origin, (plane) ? plane->normal : vec3fOrigin, Damage, 0, 0, MOD_ROCKET);
+	if ((other->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(other)->CanTakeDamage)
+		entity_cast<CHurtableEntity>(other)->TakeDamage (this, GetOwner(), Velocity, origin, (plane) ? plane->normal : vec3fOrigin, Damage, 0, 0, MOD_ROCKET);
 /*	else
 	{
 		// don't throw any debris in net games
@@ -486,7 +486,7 @@ void CBFGBolt::Think ()
 			if ((game.mode & GAME_CTF) && (ent->EntityFlags & ENT_PLAYER) &&
 				(GetOwner() && (GetOwner()->EntityFlags & ENT_PLAYER)))
 			{
-				if ((dynamic_cast<CPlayerEntity*>(ent))->Client.resp.ctf_team == (dynamic_cast<CPlayerEntity*>(GetOwner()))->Client.resp.ctf_team)
+				if ((entity_cast<CPlayerEntity>(ent))->Client.resp.ctf_team == (entity_cast<CPlayerEntity>(GetOwner()))->Client.resp.ctf_team)
 					continue;
 			}
 	//ZOID
@@ -510,14 +510,14 @@ void CBFGBolt::Think ()
 
 				// hurt it if we can
 				//if ((tr.ent->takedamage) && !(tr.ent->flags & FL_IMMUNE_LASER) && (tr.ent != gameEntity->owner))
-				if (((tr.Ent->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(tr.Ent)->CanTakeDamage) && !(tr.Ent->Flags & FL_IMMUNE_LASER) && (tr.Ent != GetOwner()))
-					dynamic_cast<CHurtableEntity*>(tr.Ent)->TakeDamage (this, GetOwner(), dir, tr.EndPos, vec3fOrigin, dmg, 1, DAMAGE_ENERGY, MOD_BFG_LASER);
+				if (((tr.Ent->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(tr.Ent)->CanTakeDamage) && !(tr.Ent->Flags & FL_IMMUNE_LASER) && (tr.Ent != GetOwner()))
+					entity_cast<CHurtableEntity>(tr.Ent)->TakeDamage (this, GetOwner(), dir, tr.EndPos, vec3fOrigin, dmg, 1, DAMAGE_ENERGY, MOD_BFG_LASER);
 
 				// if we hit something that's not a monster or player we're done
 				//if (!(tr.ent->svFlags & SVF_MONSTER) && (!tr.ent->client))
 				if (!(tr.Ent->EntityFlags & ENT_MONSTER) && !(tr.Ent->EntityFlags & ENT_PLAYER))
 				{
-					CTempEnt_Splashes::Sparks (tr.EndPos, tr.Plane.normal, CTempEnt_Splashes::STLaserSparks, (CTempEnt_Splashes::ESplashType)State.GetSkinNum(), 4);
+					CTempEnt_Splashes::Sparks (tr.EndPos, tr.Plane.normal, CTempEnt_Splashes::ST_LASER_SPARKS, State.GetSkinNum(), 4);
 					break;
 				}
 
@@ -548,11 +548,11 @@ void CBFGBolt::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 
 	vec3f boltOrigin = State.GetOrigin();
 	if (gameEntity->owner->client)
-		dynamic_cast<CPlayerEntity*>(gameEntity->owner->Entity)->PlayerNoiseAt (boltOrigin, PNOISE_IMPACT);
+		entity_cast<CPlayerEntity>(gameEntity->owner->Entity)->PlayerNoiseAt (boltOrigin, PNOISE_IMPACT);
 
 	// core explosion - prevents firing it into the wall/floor
-	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
-		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (this, GetOwner(), Velocity, boltOrigin, (plane) ? plane->normal : vec3fOrigin, 200, 0, 0, MOD_BFG_BLAST);
+	if ((other->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(other)->CanTakeDamage)
+		entity_cast<CHurtableEntity>(other)->TakeDamage (this, GetOwner(), Velocity, boltOrigin, (plane) ? plane->normal : vec3fOrigin, 200, 0, 0, MOD_BFG_BLAST);
 	T_RadiusDamage(this, GetOwner(), 200, other, 100, MOD_BFG_BLAST);
 
 	PlaySound (CHAN_VOICE, SoundIndex ("weapons/bfg__x1b.wav"));
@@ -707,10 +707,10 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 		CTrace Trace = DoTrace (from, end, Ignore, Mask);
 
 		// Did we hit an entity?
-		if (Trace.ent && Trace.Ent && ((Trace.Ent->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(Trace.Ent)->CanTakeDamage))
+		if (Trace.ent && Trace.Ent && ((Trace.Ent->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(Trace.Ent)->CanTakeDamage))
 		{
 			// Convert to base entity
-			CHurtableEntity *Target = dynamic_cast<CHurtableEntity*>(Trace.Ent);
+			CHurtableEntity *Target = entity_cast<CHurtableEntity>(Trace.Ent);
 
 			// Hurt it
 			// Revision
@@ -976,14 +976,14 @@ void CBullet::DoWaterHit	(CTrace *Trace)
 	if (Trace->contents & CONTENTS_WATER)
 	{
 		if (strcmp(Trace->surface->name, "*brwater") == 0)
-			color = CTempEnt_Splashes::SPTMud;
+			color = CTempEnt_Splashes::SPT_MUD;
 		else
-			color = CTempEnt_Splashes::SPTWater;
+			color = CTempEnt_Splashes::SPT_WATER;
 	}
 	else if (Trace->contents & CONTENTS_SLIME)
-		color = CTempEnt_Splashes::SPTSlime;
+		color = CTempEnt_Splashes::SPT_SLIME;
 	else if (Trace->contents & CONTENTS_LAVA)
-		color = CTempEnt_Splashes::SPTLava;
+		color = CTempEnt_Splashes::SPT_LAVA;
 	else
 		return;
 
@@ -1072,10 +1072,10 @@ void CBullet::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 		CTrace Trace = DoTrace (from, end, Ignore, Mask);
 
 		// Did we hit an entity?
-		if (Trace.ent && Trace.Ent && ((Trace.Ent->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(Trace.Ent)->CanTakeDamage))
+		if (Trace.ent && Trace.Ent && ((Trace.Ent->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(Trace.Ent)->CanTakeDamage))
 		{
 			// Convert to base entity
-			CHurtableEntity *Target = dynamic_cast<CHurtableEntity*>(Trace.Ent);
+			CHurtableEntity *Target = entity_cast<CHurtableEntity>(Trace.Ent);
 
 			// Hurt it
 			// Revision
@@ -1337,7 +1337,7 @@ bool CMeleeWeapon::Fire(CBaseEntity *Entity, vec3f aim, int damage, int kick)
 	if (tr.fraction == 1.0)
 		return false;
 
-	if (!((tr.Ent->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(tr.Ent)->CanTakeDamage))
+	if (!((tr.Ent->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(tr.Ent)->CanTakeDamage))
 		return false;
 
 	// if it will hit any client/monster then hit the one we wanted to hit
@@ -1352,8 +1352,8 @@ bool CMeleeWeapon::Fire(CBaseEntity *Entity, vec3f aim, int damage, int kick)
 	dir = point - Enemy->State.GetOrigin();
 
 	// do the damage
-	if ((Hit->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(Hit)->CanTakeDamage)
-		dynamic_cast<CHurtableEntity*>(Hit)->TakeDamage (Entity, Entity, dir, point, vec3fOrigin, damage, kick/2, DAMAGE_NO_KNOCKBACK, MOD_HIT);
+	if ((Hit->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(Hit)->CanTakeDamage)
+		entity_cast<CHurtableEntity>(Hit)->TakeDamage (Entity, Entity, dir, point, vec3fOrigin, damage, kick/2, DAMAGE_NO_KNOCKBACK, MOD_HIT);
 
 	if (!(Hit->EntityFlags & ENT_MONSTER) && (!(Hit->EntityFlags & ENT_PLAYER)))
 		return false;
@@ -1361,7 +1361,7 @@ bool CMeleeWeapon::Fire(CBaseEntity *Entity, vec3f aim, int damage, int kick)
 	// do our special form of knockback here
 	if (Enemy->EntityFlags & ENT_PHYSICS)
 	{
-		CPhysicsEntity *PhysEnemy = dynamic_cast<CPhysicsEntity*>(Enemy);
+		CPhysicsEntity *PhysEnemy = entity_cast<CPhysicsEntity>(Enemy);
 		vec3f v = PhysEnemy->GetAbsMin().MultiplyAngles (0.5f, PhysEnemy->GetSize()) - point;
 		v.Normalize ();
 		PhysEnemy->Velocity = v.MultiplyAngles (kick, v);
@@ -1433,18 +1433,18 @@ void CGrappleEntity::GrapplePull()
 			Link ();
 		}
 		else if (Enemy->EntityFlags & ENT_PHYSICS)
-			Velocity = dynamic_cast<CPhysicsEntity*>(Enemy)->Velocity;
+			Velocity = entity_cast<CPhysicsEntity>(Enemy)->Velocity;
 
-		if (Enemy && ((Enemy->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(Enemy)->CanTakeDamage))
+		if (Enemy && ((Enemy->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(Enemy)->CanTakeDamage))
 		{
-			CHurtableEntity *Hurt = dynamic_cast<CHurtableEntity*>(Enemy);
+			CHurtableEntity *Hurt = entity_cast<CHurtableEntity>(Enemy);
 			if (!Hurt->CheckTeamDamage (Player))
 			{
 				Hurt->TakeDamage (this, Player, Velocity, State.GetOrigin(), vec3fOrigin, 1, 1, 0, MOD_GRAPPLE);
 				PlaySound (CHAN_WEAPON, SoundIndex("weapons/grapple/grhurt.wav"), volume);
 			}
 		}
-		if (Enemy && (Enemy->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(Enemy)->DeadFlag)
+		if (Enemy && (Enemy->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(Enemy)->DeadFlag)
 		{ // he died
 			ResetGrapple();
 			return;
@@ -1541,9 +1541,9 @@ void CGrappleEntity::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *
 	Velocity.Clear ();
 	Player->PlayerNoiseAt (State.GetOrigin(), PNOISE_IMPACT);
 
-	if ((other->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(other)->CanTakeDamage)
+	if ((other->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(other)->CanTakeDamage)
 	{
-		dynamic_cast<CHurtableEntity*>(other)->TakeDamage (other, this, Player, Velocity, State.GetOrigin(), (plane) ? plane->normal : vec3fOrigin, Damage, 1, 0, MOD_GRAPPLE);
+		entity_cast<CHurtableEntity>(other)->TakeDamage (other, this, Player, Velocity, State.GetOrigin(), (plane) ? plane->normal : vec3fOrigin, Damage, 1, 0, MOD_GRAPPLE);
 		ResetGrapple();
 		return;
 	}
@@ -1618,7 +1618,7 @@ public:
 		if (!(other->EntityFlags & ENT_HURTABLE))
 			return;
 
-		Attached = dynamic_cast<CHurtableEntity*>(other);
+		Attached = entity_cast<CHurtableEntity>(other);
 		Velocity.Clear ();
 		Offset = State.GetOrigin() - Attached->State.GetOrigin();
 

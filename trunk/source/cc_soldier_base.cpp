@@ -401,7 +401,7 @@ void CSoldierBase::Attack1_Refire1 ()
 	if (Entity->State.GetSkinNum() > 1)
 		return;
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= 0)
+	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health <= 0)
 		return;
 
 	if (!EnemyVis)
@@ -418,7 +418,7 @@ void CSoldierBase::Attack1_Refire2 ()
 	if (Entity->State.GetSkinNum() < 2)
 		return;
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= 0)
+	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health <= 0)
 		return;
 
 	if (!EnemyVis)
@@ -457,7 +457,7 @@ void CSoldierBase::Attack2_Refire1 ()
 	if (Entity->State.GetSkinNum() > 1)
 		return;
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= 0)
+	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health <= 0)
 		return;
 
 	if (!EnemyVis)
@@ -474,7 +474,7 @@ void CSoldierBase::Attack2_Refire2 ()
 	if (Entity->State.GetSkinNum() < 2)
 		return;
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= 0)
+	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health <= 0)
 		return;
 
 	if (!EnemyVis)
@@ -589,7 +589,7 @@ void CSoldierBase::Attack6_Refire ()
 	StopCharge ();
 #endif
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= 0)
+	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health <= 0)
 		return;
 
 	if (Range(Entity, Entity->Enemy) < RANGE_NEAR)
@@ -612,7 +612,7 @@ void CSoldierBase::Attack6_RefireBlaster ()
 	DoneDodge ();
 	StopCharge ();
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= 0)
+	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health <= 0)
 		return;
 
 	if (Range(Entity, Entity->Enemy) < RANGE_NEAR)

@@ -380,7 +380,6 @@ class CTriggerElevator : public CMapEntity, public CThinkableEntity, public CUsa
 {
 public:
 	CTrain			*MoveTarget;
-	bool			Usable;
 
 	CTriggerElevator ();
 	CTriggerElevator (int Index);
@@ -470,8 +469,6 @@ public:
 class CFuncWall : public CMapEntity, public CBrushModel, public CUsableEntity
 {
 public:
-	bool Usable;
-
 	CFuncWall ();
 	CFuncWall (int Index);
 
@@ -489,8 +486,6 @@ public:
 class CFuncObject : public CMapEntity, public CBrushModel, public CTossProjectile, public CTouchableEntity, public CUsableEntity
 {
 public:
-	bool Usable;
-
 	CFuncObject ();
 	CFuncObject (int Index);
 

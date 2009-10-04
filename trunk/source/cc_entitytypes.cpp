@@ -49,7 +49,7 @@ CanTakeDamage(false)
 
 const CEntityField CHurtableEntity::FieldsForParsing[] =
 {
-	CEntityField ("health", EntityMemberOffset(CHurtableEntity,Health), FTInteger),
+	CEntityField ("health", EntityMemberOffset(CHurtableEntity,Health), FT_INT),
 };
 const size_t CHurtableEntity::FieldsForParsingSize = FieldSize<CHurtableEntity>();
 
@@ -103,7 +103,7 @@ bool OnSameTeam (CPlayerEntity *ent1, CPlayerEntity *ent2)
 bool CHurtableEntity::CanDamage (CBaseEntity *inflictor)
 {
 // bmodels need special checking because their origin is 0,0,0
-	if ((EntityFlags & ENT_PHYSICS) && ((dynamic_cast<CPhysicsEntity*>(this))->PhysicsType == PHYSICS_PUSH))
+	if ((EntityFlags & ENT_PHYSICS) && ((entity_cast<CPhysicsEntity>(this))->PhysicsType == PHYSICS_PUSH))
 	{
 		vec3f dest = (GetAbsMin() + GetAbsMax()) * 0.5f;
 		CTrace trace (inflictor->State.GetOrigin(), dest, inflictor->gameEntity, CONTENTS_MASK_SOLID);
@@ -137,8 +137,8 @@ bool CHurtableEntity::CheckTeamDamage (CBaseEntity *attacker)
 //ZOID
 	if ((game.mode & GAME_CTF) && (EntityFlags & ENT_PLAYER) && (attacker->EntityFlags & ENT_PLAYER))
 	{
-		CPlayerEntity *Targ = dynamic_cast<CPlayerEntity*>(this);
-		CPlayerEntity *Attacker = dynamic_cast<CPlayerEntity*>(attacker);
+		CPlayerEntity *Targ = entity_cast<CPlayerEntity>(this);
+		CPlayerEntity *Attacker = entity_cast<CPlayerEntity>(attacker);
 		if (Targ->Client.resp.ctf_team == Attacker->Client.resp.ctf_team &&
 			(this != attacker))
 			return true;
@@ -163,8 +163,8 @@ int CHurtableEntity::CheckPowerArmor (vec3f &point, vec3f &normal, int damage, i
 
 	bool		IsClient = !!(EntityFlags & ENT_PLAYER),
 				IsMonster = !!(EntityFlags & ENT_MONSTER);
-	CPlayerEntity	*Player = (IsClient) ? dynamic_cast<CPlayerEntity*>(this) : NULL;
-	CMonsterEntity	*Monster = (IsMonster) ? dynamic_cast<CMonsterEntity*>(this) : NULL;
+	CPlayerEntity	*Player = (IsClient) ? entity_cast<CPlayerEntity>(this) : NULL;
+	CMonsterEntity	*Monster = (IsMonster) ? entity_cast<CMonsterEntity>(this) : NULL;
 
 	if (IsClient)
 	{
@@ -231,35 +231,69 @@ int CHurtableEntity::CheckPowerArmor (vec3f &point, vec3f &normal, int damage, i
 	return save;
 }
 
+#ifdef MONSTER_USE_ROGUE_AI
+/*
+ROGUE
+clean up heal targets for medic
+*/
+void CleanupHealTarget (CMonsterEntity *ent)
+{
+	ent->Monster->Healer = NULL;
+	ent->CanTakeDamage = true;
+	ent->Monster->AIFlags &= ~AI_RESURRECTING;
+	ent->Monster->SetEffects ();
+}
+#endif
+
 void CHurtableEntity::Killed (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 	if (Health < -999)
 		Health = -999;
 
 	Enemy = attacker;
+
+#ifdef MONSTER_USE_ROGUE_AI
+	if (EntityFlags & ENT_MONSTER)
+	{
+		CMonsterEntity *Monster = entity_cast<CMonsterEntity>(this);
+		if (Monster->Monster->AIFlags & AI_MEDIC)
+		{
+			if (Monster->Enemy)  // god, I hope so
+				CleanupHealTarget (entity_cast<CMonsterEntity>(Monster->Enemy));
+
+			// clean up self
+			Monster->Monster->AIFlags &= ~AI_MEDIC;
+			Monster->Enemy = attacker;
+		}
+	}
+#endif
+
 	if ((!DeadFlag) && (EntityFlags & ENT_MONSTER))
 	{
-		if (!((dynamic_cast<CMonsterEntity*>(this))->Monster->AIFlags & AI_GOOD_GUY))
+		if (!((entity_cast<CMonsterEntity>(this))->Monster->AIFlags & AI_GOOD_GUY))
 		{
 			level.killed_monsters++;
 			if ((game.mode == GAME_COOPERATIVE) && (attacker->EntityFlags & ENT_PLAYER))
-				(dynamic_cast<CPlayerEntity*>(attacker))->Client.resp.score++;
+				(entity_cast<CPlayerEntity>(attacker))->Client.resp.score++;
 			// medics won't heal monsters that they kill themselves
+
+#ifndef MONSTER_USE_ROGUE_AI
 			if (strcmp(attacker->gameEntity->classname, "monster_medic") == 0)
 				SetOwner (attacker);
+#endif
 		}
 	}
 
 	if ((EntityFlags & ENT_MONSTER) && (!DeadFlag))
 	{
 		if (EntityFlags & ENT_TOUCHABLE)
-			(dynamic_cast<CTouchableEntity*>(this))->Touchable = false;
+			(entity_cast<CTouchableEntity>(this))->Touchable = false;
 		if (EntityFlags & ENT_MONSTER)
-			(dynamic_cast<CMonsterEntity*>(this))->Monster->MonsterDeathUse();
+			(entity_cast<CMonsterEntity>(this))->Monster->MonsterDeathUse();
 	}
 
-	if (((EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(this)->CanTakeDamage))
-		(dynamic_cast<CHurtableEntity*>(this))->Die (inflictor, attacker, damage, point);
+	if (((EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(this)->CanTakeDamage))
+		(entity_cast<CHurtableEntity>(this))->Die (inflictor, attacker, damage, point);
 }
 
 void CHurtableEntity::DamageEffect (vec3f &dir, vec3f &point, vec3f &normal, int &damage, int &dflags)
@@ -267,7 +301,7 @@ void CHurtableEntity::DamageEffect (vec3f &dir, vec3f &point, vec3f &normal, int
 	if ((EntityFlags & ENT_MONSTER) || (EntityFlags & ENT_PLAYER))
 		CTempEnt_Splashes::Blood (point, normal);
 	else
-		CTempEnt_Splashes::Sparks (point, normal, (dflags & DAMAGE_BULLET) ? CTempEnt_Splashes::STBulletSparks : CTempEnt_Splashes::STSparks, CTempEnt_Splashes::SPTSparks);
+		CTempEnt_Splashes::Sparks (point, normal, (dflags & DAMAGE_BULLET) ? CTempEnt_Splashes::ST_BULLET_SPARKS : CTempEnt_Splashes::ST_SPARKS, CTempEnt_Splashes::SPT_SPARKS);
 }
 
 void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
@@ -284,7 +318,7 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 		return;
 
 	bool isClient = !!(EntityFlags & ENT_PLAYER);
-	CPlayerEntity *Player = (isClient) ? dynamic_cast<CPlayerEntity*>(this) : NULL;
+	CPlayerEntity *Player = (isClient) ? entity_cast<CPlayerEntity>(this) : NULL;
 	CClient *Client = (isClient) ? &(Player->Client) : NULL;
 
 	// friendly fire avoidance
@@ -294,7 +328,7 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 	{
 		if ((EntityFlags & ENT_PLAYER) && (attacker->EntityFlags & ENT_PLAYER))
 		{
-			if (OnSameTeam (Player, dynamic_cast<CPlayerEntity*>(attacker)))
+			if (OnSameTeam (Player, entity_cast<CPlayerEntity>(attacker)))
 			{
 				if (dmFlags.dfNoFriendlyFire)
 					damage = 0;
@@ -319,7 +353,7 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 // Paril revision: Allow multiple pellet weapons to take advantage of this too!
 	if (!(dflags & DAMAGE_RADIUS) && (EntityFlags & ENT_MONSTER) && (attacker->EntityFlags & ENT_PLAYER))
 	{
-		CMonsterEntity *Monster = dynamic_cast<CMonsterEntity*>(this);
+		CMonsterEntity *Monster = entity_cast<CMonsterEntity>(this);
 
 		if ((Health > 0) &&
 			(!Enemy && (Monster->BonusDamageTime <= level.framenum)) ||
@@ -338,15 +372,15 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 	{
 		if (isClient)
 		{
-			if (Client->pers.Tech && (Client->pers.Tech->TechType == CTech::TechAggressive))
+			if (Client->pers.Tech && (Client->pers.Tech->TechType == CTech::TECH_AGGRESSIVE))
 				Client->pers.Tech->DoAggressiveTech (Player, attacker, false, damage, knockback, dflags, mod, true);
 		}
 
 		if (attacker->EntityFlags & ENT_PLAYER)
 		{
-			CPlayerEntity *Atk = dynamic_cast<CPlayerEntity*>(attacker);
-			if (Atk->Client.pers.Tech && (Atk->Client.pers.Tech->TechType == CTech::TechAggressive))
-				dynamic_cast<CPlayerEntity*>(attacker)->Client.pers.Tech->DoAggressiveTech (Atk, Player, false, damage, knockback, dflags, mod, false);
+			CPlayerEntity *Atk = entity_cast<CPlayerEntity>(attacker);
+			if (Atk->Client.pers.Tech && (Atk->Client.pers.Tech->TechType == CTech::TECH_AGGRESSIVE))
+				entity_cast<CPlayerEntity>(attacker)->Client.pers.Tech->DoAggressiveTech (Atk, Player, false, damage, knockback, dflags, mod, false);
 		}
 	}
 
@@ -356,7 +390,7 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 // figure momentum add
 	if (knockback && !(dflags & DAMAGE_NO_KNOCKBACK) && (EntityFlags & ENT_PHYSICS))
 	{
-		CPhysicsEntity *Phys = dynamic_cast<CPhysicsEntity*>(this);
+		CPhysicsEntity *Phys = entity_cast<CPhysicsEntity>(this);
 		if (!(Phys->PhysicsType == PHYSICS_NONE ||
 			Phys->PhysicsType == PHYSICS_BOUNCE ||
 			Phys->PhysicsType == PHYSICS_PUSH ||
@@ -372,7 +406,7 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 	{
 		take = 0;
 		save = damage;
-		CTempEnt_Splashes::Sparks (point, normal, (dflags & DAMAGE_BULLET) ? CTempEnt_Splashes::STBulletSparks : CTempEnt_Splashes::STSparks, CTempEnt_Splashes::SPTSparks);
+		CTempEnt_Splashes::Sparks (point, normal, (dflags & DAMAGE_BULLET) ? CTempEnt_Splashes::ST_BULLET_SPARKS : CTempEnt_Splashes::ST_SPARKS, CTempEnt_Splashes::SPT_SPARKS);
 	}
 
 	// check for invincibility
@@ -391,7 +425,7 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 //ZOID
 //team armor protect
 	if ((game.mode & GAME_CTF) && isClient && (attacker->EntityFlags & ENT_PLAYER) &&
-		(Client->resp.ctf_team == (dynamic_cast<CPlayerEntity*>(attacker))->Client.resp.ctf_team) &&
+		(Client->resp.ctf_team == (entity_cast<CPlayerEntity>(attacker))->Client.resp.ctf_team) &&
 		(this != attacker) && dmFlags.dfCtfArmorProtect)
 		psave = asave = 0;
 	else
@@ -405,7 +439,7 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 		{
 			if (Client->pers.Armor)
 			{
-				asave = Client->pers.Armor->CheckArmor (dynamic_cast<CPlayerEntity*>(this), point, normal, take, dflags);
+				asave = Client->pers.Armor->CheckArmor (entity_cast<CPlayerEntity>(this), point, normal, take, dflags);
 				take -= asave;
 			}
 		}
@@ -424,15 +458,15 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 	{
 		if (isClient)
 		{
-			if (Client->pers.Tech && (Client->pers.Tech->TechType == CTech::TechAggressive))
-				Client->pers.Tech->DoAggressiveTech (dynamic_cast<CPlayerEntity*>(this), attacker, true, take, knockback, dflags, mod, true);
+			if (Client->pers.Tech && (Client->pers.Tech->TechType == CTech::TECH_AGGRESSIVE))
+				Client->pers.Tech->DoAggressiveTech (entity_cast<CPlayerEntity>(this), attacker, true, take, knockback, dflags, mod, true);
 		}
 
 		if (attacker->EntityFlags & ENT_PLAYER)
 		{
-			CPlayerEntity *Atk = dynamic_cast<CPlayerEntity*>(attacker);
-			if (Atk->Client.pers.Tech && (Atk->Client.pers.Tech->TechType == CTech::TechAggressive))
-				dynamic_cast<CPlayerEntity*>(attacker)->Client.pers.Tech->DoAggressiveTech (Atk, dynamic_cast<CPlayerEntity*>(this), true, damage, knockback, dflags, mod, false);
+			CPlayerEntity *Atk = entity_cast<CPlayerEntity>(attacker);
+			if (Atk->Client.pers.Tech && (Atk->Client.pers.Tech->TechType == CTech::TECH_AGGRESSIVE))
+				entity_cast<CPlayerEntity>(attacker)->Client.pers.Tech->DoAggressiveTech (Atk, entity_cast<CPlayerEntity>(this), true, damage, knockback, dflags, mod, false);
 		}
 	}
 
@@ -443,7 +477,7 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 #ifdef CLEANCTF_ENABLED
 //ZOID
 	if ((game.mode & GAME_CTF) && (isClient && (attacker->EntityFlags & ENT_PLAYER)))
-		CTFCheckHurtCarrier((dynamic_cast<CPlayerEntity*>(this)), (dynamic_cast<CPlayerEntity*>(attacker)));
+		CTFCheckHurtCarrier((entity_cast<CPlayerEntity>(this)), (entity_cast<CPlayerEntity>(attacker)));
 //ZOID
 #endif
 
@@ -452,7 +486,8 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 	{
 		DamageEffect (dir, point, normal, take, dflags);
 
-		Health -= take;
+		if (!CTFMatchSetup())
+			Health -= take;
 			
 		if (Health <= 0)
 		{
@@ -465,7 +500,7 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 
 	if ((EntityFlags & ENT_MONSTER))
 	{
-		CMonster *Monster = (dynamic_cast<CMonsterEntity*>(this))->Monster;
+		CMonster *Monster = (entity_cast<CMonsterEntity>(this))->Monster;
 		Monster->ReactToDamage (attacker);
 		if (!(Monster->AIFlags & AI_DUCKED) && take)
 		{
@@ -474,7 +509,7 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 				Monster->PainDebounceTime = level.framenum + 50;
 		}
 	}
-	else if (take)
+	else if (((EntityFlags & ENT_PLAYER) && take && !CTFMatchSetup()) || take)
 		Pain (attacker, knockback, take);
 
 	// add to the damage inflicted on a player this frame
@@ -495,8 +530,8 @@ void CHurtableEntity::TakeDamage (CBaseEntity *targ, CBaseEntity *inflictor,
 								vec3f normal, int damage, int knockback,
 								int dflags, EMeansOfDeath mod)
 {
-	if ((targ->EntityFlags & ENT_HURTABLE) && dynamic_cast<CHurtableEntity*>(targ)->CanTakeDamage)
-		(dynamic_cast<CHurtableEntity*>(targ))->TakeDamage (inflictor, attacker, dir, point, normal, damage, knockback, dflags, mod);
+	if ((targ->EntityFlags & ENT_HURTABLE) && entity_cast<CHurtableEntity>(targ)->CanTakeDamage)
+		(entity_cast<CHurtableEntity>(targ))->TakeDamage (inflictor, attacker, dir, point, normal, damage, knockback, dflags, mod);
 }
 
 CThinkableEntity::CThinkableEntity () :
@@ -594,24 +629,20 @@ CTrace CPhysicsEntity::PushEntity (vec3f &push)
 
 void CPhysicsEntity::Impact (CTrace *trace)
 {
-	CBaseEntity	*e2;
-
 	if (!trace->ent->Entity)
 		return;
 
-	e2 = dynamic_cast<CBaseEntity*>(trace->ent->Entity);
-
 	if (GetSolid() != SOLID_NOT && (EntityFlags & ENT_TOUCHABLE))
 	{
-		CTouchableEntity *Touched = dynamic_cast<CTouchableEntity*>(this);
+		CTouchableEntity *Touched = entity_cast<CTouchableEntity>(this);
 
 		if (Touched->Touchable)
-			Touched->Touch (e2, &trace->plane, trace->surface);
+			Touched->Touch (trace->Ent, &trace->plane, trace->surface);
 	}
 
-	if ((e2->EntityFlags & ENT_TOUCHABLE) && e2->GetSolid() != SOLID_NOT)
+	if ((trace->Ent->EntityFlags & ENT_TOUCHABLE) && trace->Ent->GetSolid() != SOLID_NOT)
 	{
-		CTouchableEntity *Touched = dynamic_cast<CTouchableEntity*>(e2);
+		CTouchableEntity *Touched = entity_cast<CTouchableEntity>(trace->Ent);
 
 		if (Touched->Touchable)
 			Touched->Touch (this, NULL, NULL);
@@ -1049,7 +1080,7 @@ bool CStepPhysics::Run ()
 
 	// airborn monsters should always check for ground
 	if (!GroundEntity && (EntityFlags & ENT_MONSTER))
-		(dynamic_cast<CMonsterEntity*>(this))->Monster->CheckGround ();
+		(entity_cast<CMonsterEntity>(this))->Monster->CheckGround ();
 	else
 		CheckGround (); // Specific non-monster checkground
 
@@ -1104,7 +1135,7 @@ bool CStepPhysics::Run ()
 	{
 		// apply friction
 		// let dead monsters who aren't completely onground slide
-		if ((wasonground) || (Flags & (FL_SWIM|FL_FLY)) && !(((EntityFlags & ENT_MONSTER) && dynamic_cast<CMonsterEntity*>(this)->Health <= 0 && !(dynamic_cast<CMonsterEntity*>(this))->Monster->CheckBottom())))
+		if ((wasonground) || (Flags & (FL_SWIM|FL_FLY)) && !(((EntityFlags & ENT_MONSTER) && entity_cast<CMonsterEntity>(this)->Health <= 0 && !(entity_cast<CMonsterEntity>(this))->Monster->CheckBottom())))
 		{
 			speed = sqrtf(Velocity.X*Velocity.X + Velocity.Y*Velocity.Y);
 			if (speed)
@@ -1238,7 +1269,7 @@ bool Push (std::vector<CPushed> &Pushed, CBaseEntity *Entity, vec3f &move, vec3f
 
 	// save the pusher's original position
 	Pushed.push_back (CPushed (Entity,
-	(Entity->EntityFlags & ENT_PLAYER) ? (dynamic_cast<CPlayerEntity*>(Entity))->Client.PlayerState.GetPMove()->deltaAngles[YAW] : 0,
+	(Entity->EntityFlags & ENT_PLAYER) ? (entity_cast<CPlayerEntity>(Entity))->Client.PlayerState.GetPMove()->deltaAngles[YAW] : 0,
 	Entity->State.GetOrigin(), Entity->State.GetAngles()));
 
 	// move the pusher to it's final position
@@ -1259,7 +1290,7 @@ bool Push (std::vector<CPushed> &Pushed, CBaseEntity *Entity, vec3f &move, vec3f
 
 		if (Check->EntityFlags & ENT_PHYSICS)
 		{
-			CPhysicsEntity *CheckPhys = dynamic_cast<CPhysicsEntity*>(Check);
+			CPhysicsEntity *CheckPhys = entity_cast<CPhysicsEntity>(Check);
 			if (CheckPhys->PhysicsType == PHYSICS_PUSH
 				|| CheckPhys->PhysicsType == PHYSICS_STOP
 				|| CheckPhys->PhysicsType == PHYSICS_NONE
@@ -1290,7 +1321,7 @@ bool Push (std::vector<CPushed> &Pushed, CBaseEntity *Entity, vec3f &move, vec3f
 				continue;
 		}
 
-		if ((dynamic_cast<CPhysicsEntity*>(Entity)->PhysicsType == PHYSICS_PUSH) || (Check->GroundEntity == Entity))
+		if ((entity_cast<CPhysicsEntity>(Entity)->PhysicsType == PHYSICS_PUSH) || (Check->GroundEntity == Entity))
 		{
 			// move this entity
 			CPushed PushedEntity (Check, 0, Check->State.GetOrigin(), Check->State.GetAngles());
@@ -1299,7 +1330,7 @@ bool Push (std::vector<CPushed> &Pushed, CBaseEntity *Entity, vec3f &move, vec3f
 			Check->State.SetOrigin (Check->State.GetOrigin() + move);
 			if (Check->EntityFlags & ENT_PLAYER)
 			{
-				CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(Check);
+				CPlayerEntity *Player = entity_cast<CPlayerEntity>(Check);
 				Player->Client.PlayerState.GetPMove()->deltaAngles[YAW] += amove[YAW];
 
 				//r1: dead-body-on-lift / other random view distortion fix
@@ -1355,7 +1386,7 @@ bool Push (std::vector<CPushed> &Pushed, CBaseEntity *Entity, vec3f &move, vec3f
 			PushedEntity.Entity->State.SetOrigin (PushedEntity.Origin);
 			PushedEntity.Entity->State.SetAngles (PushedEntity.Angles);
 			if (PushedEntity.Entity->EntityFlags & ENT_PLAYER)
-				(dynamic_cast<CPlayerEntity*>(PushedEntity.Entity))->Client.PlayerState.GetPMove()->deltaAngles[YAW] = PushedEntity.DeltaYaw;
+				(entity_cast<CPlayerEntity>(PushedEntity.Entity))->Client.PlayerState.GetPMove()->deltaAngles[YAW] = PushedEntity.DeltaYaw;
 			PushedEntity.Entity->Link ();
 		}
 
@@ -1390,7 +1421,7 @@ bool CPushPhysics::Run ()
 		if (!(part->EntityFlags & ENT_PHYSICS))
 			continue;
 
-		CPhysicsEntity *Phys = dynamic_cast<CPhysicsEntity*>(part);
+		CPhysicsEntity *Phys = entity_cast<CPhysicsEntity>(part);
 
 		if ((Phys->Velocity.X || Phys->Velocity.Y || Phys->Velocity.Z) ||
 			(Phys->AngularVelocity.X || Phys->AngularVelocity.Y || Phys->AngularVelocity.Z))
@@ -1418,7 +1449,7 @@ bool CPushPhysics::Run ()
 		{
 			if (mv->EntityFlags & ENT_THINKABLE)
 			{
-				CThinkableEntity *Thinkable = dynamic_cast<CThinkableEntity*>(mv);
+				CThinkableEntity *Thinkable = entity_cast<CThinkableEntity>(mv);
 
 				if (Thinkable->NextThink > 0)
 					Thinkable->NextThink += FRAMETIME;
@@ -1428,7 +1459,7 @@ bool CPushPhysics::Run ()
 		// if the pusher has a "blocked" function, call it
 		// otherwise, just stay in place until the obstacle is gone
 		if ((part->EntityFlags & ENT_BLOCKABLE) && obstacle)
-			(dynamic_cast<CBlockableEntity*>(part))->Blocked (obstacle);
+			(entity_cast<CBlockableEntity>(part))->Blocked (obstacle);
 	}
 	else
 	{
@@ -1437,7 +1468,7 @@ bool CPushPhysics::Run ()
 		{
 			if (part->EntityFlags & ENT_THINKABLE)
 			{
-				CThinkableEntity *Thinkable = dynamic_cast<CThinkableEntity*>(part);
+				CThinkableEntity *Thinkable = entity_cast<CThinkableEntity>(part);
 				Thinkable->RunThink ();
 			}
 		}
@@ -1480,7 +1511,8 @@ CBaseEntity (Index)
 CUsableEntity::CUsableEntity () :
 CBaseEntity (),
 NoiseIndex (0),
-Delay (0)
+Delay (0),
+Usable (true)
 {
 	EntityFlags |= ENT_USABLE;
 }
@@ -1488,16 +1520,17 @@ Delay (0)
 CUsableEntity::CUsableEntity (int Index) :
 CBaseEntity (Index),
 NoiseIndex (0),
-Delay (0)
+Delay (0),
+Usable (true)
 {
 	EntityFlags |= ENT_USABLE;
 }
 
 const CEntityField CUsableEntity::FieldsForParsing[] =
 {
-	CEntityField ("message", EntityMemberOffset(CUsableEntity,Message), FTStringL),
-	CEntityField ("noise", EntityMemberOffset(CUsableEntity,NoiseIndex), FTStringToSound),
-	CEntityField ("delay", EntityMemberOffset(CUsableEntity,Delay), FTTime),
+	CEntityField ("message", EntityMemberOffset(CUsableEntity,Message), FT_LEVEL_STRING),
+	CEntityField ("noise", EntityMemberOffset(CUsableEntity,NoiseIndex), FT_SOUND_INDEX),
+	CEntityField ("delay", EntityMemberOffset(CUsableEntity,Delay), FT_FRAMENUMBER),
 };
 const size_t CUsableEntity::FieldsForParsingSize = FieldSize<CUsableEntity>();
 
@@ -1563,7 +1596,7 @@ void CUsableEntity::UseTargets (CBaseEntity *activator, char *Message)
 //
 	if ((Message) && (activator->EntityFlags & ENT_PLAYER))
 	{
-		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(activator);
+		CPlayerEntity *Player = entity_cast<CPlayerEntity>(activator);
 		Player->PrintToClient (PRINT_CENTER, "%s", Message);
 		Player->PlaySound (CHAN_AUTO, (NoiseIndex) ? NoiseIndex : SoundIndex ("misc/talk1.wav"));
 	}
@@ -1605,7 +1638,12 @@ void CUsableEntity::UseTargets (CBaseEntity *activator, char *Message)
 			if (Ent == this)
 				DebugPrintf ("WARNING: Entity used itself.\n");
 			else if (Ent->EntityFlags & ENT_USABLE)
-				(dynamic_cast<CUsableEntity*>(Ent))->Use (this, activator);
+			{
+				CUsableEntity *Used = entity_cast<CUsableEntity>(Ent);
+				
+				if (Used->Usable)
+					Used->Use (this, activator);
+			}
 			if (!IsInUse())
 			{
 				DebugPrintf("entity was removed while using targets\n");

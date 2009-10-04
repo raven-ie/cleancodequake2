@@ -697,7 +697,6 @@ void Cmd_Give_f (CPlayerEntity *ent)
 // This is a different style of "give".
 // Allows you to spawn the item instead of giving it.
 // Also, you can spawn monsters and other goodies from here.
-void ED_CallSpawn (edict_t *ent);
 void Cmd_Give (CPlayerEntity *ent)
 {
 	// Handle give all from old give.
@@ -719,15 +718,12 @@ void Cmd_Give (CPlayerEntity *ent)
 	if (PointContents(Origin) & CONTENTS_SOLID)
 		return;
 
-	edict_t *Spawned = G_Spawn();
-
-	Spawned->classname = Mem_PoolStrDup (ArgGetConcatenatedString(), com_levelPool, 0);
-	ED_CallSpawn (Spawned);
-	if (Spawned && Spawned->inUse)
+	CBaseEntity *Spawned = CreateEntityFromClassname(ArgGetConcatenatedString());
+	if (Spawned && Spawned->IsInUse())
 	{
-		Spawned->Entity->State.SetOrigin (Origin);
-		Spawned->Entity->State.SetAngles (Angles);
+		Spawned->State.SetOrigin (Origin);
+		Spawned->State.SetAngles (Angles);
 
-		Spawned->Entity->Link ();
+		Spawned->Link ();
 	}
 }

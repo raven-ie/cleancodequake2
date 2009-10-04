@@ -117,7 +117,7 @@ public:
 		gameEntity->item = item;
 		NextThink = level.framenum + 2;    // items start after other solids
 		ThinkState = ITS_DROPTOFLOOR;
-		NoPhysics = true;
+		PhysicsType = PHYSICS_NONE;
 
 		State.SetEffects(item->EffectFlags);
 		State.SetRenderEffects(RF_GLOW);

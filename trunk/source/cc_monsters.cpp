@@ -136,14 +136,14 @@ void CMonster::MoveToPath (float Dist)
 			{
 			case NODE_DOOR:
 					{
-						CDoor *Door = dynamic_cast<CDoor*>(P_CurrentNode->LinkedEntity); // get the plat
+						CDoor *Door = entity_cast<CDoor>(P_CurrentNode->LinkedEntity); // get the plat
 						Door->Use (Entity, Entity);
 					}
 					Stand (); // We stand, and wait.
 				break;
 			case NODE_PLATFORM:
 				{
-					CPlatForm *Plat = dynamic_cast<CPlatForm*>(P_CurrentNode->LinkedEntity); // get the plat
+					CPlatForm *Plat = entity_cast<CPlatForm>(P_CurrentNode->LinkedEntity); // get the plat
 					// If we reached the node, but the platform isn't down, go back two nodes
 					if (Plat->MoveState != STATE_BOTTOM)
 					{
@@ -175,7 +175,7 @@ void CMonster::MoveToPath (float Dist)
 				// In two goals, do we reach the platform node?
 				if (P_CurrentPath->Path[P_CurrentNodeIndex-1]->Type == NODE_PLATFORM)
 				{
-					CPlatForm *Plat = dynamic_cast<CPlatForm*>(P_CurrentPath->Path[P_CurrentNodeIndex-1]->LinkedEntity); // get the plat
+					CPlatForm *Plat = entity_cast<CPlatForm>(P_CurrentPath->Path[P_CurrentNodeIndex-1]->LinkedEntity); // get the plat
 					// Is it at bottom?
 					if (Plat->MoveState != STATE_BOTTOM)
 						Stand (); // We wait till it comes down
@@ -354,7 +354,7 @@ void AI_SetSightClient ()
 		check++;
 		if (check > game.maxclients)
 			check = 1;
-		CPlayerEntity *ent = dynamic_cast<CPlayerEntity*>(g_edicts[check].Entity);
+		CPlayerEntity *ent = entity_cast<CPlayerEntity>(g_edicts[check].Entity);
 		if (ent->IsInUse()
 			&& ent->Health > 0
 			&& !(ent->Flags & FL_NOTARGET) )
@@ -1126,14 +1126,6 @@ void CMonster::MonsterStart ()
 
 	Entity->State.SetOldOrigin(Entity->State.GetOrigin());
 
-	if (st.item)
-	{
-		Entity->gameEntity->item = FindItemByClassname (st.item);
-		if (!Entity->gameEntity->item)
-			MapPrint (MAPPRINT_WARNING, Entity, Entity->State.GetOrigin(), "Bad item: \"%s\"\n", st.item);
-			//gi.dprintf("%s at (%f %f %f) has bad item: %s\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2], st.item);
-	}
-
 	// randomize what frame they start on
 	if (CurrentMove)
 		Entity->State.SetFrame(CurrentMove->FirstFrame + (irandom(CurrentMove->LastFrame - CurrentMove->FirstFrame + 1)));
@@ -1195,7 +1187,7 @@ void CMonster::MonsterTriggeredSpawn ()
 	vec3f newOrigin = Entity->State.GetOrigin();
 	newOrigin.Z += 1;
 	Entity->State.SetOrigin (newOrigin);
-	KillBox (Entity);
+	Entity->KillBox ();
 
 	Entity->SetSolid (SOLID_BBOX);
 	Entity->PhysicsDisabled = false;
@@ -1221,7 +1213,7 @@ bool CMonster::FriendlyInLine (vec3f &Origin, vec3f &Direction)
 	CTrace trace = CTrace(Origin, end, Entity->gameEntity, CONTENTS_MONSTER);
 
 	if (trace.fraction <= 0.5 && trace.ent && (trace.ent->Entity && (trace.ent->Entity->EntityFlags & ENT_MONSTER)) &&
-		(dynamic_cast<CMonsterEntity*>(trace.Ent)->Enemy != Entity))
+		(entity_cast<CMonsterEntity>(trace.Ent)->Enemy != Entity))
 		return true;
 	return false;
 }
@@ -1398,7 +1390,7 @@ bool CMonster::CheckAttack ()
 	float	chance;
 	CTrace	tr;
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0)
+	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0)
 	{
 	// see if any entities are in the way of the shot
 		spot1 = Entity->State.GetOrigin();
@@ -1481,7 +1473,7 @@ bool CMonster::CheckAttack ()
 #else
 	float	chance;
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0)
+	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0)
 	{
 	// see if any entities are in the way of the shot
 		vec3f	spot1, spot2;
@@ -1735,7 +1727,7 @@ bool CMonster::AI_CheckAttack()
 		hesDeadJim = true;
 	else if (AIFlags & AI_MEDIC)
 	{
-		if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0)
+		if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0)
 		{
 			hesDeadJim = true;
 			AIFlags &= ~AI_MEDIC;
@@ -1745,12 +1737,12 @@ bool CMonster::AI_CheckAttack()
 	{
 		if (AIFlags & AI_BRUTAL)
 		{
-			if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= -80)
+			if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health <= -80)
 				hesDeadJim = true;
 		}
 		else
 		{
-			if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= 0)
+			if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health <= 0)
 				hesDeadJim = true;
 		}
 	}
@@ -1759,7 +1751,7 @@ bool CMonster::AI_CheckAttack()
 	{
 		Entity->Enemy = NULL;
 	// FIXME: look all around for other targets
-		if (Entity->OldEnemy && dynamic_cast<CHurtableEntity*>(Entity->OldEnemy)->Health > 0)
+		if (Entity->OldEnemy && entity_cast<CHurtableEntity>(Entity->OldEnemy)->Health > 0)
 		{
 			Entity->Enemy = Entity->OldEnemy;
 			Entity->OldEnemy = NULL;
@@ -1863,7 +1855,7 @@ bool CMonster::AI_CheckAttack()
 	}
 	else if (AIFlags & AI_MEDIC)
 	{
-		if (!(Entity->Enemy->IsInUse()) || (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0))
+		if (!(Entity->Enemy->IsInUse()) || (entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0))
 		{
 			hesDeadJim = true;
 //			self->monsterinfo.aiflags &= ~AI_MEDIC;
@@ -1873,12 +1865,12 @@ bool CMonster::AI_CheckAttack()
 	{
 		if (AIFlags & AI_BRUTAL)
 		{
-			if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= -80)
+			if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health <= -80)
 				hesDeadJim = true;
 		}
 		else
 		{
-			if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health <= 0)
+			if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health <= 0)
 				hesDeadJim = true;
 		}
 	}
@@ -1888,7 +1880,7 @@ bool CMonster::AI_CheckAttack()
 		AIFlags &= ~AI_MEDIC;
 		Entity->Enemy = NULL;
 	// FIXME: look all around for other targets
-		if (Entity->OldEnemy && dynamic_cast<CHurtableEntity*>(Entity->OldEnemy)->Health > 0)
+		if (Entity->OldEnemy && entity_cast<CHurtableEntity>(Entity->OldEnemy)->Health > 0)
 		{
 			Entity->Enemy = Entity->OldEnemy;
 			Entity->OldEnemy = NULL;
@@ -2616,14 +2608,14 @@ void CMonster::AI_Stand (float Dist)
 		// Assuming we got here because we're waiting for something.
 		if (P_CurrentNode->Type == NODE_DOOR || P_CurrentNode->Type == NODE_PLATFORM)
 		{
-			CBrushModel *Door = dynamic_cast<CBrushModel*>(P_CurrentNode->LinkedEntity);
+			CBrushModel *Door = entity_cast<CBrushModel>(P_CurrentNode->LinkedEntity);
 			if (Door->MoveState == STATE_TOP)
 				Run(); // We can go again!
 		}
 		// In two goals, do we reach the platform node?
 		else if (P_CurrentPath->Path[P_CurrentNodeIndex-1]->Type == NODE_PLATFORM)
 		{
-			CPlatForm *Plat = dynamic_cast<CPlatForm*>(P_CurrentPath->Path[P_CurrentNodeIndex-1]->LinkedEntity); // get the plat
+			CPlatForm *Plat = entity_cast<CPlatForm>(P_CurrentPath->Path[P_CurrentNodeIndex-1]->LinkedEntity); // get the plat
 			// Is it at bottom?
 			if (Plat->MoveState == STATE_BOTTOM)
 				Run (); // Go!
@@ -2684,14 +2676,14 @@ void CMonster::AI_Stand (float Dist)
 		// Assuming we got here because we're waiting for something.
 		if (P_CurrentNode->Type == NODE_DOOR || P_CurrentNode->Type == NODE_PLATFORM)
 		{
-			CBrushModel *Door = dynamic_cast<CBrushModel*>(P_CurrentNode->LinkedEntity);
+			CBrushModel *Door = entity_cast<CBrushModel>(P_CurrentNode->LinkedEntity);
 			if (Door->MoveState == STATE_TOP)
 				Run(); // We can go again!
 		}
 		// In two goals, do we reach the platform node?
 		else if (P_CurrentPath->Path[P_CurrentNodeIndex-1]->Type == NODE_PLATFORM)
 		{
-			CPlatForm *Plat = dynamic_cast<CPlatForm*>(P_CurrentPath->Path[P_CurrentNodeIndex-1]->LinkedEntity); // get the plat
+			CPlatForm *Plat = entity_cast<CPlatForm>(P_CurrentPath->Path[P_CurrentNodeIndex-1]->LinkedEntity); // get the plat
 			// Is it at bottom?
 			if (Plat->MoveState == STATE_BOTTOM)
 				Run (); // Go!
@@ -2781,7 +2773,7 @@ void CMonster::ReactToDamage (CBaseEntity *attacker)
 	// or another good guy, do not get mad at them
 	if (AIFlags & AI_GOOD_GUY)
 	{
-		if ((attacker->EntityFlags & ENT_PLAYER) || ((attacker->EntityFlags & ENT_MONSTER) && (dynamic_cast<CMonsterEntity*>(attacker))->Monster->AIFlags & AI_GOOD_GUY))
+		if ((attacker->EntityFlags & ENT_PLAYER) || ((attacker->EntityFlags & ENT_MONSTER) && (entity_cast<CMonsterEntity>(attacker))->Monster->AIFlags & AI_GOOD_GUY))
 			return;
 	}
 

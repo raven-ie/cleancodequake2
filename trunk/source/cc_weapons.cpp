@@ -55,7 +55,7 @@ VWepModel(VWepModel)
 
 CAmmo::CAmmo (char *Classname, char *WorldModel, int EffectFlags,
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
-			   char *Precache, int Quantity, EAmmoTag Tag, CWeapon *Weapon, int Amount, char *VWepModel) :
+			   char *Precache, int Quantity, CAmmo::EAmmoTag Tag, CWeapon *Weapon, int Amount, char *VWepModel) :
 CBaseItem (Classname, WorldModel, EffectFlags, PickupSound, Icon, Name, Flags,
 		   Precache),
 Quantity(Quantity),
@@ -172,7 +172,7 @@ void CWeaponItem::Drop (CPlayerEntity *ent)
 		ent->Client.pers.Weapon->NoAmmoWeaponChange(ent);
 }
 
-int maxBackpackAmmoValues[AMMOTAG_MAX] =
+int maxBackpackAmmoValues[CAmmo::AMMOTAG_MAX] =
 {
 	200,
 	300,
@@ -181,7 +181,7 @@ int maxBackpackAmmoValues[AMMOTAG_MAX] =
 	300,
 	100
 };
-int maxBandolierAmmoValues[AMMOTAG_MAX] =
+int maxBandolierAmmoValues[CAmmo::AMMOTAG_MAX] =
 {
 	150,
 	250,
@@ -319,7 +319,7 @@ public:
 		gameEntity->item = item;
 		NextThink = level.framenum + 2;    // items start after other solids
 		ThinkState = ITS_DROPTOFLOOR;
-		NoPhysics = true;
+		PhysicsType = PHYSICS_NONE;
 
 		State.SetEffects(item->EffectFlags);
 		State.SetRenderEffects(RF_GLOW);
@@ -345,12 +345,12 @@ LINK_ITEM_TO_CLASS (weapon_bfg, CItemEntity);
 
 void AddAmmoToList ()
 {
-	NItems::Shells = QNew (com_gamePool, 0) CAmmo("ammo_shells", "models/items/ammo/shells/medium/tris.md2", 0, "misc/am_pkup.wav", "a_shells", "Shells", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 10, AMMOTAG_SHELLS, NULL, -1, NULL);
-	NItems::Bullets = QNew (com_gamePool, 0) CAmmo("ammo_bullets", "models/items/ammo/bullets/medium/tris.md2", 0, "misc/am_pkup.wav", "a_bullets", "Bullets", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 50, AMMOTAG_BULLETS, NULL, -1, NULL);
-	NItems::Slugs = QNew (com_gamePool, 0) CAmmo("ammo_slugs", "models/items/ammo/slugs/medium/tris.md2", 0, "misc/am_pkup.wav", "a_slugs", "Slugs", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 10, AMMOTAG_SLUGS, NULL, -1, NULL);
-	NItems::Grenades = QNew (com_gamePool, 0) CAmmo("ammo_grenades", "models/items/ammo/grenades/medium/tris.md2", 0, "misc/am_pkup.wav", "a_grenades", "Grenades", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_USABLE|ITEMFLAG_GRABBABLE|ITEMFLAG_WEAPON, "", 5, AMMOTAG_GRENADES, &WeaponGrenades, 1, "#a_grenades.md2");
-	NItems::Rockets = QNew (com_gamePool, 0) CAmmo("ammo_rockets", "models/items/ammo/rockets/medium/tris.md2", 0, "misc/am_pkup.wav", "a_rockets", "Rockets", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 5, AMMOTAG_ROCKETS, NULL, -1, NULL);
-	NItems::Cells = QNew (com_gamePool, 0) CAmmo("ammo_cells", "models/items/ammo/cells/medium/tris.md2", 0, "misc/am_pkup.wav", "a_cells", "Cells", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 50, AMMOTAG_CELLS, NULL, -1, NULL);
+	NItems::Shells = QNew (com_gamePool, 0) CAmmo("ammo_shells", "models/items/ammo/shells/medium/tris.md2", 0, "misc/am_pkup.wav", "a_shells", "Shells", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 10, CAmmo::AMMOTAG_SHELLS, NULL, -1, NULL);
+	NItems::Bullets = QNew (com_gamePool, 0) CAmmo("ammo_bullets", "models/items/ammo/bullets/medium/tris.md2", 0, "misc/am_pkup.wav", "a_bullets", "Bullets", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 50, CAmmo::AMMOTAG_BULLETS, NULL, -1, NULL);
+	NItems::Slugs = QNew (com_gamePool, 0) CAmmo("ammo_slugs", "models/items/ammo/slugs/medium/tris.md2", 0, "misc/am_pkup.wav", "a_slugs", "Slugs", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 10, CAmmo::AMMOTAG_SLUGS, NULL, -1, NULL);
+	NItems::Grenades = QNew (com_gamePool, 0) CAmmo("ammo_grenades", "models/items/ammo/grenades/medium/tris.md2", 0, "misc/am_pkup.wav", "a_grenades", "Grenades", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_USABLE|ITEMFLAG_GRABBABLE|ITEMFLAG_WEAPON, "", 5, CAmmo::AMMOTAG_GRENADES, &WeaponGrenades, 1, "#a_grenades.md2");
+	NItems::Rockets = QNew (com_gamePool, 0) CAmmo("ammo_rockets", "models/items/ammo/rockets/medium/tris.md2", 0, "misc/am_pkup.wav", "a_rockets", "Rockets", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 5, CAmmo::AMMOTAG_ROCKETS, NULL, -1, NULL);
+	NItems::Cells = QNew (com_gamePool, 0) CAmmo("ammo_cells", "models/items/ammo/cells/medium/tris.md2", 0, "misc/am_pkup.wav", "a_cells", "Cells", ITEMFLAG_DROPPABLE|ITEMFLAG_AMMO|ITEMFLAG_GRABBABLE, "", 50, CAmmo::AMMOTAG_CELLS, NULL, -1, NULL);
 
 	ItemList->AddItemToList (NItems::Shells);
 	ItemList->AddItemToList (NItems::Bullets);

@@ -501,7 +501,7 @@ void CGunner::Fire ()
 
 	// project enemy back a bit and target there
 	target = Entity->Enemy->State.GetOrigin();
-	target = target.MultiplyAngles (-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->Enemy)->Velocity);
+	target = target.MultiplyAngles (-0.2f, entity_cast<CPhysicsEntity>(Entity->Enemy)->Velocity);
 	target.Z += Entity->Enemy->ViewHeight;
 
 	aim = target - start;
@@ -750,7 +750,7 @@ void CGunner::FireChain ()
 
 void CGunner::ReFireChain ()
 {
-	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0 && IsVisible (Entity, Entity->Enemy) && random() <= 0.5)
+	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0 && IsVisible (Entity, Entity->Enemy) && random() <= 0.5)
 	{
 		CurrentMove = &GunnerMoveFireChain;
 		return;

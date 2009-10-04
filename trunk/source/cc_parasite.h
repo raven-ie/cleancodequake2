@@ -65,7 +65,6 @@ public:
 	void Scratch ();
 	void DoFidget();
 	void ReFidget();
-	void EndFidget();
 	void DoWalk ();
 	void DoRun ();
 	void StartRun ();

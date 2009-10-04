@@ -172,7 +172,7 @@ void ClientBegin (edict_t *ent)
 CC_EXCEPTION_HANDLER_BEGIN
 #endif
 
-	dynamic_cast<CPlayerEntity*>(ent->Entity)->Begin ();
+	entity_cast<CPlayerEntity>(ent->Entity)->Begin ();
 
 #ifdef CC_USE_EXCEPTION_HANDLER
 CC_EXCEPTION_HANDLER_END
@@ -195,7 +195,7 @@ void ClientUserinfoChanged (edict_t *ent, char *userinfo)
 CC_EXCEPTION_HANDLER_BEGIN
 #endif
 
-	dynamic_cast<CPlayerEntity*>(ent->Entity)->UserinfoChanged (userinfo);
+	entity_cast<CPlayerEntity>(ent->Entity)->UserinfoChanged (userinfo);
 
 #ifdef CC_USE_EXCEPTION_HANDLER
 CC_EXCEPTION_HANDLER_END
@@ -221,7 +221,7 @@ BOOL ClientConnect (edict_t *ent, char *userinfo)
 CC_EXCEPTION_HANDLER_BEGIN
 #endif
 
-	return (dynamic_cast<CPlayerEntity*>(ent->Entity)->Connect(userinfo)) ? 1 : 0;
+	return (entity_cast<CPlayerEntity>(ent->Entity)->Connect(userinfo)) ? 1 : 0;
 
 #ifdef CC_USE_EXCEPTION_HANDLER
 CC_EXCEPTION_HANDLER_END_CUSTOM
@@ -245,7 +245,7 @@ void ClientDisconnect (edict_t *ent)
 CC_EXCEPTION_HANDLER_BEGIN
 #endif
 
-	dynamic_cast<CPlayerEntity*>(ent->Entity)->Disconnect();
+	entity_cast<CPlayerEntity>(ent->Entity)->Disconnect();
 
 #ifdef CC_USE_EXCEPTION_HANDLER
 CC_EXCEPTION_HANDLER_END
@@ -269,7 +269,7 @@ void ClientThink (edict_t *ent, userCmd_t *ucmd)
 CC_EXCEPTION_HANDLER_BEGIN
 #endif
 
-(dynamic_cast<CPlayerEntity*>(ent->Entity))->ClientThink (ucmd);
+(entity_cast<CPlayerEntity>(ent->Entity))->ClientThink (ucmd);
 
 #ifdef CC_USE_EXCEPTION_HANDLER
 CC_EXCEPTION_HANDLER_END

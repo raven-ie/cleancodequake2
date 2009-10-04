@@ -62,6 +62,7 @@ public:
 	void Search ();
 
 	void FireRail ();
+	void StorePosition ();
 	void SwingCleaver ();
 	void MeleeAttack ();
 

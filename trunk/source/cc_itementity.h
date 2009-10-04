@@ -51,11 +51,7 @@ enum
 class CItemEntity : public CMapEntity, public CTossProjectile, public CTouchableEntity, public CThinkableEntity, public CUsableEntity
 {
 public:
-	bool			NoPhysics;
-	bool			NoTouch;
 	EItemThinkState ThinkState;
-	bool			Usable;
-	CBaseEntity		*Chain;
 
 	CItemEntity ();
 	CItemEntity (int Index);

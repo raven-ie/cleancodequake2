@@ -433,17 +433,17 @@ enum
 typedef int ESurfaceFlags;
 enum
 {
-SURF_TEXINFO_LIGHT		= BIT(0),		// value will hold the light strength
-SURF_TEXINFO_SLICK		= BIT(1),		// affects game physics
-SURF_TEXINFO_SKY		= BIT(2),		// don't draw, but add to skybox
-SURF_TEXINFO_WARP		= BIT(3),		// turbulent water warp
-SURF_TEXINFO_TRANS33	= BIT(4),
-SURF_TEXINFO_TRANS66	= BIT(5),
-SURF_TEXINFO_FLOWING	= BIT(6),	// scroll towards angle
-SURF_TEXINFO_NODRAW		= BIT(7),	// don't bother referencing the texture
+	SURF_TEXINFO_LIGHT		= BIT(0),		// value will hold the light strength
+	SURF_TEXINFO_SLICK		= BIT(1),		// affects game physics
+	SURF_TEXINFO_SKY		= BIT(2),		// don't draw, but add to skybox
+	SURF_TEXINFO_WARP		= BIT(3),		// turbulent water warp
+	SURF_TEXINFO_TRANS33	= BIT(4),
+	SURF_TEXINFO_TRANS66	= BIT(5),
+	SURF_TEXINFO_FLOWING	= BIT(6),	// scroll towards angle
+	SURF_TEXINFO_NODRAW		= BIT(7),	// don't bother referencing the texture
 
-SURF_TEXINFO_HINT		= BIT(8),	// these aren't known to the engine I believe
-SURF_TEXINFO_SKIP		= BIT(9),	// only the compiler uses them
+	SURF_TEXINFO_HINT		= BIT(8),	// these aren't known to the engine I believe
+	SURF_TEXINFO_SKIP		= BIT(9),	// only the compiler uses them
 };
 
 #ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY

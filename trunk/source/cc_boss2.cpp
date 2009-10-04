@@ -100,7 +100,7 @@ void CBoss2::FireBulletRight ()
 
 	vec3f tempTarget = Entity->Enemy->State.GetOrigin();
 	if (Entity->Enemy->EntityFlags & ENT_PHYSICS)
-		tempTarget = tempTarget.MultiplyAngles (-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->Enemy)->Velocity);
+		tempTarget = tempTarget.MultiplyAngles (-0.2f, entity_cast<CPhysicsEntity>(Entity->Enemy)->Velocity);
 	target = tempTarget;
 	target.Z += Entity->Enemy->ViewHeight;
 	forward = target - start;
@@ -119,7 +119,7 @@ void CBoss2::FireBulletLeft ()
 
 	vec3f tempTarget = Entity->Enemy->State.GetOrigin();
 	if (Entity->Enemy->EntityFlags & ENT_PHYSICS)
-		tempTarget = tempTarget.MultiplyAngles (-0.2f, dynamic_cast<CPhysicsEntity*>(Entity->Enemy)->Velocity);
+		tempTarget = tempTarget.MultiplyAngles (-0.2f, entity_cast<CPhysicsEntity>(Entity->Enemy)->Velocity);
 	target = tempTarget;
 	target.Z += Entity->Enemy->ViewHeight;
 	forward = target - start;
@@ -527,7 +527,7 @@ bool CBoss2::CheckAttack ()
 	ERangeType		enemy_range;
 	float	enemy_yaw;
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0)
+	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0)
 	{
 	// see if any entities are in the way of the shot
 		vec3f spot1 = Entity->State.GetOrigin();

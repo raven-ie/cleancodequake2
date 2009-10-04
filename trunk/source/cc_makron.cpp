@@ -691,7 +691,7 @@ bool CMakron::CheckAttack ()
 	float	chance;
 	CTrace	tr;
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0)
+	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0)
 	{
 	// see if any entities are in the way of the shot
 		spot1 = Entity->State.GetOrigin();
@@ -774,7 +774,7 @@ bool CMakron::CheckAttack ()
 #else
 	float	chance;
 
-	if (dynamic_cast<CHurtableEntity*>(Entity->Enemy)->Health > 0)
+	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0)
 	{
 	// see if any entities are in the way of the shot
 		vec3f	spot1 = Entity->State.GetOrigin() + vec3f(0, 0, Entity->ViewHeight);

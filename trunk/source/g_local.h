@@ -52,8 +52,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // memory tags to allow dynamic memory to be cleaned up
 #define TAG_GAME	765		// clear when unloading the dll
 #define TAG_LEVEL	766		// clear when loading a new level
-#define TAG_CLEAN_GAME	TAG_GAME		// "Clean" memory
-#define TAG_CLEAN_LEVEL	TAG_LEVEL		// "Clean" memory
 
 //gib types
 typedef int EGibType;
@@ -146,7 +144,6 @@ typedef struct
 	bool		autosaved;
 } game_locals_t;
 
-
 //
 // this structure is cleared as each map is entered
 // it is read/written to the level.sav file for savegames
@@ -213,7 +210,6 @@ typedef struct
 
 	int			lip;
 	int			height;
-	char		*item;
 	char		*gravity;
 } spawn_temp_t;
 
@@ -332,7 +328,9 @@ enum
 	FFL_NOSPAWN
 };
 
-typedef enum {
+typedef uint32 fieldtype_t;
+enum
+{
 	F_INT, 
 	F_FLOAT,
 	F_LSTRING,			// string on disk, pointer in memory, TAG_LEVEL
@@ -346,7 +344,7 @@ typedef enum {
 	F_FUNCTION,
 	F_MMOVE,
 	F_IGNORE
-} fieldtype_t;
+};
 
 typedef struct
 {
@@ -358,36 +356,6 @@ typedef struct
 
 
 extern	field_t fields[];
-
-//
-// g_cmds.c
-//
-void Cmd_Help_f (CPlayerEntity *ent);
-void Cmd_Score_f (CPlayerEntity *ent);
-
-//
-// g_utils.c
-//
-void	G_ProjectSource (const vec3f &point, const vec3f &distance, const vec3f &forward, const vec3f &right, vec3f &result);
-
-void	G_InitEdict (edict_t *e);
-edict_t	*G_Spawn (void);
-void	G_FreeEdict (edict_t *e);
-
-// Changed to int, rarely used as a float..
-CBaseEntity *FindRadius (CBaseEntity *From, vec3f &org, int Radius, uint32 EntityFlags);
-
-template <class ReturnType, uint32 EntityFlags>
-ReturnType *FindRadius (CBaseEntity *From, vec3f &org, int Radius)
-{
-	return dynamic_cast<ReturnType*>(FindRadius (From, org, Radius, EntityFlags));
-}
-
-template <uint32 EntityFlags>
-inline CBaseEntity *FindRadius (CBaseEntity *From, vec3f &org, int Radius)
-{
-	return FindRadius (From, org, Radius, EntityFlags);
-}
 
 //
 // g_combat.c
@@ -560,6 +528,54 @@ struct edict_s
 	const NewtonBody	*newtonBody;
 #endif
 };
+
+//
+// cc_utils.cpp
+//
+void	G_ProjectSource (const vec3f &point, const vec3f &distance, const vec3f &forward, const vec3f &right, vec3f &result);
+
+// Changed to int, rarely used as a float..
+CBaseEntity *FindRadius (CBaseEntity *From, vec3f &org, int Radius, uint32 EntityFlags);
+
+template <class ReturnType, uint32 EntityFlags>
+ReturnType *FindRadius (CBaseEntity *From, vec3f &org, int Radius)
+{
+	return entity_cast<ReturnType>(FindRadius (From, org, Radius, EntityFlags));
+}
+
+template <uint32 EntityFlags>
+inline CBaseEntity *FindRadius (CBaseEntity *From, vec3f &org, int Radius)
+{
+	return FindRadius (From, org, Radius, EntityFlags);
+}
+
+_CC_INSECURE_DEPRECATE (CreateEntityFromClassname)
+edict_t	*G_Spawn (void);
+
+_CC_INSECURE_DEPRECATE (Function not needed)
+void	G_InitEdict (edict_t *e);
+
+_CC_INSECURE_DEPRECATE (Entity->Free)
+void	G_FreeEdict (edict_t *e);
+
+void	ED_CallSpawn (edict_t *ent);
+
+inline CBaseEntity *CreateEntityFromClassname (char *classname)
+{
+_CC_DISABLE_DEPRECATION
+	edict_t *ent = G_Spawn ();
+	ent->classname = classname;
+
+	ED_CallSpawn (ent);
+
+	if (ent->inUse && !ent->Entity->Freed)
+	{
+		ent->classname = Mem_PoolStrDup (classname, com_levelPool, 0);
+		return ent->Entity;
+	}
+	return NULL;
+_CC_ENABLE_DEPRECATION
+}
 
 extern	CCvar	*maxentities;
 extern	CCvar	*deathmatch;

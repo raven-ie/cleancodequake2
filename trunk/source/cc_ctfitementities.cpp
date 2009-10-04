@@ -59,8 +59,8 @@ void CFlagEntity::Think ()
 			else
 				State.SetModelIndex (ModelIndex(gameEntity->item->WorldModel));
 			SetSolid (SOLID_TRIGGER);
-			NoTouch = false;
-			NoPhysics = false;
+			Touchable = false;
+			PhysicsType = PHYSICS_NONE;
 
 			vec3f dest = State.GetOrigin() + vec3f(0, 0, -128);
 			CTrace tr (State.GetOrigin(), GetMins(), GetMaxs(), dest, gameEntity, CONTENTS_MASK_SOLID);
@@ -109,7 +109,7 @@ void CFlagEntity::Spawn (CBaseItem *Item)
 
 	NextThink = level.framenum + 2;    // items start after other solids
 	ThinkState = FTS_FLAGSETUP;
-	NoPhysics = true;
+	PhysicsType = PHYSICS_NONE;
 
 	State.SetEffects(Item->EffectFlags);
 	State.SetRenderEffects(RF_GLOW);
@@ -227,7 +227,7 @@ CItemEntity *CFlag::DropItem (CBaseEntity *ent)
 
 	if (ent->EntityFlags & ENT_PLAYER)
 	{
-		CPlayerEntity *Player = dynamic_cast<CPlayerEntity*>(ent);
+		CPlayerEntity *Player = entity_cast<CPlayerEntity>(ent);
 		CTrace	trace;
 
 		Player->Client.ViewAngle.ToVectors (&forward, &right, NULL);

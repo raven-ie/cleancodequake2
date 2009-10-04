@@ -50,40 +50,47 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 class CTempEnt_Splashes
 {
 public:
-	enum ESplashType
+	typedef uint32 ESplashType;
+	enum
 	{
-		SPTUnknown = 0,
-		SPTSparks,
-		SPTWater,
-		SPTMud,
-		SPTSlime,
-		SPTLava,
-		SPTBlood
+		SPT_UNKNOWN,
+		SPT_SPARKS,
+		SPT_WATER,
+		SPT_MUD,
+		SPT_SLIME,
+		SPT_LAVA,
+		SPT_BLOOD
 	};
-	enum EBloodType
+
+	typedef uint32 EBloodType;
+	enum
 	{
-		BTBlood = TE_BLOOD,
-		BTMoreBlood = TE_MOREBLOOD,
-		BTGreenBlood = TE_GREENBLOOD
+		BT_BLOOD = TE_BLOOD,
+		BT_MORE_BLOOD = TE_MOREBLOOD,
+		BT_GREEN_BLOOD = TE_GREENBLOOD
 	};
-	enum EBlasterType
+
+	typedef uint32 EBlasterType;
+	enum
 	{
-		BLBlaster = TE_BLASTER,
-		BLBlueHyperblaster = TE_BLUEHYPERBLASTER,
-		BLFlechette = TE_FLECHETTE,
-		BLGreenBlaster = TE_BLASTER2
+		BL_BLASTER = TE_BLASTER,
+		BL_BLUE_HYPERBLASTER = TE_BLUEHYPERBLASTER,
+		BL_FLECHETTE = TE_FLECHETTE,
+		BL_GREEN_BLASTER = TE_BLASTER2
 	};
-	enum ESparkType
+
+	typedef uint32 ESparkType;
+	enum
 	{
-		STSparks = TE_SPARKS,
-		STBulletSparks = TE_BULLET_SPARKS,
-		STHeatbeamSparks = TE_HEATBEAM_SPARKS,
-		STElectricSparks = TE_ELECTRIC_SPARKS,
+		ST_SPARKS = TE_SPARKS,
+		ST_BULLET_SPARKS = TE_BULLET_SPARKS,
+		ST_HEATBEAM_SPARKS = TE_HEATBEAM_SPARKS,
+		ST_ELECTRIC_SPARKS = TE_ELECTRIC_SPARKS,
 
 		// Ones that have amount/color
-		STLaserSparks = TE_LASER_SPARKS,
-		STWeldingSparks = TE_WELDING_SPARKS,
-		STTunnelSparks = TE_TUNNEL_SPARKS
+		ST_LASER_SPARKS = TE_LASER_SPARKS,
+		ST_WELDING_SPARKS = TE_WELDING_SPARKS,
+		ST_TUNNEL_SPARKS = TE_TUNNEL_SPARKS
 	};
 
 	static void Gunshot	(vec3_t Origin,
@@ -94,21 +101,21 @@ public:
 
 	static void Blood	(vec3_t Origin,
 				vec3_t Normal,
-				EBloodType BloodType = BTBlood);
+				EBloodType BloodType = BT_BLOOD);
 
 	static void Blaster	(vec3_t Origin,
 					vec3_t Normal,
-					EBlasterType BlasterType = BLBlaster);
+					EBlasterType BlasterType = BL_BLASTER);
 
 	static void Sparks	(vec3_t Origin,
 				vec3_t Normal,
-				ESparkType SparkType = STSparks,
-				ESplashType color = SPTUnknown,
+				ESparkType SparkType = ST_SPARKS,
+				ESplashType color = SPT_UNKNOWN,
 				byte amount = 8);
 
 	static void Splash	(vec3_t Origin,
 				vec3_t Normal,
-				ESplashType color = SPTUnknown,
+				ESplashType color = SPT_UNKNOWN,
 				byte amount = 8);
 
 	static void ShieldSparks	(vec3_t Origin,
@@ -118,7 +125,7 @@ public:
 	static void Steam	(vec3_t Origin,
 				vec3_t Normal,
 				byte count = 8,
-				ESplashType color = SPTUnknown,
+				ESplashType color = SPT_UNKNOWN,
 				short magnitude = 12,
 				short id = -1,
 				long endTime = 0);
@@ -137,21 +144,21 @@ public:
 
 	static void Blood	(vec3f &Origin,
 				vec3f &Normal,
-				EBloodType BloodType = BTBlood);
+				EBloodType BloodType = BT_BLOOD);
 
 	static void Blaster	(vec3f &Origin,
 					vec3f &Normal,
-					EBlasterType BlasterType = BLBlaster);
+					EBlasterType BlasterType = BL_BLASTER);
 
 	static void Sparks	(vec3f &Origin,
 				vec3f &Normal,
-				ESparkType SparkType = STSparks,
-				ESplashType color = SPTUnknown,
+				ESparkType SparkType = ST_SPARKS,
+				ESplashType color = SPT_UNKNOWN,
 				byte amount = 8);
 
 	static void Splash	(vec3f &Origin,
 				vec3f &Normal,
-				ESplashType color = SPTUnknown,
+				ESplashType color = SPT_UNKNOWN,
 				byte amount = 8);
 
 	static void ShieldSparks	(vec3f &Origin,
@@ -161,7 +168,7 @@ public:
 	static void Steam	(vec3f &Origin,
 				vec3f &Normal,
 				byte count = 8,
-				ESplashType color = SPTUnknown,
+				ESplashType color = SPT_UNKNOWN,
 				short magnitude = 12,
 				short id = -1,
 				long endTime = 0);

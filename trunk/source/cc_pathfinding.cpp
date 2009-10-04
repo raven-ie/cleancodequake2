@@ -707,7 +707,7 @@ void Cmd_Node_f (CPlayerEntity *ent)
 
 		if (trace.Ent && (trace.Ent->EntityFlags & ENT_MONSTER))
 		{
-			CMonster *Monster = (dynamic_cast<CMonsterEntity*>(trace.Ent))->Monster;
+			CMonster *Monster = (entity_cast<CMonsterEntity>(trace.Ent))->Monster;
 			if (Q_stricmp(ArgGets(2), "closest") == 0)
 				Monster->P_CurrentNode = GetClosestNodeTo(Monster->Entity->State.GetOrigin());
 			else

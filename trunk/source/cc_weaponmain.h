@@ -45,6 +45,8 @@ enum //EWeaponState
 
 class CWeapon
 {
+	friend void InvalidateItemMedia ();
+
 protected:
 	// Frames
 	int				ActivationStart, ActivationNumFrames,

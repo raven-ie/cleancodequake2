@@ -88,7 +88,7 @@ bool CFlag::Pickup(CItemEntity *ent, CPlayerEntity *other)
 				// Ok, let's do the player loop, hand out the bonuses
 				for (int i = 1; i <= game.maxclients; i++)
 				{
-					CPlayerEntity *player = dynamic_cast<CPlayerEntity*>(g_edicts[i].Entity);
+					CPlayerEntity *player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 					if (!player->IsInUse())
 						continue;
 
