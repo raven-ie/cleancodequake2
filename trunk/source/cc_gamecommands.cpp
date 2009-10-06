@@ -439,8 +439,10 @@ void GCmd_SayTeam_f (CPlayerEntity *ent)
 }
 
 uint32 MurmurHash2 (const char *data, const int len, uint32 seed);
+void PushTest ();
 void Cmd_Test_f (CPlayerEntity *ent)
 {
+	PushTest ();
 }
 
 #include "cc_menu.h"

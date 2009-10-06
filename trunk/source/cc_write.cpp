@@ -37,6 +37,118 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include <float.h>
 
 _CC_DISABLE_DEPRECATION
+void _WriteChar (sint8 val)
+{
+	gi.WriteChar (val);
+}
+
+void _WriteByte (byte val)
+{
+	gi.WriteByte (val);
+}
+
+void _WriteShort (short val)
+{
+	gi.WriteShort (val);
+}
+
+void _WriteLong (long val)
+{
+	gi.WriteLong (val);
+}
+
+void _WriteFloat (float val)
+{
+	gi.WriteFloat (val);
+}
+
+void _WriteString (char *val)
+{
+	gi.WriteString (val);
+}
+
+CC_ENUM (uint8, EWriteType)
+{
+	WT_CHAR,
+	WT_BYTE,
+	WT_SHORT,
+	WT_LONG,
+	WT_FLOAT,
+	WT_STRING,
+};
+
+class CWriteIndex
+{
+public:
+	byte		*Ptr;
+	EWriteType	Type;
+
+	CWriteIndex (byte *Ptr, EWriteType Type) :
+	Ptr(Ptr),
+	Type(Type)
+	{
+	};
+
+	~CWriteIndex ()
+	{
+		if (Type == WT_STRING)
+			QDelete[] Ptr;
+		else
+			QDelete Ptr;
+	};
+
+	void Write ()
+	{
+		switch (Type)
+		{
+		case WT_CHAR:
+			_WriteChar ((sint8)*Ptr);
+			break;
+		case WT_BYTE:
+			_WriteByte ((byte)*Ptr);
+			break;
+		case WT_SHORT:
+			_WriteShort (*((short*)(Ptr)));
+			break;
+		case WT_LONG:
+			_WriteLong (*((long*)(Ptr)));
+			break;
+		case WT_FLOAT:
+			_WriteFloat (*((float*)(Ptr)));
+			break;
+		case WT_STRING:
+			_WriteString ((char*)Ptr);
+			break;
+		default:
+			assert (0);
+			break;
+		};
+	};
+};
+
+std::vector <CWriteIndex*> WriteQueue;
+
+void SendQueue (edict_t *To, bool Reliable)
+{
+	for (size_t i = 0; i < WriteQueue.size(); i++)
+		WriteQueue[i]->Write ();
+
+	gi.unicast (To, (Reliable) ? 1 : 0);
+}
+
+void Clear ()
+{
+	WriteQueue.clear();
+}
+
+void PushUp (byte *Ptr, EWriteType Type)
+{
+	WriteQueue.push_back (new CWriteIndex(Ptr, Type));
+}
+
+void PushTest ()
+{
+}
 
 // Origin or Ent has to exist.
 void Cast (ECastType castType, ECastFlags castFlags, vec3_t Origin = NULL, edict_t *Ent = NULL)
@@ -47,50 +159,59 @@ void Cast (ECastType castType, ECastFlags castFlags, vec3_t Origin = NULL, edict
 	else if (castType == CAST_MULTI && !Origin)
 	{
 		Com_Printf (0, "Multicast with no assicated Origin! Can't do!\n");
+		Clear ();
 		return;
 	}
 	else if (castType == CAST_UNI && !Ent)
 	{
 		Com_Printf (0, "Unicast with no assicated Ent! Can't do!\n");
+		Clear ();
 		return;
 	}
 	else if (castType == CAST_UNI && Origin)
 		Com_Printf (0, "Multicast with an associated Origin\n");
 
+	CPlayerEntity *Entity = NULL;
+	if (Ent)
+		Entity = entity_cast<CPlayerEntity>(Ent->Entity);
+
 	// Sends to all entities
-	// FIXME: The data still gets written and the tempents happen only once these are hit..
-	// Bad, might need to have writes queued :S
-	/*if (castType == CAST_MULTI)
+	switch (castType)
 	{
-		edict_t *e = &g_edicts[1];
-		for (int i = 0; i < game.maxclients; i++, e++)
+	case CAST_MULTI:
+		for (int i = 1; i <= game.maxclients; i++)
 		{
-			if (!e || !e->inUse || !e->client || !e->client->pers.connected)
+			CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
+
+			if (!Player || !Player->IsInUse() || (Player->Client.pers.state != SVCS_SPAWNED))
 				continue;
 
-			if ((castFlags & CASTFLAG_PVS) && !gi.inPVS(Origin, e->state.origin))
+			if ((castFlags & CASTFLAG_PVS) && !InVisibleArea(Origin, Player->State.GetOrigin()))
 				continue;
-			if ((castFlags & CASTFLAG_PHS) && !gi.inPHS(Origin, e->state.origin))
+			if ((castFlags & CASTFLAG_PHS) && !InHearableArea(Origin, Player->State.GetOrigin()))
 				continue;
 
-			gi.unicast (e, (castFlags & CASTFLAG_RELIABLE) ? true : false);
+			//gi.unicast (e, (castFlags & CASTFLAG_RELIABLE) ? true : false);
+			SendQueue (Player->gameEntity, (castFlags & CASTFLAG_RELIABLE) ? true : false);
 		}
-	}
+		break;
 	// Send to one entity
-	else if (castType == CAST_UNI)
-	{
-		if ((castFlags & CASTFLAG_PVS) && !gi.inPVS(Origin, Ent->state.origin))
-			return;
-		if ((castFlags & CASTFLAG_PHS) && !gi.inPHS(Origin, Ent->state.origin))
-			return;
+	case CAST_UNI:
+		if ((castFlags & CASTFLAG_PVS) && !InVisibleArea(Origin, Entity->State.GetOrigin()))
+			break;
+		if ((castFlags & CASTFLAG_PHS) && !InHearableArea(Origin, Entity->State.GetOrigin()))
+			break;
 
-		gi.unicast (Ent, (castFlags & CASTFLAG_RELIABLE) ? true : false);
-	}*/
-	if (castType == CAST_MULTI)
-		gi.multicast (Origin, (castFlags & CASTFLAG_PVS) ? MULTICAST_PVS : MULTICAST_PHS);
-	else if (castType == CAST_UNI)
-		gi.unicast (Ent, (castFlags & CASTFLAG_RELIABLE) ? true : false);
+		//gi.unicast (Ent, (castFlags & CASTFLAG_RELIABLE) ? true : false);
+		SendQueue (Ent, (castFlags & CASTFLAG_RELIABLE) ? true : false);
+		break;
+	}
 
+	//if (castType == CAST_MULTI)
+	//	gi.multicast (Origin, (castFlags & CASTFLAG_PVS) ? MULTICAST_PVS : MULTICAST_PHS);
+	//else if (castType == CAST_UNI)
+	//	gi.unicast (Ent, (castFlags & CASTFLAG_RELIABLE) ? true : false);
+	Clear ();
 }
 void Cast (ECastFlags castFlags, vec3_t Origin)
 {
@@ -110,50 +231,59 @@ void Cast (ECastType castType, ECastFlags castFlags, vec3f *Origin = NULL, CBase
 	else if (castType == CAST_MULTI && !Origin)
 	{
 		Com_Printf (0, "Multicast with no assicated Origin! Can't do!\n");
+		Clear ();
 		return;
 	}
 	else if (castType == CAST_UNI && !Ent)
 	{
 		Com_Printf (0, "Unicast with no assicated Ent! Can't do!\n");
+		Clear ();
 		return;
 	}
 	else if (castType == CAST_UNI && Origin)
 		Com_Printf (0, "Multicast with an associated Origin\n");
 
+	CPlayerEntity *Entity = NULL;
+	if (Ent)
+		Entity = entity_cast<CPlayerEntity>(Ent);
+
 	// Sends to all entities
-	// FIXME: The data still gets written and the tempents happen only once these are hit..
-	// Bad, might need to have writes queued :S
-	/*if (castType == CAST_MULTI)
+	switch (castType)
 	{
-		edict_t *e = &g_edicts[1];
-		for (int i = 0; i < game.maxclients; i++, e++)
+	case CAST_MULTI:
+		for (int i = 1; i <= game.maxclients; i++)
 		{
-			if (!e || !e->inUse || !e->client || !e->client->pers.connected)
+			CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
+
+			if (!Player || !Player->IsInUse() || (Player->Client.pers.state != SVCS_SPAWNED))
 				continue;
 
-			if ((castFlags & CASTFLAG_PVS) && !gi.inPVS(Origin, e->state.origin))
+			if ((castFlags & CASTFLAG_PVS) && !InVisibleArea(*Origin, Player->State.GetOrigin()))
 				continue;
-			if ((castFlags & CASTFLAG_PHS) && !gi.inPHS(Origin, e->state.origin))
+			if ((castFlags & CASTFLAG_PHS) && !InHearableArea(*Origin, Player->State.GetOrigin()))
 				continue;
 
-			gi.unicast (e, (castFlags & CASTFLAG_RELIABLE) ? true : false);
+			//gi.unicast (e, (castFlags & CASTFLAG_RELIABLE) ? true : false);
+			SendQueue (Player->gameEntity, (castFlags & CASTFLAG_RELIABLE) ? true : false);
 		}
-	}
+		break;
 	// Send to one entity
-	else if (castType == CAST_UNI)
-	{
-		if ((castFlags & CASTFLAG_PVS) && !gi.inPVS(Origin, Ent->state.origin))
-			return;
-		if ((castFlags & CASTFLAG_PHS) && !gi.inPHS(Origin, Ent->state.origin))
-			return;
+	case CAST_UNI:
+		if ((castFlags & CASTFLAG_PVS) && !InVisibleArea(*Origin, Entity->State.GetOrigin()))
+			break;
+		if ((castFlags & CASTFLAG_PHS) && !InHearableArea(*Origin, Entity->State.GetOrigin()))
+			break;
 
-		gi.unicast (Ent, (castFlags & CASTFLAG_RELIABLE) ? true : false);
-	}*/
-	if (castType == CAST_MULTI)
-		gi.multicast ((Origin) ? (*Origin) : vec3fOrigin, (castFlags & CASTFLAG_PVS) ? MULTICAST_PVS : MULTICAST_PHS);
-	else if (castType == CAST_UNI)
-		gi.unicast (Ent->gameEntity, (castFlags & CASTFLAG_RELIABLE) ? true : false);
+		//gi.unicast (Ent, (castFlags & CASTFLAG_RELIABLE) ? true : false);
+		SendQueue (Ent->gameEntity, (castFlags & CASTFLAG_RELIABLE) ? true : false);
+		break;
+	}
 
+	//if (castType == CAST_MULTI)
+	//	gi.multicast (Origin, (castFlags & CASTFLAG_PVS) ? MULTICAST_PVS : MULTICAST_PHS);
+	//else if (castType == CAST_UNI)
+	//	gi.unicast (Ent, (castFlags & CASTFLAG_RELIABLE) ? true : false);
+	Clear ();
 }
 void Cast (ECastFlags castFlags, vec3f *Origin)
 {
@@ -164,7 +294,7 @@ void Cast (ECastFlags castFlags, CBaseEntity *Ent)
 	Cast (CAST_UNI, castFlags, NULL, Ent);
 }
 
-void WriteChar (char val)
+void WriteChar (sint8 val)
 {
 	if (val < CHAR_MIN || val > CHAR_MAX)
 	{
@@ -172,7 +302,8 @@ void WriteChar (char val)
 		val = Clamp<char> (val, CHAR_MIN, CHAR_MAX);
 	}
 
-	gi.WriteChar (val);
+	//gi.WriteChar (val);
+	PushUp ((byte*)QNew (com_levelPool, 0) sint8 (val), WT_CHAR);
 }
 
 void WriteByte (byte val)
@@ -183,7 +314,8 @@ void WriteByte (byte val)
 		val = Clamp<byte> (val, 0, UCHAR_MAX);
 	}
 
-	gi.WriteByte (val);
+	//gi.WriteByte (val);
+	PushUp ((byte*)QNew (com_levelPool, 0) byte (val), WT_BYTE);
 }
 
 void WriteShort (short val)
@@ -194,7 +326,8 @@ void WriteShort (short val)
 		val = Clamp<short> (val, SHRT_MIN, SHRT_MAX);
 	}
 
-	gi.WriteShort (val);
+	//gi.WriteShort (val);
+	PushUp ((byte*)QNew (com_levelPool, 0) short (val), WT_SHORT);
 }
 
 void WriteLong (long val)
@@ -205,7 +338,8 @@ void WriteLong (long val)
 		val = Clamp<long> (val, LONG_MIN, LONG_MAX);
 	}
 
-	gi.WriteLong (val);
+	//gi.WriteLong (val);
+	PushUp ((byte*)QNew (com_levelPool, 0) long (val), WT_LONG);
 }
 
 void WriteFloat (float val)
@@ -216,7 +350,8 @@ void WriteFloat (float val)
 		val = Clamp<float> (val, FLT_MIN, FLT_MAX);
 	}
 
-	gi.WriteFloat (val);
+	//gi.WriteFloat (val);
+	PushUp ((byte*)QNew (com_levelPool, 0) float (val), WT_FLOAT);
 }
 
 void WriteAngle (float val)
@@ -243,12 +378,14 @@ void WriteString (char *val)
 		// FIXME: Clamp the string??
 	}
 
-	gi.WriteString (val);
+	//gi.WriteString (val);
+	PushUp ((byte*)Mem_PoolStrDup (val, com_levelPool, 0), WT_STRING);
 }
 
 void WriteCoord (float f)
 {
-	WriteShort ((int)(f * 8));
+	//WriteShort ((int)(f * 8));
+	PushUp ((byte*)QNew (com_levelPool, 0) short ((short)(f * 8)), WT_SHORT);
 }
 
 void WritePosition (vec3_t val)

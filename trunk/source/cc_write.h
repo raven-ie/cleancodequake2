@@ -34,7 +34,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #if !defined(__CC_WRITE_H__) || !defined(INCLUDE_GUARDS)
 #define __CC_WRITE_H__
 
-void WriteChar (char val);
+void WriteChar (sint8 val);
 void WriteByte (byte val);
 void WriteShort (short val);
 void WriteLong (long val);
