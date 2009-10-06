@@ -74,26 +74,25 @@ public:
 	int		GetSkinNum		();
 	void	SetSkinNum		(int value);
 
-	uint32	GetEffects		();
-	void	SetEffects		(uint32 value);
-	void	AddEffects		(uint32 value);
-	void	RemoveEffects	(uint32 value);
+	EEntityStateEffects	GetEffects		();
+	void	SetEffects		(EEntityStateEffects value);
+	void	AddEffects		(EEntityStateEffects value);
+	void	RemoveEffects	(EEntityStateEffects value);
 
-	int		GetRenderEffects	();
-	void	SetRenderEffects	(int value);
-	void	AddRenderEffects	(int value);
-	void	RemoveRenderEffects	(int value);
+	EEntityStateRenderEffects		GetRenderEffects	();
+	void	SetRenderEffects	(EEntityStateRenderEffects value);
+	void	AddRenderEffects	(EEntityStateRenderEffects value);
+	void	RemoveRenderEffects	(EEntityStateRenderEffects value);
 
 	MediaIndex	GetSound		();
 	void		SetSound		(MediaIndex value);
 
-	int		GetEvent			();
-	void	SetEvent			(int value);
+	EEventEffect		GetEvent			();
+	void	SetEvent			(EEventEffect value);
 };
 
 // FIXME: merge some of these flags elsewhere?
-typedef uint32 EEdictFlags;
-enum
+CC_ENUM (uint32, EEdictFlags)
 {
 	FL_FLY				= BIT(0),
 	FL_SWIM				= BIT(1),
@@ -141,11 +140,11 @@ public:
 	CBaseEntity		*GetOwner	();
 	void			SetOwner	(CBaseEntity *ent);
 
-	int				GetClipmask	();
-	void			SetClipmask (int mask);
+	EBrushContents	GetClipmask	();
+	void			SetClipmask (EBrushContents mask);
 
-	solid_t			GetSolid ();
-	void			SetSolid (solid_t solid);
+	ESolidType		GetSolid ();
+	void			SetSolid (ESolidType solid);
 
 	// Vectors are a little weird.
 	// Since we can't really "return" an array we have to pass it
@@ -180,13 +179,11 @@ public:
 	void			SetAbsMax (vec3f &in);
 	void			SetSize (vec3f &in);
 
-	int				GetSvFlags ();
-	void			SetSvFlags (int SVFlags);
+	EServerFlags	GetSvFlags ();
+	void			SetSvFlags (EServerFlags SVFlags);
 
 	int				GetNumClusters ();
-
 	int				*GetClusterNums ();
-
 	int				GetHeadNode ();
 
 	int				GetAreaNum (bool second = false);
@@ -206,8 +203,9 @@ public:
 	virtual void	Free ();
 
 	// Sound functions
-	void			PlaySound (EEntSndChannel channel, MediaIndex soundIndex, float volume = 1.0f, int attenuation = ATTN_NORM, float timeOfs = 0.0f);
-	void			PlayPositionedSound (vec3_t origin, EEntSndChannel channel, MediaIndex soundIndex, float volume = 1.0f, int attenuation = ATTN_NORM, float timeOfs = 0.0f);
+	bool			PlayedSounds[CHAN_MAX-1];
+	void			PlaySound (EEntSndChannel channel, MediaIndex soundIndex, float volume = 1.0f, EAttenuation attenuation = ATTN_NORM, float timeOfs = 0.0f);
+	void			PlayPositionedSound (vec3_t origin, EEntSndChannel channel, MediaIndex soundIndex, float volume = 1.0f, EAttenuation attenuation = ATTN_NORM, float timeOfs = 0.0f);
 
 	virtual void	BecomeExplosion (bool grenade);
 
@@ -314,8 +312,7 @@ inline uint32 atou (const char *Str)
 #define GameEntityMemberOffset(x) (size_t)&(((edict_t*)0)->x)
 #define SpawnTempMemberOffset(x) (size_t)&(((spawn_temp_t*)0)->x)
 
-typedef uint32 EFieldType;
-enum// EFieldType
+CC_ENUM (uint32, EFieldType)
 {
 	FT_INT,				// Stores value as integer
 	FT_UINT,			// Stores value as unsigned integer

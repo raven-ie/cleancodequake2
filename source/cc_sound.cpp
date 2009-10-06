@@ -127,7 +127,7 @@ static BOOL GI_IsInPHS (vec3_t p1, vec3_t p2)
 }
 */
 
-static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channel, MediaIndex soundIndex, float vol, float attenuation, float timeOffset)
+static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channel, MediaIndex soundIndex, float vol, EAttenuation attenuation, float timeOffset)
 {
 	int			sendChan, flags, i, ent;
 	float		leftVol, rightVol, distanceMult;
@@ -164,7 +164,7 @@ static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channe
 	ent = entity - g_edicts;
 
 	// No PHS flag
-	if (channel & 8 || attenuation == ATTN_NONE)
+	if ((channel & 8) || attenuation == ATTN_NONE)
 	{
 		// If the sound doesn't attenuate, send it to everyone (global radio chatter, voiceovers, etc)
 		usePHS = false;
@@ -228,7 +228,7 @@ static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channe
 		}
 
 		Vec3Subtract (origin, client->state.origin, sourceVec);
-		distanceMult = attenuation * ((attenuation == ATTN_STATIC) ? 0.001f : 0.0005f);
+		distanceMult = (float)attenuation * ((attenuation == ATTN_STATIC) ? 0.001f : 0.0005f);
 
 		dist = VectorNormalizef (sourceVec, sourceVec) - SOUND_FULLVOLUME;
 		if (dist < 0)
@@ -280,12 +280,12 @@ static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channe
 	}
 }
 
-void PlaySoundFrom (edict_t *ent, EEntSndChannel channel, MediaIndex soundIndex, float volume, int attenuation, float timeOfs)
+void PlaySoundFrom (edict_t *ent, EEntSndChannel channel, MediaIndex soundIndex, float volume, EAttenuation attenuation, float timeOfs)
 {
 	SV_StartSound (NULL, ent, channel, soundIndex, volume, attenuation, timeOfs);
 }
 
-void PlaySoundAt (vec3_t origin, edict_t *ent, EEntSndChannel channel, MediaIndex soundIndex, float volume, int attenuation, float timeOfs)
+void PlaySoundAt (vec3_t origin, edict_t *ent, EEntSndChannel channel, MediaIndex soundIndex, float volume, EAttenuation attenuation, float timeOfs)
 {
 	SV_StartSound (origin, ent, channel, soundIndex, volume, attenuation, timeOfs);
 }

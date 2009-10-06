@@ -505,7 +505,7 @@ public:
 class CFuncExplosive : public CMapEntity, public CBrushModel, public CUsableEntity, public CHurtableEntity
 {
 public:
-	enum EFuncExplosiveUseType
+	CC_ENUM (uint8, EFuncExplosiveUseType)
 	{
 		FUNCEXPLOSIVE_USE_NONE,
 		FUNCEXPLOSIVE_USE_SPAWN,

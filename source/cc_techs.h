@@ -39,7 +39,7 @@ class CTech : public CBaseItem
 	uint32		TechNumber;
 
 public:
-	enum ETechType
+	CC_ENUM (uint8, ETechType)
 	{
 		TECH_PASSIVE,			// Tech's effect requires time; happens in ClientEndServerFrame
 		TECH_AGGRESSIVE,		// Tech's effect will have a direct effect on any damage going in or out of the player.

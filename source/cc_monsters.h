@@ -72,8 +72,7 @@ public:
 	};
 };
 
-typedef int EMonsterAIFlags;
-enum
+CC_ENUM (uint32, EMonsterAIFlags)
 {
 #ifndef MONSTER_USE_ROGUE_AI
 	//monster ai flags
@@ -132,8 +131,7 @@ enum
 #endif
 };
 
-typedef int EMonsterFlags;
-enum
+CC_ENUM (uint32, EMonsterFlags)
 {
 	MF_HAS_MELEE			= BIT(0),
 	MF_HAS_IDLE				= BIT(1),
@@ -149,7 +147,7 @@ enum
 };
 
 //monster attack state
-enum EAttackState
+CC_ENUM (uint8, EAttackState)
 {
 	AS_STRAIGHT,
 	AS_SLIDING,

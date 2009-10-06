@@ -81,8 +81,7 @@ public:
 #define MELEE_DISTANCE	80
 
 //range
-typedef int ERangeType;
-enum
+CC_ENUM (uint8, ERangeType)
 {
 	RANGE_MELEE,
 	RANGE_NEAR,

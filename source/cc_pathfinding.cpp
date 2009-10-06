@@ -577,7 +577,7 @@ void LoadNodes ()
 		QDelete tempChildren[i];
 	}
 
-	QDelete tempChildren;
+	QDelete[] tempChildren;
 	DebugPrintf ("Loaded %u (%u special) nodes\n", numNodes, numSpecialNodes);
 }
 

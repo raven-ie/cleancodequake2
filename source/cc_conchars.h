@@ -36,8 +36,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #define	CFLAG_SECONDARY		128
 
-typedef int EConChars;
-enum // EConChars
+CC_ENUM (uint8, EConChars)
 {
 	CCHAR_DOT1,
 	CCHAR_CONTAINER1_UPPERLEFT,

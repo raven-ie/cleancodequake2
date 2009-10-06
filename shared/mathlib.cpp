@@ -535,7 +535,8 @@ void PerpendicularVector(const vec3_t src, vec3_t dst)
 	assert(pos != 5);
 
 	Vec3Clear(tempVec);
-	tempVec[pos] = 1.0F;
+	if (pos < 3)
+		tempVec[pos] = 1.0F;
 
 	// Project the point onto the plane defined by src
 	ProjectPointOnPlane(dst, tempVec, src);

@@ -34,12 +34,12 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #if !defined(__CC_CONTROLS_H__) || !defined(INCLUDE_GUARDS)
 #define __CC_CONTROLS_H__
 
-enum ELabelFlags
+CC_ENUM (uint8, ELabelFlags)
 {
 	LF_GREEN			=	1,
 };
 
-enum ELabelAlign
+CC_ENUM (uint8, ELabelAlign)
 {
 	LA_LEFT,
 	LA_CENTER,
@@ -120,8 +120,7 @@ public:
 	virtual void	Update (CPlayerEntity *ent);
 };
 
-typedef int ESliderTextPosition;
-enum
+CC_ENUM (uint8, ESliderTextPosition)
 {
 	STP_RIGHT,
 	STP_TOP,

@@ -36,7 +36,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #define MAX_COMMANDS 128
 #define MAX_CMD_HASH (MAX_COMMANDS/4)
 
-enum ECmdTypeFlags
+CC_ENUM (uint32, ECmdTypeFlags)
 {
 	CMD_NORMAL		= 0, // Doesn't do anything at all, just here for show.
 	CMD_SPECTATOR	= 1,

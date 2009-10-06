@@ -61,8 +61,7 @@ public:
 class CAmmo : public CBaseItem
 {
 public:
-	typedef uint32 EAmmoTag;
-	enum
+	CC_ENUM (uint8, EAmmoTag)
 	{
 		AMMOTAG_SHELLS,
 		AMMOTAG_BULLETS,

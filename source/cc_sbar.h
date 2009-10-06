@@ -37,11 +37,13 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 class CStatusBar
 {
-	char bar[MAX_COMPRINT/2];
-	char temp[MAX_COMPRINT/2]; // A temp buffer used for adding stuffs to the bar buffer.
+	char *bar;
+	char *temp; // A temp buffer used for adding stuffs to the bar buffer.
 
 public:
 	CStatusBar();
+	~CStatusBar();
+
 	void Send ();
 	void SendMsg (CPlayerEntity *ent, bool reliable = true);
 

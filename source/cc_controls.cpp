@@ -208,6 +208,9 @@ CMenuItem(Menu, x, y)
 
 void CMenu_Slider::Draw (CPlayerEntity *ent, CStatusBar *DrawState)
 {
+	if (Width > (MAX_INFO_KEY*2)-3)
+		Width = (MAX_INFO_KEY*2)-3;
+
 	int drawX = x;
 
 	switch (Align)
@@ -224,7 +227,7 @@ void CMenu_Slider::Draw (CPlayerEntity *ent, CStatusBar *DrawState)
 	DrawState->AddVirtualPoint_X (drawX);
 	DrawState->AddVirtualPoint_Y (y + 120);
 
-	char Buffer[MAX_INFO_KEY];
+	char Buffer[MAX_INFO_KEY*2];
 	Buffer[0] = CCHAR_DOWNLOADBAR_LEFT;
 
 	// Which number is closest to the value?
@@ -294,7 +297,7 @@ CMenuItem(Menu, x, y)
 
 void CMenu_Box::Draw (CPlayerEntity *ent, CStatusBar *DrawState)
 {
-	char		Buf[MAX_COMPRINT/2];
+	static char	*Buf = QNew (com_genericPool, 0) char[MAX_COMPRINT/2];
 	int			DrawX = (Align == LA_CENTER) ? x : x + 160, DrawY = y + 120, Index = 0;
 	int			W = Width+2, H = Height+2;
 

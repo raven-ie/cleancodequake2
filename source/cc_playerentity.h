@@ -103,7 +103,7 @@ public:
 	void			Clear ();
 };
 
-enum EGender
+CC_ENUM (uint8, EGender)
 {
 	GENDER_MALE,
 	GENDER_FEMALE,
@@ -111,7 +111,7 @@ enum EGender
 };
 
 // svClient->state options
-enum EClientState
+CC_ENUM (uint8, EClientState)
 {
 	SVCS_FREE,		// can be reused for a new connection
 	SVCS_CONNECTED,	// has been assigned to a svClient_t, but not in game yet
@@ -162,7 +162,7 @@ typedef struct
 class CMenuState
 {
 public:
-	enum EMenuKeys
+	CC_ENUM (uint8, EMenuKeys)
 	{
 		KEY_NONE,
 		KEY_LEFT,
@@ -208,7 +208,7 @@ typedef struct
 
 #ifdef CLEANCTF_ENABLED
 //ZOID
-	int			ctf_team;			// CTF team
+	ETeamIndex			ctf_team;			// CTF team
 	int			ctf_state;
 	FrameNumber_t		ctf_lasthurtcarrier;
 	FrameNumber_t		ctf_lastreturnedflag;
@@ -316,8 +316,8 @@ public:
 
 #ifdef CLEANCTF_ENABLED
 //ZOID
-	class CGrappleEntity	*ctf_grapple;		// entity of grapple
-	int			ctf_grapplestate;		// true if pulling
+	class CGrappleEntity*ctf_grapple;		// entity of grapple
+	EGrappleState		ctf_grapplestate;		// true if pulling
 	FrameNumber_t		ctf_grapplereleasetime;	// time of grapple release
 //ZOID
 #endif

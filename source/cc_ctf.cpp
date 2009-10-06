@@ -263,7 +263,7 @@ void CTFInit(void)
 
 /*--------------------------------------------------------------------------*/
 
-char *CTFTeamName(int team)
+char *CTFTeamName(ETeamIndex team)
 {
 	switch (team) {
 	case CTF_TEAM1:
@@ -274,7 +274,7 @@ char *CTFTeamName(int team)
 	return "UKNOWN";
 }
 
-char *CTFOtherTeamName(int team)
+char *CTFOtherTeamName(ETeamIndex team)
 {
 	switch (team) {
 	case CTF_TEAM1:
@@ -285,7 +285,7 @@ char *CTFOtherTeamName(int team)
 	return "UKNOWN";
 }
 
-int CTFOtherTeam(int team)
+ETeamIndex CTFOtherTeam(ETeamIndex team)
 {
 	switch (team) {
 	case CTF_TEAM1:
@@ -818,8 +818,8 @@ static inline void CTFSay_Team_Sight(CPlayerEntity *who, char *buf, size_t bufSi
 {
 	int i;
 	int n = 0;
-	char s[1024];
-	char s2[1024];
+	static char s[1024];
+	static char s2[1024];
 
 	*s = *s2 = 0;
 	for (i = 1; i <= game.maxclients; i++)
@@ -859,8 +859,8 @@ static inline void CTFSay_Team_Sight(CPlayerEntity *who, char *buf, size_t bufSi
 bool CheckFlood(CPlayerEntity *ent);
 void CTFSay_Team(CPlayerEntity *who, char *msg)
 {
-	char outmsg[1024];
-	char buf[1024];
+	static char outmsg[1024];
+	static char buf[1024];
 	int i;
 	char *p;
 
@@ -1026,7 +1026,7 @@ LINK_CLASSNAME_TO_CLASS ("misc_ctf_banner_small", CMiscCTFBannerSmall);
 
 /* ELECTIONS */
 
-bool CTFBeginElection(CPlayerEntity *ent, elect_t type, char *msg)
+bool CTFBeginElection(CPlayerEntity *ent, EElectState type, char *msg)
 {
 	int i;
 	int count;
@@ -1553,7 +1553,7 @@ void CTFStats(CPlayerEntity *ent)
 {
 	int i, e;
 	ghost_t *g;
-	char st[80];
+	char tempStr[80];
 	char text[1400];
 
 	*text = 0;
@@ -1566,9 +1566,9 @@ void CTFStats(CPlayerEntity *ent)
 				continue;
 			if (!e2->Client.resp.ready && e2->Client.resp.ctf_team != CTF_NOTEAM)
 			{
-				Q_snprintfz(st, sizeof(st), "%s is not ready.\n", e2->Client.pers.netname);
-				if (strlen(text) + strlen(st) < sizeof(text) - 50)
-					Q_strcatz(text, st, sizeof(text));
+				Q_snprintfz(tempStr, sizeof(tempStr), "%s is not ready.\n", e2->Client.pers.netname);
+				if (strlen(text) + strlen(tempStr) < sizeof(text) - 50)
+					Q_strcatz(text, tempStr, sizeof(text));
 			}
 		}
 	}
@@ -1598,7 +1598,7 @@ void CTFStats(CPlayerEntity *ent)
 			e = 50;
 		else
 			e = g->kills * 100 / (g->kills + g->deaths);
-		Q_snprintfz(st, sizeof(st), "%3d|%-16.16s|%5d|%5d|%5d|%5d|%5d|%4d%%|\n",
+		Q_snprintfz(tempStr, sizeof(tempStr), "%3d|%-16.16s|%5d|%5d|%5d|%5d|%5d|%4d%%|\n",
 			g->number, 
 			g->netname, 
 			g->score, 
@@ -1607,12 +1607,13 @@ void CTFStats(CPlayerEntity *ent)
 			g->basedef,
 			g->carrierdef, 
 			e);
-		if (strlen(text) + strlen(st) > sizeof(text) - 50) {
+		if (strlen(text) + strlen(tempStr) > sizeof(text) - 50)
+		{
 			Q_snprintfz(text+strlen(text), sizeof(text), "And more...\n");
 			ent->PrintToClient (PRINT_HIGH, "%s", text);
 			return;
 		}
-		Q_strcatz(text, st, sizeof(text));
+		Q_strcatz(text, tempStr, sizeof(text));
 	}
 	ent->PrintToClient (PRINT_HIGH, "%s", text);
 }
@@ -1627,7 +1628,7 @@ void CTFPlayerList(CPlayerEntity *ent)
 	}
 
 	int i;
-	char st[80];
+	char tempStr[80];
 	char text[1400];
 
 	*text = 0;
@@ -1638,10 +1639,11 @@ void CTFPlayerList(CPlayerEntity *ent)
 			CPlayerEntity *e2 = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 			if (!e2->IsInUse())
 				continue;
-			if (!e2->Client.resp.ready && e2->Client.resp.ctf_team != CTF_NOTEAM) {
-				Q_snprintfz(st, sizeof(st), "%s is not ready.\n", e2->Client.pers.netname);
-				if (strlen(text) + strlen(st) < sizeof(text) - 50)
-					Q_strcatz(text, st, sizeof(text));
+			if (!e2->Client.resp.ready && e2->Client.resp.ctf_team != CTF_NOTEAM)
+			{
+				Q_snprintfz(tempStr, sizeof(tempStr), "%s is not ready.\n", e2->Client.pers.netname);
+				if (strlen(text) + strlen(tempStr) < sizeof(text) - 50)
+					Q_strcatz(text, tempStr, sizeof(text));
 			}
 		}
 	}
@@ -1655,7 +1657,7 @@ void CTFPlayerList(CPlayerEntity *ent)
 		if (!e2->IsInUse())
 			continue;
 
-		Q_snprintfz(st, sizeof(st), "%3d %-16.16s %02d:%02d %4d %3d%s%s\n",
+		Q_snprintfz(tempStr, sizeof(tempStr), "%3d %-16.16s %02d:%02d %4d %3d%s%s\n",
 			i + 1,
 			e2->Client.pers.netname,
 			(level.framenum - e2->Client.resp.enterframe) / 600,
@@ -1665,13 +1667,13 @@ void CTFPlayerList(CPlayerEntity *ent)
 			(ctfgame.match == MATCH_SETUP || ctfgame.match == MATCH_PREGAME) ?
 			(e2->Client.resp.ready ? " (ready)" : " (notready)") : "",
 			e2->Client.resp.admin ? " (admin)" : "");
-		if (strlen(text) + strlen(st) > sizeof(text) - 50)
+		if (strlen(text) + strlen(tempStr) > sizeof(text) - 50)
 		{
 			Q_snprintfz(text+strlen(text), sizeof(text), "And more...\n");
 			ent->PrintToClient (PRINT_HIGH, "%s", text);
 			return;
 		}
-		Q_strcatz(text, st, sizeof(text));
+		Q_strcatz(text, tempStr, sizeof(text));
 	}
 	ent->PrintToClient (PRINT_HIGH, "%s", text);
 }
@@ -1682,7 +1684,7 @@ void CTFWarp(CPlayerEntity *ent)
 	char text[1024];
 	char *mlist, *token;
 	static const char *seps = " \t\n\r";
-	char *nextToken;
+	char *nextToken = NULL;
 
 	if (ArgCount() < 2)
 	{

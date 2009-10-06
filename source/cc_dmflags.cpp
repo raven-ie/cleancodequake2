@@ -37,6 +37,11 @@ dmFlagsConfig dmFlags;
 
 dmFlagsConfig::dmFlagsConfig()
 {
+	Reset ();
+};
+
+void dmFlagsConfig::Reset ()
+{
 	dfNoHealth = dfNoItems = dfWeaponsStay = dfNoFallingDamage =
 	dfInstantItems = dfSameLevel = dfSkinTeams = dfModelTeams = dfNoFriendlyFire =
 	dfSpawnFarthest = dfForceRespawn = dfNoArmor = dfAllowExit =
@@ -49,59 +54,59 @@ dmFlagsConfig::dmFlagsConfig()
 	false;
 };
 
-void dmFlagsConfig::UpdateFlags (int dmFlags)
+void dmFlagsConfig::UpdateFlags (int wantedFlags)
 {
 	dmFlagsConfig();
-	if (dmFlags & DF_NO_HEALTH)
+	if (wantedFlags & DF_NO_HEALTH)
 		dfNoHealth = true;
-	if (dmFlags & DF_NO_ITEMS)
+	if (wantedFlags & DF_NO_ITEMS)
 		dfNoItems = true;
-	if (dmFlags & DF_WEAPONS_STAY)
+	if (wantedFlags & DF_WEAPONS_STAY)
 		dfWeaponsStay = true;
-	if (dmFlags & DF_NO_FALLING)
+	if (wantedFlags & DF_NO_FALLING)
 		dfNoFallingDamage = true;
-	if (dmFlags & DF_INSTANT_ITEMS)
+	if (wantedFlags & DF_INSTANT_ITEMS)
 		dfInstantItems = true;
-	if (dmFlags & DF_SAME_LEVEL)
+	if (wantedFlags & DF_SAME_LEVEL)
 		dfSameLevel = true;
-	if (dmFlags & DF_SKINTEAMS)
+	if (wantedFlags & DF_SKINTEAMS)
 		dfSkinTeams = true;
-	if (dmFlags & DF_MODELTEAMS)
+	if (wantedFlags & DF_MODELTEAMS)
 		dfModelTeams = true;
-	if (dmFlags & DF_NO_FRIENDLY_FIRE)
+	if (wantedFlags & DF_NO_FRIENDLY_FIRE)
 		dfNoFriendlyFire = true;
-	if (dmFlags & DF_SPAWN_FARTHEST)
+	if (wantedFlags & DF_SPAWN_FARTHEST)
 		dfSpawnFarthest = true;
-	if (dmFlags & DF_FORCE_RESPAWN)
+	if (wantedFlags & DF_FORCE_RESPAWN)
 		dfForceRespawn = true;
-	if (dmFlags & DF_NO_ARMOR)
+	if (wantedFlags & DF_NO_ARMOR)
 		dfNoArmor = true;
-	if (dmFlags & DF_ALLOW_EXIT)
+	if (wantedFlags & DF_ALLOW_EXIT)
 		dfAllowExit = true;
-	if (dmFlags & DF_INFINITE_AMMO)
+	if (wantedFlags & DF_INFINITE_AMMO)
 		dfInfiniteAmmo = true;
-	if (dmFlags & DF_QUAD_DROP)
+	if (wantedFlags & DF_QUAD_DROP)
 		dfQuadDrop = true;
-	if (dmFlags & DF_FIXED_FOV)
+	if (wantedFlags & DF_FIXED_FOV)
 		dfFixedFov = true;
-	if (dmFlags & DF_QUADFIRE_DROP)
+	if (wantedFlags & DF_QUADFIRE_DROP)
 		dfQuadFireDrop = true;
-	if (dmFlags & DF_NO_MINES)
+	if (wantedFlags & DF_NO_MINES)
 		dfNoMines = true;
-	if (dmFlags & DF_NO_STACK_DOUBLE)
+	if (wantedFlags & DF_NO_STACK_DOUBLE)
 		dfNoStackDouble = true;
-	if (dmFlags & DF_NO_NUKES)
+	if (wantedFlags & DF_NO_NUKES)
 		dfNoNukes = true;
-	if (dmFlags & DF_NO_SPHERES)
+	if (wantedFlags & DF_NO_SPHERES)
 		dfNoSpheres = true;
 #ifdef CLEANCTF_ENABLED
-	if (dmFlags & DF_CTF_FORCEJOIN)
+	if (wantedFlags & DF_CTF_FORCEJOIN)
 		dfCtfForceJoin = true;
-	if (dmFlags & DF_ARMOR_PROTECT)
+	if (wantedFlags & DF_ARMOR_PROTECT)
 		dfCtfArmorProtect = true;
-	if (dmFlags & DF_CTF_NO_TECH)
+	if (wantedFlags & DF_CTF_NO_TECH)
 		dfCtfNoTech = true;
 #endif
-	if (dmFlags & DF_DM_TECHS)
+	if (wantedFlags & DF_DM_TECHS)
 		dfDmTechs = true;
 };

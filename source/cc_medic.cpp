@@ -105,8 +105,6 @@ void CMedic::AbortHeal (bool Gib, bool Mark)
 
 #endif
 
-
-
 CMonsterEntity *CMedic::FindDeadMonster ()
 {
 	CMonsterEntity *ent = NULL, *best = NULL;
@@ -693,8 +691,17 @@ void CMedic::CableAttack ()
 		Monster->Monster->Healer = NULL;
 		Monster->NextThink = level.framenum;
 		Monster->Think ();
-		Monster->Monster->AIFlags |= AI_RESURRECTING;
+		Monster->Monster->AIFlags &= ~AI_RESURRECTING;
 		Monster->Enemy = NULL;
+		// Paril, fix skinnum
+		if (Monster->State.GetSkinNum() & 1)
+			Monster->State.SetSkinNum (Monster->State.GetSkinNum() - 1);
+		Monster->PhysicsType = PHYSICS_STEP;
+		Monster->Flags &= ~FL_NO_KNOCKBACK;
+		Monster->SetSvFlags (Monster->GetSvFlags() | SVF_MONSTER);
+		Monster->SetSolid (SOLID_BBOX);
+		Monster->Link ();
+
 		if (Entity->OldEnemy && (Entity->OldEnemy->EntityFlags & ENT_PLAYER))
 		{
 			Monster->Enemy = Entity->OldEnemy;
@@ -724,6 +731,16 @@ void CMedic::CableAttack ()
 			Monster->Think ();
 			Monster->Monster->AIFlags &= ~AI_RESURRECTING;
 			Monster->Enemy = NULL;
+
+			// Paril, fix skinnum
+			if (Monster->State.GetSkinNum() & 1)
+				Monster->State.SetSkinNum (Monster->State.GetSkinNum() - 1);
+			Monster->PhysicsType = PHYSICS_STEP;
+			Monster->Flags &= ~FL_NO_KNOCKBACK;
+			Monster->SetSvFlags (Monster->GetSvFlags() | SVF_MONSTER);
+			Monster->SetSolid (SOLID_BBOX);
+			Monster->Link ();
+
 			if (Entity->OldEnemy && (Entity->OldEnemy->EntityFlags & ENT_PLAYER))
 			{
 				Monster->Enemy = Entity->OldEnemy;
@@ -750,9 +767,6 @@ void CMedic::CableAttack ()
 			}
 		}
 #endif
-		// Paril, fix skinnum
-		if (Monster->State.GetSkinNum() & 1)
-			Monster->State.SetSkinNum (Monster->State.GetSkinNum() - 1);
 		break;
 	case FRAME_attack44:
 		Entity->PlaySound (CHAN_WEAPON, SoundHookHeal, 1, ATTN_NORM, 0);
@@ -982,7 +996,7 @@ void CMedic::Duck (float eta)
 		return;
 	}
 
-	DuckWaitTime = level.framenum + (skill->Integer() == 0) ? ((eta + 1) * 10) : ((eta + (0.1 * (3 - skill->Integer()))) * 10);
+	DuckWaitTime = level.framenum + ((skill->Integer() == 0) ? ((eta + 1) * 10) : ((eta + (0.1 * (3 - skill->Integer()))) * 10));
 
 	// has to be done immediately otherwise he can get stuck
 	DuckDown();

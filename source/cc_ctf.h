@@ -28,14 +28,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define CONFIG_CTF_MATCH (CS_MAXCLIENTS-1)
 
-enum
+CC_ENUM (sint8, ETeamIndex)
 {
 	CTF_NOTEAM,
 	CTF_TEAM1,
 	CTF_TEAM2
 };
 
-enum
+CC_ENUM (uint8, EGrappleState)
 {
 	CTF_GRAPPLE_STATE_FLY,
 	CTF_GRAPPLE_STATE_PULL,
@@ -60,7 +60,8 @@ typedef struct ghost_s
 	CPlayerEntity *ent;
 } ghost_t;
 
-enum match_t{
+CC_ENUM (uint8, EMatchState)
+{
 	MATCH_NONE,
 	MATCH_SETUP,
 	MATCH_PREGAME,
@@ -68,7 +69,8 @@ enum match_t{
 	MATCH_POST
 };
 
-enum elect_t{
+CC_ENUM (uint8, EElectState)
+{
 	ELECT_NONE,
 	ELECT_MATCH,
 	ELECT_ADMIN,
@@ -82,11 +84,11 @@ typedef struct ctfgame_s
 	FrameNumber_t last_flag_capture;
 	int last_capture_team;
 
-	match_t match;		// match state
+	EMatchState match;		// match state
 	float matchtime;	// time for match start/end (depends on state)
 	int lasttime;		// last time update
 
-	elect_t election;	// election type
+	EElectState election;	// election type
 	CPlayerEntity *etarget;	// for admin election, who's being elected
 	char elevel[32];	// for map election, target level
 	int evotes;			// votes so far
@@ -134,8 +136,8 @@ void CTFSpawn(void);
 void SP_info_player_team1(edict_t *self);
 void SP_info_player_team2(edict_t *self);
 
-char *CTFTeamName(int team);
-char *CTFOtherTeamName(int team);
+char *CTFTeamName(ETeamIndex team);
+char *CTFOtherTeamName(ETeamIndex team);
 void CTFAssignSkin(edict_t *ent, char *s);
 void CTFAssignTeam(gclient_t *who);
 edict_t *SelectCTFSpawnPoint (edict_t *ent);

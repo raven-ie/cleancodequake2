@@ -50,8 +50,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 class CTempEnt_Splashes
 {
 public:
-	typedef uint32 ESplashType;
-	enum
+	CC_ENUM (uint8, ESplashType)
 	{
 		SPT_UNKNOWN,
 		SPT_SPARKS,
@@ -62,16 +61,14 @@ public:
 		SPT_BLOOD
 	};
 
-	typedef uint32 EBloodType;
-	enum
+	CC_ENUM (uint8, EBloodType)
 	{
 		BT_BLOOD = TE_BLOOD,
 		BT_MORE_BLOOD = TE_MOREBLOOD,
 		BT_GREEN_BLOOD = TE_GREENBLOOD
 	};
 
-	typedef uint32 EBlasterType;
-	enum
+	CC_ENUM (uint8, EBlasterType)
 	{
 		BL_BLASTER = TE_BLASTER,
 		BL_BLUE_HYPERBLASTER = TE_BLUEHYPERBLASTER,
@@ -79,8 +76,7 @@ public:
 		BL_GREEN_BLASTER = TE_BLASTER2
 	};
 
-	typedef uint32 ESparkType;
-	enum
+	CC_ENUM (uint8, ESparkType)
 	{
 		ST_SPARKS = TE_SPARKS,
 		ST_BULLET_SPARKS = TE_BULLET_SPARKS,
@@ -362,13 +358,14 @@ public:
 						short id);
 };
 
-enum ECastType
+CC_ENUM (uint8, ECastType)
 {
 	// Cast type
 	CAST_MULTI,
 	CAST_UNI
 };
-enum ECastFlags
+
+CC_ENUM (uint8, ECastFlags)
 {
 	CASTFLAG_UNRELIABLE = 0,
 	CASTFLAG_PVS = 1,

@@ -169,7 +169,8 @@ void Com_FileBase(char *in, char *out)
 	else
 	{
 		s--;
-		Q_strnicmp (out, s2+1, s-s2);
+		// Paril: this value was never used..
+		//Q_strnicmp (out, s2+1, s-s2);
 		out[s-s2] = 0;
 	}
 }
@@ -385,7 +386,7 @@ void Com_StripPadding (char *in, char *dest)
 		}
 		else
 		{
-			*in++;
+			in++;
 		}
 	}
 	*dest = '\0';

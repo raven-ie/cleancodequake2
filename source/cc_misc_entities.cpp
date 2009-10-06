@@ -55,7 +55,7 @@ public:
 	CStepPhysics(),
 	Explosivity(100),
 	Shooter(NULL),
-	Damage(50)
+	Damage(150)
 	{
 	};
 
@@ -68,7 +68,7 @@ public:
 	CStepPhysics(Index),
 	Explosivity(100),
 	Shooter(NULL),
-	Damage(50)
+	Damage(150)
 	{
 	};
 

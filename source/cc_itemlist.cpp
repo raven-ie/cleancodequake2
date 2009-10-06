@@ -177,7 +177,7 @@ CBaseItem *FindItemByClassname (char *name)
 
 CBaseItem *GetItemByIndex (int Index)
 {
-	if (Index >= ItemList->numItems || Index < 0)
+	if (Index >= MAX_ITEMS || Index >= ItemList->numItems || Index < 0)
 		return NULL;
 	return ItemList->Items[Index];
 }

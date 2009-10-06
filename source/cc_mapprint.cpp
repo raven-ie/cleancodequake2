@@ -72,7 +72,7 @@ void MapPrint (EMapPrintType printType, edict_t *ent, vec3_t origin, char *fmt, 
 	Map_Print (printType, ent, origin);
 
 	va_list		argptr;
-	char		text[MAX_COMPRINT];
+	static char	text[MAX_COMPRINT];
 
 	va_start (argptr, fmt);
 	vsnprintf_s (text, sizeof(text), MAX_COMPRINT, fmt, argptr);
@@ -112,7 +112,7 @@ void MapPrint (EMapPrintType printType, CBaseEntity *ent, vec3f origin, char *fm
 	Map_Print (printType, ent, origin);
 
 	va_list		argptr;
-	char		text[MAX_COMPRINT];
+	static char	text[MAX_COMPRINT];
 
 	va_start (argptr, fmt);
 	vsnprintf_s (text, sizeof(text), MAX_COMPRINT, fmt, argptr);
@@ -160,7 +160,7 @@ char *CC_ParseLine (char **entString)
 	return token;
 }
 
-enum EPoundVariableType
+CC_ENUM (uint8, EPoundVariableType)
 {
 	POUNDVARIABLE_INTEGER,
 	POUNDVARIABLE_FLOATING,

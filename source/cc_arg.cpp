@@ -104,15 +104,33 @@ char *ArgGetConcatenatedString ()
 
 char *ArgGets (int Index)
 {
+	if (Index >= MAX_ARG)
+	{
+		assert (0);
+		return NULL;
+	}
+
 	return (Index >= numArgv) ? nullArg : argvStringArray[Index];
 }
 
 int ArgGeti (int Index)
 {
+	if (Index >= MAX_ARG)
+	{
+		assert (0);
+		return NULL;
+	}
+
 	return (Index >= numArgv) ? 0 : argvIntegerArray[Index];
 }
 
 float ArgGetf (int Index)
 {
+	if (Index >= MAX_ARG)
+	{
+		assert (0);
+		return NULL;
+	}
+
 	return (Index >= numArgv) ? 0 : argvFloatArray[Index];
 }

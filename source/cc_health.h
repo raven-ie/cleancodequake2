@@ -35,8 +35,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #define __CC_HEALTH_H__
 
 // Class for health.
-typedef int EHealthFlags;
-enum //EHealthFlags
+CC_ENUM (uint8, EHealthFlags)
 {
 	HEALTHFLAG_NONE,
 

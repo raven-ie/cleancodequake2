@@ -129,9 +129,22 @@ static int __FileLen(FILE *f)
 Sys_Mkdir
 ================
 */
+#include <errno.h>
 void Sys_Mkdir (char *path)
 {
-	_mkdir (path);
+	switch (_mkdir (path))
+	{
+	default:
+	case 0:
+		break;
+	case EEXIST:
+		DebugPrintf ("Sys_Mkdir: Directory was not created because %s is the name of an existing file, directory, or device.\n", path);
+		break;
+	case ENOENT:
+		DebugPrintf ("Sys_Mkdir: Path was not found.\n");
+		break;
+	};
+
 }
 /*
 ============
@@ -177,7 +190,7 @@ void FS_CopyFile(char *src, char *dst)
 		return;
 	}
 
-	byte buffer[65536];
+	byte *buffer = QNew (com_gamePool, 0) byte[65536];
 	for ( ; ; )
 	{
 		size_t l = fread(buffer, 1, sizeof(buffer), f1);
@@ -185,6 +198,8 @@ void FS_CopyFile(char *src, char *dst)
 			break;
 		fwrite(buffer, 1, l, f2);
 	}
+
+	QDelete[] buffer;
 
 	fclose(f1);
 	fclose(f2);
@@ -1048,7 +1063,7 @@ int FS_FindFiles(const char *path, const char *filter, const char *extension, ch
 		char dir[MAX_OSPATH];
 		Q_snprintfz(dir, sizeof(dir), "%s/%s", search->pathName, path);
 
-		char *dirFiles[FS_MAX_FINDFILES];
+		char **dirFiles = QNew (com_gamePool, 0) char*[FS_MAX_FINDFILES];
 		int dirCount;
 		if (extension)
 		{
@@ -1057,9 +1072,7 @@ int FS_FindFiles(const char *path, const char *filter, const char *extension, ch
 			dirCount = Sys_FindFiles(dir, ext, dirFiles, FS_MAX_FINDFILES, 0, recurse, true, false);
 		}
 		else
-		{
 			dirCount = Sys_FindFiles(dir, "*", dirFiles, FS_MAX_FINDFILES, 0, recurse, true, true);
-		}
 
 		for (int fileNum=0 ; fileNum<dirCount ; fileNum++)
 		{
@@ -1068,7 +1081,7 @@ int FS_FindFiles(const char *path, const char *filter, const char *extension, ch
 			{
 				if (!Q_WildcardMatch(filter, dirFiles[fileNum]+strlen(search->pathName)+1, 1))
 				{
-					Mem_Free(dirFiles[fileNum]);
+					QDelete dirFiles[fileNum];
 					continue;
 				}
 			}
@@ -1094,8 +1107,9 @@ int FS_FindFiles(const char *path, const char *filter, const char *extension, ch
 				}
 			}
 
-			Mem_Free(dirFiles[fileNum]);
+			QDelete dirFiles[fileNum];
 		}
+		QDelete[] dirFiles;
 	}
 
 	return fileCount;

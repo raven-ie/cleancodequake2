@@ -196,7 +196,7 @@ void CMonster::MoveToPath (float Dist)
 		{
 			if (Entity->Enemy)
 			{
-				vec3f sub = (Entity->State.GetOrigin() - Entity->Enemy->State.GetOrigin());
+				sub = (Entity->State.GetOrigin() - Entity->Enemy->State.GetOrigin());
 				if (sub.Length() < 250) // If we're still close enough that it's possible
 					// to hear him breathing (lol), start back on the trail
 				{
@@ -3363,7 +3363,7 @@ bool CMonster::FindTarget()
 						return false;
 				}
 
-				vec3f temp = client->State.GetOrigin() - Entity->State.GetOrigin();
+				temp = client->State.GetOrigin() - Entity->State.GetOrigin();
 				if (temp.Length() > 1000)	// too far to hear
 					return false;
 

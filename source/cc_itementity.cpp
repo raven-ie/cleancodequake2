@@ -88,9 +88,12 @@ void CItemEntity::Touch(CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf
 	Player->Client.bonus_alpha = 0.25;	
 
 	// show icon and name on status bar
-	Player->Client.PlayerState.SetStat(STAT_PICKUP_ICON, gameEntity->item->GetIconIndex());
-	Player->Client.PlayerState.SetStat(STAT_PICKUP_STRING, gameEntity->item->GetConfigStringNumber());
-	Player->Client.pickup_msg_time = level.framenum + 30;
+	if (Player->Client.pickup_msg_time != (level.framenum + 30))
+	{
+		Player->Client.PlayerState.SetStat(STAT_PICKUP_ICON, gameEntity->item->GetIconIndex());
+		Player->Client.PlayerState.SetStat(STAT_PICKUP_STRING, gameEntity->item->GetConfigStringNumber());
+		Player->Client.pickup_msg_time = level.framenum + 30;
+	}
 
 	// change selected item
 	if (gameEntity->item->Flags & ITEMFLAG_USABLE)
@@ -143,8 +146,8 @@ void CItemEntity::Use (CBaseEntity *other, CBaseEntity *activator)
 // Returns a random team member of ent
 CItemEntity *CItemEntity::GetRandomTeamMember (CItemEntity *Master)
 {
-	CBaseEntity *Member = Master;
-	int count = 0;
+	CBaseEntity *Member;
+	int count;
 
 	for (count = 0, Member = Master; Member; Member = Member->TeamChain, count++);
 	int choice = irandom(count);
@@ -254,7 +257,13 @@ void CItemEntity::Spawn (CBaseItem *item)
 {
 	gameEntity->item = item;
 
-	assert (item != NULL);
+	if (!item)
+	{
+		assert (0);
+		Free ();
+		return;
+	}
+
 	NextThink = level.framenum + 2;    // items start after other solids
 	ThinkState = ITS_DROPTOFLOOR;
 	PhysicsType = PHYSICS_NONE;

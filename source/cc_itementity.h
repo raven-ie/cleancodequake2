@@ -36,8 +36,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #define __CC_ITEMENTITY_H__
 
 // The item entity class
-typedef int EItemThinkState;
-enum
+CC_ENUM (uint8, EItemThinkState)
 {
 	ITS_NONE,
 	ITS_DROPTOFLOOR,

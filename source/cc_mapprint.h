@@ -34,7 +34,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #if !defined(__CC_MAPPRINT_H__) || !defined(INCLUDE_GUARDS)
 #define __CC_MAPPRINT_H__
 
-enum EMapPrintType
+CC_ENUM (uint8, EMapPrintType)
 {
 	MAPPRINT_WARNING,
 	MAPPRINT_ERROR,

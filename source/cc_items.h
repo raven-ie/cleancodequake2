@@ -34,21 +34,20 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #if !defined(__CC_ITEMS_H__) || !defined(INCLUDE_GUARDS)
 #define __CC_ITEMS_H__
 
-typedef int EItemFlags;
-enum// EItemFlags
+CC_ENUM (int32, EItemFlags)
 {
 	ITEMFLAG_NONE				= 0,
-	ITEMFLAG_WEAPON				= 1,
-	ITEMFLAG_AMMO				= 2,
-	ITEMFLAG_HEALTH				= 4,
-	ITEMFLAG_ARMOR				= 8,
-	ITEMFLAG_STAY_COOP			= 16,
-	ITEMFLAG_KEY				= 32,
-	ITEMFLAG_POWERUP			= 64,
-	ITEMFLAG_GRABBABLE			= 128,
-	ITEMFLAG_USABLE				= 256,
-	ITEMFLAG_DROPPABLE			= 512,
-	ITEMFLAG_TECH				= 1024,
+	ITEMFLAG_WEAPON				= BIT(0),
+	ITEMFLAG_AMMO				= BIT(1),
+	ITEMFLAG_HEALTH				= BIT(2),
+	ITEMFLAG_ARMOR				= BIT(3),
+	ITEMFLAG_STAY_COOP			= BIT(4),
+	ITEMFLAG_KEY				= BIT(5),
+	ITEMFLAG_POWERUP			= BIT(6),
+	ITEMFLAG_GRABBABLE			= BIT(7),
+	ITEMFLAG_USABLE				= BIT(8),
+	ITEMFLAG_DROPPABLE			= BIT(9),
+	ITEMFLAG_TECH				= BIT(10),
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
