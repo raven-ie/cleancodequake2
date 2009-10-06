@@ -75,3 +75,12 @@ CleanCode does and will follow all of R1CH's great little DLL enhancements that 
 
 ===I tried running CleanCode in KMQuake2 or Quake II Evolved and I get a game API error.. what gives?===
 CleanCode runs on a 3.20 base, therefore the engine must use the 3.20 protocol to work. If you want a certain engine supported, [http://code.google.com/p/cleancodequake2/issues/entry create an issue] with the "Type-EngineSupport" tag and we'll see what we can do!
+
+==Code Questions==
+
+===Why do entities have two constructors? Do I always need both?===
+Any entity class you create should have two constructors: Class() and Class(int Index). The difference between the two is that Class() creates a new entity, and Class(int Index) re-uses the entity at spot 'Index'.
+
+You may omit certain constructors under the following conditions:
+  * Omit Class() if the entity inherits CMapEntity and should only be made through maps
+  * Omit Class(int Index) if the entity does not inherit CMapEntity and will never be created on a re-used spot
