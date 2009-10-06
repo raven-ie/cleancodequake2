@@ -633,12 +633,16 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 {
 	vec3f end, from;
 	vec3f lastWaterStart, lastWaterEnd;
+	
+	vec3f lastDrawFrom;
+	bool DrawIsWater = false;
 
 	// Calculate end
 	if (!ModifyEnd(aimdir, start, end))
 		end = start.MultiplyAngles (8192, aimdir);
 
 	from = start;
+	lastDrawFrom = from;
 
 	int Mask = CONTENTS_MASK_SHOT|CONTENTS_MASK_WATER;
 	bool Water = false;
@@ -654,6 +658,7 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 	
 		// Special case if we started in water
 		Water = true;
+		DrawIsWater = true;
 		Mask = CONTENTS_MASK_SHOT;
 
 		// Find the exit point
@@ -719,7 +724,10 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 			{
 				vec3f origin = Target->State.GetOrigin();
 				if (!DoDamage (Entity, Target, aimdir, origin, Trace.Plane.normal))
+				{
+					DoEffect (origin, lastDrawFrom, DrawIsWater);
 					break; // We wanted to stop
+				}
 
 				// Set up the start from where we are now
 				vec3f oldFrom = from;
@@ -729,13 +737,13 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 				if (Target->GetSolid() == SOLID_BSP)
 				{
 					// Draw the effect
-					DoEffect (from, oldFrom, false);
+					//DoEffect (from, oldFrom, false);
 
 					DoSolidHit (&Trace);
 					break;
 				}
 
-				DoEffect (from, oldFrom, Water);
+				//DoEffect (from, oldFrom, Water);
 
 				// and ignore the bastard
 				Ignore = Target;
@@ -755,13 +763,14 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 			if (Target->GetSolid() == SOLID_BSP)
 			{
 				// Draw the effect
-				DoEffect (from, oldFrom, false);
+				//DoEffect (from, oldFrom, false);
 
+				DoEffect (from, oldFrom, DrawIsWater);
 				DoSolidHit (&Trace);
 				break;
 			}
 
-			DoEffect (from, oldFrom, Water);
+			//DoEffect (from, oldFrom, Water);
 
 			// and ignore the bastard
 			Ignore = Target;
@@ -836,7 +845,7 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 			DoWaterHit (&Trace);
 
 			// Set up the start from where we are now
-			from = Trace.EndPos;
+			from = lastDrawFrom = Trace.EndPos;
 			Mask = CONTENTS_MASK_SHOT;
 
 			// Find the exit point
@@ -890,30 +899,19 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 			// It has the same PVS, meaning we don't need to
 			// do complex tracing.
 
-			// Draw the effect we have so far
-			/*DoEffect (from, Trace.endPos, false);
-
 			// Keep going
 			Vec3MA (Trace.endPos, 0.1f, aimdir, from);
 
 			// Water hit effect
-			DoWaterHit (&Trace);*/
-
-			// FIXME: This is the easiest fix currently.
-			Mask = CONTENTS_MASK_SHOT;
-
-			// There's a problem with the code above in that
-			// the trace isn't fully connected with something like
-			// a railgun. For now, this should work, since
-			// I don't know any maps with real water underneath
-			// transparent water.
+			DoWaterHit (&Trace);
 			continue;
 		}
 		// Assume solid
 		else
 		{
 			// Draw the effect
-			DoEffect (from, Trace.EndPos, false);
+			//DoEffect (from, Trace.EndPos, false);
+			DoEffect (lastDrawFrom, Trace.EndPos, DrawIsWater);
 
 			DoSolidHit (&Trace);
 			break; // We're done
