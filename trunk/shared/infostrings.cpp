@@ -93,14 +93,14 @@ char *Info_ValueForKey (char *s, char *key)
 	char		pkey[512];
 	static char value[2][512];
 	static int	valueIndex;
-	char		*o;
 	
 	valueIndex ^= 1;
 	if (*s == '\\')
 		s++;
 
-	for ( ; ; ) {
-		o = pkey;
+	while (true)
+	{
+		char *o = pkey;
 		while (*s != '\\') {
 			if (!*s)
 				return "";

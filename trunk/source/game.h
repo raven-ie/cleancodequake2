@@ -24,8 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 // edict->svFlags
 
-typedef int EServerFlags;
-enum
+CC_ENUM (int, EServerFlags)
 {
 	SVF_NOCLIENT			= BIT(0), // don't send entity to clients, even if it has effects
 	SVF_DEADMONSTER			= BIT(1), // treat as CONTENTS_DEADMONSTER for collision
@@ -42,8 +41,7 @@ enum
 };
 
 // edict->solid values
-typedef int solid_t;
-enum
+CC_ENUM (int, ESolidType)
 {
 	SOLID_NOT,			// no interaction with other objects
 	SOLID_TRIGGER,		// only touch when inside, after moving
@@ -88,11 +86,11 @@ typedef struct edict_s {
 
 	//================================
 
-	int					svFlags;			// SVF_NOCLIENT, SVF_DEADMONSTER, SVF_MONSTER, etc
+	EServerFlags		svFlags;			// SVF_NOCLIENT, SVF_DEADMONSTER, SVF_MONSTER, etc
 	vec3_t				mins, maxs;
 	vec3_t				absMin, absMax, size;
-	solid_t				solid;
-	int					clipMask;
+	ESolidType			solid;
+	EBrushContents		clipMask;
 	struct edict_s		*owner;
 
 	// the game dll can add anything it wants after

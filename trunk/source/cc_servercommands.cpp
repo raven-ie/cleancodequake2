@@ -129,13 +129,15 @@ typedef struct SServerEntityListIndex_s
 class CServerEntityList
 {
 public:
-	SServerEntityListIndex		*List[MAX_CS_EDICTS];
-	SServerEntityListIndex		*HashedList[MAX_CS_EDICTS];
+	SServerEntityListIndex		**List;
+	SServerEntityListIndex		**HashedList;
 	uint32						NumInList;
 
 	CServerEntityList () :
 		NumInList (0)
 	{
+		List = new SServerEntityListIndex*[MAX_CS_EDICTS];
+		HashedList = new SServerEntityListIndex*[MAX_CS_EDICTS];
 		memset (List, 0, sizeof(List));
 		memset (HashedList, 0, sizeof(HashedList));
 	};
@@ -144,6 +146,8 @@ public:
 	{
 		for (uint32 i = 0; i < NumInList; i++)
 			QDelete List[i];
+		QDelete[] List;
+		QDelete[] HashedList;
 	};
 
 	SServerEntityListIndex *Exists (const char *className)

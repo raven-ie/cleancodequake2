@@ -290,7 +290,7 @@ static BOOL CALLBACK EnumerateLoadedModulesProcDump (PSTR ModuleName, DWORD64 Mo
 	else
 		Q_strncpyz (verString, "unknown", sizeof(verString));
 
-	fprintf (fhReport, "[0x%I64p - 0x%I64p] %s (%lu bytes, version %s)\r\n", ModuleBase, ModuleBase + (DWORD64)ModuleSize, ModuleName, ModuleSize, verString);
+	fprintf (fhReport, "[0x%I64X - 0x%I64X] %s (%lu bytes, version %s)\r\n", ModuleBase, ModuleBase + (DWORD64)ModuleSize, ModuleName, ModuleSize, verString);
 	return TRUE;
 }
 
@@ -499,7 +499,7 @@ DWORD EGLExceptionHandler (DWORD exceptionCode, LPEXCEPTION_POINTERS exceptionIn
 	fprintf (fhReport, "Exception information:\r\n");
 	fprintf (fhReport, "--------------------------------------------------\r\n");
 	fprintf (fhReport, "Code:    %x\r\n", exceptionCode);
-	fprintf (fhReport, "Address: %I64p\r\n", InstructionPtr);
+	fprintf (fhReport, "Address: %I64X\r\n", InstructionPtr);
 	fprintf (fhReport, "Module:  %s\r\n", szModuleName);
 
 	fprintf (fhReport, "\r\n");
@@ -535,10 +535,10 @@ DWORD EGLExceptionHandler (DWORD exceptionCode, LPEXCEPTION_POINTERS exceptionIn
 		}
 
 		if (fnSymFromAddr (hProcess, frame.AddrPC.Offset, &fnOffset, symInfo) && !(symInfo->Flags & SYMFLAG_EXPORT)) {
-			fprintf (fhReport, "%I64p %I64p %p %p %p %p %s!%s+0x%I64x\r\n", frame.AddrStack.Offset, frame.AddrPC.Offset, (DWORD)frame.Params[0], (DWORD)frame.Params[1], (DWORD)frame.Params[2], (DWORD)frame.Params[3], p, symInfo->Name, fnOffset, symInfo->Tag);
+			fprintf (fhReport, "%I64X %I64X %X %X %X %X %s!%s+0x%I64X %lu\r\n", frame.AddrStack.Offset, frame.AddrPC.Offset, (DWORD)frame.Params[0], (DWORD)frame.Params[1], (DWORD)frame.Params[2], (DWORD)frame.Params[3], p, symInfo->Name, fnOffset, symInfo->Tag);
 		}
 		else {
-			fprintf (fhReport, "%I64p %I64p %p %p %p %p %s!0x%I64p\r\n", frame.AddrStack.Offset, frame.AddrPC.Offset, (DWORD)frame.Params[0], (DWORD)frame.Params[1], (DWORD)frame.Params[2], (DWORD)frame.Params[3], p, frame.AddrPC.Offset);
+			fprintf (fhReport, "%X %I64X %X %X %X %X %s!0x%I64X\r\n", frame.AddrStack.Offset, frame.AddrPC.Offset, (DWORD)frame.Params[0], (DWORD)frame.Params[1], (DWORD)frame.Params[2], (DWORD)frame.Params[3], p, frame.AddrPC.Offset);
 		}
 	}
 

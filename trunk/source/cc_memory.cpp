@@ -144,14 +144,14 @@ Mem_PuddleAlloc
 static memBlock_t *Mem_PuddleAlloc(const size_t Size)
 {
 	memPuddleInfo_t *pInfo = m_sizeToPuddle[Size];
-	memPuddle_t *Result;
+	if (!pInfo->freePuddles)
+		Mem_AddPuddles(pInfo);
 
 	if (!pInfo->freePuddles)
-	{
-		Mem_AddPuddles(pInfo);
-	}
+		return NULL;
 
-	Result = pInfo->freePuddles;
+	memPuddle_t *Result = pInfo->freePuddles;
+
 	assert(Result->block->realSize >= Size);
 
 	// Remove from free list
@@ -313,7 +313,10 @@ memPool_t *_Mem_CreatePool(const char *name, const char *fileName, const int fil
 
 	// Check name
 	if (!name || !name[0])
+	{
 		Com_Error (ERR_FATAL, "Mem_CreatePool: NULL name %s:#%i", fileName, fileLine);
+		return NULL;
+	}
 	if (strlen(name)+1 >= MEM_MAX_POOL_NAME)
 		Com_Printf (PRNT_WARNING, "Mem_CreatePoole: name '%s' too long, truncating!\n", name);
 
@@ -538,7 +541,10 @@ void *_Mem_Alloc(size_t size, struct memPool_s *pool, const int tagNum, const ch
 		const size_t newSize = (size + sizeof(memBlock_t) + sizeof(byte) + 31) & ~31;
 		mem = (memBlock_t*)calloc (1, newSize);
 		if (!mem)
+		{
 			Com_Error (ERR_FATAL, "Mem_Alloc: failed on allocation of %i bytes\n" "alloc: %s:#%i", newSize, fileName, fileLine);
+			return NULL;
+		}
 
 		mem->memPointer = (void*)((byte*)mem + sizeof(memBlock_t));
 		mem->memSize = size;

@@ -108,7 +108,7 @@ int BoxOnPlaneSide(const vec3_t mins, const vec3_t maxs, const plane_t *plane)
 PlaneTypeForNormal
 =================
 */
-int	PlaneTypeForNormal(const vec3_t normal)
+EPlaneInfo	PlaneTypeForNormal(const vec3_t normal)
 {
 	// NOTE: should these have an epsilon around 1.0?		
 	if (normal[0] >= 1.0)

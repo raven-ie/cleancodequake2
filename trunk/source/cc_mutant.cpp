@@ -472,7 +472,7 @@ bool CMutant::CheckJump ()
 			// We weren't able to get to this spot right away.
 			// We need to calculate a good spot for this.
 			int escape = 0;
-			vec3f temp, angles, forward;
+			vec3f angles, forward;
 
 			// Keep going back about 15 units until we're clear
 			angles = (LastSighting - origin).ToAngles();

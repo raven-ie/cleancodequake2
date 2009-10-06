@@ -36,8 +36,14 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 CStatusBar::CStatusBar()
 {
-	Q_snprintfz (bar, sizeof(bar), "");
-	Q_snprintfz (temp, sizeof(temp), "");
+	bar = QNew (com_levelPool, 0) char[MAX_COMPRINT/2];
+	temp = QNew (com_levelPool, 0) char[MAX_COMPRINT/2];
+}
+
+CStatusBar::~CStatusBar()
+{
+	QDelete[] bar;
+	QDelete[] temp;
 }
 
 size_t CStatusBar::Length ()
@@ -59,90 +65,90 @@ void CStatusBar::SendMsg (CPlayerEntity *ent, bool reliable)
 
 void CStatusBar::AddToBarBuffer (char *string)
 {
-	Q_snprintfz (bar, sizeof(bar), "%s%s", bar, temp);
+	Q_snprintfz (bar, MAX_COMPRINT/2, "%s%s", bar, temp);
 }
 
 void CStatusBar::AddVirtualPoint_Y (int y)
 {
-	Q_snprintfz (temp, sizeof(temp), "yv %i ", y);
+	Q_snprintfz (temp, MAX_COMPRINT/2, "yv %i ", y);
 	AddToBarBuffer (temp);
 }
 
 void CStatusBar::AddVirtualPoint_X (int x)
 {
-	Q_snprintfz (temp, sizeof(temp), "xv %i ", x);
+	Q_snprintfz (temp, MAX_COMPRINT/2, "xv %i ", x);
 	AddToBarBuffer (temp);
 }
 
 void CStatusBar::AddPoint_X (int x, bool inverted = false)
 {
-	Q_snprintfz (temp, sizeof(temp), "x%c %i ", inverted ? 'r' : 'l', x);
+	Q_snprintfz (temp, MAX_COMPRINT/2, "x%c %i ", inverted ? 'r' : 'l', x);
 	AddToBarBuffer (temp);
 }
 
 void CStatusBar::AddPoint_Y (int y, bool inverted = false)
 {
-	Q_snprintfz (temp, sizeof(temp), "y%c %i ", inverted ? 'b' : 't', y);
+	Q_snprintfz (temp, MAX_COMPRINT/2, "y%c %i ", inverted ? 'b' : 't', y);
 	AddToBarBuffer (temp);
 }
 
 void CStatusBar::AddString (char *string, bool highBit = false, bool center = false)
 {
-	Q_snprintfz (temp, sizeof(temp), "%sstring%s \"%s\" ", center ? "c" : "", highBit ? "2" : "", string);
+	Q_snprintfz (temp, MAX_COMPRINT/2, "%sstring%s \"%s\" ", center ? "c" : "", highBit ? "2" : "", string);
 	AddToBarBuffer(temp);
 }
 
 void CStatusBar::AddStatString (int stat)
 {
-	Q_snprintfz (temp, sizeof(temp), "stat_string %i ", stat);
+	Q_snprintfz (temp, MAX_COMPRINT/2, "stat_string %i ", stat);
 	AddToBarBuffer (temp);
 }
 
 void CStatusBar::AddPic (char *pic)
 {
-	Q_snprintfz (temp, sizeof(temp), "picn %s ", pic);
+	Q_snprintfz (temp, MAX_COMPRINT/2, "picn %s ", pic);
 	AddToBarBuffer(temp);
 }
 
 void CStatusBar::AddPicStat (int stat)
 {
-	Q_snprintfz (temp, sizeof(temp), "pic %i ", stat);
+	Q_snprintfz (temp, MAX_COMPRINT/2, "pic %i ", stat);
 	AddToBarBuffer(temp);
 }
 
 void CStatusBar::AddNumStat (int stat, int width = 3)
 {
-	Q_snprintfz (temp, sizeof(temp), "num %i %i ", width, stat);
+	Q_snprintfz (temp, MAX_COMPRINT/2, "num %i %i ", width, stat);
 	AddToBarBuffer(temp);
 }
 
 void CStatusBar::AddIf (int stat)
 {
-	Q_snprintfz (temp, sizeof(temp), "if %i ", stat);
+	Q_snprintfz (temp, MAX_COMPRINT/2, "if %i ", stat);
 	AddToBarBuffer(temp);
 }
 
 void CStatusBar::AddEndIf ()
 {
-	Q_snprintfz (temp, sizeof(temp), "endif ");
+	Q_snprintfz (temp, MAX_COMPRINT/2, "endif ");
 	AddToBarBuffer(temp);
 }
 
 void CStatusBar::AddAmmoNum ()
 {
-	Q_snprintfz (temp, sizeof(temp), "anum ");
+	Q_snprintfz (temp, MAX_COMPRINT/2, "anum ");
 	AddToBarBuffer(temp);
 }
 
 void CStatusBar::AddHealthNum ()
 {
-	Q_snprintfz (temp, sizeof(temp), "hnum ");
+	Q_snprintfz (temp, MAX_COMPRINT/2, "hnum ");
 	AddToBarBuffer(temp);
 }
 
 void CStatusBar::AddArmorNum ()
 {
-	Q_snprintfz (temp, sizeof(temp), "rnum ");
+	Q_snprintfz (temp, MAX_COMPRINT/2, "rnum ");
 	AddToBarBuffer(temp);
 }
 
@@ -150,7 +156,7 @@ void CStatusBar::AddClientBlock (int x, int y, int cNum, int score, int ping, in
 {
 	assert (!(cNum >= game.maxclients || cNum < 0));
 
-	Q_snprintfz (temp, sizeof(temp), "client %i %i %i %i %i %i ", x, y, cNum, score, ping, time);
+	Q_snprintfz (temp, MAX_COMPRINT/2, "client %i %i %i %i %i %i ", x, y, cNum, score, ping, time);
 	AddToBarBuffer(temp);
 }
 
@@ -158,7 +164,7 @@ void CStatusBar::AddClientBlock (int x, int y, int cNum, int score, int ping)
 {
 	assert (!(cNum >= game.maxclients || cNum < 0));
 
-	Q_snprintfz (temp, sizeof(temp), "ctf %i %i %i %i %i %i ", x, y, cNum, score, ping);
+	Q_snprintfz (temp, MAX_COMPRINT/2, "ctf %i %i %i %i %i %i ", x, y, cNum, score, ping);
 	AddToBarBuffer(temp);
 }
 

@@ -391,8 +391,7 @@ void AddAmmoToList ()
 #endif
 }
 
-typedef int EWeaponVwepIndices;
-enum
+CC_ENUM (uint8, EWeaponVwepIndices)
 {
 	WEAP_NONE,
 	WEAP_BLASTER,

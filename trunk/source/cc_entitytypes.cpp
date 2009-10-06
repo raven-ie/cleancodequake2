@@ -258,7 +258,7 @@ void CHurtableEntity::Killed (CBaseEntity *inflictor, CBaseEntity *attacker, int
 		CMonsterEntity *Monster = entity_cast<CMonsterEntity>(this);
 		if (Monster->Monster->AIFlags & AI_MEDIC)
 		{
-			if (Monster->Enemy)  // god, I hope so
+			if (Monster->Enemy && (Monster->Enemy->EntityFlags & ENT_MONSTER))  // god, I hope so
 				CleanupHealTarget (entity_cast<CMonsterEntity>(Monster->Enemy));
 
 			// clean up self

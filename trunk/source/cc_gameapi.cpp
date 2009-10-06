@@ -88,7 +88,7 @@ _CC_ENABLE_DEPRECATION
 void GameError (char *fmt, ...)
 {
 	va_list		argptr;
-	char		text[MAX_COMPRINT];
+	static char	text[MAX_COMPRINT];
 
 	va_start (argptr, fmt);
 	vsnprintf_s (text, sizeof(text), MAX_COMPRINT, fmt, argptr);
@@ -432,10 +432,10 @@ gameExport_t *GetGameAPI (gameImport_t *import)
 #ifndef GAME_HARD_LINKED
 // this is only here so the functions in q_shared.c and q_shwin.c can link
 
-void Com_Printf (comPrint_t flags, char *fmt, ...)
+void Com_Printf (EComPrint flags, char *fmt, ...)
 {
 	va_list		argptr;
-	char		text[MAX_COMPRINT];
+	static char	text[MAX_COMPRINT];
 
 	va_start (argptr, fmt);
 	vsnprintf_s (text, sizeof(text), MAX_COMPRINT, fmt, argptr);
@@ -444,10 +444,10 @@ void Com_Printf (comPrint_t flags, char *fmt, ...)
 	DebugPrintf ("%s", text);
 }
 
-void Com_DevPrintf (comPrint_t flags, char *fmt, ...)
+void Com_DevPrintf (EComPrint flags, char *fmt, ...)
 {
 	va_list		argptr;
-	char		text[MAX_COMPRINT];
+	static char	text[MAX_COMPRINT];
 
 	va_start (argptr, fmt);
 	vsnprintf_s (text, sizeof(text), MAX_COMPRINT, fmt, argptr);
@@ -460,7 +460,7 @@ void Com_DevPrintf (comPrint_t flags, char *fmt, ...)
 void Com_Error (EComErrorType code, char *fmt, ...)
 {
 	va_list		argptr;
-	char		text[MAX_COMPRINT];
+	static char	text[MAX_COMPRINT];
 
 	va_start (argptr, fmt);
 	vsnprintf_s (text, sizeof(text), MAX_COMPRINT, fmt, argptr);

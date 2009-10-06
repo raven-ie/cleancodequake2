@@ -1008,6 +1008,7 @@ void CMakronJumpTimer::Think ()
 	newClass->Velocity = vel;
 	newClass->Velocity.Z = 200;
 	newClass->GroundEntity = NULL;
+	newClass->Link ();
 
 	Free ();
 };

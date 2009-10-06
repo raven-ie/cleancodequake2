@@ -404,6 +404,9 @@ void CWeapon::NoAmmoWeaponChange (CPlayerEntity *Player)
 	if (Player->Client.pers.Weapon->WeaponItem && !Player->Client.pers.Inventory.Has(Player->Client.pers.Weapon->WeaponItem))
 		HasCurrentWeapon = false;
 
+	if (!Chosen_Ammo && !Chosen_Weapon)
+		return;
+
 	Player->Client.NewWeapon = (Chosen_Weapon == NULL) ? Chosen_Ammo->Weapon : Chosen_Weapon->Weapon;
 	if (!HasCurrentWeapon)
 		Player->Client.pers.Weapon->ChangeWeapon(Player);

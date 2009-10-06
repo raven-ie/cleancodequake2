@@ -139,9 +139,9 @@ public:
 		other->State.SetEvent ((Player) ? EV_PLAYER_TELEPORT : EV_OTHER_TELEPORT);
 
 		// set angles
-		if (other->EntityFlags & ENT_PLAYER)
+		if (Player)
 		{
-			for (int i=0 ; i<3 ; i++)
+			for (int i = 0; i < 3; i++)
 				Player->Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(Dest->State.GetAngles()[i] - Player->Client.resp.cmd_angles[i]);
 		}
 

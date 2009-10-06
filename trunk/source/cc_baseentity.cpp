@@ -173,36 +173,36 @@ void	CEntityState::SetSkinNum		(int value)
 	state->skinNum = value;
 }
 
-uint32	CEntityState::GetEffects		()
+EEntityStateEffects	CEntityState::GetEffects		()
 {
 	return state->effects;
 }
-void	CEntityState::SetEffects		(uint32 value)
+void	CEntityState::SetEffects		(EEntityStateEffects value)
 {
 	state->effects = value;
 }
-void	CEntityState::AddEffects		(uint32 value)
+void	CEntityState::AddEffects		(EEntityStateEffects value)
 {
 	state->effects |= value;
 }
-void	CEntityState::RemoveEffects		(uint32 value)
+void	CEntityState::RemoveEffects		(EEntityStateEffects value)
 {
 	state->effects &= ~value;
 }
 
-int		CEntityState::GetRenderEffects	()
+EEntityStateRenderEffects		CEntityState::GetRenderEffects	()
 {
 	return state->renderFx;
 }
-void	CEntityState::SetRenderEffects	(int value)
+void	CEntityState::SetRenderEffects	(EEntityStateRenderEffects value)
 {
 	state->renderFx = value;
 }
-void	CEntityState::AddRenderEffects	(int value)
+void	CEntityState::AddRenderEffects	(EEntityStateRenderEffects value)
 {
 	state->renderFx |= value;
 }
-void	CEntityState::RemoveRenderEffects	(int value)
+void	CEntityState::RemoveRenderEffects	(EEntityStateRenderEffects value)
 {
 	state->renderFx &= ~value;
 }
@@ -216,11 +216,11 @@ void		CEntityState::SetSound		(MediaIndex value)
 	state->sound = value;
 }
 
-int		CEntityState::GetEvent			()
+EEventEffect	CEntityState::GetEvent			()
 {
 	return state->event;
 }
-void	CEntityState::SetEvent			(int value)
+void	CEntityState::SetEvent			(EEventEffect value)
 {
 	state->event = value;
 }
@@ -353,20 +353,20 @@ void			CBaseEntity::SetOwner	(CBaseEntity *ent)
 	gameEntity->owner = ent->gameEntity;
 }
 
-int				CBaseEntity::GetClipmask	()
+EBrushContents	CBaseEntity::GetClipmask	()
 {
 	return gameEntity->clipMask;
 }
-void			CBaseEntity::SetClipmask (int mask)
+void			CBaseEntity::SetClipmask (EBrushContents mask)
 {
 	gameEntity->clipMask = mask;
 }
 
-solid_t			CBaseEntity::GetSolid ()
+ESolidType		CBaseEntity::GetSolid ()
 {
 	return gameEntity->solid;
 }
-void			CBaseEntity::SetSolid (solid_t solid)
+void			CBaseEntity::SetSolid (ESolidType solid)
 {
 	gameEntity->solid = solid;
 }
@@ -474,11 +474,11 @@ void			CBaseEntity::SetSize (vec3f &in)
 	gameEntity->size[2] = in.Z;
 }
 
-int				CBaseEntity::GetSvFlags ()
+EServerFlags	CBaseEntity::GetSvFlags ()
 {
 	return gameEntity->svFlags;
 }
-void			CBaseEntity::SetSvFlags (int SVFlags)
+void			CBaseEntity::SetSvFlags (EServerFlags SVFlags)
 {
 	gameEntity->svFlags = SVFlags;
 }
@@ -538,13 +538,29 @@ void			CBaseEntity::Free ()
 	Freed = true;
 }
 
-void	CBaseEntity::PlaySound (EEntSndChannel channel, MediaIndex soundIndex, float volume, int attenuation, float timeOfs)
+void	CBaseEntity::PlaySound (EEntSndChannel channel, MediaIndex soundIndex, float volume, EAttenuation attenuation, float timeOfs)
 {
+	if ((channel != CHAN_AUTO) && (channel < CHAN_MAX))
+	{
+		if (PlayedSounds[channel-1])
+			return;
+		else
+			PlayedSounds[channel-1] = true;
+	}
+
 	PlaySoundFrom (gameEntity, channel, soundIndex, volume, attenuation, timeOfs);
 };
 
-void	CBaseEntity::PlayPositionedSound (vec3_t origin, EEntSndChannel channel, MediaIndex soundIndex, float volume, int attenuation, float timeOfs)
+void	CBaseEntity::PlayPositionedSound (vec3_t origin, EEntSndChannel channel, MediaIndex soundIndex, float volume, EAttenuation attenuation, float timeOfs)
 {
+	if ((channel != CHAN_AUTO) && (channel < CHAN_MAX))
+	{
+		if (PlayedSounds[channel-1])
+			return;
+		else
+			PlayedSounds[channel-1] = true;
+	}
+
 	PlaySoundAt (origin, gameEntity, channel, soundIndex, volume, attenuation, timeOfs);
 };
 
@@ -725,14 +741,16 @@ void CMapEntity::ParseFields ()
 		return;
 
 	// Go through all the dictionary pairs
-	std::list<CKeyValuePair*>::iterator it = gameEntity->ParseData->begin();
-	while (it != gameEntity->ParseData->end())
 	{
-		CKeyValuePair *PairPtr = (*it);
-		if (ParseField (PairPtr->Key, PairPtr->Value))
-			gameEntity->ParseData->erase (it++);
-		else
-			++it;
+		std::list<CKeyValuePair*>::iterator it = gameEntity->ParseData->begin();
+		while (it != gameEntity->ParseData->end())
+		{
+			CKeyValuePair *PairPtr = (*it);
+			if (ParseField (PairPtr->Key, PairPtr->Value))
+				gameEntity->ParseData->erase (it++);
+			else
+				++it;
+		}
 	}
 
 	// Since this is the last part, go through the rest of the list now

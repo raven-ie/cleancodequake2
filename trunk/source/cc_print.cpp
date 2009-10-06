@@ -45,7 +45,7 @@ Sends text across to be displayed if the level passes
 static void SV_ClientPrintf (edict_t *ent, EGamePrintLevel printLevel, char *fmt, ...)
 {
 	va_list		argptr;
-	char		string[MAX_COMPRINT];
+	static char	string[MAX_COMPRINT];
 	CPlayerEntity *Player = entity_cast<CPlayerEntity>(ent->Entity);
 
 	if (printLevel < Player->Client.resp.messageLevel)
@@ -64,7 +64,7 @@ static void SV_ClientPrintf (edict_t *ent, EGamePrintLevel printLevel, char *fmt
 
 void ClientPrintf (edict_t *ent, EGamePrintLevel printLevel, char *fmt, ...)
 {
-	char		msg[MAX_COMPRINT];
+	static char	msg[MAX_COMPRINT];
 	va_list		argptr;
 
 	if (ent)
@@ -100,7 +100,7 @@ void DeveloperPrintf (char *fmt, ...)
 		return;
 
 	va_list		argptr;
-	char		text[MAX_COMPRINT];
+	static char	text[MAX_COMPRINT];
 
 	va_start (argptr, fmt);
 	vsnprintf_s (text, sizeof(text), MAX_COMPRINT, fmt, argptr);
@@ -121,7 +121,7 @@ _CC_ENABLE_DEPRECATION
 void DebugPrintf (char *fmt, ...)
 {
 	va_list		argptr;
-	char		text[MAX_COMPRINT];
+	static char	text[MAX_COMPRINT];
 
 	va_start (argptr, fmt);
 	vsnprintf_s (text, sizeof(text), MAX_COMPRINT, fmt, argptr);
@@ -141,7 +141,7 @@ _CC_ENABLE_DEPRECATION
 void BroadcastPrintf (EGamePrintLevel printLevel, char *fmt, ...)
 {
 	va_list		argptr;
-	char		string[MAX_COMPRINT];
+	static char	string[MAX_COMPRINT];
 
 	va_start (argptr, fmt);
 	vsnprintf_s (string, sizeof(string), sizeof(string), fmt, argptr);
@@ -150,7 +150,7 @@ void BroadcastPrintf (EGamePrintLevel printLevel, char *fmt, ...)
 	// Echo to console
 	if (dedicated->Integer())
 	{
-		char	copy[1024];
+		static char	copy[1024];
 		int		i;
 		
 		// Mask off high bits

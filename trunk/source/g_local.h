@@ -54,16 +54,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define TAG_LEVEL	766		// clear when loading a new level
 
 //gib types
-typedef int EGibType;
-enum
+CC_ENUM (uint8, EGibType)
 {
 	GIB_ORGANIC,
 	GIB_METALLIC
 };
 
 // power armor types
-typedef int EPowerArmorType;
-enum
+CC_ENUM (uint8, EPowerArmorType)
 {
 	POWER_ARMOR_NONE,
 	POWER_ARMOR_SCREEN,
@@ -71,16 +69,14 @@ enum
 };
 
 // handedness values
-typedef int EHandedness;
-enum
+CC_ENUM (uint8, EHandedness)
 {
 	RIGHT_HANDED,
 	LEFT_HANDED,
 	CENTER_HANDED
 };
 
-typedef int ECrossLevelTriggerFlags;
-enum
+CC_ENUM (uint32, ECrossLevelTriggerFlags)
 {
 	SFL_CROSS_TRIGGER_1		= BIT(0),
 	SFL_CROSS_TRIGGER_2		= BIT(1),
@@ -94,8 +90,7 @@ enum
 };
 
 // noise types for PlayerNoise
-typedef int ENoiseTye;
-enum
+CC_ENUM (uint8, ENoiseType)
 {
 	PNOISE_SELF,
 	PNOISE_WEAPON,
@@ -107,8 +102,7 @@ enum
 // it should be initialized at dll load time, and read/written to
 // the server.ssv file for savegames
 //
-typedef int EGameMode;
-enum //EGameMode
+CC_ENUM (uint16, EGameMode)
 {
 	GAME_SINGLEPLAYER		=	BIT(0),
 	GAME_DEATHMATCH			=	BIT(1),
@@ -213,8 +207,7 @@ typedef struct
 	char		*gravity;
 } spawn_temp_t;
 
-typedef int EFuncState;
-enum
+CC_ENUM (uint8, EFuncState)
 {
 	STATE_TOP,
 	STATE_BOTTOM,
@@ -228,8 +221,7 @@ extern	gameExport_t	globals;
 extern	spawn_temp_t	st;
 
 // means of death
-typedef uint32	EMeansOfDeath;
-enum // EMeansOfDeath
+CC_ENUM (uint32, EMeansOfDeath)
 {
 	MOD_UNKNOWN,
 	MOD_BLASTER,
@@ -293,8 +285,7 @@ extern	edict_t			*g_edicts;
 // 8 bits used as power cube id bits for coop games
 
 // item spawnflags
-typedef int EItemSpawnflags;
-enum
+CC_ENUM (uint32, EItemSpawnflags)
 {
 	ITEM_TRIGGER_SPAWN			= BIT(0),
 	ITEM_NO_TOUCH				= BIT(1),
@@ -307,8 +298,7 @@ enum
 
 // edict->spawnflags
 // these are set with checkboxes on each entity in the map editor
-typedef int EEdictSpawnflags;
-enum
+CC_ENUM (uint32, EEdictSpawnflags)
 {
 	SPAWNFLAG_NOT_EASY			= BIT(8),
 	SPAWNFLAG_NOT_MEDIUM		= BIT(9),
@@ -316,46 +306,6 @@ enum
 	SPAWNFLAG_NOT_DEATHMATCH	= BIT(11),
 	SPAWNFLAG_NOT_COOP			= BIT(12)
 };
-
-
-//
-// fields are needed for spawning from the entity string
-// and saving / loading games
-//
-enum
-{
-	FFL_SPAWNTEMP = 1,
-	FFL_NOSPAWN
-};
-
-typedef uint32 fieldtype_t;
-enum
-{
-	F_INT, 
-	F_FLOAT,
-	F_LSTRING,			// string on disk, pointer in memory, TAG_LEVEL
-	F_GSTRING,			// string on disk, pointer in memory, TAG_GAME
-	F_VECTOR,
-	F_ANGLEHACK,
-	F_EDICT,			// index on disk, pointer in memory
-	F_ITEM,				// index on disk, pointer in memory
-	F_NEWITEM,			// index on disk, pointer in memory
-	F_CLIENT,			// index on disk, pointer in memory
-	F_FUNCTION,
-	F_MMOVE,
-	F_IGNORE
-};
-
-typedef struct
-{
-	char	*name;
-	int		ofs;
-	fieldtype_t	type;
-	int		flags;
-} field_t;
-
-
-extern	field_t fields[];
 
 //
 // g_combat.c
@@ -469,11 +419,11 @@ struct edict_s
 
 	//================================
 
-	int					svFlags;			// SVF_NOCLIENT, SVF_DEADMONSTER, SVF_MONSTER, etc
+	EServerFlags		svFlags;			// SVF_NOCLIENT, SVF_DEADMONSTER, SVF_MONSTER, etc
 	vec3_t				mins, maxs;
 	vec3_t				absMin, absMax, size;
-	solid_t				solid;
-	int					clipMask;
+	ESolidType			solid;
+	EBrushContents		clipMask;
 	struct edict_s		*owner;
 
 
@@ -621,10 +571,6 @@ extern	CCvar	*cc_techflags;
 #ifdef CLEANCTF_ENABLED
 extern	CCvar	*capturelimit;
 extern	CCvar	*instantweap;
-#endif
-
-#ifdef CLEANCTF_ENABLED
-#include "cc_ctf.h"
 #endif
 
 extern CBaseEntity *World;

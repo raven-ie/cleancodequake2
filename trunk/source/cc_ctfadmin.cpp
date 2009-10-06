@@ -363,7 +363,7 @@ void CTFAdmin(edict_t *ent)
 	CTFOpenAdminMenu(ent);
 }
 #endif
-bool CTFBeginElection(CPlayerEntity *ent, elect_t type, char *msg);
+bool CTFBeginElection(CPlayerEntity *ent, EElectState type, char *msg);
 
 void CTFAdmin(CPlayerEntity *ent)
 {

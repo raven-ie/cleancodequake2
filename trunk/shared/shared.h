@@ -65,7 +65,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 // server to client
 // note: ONLY add things to the bottom, to keep Quake2 compatibility
 //
-enum ESVCType
+CC_ENUM (byte, ESVCType)
 {
 	SVC_BAD,
 
@@ -106,7 +106,7 @@ enum ESVCType
 //
 // game print flags
 //
-enum EGamePrintLevel
+CC_ENUM (uint8, EGamePrintLevel)
 {
 	PRINT_LOW,				// pickup messages
 	PRINT_MEDIUM,			// death messages
@@ -118,7 +118,7 @@ enum EGamePrintLevel
 //
 // destination class for gi.multicast()
 //
-enum EMultiCast
+CC_ENUM (uint8, EMultiCast)
 {
 	MULTICAST_ALL,
 	MULTICAST_PHS,
@@ -217,7 +217,7 @@ typedef uint32				fileHandle_t;
 #define MAX_OSPATH			128		// max length of a filesystem pathname
 
 // directory searching
-enum ESearchFileFlags
+CC_ENUM (uint16, ESearchFileFlags)
 {
 	SFF_ARCH		= BIT(0),
 	SFF_HIDDEN		= BIT(1),
@@ -227,7 +227,7 @@ enum ESearchFileFlags
 };
 
 // these are used for FS_OpenFile
-enum EFSOpenMode
+CC_ENUM (uint8, EFSOpenMode)
 {
 	FS_MODE_READ_BINARY,
 	FS_MODE_WRITE_BINARY,
@@ -238,7 +238,7 @@ enum EFSOpenMode
 };
 
 // these are used for FS_Seek
-enum EFSSeekOrigin
+CC_ENUM (uint8, EFSSeekOrigin)
 {
 	FS_SEEK_SET,
 	FS_SEEK_CUR,
@@ -254,19 +254,18 @@ enum EFSSeekOrigin
 #define MAX_COMPRINT 4096
 
 // Com_Printf
-typedef int comPrint_t;
-enum
+CC_ENUM (uint16, EComPrint)
 {
 	PRNT_WARNING			= BIT(0),
 	PRNT_ERROR				= BIT(1),
 	PRNT_CONSOLE			= BIT(2),
 	PRNT_CHATHUD			= BIT(3)
 };
-void	Com_Printf (comPrint_t flags, char *fmt, ...);
-void	Com_DevPrintf (comPrint_t flags, char *fmt, ...);
+void	Com_Printf (EComPrint flags, char *fmt, ...);
+void	Com_DevPrintf (EComPrint flags, char *fmt, ...);
 
 // Com_Error
-enum EComErrorType
+CC_ENUM (uint8, EComErrorType)
 {
 	ERR_FATAL,				// exit the entire game with a popup window
 	ERR_DROP,				// print to console and disconnect from game
@@ -353,8 +352,7 @@ enum
 //
 // lower bits are stronger, and will eat weaker brushes completely
 //
-typedef int EBrushContents;
-enum 
+CC_ENUM (int, EBrushContents)
 {
 	CONTENTS_SOLID			= BIT(0),		// an eye is never valid in a solid
 	CONTENTS_WINDOW			= BIT(1),		// translucent, but not watery
@@ -430,8 +428,7 @@ enum
 	CONTENTS_MASK_CURRENT		= (CONTENTS_CURRENT_0|CONTENTS_CURRENT_90|CONTENTS_CURRENT_180|CONTENTS_CURRENT_270|CONTENTS_CURRENT_UP|CONTENTS_CURRENT_DOWN),
 };
 
-typedef int ESurfaceFlags;
-enum
+CC_ENUM (int, ESurfaceFlags)
 {
 	SURF_TEXINFO_LIGHT		= BIT(0),		// value will hold the light strength
 	SURF_TEXINFO_SLICK		= BIT(1),		// affects game physics
@@ -491,8 +488,7 @@ enum
 ==============================================================================
 */
 
-typedef int EPlaneInfo;
-enum
+CC_ENUM (uint8, EPlaneInfo)
 {
 	// Axial planes
 	PLANE_X,
@@ -527,7 +523,7 @@ struct Plane_t
 // m_plane.c
 //
 int BoxOnPlaneSide(const vec3_t mins, const vec3_t maxs, const plane_t *plane);
-int PlaneTypeForNormal(const vec3_t normal);
+EPlaneInfo PlaneTypeForNormal(const vec3_t normal);
 void CategorizePlane(plane_t *plane);
 void PlaneFromPoints(const vec3_t verts[3], plane_t *plane);
 bool ComparePlanes(const vec3_t p1normal, const float p1dist, const vec3_t p2normal, const float p2dist);
@@ -561,7 +557,7 @@ inline int Box_On_Plane_Side (const vec3_t mins, const vec3_t maxs, const plane_
 struct cmBspSurface_t
 {
 	char			name[16];
-	int				flags;
+	ESurfaceFlags	flags;
 	int				value;
 
 #ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
@@ -733,8 +729,7 @@ struct pMoveNew_t
 // Effects are things handled on the client side (lights, particles, frame
 // animations) that happen constantly on the given entity. An entity that has
 // effects will be sent to the client even if it has a zero index model.
-typedef uint32 EEntityStateEffects;
-enum
+CC_ENUM (uint32, EEntityStateEffects)
 {
 	EF_ROTATE			= BIT(0),		// rotate (bonus items)
 	EF_GIB				= BIT(1),		// leave a trail
@@ -789,8 +784,7 @@ enum
 */
 
 // entityState_t->renderfx flags
-typedef int EEntityStateRenderEffects;
-enum
+CC_ENUM (int, EEntityStateRenderEffects)
 {
 	RF_MINLIGHT			= BIT(0),		// allways have some light (viewmodel)
 	RF_VIEWERMODEL		= BIT(1),		// don't draw through eyes, only mirrors
@@ -1230,8 +1224,7 @@ enum
 // Other channels (1-7) allways override
 // a playing sound on that channel
 //
-typedef int EEntSndChannel;
-enum
+CC_ENUM (uint8, EEntSndChannel)
 {
 	CHAN_AUTO,
 	CHAN_WEAPON,
@@ -1249,7 +1242,7 @@ enum
 //
 // sound attenuation values
 //
-enum
+CC_ENUM (uint8, EAttenuation)
 {
 	ATTN_NONE,				// full volume the entire level
 	ATTN_NORM,
@@ -1266,8 +1259,7 @@ enum
 */
 
 // dmflags->floatVal flags
-typedef int EDeathmatchFlags;
-enum
+CC_ENUM (int, EDeathmatchFlags)
 {
 	DF_NO_HEALTH		= BIT(0),
 	DF_NO_ITEMS			= BIT(1),
@@ -1329,8 +1321,7 @@ enum
 
 // config strings are a general means of communication from the server to all
 // connected clients. Each config string can be at most MAX_CFGSTRLEN characters.
-typedef int EConfigStringIndexes;
-enum
+CC_ENUM (int, EConfigStringIndexes)
 {
 	CS_NAME,
 	CS_CDTRACK,
@@ -1367,7 +1358,7 @@ enum
 // ertity events are for effects that take place reletive to an existing
 // entities origin.  Very network efficient. All muzzle flashes really should
 // be converted to events...
-enum
+CC_ENUM (int, EEventEffect)
 {
 	EV_NONE,
 	EV_ITEM_RESPAWN,
@@ -1399,13 +1390,13 @@ struct entityState_t
 	int				frame;		// also RF_BEAM's size
 	int				skinNum;	// also RF_BEAM color index
 
-	uint32			effects;	// PGM - we're filling it, so it needs to be uint32
-	int				renderFx;
+	EEntityStateEffects			effects;	// PGM - we're filling it, so it needs to be uint32
+	EEntityStateRenderEffects	renderFx;
 	int				solid;		// for client side prediction, 8*(bits 0-4) is x/y radius
 								// 8*(bits 5-9) is z down distance, 8(bits10-15) is z up
 								// gi.linkentity sets this properly
 	int				sound;		// for looping sounds, to guarantee shutoff
-	int				event;		// impulse events -- muzzle flashes, footsteps, etc
+	EEventEffect	event;		// impulse events -- muzzle flashes, footsteps, etc
 								// events only go out for a single frame, they
 								// are automatically cleared each frame
 	vec3_t			velocity;	// for new ENHANCED_PROTOCOL_VERSION
@@ -1429,13 +1420,13 @@ struct entityStateOld_t
 	int				frame;		// also RF_BEAM's size
 	int				skinNum;	// also RF_BEAM color index
 
-	uint32			effects;	// PGM - we're filling it, so it needs to be uint32
-	int				renderFx;
+	EEntityStateEffects			effects;	// PGM - we're filling it, so it needs to be uint32
+	EEntityStateRenderEffects	renderFx;
 	int				solid;		// for client side prediction, 8*(bits 0-4) is x/y radius
 								// 8*(bits 5-9) is z down distance, 8(bits10-15) is z up
 								// gi.linkentity sets this properly
 	int				sound;		// for looping sounds, to guarantee shutoff
-	int				event;		// impulse events -- muzzle flashes, footsteps, etc
+	EEventEffect	event;		// impulse events -- muzzle flashes, footsteps, etc
 								// events only go out for a single frame, they
 								// are automatically cleared each frame
 };
@@ -1449,7 +1440,7 @@ struct entityStateOld_t
 */
 
 // playerState->stats[] indexes
-enum
+CC_ENUM (int16, EStatIndex)
 {
 	STAT_HEALTH_ICON,
 	STAT_HEALTH,
@@ -1490,7 +1481,7 @@ enum
 };
 
 // playerState_t->rdFlags
-enum
+CC_ENUM (int, ERenderDefFlags)
 {
 	RDF_UNDERWATER		= BIT(0),		// warp the screen as apropriate
 	RDF_NOWORLDMODEL	= BIT(1),		// used for player configuration screen
@@ -1522,7 +1513,7 @@ struct playerStateNew_t
 	
 	float			fov;				// horizontal field of view
 
-	int				rdFlags;			// refdef flags
+	ERenderDefFlags	rdFlags;			// refdef flags
 
 	int16			stats[MAX_STATS];	// fast status bar updates
 
@@ -1549,9 +1540,9 @@ struct playerState_t
 	
 	float			fov;				// horizontal field of view
 
-	int				rdFlags;			// refdef flags
+	ERenderDefFlags	rdFlags;			// refdef flags
 
-	int16			stats[MAX_STATS];	// fast status bar updates
+	EStatIndex		stats[MAX_STATS];	// fast status bar updates
 };
 
 // CleanCode Stuff

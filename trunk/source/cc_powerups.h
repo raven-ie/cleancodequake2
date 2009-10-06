@@ -35,14 +35,14 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #define __CC_POWERUPS_H__
 
 // Class for powerups.
-// Powerups are funny because they are.
-typedef int EPowerupFlags;
-enum //EPowerupFlags
+// Powerups are funny because they are
+CC_ENUM (uint8, EPowerupFlags)
 {
-	POWERFLAG_STORE			=	1,
-	POWERFLAG_STACK			=	2,
-	POWERFLAG_BUTNOTINCOOP	=	4, // must be ORed with stack
+	POWERFLAG_STORE			=	BIT(0),
+	POWERFLAG_STACK			=	BIT(1),
+	POWERFLAG_BUTNOTINCOOP	=	BIT(2), // must be ORed with stack
 };
+
 class CBasePowerUp : public CBaseItem
 {
 public:

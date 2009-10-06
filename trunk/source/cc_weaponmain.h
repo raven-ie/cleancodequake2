@@ -34,8 +34,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #if !defined(__CC_WEAPONMAIN_H__) || !defined(INCLUDE_GUARDS)
 #define __CC_WEAPONMAIN_H__
 
-typedef int EWeaponState;
-enum //EWeaponState
+CC_ENUM (uint8, EWeaponState)
 {
 	WS_ACTIVATING,
 	WS_IDLE,

@@ -359,10 +359,10 @@ public:
 
 	bool DoCallback (CPlayerEntity *Player)
 	{
-		char st[80];
+		char tempString[80];
 
 		if (!Spectator)
-			Q_snprintfz(st, sizeof(st), " - %02d:%02d %4d %3d %s%s\n",
+			Q_snprintfz(tempString, sizeof(tempString), " - %02d:%02d %4d %3d %s%s\n",
 				(level.framenum - Player->Client.resp.enterframe) / 600,
 				((level.framenum - Player->Client.resp.enterframe) % 600)/10,
 				Player->Client.GetPing(),
@@ -370,18 +370,18 @@ public:
 				Player->Client.pers.netname,
 				Player->Client.resp.spectator ? " (spectator)" : "");
 		else
-			Q_snprintfz(st, sizeof(st), " - %s%s\n",
+			Q_snprintfz(tempString, sizeof(tempString), " - %s%s\n",
 				Player->Client.pers.netname,
 				Player->Client.resp.spectator ? " (spectator)" : "");
 
-		if (strlen(Text) + strlen(st) > SizeOf - 50)
+		if (strlen(Text) + strlen(tempString) > SizeOf - 50)
 		{
 			Q_snprintfz (Text+strlen(Text), SizeOf, "And more...\n");
 			Ent->PrintToClient (PRINT_HIGH, "%s", Text);
 			return true;
 		}
 
-		Q_strcatz(Text, st, SizeOf);
+		Q_strcatz(Text, tempString, SizeOf);
 		return false;
 	}
 

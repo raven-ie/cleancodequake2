@@ -451,25 +451,28 @@ void CTurretDriver::TurretThink ()
 		}
 	}
 
-	// let the turret know where we want it to aim
-	vec3f dir = (Entity->Enemy->State.GetOrigin() +
-		vec3f(0, 0, Entity->Enemy->ViewHeight)) -
-		TargetedBreach->State.GetOrigin();
+	if (Entity->Enemy)
+	{
+		// let the turret know where we want it to aim
+		vec3f dir = (Entity->Enemy->State.GetOrigin() +
+			vec3f(0, 0, Entity->Enemy->ViewHeight)) -
+			TargetedBreach->State.GetOrigin();
 
-	vec3f ang = dir.ToAngles ();
-	TargetedBreach->MoveAngles = ang;
+		vec3f ang = dir.ToAngles ();
+		TargetedBreach->MoveAngles = ang;
 
-	// decide if we should shoot
-	if (level.framenum < AttackFinished)
-		return;
+		// decide if we should shoot
+		if (level.framenum < AttackFinished)
+			return;
 
-	float reaction_time = (3 - skill->Integer()) * 1.0;
-	if ((level.framenum - TrailTime) < (reaction_time * 10))
-		return;
+		float reaction_time = (3 - skill->Integer()) * 1.0;
+		if ((level.framenum - TrailTime) < (reaction_time * 10))
+			return;
 
-	AttackFinished = level.framenum + ((reaction_time + 1.0) * 10);
+		AttackFinished = level.framenum + ((reaction_time + 1.0) * 10);
 
-	TargetedBreach->ShouldFire = true;
+		TargetedBreach->ShouldFire = true;
+	}
 }
 
 void CTurretDriver::TurretLink ()

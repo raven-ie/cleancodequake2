@@ -69,7 +69,9 @@ public:
 	bool				dfDmTechs;
 
 	dmFlagsConfig();
-	void UpdateFlags (int dmFlags);
+
+	void UpdateFlags (int wantedFlags);
+	void Reset ();
 };
 
 extern dmFlagsConfig dmFlags;

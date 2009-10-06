@@ -51,7 +51,7 @@ void EndDMLevel (void)
 	char *s, *t, *f;
 	static const char *seps = " ,\n\r";
 #ifdef CRT_USE_UNDEPRECATED_FUNCTIONS
-	char *nextToken;
+	char *nextToken = NULL;
 #endif
 
 	// stay on same level flag
@@ -257,6 +257,7 @@ void __break(int);
 #pragma intrinsic (__break)
 #define _DbgBreak() __break(0x80016)
 #else  /* defined (_M_IA64) */
+#include <windows.h>
 #define _DbgBreak() DebugBreak()
 #endif  /* defined (_M_IA64) */
 
@@ -316,8 +317,9 @@ void CC_RunFrame ()
 		if (ent->Entity)
 		{
 			CBaseEntity *Entity = ent->Entity;
+			memset (&Entity->PlayedSounds, 0, sizeof(Entity->PlayedSounds));
+			
 			level.CurrentEntity = Entity;
-
 			Entity->State.SetOldOrigin (Entity->State.GetOrigin());
 
 			// if the ground entity moved, make sure we are still on it

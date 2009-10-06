@@ -53,7 +53,7 @@ class CTargetSpeaker : public CMapEntity, public CUsableEntity
 {
 public:
 	float		Volume;
-	float		Attenuation;
+	int			Attenuation;
 
 	CTargetSpeaker () :
 	  CBaseEntity (),
@@ -100,7 +100,7 @@ public:
 			Volume = 1.0;
 
 		if (!Attenuation)
-			Attenuation = 1.0;
+			Attenuation = 1;
 		else if (Attenuation == -1)	// use -1 so 0 defaults to 1
 			Attenuation = 0;
 
@@ -117,7 +117,7 @@ public:
 const CEntityField CTargetSpeaker::FieldsForParsing[] =
 {
 	CEntityField ("volume", EntityMemberOffset(CTargetSpeaker,Volume), FT_FLOAT),
-	CEntityField ("attenuation", EntityMemberOffset(CTargetSpeaker,Attenuation), FT_FLOAT)
+	CEntityField ("attenuation", EntityMemberOffset(CTargetSpeaker,Attenuation), FT_INT)
 };
 const size_t CTargetSpeaker::FieldsForParsingSize = FieldSize<CTargetSpeaker>();
 

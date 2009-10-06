@@ -222,34 +222,42 @@ void			CPlayerState::SetFov (float value)
 	playerState->fov = value;
 }
 
-int				CPlayerState::GetRdFlags ()
+ERenderDefFlags	CPlayerState::GetRdFlags ()
 {
 	return playerState->rdFlags;
 }
-void			CPlayerState::SetRdFlags (int value)
+void			CPlayerState::SetRdFlags (ERenderDefFlags value)
 {
 	playerState->rdFlags = value;
 }
 
 int16			CPlayerState::GetStat (uint8 index)
 {
-	assert (!(index < 0 || index > 32));
+	if (index < 0 || index > 32)
+	{
+		assert (0);
+		return 0;
+	}
 
 	return playerState->stats[index];
 }
 void			CPlayerState::SetStat (uint8 index, int16 val)
 {
-	assert (!(index < 0 || index > 32));
+	if (index < 0 || index > 32)
+	{
+		assert (0);
+		return;
+	}
 
 	playerState->stats[index] = val;
 }
 
-void CPlayerState::CopyStats (int16 *Stats)
+void CPlayerState::CopyStats (EStatIndex *Stats)
 {
 	memcpy (playerState->stats, Stats, sizeof(playerState->stats));
 }
 
-int16 *CPlayerState::GetStats ()
+EStatIndex *CPlayerState::GetStats ()
 {
 	return playerState->stats;
 }
@@ -486,8 +494,8 @@ void CPlayerEntity::PutInServer ()
 	int						index;
 	vec3f					spawn_origin, spawn_angles;
 	int						i;
-	clientPersistent_t		saved;
-	clientRespawn_t			resp;
+	static clientPersistent_t		saved;
+	static clientRespawn_t			resp;
 
 	// find a spawn point
 	// do it before setting health back up, so farthest
@@ -1909,14 +1917,14 @@ CTFScoreboardMessage
 void CPlayerEntity::CTFScoreboardMessage (bool reliable)
 {
 	CStatusBar			Bar;
-	char				entry[1024];
+	static char			entry[1024];
 	size_t				len;
-	int					sorted[2][MAX_CS_CLIENTS];
-	int					sortedscores[2][MAX_CS_CLIENTS];
-	int					score, total[2], totalscore[2];
+	static int			sorted[2][MAX_CS_CLIENTS];
+	static int			sortedscores[2][MAX_CS_CLIENTS];
+	static int			score, total[2], totalscore[2];
 	int					last[2];
 	int					n, j, k;
-	char				str[MAX_COMPRINT/4];
+	static char			str[MAX_COMPRINT/4];
 	int					team;
 
 	// sort the clients by team and score
@@ -2107,10 +2115,10 @@ void CPlayerEntity::DeathmatchScoreboardMessage (bool reliable)
 #endif
 
 	CStatusBar			Scoreboard;
-	int					sorted[MAX_CS_CLIENTS];
-	int					sortedscores[MAX_CS_CLIENTS];
+	static int			sorted[MAX_CS_CLIENTS];
+	static int			sortedscores[MAX_CS_CLIENTS];
 	int					score, total;
-	CPlayerEntity		*Killer = (Enemy) ? entity_cast<CPlayerEntity>(Enemy) : NULL;
+	CPlayerEntity		*Killer = (Enemy && (Enemy->EntityFlags & ENT_PLAYER)) ? entity_cast<CPlayerEntity>(Enemy) : NULL;
 
 	// sort the clients by score
 	total = 0;
@@ -2146,6 +2154,9 @@ void CPlayerEntity::DeathmatchScoreboardMessage (bool reliable)
 		int		x, y;
 		char	*tag;
 		CPlayerEntity *cl_ent = entity_cast<CPlayerEntity>((g_edicts + 1 + sorted[i])->Entity);
+
+		if (!cl_ent)
+			continue;
 
 		x = (i>=6) ? 160 : 0;
 		y = 32 + 32 * (i%6);
@@ -2319,7 +2330,7 @@ void CPlayerEntity::SetStats ()
 		Client.PlayerState.SetStat(STAT_HELPICON, gMedia.Hud.HelpPic);
 
 	else if ( (Client.pers.hand == CENTER_HANDED || Client.PlayerState.GetFov() > 91)
-		&& Client.pers.Weapon)
+		&& Client.pers.Weapon && Client.pers.Weapon->Item)
 		Client.PlayerState.SetStat(STAT_HELPICON, Client.pers.Weapon->Item->GetIconIndex());
 	else
 		Client.PlayerState.SetStat(STAT_HELPICON, 0);
@@ -2367,7 +2378,6 @@ void CPlayerEntity::SetSpectatorStats ()
 #ifdef CLEANCTF_ENABLED
 void CPlayerEntity::SetCTFStats()
 {
-	int i;
 	int p1, p2;
 	CFlagEntity *e;
 
@@ -2407,8 +2417,6 @@ void CPlayerEntity::SetCTFStats()
 		}
 	}
 
-	i = 0;
-
 	// figure out what icon to display for team logos
 	// three states:
 	//   flag at base
@@ -2420,12 +2428,10 @@ void CPlayerEntity::SetCTFStats()
 	{
 		if (e->GetSolid() == SOLID_NOT)
 		{
-			int i;
-
 			// not at base
 			// check if on player
 			p1 = ImageIndex ("i_ctf1d"); // default to dropped
-			for (i = 1; i <= game.maxclients; i++)
+			for (int i = 1; i <= game.maxclients; i++)
 			{
 				CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 
@@ -2447,12 +2453,10 @@ void CPlayerEntity::SetCTFStats()
 	{
 		if (e->GetSolid() == SOLID_NOT)
 		{
-			int i;
-
 			// not at base
 			// check if on player
 			p2 = ImageIndex ("i_ctf2d"); // default to dropped
-			for (i = 1; i <= game.maxclients; i++)
+			for (int i = 1; i <= game.maxclients; i++)
 			{
 				CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 
@@ -3163,7 +3167,10 @@ void	CPlayerEntity::SelectSpawnPoint (vec3f &origin, vec3f &angles)
 			}
 			// FIXME: Remove.
 			if (!spot)
+			{
 				GameError ("Couldn't find spawn point %s", game.spawnpoint);
+				return;
+			}
 		}
 	}
 
@@ -3411,7 +3418,7 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 void CPlayerEntity::PrintToClient (EGamePrintLevel printLevel, char *fmt, ...)
 {
 	va_list		argptr;
-	char		text[MAX_COMPRINT];
+	static char	text[MAX_COMPRINT];
 
 	va_start (argptr, fmt);
 	vsnprintf_s (text, sizeof(text), MAX_COMPRINT, fmt, argptr);

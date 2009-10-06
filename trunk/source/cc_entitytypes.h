@@ -137,8 +137,7 @@ public:
 	virtual void	Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
 };
 
-typedef uint32 EPhysicsType;
-enum
+CC_ENUM (uint8, EPhysicsType)
 {
 	PHYSICS_NONE,
 

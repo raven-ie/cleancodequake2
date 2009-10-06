@@ -140,7 +140,7 @@ G_TouchTriggers
 */
 void	G_TouchTriggers (CBaseEntity *ent)
 {
-	edict_t		*touch[MAX_CS_EDICTS];
+	static edict_t		*touch[MAX_CS_EDICTS];
 	memset(touch, 0, sizeof(touch));
 
 	// dead things don't activate triggers!
