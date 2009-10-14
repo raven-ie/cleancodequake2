@@ -444,19 +444,11 @@ struct edict_s
 	FrameNumber_t		timestamp;
 
 	float		angle;			// set in qe3, -1 = up, -2 = down
-	char		*target;
-	char		*targetname;
-	char		*killtarget;
 	char		*team;
 	char		*pathtarget;
-	char		*deathtarget;
-	char		*combattarget;
 
 	float		gravity;		// per entity gravity multiplier (1.0 is normal)
 								// use for lowgrav artifact, flares
-
-	edict_t		*goalentity;
-	edict_t		*movetarget;
 
 	int			show_hostile;
 	FrameNumber_t		powerarmor_time;

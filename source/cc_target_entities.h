@@ -43,9 +43,7 @@ public:
 
 	void Use (CBaseEntity *other, CBaseEntity *activator);
 
-	static const class CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-	virtual bool			ParseField (char *Key, char *Value);
+	ENTITYFIELD_DEFS
 
 	void Spawn ();
 };

@@ -77,19 +77,25 @@ CBrushModel::CBrushModel () :
 CBaseEntity (),
 CThinkableEntity (),
 CPushPhysics (),
-CStopPhysics ()
+CStopPhysics (),
+BrushType(0)
 {
+	EntityFlags |= ENT_BRUSHMODEL;
+	BrushType |= BRUSH_BASE;
 };
 
 CBrushModel::CBrushModel (int Index) :
 CBaseEntity (Index),
 CThinkableEntity (Index),
 CPushPhysics (Index),
-CStopPhysics (Index)
+CStopPhysics (Index),
+BrushType(0)
 {
+	EntityFlags |= ENT_BRUSHMODEL;
+	BrushType |= BRUSH_BASE;
 };
 
-const CEntityField CBrushModel::FieldsForParsing[] =
+ENTITYFIELDS_BEGIN(CBrushModel)
 {
 	CEntityField ("wait", EntityMemberOffset(CBrushModel,Wait), FT_FRAMENUMBER),
 	CEntityField ("speed", EntityMemberOffset(CBrushModel,Speed), FT_FLOAT),
@@ -98,7 +104,7 @@ const CEntityField CBrushModel::FieldsForParsing[] =
 	CEntityField ("distance", EntityMemberOffset(CBrushModel,Distance), FT_INT),
 	CEntityField ("dmg", EntityMemberOffset(CBrushModel,Damage), FT_INT),
 };
-const size_t CBrushModel::FieldsForParsingSize = FieldSize<CBrushModel>();
+ENTITYFIELDS_END(CBrushModel)
 
 bool			CBrushModel::ParseField (char *Key, char *Value)
 {
@@ -378,6 +384,7 @@ CBlockableEntity(),
 CUsableEntity(),
 CBrushModel()
 {
+	BrushType |= BRUSH_PLATFORM;
 };
 
 CPlatForm::CPlatForm(int Index) :
@@ -387,6 +394,7 @@ CBlockableEntity(Index),
 CUsableEntity(Index),
 CBrushModel(Index)
 {
+	BrushType |= BRUSH_PLATFORM;
 };
 
 bool CPlatForm::Run ()
@@ -429,7 +437,7 @@ void CPlatForm::HitTop ()
 	if (!(Flags & FL_TEAMSLAVE))
 	{
 		if (SoundEnd)
-			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundEnd, 1, ATTN_STATIC);
+			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundEnd, 255, ATTN_STATIC);
 		State.SetSound (0);
 	}
 	MoveState = STATE_TOP;
@@ -443,7 +451,7 @@ void CPlatForm::HitBottom ()
 	if (!(Flags & FL_TEAMSLAVE))
 	{
 		if (SoundEnd)
-			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundEnd, 1, ATTN_STATIC);
+			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundEnd, 255, ATTN_STATIC);
 		State.SetSound (0);
 	}
 	MoveState = STATE_BOTTOM;
@@ -467,7 +475,7 @@ void CPlatForm::GoDown ()
 	if (!(Flags & FL_TEAMSLAVE))
 	{
 		if (SoundStart)
-			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 1, ATTN_STATIC);
+			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 255, ATTN_STATIC);
 		State.SetSound (SoundMiddle);
 	}
 	MoveState = STATE_DOWN;
@@ -479,7 +487,7 @@ void CPlatForm::GoUp ()
 	if (!(Flags & FL_TEAMSLAVE))
 	{
 		if (SoundStart)
-			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 1, ATTN_STATIC);
+			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 255, ATTN_STATIC);
 		State.SetSound (SoundMiddle);
 	}
 	MoveState = STATE_UP;
@@ -598,7 +606,7 @@ void CPlatForm::Spawn ()
 	Positions[0] = Positions[1] = State.GetOrigin ();
 	Positions[1].Z -= (st.height) ? st.height : ((GetMaxs().Z - GetMins().Z) - st.lip);
 
-	if (gameEntity->targetname)
+	if (TargetName)
 		MoveState = STATE_UP;
 	else
 	{
@@ -646,6 +654,7 @@ CUsableEntity(),
 CHurtableEntity(),
 CTouchableEntity()
 {
+	BrushType |= BRUSH_DOOR;
 };
 
 CDoor::CDoor(int Index) :
@@ -657,6 +666,7 @@ CUsableEntity(Index),
 CHurtableEntity(Index),
 CTouchableEntity(Index)
 {
+	BrushType |= BRUSH_DOOR;
 };
 
 bool CDoor::Run ()
@@ -666,12 +676,12 @@ bool CDoor::Run ()
 
 void CDoor::UseAreaPortals (bool isOpen)
 {
-	CBaseEntity	*t = NULL;
+	CMapEntity	*t = NULL;
 
-	if (!gameEntity->target)
+	if (!Target)
 		return;
 
-	while ((t = CC_Find (t, FOFS(targetname), gameEntity->target)) != NULL)
+	while ((t = CC_Find<CMapEntity, ENT_MAP, EntityMemberOffset(CMapEntity,TargetName)> (t, Target)) != NULL)
 	{
 		if (Q_stricmp(t->gameEntity->classname, "func_areaportal") == 0)
 			gi.SetAreaPortalState (t->gameEntity->style, isOpen);
@@ -683,7 +693,7 @@ void CDoor::HitTop ()
 	if (!(Flags & FL_TEAMSLAVE))
 	{
 		if (SoundEnd)
-			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundEnd, 1, ATTN_STATIC);
+			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundEnd, 255, ATTN_STATIC);
 		State.SetSound (0);
 	}
 	MoveState = STATE_TOP;
@@ -701,7 +711,7 @@ void CDoor::HitBottom ()
 	if (!(Flags & FL_TEAMSLAVE))
 	{
 		if (SoundEnd)
-			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundEnd, 1, ATTN_STATIC);
+			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundEnd, 255, ATTN_STATIC);
 		State.SetSound (0);
 	}
 	MoveState = STATE_BOTTOM;
@@ -713,7 +723,7 @@ void CDoor::GoDown ()
 	if (!(Flags & FL_TEAMSLAVE))
 	{
 		if (SoundStart)
-			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 1, ATTN_STATIC);
+			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 255, ATTN_STATIC);
 		State.SetSound (SoundMiddle);
 	}
 	if (MaxHealth)
@@ -744,7 +754,7 @@ void CDoor::GoUp (CBaseEntity *activator)
 	if (!(Flags & FL_TEAMSLAVE))
 	{
 		if (SoundStart)
-			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 1, ATTN_STATIC);
+			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 255, ATTN_STATIC);
 		State.SetSound (SoundMiddle);
 	}
 	MoveState = STATE_UP;
@@ -1042,7 +1052,7 @@ void CDoor::Spawn ()
 		CanTakeDamage = true;
 		MaxHealth = Health;
 	}
-	else if (gameEntity->targetname && Message)
+	else if (TargetName && Message)
 	{
 		SoundIndex ("misc/talk.wav");
 		Touchable = true;
@@ -1065,7 +1075,7 @@ void CDoor::Spawn ()
 	Link ();
 
 	NextThink = level.framenum + FRAMETIME;
-	if (Health || gameEntity->targetname)
+	if (Health || TargetName)
 		ThinkType = DOORTHINK_CALCMOVESPEED;
 	else if (!map_debug->Boolean())
 		ThinkType = DOORTHINK_SPAWNDOORTRIGGER;
@@ -1079,12 +1089,14 @@ CRotatingDoor::CRotatingDoor () :
 CBaseEntity(),
 CDoor ()
 {
+	BrushType |= BRUSH_ROTATINGDOOR;
 };
 
 CRotatingDoor::CRotatingDoor (int Index) :
 CBaseEntity(Index),
 CDoor(Index)
 {
+	BrushType |= BRUSH_ROTATINGDOOR;
 };
 
 void CRotatingDoor::GoDown ()
@@ -1092,7 +1104,7 @@ void CRotatingDoor::GoDown ()
 	if (!(Flags & FL_TEAMSLAVE))
 	{
 		if (SoundStart)
-			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 1, ATTN_STATIC);
+			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 255, ATTN_STATIC);
 		State.SetSound (SoundMiddle);
 	}
 	if (MaxHealth)
@@ -1120,7 +1132,7 @@ void CRotatingDoor::GoUp (CBaseEntity *activator)
 	if (!(Flags & FL_TEAMSLAVE))
 	{
 		if (SoundStart)
-			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 1, ATTN_STATIC);
+			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 255, ATTN_STATIC);
 		State.SetSound (SoundMiddle);
 	}
 	MoveState = STATE_UP;
@@ -1198,7 +1210,7 @@ void CRotatingDoor::Spawn ()
 		MaxHealth = Health;
 	}
 	
-	if (gameEntity->targetname && Message)
+	if (TargetName && Message)
 	{
 		SoundIndex ("misc/talk.wav");
 		Touchable = true;
@@ -1222,7 +1234,7 @@ void CRotatingDoor::Spawn ()
 	Link ();
 
 	NextThink = level.framenum + FRAMETIME;
-	if (Health || gameEntity->targetname)
+	if (Health || TargetName)
 		ThinkType = DOORTHINK_CALCMOVESPEED;
 	else
 		ThinkType = DOORTHINK_SPAWNDOORTRIGGER;
@@ -1327,12 +1339,14 @@ CDoorSecret::CDoorSecret () :
 CBaseEntity(),
 CDoor ()
 {
+	BrushType |= BRUSH_SECRETDOOR;
 };
 
 CDoorSecret::CDoorSecret (int Index) :
 CBaseEntity(Index),
 CDoor(Index)
 {
+	BrushType |= BRUSH_SECRETDOOR;
 };
 
 void CDoorSecret::DoEndFunc ()
@@ -1340,7 +1354,7 @@ void CDoorSecret::DoEndFunc ()
 	switch (EndFunc)
 	{
 		case DOORSECRETENDFUNC_DONE:
-			if (!(gameEntity->targetname) || (SpawnFlags & SECRET_ALWAYS_SHOOT))
+			if (!(TargetName) || (SpawnFlags & SECRET_ALWAYS_SHOOT))
 			{
 				Health = 0;
 				CanTakeDamage = true;
@@ -1432,7 +1446,7 @@ void CDoorSecret::Spawn ()
 	SetSolid (SOLID_BSP);
 	SetBrushModel ();
 
-	if (!(gameEntity->targetname) || (SpawnFlags & SECRET_ALWAYS_SHOOT))
+	if (!(TargetName) || (SpawnFlags & SECRET_ALWAYS_SHOOT))
 	{
 		Health = 0;
 		CanTakeDamage = true;
@@ -1468,7 +1482,7 @@ void CDoorSecret::Spawn ()
 		CanTakeDamage = true;
 		MaxHealth = Health;
 	}
-	else if (gameEntity->targetname && Message)
+	else if (TargetName && Message)
 	{
 		SoundIndex ("misc/talk.wav");
 		Touchable = true;
@@ -1517,6 +1531,7 @@ CUsableEntity(),
 CHurtableEntity(),
 CTouchableEntity()
 {
+	BrushType |= BRUSH_BUTTON;
 };
 
 CButton::CButton(int Index) :
@@ -1527,6 +1542,7 @@ CUsableEntity(Index),
 CHurtableEntity(Index),
 CTouchableEntity(Index)
 {
+	BrushType |= BRUSH_BUTTON;
 };
 
 bool CButton::Run ()
@@ -1587,7 +1603,7 @@ void CButton::Fire ()
 
 	MoveState = STATE_UP;
 	if (SoundStart && !(Flags & FL_TEAMSLAVE))
-		PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 1, ATTN_STATIC);
+		PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 255, ATTN_STATIC);
 	MoveCalc (EndOrigin, BUTTONENDFUNC_WAIT);
 }
 
@@ -1652,7 +1668,7 @@ void CButton::Spawn ()
 		MaxHealth = Health;
 		CanTakeDamage = true;
 	}
-	else if (!gameEntity->targetname)
+	else if (!TargetName)
 		Touchable = true;
 
 	MoveState = STATE_BOTTOM;
@@ -1691,6 +1707,7 @@ CBrushModel(),
 CBlockableEntity(),
 CUsableEntity()
 {
+	BrushType |= BRUSH_TRAIN;
 };
 
 CTrainBase::CTrainBase(int Index) :
@@ -1700,6 +1717,7 @@ CBrushModel(Index),
 CBlockableEntity(Index),
 CUsableEntity(Index)
 {
+	BrushType |= BRUSH_TRAIN;
 };
 
 bool CTrainBase::Run ()
@@ -1738,12 +1756,10 @@ void CTrainBase::TrainWait ()
 	if (TargetEntity->gameEntity->pathtarget)
 	{
 		char	*savetarget;
-		CBaseEntity	*ent = TargetEntity;
-		savetarget = ent->gameEntity->target;
-		ent->gameEntity->target = ent->gameEntity->pathtarget;
-		if (TargetEntity->EntityFlags & ENT_USABLE)
-			entity_cast<CUsableEntity>(TargetEntity)->UseTargets (Activator, Message);
-		ent->gameEntity->target = savetarget;
+		savetarget = TargetEntity->Target;
+		TargetEntity->Target = TargetEntity->gameEntity->pathtarget;
+		TargetEntity->UseTargets (Activator, Message);
+		TargetEntity->Target = savetarget;
 
 		// make sure we didn't get killed by a killtarget
 		if (!IsInUse())
@@ -1768,7 +1784,7 @@ void CTrainBase::TrainWait ()
 		if (!(Flags & FL_TEAMSLAVE))
 		{
 			if (SoundEnd)
-				PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundEnd, 1, ATTN_STATIC);
+				PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundEnd, 255, ATTN_STATIC);
 			State.SetSound (0);
 		}
 	}
@@ -1782,20 +1798,20 @@ void CTrainBase::Next ()
 {
 	bool		first = true;
 
-	CBaseEntity *ent = NULL;
+	CUsableEntity *ent = NULL;
 	while (true)
 	{
-		if (!gameEntity->target)
+		if (!Target)
 			return;
 
-		ent = CC_PickTarget (gameEntity->target);
+		ent = entity_cast<CUsableEntity> (CC_PickTarget (Target));
 		if (!ent)
 		{
-			DebugPrintf ("train_next: bad target %s\n", gameEntity->target);
+			DebugPrintf ("train_next: bad target %s\n", Target);
 			return;
 		}
 
-		gameEntity->target = ent->gameEntity->target;
+		Target = ent->Target;
 
 		// check for a teleport path_corner
 		if (ent->SpawnFlags & 1)
@@ -1820,12 +1836,12 @@ void CTrainBase::Next ()
 	if (Corner)
 		Wait = Corner->Wait;
 
-	TargetEntity = ent;
+	TargetEntity = entity_cast<CUsableEntity>(ent);
 
 	if (!(Flags & FL_TEAMSLAVE))
 	{
 		if (SoundStart)
-			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 1, ATTN_STATIC);
+			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 255, ATTN_STATIC);
 		State.SetSound (SoundMiddle);
 	}
 
@@ -1850,24 +1866,24 @@ void CTrainBase::Resume ()
 
 void CTrainBase::Find ()
 {
-	if (!gameEntity->target)
+	if (!Target)
 	{
 		DebugPrintf ("train_find: no target\n");
 		return;
 	}
-	CBaseEntity *ent = CC_PickTarget (gameEntity->target);
+	CUsableEntity *ent = entity_cast<CUsableEntity>(CC_PickTarget (Target));
 	if (!ent)
 	{
-		DebugPrintf ("train_find: target %s not found\n", gameEntity->target);
+		DebugPrintf ("train_find: target %s not found\n", Target);
 		return;
 	}
-	gameEntity->target = ent->gameEntity->target;
+	Target = ent->Target;
 	State.SetOrigin (ent->State.GetOrigin() - GetMins());
 
 	Link ();
 
 	// if not triggered, start immediately
-	if (!gameEntity->targetname)
+	if (!TargetName)
 		SpawnFlags |= TRAIN_START_ON;
 
 	if (SpawnFlags & TRAIN_START_ON)
@@ -1965,7 +1981,7 @@ void CTrain::Spawn ()
 
 	Link ();
 
-	if (gameEntity->target)
+	if (Target)
 	{
 		// start trains on the second frame, to make sure their targets have had
 		// a chance to spawn
@@ -2014,7 +2030,7 @@ void CTriggerElevator::Use (CBaseEntity *other, CBaseEntity *activator)
 		return;
 	}
 
-	CBaseEntity *target = CC_PickTarget (other->gameEntity->pathtarget);
+	CUsableEntity *target = entity_cast<CUsableEntity>(CC_PickTarget (other->gameEntity->pathtarget));
 	if (!target)
 	{
 		DebugPrintf("elevator used with bad pathtarget: %s\n", other->gameEntity->pathtarget);
@@ -2027,23 +2043,23 @@ void CTriggerElevator::Use (CBaseEntity *other, CBaseEntity *activator)
 
 void CTriggerElevator::Think ()
 {
-	if (!gameEntity->target)
+	if (!Target)
 	{
 		//gi.dprintf("trigger_elevator has no target\n");
 		MapPrint (MAPPRINT_ERROR, this, GetAbsMin(), "No target\n");
 		return;
 	}
-	CBaseEntity *newTarg = CC_PickTarget (gameEntity->target);
+	CBaseEntity *newTarg = CC_PickTarget (Target);
 	if (!newTarg)
 	{
 		//gi.dprintf("trigger_elevator unable to find target %s\n", self->target);
-		MapPrint (MAPPRINT_ERROR, this, GetAbsMin(), "Unable to find target \"%s\"\n", gameEntity->target);
+		MapPrint (MAPPRINT_ERROR, this, GetAbsMin(), "Unable to find target \"%s\"\n", Target);
 		return;
 	}
 	if (strcmp(newTarg->gameEntity->classname, "func_train") != 0)
 	{
 		//gi.dprintf("trigger_elevator target %s is not a train\n", self->target);
-		MapPrint (MAPPRINT_ERROR, this, GetAbsMin(), "Target \"%s\" is not a train\n", gameEntity->target);
+		MapPrint (MAPPRINT_ERROR, this, GetAbsMin(), "Target \"%s\" is not a train\n", Target);
 		return;
 	}
 
@@ -2076,11 +2092,11 @@ CBrushModel(Index)
 {
 };
 
-const CEntityField CWorldEntity::FieldsForParsing[] =
+ENTITYFIELDS_BEGIN(CWorldEntity)
 {
 	CEntityField ("message", EntityMemberOffset(CWorldEntity,Message), FT_LEVEL_STRING),
 };
-const size_t CWorldEntity::FieldsForParsingSize = FieldSize<CWorldEntity>();
+ENTITYFIELDS_END(CWorldEntity)
 
 bool			CWorldEntity::ParseField (char *Key, char *Value)
 {
@@ -2275,6 +2291,7 @@ CRotatingBrush::CRotatingBrush () :
 	CBlockableEntity(),
 	CTouchableEntity()
 {
+	BrushType |= BRUSH_ROTATING;
 };
 
 CRotatingBrush::CRotatingBrush (int Index) :
@@ -2285,6 +2302,7 @@ CRotatingBrush::CRotatingBrush (int Index) :
 	CBlockableEntity(Index),
 	CTouchableEntity(Index)
 {
+	BrushType |= BRUSH_ROTATING;
 };
 
 bool CRotatingBrush::Run ()
@@ -2385,6 +2403,7 @@ CConveyor::CConveyor () :
 	CBrushModel (),
 	CUsableEntity ()
 	{
+		BrushType |= BRUSH_CONVEYOR;
 	};
 
 CConveyor::CConveyor (int Index) :
@@ -2393,6 +2412,7 @@ CConveyor::CConveyor (int Index) :
 	CBrushModel (Index),
 	CUsableEntity (Index)
 	{
+		BrushType |= BRUSH_CONVEYOR;
 	};
 
 void CConveyor::Use (CBaseEntity *other, CBaseEntity *activator)
@@ -2499,6 +2519,7 @@ CFuncWall::CFuncWall () :
 	CBrushModel (),
 	CUsableEntity ()
 	{
+		BrushType |= BRUSH_WALL;
 	};
 
 CFuncWall::CFuncWall (int Index) :
@@ -2507,6 +2528,7 @@ CFuncWall::CFuncWall (int Index) :
 	CBrushModel (Index),
 	CUsableEntity (Index)
 	{
+		BrushType |= BRUSH_WALL;
 	};
 
 void CFuncWall::Use (CBaseEntity *other, CBaseEntity *activator)
@@ -2593,6 +2615,7 @@ CFuncObject::CFuncObject () :
 	CUsableEntity (),
 	CTossProjectile ()
 	{
+		BrushType |= BRUSH_OBJECT;
 	};
 
 CFuncObject::CFuncObject (int Index) :
@@ -2603,6 +2626,7 @@ CFuncObject::CFuncObject (int Index) :
 	CUsableEntity (Index),
 	CTossProjectile (Index)
 	{
+		BrushType |= BRUSH_OBJECT;
 	};
 
 bool CFuncObject::Run ()
@@ -2705,6 +2729,7 @@ CFuncExplosive::CFuncExplosive () :
 	UseType(FUNCEXPLOSIVE_USE_NONE),
 	Explosivity (75)
 	{
+		BrushType |= BRUSH_EXPLOSIVE;
 	};
 
 CFuncExplosive::CFuncExplosive (int Index) :
@@ -2716,13 +2741,14 @@ CFuncExplosive::CFuncExplosive (int Index) :
 	UseType(FUNCEXPLOSIVE_USE_NONE),
 	Explosivity (75)
 	{
+		BrushType |= BRUSH_EXPLOSIVE;
 	};
 
-const CEntityField CFuncExplosive::FieldsForParsing[] =
+ENTITYFIELDS_BEGIN(CFuncExplosive)
 {
 	CEntityField ("mass", EntityMemberOffset(CFuncExplosive,Explosivity), FT_INT),
 };
-const size_t CFuncExplosive::FieldsForParsingSize = FieldSize<CFuncExplosive>();
+ENTITYFIELDS_END(CFuncExplosive)
 
 bool			CFuncExplosive::ParseField (char *Key, char *Value)
 {
@@ -2832,7 +2858,7 @@ void CFuncExplosive::Spawn ()
 	else
 	{
 		SetSolid (SOLID_BSP);
-		if (gameEntity->targetname)
+		if (TargetName)
 			UseType = FUNCEXPLOSIVE_USE_EXPLODE;
 	}
 
@@ -2907,7 +2933,7 @@ public:
 	  {
 	  };
 
-	virtual bool ParseField (char *Key, char *Value)
+	bool ParseField (char *Key, char *Value)
 	{
 		return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 	}

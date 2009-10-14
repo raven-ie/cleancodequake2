@@ -44,7 +44,7 @@ CMonster (ID)
 
 void CGunner::Idle ()
 {
-	Entity->PlaySound (CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
+	Entity->PlaySound (CHAN_VOICE, SoundIdle, 255, ATTN_IDLE);
 }
 
 void CGunner::Sight ()
@@ -448,7 +448,7 @@ void CGunner::Dodge (CBaseEntity *attacker, float eta
 
 void CGunner::OpenGun ()
 {
-	Entity->PlaySound (CHAN_VOICE, SoundOpen, 1, ATTN_IDLE, 0);
+	Entity->PlaySound (CHAN_VOICE, SoundOpen, 255, ATTN_IDLE);
 }
 
 #ifdef MONSTER_USE_ROGUE_AI

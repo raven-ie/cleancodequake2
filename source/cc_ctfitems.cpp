@@ -78,7 +78,7 @@ bool CFlag::Pickup(CItemEntity *ent, CPlayerEntity *other)
 				else
 					ctfgame.team2++;
 
-				ent->PlaySound(CHAN_RELIABLE+CHAN_NO_PHS_ADD+CHAN_VOICE, SoundIndex("ctf/flagcap.wav"), 1, ATTN_NONE, 0);
+				ent->PlaySound (CHAN_RELIABLE+CHAN_NO_PHS_ADD+CHAN_VOICE, SoundIndex("ctf/flagcap.wav"), 255, ATTN_NONE);
 
 				// other gets another 10 frag bonus
 				other->Client.resp.score += CTF_CAPTURE_BONUS;
@@ -122,7 +122,7 @@ bool CFlag::Pickup(CItemEntity *ent, CPlayerEntity *other)
 			other->Client.pers.netname, CTFTeamName(team));
 		other->Client.resp.score += CTF_RECOVERY_BONUS;
 		other->Client.resp.ctf_lastreturnedflag = level.framenum;
-		ent->PlaySound (CHAN_RELIABLE+CHAN_NO_PHS_ADD+CHAN_VOICE, SoundIndex("ctf/flagret.wav"), 1, ATTN_NONE, 0);
+		ent->PlaySound (CHAN_RELIABLE+CHAN_NO_PHS_ADD+CHAN_VOICE, SoundIndex("ctf/flagret.wav"), 255, ATTN_NONE);
 		//CTFResetFlag will remove this entity!  We must return false
 		CTFResetFlag(team);
 		return false;

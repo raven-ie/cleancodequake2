@@ -44,7 +44,7 @@ CMonster(ID)
 
 void CMaiden::Moan ()
 {
-	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundIdle1 : SoundIdle2, 1, ATTN_IDLE, 0);
+	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundIdle1 : SoundIdle2, 255, ATTN_IDLE);
 }
 
 CFrame ChickFramesFidget [] =

@@ -157,16 +157,19 @@ void CTurretBreach::Think ()
 		FinishInit = false;
 
 		// get and save info for muzzle location
-		if (!gameEntity->target)
+		if (!Target)
 		{
 			//gi.dprintf("%s at (%f %f %f) needs a target\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
 			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "Needs a target\n");
 		}
 		else
 		{
-			CBaseEntity *targ = CC_PickTarget (gameEntity->target);
+			CBaseEntity *targ = CC_PickTarget (Target);
 			MoveOrigin = (targ->State.GetOrigin() - State.GetOrigin());
 			targ->Free();
+
+			QDelete Target;
+			Target = NULL;
 		}
 
 		entity_cast<CBrushModel>(TeamMaster)->Damage = Damage;
@@ -274,14 +277,15 @@ void CTurretBreach::Think ()
 	}
 }
 
-const CEntityField CTurretBreach::FieldsForParsing[] =
+ENTITYFIELDS_BEGIN(CTurretBreach)
 {
 	CEntityField ("minpitch", EntityMemberOffset(CTurretBreach,PitchOptions[0]), FT_FLOAT),
 	CEntityField ("maxpitch", EntityMemberOffset(CTurretBreach,PitchOptions[1]), FT_FLOAT),
 	CEntityField ("minyaw", EntityMemberOffset(CTurretBreach,PitchOptions[2]), FT_FLOAT),
 	CEntityField ("maxyaw", EntityMemberOffset(CTurretBreach,PitchOptions[3]), FT_FLOAT),
+	CEntityField ("target", EntityMemberOffset(CTurretBreach,Target), FT_LEVEL_STRING),
 };
-const size_t CTurretBreach::FieldsForParsingSize = FieldSize<CTurretBreach>();
+ENTITYFIELDS_END(CTurretBreach)
 
 bool			CTurretBreach::ParseField (char *Key, char *Value)
 {
@@ -480,7 +484,7 @@ void CTurretDriver::TurretLink ()
 	Think = static_cast<void (__thiscall CMonster::* )(void)>(&CTurretDriver::TurretThink);
 	Entity->NextThink = level.framenum + FRAMETIME;
 
-	TargetedBreach = entity_cast<CTurretBreach>(CC_PickTarget (Entity->gameEntity->target));
+	TargetedBreach = entity_cast<CTurretBreach>(CC_PickTarget (Entity->Target));
 	TargetedBreach->SetOwner (Entity);
 	TargetedBreach->TeamMaster->SetOwner (Entity);
 	Entity->State.SetAngles (TargetedBreach->State.GetAngles());

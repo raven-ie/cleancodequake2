@@ -75,7 +75,7 @@ void CTank::Windup ()
 
 void CTank::Idle ()
 {
-	Entity->PlaySound (CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
+	Entity->PlaySound (CHAN_VOICE, SoundIdle, 255, ATTN_IDLE);
 }
 
 //

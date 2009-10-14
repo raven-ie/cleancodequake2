@@ -44,27 +44,27 @@ CMonster(ID)
 
 void CParasite::Launch ()
 {
-	Entity->PlaySound (CHAN_WEAPON, SoundLaunch, 1, ATTN_NORM, 0);
+	Entity->PlaySound (CHAN_WEAPON, SoundLaunch);
 }
 
 void CParasite::ReelIn ()
 {
-	Entity->PlaySound (CHAN_WEAPON, SoundReelIn, 1, ATTN_NORM, 0);
+	Entity->PlaySound (CHAN_WEAPON, SoundReelIn);
 }
 
 void CParasite::Sight ()
 {
-	Entity->PlaySound (CHAN_WEAPON, SoundSight, 1, ATTN_NORM, 0);
+	Entity->PlaySound (CHAN_WEAPON, SoundSight);
 }
 
 void CParasite::Tap ()
 {
-	Entity->PlaySound (CHAN_WEAPON, SoundTap, 1, ATTN_IDLE, 0);
+	Entity->PlaySound (CHAN_WEAPON, SoundTap, 255, ATTN_IDLE);
 }
 
 void CParasite::Scratch ()
 {
-	Entity->PlaySound (CHAN_WEAPON, SoundScratch, 1, ATTN_IDLE, 0);
+	Entity->PlaySound (CHAN_WEAPON, SoundScratch, 255, ATTN_IDLE);
 }
 
 CFrame ParasiteFramesStartFidget [] =
@@ -252,7 +252,7 @@ void CParasite::Pain (CBaseEntity *other, float kick, int damage)
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
 
-	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundPain1 : SoundPain2, 1, ATTN_NORM, 0);
+	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundPain1 : SoundPain2);
 
 	CurrentMove = &ParasiteMovePain1;
 }
@@ -319,7 +319,7 @@ void CParasite::DrainAttack ()
 	if (Entity->State.GetFrame() == FRAME_drain03)
 		Entity->Enemy->PlaySound (CHAN_AUTO, SoundImpact);
 	else if (Entity->State.GetFrame() == FRAME_drain04)
-		Entity->PlaySound (CHAN_WEAPON, SoundSuck, 1, ATTN_NORM, 0);
+		Entity->PlaySound (CHAN_WEAPON, SoundSuck);
 
 	CTempEnt_Trails::FleshCable (start, end, Entity->State.GetNumber());
 
@@ -447,7 +447,7 @@ void CParasite::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, 
 // check for gib
 	if (Entity->Health <= Entity->GibHealth)
 	{
-		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"), 1, ATTN_NORM, 0);
+		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
 		for (int n= 0; n < 4; n++)
@@ -461,7 +461,7 @@ void CParasite::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, 
 		return;
 
 // regular death
-	Entity->PlaySound (CHAN_VOICE, SoundDie, 1, ATTN_NORM, 0);
+	Entity->PlaySound (CHAN_VOICE, SoundDie);
 	Entity->DeadFlag = true;
 	Entity->CanTakeDamage = true;
 	CurrentMove = &ParasiteMoveDeath;

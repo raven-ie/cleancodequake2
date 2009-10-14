@@ -158,6 +158,17 @@ CC_ENUM (uint8, EAttackState)
 #endif
 };
 
+#define MELEE_DISTANCE	80
+
+//range
+CC_ENUM (uint8, ERangeType)
+{
+	RANGE_MELEE,
+	RANGE_NEAR,
+	RANGE_MID,
+	RANGE_FAR
+};
+
 enum
 {
 	MONSTERENTITY_THINK_NONE,
@@ -174,11 +185,16 @@ public:
 	FrameNumber_t	DamageDebounceTime;
 	FrameNumber_t	BonusDamageTime;
 	CBaseEntity		*OldEnemy;
-
+	CBaseEntity		*GoalEntity;
+	CBaseEntity		*MoveTarget;
 	class CMonster	*Monster;
+	char			*DeathTarget;
+	char			*CombatTarget;
 
 	CMonsterEntity	();
 	CMonsterEntity	(int Index);
+
+	ENTITYFIELD_DEFS
 
 	virtual bool			CheckValidity ();
 
@@ -194,8 +210,6 @@ public:
 	void			ThrowHead (MediaIndex gibIndex, int damage, int type);
 
 	void Spawn ();
-
-	bool			ParseField (char *Key, char *Value);
 };
 
 class CMonster
@@ -214,8 +228,6 @@ public:
 	CMonsterEntity		*Entity; // Entity linked to the monster
 
 	float				IdealYaw;
-	edict_t				*GoalEntity;
-	edict_t				*MoveTarget;
 	float				YawSpeed;
 	uint32				AIFlags;
 

@@ -39,9 +39,7 @@ public:
 	CPathCorner ();
 	CPathCorner (int Index);
 
-	static const class CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-	virtual bool			ParseField (char *Key, char *Value);
+	ENTITYFIELD_DEFS
 
 	virtual void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf);
 	virtual void Spawn ();

@@ -48,13 +48,13 @@ void CJorg::Search ()
 	switch (irandom(3))
 	{
 	case 0:
-		Entity->PlaySound (CHAN_VOICE, SoundSearch1, 1, ATTN_NORM, 0);
+		Entity->PlaySound (CHAN_VOICE, SoundSearch1);
 		break;
 	case 1:
-		Entity->PlaySound (CHAN_VOICE, SoundSearch2, 1, ATTN_NORM, 0);
+		Entity->PlaySound (CHAN_VOICE, SoundSearch2);
 		break;
 	case 2:
-		Entity->PlaySound (CHAN_VOICE, SoundSearch3, 1, ATTN_NORM, 0);
+		Entity->PlaySound (CHAN_VOICE, SoundSearch3);
 		break;
 	};
 }
@@ -121,22 +121,22 @@ CAnim	JorgMoveStand (FRAME_stand01, FRAME_stand51, JorgFramesStand);
 
 void CJorg::Idle ()
 {
-	Entity->PlaySound (CHAN_VOICE, SoundIdle, 1, ATTN_NORM,0);
+	Entity->PlaySound (CHAN_VOICE, SoundIdle);
 }
 
 void CJorg::DeathHit ()
 {
-	Entity->PlaySound (CHAN_BODY, SoundDeathHit, 1, ATTN_NORM,0);
+	Entity->PlaySound (CHAN_BODY, SoundDeathHit);
 }
 
 void CJorg::StepLeft ()
 {
-	Entity->PlaySound (CHAN_BODY, SoundStepLeft, 1, ATTN_NORM,0);
+	Entity->PlaySound (CHAN_BODY, SoundStepLeft);
 }
 
 void CJorg::StepRight ()
 {
-	Entity->PlaySound (CHAN_BODY, SoundStepRight, 1, ATTN_NORM,0);
+	Entity->PlaySound (CHAN_BODY, SoundStepRight);
 }
 
 void CJorg::Stand ()
@@ -302,17 +302,17 @@ void CJorg::Pain (CBaseEntity *other, float kick, int damage)
 
 	if (damage <= 50)
 	{
-		Entity->PlaySound (CHAN_VOICE, SoundPain1, 1, ATTN_NORM,0);
+		Entity->PlaySound (CHAN_VOICE, SoundPain1);
 		CurrentMove = &JorgMovePain1;
 	}
 	else if (damage <= 100)
 	{
-		Entity->PlaySound (CHAN_VOICE, SoundPain2, 1, ATTN_NORM,0);
+		Entity->PlaySound (CHAN_VOICE, SoundPain2);
 		CurrentMove = &JorgMovePain2;
 	}
 	else if (random() <= 0.3)
 	{
-		Entity->PlaySound (CHAN_VOICE, SoundPain3, 1, ATTN_NORM,0);
+		Entity->PlaySound (CHAN_VOICE, SoundPain3);
 		CurrentMove = &JorgMovePain3;
 	}
 };
@@ -374,7 +374,7 @@ CAnim JorgMoveDeath (FRAME_death01, FRAME_death50, JorgFramesDeath1, NULL);
 
 void CJorg::TossMakron ()
 {
-	CMakronJumpTimer::Spawn (Entity);
+	CMakronJumpTimer::Spawn (this);
 };
 
 void CJorg::Explode ()
@@ -434,7 +434,7 @@ void CJorg::Explode ()
 
 void CJorg::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
-	Entity->PlaySound (CHAN_VOICE, SoundDeath, 1, ATTN_NORM, 0);
+	Entity->PlaySound (CHAN_VOICE, SoundDeath);
 	Entity->DeadFlag = true;
 	Entity->CanTakeDamage = false;
 	Entity->State.SetSound (0);
@@ -528,7 +528,7 @@ void CJorg::FireBFG ()
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_JORG_BFG_1], forward, right, start);
 
 	dir = ((Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->ViewHeight)) - start).GetNormalized();
-	Entity->PlaySound (CHAN_VOICE, SoundAttack2, 1, ATTN_NORM, 0);
+	Entity->PlaySound (CHAN_VOICE, SoundAttack2);
 	MonsterFireBfg (start, dir, 50, 300, 100, 200, MZ2_JORG_BFG_1);
 }
 
@@ -562,13 +562,13 @@ void CJorg::Attack()
 {
 	if (random() <= 0.75)
 	{
-		Entity->PlaySound (CHAN_VOICE, SoundAttack1, 1, ATTN_NORM,0);
+		Entity->PlaySound (CHAN_VOICE, SoundAttack1);
 		Entity->State.SetSound (SoundIndex ("boss3/w_loop.wav"));
 		CurrentMove = &JorgMoveStartAttack1;
 	}
 	else
 	{
-		Entity->PlaySound (CHAN_VOICE, SoundAttack2, 1, ATTN_NORM,0);
+		Entity->PlaySound (CHAN_VOICE, SoundAttack2);
 		CurrentMove = &JorgMoveAttack2;
 	}
 }

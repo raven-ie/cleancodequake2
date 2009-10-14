@@ -72,13 +72,13 @@ CFuncTimer::CFuncTimer (int Index) :
 	{
 	};
 
-const CEntityField CFuncTimer::FieldsForParsing[] =
+ENTITYFIELDS_BEGIN(CFuncTimer)
 {
 	CEntityField ("random", EntityMemberOffset(CFuncTimer,Random), FT_FRAMENUMBER),
 	CEntityField ("pausetime", EntityMemberOffset(CFuncTimer,PauseTime), FT_FRAMENUMBER),
 	CEntityField ("wait", EntityMemberOffset(CFuncTimer,Wait), FT_FRAMENUMBER),
 };
-const size_t CFuncTimer::FieldsForParsingSize = FieldSize<CFuncTimer>();
+ENTITYFIELDS_END(CFuncTimer)
 
 bool			CFuncTimer::ParseField (char *Key, char *Value)
 {
@@ -329,7 +329,7 @@ void CFuncClock::Think ()
 {
 	if (!String)
 	{
-		String = entity_cast<CTargetString>(CC_Find (NULL, FOFS(targetname), gameEntity->target));
+		String = entity_cast<CTargetString>(CC_Find<CMapEntity, ENT_MAP, EntityMemberOffset(CMapEntity,TargetName)> (NULL, Target));
 		if (!String)
 			return;
 	}
@@ -368,12 +368,12 @@ void CFuncClock::Think ()
 	{
 		if (gameEntity->pathtarget)
 		{
-			char *savetarget = gameEntity->target;
+			char *savetarget = Target;
 			char *savemessage = Message;
-			gameEntity->target = gameEntity->pathtarget;
+			Target = gameEntity->pathtarget;
 			Message = NULL;
 			UseTargets (Activator, Message);
-			gameEntity->target = savetarget;
+			Target = savetarget;
 			Message = savemessage;
 		}
 
@@ -406,7 +406,7 @@ void CFuncClock::Use (CBaseEntity *other, CBaseEntity *activator)
 
 void CFuncClock::Spawn ()
 {
-	if (!gameEntity->target)
+	if (!Target)
 	{
 		//gi.dprintf("%s with no target at (%f %f %f)\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
 		MapPrint (MAPPRINT_ERROR, this, GetAbsMin(), "No target\n");

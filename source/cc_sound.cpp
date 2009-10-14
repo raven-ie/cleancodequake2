@@ -72,78 +72,18 @@ enum
 	SND_OFFSET			= BIT(4)	// a byte, msec offset from frame start
 };
 
-#define DEFAULT_SOUND_PACKET_VOLUME			1.0
+#define DEFAULT_SOUND_PACKET_VOLUME			255
 #define DEFAULT_SOUND_PACKET_ATTENUATION	1.0
 
-/*
-static BOOL GI_IsInPVS (vec3_t p1, vec3_t p2)
+static void SV_StartSound (vec3f origin, CBaseEntity *entity, EEntSndChannel channel, MediaIndex soundIndex, byte vol, EAttenuation attenuation, byte timeOffset, bool Positioned)
 {
-	int		leafnum;
-	int		cluster;
-	int		area1, area2;
-	byte	*mask;
-
-	leafnum = CM_PointLeafnum (p1);
-	cluster = CM_LeafCluster (leafnum);
-	area1 = CM_LeafArea (leafnum);
-	mask = CM_ClusterPVS (cluster);
-
-	leafnum = CM_PointLeafnum (p2);
-	cluster = CM_LeafCluster (leafnum);
-	area2 = CM_LeafArea (leafnum);
-
-	if (mask && (!(mask[cluster>>3] & BIT(cluster&7))))
-		return false;
-
-	if (!CM_AreasConnected (area1, area2))
-		return false;		// A door blocks sight
-
-	return true;
-}
-
-static BOOL GI_IsInPHS (vec3_t p1, vec3_t p2)
-{
-	int		leafnum;
-	int		cluster;
-	int		area1, area2;
-	byte	*mask;
-
-	leafnum = CM_PointLeafnum (p1);
-	cluster = CM_LeafCluster (leafnum);
-	area1 = CM_LeafArea (leafnum);
-	mask = CM_ClusterPHS (cluster);
-
-	leafnum = CM_PointLeafnum (p2);
-	cluster = CM_LeafCluster (leafnum);
-	area2 = CM_LeafArea (leafnum);
-
-	if (mask && (!(mask[cluster>>3] & BIT(cluster&7))))
-		return false;		// More than one bounce away
-
-	if (!CM_AreasConnected (area1, area2))
-		return false;		// A door blocks hearing
-
-	return true;
-}
-*/
-
-static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channel, MediaIndex soundIndex, float vol, EAttenuation attenuation, float timeOffset)
-{
-	int			sendChan, flags, i, ent;
-	float		leftVol, rightVol, distanceMult;
-	edict_t		*client;
-	vec3_t		sourceVec, listenerRight;
-	float		dot, dist;
-	float		rightScale, leftScale;
-	bool		usePHS;
-
-	if (!origin && !entity)
+	if (!Positioned && !entity)
 	{
-		DebugPrintf ("CleanCode SV_StartSound: No entity or origin!\n");
+		DebugPrintf ("CleanCode SV_StartSound: Not positioned and no entity!\n");
 		return;
 	}
 
-	if (vol < 0 || vol > 1.0f)
+	if (vol < 0 || vol > 255)
 	{
 		DebugPrintf ("CleanCode SV_StartSound: volume = %f", vol);
 		return;
@@ -155,27 +95,25 @@ static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channe
 		return;
 	}
 
-	if (timeOffset < 0 || timeOffset > 0.255f)
+	if (timeOffset < 0 || timeOffset > 65)
 	{
 		DebugPrintf ("CleanCode SV_StartSound: timeOffset = %f", timeOffset);
 		return;
 	}
 
-	ent = entity - g_edicts;
-
 	// No PHS flag
+	bool usePHS = true;
+
 	if ((channel & 8) || attenuation == ATTN_NONE)
 	{
 		// If the sound doesn't attenuate, send it to everyone (global radio chatter, voiceovers, etc)
 		usePHS = false;
 		channel &= 7;
 	}
-	else
-		usePHS = true;
 
-	sendChan = (ent<<3) | (channel&7);
+	int sendChan = (entity->State.GetNumber() << 3) | (channel & 7);
 
-	flags = 0;
+	int flags = 0;
 	if (vol != DEFAULT_SOUND_PACKET_VOLUME)
 		flags |= SND_VOLUME;
 	if (attenuation != DEFAULT_SOUND_PACKET_ATTENUATION)
@@ -185,7 +123,7 @@ static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channe
 	** the client doesn't know that bmodels have weird origins
 	** the origin can also be explicitly set
 	*/
-	if ((entity->svFlags & SVF_NOCLIENT) || (entity->solid == SOLID_BSP) || origin)
+	if ((entity->GetSvFlags() & SVF_NOCLIENT) || (entity->GetSolid() == SOLID_BSP) || Positioned)
 		flags |= SND_POS;
 
 	// always send the entity number for channel overrides
@@ -195,25 +133,13 @@ static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channe
 		flags |= SND_OFFSET;
 
 	// use the entity origin/bmodel origin if the origin is specified
-	if (!origin)
-	{
-		vec3_t originVec;
-		if (entity->solid == SOLID_BSP)
-		{
-			originVec[0] = entity->state.origin[0] + 0.5f * (entity->mins[0] + entity->maxs[0]);
-			originVec[1] = entity->state.origin[1] + 0.5f * (entity->mins[1] + entity->maxs[1]);
-			originVec[2] = entity->state.origin[2] + 0.5f * (entity->mins[2] + entity->maxs[2]);
-		}
-		else
-			Vec3Copy (entity->state.origin, originVec);
-
-		origin = originVec;
-	}
+	if (!Positioned)
+		origin = (entity->GetSolid() == SOLID_BSP) ? entity->State.GetOrigin() + 0.5f * (entity->GetMins() + entity->GetMaxs()) : entity->State.GetOrigin();
 
 	// Cycle through the different targets and do attenuation calculations
-	for (i=1, client=&g_edicts[1] ; i<=game.maxclients ; i++, client++)
+	for (int i = 1; i <= game.maxclients; i++)
 	{
-		CPlayerEntity *Player = entity_cast<CPlayerEntity>(client->Entity);
+		CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 		if (Player->Client.pers.state == SVCS_FREE)
 			continue;
 
@@ -223,36 +149,34 @@ static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channe
 		if (usePHS)
 		{
 			// Not hearable from here
-			if (!InHearableArea (client->state.origin, origin))
+			if (!InHearableArea (Player->State.GetOrigin(), origin))
 				continue;
 		}
 
-		Vec3Subtract (origin, client->state.origin, sourceVec);
-		distanceMult = (float)attenuation * ((attenuation == ATTN_STATIC) ? 0.001f : 0.0005f);
+		vec3f sourceVec = origin - Player->State.GetOrigin();
+		float distanceMult = (float)attenuation * ((attenuation == ATTN_STATIC) ? 0.001f : 0.0005f);
 
-		dist = VectorNormalizef (sourceVec, sourceVec) - SOUND_FULLVOLUME;
+		float dist = sourceVec.Normalize () - SOUND_FULLVOLUME;
 		if (dist < 0)
 			dist = 0;			// close enough to be at full volume
 		dist *= distanceMult;	// different attenuation levels
 
-		Angles_Vectors (client->state.angles, NULL, listenerRight, NULL);
-		dot = Dot3Product (listenerRight, sourceVec);
+		vec3f listenerRight;
+		Player->State.GetAngles().ToVectors (NULL, &listenerRight, NULL);
+		float dot = listenerRight.Dot (sourceVec);
 
-		if (!distanceMult)
-		{
-			// no attenuation = no spatialization
-			rightScale = 1.0f;
-			leftScale = 1.0f;
-		}
-		else
+		// no attenuation = no spatialization
+		float rightScale = 1.0f, leftScale = 1.0f;
+
+		if (distanceMult)
 		{
 			rightScale = 0.5f * (1.0f + dot);
 			leftScale = 0.5f * (1.0f - dot);
 		}
 
 		// add in distance effect
-		rightVol = (vol * ((1.0f - dist) * rightScale));
-		leftVol = (vol * ((1.0f - dist) * leftScale));
+		float rightVol = ((vol / 255) * ((1.0f - dist) * rightScale));
+		float leftVol = ((vol / 255) * ((1.0f - dist) * leftScale));
 
 		if (rightVol <= 0 && leftVol <= 0)
 			continue; // silent
@@ -262,13 +186,13 @@ static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channe
 		WriteByte (soundIndex);
 
 		if (flags & SND_VOLUME)
-			WriteByte (vol*255);
+			WriteByte (vol);
 
 		if (flags & SND_ATTENUATION)
 			WriteByte (attenuation*64);
 
 		if (flags & SND_OFFSET)
-			WriteByte (timeOffset*1000);
+			WriteByte (timeOffset * (1000 / 255));
 
 		if (flags & SND_ENT)
 			WriteShort (sendChan);
@@ -276,16 +200,16 @@ static void SV_StartSound (vec3_t origin, edict_t *entity, EEntSndChannel channe
 		if (flags & SND_POS)
 			WritePosition (origin);
 
-		Cast ((channel & CHAN_RELIABLE) ? CASTFLAG_RELIABLE : CASTFLAG_UNRELIABLE, client);
+		Cast ((channel & CHAN_RELIABLE) ? CASTFLAG_RELIABLE : CASTFLAG_UNRELIABLE, Player);
 	}
 }
 
-void PlaySoundFrom (edict_t *ent, EEntSndChannel channel, MediaIndex soundIndex, float volume, EAttenuation attenuation, float timeOfs)
+void PlaySoundFrom (CBaseEntity *ent, EEntSndChannel channel, MediaIndex soundIndex, byte volume, EAttenuation attenuation, byte timeOfs)
 {
-	SV_StartSound (NULL, ent, channel, soundIndex, volume, attenuation, timeOfs);
+	SV_StartSound (vec3fOrigin, ent, channel, soundIndex, volume, attenuation, timeOfs, false);
 }
 
-void PlaySoundAt (vec3_t origin, edict_t *ent, EEntSndChannel channel, MediaIndex soundIndex, float volume, EAttenuation attenuation, float timeOfs)
+void PlaySoundAt (vec3f origin, CBaseEntity *ent, EEntSndChannel channel, MediaIndex soundIndex, byte volume, EAttenuation attenuation, byte timeOfs)
 {
-	SV_StartSound (origin, ent, channel, soundIndex, volume, attenuation, timeOfs);
+	SV_StartSound (origin, ent, channel, soundIndex, volume, attenuation, timeOfs, true);
 }

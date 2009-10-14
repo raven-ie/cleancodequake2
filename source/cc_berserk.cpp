@@ -44,12 +44,12 @@ CMonster(ID)
 
 void CBerserker::Sight ()
 {
-	Entity->PlaySound (CHAN_VOICE, SoundSight, 1, ATTN_NORM, 0);
+	Entity->PlaySound (CHAN_VOICE, SoundSight);
 }
 
 void CBerserker::Search ()
 {
-	Entity->PlaySound (CHAN_VOICE, SoundSearch, 1, ATTN_NORM, 0);
+	Entity->PlaySound (CHAN_VOICE, SoundSearch);
 }
 
 
@@ -101,7 +101,7 @@ void CBerserker::Fidget ()
 		return;
 
 	CurrentMove = &BerserkMoveStandFidget;
-	Entity->PlaySound (CHAN_WEAPON, SoundIdle, 1, ATTN_IDLE, 0);
+	Entity->PlaySound (CHAN_WEAPON, SoundIdle, 255, ATTN_IDLE);
 }
 
 
@@ -175,7 +175,7 @@ void CBerserker::AttackSpike ()
 
 void CBerserker::Swing ()
 {
-	Entity->PlaySound (CHAN_WEAPON, SoundPunch, 1, ATTN_NORM, 0);
+	Entity->PlaySound (CHAN_WEAPON, SoundPunch);
 }
 
 CFrame BerserkFramesAttackSpike [] =
@@ -313,7 +313,7 @@ void CBerserker::Pain (CBaseEntity *other, float kick, int damage)
 		return;
 
 	PainDebounceTime = level.framenum + 30;
-	Entity->PlaySound (CHAN_VOICE, SoundPain, 1, ATTN_NORM, 0);
+	Entity->PlaySound (CHAN_VOICE, SoundPain);
 
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
@@ -368,7 +368,7 @@ void CBerserker::Die(CBaseEntity *inflictor, CBaseEntity *attacker, int damage, 
 {
 	if (Entity->Health <= Entity->GibHealth)
 	{
-		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"), 1, ATTN_NORM, 0);
+		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
 		for (int n= 0; n < 4; n++)
@@ -381,7 +381,7 @@ void CBerserker::Die(CBaseEntity *inflictor, CBaseEntity *attacker, int damage, 
 	if (Entity->DeadFlag == true)
 		return;
 
-	Entity->PlaySound (CHAN_VOICE, SoundDie, 1, ATTN_NORM, 0);
+	Entity->PlaySound (CHAN_VOICE, SoundDie);
 	Entity->DeadFlag = true;
 	Entity->CanTakeDamage = true;
 

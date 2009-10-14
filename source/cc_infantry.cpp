@@ -131,7 +131,7 @@ CAnim InfantryMoveFidget (FRAME_stand01, FRAME_stand49, InfantryFramesFidget, &C
 void CInfantry::Idle ()
 {
 	CurrentMove = &InfantryMoveFidget;
-	Entity->PlaySound (CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
+	Entity->PlaySound (CHAN_VOICE, SoundIdle, 255, ATTN_IDLE);
 }
 
 CFrame InfantryFramesWalk [] =

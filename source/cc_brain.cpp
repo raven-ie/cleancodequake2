@@ -142,7 +142,7 @@ CAnim BrainMoveIdle (FRAME_stand31, FRAME_stand60, BrainFramesIdle, &CMonster::S
 
 void CBrain::Idle ()
 {
-	Entity->PlaySound (CHAN_AUTO, SoundIdle3, 1, ATTN_IDLE);
+	Entity->PlaySound (CHAN_AUTO, SoundIdle3, 255, ATTN_IDLE);
 	CurrentMove = &BrainMoveIdle;
 }
 

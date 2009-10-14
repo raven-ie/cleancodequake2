@@ -41,12 +41,10 @@ public:
 	int			Health;
 	int			MaxHealth;
 	int			GibHealth;
-	bool		DeadFlag; // false = false, true = true
+	bool		DeadFlag;
 	bool		CanTakeDamage;
 
-	static const class CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-	virtual bool			ParseField (char *Key, char *Value);
+	ENTITYFIELD_VIRTUAL_DEFS
 
 	CHurtableEntity ();
 	CHurtableEntity (int index);
@@ -93,15 +91,15 @@ public:
 class CUsableEntity abstract : public virtual CBaseEntity
 {
 public:
-	FrameNumber_t		Delay;
 	char				*Message;
+	char				*Target;
+	char				*KillTarget;
 	CBaseEntity			*Activator;
+	FrameNumber_t		Delay;
 	MediaIndex			NoiseIndex;
 	bool				Usable;
 
-	static const class CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-	virtual bool			ParseField (char *Key, char *Value);
+	ENTITYFIELD_VIRTUAL_DEFS
 
 	CUsableEntity ();
 	CUsableEntity (int Index);

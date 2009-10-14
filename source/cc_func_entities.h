@@ -39,9 +39,7 @@ public:
 	CFuncTimer ();
 	CFuncTimer (int Index);
 
-	static const class CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-	virtual bool			ParseField (char *Key, char *Value);
+	ENTITYFIELD_DEFS
 
 	void Think ();
 	void Use (CBaseEntity *other, CBaseEntity *activator);

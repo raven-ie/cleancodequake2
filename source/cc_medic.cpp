@@ -156,7 +156,7 @@ CMonsterEntity *CMedic::FindDeadMonster ()
 
 void CMedic::Idle ()
 {
-	Entity->PlaySound (CHAN_VOICE, SoundIdle1, 1, ATTN_IDLE, 0);
+	Entity->PlaySound (CHAN_VOICE, SoundIdle1, 255, ATTN_IDLE);
 
 	CMonsterEntity *ent = FindDeadMonster();
 	if (ent)
@@ -170,7 +170,7 @@ void CMedic::Idle ()
 
 void CMedic::Search ()
 {
-	Entity->PlaySound (CHAN_VOICE, SoundSearch, 1, ATTN_IDLE, 0);
+	Entity->PlaySound (CHAN_VOICE, SoundSearch, 255, ATTN_IDLE);
 
 	if (!Entity->OldEnemy)
 	{
@@ -188,7 +188,7 @@ void CMedic::Search ()
 
 void CMedic::Sight ()
 {
-	Entity->PlaySound (CHAN_VOICE, SoundSight, 1, ATTN_NORM, 0);
+	Entity->PlaySound (CHAN_VOICE, SoundSight);
 }
 
 CFrame MedicFramesStand [] =
@@ -409,7 +409,7 @@ void CMedic::Pain(CBaseEntity *other, float kick, int damage)
 
 	float r = random();
 	CurrentMove = (r < 0.5) ? &MedicMovePain1 : &MedicMovePain2;
-	Entity->PlaySound (CHAN_VOICE, (r < 0.5) ? SoundPain1 : SoundPain2, 1, ATTN_NORM, 0);
+	Entity->PlaySound (CHAN_VOICE, (r < 0.5) ? SoundPain1 : SoundPain2);
 }
 
 void CMedic::FireBlaster ()
@@ -504,7 +504,7 @@ void CMedic::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec
 // check for gib
 	if (Entity->Health <= Entity->GibHealth)
 	{
-		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"), 1, ATTN_NORM, 0);
+		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
 		for (int n= 0; n < 4; n++)
@@ -518,7 +518,7 @@ void CMedic::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec
 		return;
 
 // regular death
-	Entity->PlaySound (CHAN_VOICE, SoundDie, 1, ATTN_NORM, 0);
+	Entity->PlaySound (CHAN_VOICE, SoundDie);
 	Entity->DeadFlag = true;
 	Entity->CanTakeDamage = true;
 
@@ -573,7 +573,7 @@ CAnim MedicMoveAttackBlaster (FRAME_attack1, FRAME_attack14, MedicFramesAttackBl
 
 void CMedic::HookLaunch ()
 {
-	Entity->PlaySound (CHAN_WEAPON, SoundHookLaunch, 1, ATTN_NORM, 0);
+	Entity->PlaySound (CHAN_WEAPON, SoundHookLaunch);
 }
 
 static vec3f	MedicCableOffsets[] =
@@ -678,13 +678,13 @@ void CMedic::CableAttack ()
 		break;
 	case FRAME_attack50:
 		Entity->Enemy->SpawnFlags = 0;
-		(entity_cast<CMonsterEntity>(Entity->Enemy))->Monster->AIFlags = 0;
-		Entity->Enemy->gameEntity->target = NULL;
-		Entity->Enemy->gameEntity->targetname = NULL;
-		Entity->Enemy->gameEntity->combattarget = NULL;
-		Entity->Enemy->gameEntity->deathtarget = NULL;
+		//Entity->Enemy->gameEntity->deathtarget = NULL;
 		Monster = (entity_cast<CMonsterEntity>(Entity->Enemy));
+		Monster->DeathTarget = Monster->CombatTarget = NULL;
 		Monster->Monster->Healer = Entity;
+		Monster->Monster->AIFlags = 0;
+		Monster->Target = NULL;
+		Monster->TargetName = NULL;
 
 #ifndef MONSTER_USE_ROGUE_AI
 		Monster->Monster->Spawn ();
@@ -769,7 +769,7 @@ void CMedic::CableAttack ()
 #endif
 		break;
 	case FRAME_attack44:
-		Entity->PlaySound (CHAN_WEAPON, SoundHookHeal, 1, ATTN_NORM, 0);
+		Entity->PlaySound (CHAN_WEAPON, SoundHookHeal);
 	default:
 		break;
 	}
@@ -785,7 +785,7 @@ void CMedic::CableAttack ()
 
 void CMedic::HookRetract ()
 {
-	Entity->PlaySound (CHAN_WEAPON, SoundHookRetract, 1, ATTN_NORM, 0);
+	Entity->PlaySound (CHAN_WEAPON, SoundHookRetract);
 #ifndef MONSTER_USE_ROGUE_AI
 	(entity_cast<CMonsterEntity>(Entity->Enemy))->Monster->AIFlags &= ~AI_RESURRECTING;
 #endif

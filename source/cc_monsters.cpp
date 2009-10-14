@@ -111,7 +111,7 @@ void CMonster::MoveToPath (float Dist)
 
 	bool doit = false;
 
-	if (!P_CurrentNode || !P_CurrentPath->Path.size())
+	if (!P_CurrentNode || !P_CurrentPath || !P_CurrentPath->Path.size())
 	{
 		FollowingPath = false;
 		return;
@@ -417,8 +417,18 @@ void CMonsterEntity::Spawn ()
 	PhysicsType = PHYSICS_STEP;
 };
 
+ENTITYFIELDS_BEGIN(CMonsterEntity)
+{
+	CEntityField ("deathtarget",	EntityMemberOffset(CMonsterEntity,DeathTarget),			FT_LEVEL_STRING),
+	CEntityField ("combattarget",	EntityMemberOffset(CMonsterEntity,CombatTarget),		FT_LEVEL_STRING),
+};
+ENTITYFIELDS_END(CMonsterEntity)
+
 bool			CMonsterEntity::ParseField (char *Key, char *Value)
 {
+	if (CheckFields<CMonsterEntity> (this, Key, Value))
+		return true;
+
 	return (CUsableEntity::ParseField (Key, Value) || CHurtableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 };
 
@@ -607,7 +617,7 @@ bool CMonster::CheckBottom ()
 
 void CMonster::MoveToGoal (float Dist)
 {
-	CBaseEntity *goal = (Entity->gameEntity->goalentity) ? Entity->gameEntity->goalentity->Entity : Entity->Enemy;
+	CBaseEntity *goal = (Entity->GoalEntity) ? Entity->GoalEntity : Entity->Enemy;
 
 	if (!Entity->GroundEntity && !(Entity->Flags & (FL_FLY|FL_SWIM)))
 		return;
@@ -651,11 +661,11 @@ bool CMonster::MoveStep (vec3f move, bool ReLink)
 			vec3f neworg = oldorg + move;
 			if (i == 0 && Entity->Enemy)
 			{
-				if (!Entity->gameEntity->goalentity)
-					Entity->gameEntity->goalentity = Entity->Enemy->gameEntity;
+				if (!Entity->GoalEntity)
+					Entity->GoalEntity = Entity->Enemy;
 
-				float dz = oldorg.Z - Entity->gameEntity->goalentity->state.origin[2];
-				if (Entity->gameEntity->goalentity->client)
+				float dz = oldorg.Z - Entity->GoalEntity->State.GetOrigin().Z;
+				if (Entity->GoalEntity->EntityFlags & ENT_PLAYER)
 				{
 					if (dz > 40)
 						neworg.Z -= 8;
@@ -1011,64 +1021,64 @@ void CMonster::MonsterStartGo ()
 		return;
 
 	// check for target to combat_point and change to combattarget
-	if (Entity->gameEntity->target)
+	if (Entity->Target)
 	{
 		bool		notcombat = false, fixup = false;
-		CBaseEntity		*target = NULL;
+		CMapEntity		*target = NULL;
 
-		while ((target = CC_Find (target, FOFS(targetname), Entity->gameEntity->target)) != NULL)
+		while ((target = CC_Find<CMapEntity, ENT_MAP, EntityMemberOffset(CMapEntity,TargetName)> (target, Entity->Target)) != NULL)
 		{
 			if (strcmp(target->gameEntity->classname, "point_combat") == 0)
 			{
-				Entity->gameEntity->combattarget = Entity->gameEntity->target;
+				Entity->CombatTarget = Entity->Target;
 				fixup = true;
 			}
 			else
 				notcombat = true;
 		}
-		if (notcombat && Entity->gameEntity->combattarget)
+		if (notcombat && Entity->CombatTarget)
 			MapPrint (MAPPRINT_WARNING, Entity, Entity->State.GetOrigin(), "Target with mixed types\n");
 			//gi.dprintf("%s at (%f %f %f) has target with mixed types\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
 		if (fixup)
-			Entity->gameEntity->target = NULL;
+			Entity->Target = NULL;
 	}
 
 	// validate combattarget
-	if (Entity->gameEntity->combattarget)
+	if (Entity->CombatTarget)
 	{
-		CBaseEntity		*target = NULL;
-		while ((target = CC_Find (target, FOFS(targetname), Entity->gameEntity->combattarget)) != NULL)
+		CMapEntity		*target = NULL;
+		while ((target = CC_Find<CMapEntity, ENT_MAP, EntityMemberOffset(CMapEntity,TargetName)> (target, Entity->CombatTarget)) != NULL)
 		{
 			if (strcmp(target->gameEntity->classname, "point_combat") != 0)
-				MapPrint (MAPPRINT_WARNING, Entity, Entity->State.GetOrigin(), "Has a bad combattarget (\"%s\")\n", Entity->gameEntity->combattarget);
+				MapPrint (MAPPRINT_WARNING, Entity, Entity->State.GetOrigin(), "Has a bad combattarget (\"%s\")\n", Entity->CombatTarget);
 		}
 	}
 
-	if (Entity->gameEntity->target)
+	if (Entity->Target)
 	{
-		CBaseEntity *Target = CC_PickTarget(Entity->gameEntity->target);
+		CBaseEntity *Target = CC_PickTarget(Entity->Target);
 
 		if (Target)
-			Entity->gameEntity->goalentity = Entity->gameEntity->movetarget = Target->gameEntity;
-		if (!Entity->gameEntity->movetarget)
+			Entity->GoalEntity = Entity->MoveTarget = Target;
+		if (!Entity->MoveTarget)
 		{
 			//gi.dprintf ("%s can't find target %s at (%f %f %f)\n", self->classname, self->target, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
 			MapPrint (MAPPRINT_WARNING, Entity, Entity->State.GetOrigin(), "Can't find target\n");
-			Entity->gameEntity->target = NULL;
+			Entity->Target = NULL;
 			PauseTime = 100000000;
 			Stand ();
 		}
-		else if (strcmp (Entity->gameEntity->movetarget->classname, "path_corner") == 0)
+		else if (strcmp (Entity->MoveTarget->gameEntity->classname, "path_corner") == 0)
 		{
 			vec3f angles = Entity->State.GetAngles();
-			IdealYaw = angles.Y = (Entity->gameEntity->goalentity->Entity->State.GetOrigin() - Entity->State.GetOrigin()).ToYaw();
+			IdealYaw = angles.Y = (Entity->GoalEntity->State.GetOrigin() - Entity->State.GetOrigin()).ToYaw();
 			Entity->State.SetAngles(angles);
 			Walk ();
-			Entity->gameEntity->target = NULL;
+			Entity->Target = NULL;
 		}
 		else
 		{
-			Entity->gameEntity->goalentity = Entity->gameEntity->movetarget = NULL;
+			Entity->GoalEntity = Entity->MoveTarget = NULL;
 			PauseTime = 100000000;
 			Stand ();
 		}
@@ -1690,7 +1700,7 @@ bool CMonster::AI_CheckAttack()
 	bool		hesDeadJim = false;
 
 // this causes monsters to run blindly to the combat point w/o firing
-	if (Entity->gameEntity->goalentity)
+	if (Entity->GoalEntity)
 	{
 		if (AIFlags & AI_COMBAT_POINT)
 			return false;
@@ -1701,12 +1711,12 @@ bool CMonster::AI_CheckAttack()
 			{
 				if ((level.framenum - Entity->Enemy->teleport_time) > 50)
 				{
-					if (Entity->gameEntity->goalentity == Entity->Enemy)
+					if (Entity->GoalEntity == Entity->Enemy)
 					{
-						if (Entity->gameEntity->movetarget)
-							Entity->gameEntity->goalentity = Entity->gameEntity->movetarget;
+						if (Entity->MoveTarget)
+							Entity->GoalEntity = Entity->MoveTarget;
 						else
-							Entity->gameEntity->goalentity = NULL;
+							Entity->GoalEntity = NULL;
 					}
 
 					AIFlags &= ~AI_SOUND_TARGET;
@@ -1759,9 +1769,9 @@ bool CMonster::AI_CheckAttack()
 		}
 		else
 		{
-			if (Entity->gameEntity->movetarget)
+			if (Entity->MoveTarget)
 			{
-				Entity->gameEntity->goalentity = Entity->gameEntity->movetarget;
+				Entity->GoalEntity = Entity->MoveTarget;
 				Walk ();
 			}
 			else
@@ -1816,7 +1826,7 @@ bool CMonster::AI_CheckAttack()
 	bool	retval;
 
 // this causes monsters to run blindly to the combat point w/o firing
-	if (Entity->gameEntity->goalentity)
+	if (Entity->GoalEntity)
 	{
 		if (AIFlags & AI_COMBAT_POINT)
 			return false;
@@ -1825,12 +1835,12 @@ bool CMonster::AI_CheckAttack()
 		{
 			if ((level.framenum - Entity->Enemy->gameEntity->teleport_time) > 50)
 			{
-				if (Entity->gameEntity->goalentity == Entity->Enemy->gameEntity)
+				if (Entity->GoalEntity == Entity->Enemy)
 				{
-					if (Entity->gameEntity->movetarget)
-						Entity->gameEntity->goalentity = Entity->gameEntity->movetarget;
+					if (Entity->MoveTarget)
+						Entity->GoalEntity = Entity->MoveTarget;
 					else
-						Entity->gameEntity->goalentity = NULL;
+						Entity->GoalEntity = NULL;
 				}
 
 				AIFlags &= ~AI_SOUND_TARGET;
@@ -1899,9 +1909,9 @@ bool CMonster::AI_CheckAttack()
 //ROGUE
 		else
 		{
-			if (Entity->gameEntity->movetarget)
+			if (Entity->MoveTarget)
 			{
-				Entity->gameEntity->goalentity = Entity->gameEntity->movetarget;
+				Entity->GoalEntity = Entity->MoveTarget;
 				Walk ();
 			}
 			else
@@ -1996,7 +2006,8 @@ public:
 void CMonster::AI_Run(float Dist)
 {
 #ifndef MONSTER_USE_ROGUE_AI
-	edict_t		*tempgoal, *save, *marker;
+	CTempGoal		*tempgoal;
+	CBaseEntity		*save;
 	bool		isNew;
 	float		d1, d2, left, center, right;
 	CTrace		tr;
@@ -2072,9 +2083,9 @@ void CMonster::AI_Run(float Dist)
 	//	return;
 	//}
 
-	save = Entity->gameEntity->goalentity;
-	tempgoal = G_Spawn();
-	Entity->gameEntity->goalentity = tempgoal;
+	save = Entity->GoalEntity;
+	tempgoal = QNew (com_levelPool, 0) CTempGoal;
+	Entity->GoalEntity = tempgoal;
 
 	isNew = false;
 
@@ -2125,7 +2136,7 @@ void CMonster::AI_Run(float Dist)
 		Dist = d1;
 	}
 
-	Entity->gameEntity->goalentity->Entity->State.SetOrigin (LastSighting);
+	Entity->GoalEntity->State.SetOrigin (LastSighting);
 
 	if (isNew)
 	{
@@ -2134,7 +2145,7 @@ void CMonster::AI_Run(float Dist)
 		tr = CTrace (origin, Entity->GetMins(), Entity->GetMaxs(), LastSighting, Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
 		if (tr.fraction < 1)
 		{
-			v = vec3f(Entity->gameEntity->goalentity->state.origin) - origin;
+			v = vec3f(Entity->GoalEntity->State.GetOrigin()) - origin;
 			d1 = v.Length();
 			center = tr.fraction;
 			d2 = d1 * ((center+1)/2);
@@ -2165,9 +2176,9 @@ void CMonster::AI_Run(float Dist)
 				}
 				SavedGoal = LastSighting;
 				AIFlags |= AI_PURSUE_TEMP;
-				Vec3Copy (left_target, Entity->gameEntity->goalentity->state.origin);
+				Entity->GoalEntity->State.SetOrigin (left_target);
 				LastSighting = left_target;
-				v = vec3f(Entity->gameEntity->goalentity->state.origin) - origin;
+				v = vec3f(Entity->GoalEntity->State.GetOrigin()) - origin;
 
 				vec3f ang = Entity->State.GetAngles();
 				ang.Y = IdealYaw = v.ToYaw();
@@ -2185,9 +2196,9 @@ void CMonster::AI_Run(float Dist)
 				}
 				SavedGoal = LastSighting;
 				AIFlags |= AI_PURSUE_TEMP;
-				Vec3Copy (right_target, Entity->gameEntity->goalentity->state.origin);
+				Entity->GoalEntity->State.SetOrigin (right_target);
 				LastSighting = right_target;
-				v = vec3f(Entity->gameEntity->goalentity->state.origin) - origin;
+				v = vec3f(Entity->GoalEntity->State.GetOrigin()) - origin;
 				vec3f ang = Entity->State.GetAngles();
 				ang.Y = IdealYaw = v.ToYaw();
 				Entity->State.SetAngles(ang);
@@ -2200,13 +2211,13 @@ void CMonster::AI_Run(float Dist)
 
 	MoveToGoal (Dist);
 
-	G_FreeEdict(tempgoal);
+	tempgoal->Free ();
 
 	if (Entity)
-		Entity->gameEntity->goalentity = save;
+		Entity->GoalEntity = save;
 #else
 	CTempGoal		*tempgoal;
-	edict_t		*save;
+	CBaseEntity		*save;
 	bool	isNew;
 	//PMM
 	bool	retval;
@@ -2364,9 +2375,9 @@ void CMonster::AI_Run(float Dist)
 		return;
 	}
 
-	save = Entity->gameEntity->goalentity;
+	save = Entity->GoalEntity;
 	tempgoal = QNew (com_levelPool, 0) CTempGoal;
-	Entity->gameEntity->goalentity = tempgoal->gameEntity;
+	Entity->GoalEntity = tempgoal;
 
 	isNew = false;
 
@@ -2414,7 +2425,7 @@ void CMonster::AI_Run(float Dist)
 		Dist = d1;
 	}
 
-	Entity->gameEntity->goalentity->Entity->State.SetOrigin (LastSighting);
+	Entity->GoalEntity->State.SetOrigin (LastSighting);
 
 	if (isNew)
 	{
@@ -2422,7 +2433,7 @@ void CMonster::AI_Run(float Dist)
 		if (tr.fraction < 1)
 		{
 			float center = tr.fraction;
-			v = Entity->gameEntity->goalentity->Entity->State.GetOrigin() - Entity->State.GetOrigin();
+			v = Entity->GoalEntity->State.GetOrigin() - Entity->State.GetOrigin();
 			d1 = v.Length();
 
 			float d2 = d1 * ((center+1)/2);
@@ -2457,9 +2468,9 @@ void CMonster::AI_Run(float Dist)
 				}
 				SavedGoal = LastSighting;
 				AIFlags |= AI_PURSUE_TEMP;
-				Vec3Copy (left_target, Entity->gameEntity->goalentity->state.origin);
+				Entity->GoalEntity->State.SetOrigin (left_target);
 				LastSighting = left_target;
-				v = Entity->gameEntity->goalentity->Entity->State.GetOrigin() - origin;
+				v = Entity->GoalEntity->State.GetOrigin() - origin;
 
 				angles[YAW] = IdealYaw = v.ToYaw();
 				Entity->State.SetAngles(angles);
@@ -2473,9 +2484,9 @@ void CMonster::AI_Run(float Dist)
 				}
 				SavedGoal = LastSighting;
 				AIFlags |= AI_PURSUE_TEMP;
-				Vec3Copy (right_target, Entity->gameEntity->goalentity->state.origin);
+				Entity->GoalEntity->State.SetOrigin(right_target);
 				LastSighting = right_target;
-				v = Entity->gameEntity->goalentity->Entity->State.GetOrigin() - origin;
+				v = Entity->GoalEntity->State.GetOrigin() - origin;
 				angles[YAW] = IdealYaw = v.ToYaw();
 				Entity->State.SetAngles(angles);
 			}
@@ -2490,7 +2501,7 @@ void CMonster::AI_Run(float Dist)
 		return;			// PGM - g_touchtrigger free problem
 
 	if (Entity)
-		Entity->gameEntity->goalentity = save;
+		Entity->GoalEntity = save;
 #endif
 }
 
@@ -2929,10 +2940,10 @@ void CMonster::MonsterDeathUse ()
 		Entity->gameEntity->item = NULL;
 	}
 
-	if (Entity->gameEntity->deathtarget)
-		Entity->gameEntity->target = Entity->gameEntity->deathtarget;
+	if (Entity->DeathTarget)
+		Entity->Target = Entity->DeathTarget;
 
-	if (!Entity->gameEntity->target)
+	if (!Entity->Target)
 		return;
 
 	Entity->UseTargets (Entity->Enemy, Entity->Message);
@@ -3069,29 +3080,28 @@ void CMonster::FoundTarget ()
 	LastSighting = Entity->Enemy->State.GetOrigin();
 	TrailTime = level.framenum;
 
-	if (!Entity->gameEntity->combattarget)
+	if (!Entity->CombatTarget)
 	{
 		HuntTarget ();
 		return;
 	}
 
-	CBaseEntity *Target = CC_PickTarget(Entity->gameEntity->combattarget);
-	Entity->gameEntity->goalentity = Entity->gameEntity->movetarget = Target->gameEntity;
-	if (!Entity->gameEntity->movetarget)
+	Entity->GoalEntity = Entity->MoveTarget = CC_PickTarget(Entity->CombatTarget);
+	if (!Entity->MoveTarget)
 	{
 		if (Entity->Enemy)
-			Entity->gameEntity->goalentity = Entity->gameEntity->movetarget = Entity->Enemy->gameEntity;
+			Entity->GoalEntity = Entity->MoveTarget = Entity->Enemy;
 		HuntTarget ();
-		MapPrint (MAPPRINT_ERROR, Entity, Entity->State.GetOrigin(), "combattarget %s not found\n", Entity->gameEntity->combattarget);
+		MapPrint (MAPPRINT_ERROR, Entity, Entity->State.GetOrigin(), "combattarget %s not found\n", Entity->CombatTarget);
 		return;
 	}
 
 	// clear out our combattarget, these are a one shot deal
-	Entity->gameEntity->combattarget = NULL;
+	Entity->CombatTarget = NULL;
 	AIFlags |= AI_COMBAT_POINT;
 
-	// clear the targetname, that point is ours!
-	Entity->gameEntity->movetarget->targetname = NULL;
+	// clear the targetname, the point is ours!
+	entity_cast<CMapEntity>(Entity->MoveTarget)->TargetName = NULL;
 	PauseTime = 0;
 #ifdef MONSTER_USE_ROGUE_AI
 	// PMM
@@ -3279,7 +3289,7 @@ void CMonster::CheckGround()
 
 void CMonster::HuntTarget()
 {
-	Entity->gameEntity->goalentity = Entity->Enemy->gameEntity;
+	Entity->GoalEntity = Entity->Enemy;
 	if (AIFlags & AI_STAND_GROUND)
 		Stand ();
 	else
@@ -3298,9 +3308,9 @@ bool CMonster::FindTarget()
 
 	if (AIFlags & AI_GOOD_GUY)
 	{
-		if (Entity->gameEntity->goalentity && Entity->gameEntity->goalentity->inUse && Entity->gameEntity->goalentity->classname)
+		if (Entity->GoalEntity && Entity->GoalEntity->IsInUse() && Entity->GoalEntity->gameEntity->classname)
 		{
-			if (strcmp(Entity->gameEntity->goalentity->classname, "target_actor") == 0)
+			if (strcmp(Entity->GoalEntity->gameEntity->classname, "target_actor") == 0)
 				return false;
 		}
 

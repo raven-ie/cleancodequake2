@@ -47,11 +47,11 @@ CanTakeDamage(false)
 	EntityFlags |= ENT_HURTABLE;
 };
 
-const CEntityField CHurtableEntity::FieldsForParsing[] =
+ENTITYFIELDS_BEGIN(CHurtableEntity)
 {
 	CEntityField ("health", EntityMemberOffset(CHurtableEntity,Health), FT_INT),
 };
-const size_t CHurtableEntity::FieldsForParsingSize = FieldSize<CHurtableEntity>();
+ENTITYFIELDS_END(CHurtableEntity)
 
 bool			CHurtableEntity::ParseField (char *Key, char *Value)
 {
@@ -414,7 +414,7 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 	{
 		if (Player->PainDebounceTime < level.framenum)
 		{
-			PlaySound (CHAN_ITEM, SoundIndex("items/protect4.wav"), 1, ATTN_NORM);
+			PlaySound (CHAN_ITEM, SoundIndex("items/protect4.wav"));
 			Player->PainDebounceTime = level.framenum + 20;
 		}
 		take = 0;
@@ -739,9 +739,9 @@ bool CBounceProjectile::Run ()
 
 	gameEntity->waterlevel = (isinwater) ? 1 : 0;
 	if (!wasinwater && isinwater)
-		PlaySoundAt (old_origin, g_edicts, CHAN_AUTO, SoundIndex("misc/h2ohit1.wav"));
+		World->PlayPositionedSound (old_origin, CHAN_AUTO, SoundIndex("misc/h2ohit1.wav"));
 	else if (wasinwater && !isinwater)
-		PlaySoundAt (or, g_edicts, CHAN_AUTO, SoundIndex("misc/h2ohit1.wav"));
+		World->PlayPositionedSound (or, CHAN_AUTO, SoundIndex("misc/h2ohit1.wav"));
 
 // move teamslaves
 	for (CBaseEntity *slave = TeamChain; slave; slave = slave->TeamChain)
@@ -849,9 +849,9 @@ bool CFlyMissileProjectile::Run ()
 	gameEntity->waterlevel = (isinwater) ? 1 : 0;
 
 	if (!wasinwater && isinwater)
-		PlaySoundAt (old_origin, g_edicts, CHAN_AUTO, SoundIndex("misc/h2ohit1.wav"));
+		World->PlayPositionedSound (old_origin, CHAN_AUTO, SoundIndex("misc/h2ohit1.wav"));
 	else if (wasinwater && !isinwater)
-		PlaySoundAt (State.GetOrigin(), g_edicts, CHAN_AUTO, SoundIndex("misc/h2ohit1.wav"));
+		World->PlayPositionedSound (State.GetOrigin(), CHAN_AUTO, SoundIndex("misc/h2ohit1.wav"));
 
 // move teamslaves
 	for (CBaseEntity *slave = TeamChain; slave; slave = slave->TeamChain)
@@ -1526,13 +1526,15 @@ Usable (true)
 	EntityFlags |= ENT_USABLE;
 }
 
-const CEntityField CUsableEntity::FieldsForParsing[] =
+ENTITYFIELDS_BEGIN(CUsableEntity)
 {
-	CEntityField ("message", EntityMemberOffset(CUsableEntity,Message), FT_LEVEL_STRING),
-	CEntityField ("noise", EntityMemberOffset(CUsableEntity,NoiseIndex), FT_SOUND_INDEX),
-	CEntityField ("delay", EntityMemberOffset(CUsableEntity,Delay), FT_FRAMENUMBER),
+	CEntityField ("message",	EntityMemberOffset(CUsableEntity,Message),			FT_LEVEL_STRING),
+	CEntityField ("noise",		EntityMemberOffset(CUsableEntity,NoiseIndex),		FT_SOUND_INDEX),
+	CEntityField ("delay",		EntityMemberOffset(CUsableEntity,Delay),			FT_FRAMENUMBER),
+	CEntityField ("target",		EntityMemberOffset(CUsableEntity,Target),			FT_LEVEL_STRING),
+	CEntityField ("killtarget",	EntityMemberOffset(CUsableEntity,KillTarget),		FT_LEVEL_STRING | FT_GAME_ENTITY),
 };
-const size_t CUsableEntity::FieldsForParsingSize = FieldSize<CUsableEntity>();
+ENTITYFIELDS_END(CUsableEntity)
 
 bool			CUsableEntity::ParseField (char *Key, char *Value)
 {
@@ -1586,8 +1588,8 @@ void CUsableEntity::UseTargets (CBaseEntity *activator, char *Message)
 		if (!activator)
 			DebugPrintf ("DelayedUse with no activator\n");
 		t->Message = Message;
-		t->gameEntity->target = gameEntity->target;
-		t->gameEntity->killtarget = gameEntity->killtarget;
+		t->Target = Target;
+		t->KillTarget = KillTarget;
 		return;
 	}
 
@@ -1604,10 +1606,10 @@ void CUsableEntity::UseTargets (CBaseEntity *activator, char *Message)
 //
 // kill killtargets
 //
-	if (gameEntity->killtarget)
+	if (KillTarget)
 	{
-		CBaseEntity *t = NULL;
-		while ((t = CC_Find (t, FOFS(targetname), gameEntity->killtarget)) != NULL)
+		CMapEntity *t = NULL;
+		while ((t = CC_Find<CMapEntity, ENT_MAP, EntityMemberOffset(CMapEntity,TargetName)> (t, KillTarget)) != NULL)
 		{
 			t->Free ();
 
@@ -1622,10 +1624,10 @@ void CUsableEntity::UseTargets (CBaseEntity *activator, char *Message)
 //
 // fire targets
 //
-	if (gameEntity->target)
+	if (Target)
 	{
-		CBaseEntity *Ent = NULL;
-		while ((Ent = CC_Find (Ent, FOFS(targetname), gameEntity->target)) != NULL)
+		CMapEntity *Ent = NULL;
+		while ((Ent = CC_Find<CMapEntity, ENT_MAP, EntityMemberOffset(CMapEntity,TargetName)> (Ent, Target)) != NULL)
 		{
 			if (!Ent)
 				continue;
@@ -1635,12 +1637,13 @@ void CUsableEntity::UseTargets (CBaseEntity *activator, char *Message)
 				(!Q_stricmp(Ent->gameEntity->classname, "func_door") || !Q_stricmp(Ent->gameEntity->classname, "func_door_rotating")))
 				continue;
 
-			if (Ent == this)
-				DebugPrintf ("WARNING: Entity used itself.\n");
-			else if (Ent->EntityFlags & ENT_USABLE)
+			if (Ent->EntityFlags & ENT_USABLE)
 			{
 				CUsableEntity *Used = entity_cast<CUsableEntity>(Ent);
 				
+				if (Used == this)
+					DebugPrintf ("WARNING: Entity used itself.\n");
+
 				if (Used->Usable)
 					Used->Use (this, activator);
 			}

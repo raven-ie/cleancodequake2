@@ -34,10 +34,10 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #if !defined(__CC_SOUND_H__) || !defined(INCLUDE_GUARDS)
 #define __CC_SOUND_H__
 
-void PlaySoundFrom	(edict_t *ent,  EEntSndChannel channel, MediaIndex soundIndex,
-					float volume = 1.0f, EAttenuation attenuation = ATTN_NORM, float timeOfs = 0.0f);
-void PlaySoundAt	(vec3_t origin, edict_t *ent, EEntSndChannel channel, MediaIndex soundIndex,
-					float volume = 1.0f, EAttenuation attenuation = ATTN_NORM, float timeOfs = 0.0f);
+void PlaySoundFrom	(CBaseEntity *ent, EEntSndChannel channel, MediaIndex soundIndex,
+					byte volume = 255, EAttenuation attenuation = ATTN_NORM, byte timeOfs = 0);
+void PlaySoundAt	(vec3f origin, CBaseEntity *ent, EEntSndChannel channel, MediaIndex soundIndex,
+					byte volume = 255, EAttenuation attenuation = ATTN_NORM, byte timeOfs = 0);
 
 #else
 FILE_WARNING

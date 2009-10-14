@@ -113,9 +113,7 @@ public:
 	{
 	};
 
-  	static const class CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-	virtual bool			ParseField (char *Key, char *Value);
+	ENTITYFIELD_VIRTUAL_DEFS
 
 	bool Run ()
 	{
@@ -217,11 +215,11 @@ public:
 	virtual void Spawn () = 0;
 };
 
-const CEntityField CTriggerBase::FieldsForParsing[] =
+ENTITYFIELDS_BEGIN(CTriggerBase)
 {
 	CEntityField ("wait", EntityMemberOffset(CTriggerBase,Wait), FT_FRAMENUMBER),
-};
-const size_t CTriggerBase::FieldsForParsingSize = FieldSize<CTriggerBase>();
+}
+ENTITYFIELDS_END(CTriggerBase)
 
 bool			CTriggerBase::ParseField (char *Key, char *Value)
 {
@@ -458,9 +456,7 @@ public:
 	  {
 	  };
 
-	static const class CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-	virtual bool			ParseField (char *Key, char *Value);
+	ENTITYFIELD_DEFS
 
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
@@ -522,9 +518,9 @@ public:
 		Speed *= 10;
 
 		CBaseEntity *target;
-		if (!gameEntity->target)
+		if (!Target)
 			Q3Touch = false;
-		else if ((target = CC_Find (NULL, FOFS(targetname), gameEntity->target)) != NULL)
+		else if ((target = CC_Find<CMapEntity, ENT_MAP, EntityMemberOffset(CMapEntity,TargetName)> (NULL, Target)) != NULL)
 		{
 			// Quake3
 			//self->touch = trigger_push_q3touch;
@@ -538,11 +534,11 @@ public:
 	};
 };
 
-const CEntityField CTriggerPush::FieldsForParsing[] =
+ENTITYFIELDS_BEGIN(CTriggerPush)
 {
 	CEntityField ("speed", EntityMemberOffset(CTriggerPush,Speed), FT_FLOAT),
 };
-const size_t CTriggerPush::FieldsForParsingSize = FieldSize<CTriggerPush>();
+ENTITYFIELDS_END(CTriggerPush)
 
 bool			CTriggerPush::ParseField (char *Key, char *Value)
 {
@@ -589,9 +585,7 @@ public:
 	  {
 	  };
 
-  	static const CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-	virtual bool ParseField (char *Key, char *Value);
+	ENTITYFIELD_DEFS
 
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
@@ -640,11 +634,11 @@ public:
 	};
 };
 
-const CEntityField CTriggerHurt::FieldsForParsing[] =
+ENTITYFIELDS_BEGIN(CTriggerHurt)
 {
 	CEntityField ("dmg", EntityMemberOffset(CTriggerHurt,Damage), FT_INT),
 };
-const size_t CTriggerHurt::FieldsForParsingSize = FieldSize<CTriggerHurt>();
+ENTITYFIELDS_END(CTriggerHurt)
 
 bool			CTriggerHurt::ParseField (char *Key, char *Value)
 {
@@ -681,9 +675,7 @@ public:
 	  {
 	  };
 
-  	static const class CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-	virtual bool			ParseField (char *Key, char *Value);
+	ENTITYFIELD_DEFS
 
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
@@ -728,11 +720,11 @@ public:
 	};
 };
 
-const CEntityField CTriggerMonsterJump::FieldsForParsing[] =
+ENTITYFIELDS_BEGIN(CTriggerMonsterJump)
 {
 	CEntityField ("speed", EntityMemberOffset(CTriggerMonsterJump,Speed), FT_FLOAT),
 };
-const size_t CTriggerMonsterJump::FieldsForParsingSize = FieldSize<CTriggerMonsterJump>();
+ENTITYFIELDS_END(CTriggerMonsterJump)
 
 bool			CTriggerMonsterJump::ParseField (char *Key, char *Value)
 {
@@ -910,7 +902,7 @@ public:
 	{
 		Item = gameEntity->item;
 
-		if (!gameEntity->target)
+		if (!Target)
 		{
 			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No target\n");
 			//gi.dprintf("%s at (%f %f %f) has no target\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2]);

@@ -181,7 +181,7 @@ CAnim MutantMoveIdle (FRAME_stand152, FRAME_stand164, MutantFramesIdle, &CMonste
 void CMutant::Idle ()
 {
 	CurrentMove = &MutantMoveIdle;
-	Entity->PlaySound (CHAN_VOICE, SoundIdle, 1, ATTN_IDLE);
+	Entity->PlaySound (CHAN_VOICE, SoundIdle, 255, ATTN_IDLE);
 }
 
 //

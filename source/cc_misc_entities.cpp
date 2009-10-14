@@ -72,10 +72,7 @@ public:
 	{
 	};
 
-	static const CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-
-	bool			ParseField (char *Key, char *Value);
+	ENTITYFIELD_DEFS
 
 #define BARREL_STEPSIZE 8
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
@@ -88,8 +85,8 @@ public:
 		float ratio = entity_cast<CPhysicsEntity>(other)->Mass / Mass;
 		vec3f v = State.GetOrigin() - other->State.GetOrigin();
 		float Yaw = (v.ToYaw ()*M_PI*2 / 360);
-		vec3f move = vec3f( cosf(Yaw)*(20 * ratio),
-							sinf(Yaw)*(20 * ratio),
+		vec3f move = vec3f( cosf(Yaw)*(2 * ratio),
+							sinf(Yaw)*(2 * ratio),
 							0);
 
 		vec3f	oldOrigin = State.GetOrigin(),
@@ -204,12 +201,12 @@ public:
 	};
 };
 
-const CEntityField CMiscExploBox::FieldsForParsing[] =
+ENTITYFIELDS_BEGIN(CMiscExploBox)
 {
 	CEntityField ("mass", EntityMemberOffset(CMiscExploBox,Explosivity), FT_INT),
 	CEntityField ("dmg", EntityMemberOffset(CMiscExploBox,Damage), FT_INT),
 };
-const size_t CMiscExploBox::FieldsForParsingSize = FieldSize<CMiscExploBox>();
+ENTITYFIELDS_END(CMiscExploBox)
 
 bool			CMiscExploBox::ParseField (char *Key, char *Value)
 {
@@ -264,7 +261,7 @@ public:
 
 	virtual void Spawn ()
 	{
-		if (!gameEntity->target)
+		if (!Target)
 		{
 			//gi.dprintf ("misc_viper without a target at (%f %f %f)\n", ent->absMin[0], ent->absMin[1], ent->absMin[2]);
 			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No targetname\n");
@@ -697,6 +694,11 @@ public:
 		};
 	};
 
+	void DamageEffect (vec3f &dir, vec3f &point, vec3f &normal, int &damage, int &dflags)
+	{
+		CTempEnt_Splashes::Blood (point, normal);
+	}
+
 	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 	{
 		if (Health > -80)
@@ -873,10 +875,7 @@ public:
 	{
 	};
 
-	static const class CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-
-	virtual bool			ParseField (char *Key, char *Value);
+	ENTITYFIELD_DEFS
 
 	bool Run ()
 	{
@@ -954,11 +953,11 @@ public:
 	};
 };
 
-const CEntityField CMiscViperBomb::FieldsForParsing[] =
+ENTITYFIELDS_BEGIN(CMiscViperBomb)
 {
 	CEntityField ("dmg", EntityMemberOffset(CMiscViperBomb,Damage), FT_INT),
 };
-const size_t CMiscViperBomb::FieldsForParsingSize = FieldSize<CMiscViperBomb>();
+ENTITYFIELDS_END(CMiscViperBomb)
 
 bool			CMiscViperBomb::ParseField (char *Key, char *Value)
 {
