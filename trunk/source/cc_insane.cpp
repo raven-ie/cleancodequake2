@@ -43,22 +43,22 @@ CMonster (ID)
 
 void CInsane::Fist ()
 {
-	Entity->PlaySound (CHAN_VOICE, SoundFist, 1, ATTN_IDLE);
+	Entity->PlaySound (CHAN_VOICE, SoundFist, 255, ATTN_IDLE);
 }
 
 void CInsane::Shake ()
 {
-	Entity->PlaySound (CHAN_VOICE, SoundShake, 1, ATTN_IDLE);
+	Entity->PlaySound (CHAN_VOICE, SoundShake, 255, ATTN_IDLE);
 }
 
 void CInsane::Moan ()
 {
-	Entity->PlaySound (CHAN_VOICE, SoundMoan, 1, ATTN_IDLE);
+	Entity->PlaySound (CHAN_VOICE, SoundMoan, 255, ATTN_IDLE);
 }
 
 void CInsane::Scream ()
 {
-	Entity->PlaySound (CHAN_VOICE, SoundScream[irandom(8)], 1, ATTN_IDLE);
+	Entity->PlaySound (CHAN_VOICE, SoundScream[irandom(8)], 255, ATTN_IDLE);
 }
 
 CFrame InsaneFramesStandNormal [] =
@@ -486,7 +486,7 @@ void CInsane::Pain (CBaseEntity *other, float kick, int damage)
 		l = 75;
 	else
 		l = 100;
-	Entity->PlaySound (CHAN_VOICE, SoundIndex (Q_VarArgs("player/male/pain%i_%i.wav", l, r)), 1, ATTN_IDLE);
+	Entity->PlaySound (CHAN_VOICE, SoundIndex (Q_VarArgs("player/male/pain%i_%i.wav", l, r)), 255, ATTN_IDLE);
 	// END SHIT
 
 	// Don't go into pain frames if crucified.
@@ -558,7 +558,7 @@ void CInsane::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 {
 	if (Entity->Health <= Entity->GibHealth)
 	{
-		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"), 1, ATTN_IDLE);
+		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"), 255, ATTN_IDLE);
 		for (int n= 0; n < 2; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
 		for (int n= 0; n < 4; n++)
@@ -571,7 +571,7 @@ void CInsane::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 	if (Entity->DeadFlag == true)
 		return;
 
-	Entity->PlaySound (CHAN_VOICE, SoundIndex(Q_VarArgs("player/male/death%i.wav", (irandom(4))+1)), 1, ATTN_IDLE);
+	Entity->PlaySound (CHAN_VOICE, SoundIndex(Q_VarArgs("player/male/death%i.wav", (irandom(4))+1)), 255, ATTN_IDLE);
 
 	Entity->DeadFlag = true;
 	Entity->CanTakeDamage = true;

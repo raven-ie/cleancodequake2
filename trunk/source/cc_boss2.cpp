@@ -45,7 +45,7 @@ CMonster (ID)
 void CBoss2::Search ()
 {
 	if (random() < 0.5)
-		Entity->PlaySound (CHAN_VOICE, SoundSearch1, 1, ATTN_NONE, 0);
+		Entity->PlaySound (CHAN_VOICE, SoundSearch1, 255, ATTN_NONE);
 }
 
 void CBoss2::FireRocket ()
@@ -496,7 +496,7 @@ void CBoss2::Pain (CBaseEntity *other, float kick, int damage)
 	PainDebounceTime = level.framenum + 30;
 
 // American wanted these at no attenuation
-	Entity->PlaySound (CHAN_VOICE, (damage < 10) ? SoundPain3 : ((damage < 30) ? SoundPain1 : SoundPain2), 1, ATTN_NONE, 0);
+	Entity->PlaySound (CHAN_VOICE, (damage < 10) ? SoundPain3 : ((damage < 30) ? SoundPain1 : SoundPain2), 255, ATTN_NONE);
 	CurrentMove = (damage < 30) ? &Boss2MovePainLight : &Boss2MovePainHeavy;
 }
 
@@ -512,7 +512,7 @@ void CBoss2::Dead ()
 
 void CBoss2::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
-	Entity->PlaySound (CHAN_VOICE, SoundDeath, 1, ATTN_NONE, 0);
+	Entity->PlaySound (CHAN_VOICE, SoundDeath, 255, ATTN_NONE);
 	Entity->DeadFlag = true;
 	Entity->CanTakeDamage = false;
 	Entity->gameEntity->count = 0;

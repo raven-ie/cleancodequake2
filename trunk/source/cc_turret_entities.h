@@ -48,11 +48,9 @@ class CTurretBreach : public CTurretEntityBase
 public:
 	bool	FinishInit, ShouldFire;
 	float	PitchOptions[4];
+	char	*Target;
 
-	static const class CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-
-	virtual bool			ParseField (char *Key, char *Value);
+	ENTITYFIELD_DEFS
 
 	CTurretBreach ();
 	CTurretBreach (int Index);

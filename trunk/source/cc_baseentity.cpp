@@ -319,6 +319,14 @@ _CC_ENABLE_DEPRECATION
 
 CBaseEntity::CBaseEntity (int Index)
 {
+	if (Index < 0)
+	{
+		Freed = false;
+		EntityFlags |= ENT_BASE;
+		gameEntity = NULL;
+		return;
+	}
+
 	gameEntity = &g_edicts[Index];
 	gameEntity->Entity = this;
 	gameEntity->state.number = Index;
@@ -538,7 +546,7 @@ void			CBaseEntity::Free ()
 	Freed = true;
 }
 
-void	CBaseEntity::PlaySound (EEntSndChannel channel, MediaIndex soundIndex, float volume, EAttenuation attenuation, float timeOfs)
+void	CBaseEntity::PlaySound (EEntSndChannel channel, MediaIndex soundIndex, byte volume, EAttenuation attenuation, byte timeOfs)
 {
 	if ((channel != CHAN_AUTO) && (channel < CHAN_MAX))
 	{
@@ -548,10 +556,10 @@ void	CBaseEntity::PlaySound (EEntSndChannel channel, MediaIndex soundIndex, floa
 			PlayedSounds[channel-1] = true;
 	}
 
-	PlaySoundFrom (gameEntity, channel, soundIndex, volume, attenuation, timeOfs);
+	PlaySoundFrom (this, channel, soundIndex, volume, attenuation, timeOfs);
 };
 
-void	CBaseEntity::PlayPositionedSound (vec3_t origin, EEntSndChannel channel, MediaIndex soundIndex, float volume, EAttenuation attenuation, float timeOfs)
+void	CBaseEntity::PlayPositionedSound (vec3f origin, EEntSndChannel channel, MediaIndex soundIndex, byte volume, EAttenuation attenuation, byte timeOfs)
 {
 	if ((channel != CHAN_AUTO) && (channel < CHAN_MAX))
 	{
@@ -561,7 +569,7 @@ void	CBaseEntity::PlayPositionedSound (vec3_t origin, EEntSndChannel channel, Me
 			PlayedSounds[channel-1] = true;
 	}
 
-	PlaySoundAt (origin, gameEntity, channel, soundIndex, volume, attenuation, timeOfs);
+	PlaySoundAt (origin, this, channel, soundIndex, volume, attenuation, timeOfs);
 };
 
 void	CBaseEntity::KillBox ()
@@ -589,11 +597,13 @@ void	CBaseEntity::KillBox ()
 CMapEntity::CMapEntity () : 
 CBaseEntity()
 {
+	EntityFlags |= ENT_MAP;
 };
 
 CMapEntity::CMapEntity (int Index) : 
 CBaseEntity(Index)
 {
+	EntityFlags |= ENT_MAP;
 };
 
 CPrivateEntity::CPrivateEntity (int Index)
@@ -654,7 +664,7 @@ void CBaseEntity::StuffText (char *text)
     CastTo (CASTFLAG_RELIABLE);	
 }
 
-const CEntityField CMapEntity::FieldsForParsing[] =
+ENTITYFIELDS_BEGIN(CMapEntity)
 {
 	CEntityField ("spawnflags",		EntityMemberOffset(CBaseEntity,SpawnFlags),		FT_UINT),
 	CEntityField ("origin",			GameEntityMemberOffset(state.origin),			FT_VECTOR | FT_GAME_ENTITY),
@@ -664,19 +674,12 @@ const CEntityField CMapEntity::FieldsForParsing[] =
 	CEntityField ("light",			0,												FT_IGNORE),
 
 	CEntityField ("item",			GameEntityMemberOffset(item),					FT_ITEM | FT_GAME_ENTITY),
-	CEntityField ("target",			GameEntityMemberOffset(target),					FT_LEVEL_STRING | FT_GAME_ENTITY),
-	CEntityField ("targetname",		GameEntityMemberOffset(targetname),				FT_LEVEL_STRING | FT_GAME_ENTITY),
 	CEntityField ("pathtarget",		GameEntityMemberOffset(pathtarget),				FT_LEVEL_STRING | FT_GAME_ENTITY),
-	CEntityField ("deathtarget",	GameEntityMemberOffset(deathtarget),			FT_LEVEL_STRING | FT_GAME_ENTITY),
-	CEntityField ("killtarget",		GameEntityMemberOffset(killtarget),				FT_LEVEL_STRING | FT_GAME_ENTITY),
-	CEntityField ("combattarget",	GameEntityMemberOffset(combattarget),			FT_LEVEL_STRING | FT_GAME_ENTITY),
 	CEntityField ("team",			GameEntityMemberOffset(team),					FT_LEVEL_STRING | FT_GAME_ENTITY),
 	CEntityField ("style",			GameEntityMemberOffset(style),					FT_INT | FT_GAME_ENTITY),
 	CEntityField ("count",			GameEntityMemberOffset(count),					FT_INT | FT_GAME_ENTITY),
 	CEntityField ("sounds",			GameEntityMemberOffset(sounds),					FT_INT | FT_GAME_ENTITY),
 
-	CEntityField ("goalentity",		GameEntityMemberOffset(goalentity),				FT_ENTITY | FT_GAME_ENTITY | FT_NOSPAWN | FT_SAVABLE),
-	CEntityField ("movetarget",		GameEntityMemberOffset(movetarget),				FT_ENTITY | FT_GAME_ENTITY | FT_NOSPAWN | FT_SAVABLE),
 	CEntityField ("owner",			GameEntityMemberOffset(owner),					FT_ENTITY | FT_GAME_ENTITY | FT_NOSPAWN | FT_SAVABLE),
 
 	// temp spawn vars -- only valid when the spawn function is called
@@ -689,12 +692,29 @@ const CEntityField CMapEntity::FieldsForParsing[] =
 	CEntityField ("skyaxis",		SpawnTempMemberOffset(skyaxis),					FT_VECTOR | FT_SPAWNTEMP),
 	CEntityField ("nextmap",		SpawnTempMemberOffset(nextmap),					FT_LEVEL_STRING | FT_SPAWNTEMP),
 };
-const size_t CMapEntity::FieldsForParsingSize = FieldSize<CMapEntity>();
+ENTITYFIELDS_END(CMapEntity)
+
+const CEntityField CMapEntity::FieldsForParsing_Map[] =
+{
+	CEntityField ("targetname",		EntityMemberOffset(CMapEntity,TargetName),		FT_LEVEL_STRING),
+};
+const size_t CMapEntity::FieldsForParsingSize_Map = sizeof(CMapEntity::FieldsForParsing_Map) / sizeof(CMapEntity::FieldsForParsing_Map[0]);
 
 bool			CMapEntity::ParseField (char *Key, char *Value)
 {
 	if (CheckFields<CMapEntity, CBaseEntity> (this, Key, Value))
 		return true;
+	else
+	{
+		for (size_t i = 0; i < CMapEntity::FieldsForParsingSize_Map; i++)
+		{
+			if (!(CMapEntity::FieldsForParsing_Map[i].FieldType & FT_NOSPAWN) && (strcmp (Key, CMapEntity::FieldsForParsing_Map[i].Name) == 0))
+			{
+				CMapEntity::FieldsForParsing_Map[i].Create<CMapEntity> (this, Value);
+				return true;
+			}
+		}
+	}
 
 	// Couldn't find it here
 	return false;

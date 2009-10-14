@@ -51,12 +51,29 @@ enum
 	BRUSHTHINK_CUSTOM_START,
 };
 
+CC_ENUM (uint32, EBrushType)
+{
+	BRUSH_BASE			= BIT(0),
+
+	BRUSH_DOOR			= BIT(1),
+	BRUSH_PLATFORM		= BIT(2),
+	BRUSH_TRAIN			= BIT(3),
+	BRUSH_ROTATINGDOOR	= BIT(4),
+	BRUSH_MOVABLEWATER	= BIT(5),
+	BRUSH_SECRETDOOR	= BIT(6),
+	BRUSH_BUTTON		= BIT(7),
+	BRUSH_ROTATING		= BIT(8),
+	BRUSH_CONVEYOR		= BIT(9),
+	BRUSH_WALL			= BIT(10),
+	BRUSH_OBJECT		= BIT(11),
+	BRUSH_EXPLOSIVE		= BIT(12),
+};
+
 // Contains code common to brush models
 class CBrushModel : public virtual CBaseEntity, public CThinkableEntity, public CPushPhysics, public CStopPhysics
 {
 public:
-	CBrushModel ();
-	CBrushModel (int Index);
+	EBrushType	BrushType;
 
 	float		Accel;
 	float		Speed;
@@ -65,10 +82,6 @@ public:
 	int			Damage;
 
 	FrameNumber_t		Wait;
-
-	static const class CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-	virtual bool			ParseField (char *Key, char *Value);
 
 	FrameNumber_t		TouchDebounce;
 
@@ -85,6 +98,23 @@ public:
 	vec3f		Positions[2];
 	vec3f		MoveOrigin, MoveAngles;
 
+	// state data
+	int			MoveState;
+	vec3f		Dir;
+	float		CurrentSpeed;
+	float		MoveSpeed;
+	float		NextSpeed;
+	float		RemainingDistance;
+	float		DecelDistance;
+	uint32		EndFunc;
+
+	uint32		ThinkType;
+
+	ENTITYFIELD_VIRTUAL_DEFS
+
+	CBrushModel ();
+	CBrushModel (int Index);
+
 	inline void SetMoveDir ()
 	{
 		if (State.GetAngles().Y == -1)
@@ -97,19 +127,8 @@ public:
 		State.SetAngles (vec3fOrigin);
 	}
 
-	// state data
-	int			MoveState;
-	vec3f		Dir;
-	float		CurrentSpeed;
-	float		MoveSpeed;
-	float		NextSpeed;
-	float		RemainingDistance;
-	float		DecelDistance;
-	uint32		EndFunc;
+
 	virtual void	DoEndFunc () {};
-
-	uint32		ThinkType;
-
 
 	// Origin/velocity
 	void MoveDone ();
@@ -332,7 +351,7 @@ public:
 class CTrainBase : public CMapEntity, public CBrushModel, public CBlockableEntity, public CUsableEntity
 {
 public:
-	CBaseEntity	*TargetEntity;
+	CUsableEntity	*TargetEntity;
 	enum
 	{
 		TRAINTHINK_FIND = BRUSHTHINK_CUSTOM_START,
@@ -403,9 +422,7 @@ public:
 	CWorldEntity ();
 	CWorldEntity (int Index);
 
-	static const class CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-	virtual bool			ParseField (char *Key, char *Value);
+	ENTITYFIELD_DEFS
 
 	bool Run ();
 	void Spawn ();
@@ -515,9 +532,7 @@ public:
 	EFuncExplosiveUseType	UseType;
 	int						Explosivity;
 
-	static const class CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-	virtual bool			ParseField (char *Key, char *Value);
+	ENTITYFIELD_DEFS
 
 	CFuncExplosive ();
 	CFuncExplosive (int Index);

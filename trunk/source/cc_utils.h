@@ -39,6 +39,38 @@ void G_SetMovedir (vec3f &angles, vec3f &movedir);
 CBaseEntity *CC_PickTarget (char *targetname);
 CBaseEntity *CC_Find (CBaseEntity *from, int fieldofs, char *match);
 
+template <class TEntityType, uint32 EntityFlags, size_t FieldOfs>
+TEntityType *CC_Find (TEntityType *From, char *Match)
+{
+	edict_t *gameEnt;
+	if (!From)
+		gameEnt = g_edicts;
+	else
+	{
+		gameEnt = From->gameEntity;
+		gameEnt++;
+	}
+
+	for ( ; gameEnt < &g_edicts[globals.numEdicts] ; gameEnt++)
+	{
+		if (!gameEnt->inUse)
+			continue;
+		if (!gameEnt->Entity)
+			continue;
+		if (!(gameEnt->Entity->EntityFlags & EntityFlags))
+			continue;
+
+		TEntityType *Check = entity_cast<TEntityType>(gameEnt->Entity);
+		char *s = *(char **) ((byte *)Check + FieldOfs);
+		if (!s)
+			continue;
+		if (!Q_stricmp (s, Match))
+			return Check;
+	}
+
+	return NULL;
+}
+
 CBaseEntity *SelectFarthestDeathmatchSpawnPoint ();
 CBaseEntity *SelectRandomDeathmatchSpawnPoint ();
 float	PlayersRangeFromSpot (CBaseEntity *spot);
@@ -77,17 +109,6 @@ public:
 	}
 };
 */
-
-#define MELEE_DISTANCE	80
-
-//range
-CC_ENUM (uint8, ERangeType)
-{
-	RANGE_MELEE,
-	RANGE_NEAR,
-	RANGE_MID,
-	RANGE_FAR
-};
 
 inline float RangeFrom (vec3f left, vec3f right)
 {

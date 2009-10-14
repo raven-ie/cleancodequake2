@@ -49,7 +49,7 @@ void CFlyer::Sight ()
 
 void CFlyer::Idle ()
 {
-	Entity->PlaySound (CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
+	Entity->PlaySound (CHAN_VOICE, SoundIdle, 255, ATTN_IDLE);
 }
 
 void CFlyer::PopBlades ()
@@ -604,8 +604,8 @@ void CFlyer::Spawn ()
 	// fix a map bug in jail5.bsp
 	if (!Q_stricmp(level.mapname, "jail5") && (Entity->State.GetOrigin().Z == -104))
 	{
-		Entity->gameEntity->targetname = Entity->gameEntity->target;
-		Entity->gameEntity->target = NULL;
+		Entity->TargetName = Entity->Target;
+		Entity->Target = NULL;
 	}
 
 	SoundSight = SoundIndex ("flyer/flysght1.wav");

@@ -99,10 +99,10 @@ CBaseEntity *CC_PickTarget (char *targetname)
 	if (!targetname)
 		return NULL;
 
-	CBaseEntity *ent = NULL;
+	CMapEntity *ent = NULL;
 	while(1)
 	{
-		ent = CC_Find (ent, FOFS(targetname), targetname);
+		ent = CC_Find<CMapEntity, ENT_MAP, EntityMemberOffset(CMapEntity,TargetName)> (ent, targetname);
 		if (!ent)
 			break;
 

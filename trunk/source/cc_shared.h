@@ -54,7 +54,6 @@ typedef int64	FrameNumber_t;
 #include "cc_write.h"
 #include "cc_cvar.h"
 #include "cc_filesystem.h"
-#include "cc_utils.h"
 #include "cc_hash.h"
 #define BAN_BASIC_INFO
 #include "cc_ban.h"
@@ -79,6 +78,7 @@ typedef int64	FrameNumber_t;
 #include "cc_trace.h"
 #include "cc_cmds.h"
 #include "cc_monsters.h"
+#include "cc_utils.h"
 
 // Classes that require classes from the above includes
 #include "cc_bodyqueue.h"

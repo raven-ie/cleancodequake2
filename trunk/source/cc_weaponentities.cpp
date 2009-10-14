@@ -1406,7 +1406,7 @@ void CGrappleEntity::GrappleDrawCable()
 
 void CGrappleEntity::GrapplePull()
 {
-	float volume = (Player->Client.silencer_shots) ? 0.2f : 1.0;
+	byte volume = (Player->Client.silencer_shots) ? 51 : 255;
 
 	if ((Player->Client.pers.Weapon->Item == NItems::Grapple) &&
 		!Player->Client.NewWeapon &&
@@ -1551,7 +1551,7 @@ void CGrappleEntity::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *
 
 	SetSolid (SOLID_NOT);
 
-	float volume = (Player->Client.silencer_shots) ? 0.2f : 1.0f;
+	byte volume = (Player->Client.silencer_shots) ? 51 : 255;
 	Player->PlaySound (CHAN_WEAPON, SoundIndex("weapons/grapple/grpull.wav"), volume);
 	PlaySound (CHAN_WEAPON, SoundIndex("weapons/grapple/grhit.wav"), volume);
 

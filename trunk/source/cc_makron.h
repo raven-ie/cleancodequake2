@@ -93,7 +93,7 @@ public:
 	CMakronJumpTimer (int Index);
 
 	void Think ();
-	static void Spawn (CBaseEntity *Jorg);
+	static void Spawn (class CJorg *Jorg);
 };
 
 #else

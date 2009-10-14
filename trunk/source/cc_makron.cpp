@@ -57,7 +57,7 @@ void CMakron::Taunt ()
 		break;
 	};
 
-	Entity->PlaySound (CHAN_AUTO, Sound, 1, ATTN_NONE, 0);
+	Entity->PlaySound (CHAN_AUTO, Sound, 255, ATTN_NONE);
 }
 
 //
@@ -136,32 +136,32 @@ void CMakron::Stand ()
 
 void CMakron::Hit ()
 {
-	Entity->PlaySound (CHAN_AUTO, SoundHit, 1, ATTN_NONE,0);
+	Entity->PlaySound (CHAN_AUTO, SoundHit, 255, ATTN_NONE);
 }
 
 void CMakron::PopUp ()
 {
-	Entity->PlaySound (CHAN_BODY, SoundPopUp, 1, ATTN_NONE,0);
+	Entity->PlaySound (CHAN_BODY, SoundPopUp, 255, ATTN_NONE);
 }
 
 void CMakron::StepLeft ()
 {
-	Entity->PlaySound (CHAN_BODY, SoundStepLeft, 1, ATTN_NORM,0);
+	Entity->PlaySound (CHAN_BODY, SoundStepLeft);
 }
 
 void CMakron::StepRight ()
 {
-	Entity->PlaySound (CHAN_BODY, SoundStepRight, 1, ATTN_NORM,0);
+	Entity->PlaySound (CHAN_BODY, SoundStepRight);
 }
 
 void CMakron::BrainSplorch ()
 {
-	Entity->PlaySound (CHAN_VOICE, SoundBrainSplorch, 1, ATTN_NORM,0);
+	Entity->PlaySound (CHAN_VOICE, SoundBrainSplorch);
 }
 
 void CMakron::PreRailgun ()
 {
-	Entity->PlaySound (CHAN_WEAPON, SoundPreRailgun, 1, ATTN_NORM,0);
+	Entity->PlaySound (CHAN_WEAPON, SoundPreRailgun);
 }
 
 CFrame MakronFramesRun [] =
@@ -272,24 +272,24 @@ void CMakron::Pain (CBaseEntity *other, float kick, int damage)
 
 	if (damage <= 40)
 	{
-		Entity->PlaySound (CHAN_VOICE, SoundPain4, 1, ATTN_NONE,0);
+		Entity->PlaySound (CHAN_VOICE, SoundPain4, 255, ATTN_NONE);
 		CurrentMove = &MakronMovePain4;
 	}
 	else if (damage <= 110)
 	{
-		Entity->PlaySound (CHAN_VOICE, SoundPain5, 1, ATTN_NONE,0);
+		Entity->PlaySound (CHAN_VOICE, SoundPain5, 255, ATTN_NONE);
 		CurrentMove = &MakronMovePain5;
 	}
 	else
 	{
 		if ((damage <= 150) && (random() <= 0.45f))
 		{
-			Entity->PlaySound (CHAN_VOICE, SoundPain6, 1, ATTN_NONE,0);
+			Entity->PlaySound (CHAN_VOICE, SoundPain6, 255, ATTN_NONE);
 			CurrentMove = &MakronMovePain6;
 		}
 		else if (random() <= 0.35f)
 		{
-			Entity->PlaySound (CHAN_VOICE, SoundPain6, 1, ATTN_NONE,0);
+			Entity->PlaySound (CHAN_VOICE, SoundPain6, 255, ATTN_NONE);
 			CurrentMove = &MakronMovePain6;
 		}
 	}
@@ -446,7 +446,7 @@ void CMakron::FireBFG ()
 	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
 	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_MAKRON_BFG], forward, right, start);
 
-	Entity->PlaySound (CHAN_VOICE, SoundAttackBfg, 1, ATTN_NORM, 0);
+	Entity->PlaySound (CHAN_VOICE, SoundAttackBfg);
 	MonsterFireBfg (start,
 		((Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->ViewHeight)) - start).GetNormalized(),
 		50, 300, 100, 300, MZ2_MAKRON_BFG);
@@ -660,7 +660,7 @@ void CMakron::Die(CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec
 	// check for gib
 	if (Entity->Health <= Entity->GibHealth)
 	{
-		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"), 1, ATTN_NORM, 0);
+		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 1 /*4*/; n++)
 			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 		for (int n= 0; n < 4; n++)
@@ -674,7 +674,7 @@ void CMakron::Die(CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec
 		return;
 
 // regular death
-	Entity->PlaySound (CHAN_VOICE, SoundDeath, 1, ATTN_NONE, 0);
+	Entity->PlaySound (CHAN_VOICE, SoundDeath, 255, ATTN_NONE);
 	Entity->DeadFlag = true;
 	Entity->CanTakeDamage = true;
 
@@ -994,7 +994,7 @@ void CMakronJumpTimer::Think ()
 	newClass->State.SetOrigin (State.GetOrigin());
 	Monster->Spawn ();
 	newClass->NextThink = level.framenum + 1;
-	newClass->gameEntity->target = Target;
+	newClass->Target = Target;
 
 	// jump at player
 	CPlayerEntity *Player = level.sight_client;
@@ -1013,12 +1013,12 @@ void CMakronJumpTimer::Think ()
 	Free ();
 };
 
-void CMakronJumpTimer::Spawn (CBaseEntity *Jorg)
+void CMakronJumpTimer::Spawn (CJorg *Jorg)
 {
 	CMakronJumpTimer *Timer = QNew (com_levelPool, 0) CMakronJumpTimer;
 	
 	Timer->NextThink = level.framenum + 8;
-	Timer->Target = Jorg->gameEntity->target;
-	Timer->State.SetOrigin (Jorg->State.GetOrigin());
+	Timer->Target = Jorg->Entity->Target;
+	Timer->State.SetOrigin (Jorg->Entity->State.GetOrigin());
 	Timer->Link();
 }

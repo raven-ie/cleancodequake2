@@ -42,7 +42,7 @@ CMonster (ID)
 void CSoldierBase::Idle ()
 {
 	if (random() > 0.8)
-		Entity->PlaySound (CHAN_VOICE, SoundIdle, 1, ATTN_IDLE, 0);
+		Entity->PlaySound (CHAN_VOICE, SoundIdle, 255, ATTN_IDLE);
 }
 
 void CSoldierBase::CockGun ()

@@ -204,8 +204,8 @@ public:
 
 	// Sound functions
 	bool			PlayedSounds[CHAN_MAX-1];
-	void			PlaySound (EEntSndChannel channel, MediaIndex soundIndex, float volume = 1.0f, EAttenuation attenuation = ATTN_NORM, float timeOfs = 0.0f);
-	void			PlayPositionedSound (vec3_t origin, EEntSndChannel channel, MediaIndex soundIndex, float volume = 1.0f, EAttenuation attenuation = ATTN_NORM, float timeOfs = 0.0f);
+	void			PlaySound (EEntSndChannel channel, MediaIndex soundIndex, byte volume = 255, EAttenuation attenuation = ATTN_NORM, byte timeOfs = 0);
+	void			PlayPositionedSound (vec3f origin, EEntSndChannel channel, MediaIndex soundIndex, byte volume = 255, EAttenuation attenuation = ATTN_NORM, byte timeOfs = 0);
 
 	virtual void	BecomeExplosion (bool grenade);
 
@@ -229,6 +229,8 @@ enum
 	ENT_BLOCKABLE	=	BIT(7), // Can be casted to CBlockableEntity
 	ENT_USABLE		=	BIT(8), // Can be casted to CUsableEntity
 	ENT_ITEM		=	BIT(9), // Can be casted to CItemEntity
+	ENT_MAP			=	BIT(10), // Can be casted to CMapEntity
+	ENT_BRUSHMODEL	=	BIT(11), // Can be casted to CBrushModel
 };
 
 template <class TType>
@@ -250,33 +252,6 @@ inline CBaseEntity *entity_cast<CBaseEntity> (CBaseEntity *Entity)
 {
 	return Entity; // Implicit cast already done
 }
-
-// Base classes
-#include "cc_entitytypes.h"
-
-// Derivitives
-#include "cc_playerentity.h"
-#include "cc_weaponentities.h"
-
-// An entity that can be seen via a map.
-// Just to bypass the damn abstractness I did.
-class CMapEntity : public virtual CBaseEntity
-{
-public:
-	char		*Classname;
-
-	CMapEntity ();
-	CMapEntity (int Index);
-
-	virtual void Spawn() = 0;
-
-	static const class CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-
-	virtual bool			ParseField (char *Key, char *Value);
-	void					ParseFields ();
-	virtual bool			CheckValidity ();
-};
 
 inline char *CopyStr (char *In, struct memPool_s *Pool)
 {
@@ -312,6 +287,25 @@ inline uint32 atou (const char *Str)
 #define GameEntityMemberOffset(x) (size_t)&(((edict_t*)0)->x)
 #define SpawnTempMemberOffset(x) (size_t)&(((spawn_temp_t*)0)->x)
 
+// Convenience macros
+// CAREFUL WITH THESE!
+#define ENTITYFIELD_DEFS \
+	static const CEntityField FieldsForParsing[]; \
+	static const size_t FieldsForParsingSize; \
+	bool				ParseField (char *Key, char *Value);
+
+#define ENTITYFIELD_VIRTUAL_DEFS \
+	static const CEntityField FieldsForParsing[]; \
+	static const size_t FieldsForParsingSize; \
+	virtual bool			ParseField (char *Key, char *Value);
+
+#define ENTITYFIELD_SETSIZE(x) const size_t x::FieldsForParsingSize = FieldSize<x>();
+
+#define ENTITYFIELDS_BEGIN(c) \
+	const CEntityField c::FieldsForParsing[] =
+#define ENTITYFIELDS_END(c) \
+	;ENTITYFIELD_SETSIZE(c)
+
 CC_ENUM (uint32, EFieldType)
 {
 	FT_INT,				// Stores value as integer
@@ -328,6 +322,7 @@ CC_ENUM (uint32, EFieldType)
 	FT_FRAMENUMBER,		// Stores value as FrameNumber (val * 10)
 	FT_ITEM,			// Stores value as CBaseItem (finds the item and stores it in the ptr)
 	FT_ENTITY,			// Saved as an index to an entity
+	FT_FLOAT_TO_BYTE,	// Accepted float input, stores as byte (0-255)
 
 	// Flags
 	FT_GAME_ENTITY	=	BIT(10),		// Stored in gameEntity instead of TClass
@@ -373,6 +368,9 @@ public:
 			break;
 		case FT_FLOAT:
 			*((float*)(ClassOffset)) = atof(Value);
+			break;
+		case FT_FLOAT_TO_BYTE:
+			*((byte*)(ClassOffset)) = (byte)Clamp<int> ((int)(atof(Value) * 255), 0, 255);
 			break;
 		case FT_VECTOR:
 			{
@@ -466,6 +464,37 @@ const size_t FieldSize ()
 {
 	return (sizeof(TClass::FieldsForParsing) / sizeof(TClass::FieldsForParsing[0]));
 }
+
+// Base classes
+#include "cc_entitytypes.h"
+
+// Derivitives
+#include "cc_playerentity.h"
+#include "cc_weaponentities.h"
+
+// An entity that can be seen via a map.
+// Just to bypass the damn abstractness I did.
+class CMapEntity : public virtual CBaseEntity
+{
+public:
+	char		*Classname;
+	char		*TargetName;
+
+	CMapEntity ();
+	CMapEntity (int Index);
+
+	virtual void Spawn() = 0;
+
+	static const class CEntityField FieldsForParsing[];
+	static const size_t FieldsForParsingSize;
+
+	static const class CEntityField FieldsForParsing_Map[];
+	static const size_t FieldsForParsingSize_Map;
+
+	virtual bool			ParseField (char *Key, char *Value);
+	void					ParseFields ();
+	virtual bool			CheckValidity ();
+};
 
 // An entity completely privatized.
 // Does not take up a g_edicts space.

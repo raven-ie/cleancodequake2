@@ -90,6 +90,7 @@ class CTeleporterTrigger : public CMapEntity, public CTouchableEntity, public CT
 {
 public:
 	CBaseEntity		*Dest;
+	char			*Target;
 
 	CTeleporterTrigger() :
 	  CBaseEntity (),
@@ -160,7 +161,7 @@ public:
 
 	void Think ()
 	{
-		Dest = CC_Find (NULL, FOFS(targetname), gameEntity->target);
+		Dest = CC_Find<CMapEntity, ENT_MAP, EntityMemberOffset(CMapEntity,TargetName)> (NULL, Target);
 	
 		if (!Dest)
 			DebugPrintf ("Couldn't find teleporter\n");
@@ -175,6 +176,10 @@ public:
 class CTeleporter : public CSpotBase
 {
 public:
+	char			*Target;
+
+	ENTITYFIELD_DEFS
+
 	CTeleporter () :
 		CBaseEntity (),
 		CSpotBase ()
@@ -189,7 +194,7 @@ public:
 
 	virtual void Spawn ()
 	{
-		if (!gameEntity->target)
+		if (!Target)
 		{
 			//gi.dprintf ("teleporter without a target.\n");
 			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No target\n");
@@ -210,7 +215,7 @@ public:
 		CTeleporterTrigger *trig = QNew (com_levelPool, 0) CTeleporterTrigger;
 		trig->Touchable = true;
 		trig->SetSolid (SOLID_TRIGGER);
-		trig->gameEntity->target = gameEntity->target;
+		trig->Target = Target;
 		trig->SetOwner (this);
 		trig->State.SetOrigin (State.GetOrigin());
 		trig->SetMins (vec3f(-8, -8, 8));
@@ -218,6 +223,21 @@ public:
 		trig->NextThink = level.framenum + 1;
 		trig->Link ();
 	};
+};
+
+ENTITYFIELDS_BEGIN(CTeleporter)
+{
+	CEntityField ("target", EntityMemberOffset(CTeleporter,Target), FT_LEVEL_STRING),
+};
+ENTITYFIELDS_END(CTeleporter)
+
+bool			CTeleporter::ParseField (char *Key, char *Value)
+{
+	if (CheckFields<CTeleporter> (this, Key, Value))
+		return true;
+
+	// Couldn't find it here
+	return (CMapEntity::ParseField (Key, Value));
 };
 
 LINK_CLASSNAME_TO_CLASS ("misc_teleporter", CTeleporter);
@@ -250,7 +270,7 @@ public:
 	};
 	void Spawn ()
 	{
-		if (!gameEntity->target)
+		if (!Target)
 		{
 			DebugPrintf ("teleporter without a target.\n");
 			Free ();
@@ -370,20 +390,20 @@ public:
 	// that of the nearest named single player spot
 	virtual void Think ()
 	{
-		CBaseEntity *spot = NULL;
+		CMapEntity *spot = NULL;
 		while(1)
 		{
-			spot = CC_Find(spot, FOFS(classname), "info_player_start");
+			spot = CC_Find<CMapEntity, ENT_MAP, EntityMemberOffset (CMapEntity,TargetName)> (spot, "info_player_start");
 
 			if (!spot)
 				return;
-			if (!spot->gameEntity->targetname)
+			if (!spot->TargetName)
 				continue;
 			
 			if ((State.GetOrigin() - spot->State.GetOrigin()).Length() < 384)
 			{
-				if ((!gameEntity->targetname) || Q_stricmp(gameEntity->targetname, spot->gameEntity->targetname) != 0)
-					gameEntity->targetname = spot->gameEntity->targetname;
+				if ((!TargetName) || Q_stricmp(TargetName, spot->TargetName) != 0)
+					TargetName = spot->TargetName;
 				return;
 			}
 		}
@@ -493,7 +513,7 @@ public:
 				CPlayerCoop *spot = QNew (com_levelPool, 0) CPlayerCoop;
 				spot->gameEntity->classname = "info_player_coop";
 				spot->State.SetOrigin (origins[i]);
-				spot->gameEntity->targetname = "jail3";
+				spot->TargetName = "jail3";
 				spot->State.SetAngles (vec3f(0,90,0));
 			}
 		}
@@ -570,6 +590,8 @@ Pathtarget: gets used when an entity that has
 	this path_corner targeted touches it
 */
 
+#include "cc_brushmodels.h"
+
 CPathCorner::CPathCorner () :
   CBaseEntity(),
   CMapEntity (),
@@ -589,8 +611,21 @@ void CPathCorner::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *sur
 	vec3f			v;
 	CBaseEntity		*next;
 
-	if (other->gameEntity->movetarget != gameEntity)
-		return;
+	if (other->EntityFlags & ENT_MONSTER)
+	{
+		if (entity_cast<CMonsterEntity>(other)->MoveTarget != this)
+			return;
+	}
+	else if (other->EntityFlags & ENT_BRUSHMODEL)
+	{
+		if (entity_cast<CBrushModel>(other)->BrushType & BRUSH_TRAIN)
+		{
+			CTrainBase *Train = entity_cast<CTrainBase>(other);
+
+			if (Train->TargetEntity != this)
+				return;
+		}
+	}
 	
 	if (other->Enemy)
 		return;
@@ -599,53 +634,52 @@ void CPathCorner::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *sur
 	{
 		char *savetarget;
 
-		savetarget = gameEntity->target;
-		gameEntity->target = gameEntity->pathtarget;
+		savetarget = Target;
+		Target = gameEntity->pathtarget;
 		UseTargets (other, Message);
-		gameEntity->target = savetarget;
+		Target = savetarget;
 	}
 
-	next = (gameEntity->target) ? CC_PickTarget(gameEntity->target) : NULL;
+	next = (Target) ? CC_PickTarget(Target) : NULL;
 	if ((next) && (next->SpawnFlags & 1))
 	{
 		other->State.SetOrigin (next->State.GetOrigin() + vec3f(0, 0, next->GetMins().Z - other->GetMins().Z));
-		next = CC_PickTarget(next->gameEntity->target);
+		next = CC_PickTarget(entity_cast<CUsableEntity>(next)->Target);
 		other->State.SetEvent (EV_OTHER_TELEPORT);
 	}
 
-	other->gameEntity->goalentity = other->gameEntity->movetarget = (next) ? next->gameEntity : NULL;
+	CMonsterEntity *Monster = NULL;
+	if (other->EntityFlags & ENT_MONSTER)
+		Monster = entity_cast<CMonsterEntity>(other);
+
+	if (Monster)
+		Monster->GoalEntity = Monster->MoveTarget = next;
 
 	if (Wait)
 	{
-		if (other->EntityFlags & ENT_MONSTER)
+		if (Monster)
 		{
-			CMonsterEntity *Monster = entity_cast<CMonsterEntity>(other);
-			// Backcompat
 			Monster->Monster->PauseTime = level.framenum + Wait;
 			Monster->Monster->Stand();
 		}
 		return;
 	}
 
-	if (!other->gameEntity->movetarget)
+	if (Monster)
 	{
-		if (other->EntityFlags & ENT_MONSTER)
+		if (!Monster->MoveTarget)
 		{
-			CMonsterEntity *Monster = entity_cast<CMonsterEntity>(other);
 			Monster->Monster->PauseTime = level.framenum + 100000000;
 			Monster->Monster->Stand ();
 		}
-	}
-	else
-	{
-		if (other->EntityFlags & ENT_MONSTER)
-			(entity_cast<CMonsterEntity>(other))->Monster->IdealYaw = (other->gameEntity->goalentity->Entity->State.GetOrigin() - other->State.GetOrigin()).ToYaw();
+		else
+			Monster->Monster->IdealYaw = (Monster->GoalEntity->State.GetOrigin() - Monster->State.GetOrigin()).ToYaw();
 	}
 };
 
 void CPathCorner::Spawn ()
 {
-	if (!gameEntity->targetname)
+	if (!TargetName)
 	{
 		//gi.dprintf ("path_corner with no targetname at (%f %f %f)\n", self->state.origin[0], self->state.origin[1], self->state.origin[2]);
 		MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No targetname\n");
@@ -661,11 +695,11 @@ void CPathCorner::Spawn ()
 	Link ();
 };
 
-const CEntityField CPathCorner::FieldsForParsing[] =
+ENTITYFIELDS_BEGIN(CPathCorner)
 {
 	CEntityField ("wait", EntityMemberOffset(CPathCorner,Wait), FT_FRAMENUMBER),
 };
-const size_t CPathCorner::FieldsForParsingSize = FieldSize<CPathCorner>();
+ENTITYFIELDS_END(CPathCorner)
 
 bool			CPathCorner::ParseField (char *Key, char *Value)
 {
@@ -675,7 +709,6 @@ bool			CPathCorner::ParseField (char *Key, char *Value)
 	// Couldn't find it here
 	return (CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 };
-
 
 LINK_CLASSNAME_TO_CLASS ("path_corner", CPathCorner);
 
@@ -701,40 +734,47 @@ public:
 
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
-		if (!other->gameEntity->movetarget || other->gameEntity->movetarget->Entity != this)
+		CMonsterEntity *Monster = NULL;
+		if (other->EntityFlags & ENT_MONSTER)
+			Monster = entity_cast<CMonsterEntity>(other);
+
+		if (Monster && (!Monster->MoveTarget || Monster->MoveTarget != this))
 			return;
 
-		if (gameEntity->target)
+		if (Target)
 		{
-			other->gameEntity->target = gameEntity->target;
-			other->gameEntity->goalentity = other->gameEntity->movetarget = CC_PickTarget(other->gameEntity->target)->gameEntity;
-			if (!other->gameEntity->goalentity)
+			if (other->EntityFlags & ENT_USABLE)
 			{
-				DebugPrintf("%s at (%f %f %f) target %s does not exist\n", gameEntity->classname, State.GetOrigin().X, State.GetOrigin().Y, State.GetOrigin().Z, gameEntity->target);
-				other->gameEntity->movetarget = gameEntity;
+				CUsableEntity *Usable = entity_cast<CUsableEntity>(other);
+				Usable->Target = Target;
+
+				if (Monster)
+					Monster->GoalEntity = Monster->MoveTarget = CC_PickTarget(Usable->Target);
 			}
-			gameEntity->target = NULL;
+			if (Monster && !Monster->GoalEntity)
+			{
+				DebugPrintf("%s at (%f %f %f) target %s does not exist\n", gameEntity->classname, State.GetOrigin().X, State.GetOrigin().Y, State.GetOrigin().Z, Target);
+				Monster->MoveTarget = this;
+			}
+			Target = NULL;
 		}
 		else if ((SpawnFlags & 1) && !(other->Flags & (FL_SWIM|FL_FLY)))
 		{
-			if (other->EntityFlags & ENT_MONSTER)
+			if (Monster)
 			{
-				CMonster *Monster = (entity_cast<CMonsterEntity>(other))->Monster;
-
-				Monster->PauseTime = level.framenum + 100000000;
-				Monster->AIFlags |= AI_STAND_GROUND;
-				Monster->Stand ();
+				Monster->Monster->PauseTime = level.framenum + 100000000;
+				Monster->Monster->AIFlags |= AI_STAND_GROUND;
+				Monster->Monster->Stand ();
 			}
 		}
 
-		if (other->gameEntity->movetarget == gameEntity)
+		if (Monster && (Monster->MoveTarget == this))
 		{
-			other->gameEntity->target = NULL;
-			other->gameEntity->movetarget = NULL;
-			other->gameEntity->goalentity = other->Enemy->gameEntity;
+			Monster->Target = NULL;
+			Monster->MoveTarget = NULL;
+			Monster->GoalEntity = Monster->Enemy;
 
-			if (other->EntityFlags & ENT_MONSTER)
-				(entity_cast<CMonsterEntity>(other))->Monster->AIFlags &= ~AI_COMBAT_POINT;
+			Monster->Monster->AIFlags &= ~AI_COMBAT_POINT;
 		}
 
 		if (gameEntity->pathtarget)
@@ -742,19 +782,19 @@ public:
 			char *savetarget;
 			CBaseEntity *activator;
 
-			savetarget = gameEntity->target;
-			gameEntity->target = gameEntity->pathtarget;
+			savetarget = Target;
+			Target = gameEntity->pathtarget;
 			if (other->Enemy && (other->Enemy->EntityFlags & ENT_PLAYER))
 				activator = other->Enemy;
-			else if ((other->EntityFlags & ENT_MONSTER) &&
-				(entity_cast<CMonsterEntity>(other)->OldEnemy) && (entity_cast<CMonsterEntity>(other)->OldEnemy->EntityFlags & ENT_PLAYER))
-				activator = entity_cast<CMonsterEntity>(other)->OldEnemy;
+			else if ((Monster) &&
+				(Monster->OldEnemy) && (Monster->OldEnemy->EntityFlags & ENT_PLAYER))
+				activator = Monster->OldEnemy;
 			else if ((other->EntityFlags & ENT_USABLE) && (entity_cast<CUsableEntity>(other)->Activator) && ((entity_cast<CUsableEntity>(other)->Activator)->EntityFlags & ENT_PLAYER))
 				activator = (entity_cast<CUsableEntity>(other)->Activator);
 			else
 				activator = other;
 			UseTargets (activator, Message);
-			gameEntity->target = savetarget;
+			Target = savetarget;
 		}
 	};
 
@@ -877,7 +917,7 @@ public:
 	void Spawn ()
 	{
 		// no targeted lights in deathmatch, because they cause global messages
-		if (!gameEntity->targetname || (game.mode & GAME_DEATHMATCH))
+		if (!TargetName || (game.mode & GAME_DEATHMATCH))
 		{
 			Free ();
 			return;
@@ -927,9 +967,7 @@ public:
 		RampMessage[0] = RampMessage[1] = RampMessage[2] = 0;
 	};
 
-	static const class CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-	virtual bool			ParseField (char *Key, char *Value);
+	ENTITYFIELD_DEFS
 
 	bool Run ()
 	{
@@ -957,22 +995,22 @@ public:
 		if (!Light)
 		{
 			// check all the targets
-			CLight *e = NULL;
+			CMapEntity *e = NULL;
 			while (1)
 			{
-				e = entity_cast<CLight>(CC_Find (e, FOFS(targetname), gameEntity->target));
+				e = CC_Find<CMapEntity, ENT_MAP, EntityMemberOffset(CMapEntity,TargetName)> (e, Target);
 				if (!e)
 					break;
 				if (strcmp(e->gameEntity->classname, "light") != 0)
-					MapPrint (MAPPRINT_WARNING, this, State.GetOrigin(), "Target \"%s\" is not a light\n", gameEntity->target);
+					MapPrint (MAPPRINT_WARNING, this, State.GetOrigin(), "Target \"%s\" is not a light\n", Target);
 				else
-					Light = e;
+					Light = entity_cast<CLight>(e);
 			}
 
 			if (!Light)
 			{
 				//gi.dprintf("%s target %s not found at (%f %f %f)\n", self->classname, self->target, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
-				MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "Target \"%s\" not found\n", gameEntity->target);
+				MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "Target \"%s\" not found\n", Target);
 				Free ();
 				return;
 			}
@@ -998,7 +1036,7 @@ public:
 			return;
 		}
 
-		if (!gameEntity->target)
+		if (!Target)
 		{
 			//gi.dprintf("%s with no target at (%f %f %f)\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
 			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No target\n");
@@ -1014,11 +1052,11 @@ public:
 	};
 };
 
-const CEntityField CTargetLightRamp::FieldsForParsing[] =
+ENTITYFIELDS_BEGIN(CTargetLightRamp)
 {
 	CEntityField ("speed", EntityMemberOffset(CTargetLightRamp,Speed), FT_FLOAT),
 };
-const size_t CTargetLightRamp::FieldsForParsingSize = FieldSize<CTargetLightRamp>();
+ENTITYFIELDS_END(CTargetLightRamp)
 
 bool			CTargetLightRamp::ParseField (char *Key, char *Value)
 {

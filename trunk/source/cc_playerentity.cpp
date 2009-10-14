@@ -1629,7 +1629,7 @@ inline void CPlayerEntity::SetClientSound ()
 	if (Client.pers.helpchanged && Client.pers.helpchanged <= 3 && !(level.framenum&63) )
 	{
 		Client.pers.helpchanged++;
-		PlaySound (CHAN_VOICE, SoundIndex ("misc/pc_up.wav"), 1, ATTN_STATIC);
+		PlaySound (CHAN_VOICE, SoundIndex ("misc/pc_up.wav"), 255, ATTN_STATIC);
 	}
 
 	if (gameEntity->waterlevel && (gameEntity->watertype & (CONTENTS_LAVA|CONTENTS_SLIME)))
@@ -2642,7 +2642,7 @@ bool CPlayerEntity::ApplyStrengthSound()
 		if (Client.techsndtime < level.framenum)
 		{
 			Client.techsndtime = level.framenum + 10;
-			PlaySound (CHAN_AUTO, SoundIndex((Client.quad_framenum > level.framenum) ? "ctf/tech2x.wav" : "ctf/tech2.wav"), (Client.silencer_shots) ? 0.2f : 1.0f);
+			PlaySound (CHAN_AUTO, SoundIndex((Client.quad_framenum > level.framenum) ? "ctf/tech2x.wav" : "ctf/tech2.wav"), (Client.silencer_shots) ? 51 : 255);
 		}
 		return true;
 	}
@@ -2659,7 +2659,7 @@ void CPlayerEntity::ApplyHasteSound()
 	if (Client.pers.Tech && (Client.pers.Tech->GetTechNumber() == CTFTECH_HASTE_NUMBER) && Client.techsndtime < level.framenum)
 	{
 		Client.techsndtime = level.framenum + 10;
-		PlaySound (CHAN_AUTO, SoundIndex("ctf/tech3.wav"), (Client.silencer_shots) ? 0.2f : 1.0f);
+		PlaySound (CHAN_AUTO, SoundIndex("ctf/tech3.wav"), (Client.silencer_shots) ? 51 : 255);
 	}
 }
 
@@ -3109,7 +3109,7 @@ CBaseEntity *CPlayerEntity::SelectCoopSpawnPoint ()
 		if (!spot)
 			return NULL;	// we didn't have enough...
 
-		char *target = spot->gameEntity->targetname;
+		char *target = entity_cast<CMapEntity>(spot)->TargetName;
 		if (!target)
 			target = "";
 		if ( Q_stricmp(game.spawnpoint, target) == 0 )
@@ -3146,20 +3146,22 @@ void	CPlayerEntity::SelectSpawnPoint (vec3f &origin, vec3f &angles)
 	{
 		while ((spot = CC_Find (spot, FOFS(classname), "info_player_start")) != NULL)
 		{
-			if (!game.spawnpoint[0] && !spot->gameEntity->targetname)
+			CMapEntity *Spot = entity_cast<CMapEntity>(spot);
+			if (!game.spawnpoint[0] && !Spot->TargetName)
 				break;
 
-			if (!game.spawnpoint[0] || !spot->gameEntity->targetname)
+			if (!game.spawnpoint[0] || !Spot->TargetName)
 				continue;
 
-			if (Q_stricmp(game.spawnpoint, spot->gameEntity->targetname) == 0)
+			if (Q_stricmp(game.spawnpoint, Spot->TargetName) == 0)
 				break;
 		}
 
 		if (!spot)
 		{
 			// There wasn't a spawnpoint without a target, so use any
-			if (!game.spawnpoint[0]) {
+			if (!game.spawnpoint[0])
+			{
 				spot = CC_Find (spot, FOFS(classname), "info_player_start");
 
 				if (!spot)

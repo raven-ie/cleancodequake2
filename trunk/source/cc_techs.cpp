@@ -96,7 +96,7 @@ public:
 		if (Defending && Damage)
 		{
 			// make noise
-			Left->PlaySound (CHAN_ITEM, SoundIndex("ctf/tech1.wav"), (Left->Client.silencer_shots) ? 0.2f : 1.0f);
+			Left->PlaySound (CHAN_ITEM, SoundIndex("ctf/tech1.wav"), (Left->Client.silencer_shots) ? 51 : 255);
 			Damage /= 2;
 		}
 	};
@@ -157,7 +157,7 @@ public:
 		if (noise && Player->Client.techsndtime < level.framenum)
 		{
 			Player->Client.techsndtime = level.framenum + 10;
-			Player->PlaySound (CHAN_AUTO, SoundIndex("ctf/tech4.wav"), (Player->Client.silencer_shots) ? 0.2f : 1.0f);
+			Player->PlaySound (CHAN_AUTO, SoundIndex("ctf/tech4.wav"), (Player->Client.silencer_shots) ? 51 : 255);
 		}
 	};
 };
@@ -216,7 +216,7 @@ public:
 		if (noise && Player->Client.techsndtime < level.framenum)
 		{
 			Player->Client.techsndtime = level.framenum + AMMO_REGEN_TIME;
-			Player->PlaySound (CHAN_AUTO, SoundIndex("ctf/tech5.wav"), (Player->Client.silencer_shots) ? 0.2f : 1.0f);
+			Player->PlaySound (CHAN_AUTO, SoundIndex("ctf/tech5.wav"), (Player->Client.silencer_shots) ? 51 : 255);
 		}
 	};
 };

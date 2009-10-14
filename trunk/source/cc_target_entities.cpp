@@ -52,7 +52,7 @@ Multiple identical looping sounds will just increase volume without any speed co
 class CTargetSpeaker : public CMapEntity, public CUsableEntity
 {
 public:
-	float		Volume;
+	byte		Volume;
 	int			Attenuation;
 
 	CTargetSpeaker () :
@@ -73,9 +73,7 @@ public:
 	  {
 	  };
 
-	static const CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-	virtual bool ParseField (char *Key, char *Value);
+	ENTITYFIELD_DEFS
 
 	void Use (CBaseEntity *other, CBaseEntity *activator)
 	{
@@ -97,7 +95,7 @@ public:
 		}
 
 		if (!Volume)
-			Volume = 1.0;
+			Volume = 255;
 
 		if (!Attenuation)
 			Attenuation = 1;
@@ -114,12 +112,12 @@ public:
 	};
 };
 
-const CEntityField CTargetSpeaker::FieldsForParsing[] =
+ENTITYFIELDS_BEGIN(CTargetSpeaker)
 {
 	CEntityField ("volume", EntityMemberOffset(CTargetSpeaker,Volume), FT_FLOAT),
 	CEntityField ("attenuation", EntityMemberOffset(CTargetSpeaker,Attenuation), FT_INT)
 };
-const size_t CTargetSpeaker::FieldsForParsingSize = FieldSize<CTargetSpeaker>();
+ENTITYFIELDS_END(CTargetSpeaker)
 
 bool			CTargetSpeaker::ParseField (char *Key, char *Value)
 {
@@ -154,9 +152,7 @@ public:
 	{
 	};
 
-	static const CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-	virtual bool ParseField (char *Key, char *Value);
+	ENTITYFIELD_DEFS
 
 	bool Run ()
 	{
@@ -196,11 +192,11 @@ public:
 	};
 };
 
-const CEntityField CTargetExplosion::FieldsForParsing[] =
+ENTITYFIELDS_BEGIN(CTargetExplosion)
 {
 	CEntityField ("dmg", EntityMemberOffset(CTargetExplosion,Damage), FT_INT),
 };
-const size_t CTargetExplosion::FieldsForParsingSize = FieldSize<CTargetExplosion>();
+ENTITYFIELDS_END(CTargetExplosion)
 
 bool			CTargetExplosion::ParseField (char *Key, char *Value)
 {
@@ -247,9 +243,7 @@ public:
 	{
 	};
 
-	static const class CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-	virtual bool			ParseField (char *Key, char *Value);
+	ENTITYFIELD_DEFS
 
 	bool Run ()
 	{
@@ -258,7 +252,7 @@ public:
 
 	void Use (CBaseEntity *other, CBaseEntity *activator)
 	{
-		CBaseEntity *Entity = CreateEntityFromClassname(gameEntity->target);
+		CBaseEntity *Entity = CreateEntityFromClassname(Target);
 
 		if (!Entity)
 			return;
@@ -287,11 +281,11 @@ public:
 	};
 };
 
-const CEntityField CTargetSpawner::FieldsForParsing[] =
+ENTITYFIELDS_BEGIN(CTargetSpawner)
 {
 	CEntityField ("speed", EntityMemberOffset(CTargetSpawner,Speed), FT_FLOAT),
 };
-const size_t CTargetSpawner::FieldsForParsingSize = FieldSize<CTargetSpawner>();
+ENTITYFIELDS_END(CTargetSpawner)
 
 bool			CTargetSpawner::ParseField (char *Key, char *Value)
 {
@@ -341,9 +335,7 @@ public:
 	{
 	};
 
-  	static const CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-	virtual bool ParseField (char *Key, char *Value);
+	ENTITYFIELD_DEFS
 
 	bool Run ()
 	{
@@ -371,11 +363,11 @@ public:
 	};
 };
 
-const CEntityField CTargetSplash::FieldsForParsing[] =
+ENTITYFIELDS_BEGIN(CTargetSplash)
 {
 	CEntityField ("dmg", EntityMemberOffset(CTargetSplash,Damage), FT_INT),
 };
-const size_t CTargetSplash::FieldsForParsingSize = FieldSize<CTargetSplash>();
+ENTITYFIELDS_END(CTargetSplash)
 
 bool			CTargetSplash::ParseField (char *Key, char *Value)
 {
@@ -608,11 +600,11 @@ void CTargetChangeLevel::Spawn ()
 	SetSvFlags (SVF_NOCLIENT);
 };
 
-const CEntityField CTargetChangeLevel::FieldsForParsing[] =
+ENTITYFIELDS_BEGIN(CTargetChangeLevel)
 {
 	CEntityField ("map", EntityMemberOffset(CTargetChangeLevel,Map), FT_LEVEL_STRING),
 };
-const size_t CTargetChangeLevel::FieldsForParsingSize = FieldSize<CTargetChangeLevel>();
+ENTITYFIELDS_END(CTargetChangeLevel)
 
 bool			CTargetChangeLevel::ParseField (char *Key, char *Value)
 {
@@ -900,9 +892,7 @@ public:
 	{
 	};
 
-	static const class CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-	virtual bool			ParseField (char *Key, char *Value);
+	ENTITYFIELD_DEFS
 
 	bool Run ()
 	{
@@ -932,12 +922,12 @@ public:
 	};
 };
 
-const CEntityField CTargetBlaster::FieldsForParsing[] =
+ENTITYFIELDS_BEGIN(CTargetBlaster)
 {
 	CEntityField ("speed", EntityMemberOffset(CTargetBlaster,Speed), FT_FLOAT),
 	CEntityField ("dmg", EntityMemberOffset(CTargetBlaster,Damage), FT_INT),
 };
-const size_t CTargetBlaster::FieldsForParsingSize = FieldSize<CTargetBlaster>();
+ENTITYFIELDS_END(CTargetBlaster)
 
 bool			CTargetBlaster::ParseField (char *Key, char *Value)
 {
@@ -989,9 +979,7 @@ public:
 	{
 	};
 
-  	static const CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-	virtual bool ParseField (char *Key, char *Value);
+	ENTITYFIELD_DEFS
 
 	bool Run ()
 	{
@@ -1114,12 +1102,12 @@ public:
 
 		if (!Enemy)
 		{
-			if (gameEntity->target)
+			if (Target)
 			{
-				CBaseEntity *ent = CC_Find (NULL, FOFS(targetname), gameEntity->target);
+				CBaseEntity *ent = CC_Find<CMapEntity, ENT_MAP, EntityMemberOffset(CMapEntity,TargetName)> (NULL, Target);
 				if (!ent)
 					//gi.dprintf ("%s at (%f %f %f): %s is a bad target\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2], self->target);
-					MapPrint (MAPPRINT_WARNING, this, State.GetOrigin(), "\"%s\" is a bad target\n", gameEntity->target);
+					MapPrint (MAPPRINT_WARNING, this, State.GetOrigin(), "\"%s\" is a bad target\n", Target);
 				Enemy = ent;
 			}
 			else
@@ -1155,11 +1143,11 @@ public:
 	};
 };
 
-const CEntityField CTargetLaser::FieldsForParsing[] =
+ENTITYFIELDS_BEGIN(CTargetLaser)
 {
 	CEntityField ("dmg", EntityMemberOffset(CTargetLaser,Damage), FT_INT),
 };
-const size_t CTargetLaser::FieldsForParsingSize = FieldSize<CTargetLaser>();
+ENTITYFIELDS_END(CTargetLaser)
 
 bool			CTargetLaser::ParseField (char *Key, char *Value)
 {
@@ -1262,9 +1250,7 @@ public:
 	{
 	};
 
-	static const class CEntityField FieldsForParsing[];
-	static const size_t FieldsForParsingSize;
-	virtual bool			ParseField (char *Key, char *Value);
+	ENTITYFIELD_DEFS
 
 	bool Run ()
 	{
@@ -1319,7 +1305,7 @@ public:
 
 	void Spawn ()
 	{
-		if (!gameEntity->targetname)
+		if (!TargetName)
 			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No targetname\n");
 			//gi.dprintf("untargeted %s at (%f %f %f)\n", self->classname, self->state.origin[0], self->state.origin[1], self->state.origin[2]);
 
@@ -1335,11 +1321,11 @@ public:
 	};
 };
 
-const CEntityField CTargetEarthquake::FieldsForParsing[] =
+ENTITYFIELDS_BEGIN(CTargetEarthquake)
 {
 	CEntityField ("speed", EntityMemberOffset(CTargetEarthquake,Speed), FT_FLOAT),
 };
-const size_t CTargetEarthquake::FieldsForParsingSize = FieldSize<CTargetEarthquake>();
+ENTITYFIELDS_END(CTargetEarthquake)
 
 bool			CTargetEarthquake::ParseField (char *Key, char *Value)
 {
