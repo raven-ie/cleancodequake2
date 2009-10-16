@@ -438,7 +438,7 @@ void CPlatForm::HitTop ()
 	{
 		if (SoundEnd)
 			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundEnd, 255, ATTN_STATIC);
-		State.SetSound (0);
+		State.GetSound() = 0;
 	}
 	MoveState = STATE_TOP;
 
@@ -452,7 +452,7 @@ void CPlatForm::HitBottom ()
 	{
 		if (SoundEnd)
 			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundEnd, 255, ATTN_STATIC);
-		State.SetSound (0);
+		State.GetSound() = 0;
 	}
 	MoveState = STATE_BOTTOM;
 }
@@ -476,7 +476,7 @@ void CPlatForm::GoDown ()
 	{
 		if (SoundStart)
 			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 255, ATTN_STATIC);
-		State.SetSound (SoundMiddle);
+		State.GetSound() = SoundMiddle;
 	}
 	MoveState = STATE_DOWN;
 	MoveCalc (EndOrigin, PLATENDFUNC_HITBOTTOM);
@@ -488,7 +488,7 @@ void CPlatForm::GoUp ()
 	{
 		if (SoundStart)
 			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 255, ATTN_STATIC);
-		State.SetSound (SoundMiddle);
+		State.GetSound() = SoundMiddle;
 	}
 	MoveState = STATE_UP;
 	MoveCalc (StartOrigin, PLATENDFUNC_HITTOP);
@@ -551,7 +551,7 @@ void CPlatForm::SpawnInsideTrigger ()
 	tmax.Y -= 25;
 	tmax.Z += 8;
 
-	tmin.Z = tmax.Z - (Positions[0].Z - Positions[1].Z + st.lip);
+	tmin.Z = tmax.Z - (Positions[0].Z - Positions[1].Z + st->lip);
 
 	if (SpawnFlags & PLAT_LOW_TRIGGER)
 		tmax.Z = tmin.Z + 8;
@@ -599,12 +599,12 @@ void CPlatForm::Spawn ()
 	if (!Damage)
 		Damage = 2;
 
-	if (!st.lip)
-		st.lip = 8;
+	if (!st->lip)
+		st->lip = 8;
 
 	// pos1 is the top position, pos2 is the bottom
 	Positions[0] = Positions[1] = State.GetOrigin ();
-	Positions[1].Z -= (st.height) ? st.height : ((GetMaxs().Z - GetMins().Z) - st.lip);
+	Positions[1].Z -= (st->height) ? st->height : ((GetMaxs().Z - GetMins().Z) - st->lip);
 
 	if (TargetName)
 		MoveState = STATE_UP;
@@ -694,7 +694,7 @@ void CDoor::HitTop ()
 	{
 		if (SoundEnd)
 			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundEnd, 255, ATTN_STATIC);
-		State.SetSound (0);
+		State.GetSound() = 0;
 	}
 	MoveState = STATE_TOP;
 	if (SpawnFlags & DOOR_TOGGLE)
@@ -712,7 +712,7 @@ void CDoor::HitBottom ()
 	{
 		if (SoundEnd)
 			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundEnd, 255, ATTN_STATIC);
-		State.SetSound (0);
+		State.GetSound() = 0;
 	}
 	MoveState = STATE_BOTTOM;
 	UseAreaPortals (false);
@@ -724,7 +724,7 @@ void CDoor::GoDown ()
 	{
 		if (SoundStart)
 			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 255, ATTN_STATIC);
-		State.SetSound (SoundMiddle);
+		State.GetSound() = SoundMiddle;
 	}
 	if (MaxHealth)
 	{
@@ -755,7 +755,7 @@ void CDoor::GoUp (CBaseEntity *activator)
 	{
 		if (SoundStart)
 			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 255, ATTN_STATIC);
-		State.SetSound (SoundMiddle);
+		State.GetSound() = SoundMiddle;
 	}
 	MoveState = STATE_UP;
 	//if (strcmp(self->classname, "func_door") == 0)
@@ -1025,15 +1025,15 @@ void CDoor::Spawn ()
 
 	if (!Wait)
 		Wait = 30;
-	if (!st.lip)
-		st.lip = 8;
+	if (!st->lip)
+		st->lip = 8;
 	if (!Damage)
 		Damage = 2;
 
 	// calculate second position
 	Positions[0] = State.GetOrigin ();
 	vec3f Size = GetSize();
-	Distance = Q_fabs(MoveDir.X) * Size.X + Q_fabs(MoveDir.Y) * Size.Y + Q_fabs(MoveDir.Z) * Size.Z - st.lip;
+	Distance = Q_fabs(MoveDir.X) * Size.X + Q_fabs(MoveDir.Y) * Size.Y + Q_fabs(MoveDir.Z) * Size.Z - st->lip;
 	Positions[1] = Positions[0].MultiplyAngles (Distance, MoveDir);
 
 	// if it starts open, switch the positions
@@ -1064,9 +1064,9 @@ void CDoor::Spawn ()
 	EndAngles = State.GetAngles ();
 
 	if (SpawnFlags & 16)
-		State.AddEffects (EF_ANIM_ALL);
+		State.GetEffects() |= EF_ANIM_ALL;
 	if (SpawnFlags & 64)
-		State.AddEffects (EF_ANIM_ALLFAST);
+		State.GetEffects() |= EF_ANIM_ALLFAST;
 
 	// to simplify logic elsewhere, make non-teamed doors into a team of one
 	if (!gameEntity->team)
@@ -1105,7 +1105,7 @@ void CRotatingDoor::GoDown ()
 	{
 		if (SoundStart)
 			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 255, ATTN_STATIC);
-		State.SetSound (SoundMiddle);
+		State.GetSound() = SoundMiddle;
 	}
 	if (MaxHealth)
 	{
@@ -1133,7 +1133,7 @@ void CRotatingDoor::GoUp (CBaseEntity *activator)
 	{
 		if (SoundStart)
 			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 255, ATTN_STATIC);
-		State.SetSound (SoundMiddle);
+		State.GetSound() = SoundMiddle;
 	}
 	MoveState = STATE_UP;
 	AngleMoveCalc (DOORENDFUNC_HITTOP);
@@ -1225,7 +1225,7 @@ void CRotatingDoor::Spawn ()
 	EndAngles = Positions[1];
 
 	if (SpawnFlags & 16)
-		State.AddEffects (EF_ANIM_ALL);
+		State.GetEffects() |= EF_ANIM_ALL;
 
 	// to simplify logic elsewhere, make non-teamed doors into a team of one
 	if (!gameEntity->team)
@@ -1279,7 +1279,7 @@ void CMovableWater::Spawn ()
 	// calculate second position
 	Positions[0] = State.GetOrigin ();
 
-	Distance = Q_fabs(MoveDir.X) * GetSize().X + Q_fabs(MoveDir.Y) * GetSize().Y + Q_fabs(MoveDir.Z) * GetSize().Z - st.lip;
+	Distance = Q_fabs(MoveDir.X) * GetSize().X + Q_fabs(MoveDir.Y) * GetSize().Y + Q_fabs(MoveDir.Z) * GetSize().Z - st->lip;
 	Positions[1] = Positions[0].MultiplyAngles (Distance, MoveDir);
 
 	// if it starts open, switch the positions
@@ -1560,16 +1560,16 @@ void CButton::DoEndFunc ()
 	{
 	case BUTTONENDFUNC_DONE:
 		MoveState = STATE_BOTTOM;
-		State.RemoveEffects (EF_ANIM23);
-		State.AddEffects (EF_ANIM01);
+		State.GetEffects() &= ~EF_ANIM23;
+		State.GetEffects() |= EF_ANIM01;
 		break;
 	case BUTTONENDFUNC_WAIT:
 		MoveState = STATE_TOP;
-		State.RemoveEffects (EF_ANIM01);
-		State.AddEffects (EF_ANIM23);
+		State.GetEffects() &= ~EF_ANIM01;
+		State.GetEffects() |= EF_ANIM23;
 
 		UseTargets (Activator, Message);
-		State.SetFrame (1);
+		State.GetFrame() = 1;
 		if (Wait >= 0)
 		{
 			NextThink = level.framenum + Wait;
@@ -1586,7 +1586,7 @@ void CButton::Think ()
 	case BUTTONTHINK_RETURN:
 		MoveState = STATE_DOWN;
 		MoveCalc (StartOrigin, BUTTONENDFUNC_DONE);
-		State.SetFrame (0);
+		State.GetFrame() = 0;
 
 		if (Health)
 			CanTakeDamage = true;
@@ -1653,14 +1653,14 @@ void CButton::Spawn ()
 
 	if (!Wait)
 		Wait = 30;
-	if (!st.lip)
-		st.lip = 4;
+	if (!st->lip)
+		st->lip = 4;
 
 	Positions[0] = State.GetOrigin ();
-	float dist = Q_fabs(MoveDir.X) * GetSize().X + Q_fabs(MoveDir.Y) * GetSize().Y + Q_fabs(MoveDir.Z) * GetSize().Z - st.lip;
+	float dist = Q_fabs(MoveDir.X) * GetSize().X + Q_fabs(MoveDir.Y) * GetSize().Y + Q_fabs(MoveDir.Z) * GetSize().Z - st->lip;
 	Positions[1] = Positions[0].MultiplyAngles (dist, MoveDir);
 
-	State.AddEffects (EF_ANIM01);
+	State.GetEffects() |= EF_ANIM01;
 
 	Touchable = false;
 	if (Health)
@@ -1785,7 +1785,7 @@ void CTrainBase::TrainWait ()
 		{
 			if (SoundEnd)
 				PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundEnd, 255, ATTN_STATIC);
-			State.SetSound (0);
+			State.GetSound() = 0;
 		}
 	}
 	else
@@ -1823,8 +1823,8 @@ void CTrainBase::Next ()
 			}
 			first = false;
 			State.SetOrigin (ent->State.GetOrigin() - GetMins());
-			State.SetOldOrigin (State.GetOrigin());
-			State.SetEvent (EV_OTHER_TELEPORT);
+			State.GetOldOrigin () = State.GetOrigin();
+			State.GetEvent() = EV_OTHER_TELEPORT;
 			Link ();
 			continue;
 		}
@@ -1842,7 +1842,7 @@ void CTrainBase::Next ()
 	{
 		if (SoundStart)
 			PlaySound (CHAN_NO_PHS_ADD+CHAN_VOICE, SoundStart, 255, ATTN_STATIC);
-		State.SetSound (SoundMiddle);
+		State.GetSound() = SoundMiddle;
 	}
 
 	MoveState = STATE_TOP;
@@ -2161,14 +2161,14 @@ void CWorldEntity::Spawn ()
 	PhysicsType = PHYSICS_PUSH;
 	SetSolid (SOLID_BSP);
 	SetInUse (true);			// since the world doesn't use G_Spawn()
-	State.SetModelIndex (1);		// world model is always index 1
+	State.GetModelIndex() = 1;	// world model is always index 1
 
 	// reserve some spots for dead player bodies for coop / deathmatch
 	BodyQueue_Init ();
 	Init_Junk();
 
-	if (st.nextmap)
-		Q_strncpyz (level.nextmap, st.nextmap, sizeof(level.nextmap));
+	if (st->nextmap)
+		Q_strncpyz (level.nextmap, st->nextmap, sizeof(level.nextmap));
 
 	// make some data visible to the server
 	if (Message && Message[0])
@@ -2179,15 +2179,15 @@ void CWorldEntity::Spawn ()
 	else
 		Q_strncpyz (level.level_name, level.mapname, sizeof(level.level_name));
 
-	if (st.sky && st.sky[0])
-		ConfigString (CS_SKY, st.sky);
+	if (st->sky && st->sky[0])
+		ConfigString (CS_SKY, st->sky);
 	else
 		ConfigString (CS_SKY, "unit1_");
 
-	ConfigString (CS_SKYROTATE, Q_VarArgs ("%f", st.skyrotate) );
+	ConfigString (CS_SKYROTATE, Q_VarArgs ("%f", st->skyrotate) );
 
 	ConfigString (CS_SKYAXIS, Q_VarArgs ("%f %f %f",
-		st.skyaxis[0], st.skyaxis[1], st.skyaxis[2]) );
+		st->skyaxis[0], st->skyaxis[1], st->skyaxis[2]) );
 
 	ConfigString (CS_CDTRACK, Q_VarArgs ("%i", gameEntity->sounds) );
 
@@ -2223,10 +2223,10 @@ void CWorldEntity::Spawn ()
 	SetItemNames();
 
 	CCvar gravity ("gravity", "800", 0);
-	if (!st.gravity)
+	if (!st->gravity)
 		gravity.Set("800");
 	else
-		gravity.Set(st.gravity);
+		gravity.Set(st->gravity);
 
 	SoundIndex ("player/lava1.wav");
 	SoundIndex ("player/lava2.wav");
@@ -2329,13 +2329,13 @@ void CRotatingBrush::Use (CBaseEntity *other, CBaseEntity *activator)
 {
 	if (AngularVelocity != vec3fOrigin)
 	{
-		State.SetSound (0);
+		State.GetSound() = 0;
 		AngularVelocity.Clear();
 		Touchable = false;
 	}
 	else
 	{
-		State.SetSound (SoundMiddle);
+		State.GetSound() = SoundMiddle;
 		AngularVelocity = MoveDir * Speed;
 
 		if (SpawnFlags & 16)
@@ -2379,9 +2379,9 @@ void CRotatingBrush::Spawn ()
 		Use (NULL, NULL);
 
 	if (SpawnFlags & 64)
-		State.AddEffects (EF_ANIM_ALL);
+		State.GetEffects() |= EF_ANIM_ALL;
 	if (SpawnFlags & 128)
-		State.AddEffects (EF_ANIM_ALLFAST);
+		State.GetEffects() |= EF_ANIM_ALLFAST;
 
 	SetBrushModel ();
 	Link ();
@@ -2564,9 +2564,9 @@ void CFuncWall::Spawn ()
 	SetBrushModel ();
 
 	if (SpawnFlags & 8)
-		State.AddEffects (EF_ANIM_ALL);
+		State.GetEffects() |= EF_ANIM_ALL;
 	if (SpawnFlags & 16)
-		State.AddEffects (EF_ANIM_ALLFAST);
+		State.GetEffects() |= EF_ANIM_ALLFAST;
 
 	// just a wall
 	if ((SpawnFlags & 7) == 0)
@@ -2696,9 +2696,9 @@ void CFuncObject::Spawn ()
 	}
 
 	if (SpawnFlags & 2)
-		State.AddEffects (EF_ANIM_ALL);
+		State.GetEffects() |= EF_ANIM_ALL;
 	if (SpawnFlags & 4)
-		State.AddEffects (EF_ANIM_ALLFAST);
+		State.GetEffects() |= EF_ANIM_ALLFAST;
 
 	SetClipmask (CONTENTS_MASK_MONSTERSOLID);
 	Link ();
@@ -2718,7 +2718,7 @@ health defaults to 100.
 
 mass defaults to 75.  This determines how much debris is emitted when
 it explodes.  You get one large chunk per 100 of mass (up to 8) and
-one small chunk per 25 of mass (up to 16).  So 800 gives the most.
+one small chunk per 25 of mass (up to 16).  So 800 gives the most->
 */
 CFuncExplosive::CFuncExplosive () :
 	CBaseEntity (),
@@ -2865,9 +2865,9 @@ void CFuncExplosive::Spawn ()
 	SetBrushModel ();
 
 	if (SpawnFlags & 2)
-		State.AddEffects (EF_ANIM_ALL);
+		State.GetEffects() |= EF_ANIM_ALL;
 	if (SpawnFlags & 4)
-		State.AddEffects (EF_ANIM_ALLFAST);
+		State.GetEffects() |= EF_ANIM_ALLFAST;
 
 	if (UseType != FUNCEXPLOSIVE_USE_EXPLODE)
 	{

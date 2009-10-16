@@ -224,34 +224,38 @@ static VOID EGLUploadCrashDump (LPCSTR crashDump, LPCSTR crashText)
 }
 #endif
 
+namespace EEnumberateLoadedModulesProcSymInfoHeap
+{
+IMAGEHLP_MODULE64	symInfo;
+FILE				*fhReport;
+
+static const PCHAR SymTypeToString (SYM_TYPE SymType)
+{
+	switch (SymType)
+	{
+	case SymCoff:		return "COFF";
+	case SymCv:			return "CV";
+	case SymExport:		return "Export";
+	case SymPdb:		return "PDB";
+	case SymNone:		return "No";
+	default:			return "Unknown";
+	}
+}
+
 static BOOL CALLBACK EnumerateLoadedModulesProcSymInfo (PSTR ModuleName, DWORD64 ModuleBase, ULONG ModuleSize, PVOID UserContext)
 {
-	IMAGEHLP_MODULE64	symInfo = {0};
-	FILE				*fhReport = (FILE *)UserContext;
+	memset (&symInfo, 0, sizeof(symInfo));
+	fhReport = (FILE *)UserContext;
 
 	symInfo.SizeOfStruct = sizeof(symInfo);
 
 	if (fnSymGetModuleInfo64 (GetCurrentProcess(), ModuleBase, &symInfo))
-	{
-		PCHAR				symType;
-		switch (symInfo.SymType) {
-		case SymCoff:		symType = "COFF";		break;
-		case SymCv:			symType = "CV";			break;
-		case SymExport:		symType = "Export";		break;
-		case SymPdb:		symType = "PDB";		break;
-		case SymNone:		symType = "No";			break;
-		default:			symType = "Unknown";	break;
-		}
-
-		fprintf (fhReport, "%s, %s symbols loaded.\r\n", symInfo.LoadedImageName, symType);
-	}
+		fprintf (fhReport, "%s, %s symbols loaded.\r\n", symInfo.LoadedImageName, SymTypeToString(symInfo.SymType));
 	else
-	{
-		int i = GetLastError ();
-		fprintf (fhReport, "%s, couldn't check symbols (error %d, DBGHELP.DLL too old?)\r\n", ModuleName, i);
-	}
+		fprintf (fhReport, "%s, couldn't check symbols (error %d, DBGHELP.DLL too old?)\r\n", ModuleName, GetLastError ());
 	
 	return TRUE;
+}
 }
 
 static BOOL CALLBACK EnumerateLoadedModulesProcDump (PSTR ModuleName, DWORD64 ModuleBase, ULONG ModuleSize, PVOID UserContext)
@@ -297,62 +301,71 @@ static BOOL CALLBACK EnumerateLoadedModulesProcDump (PSTR ModuleName, DWORD64 Mo
 static BOOL CALLBACK EnumerateLoadedModulesProcInfo (PSTR ModuleName, DWORD64 ModuleBase, ULONG ModuleSize, PVOID UserContext)
 {
 	DWORD	addr = (DWORD)UserContext;
-	if (addr > ModuleBase && addr < ModuleBase+ModuleSize) {
+	if (addr > ModuleBase && addr < ModuleBase+ModuleSize)
+	{
 		Q_strncpyz (szModuleName, ModuleName, sizeof(szModuleName)-1);
 		return FALSE;
 	}
 	return TRUE;
 }
 
+
+HANDLE						hProcess;
+HMODULE						hDbgHelp, hVersion;
+ENUMERATELOADEDMODULES64	fnEnumerateLoadedModules64;
+SYMSETOPTIONS				fnSymSetOptions;
+SYMINITIALIZE				fnSymInitialize;
+STACKWALK64					fnStackWalk64;
+SYMFUNCTIONTABLEACCESS64	fnSymFunctionTableAccess64;
+SYMGETMODULEBASE64			fnSymGetModuleBase64;
+SYMFROMADDR					fnSymFromAddr;
+SYMCLEANUP					fnSymCleanup;
+MINIDUMPWRITEDUMP			fnMiniDumpWriteDump;
+CHAR						searchPath[MAX_PATH], *p, *upMessage;
+CHAR						reportPath[MAX_PATH];
+CHAR						dumpPath[MAX_PATH];
+MINIDUMP_EXCEPTION_INFORMATION miniInfo;
+SYSTEMTIME					timeInfo;
+FILE						*fhReport;
+DWORD64						fnOffset;
+DWORD64						InstructionPtr;
+DWORD						ret;
+STACKFRAME64				frame = {0};
+CONTEXT						context;
+SYMBOL_INFO					*symInfo;
+OSVERSIONINFOEX				osInfo;
+#ifdef USE_CURL
+bool						upload;
+#endif
+
+#ifdef USE_GZ
+BYTE	gzBuff[0xFFFF];
+#endif
+
 DWORD EGLExceptionHandler (DWORD exceptionCode, LPEXCEPTION_POINTERS exceptionInfo)
 {
-	HANDLE						hProcess;
-	HMODULE						hDbgHelp, hVersion;
-	ENUMERATELOADEDMODULES64	fnEnumerateLoadedModules64;
-	SYMSETOPTIONS				fnSymSetOptions;
-	SYMINITIALIZE				fnSymInitialize;
-	STACKWALK64					fnStackWalk64;
-	SYMFUNCTIONTABLEACCESS64	fnSymFunctionTableAccess64;
-	SYMGETMODULEBASE64			fnSymGetModuleBase64;
-	SYMFROMADDR					fnSymFromAddr;
-	SYMCLEANUP					fnSymCleanup;
-	MINIDUMPWRITEDUMP			fnMiniDumpWriteDump;
-	CHAR						searchPath[MAX_PATH], *p, *upMessage;
-	CHAR						reportPath[MAX_PATH];
-	CHAR						dumpPath[MAX_PATH];
-	MINIDUMP_EXCEPTION_INFORMATION miniInfo;
-	SYSTEMTIME					timeInfo;
-	FILE						*fhReport;
-	DWORD64						fnOffset;
-	DWORD64						InstructionPtr;
-	DWORD						ret, i;
-	STACKFRAME64				frame = {0};
-	CONTEXT						context = *exceptionInfo->ContextRecord;
-	SYMBOL_INFO					*symInfo;
-	OSVERSIONINFOEX				osInfo;
-#ifdef USE_CURL
-	bool						upload;
-#endif
+	context = *exceptionInfo->ContextRecord;
 
 	// Show the mouse cursor
 	ShowCursor (TRUE);
 
 	// Continue searching?
 #ifdef _DEBUG
-	ret = MessageBox (NULL, "An unhandled exception occured in CleanCode!\n\nThis version was built with debug information. Do you have a debugger you can attach? If so, do this now, then click Yes, otherwise click No.", "Unhandled Exception", MB_ICONERROR|MB_YESNO);
-	if (ret == IDYES)
+	if (MessageBox (NULL, "An unhandled exception occured in CleanCode!\n\nThis version was built with debug information. Do you have a debugger you can attach? If so, do this now, then click Yes, otherwise click No.", "Unhandled Exception", MB_ICONERROR|MB_YESNO) == IDYES)
 		return EXCEPTION_CONTINUE_SEARCH;
 #endif
 
 	// Load needed libraries and get the location of the needed functions
 	hDbgHelp = LoadLibrary ("DBGHELP");
-	if (!hDbgHelp) {
+	if (!hDbgHelp)
+	{
 		MessageBox (NULL, APP_FULLNAME " has encountered an unhandled exception and must be terminated. No crash report could be generated since " APP_FULLNAME " failed to load DBGHELP.DLL. Please obtain DBGHELP.DLL and place it in your Quake II directory to enable crash dump generation.", "Unhandled Exception", MB_OK | MB_ICONEXCLAMATION);
 		return EXCEPTION_CONTINUE_SEARCH;
 	}
 
 	hVersion = LoadLibrary ("VERSION");
-	if (hVersion) {
+	if (hVersion)
+	{
 		fnVerQueryValue = (VERQUERYVALUE)GetProcAddress (hVersion, "VerQueryValueA");
 		fnGetFileVersionInfo = (GETFILEVERSIONINFO)GetProcAddress (hVersion, "GetFileVersionInfoA");
 		fnGetFileVersionInfoSize = (GETFILEVERSIONINFOSIZE)GetProcAddress (hVersion, "GetFileVersionInfoSizeA");
@@ -371,7 +384,9 @@ DWORD EGLExceptionHandler (DWORD exceptionCode, LPEXCEPTION_POINTERS exceptionIn
 	fnMiniDumpWriteDump = (MINIDUMPWRITEDUMP)GetProcAddress (hDbgHelp, "MiniDumpWriteDump");
 
 	if (!fnEnumerateLoadedModules64 || !fnSymSetOptions || !fnSymInitialize || !fnSymFunctionTableAccess64
-	|| !fnSymGetModuleBase64 || !fnStackWalk64 || !fnSymFromAddr || !fnSymCleanup || !fnSymGetModuleInfo64) {// || !fnSymLoadModule64) {
+	|| !fnSymGetModuleBase64 || !fnStackWalk64 || !fnSymFromAddr || !fnSymCleanup || !fnSymGetModuleInfo64)
+	// || !fnSymLoadModule64)
+	{
 		FreeLibrary (hDbgHelp);
 		if (hVersion)
 			FreeLibrary (hVersion);
@@ -380,8 +395,8 @@ DWORD EGLExceptionHandler (DWORD exceptionCode, LPEXCEPTION_POINTERS exceptionIn
 	}
 
 	// Let the user know
-	ret = MessageBox (NULL, APP_FULLNAME " has encountered an unhandled exception and must be terminated. Would you like to generate a crash report?", "Unhandled Exception", MB_ICONEXCLAMATION | MB_YESNO);
-	if (ret == IDNO) {
+	if (MessageBox (NULL, APP_FULLNAME " has encountered an unhandled exception and must be terminated. Would you like to generate a crash report?", "Unhandled Exception", MB_ICONEXCLAMATION | MB_YESNO) == IDNO)
+	{
 		FreeLibrary (hDbgHelp);
 		if (hVersion)
 			FreeLibrary (hVersion);
@@ -403,8 +418,10 @@ DWORD EGLExceptionHandler (DWORD exceptionCode, LPEXCEPTION_POINTERS exceptionIn
 	GetSystemTime (&timeInfo);
 
 	// Find the next filename to use for this dump
-	for (i=1 ; ; i++) {
-		Q_snprintfz (reportPath, sizeof(reportPath), "%s\\CCCrashLog%.4d-%.2d-%.2d_%d.txt", searchPath, timeInfo.wYear, timeInfo.wMonth, timeInfo.wDay, i);
+	int dumpNum = 1;
+	for (; ; dumpNum++)
+	{
+		Q_snprintfz (reportPath, sizeof(reportPath), "%s\\CCCrashLog%.4d-%.2d-%.2d_%d.txt", searchPath, timeInfo.wYear, timeInfo.wMonth, timeInfo.wDay, dumpNum);
 		if (Sys_FileLength (reportPath) == -1)
 			break;
 	}
@@ -415,7 +432,8 @@ DWORD EGLExceptionHandler (DWORD exceptionCode, LPEXCEPTION_POINTERS exceptionIn
 #else
 	fopen_s (&fhReport, reportPath, "wb");
 #endif
-	if (!fhReport) {
+	if (!fhReport)
+	{
 		FreeLibrary (hDbgHelp);
 		if (hVersion)
 			FreeLibrary (hVersion);
@@ -448,7 +466,8 @@ DWORD EGLExceptionHandler (DWORD exceptionCode, LPEXCEPTION_POINTERS exceptionIn
 	// Get OS info
 	memset (&osInfo, 0, sizeof(osInfo));
 	osInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-	if (!GetVersionEx ((OSVERSIONINFO *)&osInfo)) {
+	if (!GetVersionEx ((OSVERSIONINFO *)&osInfo))
+	{
 		osInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 		GetVersionEx ((OSVERSIONINFO *)&osInfo);
 	}
@@ -458,7 +477,8 @@ DWORD EGLExceptionHandler (DWORD exceptionCode, LPEXCEPTION_POINTERS exceptionIn
 	fnEnumerateLoadedModules64 (hProcess, (PENUMLOADED_MODULES_CALLBACK64)EnumerateLoadedModulesProcInfo, (VOID *)InstructionPtr);
 	Q_strlwr (szModuleName);
 
-	if (strstr (szModuleName, "gamex86")) {
+	if (strstr (szModuleName, "gamex86"))
+	{
 		upMessage =
 			"CleanCode's Gamex86 seems to be the root problem.\r\n"
 			"If this is not base CleanCode, send the report to the mod author,\r\n"
@@ -467,7 +487,8 @@ DWORD EGLExceptionHandler (DWORD exceptionCode, LPEXCEPTION_POINTERS exceptionIn
 		upload = false;
 #endif
 	}
-	else {
+	else
+	{
 		upMessage =
 			"Unable to detect where the exception occured!\r\n";
 #ifdef USE_CURL
@@ -480,7 +501,7 @@ DWORD EGLExceptionHandler (DWORD exceptionCode, LPEXCEPTION_POINTERS exceptionIn
 		APP_FULLNAME " encountered an unhandled exception and was terminated. If you are\r\n"
 		"able to reproduce this crash, please submit the crash report when prompted, or email\r\n"
 		"the file to Paril or any CleanCode project memory. Goto http://code.google.com/p/cleancodequake2 and click on\r\n"
-		"Issues, and file a bug report, or email jonno.5000@gmail.com with the report.\r\n"
+		"Issues, and file a bug report, or email paril@alteredsoftworks.com with the report.\r\n"
 		"\r\n"
 		"*** PLEASE MAKE SURE THAT YOU ARE USING THE LATEST VERSION OF CLEANCODE BEFORE SUBMITTING ***\r\n");
 
@@ -507,7 +528,7 @@ DWORD EGLExceptionHandler (DWORD exceptionCode, LPEXCEPTION_POINTERS exceptionIn
 	// Symbol information
 	fprintf (fhReport, "Symbol information:\r\n");
 	fprintf (fhReport, "--------------------------------------------------\r\n");
-	fnEnumerateLoadedModules64 (hProcess, (PENUMLOADED_MODULES_CALLBACK64)EnumerateLoadedModulesProcSymInfo, (VOID *)fhReport);
+	fnEnumerateLoadedModules64 (hProcess, (PENUMLOADED_MODULES_CALLBACK64)EEnumberateLoadedModulesProcSymInfoHeap::EnumerateLoadedModulesProcSymInfo, (VOID *)fhReport);
 
 	fprintf (fhReport, "\r\n");
 
@@ -522,42 +543,41 @@ DWORD EGLExceptionHandler (DWORD exceptionCode, LPEXCEPTION_POINTERS exceptionIn
 	fprintf (fhReport, "Stack trace:\r\n");
 	fprintf (fhReport, "--------------------------------------------------\r\n");
 	fprintf (fhReport, "Stack    EIP      Arg0     Arg1     Arg2     Arg3     Address\r\n");
-	while (fnStackWalk64 (IMAGE_FILE_MACHINE_I386, hProcess, GetCurrentThread(), &frame, &context, NULL, (PFUNCTION_TABLE_ACCESS_ROUTINE64)fnSymFunctionTableAccess64, (PGET_MODULE_BASE_ROUTINE64)fnSymGetModuleBase64, NULL)) {
+	while (fnStackWalk64 (IMAGE_FILE_MACHINE_I386, hProcess, GetCurrentThread(), &frame, &context, NULL, (PFUNCTION_TABLE_ACCESS_ROUTINE64)fnSymFunctionTableAccess64, (PGET_MODULE_BASE_ROUTINE64)fnSymGetModuleBase64, NULL))
+	{
 		Q_strncpyz (szModuleName, "<unknown>", sizeof(szModuleName));
 		fnEnumerateLoadedModules64 (hProcess, (PENUMLOADED_MODULES_CALLBACK64)EnumerateLoadedModulesProcInfo, (VOID *)(DWORD)frame.AddrPC.Offset);
 
 		p = strrchr (szModuleName, '\\');
-		if (p) {
+		if (p)
 			p++;
-		}
-		else {
+		else
 			p = szModuleName;
-		}
 
-		if (fnSymFromAddr (hProcess, frame.AddrPC.Offset, &fnOffset, symInfo) && !(symInfo->Flags & SYMFLAG_EXPORT)) {
+		if (fnSymFromAddr (hProcess, frame.AddrPC.Offset, &fnOffset, symInfo) && !(symInfo->Flags & SYMFLAG_EXPORT))
 			fprintf (fhReport, "%I64X %I64X %X %X %X %X %s!%s+0x%I64X %lu\r\n", frame.AddrStack.Offset, frame.AddrPC.Offset, (DWORD)frame.Params[0], (DWORD)frame.Params[1], (DWORD)frame.Params[2], (DWORD)frame.Params[3], p, symInfo->Name, fnOffset, symInfo->Tag);
-		}
-		else {
+		else
 			fprintf (fhReport, "%X %I64X %X %X %X %X %s!0x%I64X\r\n", frame.AddrStack.Offset, frame.AddrPC.Offset, (DWORD)frame.Params[0], (DWORD)frame.Params[1], (DWORD)frame.Params[2], (DWORD)frame.Params[3], p, frame.AddrPC.Offset);
-		}
 	}
 
 	fprintf (fhReport, "\r\n");
 
 	// Write a minidump
-	if (fnMiniDumpWriteDump) {
+	if (fnMiniDumpWriteDump)
+	{
 		HANDLE	hFile;
 
 		//GetTempPath (sizeof(dumpPath)-16, dumpPath);
-		Q_snprintfz (dumpPath, sizeof(dumpPath), "%s\\CCCrashLog%.4d-%.2d-%.2d_%d.dmp", searchPath, timeInfo.wYear, timeInfo.wMonth, timeInfo.wDay, i);
+		Q_snprintfz (dumpPath, sizeof(dumpPath), "%s\\CCCrashLog%.4d-%.2d-%.2d_%d.dmp", searchPath, timeInfo.wYear, timeInfo.wMonth, timeInfo.wDay, dumpNum);
 
 		hFile = CreateFile (dumpPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-		if (hFile != INVALID_HANDLE_VALUE) {
+		if (hFile != INVALID_HANDLE_VALUE)
+		{
 			miniInfo.ClientPointers = TRUE;
 			miniInfo.ExceptionPointers = exceptionInfo;
 			miniInfo.ThreadId = GetCurrentThreadId ();
-			if (fnMiniDumpWriteDump (hProcess, GetCurrentProcessId(), hFile, (MINIDUMP_TYPE)(MiniDumpWithIndirectlyReferencedMemory|MiniDumpWithDataSegs), &miniInfo, NULL, NULL)) {
-
+			if (fnMiniDumpWriteDump (hProcess, GetCurrentProcessId(), hFile, (MINIDUMP_TYPE)(MiniDumpWithIndirectlyReferencedMemory|MiniDumpWithDataSegs), &miniInfo, NULL, NULL))
+			{
 				CloseHandle (hFile);
 
 				FILE	*fh;
@@ -573,16 +593,15 @@ DWORD EGLExceptionHandler (DWORD exceptionCode, LPEXCEPTION_POINTERS exceptionIn
 				if (fh)
 #ifdef USE_GZ
 				{
-					BYTE	buff[0xFFFF];
 					gzFile	gz;
 
-					Q_snprintfz (zPath, sizeof(zPath)-1, "%s\\CCCrashLog%.4d-%.2d-%.2d_%d.dmp.gz", searchPath, timeInfo.wYear, timeInfo.wMonth, timeInfo.wDay, i);
+					Q_snprintfz (zPath, sizeof(zPath)-1, "%s\\CCCrashLog%.4d-%.2d-%.2d_%d.dmp.gz", searchPath, timeInfo.wYear, timeInfo.wMonth, timeInfo.wDay, dumpNum);
 					gz = gzopen (zPath, "wb");
 					if (gz)
 					{
 						size_t len;
-						while ((len = fread (buff, 1, sizeof(buff), fh)) > 0)
-							gzwrite (gz, buff, (unsigned int)len);
+						while ((len = fread (gzBuff, 1, sizeof(gzBuff), fh)) > 0)
+							gzwrite (gz, gzBuff, (unsigned int)len);
 						gzclose (gz);
 #endif
 						fclose (fh);
@@ -604,15 +623,15 @@ DWORD EGLExceptionHandler (DWORD exceptionCode, LPEXCEPTION_POINTERS exceptionIn
 #endif
 					"was saved to %s.\r\nPlease include this file when posting a crash report.\r\n", dumpPath);
 			}
-			else {
+			else
+			{
 				CloseHandle (hFile);
 				DeleteFile (dumpPath);
 			}
 		}
 	}
-	else {
+	else
 		fprintf (fhReport, "A minidump could not be created. Minidumps are only available on Windows XP or later.\r\n");
-	}
 
 	// Done writing reports
 	fclose (fhReport);
@@ -623,16 +642,16 @@ DWORD EGLExceptionHandler (DWORD exceptionCode, LPEXCEPTION_POINTERS exceptionIn
 	MessageBox (NULL, Q_VarArgs ("Report written to: %s\nMini-dump written to %s\nPlease include both files if you submit manually!\n", reportPath, dumpPath), "Unhandled Exception", MB_ICONEXCLAMATION | MB_OK);
 
 #ifdef USE_CURL
-	if (upload) {
+	if (upload)
+	{
 		ret = MessageBox (NULL, "Would you like to automatically upload this crash report for analysis?\nPlease do not submit multiple reports of the same crash as this will only delay processing.", "Unhandled Exception", MB_ICONQUESTION | MB_YESNO | MB_DEFBUTTON2);
 		if (ret == IDYES)
 			EGLUploadCrashDump (dumpPath, reportPath);
 		else
 			MessageBox (NULL, "You have chosen to manually upload the crash report.\nPlease include BOTH the crash log and mini-dump when you post it on the EGL forums!\n", "Submit manually", MB_ICONEXCLAMATION|MB_OK);
 	}
-	else {
+	else
 		MessageBox (NULL, upMessage, "Unhandled Exception", MB_OK|MB_ICONEXCLAMATION);
-	}
 #endif
 
 	// Done

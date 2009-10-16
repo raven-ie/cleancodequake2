@@ -496,7 +496,7 @@ public:
 					if (Player->FlySoundDebounceTime < level.framenum)
 					{
 						Player->FlySoundDebounceTime = level.framenum + 15;
-						other->PlaySound (CHAN_AUTO, gMedia.FlySound());
+						other->PlaySound (CHAN_AUTO, GameMedia.FlySound());
 					}
 				}
 			}
@@ -707,8 +707,8 @@ public:
 			Speed = 200;
 		Speed *= 10;
 
-		if (!st.height)
-			st.height = 200;
+		if (!st->height)
+			st->height = 200;
 		if (State.GetAngles().Y == 0)
 		{
 			vec3f Ang = State.GetAngles();
@@ -716,7 +716,7 @@ public:
 			State.SetAngles (Ang);
 		}
 		Init ();
-		MoveDir.Z = st.height;
+		MoveDir.Z = st->height;
 	};
 };
 
@@ -768,7 +768,7 @@ public:
 
 	void Spawn ()
 	{
-		if (st.gravity == 0)
+		if (st->gravity == 0)
 		{
 			//gi.dprintf("trigger_gravity without gravity set at (%f %f %f)\n", self->state.origin[0], self->state.origin[1], self->state.origin[2]);
 			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No gravity set\n");
@@ -777,7 +777,7 @@ public:
 		}
 
 		Init ();
-		gameEntity->gravity = atoi(st.gravity);
+		gameEntity->gravity = atoi(st->gravity);
 	};
 };
 
@@ -841,7 +841,7 @@ public:
 		CPlayerEntity *Player = entity_cast<CPlayerEntity>(activator);
 
 		int index = Item->GetIndex();
-		if (!Player->Client.pers.Inventory.Has(index))
+		if (!Player->Client.Persistent.Inventory.Has(index))
 		{
 			if (level.framenum < TouchDebounce)
 				return;
@@ -863,7 +863,7 @@ public:
 				int	cube;
 				for (cube = 0; cube < 8; cube++)
 				{
-					if (Player->Client.pers.power_cubes & (1 << cube))
+					if (Player->Client.Persistent.power_cubes & (1 << cube))
 						break;
 				}
 
@@ -872,10 +872,10 @@ public:
 					CPlayerEntity *ent = entity_cast<CPlayerEntity>(g_edicts[player].Entity);
 					if (!ent->IsInUse())
 						continue;
-					if (ent->Client.pers.power_cubes & (1 << cube))
+					if (ent->Client.Persistent.power_cubes & (1 << cube))
 					{
-						ent->Client.pers.Inventory -= index;
-						ent->Client.pers.power_cubes &= ~(1 << cube);
+						ent->Client.Persistent.Inventory -= index;
+						ent->Client.Persistent.power_cubes &= ~(1 << cube);
 					}
 				}
 			}
@@ -886,12 +886,12 @@ public:
 					CPlayerEntity *ent = entity_cast<CPlayerEntity>(g_edicts[player].Entity);
 					if (!ent->IsInUse())
 						continue;
-					ent->Client.pers.Inventory.Set(index, 0);
+					ent->Client.Persistent.Inventory.Set(index, 0);
 				}
 			}
 		}
 		else
-			Player->Client.pers.Inventory -= index;
+			Player->Client.Persistent.Inventory -= index;
 
 		UseTargets (activator, Message);
 

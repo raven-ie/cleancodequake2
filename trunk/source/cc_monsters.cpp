@@ -465,18 +465,18 @@ void CMonsterEntity::ThrowHead (MediaIndex gibIndex, int damage, int type)
 	float	vscale;
 
 	IsHead = true;
-	State.SetSkinNum (0);
-	State.SetFrame (0);
+	State.GetSkinNum() = 0;
+	State.GetFrame() = 0;
 
 	SetMins (vec3fOrigin);
 	SetMaxs (vec3fOrigin);
 
-	State.SetModelIndex (0, 2);
-	State.SetModelIndex (gibIndex);
+	State.GetModelIndex(2) = 0;
+	State.GetModelIndex() = gibIndex;
 	SetSolid (SOLID_NOT);
-	State.AddEffects (EF_GIB);
-	State.RemoveEffects (EF_FLIES);
-	State.SetSound (0);
+	State.GetEffects() |= EF_GIB;
+	State.GetEffects() &= ~EF_FLIES;
+	State.GetSound() = 0;
 	Flags |= FL_NO_KNOCKBACK;
 	SetSvFlags (GetSvFlags() & ~SVF_MONSTER);
 	CanTakeDamage = true;
@@ -1124,7 +1124,7 @@ void CMonster::MonsterStart ()
 
 	Entity->NextThink = level.framenum + FRAMETIME;
 	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_MONSTER);
-	Entity->State.AddRenderEffects (RF_FRAMELERP);
+	Entity->State.GetRenderEffects() |= RF_FRAMELERP;
 	Entity->CanTakeDamage = true;
 	Entity->AirFinished = level.framenum + 120;
 	Entity->UseState = MONSTERENTITY_THINK_USE;
@@ -1134,11 +1134,11 @@ void CMonster::MonsterStart ()
 	Entity->DeadFlag = false;
 	Entity->SetSvFlags (Entity->GetSvFlags() & ~SVF_DEADMONSTER);
 
-	Entity->State.SetOldOrigin(Entity->State.GetOrigin());
+	Entity->State.GetOldOrigin() = Entity->State.GetOrigin();
 
 	// randomize what frame they start on
 	if (CurrentMove)
-		Entity->State.SetFrame(CurrentMove->FirstFrame + (irandom(CurrentMove->LastFrame - CurrentMove->FirstFrame + 1)));
+		Entity->State.GetFrame() = (CurrentMove->FirstFrame + (irandom(CurrentMove->LastFrame - CurrentMove->FirstFrame + 1)));
 
 #ifdef MONSTER_USE_ROGUE_AI
 	BaseHeight = Entity->GetMaxs().Z;
@@ -1155,7 +1155,7 @@ void CMonster::MonsterTriggeredStart ()
 	if (!map_debug->Integer())
 		Entity->SetSvFlags (Entity->GetSvFlags() | SVF_NOCLIENT);
 	else
-		Entity->State.SetEffects (EF_SPHERETRANS);
+		Entity->State.GetEffects() = EF_SPHERETRANS;
 	Entity->NextThink = 0;
 	Think = NULL;
 	Entity->UseState = MONSTERENTITY_THINK_TRIGGEREDSPAWNUSE;
@@ -2092,7 +2092,7 @@ void CMonster::AI_Run(float Dist)
 	if (!(AIFlags & AI_LOST_SIGHT))
 	{
 #ifdef MONSTERS_USE_PATHFINDING
-		P_NodePathTimeout = level.framenum + 100; // Do "blind fire" first.
+		P_NodePathTimeout = level.framenum + 100; // Do "blind fire" first->
 #endif
 
 		// just lost sight of the player, decide where to go first
@@ -2384,7 +2384,7 @@ void CMonster::AI_Run(float Dist)
 	if (!(AIFlags & AI_LOST_SIGHT))
 	{
 #ifdef MONSTERS_USE_PATHFINDING
-		P_NodePathTimeout = level.framenum + 100; // Do "blind fire" first.
+		P_NodePathTimeout = level.framenum + 100; // Do "blind fire" first->
 #endif
 
 		// just lost sight of the player, decide where to go first
@@ -2973,7 +2973,7 @@ void CMonster::MoveFrame ()
 	{
 		if ((NextFrame) && (NextFrame >= Move->LastFrame) && (NextFrame <= Move->FirstFrame))
 		{
-			Entity->State.SetFrame(NextFrame);
+			Entity->State.GetFrame() = NextFrame;
 			NextFrame = 0;
 		}
 		else
@@ -2997,15 +2997,14 @@ void CMonster::MoveFrame ()
 			if (Entity->State.GetFrame() < Move->LastFrame || Entity->State.GetFrame() > Move->FirstFrame)
 			{
 				AIFlags &= ~AI_HOLD_FRAME;
-				Entity->State.SetFrame (Move->FirstFrame);
+				Entity->State.GetFrame() = Move->FirstFrame;
 			}
 			else
 			{
 				if (!(AIFlags & AI_HOLD_FRAME))
 				{
-					Entity->State.SetFrame(Entity->State.GetFrame() - 1);
-					if (Entity->State.GetFrame() < Move->LastFrame)
-						Entity->State.SetFrame(Move->FirstFrame);
+					if (--Entity->State.GetFrame() < Move->LastFrame)
+						Entity->State.GetFrame() = Move->FirstFrame;
 				}
 			}
 		}
@@ -3024,7 +3023,7 @@ void CMonster::MoveFrame ()
 	{
 		if ((NextFrame) && (NextFrame >= Move->FirstFrame) && (NextFrame <= Move->LastFrame))
 		{
-			Entity->State.SetFrame (NextFrame);
+			Entity->State.GetFrame() = NextFrame;
 			NextFrame = 0;
 		}
 		else
@@ -3048,15 +3047,14 @@ void CMonster::MoveFrame ()
 			if (Entity->State.GetFrame() < Move->FirstFrame || Entity->State.GetFrame() > Move->LastFrame)
 			{
 				AIFlags &= ~AI_HOLD_FRAME;
-				Entity->State.SetFrame (Move->FirstFrame);
+				Entity->State.GetFrame() = Move->FirstFrame;
 			}
 			else
 			{
 				if (!(AIFlags & AI_HOLD_FRAME))
 				{
-					Entity->State.SetFrame(Entity->State.GetFrame()+1);
-					if (Entity->State.GetFrame() > Move->LastFrame)
-						Entity->State.SetFrame(Move->FirstFrame);
+					if (++Entity->State.GetFrame() > Move->LastFrame)
+						Entity->State.GetFrame() = Move->FirstFrame;
 				}
 			}
 		}
@@ -3116,13 +3114,13 @@ void CMonster::FoundTarget ()
 
 void CMonster::SetEffects()
 {
-	Entity->State.SetEffects (0);
-	Entity->State.SetRenderEffects(RF_FRAMELERP);
+	Entity->State.GetEffects() = 0;
+	Entity->State.GetRenderEffects() = RF_FRAMELERP;
 
 	if (AIFlags & AI_RESURRECTING)
 	{
-		Entity->State.AddEffects(EF_COLOR_SHELL);
-		Entity->State.AddRenderEffects(RF_SHELL_RED);
+		Entity->State.GetEffects() |= EF_COLOR_SHELL;
+		Entity->State.GetRenderEffects() |= RF_SHELL_RED;
 	}
 
 	if (Entity->Health <= 0)
@@ -3131,11 +3129,11 @@ void CMonster::SetEffects()
 	if (Entity->gameEntity->powerarmor_time > level.framenum)
 	{
 		if (PowerArmorType == POWER_ARMOR_SCREEN)
-			Entity->State.AddEffects (EF_POWERSCREEN);
+			Entity->State.GetEffects() |= EF_POWERSCREEN;
 		else if (PowerArmorType == POWER_ARMOR_SHIELD)
 		{
-			Entity->State.AddEffects (EF_COLOR_SHELL);
-			Entity->State.AddRenderEffects (RF_SHELL_GREEN);
+			Entity->State.GetEffects() |= EF_COLOR_SHELL;
+			Entity->State.GetRenderEffects() |= RF_SHELL_GREEN;
 		}
 	}
 }
@@ -3557,16 +3555,16 @@ bool CMonster::FacingIdeal()
 
 void CMonster::FliesOff()
 {
-	Entity->State.RemoveEffects(EF_FLIES);
-	Entity->State.SetSound (0);
+	Entity->State.GetEffects() &= ~EF_FLIES;
+	Entity->State.GetSound() = 0;
 }
 
 void CMonster::FliesOn ()
 {
 	if (Entity->gameEntity->waterlevel)
 		return;
-	Entity->State.AddEffects (EF_FLIES);
-	Entity->State.SetSound (SoundIndex ("infantry/inflies1.wav"));
+	Entity->State.GetEffects() |= EF_FLIES;
+	Entity->State.GetSound() = SoundIndex ("infantry/inflies1.wav");
 	Think = &CMonster::FliesOff;
 	Entity->NextThink = level.framenum + 600;
 }

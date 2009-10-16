@@ -42,23 +42,24 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 		return PUTTOGETHER(name); \
 	} \
 
-typedef struct SPlayerMedia_s
+struct SPlayerMedia_t
 {
 	MediaIndex		Death[4];
 	MediaIndex		Fall[2];
 	MediaIndex		Gurp[2];
 	MediaIndex		Jump;
 	MediaIndex		Pain[4][2];
-} SPlayerMedia_t;
+};
 
-typedef struct SHudMedia_s
+struct SHudMedia_t
 {
 	MediaIndex	HealthPic;
 	MediaIndex	HelpPic;
-} SHudMedia_t;
+};
 
-typedef struct SGameMedia_s
+class CGameMedia
 {
+public:
 	// Player media
 	SPlayerMedia_t	Player;
 	// HUD Media
@@ -78,9 +79,9 @@ typedef struct SGameMedia_s
 	// World stuff
 	MEDIA_INDEXING_FUNCTION (FrySound, "player/fry.wav", SoundIndex);
 	MEDIA_INDEXING_FUNCTION (FlySound, "misc/windfly.wav", SoundIndex);
-} SGameMedia_t;
+};
 
-extern SGameMedia_t gMedia;
+extern CGameMedia GameMedia;
 
 void InitGameMedia ();
 

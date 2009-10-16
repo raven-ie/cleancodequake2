@@ -42,7 +42,7 @@ CC_ENUM (uint8, EGrappleState)
 	CTF_GRAPPLE_STATE_HANG
 };
 
-typedef struct ghost_s
+struct ghost_t
 {
 	char netname[16];
 	int number;
@@ -58,7 +58,7 @@ typedef struct ghost_s
 	int team; // team
 	int score; // frags at time of disconnect
 	CPlayerEntity *ent;
-} ghost_t;
+};
 
 CC_ENUM (uint8, EMatchState)
 {
@@ -77,7 +77,7 @@ CC_ENUM (uint8, EElectState)
 	ELECT_MAP
 };
 
-typedef struct ctfgame_s
+struct ctfgame_t
 {
 	int team1, team2;
 	int total1, total2; // these are only set when going into intermission!
@@ -98,7 +98,7 @@ typedef struct ctfgame_s
 
 
 	ghost_t ghosts[MAX_CS_CLIENTS]; // ghost codes
-} ctfgame_t;
+};
 
 extern CCvar *ctf;
 

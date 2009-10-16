@@ -84,7 +84,7 @@ void CBFG::MuzzleEffect (CPlayerEntity *ent)
 	// send muzzle flash
 	Muzzle (ent, MZ_BFG);
 
-	ent->Client.PlayerState.SetGunFrame (ent->Client.PlayerState.GetGunFrame()+1);
+	ent->Client.PlayerState.GetGunFrame()++;
 }
 
 void CBFG::FireBFG (CPlayerEntity *ent)
@@ -97,9 +97,9 @@ void CBFG::FireBFG (CPlayerEntity *ent)
 
 	// cells can go down during windup (from power armor hits), so
 	// check again and abort firing if we don't have enough now
-	if (ent->Client.pers.Inventory.Has(ent->Client.pers.Weapon->WeaponItem->Ammo) < 50)
+	if (ent->Client.Persistent.Inventory.Has(ent->Client.Persistent.Weapon->WeaponItem->Ammo) < 50)
 	{
-		ent->Client.PlayerState.SetGunFrame (ent->Client.PlayerState.GetGunFrame()+1);
+		ent->Client.PlayerState.GetGunFrame();
 		return;
 	}
 
@@ -116,7 +116,7 @@ void CBFG::FireBFG (CPlayerEntity *ent)
 	CBFGBolt::Spawn (ent, start, forward, damage, 400, 1000);
 
 	AttackSound (ent);
-	ent->Client.PlayerState.SetGunFrame (ent->Client.PlayerState.GetGunFrame()+1);
+	ent->Client.PlayerState.GetGunFrame();
 
 	ent->PlayerNoiseAt (start, PNOISE_WEAPON);
 

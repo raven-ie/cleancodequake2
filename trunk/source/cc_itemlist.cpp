@@ -27,7 +27,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_itemlist.cpp
+// cc_itemlist->cpp
 // Itemlist
 // Basically the link between items and the real world
 //
@@ -128,7 +128,7 @@ void CItemList::AddItemToList (CBaseItem *Item)
 void CItemList::SendItemNames ()
 {
 	for (int i = 0 ; i < numItems ; i++)
-		ConfigString (Items[i]->GetConfigStringNumber(), this->Items[i]->Name);
+		ConfigString (Items[i]->GetConfigStringNumber(), Items[i]->Name);
 }
 
 CBaseItem *FindItem (char *name)
@@ -158,7 +158,7 @@ CBaseItem *FindItem (char *name)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void CBaseItem::Add (CPlayerEntity *ent, int quantity)
 {
-	ent->Client.pers.Inventory.Add(this, quantity);
+	ent->Client.Persistent.Inventory.Add(this, quantity);
 }
 
 CBaseItem *FindItemByClassname (char *name)

@@ -53,10 +53,10 @@ size_t GetNodeIndex (CPathNode *Node);
 std::vector<CPathNode*>		Closed, Open;
 
 #define MAX_SAVED_PATHS	512
-typedef struct SSavedPath_s
+struct SSavedPath_t
 {
 	CPath	*ToEnd[MAX_SAVED_PATHS];
-} SSavedPath_t;
+};
 
 SSavedPath_t SavedPaths[512];
 
@@ -343,7 +343,7 @@ void SpawnNodeEntity (CPathNode *Node)
 		return;
 
 	Node->Ent = new CNodeEntity;
-	Node->Ent->State.SetModelIndex (ModelIndex("models/objects/grenade2/tris.md2"));
+	Node->Ent->State.GetModelIndex() = ModelIndex("models/objects/grenade2/tris.md2");
 	Node->Ent->State.SetOrigin (Node->Origin);
 	Node->Ent->Link ();
 	CheckNodeFlags (Node);
@@ -354,22 +354,21 @@ void CheckNodeFlags (CPathNode *Node)
 	if (!DebugNodes->Integer())
 		return;
 
-	Node->Ent->State.SetEffects (0);
-	Node->Ent->State.SetRenderEffects (0);
+	Node->Ent->State.GetEffects() = Node->Ent->State.GetRenderEffects() = 0;
 
 	switch (Node->Type)
 	{
 	case NODE_DOOR:
-		Node->Ent->State.SetEffects (EF_COLOR_SHELL);
-		Node->Ent->State.SetRenderEffects (RF_SHELL_RED);
+		Node->Ent->State.GetEffects() = EF_COLOR_SHELL;
+		Node->Ent->State.GetRenderEffects() = RF_SHELL_RED;
 		break;
 	case NODE_PLATFORM:
-		Node->Ent->State.SetEffects (EF_COLOR_SHELL);
-		Node->Ent->State.SetRenderEffects (RF_SHELL_GREEN);
+		Node->Ent->State.GetEffects() = EF_COLOR_SHELL;
+		Node->Ent->State.GetRenderEffects() = RF_SHELL_GREEN;
 		break;
 	case NODE_JUMP:
-		Node->Ent->State.SetEffects (EF_COLOR_SHELL);
-		Node->Ent->State.SetRenderEffects (RF_SHELL_BLUE);
+		Node->Ent->State.GetEffects() = EF_COLOR_SHELL;
+		Node->Ent->State.GetRenderEffects() = RF_SHELL_BLUE;
 		break;
 	}
 }
@@ -384,10 +383,10 @@ void AddNode (CPlayerEntity *ent, vec3f origin)
 
 	if (Q_stricmp(ArgGets(2), "connect") == 0)
 	{
-		if (ent->Client.resp.LastNode)
-			ConnectNode (ent->Client.resp.LastNode, NodeList.at(NodeList.size() - 1));
+		if (ent->Client.Respawn.LastNode)
+			ConnectNode (ent->Client.Respawn.LastNode, NodeList.at(NodeList.size() - 1));
 	}
-	ent->Client.resp.LastNode = NodeList.at(NodeList.size() - 1);
+	ent->Client.Respawn.LastNode = NodeList.at(NodeList.size() - 1);
 }
 
 void ConnectNode (CPathNode *Node1, CPathNode *Node2)
@@ -637,7 +636,7 @@ void Cmd_Node_f (CPlayerEntity *ent)
 	else if (Q_stricmp(cmd, "drop") == 0)
 		AddNode (ent, origin);
 	else if (Q_stricmp(cmd, "clearlastnode") == 0)
-		ent->Client.resp.LastNode = NULL;
+		ent->Client.Respawn.LastNode = NULL;
 	else if (Q_stricmp(cmd, "connect") == 0)
 	{
 		uint32 firstId = ArgGeti(2);
@@ -660,7 +659,7 @@ void Cmd_Node_f (CPlayerEntity *ent)
 	else if (Q_stricmp(cmd, "clearstate") == 0)
 	{
 		for (uint32 i = 0; i < NodeList.size(); i++)
-			NodeList[i]->Ent->State.SetModelIndex (ModelIndex("models/objects/grenade2/tris.md2"));
+			NodeList[i]->Ent->State.GetModelIndex() = ModelIndex("models/objects/grenade2/tris.md2");
 	}
 	else if (Q_stricmp(cmd, "settype") == 0)
 	{

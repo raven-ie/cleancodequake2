@@ -57,7 +57,7 @@ public:
 
 		bool Select (CPlayerEntity *ent)
 		{
-			ent->Client.resp.MenuState.CloseMenu();
+			ent->Client.Respawn.MenuState.CloseMenu();
 			CTFOpenJoinMenu (ent);
 
 			// Has to be false so we can tell it to switch manually
@@ -111,13 +111,13 @@ public:
 
 void CTFOpenCreditsMenu(CPlayerEntity *ent)
 {
-	if (ent->Client.resp.MenuState.InMenu)
+	if (ent->Client.Respawn.MenuState.InMenu)
 		return;
 
-	ent->Client.resp.MenuState.CurrentMenu = QNew (com_levelPool, 0) CCTFCreditsMenu(ent);
-	ent->Client.resp.MenuState.OpenMenu ();
+	ent->Client.Respawn.MenuState.CurrentMenu = QNew (com_levelPool, 0) CCTFCreditsMenu(ent);
+	ent->Client.Respawn.MenuState.OpenMenu ();
 
-	ent->Client.resp.MenuState.CurrentMenu->Draw (true);
+	ent->Client.Respawn.MenuState.CurrentMenu->Draw (true);
 }
 
 class CCTFMainMenu : public CMenu
@@ -143,28 +143,28 @@ public:
 		bool Select (CPlayerEntity *ent)
 		{
 			ent->SetSvFlags(ent->GetSvFlags() & ~SVF_NOCLIENT);
-			ent->Client.resp.ctf_team = team;
-			ent->Client.resp.ctf_state = 0;
-			char *s = Info_ValueForKey (ent->Client.pers.userinfo, "skin");
+			ent->Client.Respawn.ctf_team = team;
+			ent->Client.Respawn.ctf_state = 0;
+			char *s = Info_ValueForKey (ent->Client.Persistent.userinfo, "skin");
 			ent->CTFAssignSkin(s);
 
 			// assign a ghost if we are in match mode
 			if (ctfgame.match == MATCH_GAME)
 			{
-				if (ent->Client.resp.ghost)
-					ent->Client.resp.ghost->code = 0;
-				ent->Client.resp.ghost = NULL;
+				if (ent->Client.Respawn.ghost)
+					ent->Client.Respawn.ghost->code = 0;
+				ent->Client.Respawn.ghost = NULL;
 				ent->CTFAssignGhost();
 			}
 
 			ent->PutInServer ();
 			// add a teleportation effect
-			ent->State.SetEvent (EV_PLAYER_TELEPORT);
+			ent->State.GetEvent() = EV_PLAYER_TELEPORT;
 			// hold in place briefly
 			ent->Client.PlayerState.GetPMove()->pmFlags = PMF_TIME_TELEPORT;
 			ent->Client.PlayerState.GetPMove()->pmTime = 14;
 			BroadcastPrintf(PRINT_HIGH, "%s joined the %s team.\n",
-				ent->Client.pers.netname, CTFTeamName(team));
+				ent->Client.Persistent.netname, CTFTeamName(team));
 
 			if (ctfgame.match == MATCH_SETUP)
 			{
@@ -200,7 +200,7 @@ public:
 				if (e->IsInUse() && e->GetSolid() != SOLID_NOT)
 				{
 					ent->Client.chase_target = e;
-					ent->Client.update_chase = true;
+					ent->Client.LayoutFlags |= LF_UPDATECHASE;
 					return true;
 				}
 			}
@@ -219,7 +219,7 @@ public:
 
 		bool Select (CPlayerEntity *ent)
 		{
-			ent->Client.resp.MenuState.CloseMenu();
+			ent->Client.Respawn.MenuState.CloseMenu();
 			CTFOpenCreditsMenu (ent);
 
 			// Has to be false so we can tell it to switch manually
@@ -236,9 +236,9 @@ public:
 			CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i+1].Entity);
 			if (!Player->IsInUse())
 				continue;
-			if (Player->Client.resp.ctf_team == CTF_TEAM1)
+			if (Player->Client.Respawn.ctf_team == CTF_TEAM1)
 				num1++;
-			else if (Player->Client.resp.ctf_team == CTF_TEAM2)
+			else if (Player->Client.Respawn.ctf_team == CTF_TEAM2)
 				num2++;
 		}
 
@@ -398,12 +398,12 @@ public:
 
 void CTFOpenJoinMenu(CPlayerEntity *ent)
 {
-	if (ent->Client.resp.MenuState.InMenu)
+	if (ent->Client.Respawn.MenuState.InMenu)
 		return;
 
-	ent->Client.resp.MenuState.CurrentMenu = QNew (com_levelPool, 0) CCTFMainMenu(ent);
-	ent->Client.resp.MenuState.OpenMenu ();
+	ent->Client.Respawn.MenuState.CurrentMenu = QNew (com_levelPool, 0) CCTFMainMenu(ent);
+	ent->Client.Respawn.MenuState.OpenMenu ();
 
-	ent->Client.resp.MenuState.CurrentMenu->Draw (true);
+	ent->Client.Respawn.MenuState.CurrentMenu->Draw (true);
 }
 #endif

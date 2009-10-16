@@ -56,8 +56,8 @@ WeaponSound(WeaponSound)
 
 void CWeapon::InitWeapon (CPlayerEntity *Player)
 {
-	Player->Client.PlayerState.SetGunFrame (ActivationStart);
-	Player->Client.PlayerState.SetGunIndex (GetWeaponModel ());
+	Player->Client.PlayerState.GetGunFrame() = ActivationStart;
+	Player->Client.PlayerState.GetGunIndex() = GetWeaponModel();
 	Player->Client.weaponstate = WS_ACTIVATING;
 }
 
@@ -82,20 +82,20 @@ void CWeapon::WeaponGeneric (CPlayerEntity *Player)
 			newState = WS_DEACTIVATING;
 			newFrame = DeactStart;
 		}
-		else if ((Player->Client.buttons|Player->Client.latched_buttons) & BUTTON_ATTACK)
+		else if ((Player->Client.Buttons|Player->Client.LatchedButtons) & BUTTON_ATTACK)
 		{
-			Player->Client.latched_buttons &= ~BUTTON_ATTACK;
+			Player->Client.LatchedButtons &= ~BUTTON_ATTACK;
 
 			// This here is ugly, but necessary so that machinegun/chaingun/hyperblaster
 			// get the right acceptance on first-frame-firing
-			Player->Client.buttons |= BUTTON_ATTACK;
+			Player->Client.Buttons |= BUTTON_ATTACK;
 
 			// We want to attack!
 			// First call, check AttemptToFire
 			if (AttemptToFire(Player))
 			{
 				// Got here, we can fire!
-				Player->Client.PlayerState.SetGunFrame(FireStart);
+				Player->Client.PlayerState.GetGunFrame() = FireStart;
 				Player->Client.weaponstate = WS_FIRING;
 
 				// We need to check against us right away for first-frame firing
@@ -152,28 +152,33 @@ void CWeapon::WeaponGeneric (CPlayerEntity *Player)
 	}
 
 	if (newFrame != -1)
-		Player->Client.PlayerState.SetGunFrame(newFrame);
+		Player->Client.PlayerState.GetGunFrame() = newFrame;
 	if (newState != -1)
 		Player->Client.weaponstate = newState;
 
-	if (newFrame == -1 && newState == -1)
-		Player->Client.PlayerState.SetGunFrame (Player->Client.PlayerState.GetGunFrame() + 1);
+	if ((newFrame == -1) && (newState == -1))
+		Player->Client.PlayerState.GetGunFrame()++;
+}
+
+inline int GetWeaponVWepIndex (CPlayerEntity *Player)
+{
+	return (Player->State.GetNumber() - 1) | ((Player->Client.Persistent.Weapon->vwepIndex & 0xff) << 8);
 }
 
 void CWeapon::ChangeWeapon (CPlayerEntity *Player)
 {
-	Player->Client.pers.LastWeapon = Player->Client.pers.Weapon;
-	Player->Client.pers.Weapon = Player->Client.NewWeapon;
+	Player->Client.Persistent.LastWeapon = Player->Client.Persistent.Weapon;
+	Player->Client.Persistent.Weapon = Player->Client.NewWeapon;
 	Player->Client.NewWeapon = NULL;
 	Player->Client.machinegun_shots = 0;
 
 	// set visible model
-	if (Player->Client.pers.Weapon && Player->State.GetModelIndex() == 255)
-		Player->State.SetSkinNum ((Player->State.GetNumber()-1) | ((Player->Client.pers.Weapon->vwepIndex & 0xff) << 8));
+	if (Player->Client.Persistent.Weapon && Player->State.GetModelIndex() == 255)
+		Player->State.GetSkinNum() = GetWeaponVWepIndex(Player);
 
-	if (!Player->Client.pers.Weapon)
+	if (!Player->Client.Persistent.Weapon)
 	{	// dead
-		Player->Client.PlayerState.SetGunIndex(0);
+		Player->Client.PlayerState.GetGunIndex() = 0;
 		if (!Player->Client.grenade_thrown && !Player->Client.grenade_blew_up && Player->Client.grenade_time >= level.framenum) // We had a grenade cocked
 		{
 			WeaponGrenades.FireGrenade(Player, false);
@@ -182,17 +187,17 @@ void CWeapon::ChangeWeapon (CPlayerEntity *Player)
 		return;
 	}
 
-	Player->Client.pers.Weapon->InitWeapon(Player);
+	Player->Client.Persistent.Weapon->InitWeapon(Player);
 
 	Player->Client.anim_priority = ANIM_PAIN;
 	if (Player->Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED)
 	{
-		Player->State.SetFrame (FRAME_crpain1);
+		Player->State.GetFrame() = FRAME_crpain1;
 		Player->Client.anim_end = FRAME_crpain4;
 	}
 	else
 	{
-		Player->State.SetFrame (FRAME_pain301);
+		Player->State.GetFrame() = FRAME_pain301;
 		Player->Client.anim_end = FRAME_pain304;
 	}
 }
@@ -204,10 +209,10 @@ void CWeapon::DepleteAmmo (CPlayerEntity *Player, int Amount = 1)
 		CAmmo *Ammo = WeaponItem->Ammo;
 
 		if (Ammo)
-			Player->Client.pers.Inventory.Remove (Ammo, Amount);
+			Player->Client.Persistent.Inventory.Remove (Ammo, Amount);
 	}
 	else if (Item && (Item->Flags & ITEMFLAG_AMMO))
-		Player->Client.pers.Inventory.Remove (Item, Amount);
+		Player->Client.Persistent.Inventory.Remove (Item, Amount);
 }
 
 bool CWeapon::AttemptToFire (CPlayerEntity *Player)
@@ -218,7 +223,7 @@ bool CWeapon::AttemptToFire (CPlayerEntity *Player)
 
 	if (Item && (Item->Flags & ITEMFLAG_AMMO))
 	{
-		numAmmo = Player->Client.pers.Inventory.Has(Item);
+		numAmmo = Player->Client.Persistent.Inventory.Has(Item);
 		Ammo = dynamic_cast<CAmmo*>(Item);
 		quantity = Ammo->Amount;
 	}
@@ -230,7 +235,7 @@ bool CWeapon::AttemptToFire (CPlayerEntity *Player)
 			Ammo = WeaponItem->Ammo;
 			quantity = WeaponItem->Quantity;
 			if (Ammo)
-				numAmmo = Player->Client.pers.Inventory.Has(Ammo);
+				numAmmo = Player->Client.Persistent.Inventory.Has(Ammo);
 		}
 		else
 			return true;
@@ -270,7 +275,7 @@ Called by ClientBeginServerFrame
 void CWeapon::Think (CPlayerEntity *Player)
 {
 #ifdef CLEANCTF_ENABLED
-	if ((game.mode & GAME_CTF) && !Player->Client.resp.ctf_team)
+	if ((game.mode & GAME_CTF) && !Player->Client.Respawn.ctf_team)
 		return;
 #endif
 
@@ -315,29 +320,29 @@ void CWeapon::AttackSound(CPlayerEntity *Player)
 void CWeapon::NoAmmoWeaponChange (CPlayerEntity *Player)
 {
 	// Dead?
-	if (!Player->Client.pers.Weapon || Player->Health <= 0 || Player->DeadFlag)
+	if (!Player->Client.Persistent.Weapon || Player->Health <= 0 || Player->DeadFlag)
 		return;
 
 	// Collect info on our current state
-	bool HasShotgun = (Player->Client.pers.Inventory.Has(NItems::Shotgun) != 0);
-	bool HasSuperShotgun = (Player->Client.pers.Inventory.Has(NItems::SuperShotgun) != 0);
-	bool HasMachinegun = (Player->Client.pers.Inventory.Has(NItems::Machinegun) != 0);
-	bool HasChaingun = (Player->Client.pers.Inventory.Has(NItems::Chaingun) != 0);
-	bool HasGrenadeLauncher = (Player->Client.pers.Inventory.Has(NItems::GrenadeLauncher) != 0);
-	bool HasRocketLauncher = (Player->Client.pers.Inventory.Has(NItems::RocketLauncher) != 0);
-	bool HasHyperblaster = (Player->Client.pers.Inventory.Has(NItems::HyperBlaster) != 0);
-	bool HasRailgun = (Player->Client.pers.Inventory.Has(NItems::Railgun) != 0);
-	bool HasBFG = (Player->Client.pers.Inventory.Has(NItems::BFG) != 0);
+	bool HasShotgun = (Player->Client.Persistent.Inventory.Has(NItems::Shotgun) != 0);
+	bool HasSuperShotgun = (Player->Client.Persistent.Inventory.Has(NItems::SuperShotgun) != 0);
+	bool HasMachinegun = (Player->Client.Persistent.Inventory.Has(NItems::Machinegun) != 0);
+	bool HasChaingun = (Player->Client.Persistent.Inventory.Has(NItems::Chaingun) != 0);
+	bool HasGrenadeLauncher = (Player->Client.Persistent.Inventory.Has(NItems::GrenadeLauncher) != 0);
+	bool HasRocketLauncher = (Player->Client.Persistent.Inventory.Has(NItems::RocketLauncher) != 0);
+	bool HasHyperblaster = (Player->Client.Persistent.Inventory.Has(NItems::HyperBlaster) != 0);
+	bool HasRailgun = (Player->Client.Persistent.Inventory.Has(NItems::Railgun) != 0);
+	bool HasBFG = (Player->Client.Persistent.Inventory.Has(NItems::BFG) != 0);
 
-	bool HasShells = (Player->Client.pers.Inventory.Has(NItems::Shells) != 0);
-	bool HasShells_ForSuperShotty = (Player->Client.pers.Inventory.Has(NItems::Shells) > 5);
-	bool HasBullets = (Player->Client.pers.Inventory.Has(NItems::Bullets) != 0);
-	bool HasBullets_ForChaingun = (Player->Client.pers.Inventory.Has(NItems::Bullets) >= 50);
-	bool HasGrenades = (Player->Client.pers.Inventory.Has(NItems::Grenades) != 0);
-	bool HasRockets = (Player->Client.pers.Inventory.Has (NItems::Rockets) != 0);
-	bool HasCells = (Player->Client.pers.Inventory.Has (NItems::Cells) != 0);
-	bool HasCells_ForBFG = (Player->Client.pers.Inventory.Has (NItems::Cells) >= 50);
-	bool HasSlugs = (Player->Client.pers.Inventory.Has(NItems::Slugs) != 0);
+	bool HasShells = (Player->Client.Persistent.Inventory.Has(NItems::Shells) != 0);
+	bool HasShells_ForSuperShotty = (Player->Client.Persistent.Inventory.Has(NItems::Shells) > 5);
+	bool HasBullets = (Player->Client.Persistent.Inventory.Has(NItems::Bullets) != 0);
+	bool HasBullets_ForChaingun = (Player->Client.Persistent.Inventory.Has(NItems::Bullets) >= 50);
+	bool HasGrenades = (Player->Client.Persistent.Inventory.Has(NItems::Grenades) != 0);
+	bool HasRockets = (Player->Client.Persistent.Inventory.Has (NItems::Rockets) != 0);
+	bool HasCells = (Player->Client.Persistent.Inventory.Has (NItems::Cells) != 0);
+	bool HasCells_ForBFG = (Player->Client.Persistent.Inventory.Has (NItems::Cells) >= 50);
+	bool HasSlugs = (Player->Client.Persistent.Inventory.Has(NItems::Slugs) != 0);
 
 	bool AlmostDead = (Player->Health <= 20);
 
@@ -401,7 +406,7 @@ void CWeapon::NoAmmoWeaponChange (CPlayerEntity *Player)
 
 	bool HasCurrentWeapon = true;
 	// Do a quick check to see if we still even have the weapon we're holding.
-	if (Player->Client.pers.Weapon->WeaponItem && !Player->Client.pers.Inventory.Has(Player->Client.pers.Weapon->WeaponItem))
+	if (Player->Client.Persistent.Weapon->WeaponItem && !Player->Client.Persistent.Inventory.Has(Player->Client.Persistent.Weapon->WeaponItem))
 		HasCurrentWeapon = false;
 
 	if (!Chosen_Ammo && !Chosen_Weapon)
@@ -409,7 +414,7 @@ void CWeapon::NoAmmoWeaponChange (CPlayerEntity *Player)
 
 	Player->Client.NewWeapon = (Chosen_Weapon == NULL) ? Chosen_Ammo->Weapon : Chosen_Weapon->Weapon;
 	if (!HasCurrentWeapon)
-		Player->Client.pers.Weapon->ChangeWeapon(Player);
+		Player->Client.Persistent.Weapon->ChangeWeapon(Player);
 }
 
 void CWeapon::FireAnimation (CPlayerEntity *Player)
@@ -418,12 +423,12 @@ void CWeapon::FireAnimation (CPlayerEntity *Player)
 	Player->Client.anim_priority = ANIM_ATTACK;
 	if (Player->Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED)
 	{
-		Player->State.SetFrame (FRAME_crattak1-1);
+		Player->State.GetFrame() = FRAME_crattak1 - 1;
 		Player->Client.anim_end = FRAME_crattak9;
 	}
 	else
 	{
-		Player->State.SetFrame (FRAME_attack1-1);
+		Player->State.GetFrame() = FRAME_attack1 - 1;
 		Player->Client.anim_end = FRAME_attack8;
 	}
 }

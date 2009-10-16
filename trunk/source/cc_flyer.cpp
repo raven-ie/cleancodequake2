@@ -463,7 +463,7 @@ void CFlyer::CheckMelee ()
 void CFlyer::Pain (CBaseEntity *other, float kick, int damage)
 {
 	if (Entity->Health < (Entity->MaxHealth / 2))
-		Entity->State.SetSkinNum(1);
+		Entity->State.GetSkinNum() = 1;
 
 	if (level.framenum < PainDebounceTime)
 		return;
@@ -618,12 +618,12 @@ void CFlyer::Spawn ()
 
 	SoundIndex ("flyer/flyatck3.wav");
 
-	Entity->State.SetModelIndex (ModelIndex ("models/monsters/flyer/tris.md2"));
+	Entity->State.GetModelIndex() = ModelIndex ("models/monsters/flyer/tris.md2");
 	Entity->SetMins (vec3f(-16, -16, -24));
 	Entity->SetMaxs (vec3f(16, 16, 16));
 	Entity->SetSolid (SOLID_BBOX);
 
-	Entity->State.SetSound (SoundIndex ("flyer/flyidle1.wav"));
+	Entity->State.GetSound() = SoundIndex ("flyer/flyidle1.wav");
 
 	Entity->Health = 50;
 	Entity->Mass = 50;

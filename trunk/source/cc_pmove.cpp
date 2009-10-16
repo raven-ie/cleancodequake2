@@ -40,10 +40,17 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 
+int PointContents (vec3_t p)
+{
+	vec3f po (p);
+	return PointContents(po);
+}
+
 // all of the locals will be zeroed before each pmove, just to make damn sure
 // we don't have any differences when running on client or server
 
-typedef struct pMoveLocal_s {
+struct pMoveLocal_t
+{
 	vec3_t			origin;			// full float precision
 	vec3_t			velocity;		// full float precision
 
@@ -57,7 +64,7 @@ typedef struct pMoveLocal_s {
 	bool			ladder;
 
 	CPlayerEntity	*ent;
-} pMoveLocal_t;
+};
 
 static pMoveNew_t	*pm;
 static pMoveLocal_t	pml;
@@ -629,6 +636,7 @@ static void SV_PM_CatagorizePosition (void) {
 	sample1 = sample2 / 2;
 
 	point[2] = pml.origin[2] + pm->mins[2] + 1;	
+
 	cont = PointContents (point);
 
 	if (cont & CONTENTS_MASK_WATER)

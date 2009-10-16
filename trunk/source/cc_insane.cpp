@@ -560,10 +560,10 @@ void CInsane::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"), 255, ATTN_IDLE);
 		for (int n= 0; n < 2; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, GameMedia.Gib_Bone[0], damage, GIB_ORGANIC);
 		for (int n= 0; n < 4; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		Entity->ThrowHead (gMedia.Gib_Head[1], damage, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, GameMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		Entity->ThrowHead (GameMedia.Gib_Head[1], damage, GIB_ORGANIC);
 		Entity->DeadFlag = true;
 		return;
 	}
@@ -605,7 +605,7 @@ void CInsane::Spawn ()
 	SoundScream[7] = SoundIndex ("insane/insane10.wav");
 
 	Entity->SetSolid (SOLID_BBOX);
-	Entity->State.SetModelIndex ( ModelIndex("models/monsters/insane/tris.md2"));
+	Entity->State.GetModelIndex() = ModelIndex("models/monsters/insane/tris.md2");
 
 	Entity->SetMins (vec3f(-16, -16, -24));
 	Entity->SetMaxs (vec3f(16, 16, 32));
@@ -634,7 +634,7 @@ void CInsane::Spawn ()
 	{
 		WalkMonsterStart ();
 	}
-	Entity->State.SetSkinNum (irandom(3));
+	Entity->State.GetSkinNum() = irandom(3);
 }
 
 LINK_MONSTER_CLASSNAME_TO_CLASS ("misc_insane", CInsane);

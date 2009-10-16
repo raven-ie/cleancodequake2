@@ -69,7 +69,7 @@ char *ClientTeam (CPlayerEntity *ent)
 
 	value[0] = 0;
 
-	Q_strncpyz(value, Info_ValueForKey (ent->Client.pers.userinfo, "skin"), sizeof(value));
+	Q_strncpyz(value, Info_ValueForKey (ent->Client.Persistent.userinfo, "skin"), sizeof(value));
 	p = strchr(value, '/');
 	if (!p)
 		return value;
@@ -139,7 +139,7 @@ bool CHurtableEntity::CheckTeamDamage (CBaseEntity *attacker)
 	{
 		CPlayerEntity *Targ = entity_cast<CPlayerEntity>(this);
 		CPlayerEntity *Attacker = entity_cast<CPlayerEntity>(attacker);
-		if (Targ->Client.resp.ctf_team == Attacker->Client.resp.ctf_team &&
+		if (Targ->Client.Respawn.ctf_team == Attacker->Client.Respawn.ctf_team &&
 			(this != attacker))
 			return true;
 	}
@@ -170,7 +170,7 @@ int CHurtableEntity::CheckPowerArmor (vec3f &point, vec3f &normal, int damage, i
 	{
 		power_armor_type = Player->PowerArmorType ();
 		if (power_armor_type != POWER_ARMOR_NONE)
-			power = Player->Client.pers.Inventory.Has(index);
+			power = Player->Client.Persistent.Inventory.Has(index);
 	}
 	else if (IsMonster)
 	{
@@ -225,7 +225,7 @@ int CHurtableEntity::CheckPowerArmor (vec3f &point, vec3f &normal, int damage, i
 		power_used = 1;
 
 	if (IsClient)
-		Player->Client.pers.Inventory.Remove(index, power_used);
+		Player->Client.Persistent.Inventory.Remove(index, power_used);
 	else if (IsMonster)
 		Monster->Monster->PowerArmorPower -= power_used;
 	return save;
@@ -274,7 +274,7 @@ void CHurtableEntity::Killed (CBaseEntity *inflictor, CBaseEntity *attacker, int
 		{
 			level.killed_monsters++;
 			if ((game.mode == GAME_COOPERATIVE) && (attacker->EntityFlags & ENT_PLAYER))
-				(entity_cast<CPlayerEntity>(attacker))->Client.resp.score++;
+				(entity_cast<CPlayerEntity>(attacker))->Client.Respawn.score++;
 			// medics won't heal monsters that they kill themselves
 
 #ifndef MONSTER_USE_ROGUE_AI
@@ -372,15 +372,15 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 	{
 		if (isClient)
 		{
-			if (Client->pers.Tech && (Client->pers.Tech->TechType == CTech::TECH_AGGRESSIVE))
-				Client->pers.Tech->DoAggressiveTech (Player, attacker, false, damage, knockback, dflags, mod, true);
+			if (Client->Persistent.Tech && (Client->Persistent.Tech->TechType == CTech::TECH_AGGRESSIVE))
+				Client->Persistent.Tech->DoAggressiveTech (Player, attacker, false, damage, knockback, dflags, mod, true);
 		}
 
 		if (attacker->EntityFlags & ENT_PLAYER)
 		{
 			CPlayerEntity *Atk = entity_cast<CPlayerEntity>(attacker);
-			if (Atk->Client.pers.Tech && (Atk->Client.pers.Tech->TechType == CTech::TECH_AGGRESSIVE))
-				entity_cast<CPlayerEntity>(attacker)->Client.pers.Tech->DoAggressiveTech (Atk, Player, false, damage, knockback, dflags, mod, false);
+			if (Atk->Client.Persistent.Tech && (Atk->Client.Persistent.Tech->TechType == CTech::TECH_AGGRESSIVE))
+				entity_cast<CPlayerEntity>(attacker)->Client.Persistent.Tech->DoAggressiveTech (Atk, Player, false, damage, knockback, dflags, mod, false);
 		}
 	}
 
@@ -425,7 +425,7 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 //ZOID
 //team armor protect
 	if ((game.mode & GAME_CTF) && isClient && (attacker->EntityFlags & ENT_PLAYER) &&
-		(Client->resp.ctf_team == (entity_cast<CPlayerEntity>(attacker))->Client.resp.ctf_team) &&
+		(Client->Respawn.ctf_team == (entity_cast<CPlayerEntity>(attacker))->Client.Respawn.ctf_team) &&
 		(this != attacker) && dmFlags.dfCtfArmorProtect)
 		psave = asave = 0;
 	else
@@ -437,9 +437,9 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 
 		if (isClient)
 		{
-			if (Client->pers.Armor)
+			if (Client->Persistent.Armor)
 			{
-				asave = Client->pers.Armor->CheckArmor (entity_cast<CPlayerEntity>(this), point, normal, take, dflags);
+				asave = Client->Persistent.Armor->CheckArmor (entity_cast<CPlayerEntity>(this), point, normal, take, dflags);
 				take -= asave;
 			}
 		}
@@ -458,15 +458,15 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 	{
 		if (isClient)
 		{
-			if (Client->pers.Tech && (Client->pers.Tech->TechType == CTech::TECH_AGGRESSIVE))
-				Client->pers.Tech->DoAggressiveTech (entity_cast<CPlayerEntity>(this), attacker, true, take, knockback, dflags, mod, true);
+			if (Client->Persistent.Tech && (Client->Persistent.Tech->TechType == CTech::TECH_AGGRESSIVE))
+				Client->Persistent.Tech->DoAggressiveTech (entity_cast<CPlayerEntity>(this), attacker, true, take, knockback, dflags, mod, true);
 		}
 
 		if (attacker->EntityFlags & ENT_PLAYER)
 		{
 			CPlayerEntity *Atk = entity_cast<CPlayerEntity>(attacker);
-			if (Atk->Client.pers.Tech && (Atk->Client.pers.Tech->TechType == CTech::TECH_AGGRESSIVE))
-				entity_cast<CPlayerEntity>(attacker)->Client.pers.Tech->DoAggressiveTech (Atk, entity_cast<CPlayerEntity>(this), true, damage, knockback, dflags, mod, false);
+			if (Atk->Client.Persistent.Tech && (Atk->Client.Persistent.Tech->TechType == CTech::TECH_AGGRESSIVE))
+				entity_cast<CPlayerEntity>(attacker)->Client.Persistent.Tech->DoAggressiveTech (Atk, entity_cast<CPlayerEntity>(this), true, damage, knockback, dflags, mod, false);
 		}
 	}
 
@@ -517,10 +517,10 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 	// at the end of the frame
 	if (isClient)
 	{
-		Client->damage_parmor += psave;
-		Client->damage_armor += asave;
-		Client->damage_blood += take;
-		Client->damage_knockback += knockback;
+		Client->DamageValues[DT_POWERARMOR] += psave;
+		Client->DamageValues[DT_ARMOR] += asave;
+		Client->DamageValues[DT_BLOOD] += take;
+		Client->DamageValues[DT_KNOCKBACK] += knockback;
 		Client->DamageFrom = point;
 	}
 }
@@ -1532,7 +1532,7 @@ ENTITYFIELDS_BEGIN(CUsableEntity)
 	CEntityField ("noise",		EntityMemberOffset(CUsableEntity,NoiseIndex),		FT_SOUND_INDEX),
 	CEntityField ("delay",		EntityMemberOffset(CUsableEntity,Delay),			FT_FRAMENUMBER),
 	CEntityField ("target",		EntityMemberOffset(CUsableEntity,Target),			FT_LEVEL_STRING),
-	CEntityField ("killtarget",	EntityMemberOffset(CUsableEntity,KillTarget),		FT_LEVEL_STRING | FT_GAME_ENTITY),
+	CEntityField ("killtarget",	EntityMemberOffset(CUsableEntity,KillTarget),		FT_LEVEL_STRING),
 };
 ENTITYFIELDS_END(CUsableEntity)
 

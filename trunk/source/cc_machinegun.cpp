@@ -69,33 +69,33 @@ void CMachinegun::FireAnimation (CPlayerEntity *ent)
 	ent->Client.anim_priority = ANIM_ATTACK;
 	if (ent->Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED)
 	{
-		ent->State.SetFrame (FRAME_crattak1 - (int) (random()+0.25));
+		ent->State.GetFrame() = (FRAME_crattak1 - (int) (random()+0.25));
 		ent->Client.anim_end = FRAME_crattak9;
 	}
 	else
 	{
-		ent->State.SetFrame (FRAME_attack1 - (int) (random()+0.25));
+		ent->State.GetFrame() = (FRAME_attack1 - (int) (random()+0.25));
 		ent->Client.anim_end = FRAME_attack8;
 	}
 }
 
 void CMachinegun::Fire (CPlayerEntity *ent)
 {
-	if (!(ent->Client.buttons & BUTTON_ATTACK))
+	if (!(ent->Client.Buttons & BUTTON_ATTACK))
 	{
 		ent->Client.machinegun_shots = 0;
-		ent->Client.PlayerState.SetGunFrame(ent->Client.PlayerState.GetGunFrame() + 1);
+		ent->Client.PlayerState.GetGunFrame()++;
 		return;
 	}
 
 	if (ent->Client.PlayerState.GetGunFrame() == 5)
-		ent->Client.PlayerState.SetGunFrame(4);
+		ent->Client.PlayerState.GetGunFrame() = 4;
 	else
-		ent->Client.PlayerState.SetGunFrame(5);
+		ent->Client.PlayerState.GetGunFrame() = 5;
 
 	if (!AttemptToFire(ent))
 	{
-		ent->Client.PlayerState.SetGunFrame (6);
+		ent->Client.PlayerState.GetGunFrame() = 6;
 		OutOfAmmo(ent);
 		NoAmmoWeaponChange (ent);
 		return;

@@ -167,7 +167,7 @@ CC_ENUM (uint8, EPoundVariableType)
 	POUNDVARIABLE_STRING
 };
 
-typedef struct PoundVariable_s
+struct PoundVariable_t
 {
 	char				*variableName;
 	EPoundVariableType	variableType;
@@ -177,7 +177,7 @@ typedef struct PoundVariable_s
 		float		*floating;
 		char		*string;
 	} vars;
-} PoundVariable_t;
+};
 
 std::vector<PoundVariable_t *> VariableList;
 

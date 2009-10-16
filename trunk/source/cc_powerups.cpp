@@ -46,13 +46,13 @@ bool CBasePowerUp::Pickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	if (PowerupFlags & POWERFLAG_STORE)
 	{
-		if (other->Client.pers.Inventory.Has(this) > 0 &&
+		if (other->Client.Persistent.Inventory.Has(this) > 0 &&
 			(!(PowerupFlags & POWERFLAG_STACK) ||
 			(PowerupFlags & (POWERFLAG_STACK|POWERFLAG_BUTNOTINCOOP) && (game.mode == GAME_COOPERATIVE)) ||
 			(game.mode == GAME_COOPERATIVE) && (Flags & ITEMFLAG_STAY_COOP)))
 			return false;
 
-		other->Client.pers.Inventory += this;
+		other->Client.Persistent.Inventory += this;
 	}
 
 	DoPickup (ent, other);
@@ -72,7 +72,7 @@ void CBasePowerUp::Drop (CPlayerEntity *ent)
 	if (PowerupFlags & POWERFLAG_STORE)
 	{	
 		DropItem (ent);
-		ent->Client.pers.Inventory -= this;
+		ent->Client.Persistent.Inventory -= this;
 	}
 }
 
@@ -216,8 +216,8 @@ public:
 		ThinkState = ITS_DROPTOFLOOR;
 		PhysicsType = PHYSICS_NONE;
 
-		State.SetEffects(item->EffectFlags);
-		State.SetRenderEffects(RF_GLOW);
+		State.GetEffects() = item->EffectFlags;
+		State.GetRenderEffects() = RF_GLOW;
 	};
 };
 
@@ -257,8 +257,8 @@ void CBackPack::DoPickup (class CItemEntity *ent, CPlayerEntity *other)
 	// Increase their max ammo, if applicable
 	for (int i = 0; i < CAmmo::AMMOTAG_MAX; i++)
 	{
-		if (other->Client.pers.maxAmmoValues[i] < maxBackpackAmmoValues[i])
-			other->Client.pers.maxAmmoValues[i] = maxBackpackAmmoValues[i];
+		if (other->Client.Persistent.maxAmmoValues[i] < maxBackpackAmmoValues[i])
+			other->Client.Persistent.maxAmmoValues[i] = maxBackpackAmmoValues[i];
 	}
 
 	// Give them some more ammo
@@ -304,7 +304,7 @@ void CQuadDamage::Use (CPlayerEntity *ent)
 	else
 		ent->Client.quad_framenum = level.framenum + timeOut;
 
-	ent->Client.pers.Inventory -= this;
+	ent->Client.Persistent.Inventory -= this;
 
 	ent->PlaySound (CHAN_ITEM, SoundIndex("items/damage.wav"));
 }
@@ -322,7 +322,7 @@ void CInvulnerability::DoPickup (class CItemEntity *ent, CPlayerEntity *other)
 
 void CInvulnerability::Use (CPlayerEntity *ent)
 {
-	ent->Client.pers.Inventory -= this;
+	ent->Client.Persistent.Inventory -= this;
 
 	if (ent->Client.invincible_framenum > level.framenum)
 		ent->Client.invincible_framenum += 300;
@@ -345,7 +345,7 @@ void CSilencer::DoPickup (class CItemEntity *ent, CPlayerEntity *other)
 
 void CSilencer::Use (CPlayerEntity *ent)
 {
-	ent->Client.pers.Inventory -= this;
+	ent->Client.Persistent.Inventory -= this;
 	ent->Client.silencer_shots += 30;
 }
 
@@ -362,7 +362,7 @@ void CRebreather::DoPickup (class CItemEntity *ent, CPlayerEntity *other)
 
 void CRebreather::Use (CPlayerEntity *ent)
 {
-	ent->Client.pers.Inventory -= this;
+	ent->Client.Persistent.Inventory -= this;
 
 	if (ent->Client.breather_framenum > level.framenum)
 		ent->Client.breather_framenum += 300;
@@ -383,7 +383,7 @@ void CEnvironmentSuit::DoPickup (class CItemEntity *ent, CPlayerEntity *other)
 
 void CEnvironmentSuit::Use (CPlayerEntity *ent)
 {
-	ent->Client.pers.Inventory -= this;
+	ent->Client.Persistent.Inventory -= this;
 
 	if (ent->Client.enviro_framenum > level.framenum)
 		ent->Client.enviro_framenum += 300;
@@ -396,8 +396,8 @@ void CBandolier::DoPickup (class CItemEntity *ent, CPlayerEntity *other)
 	// Increase their max ammo, if applicable
 	for (int i = 0; i < CAmmo::AMMOTAG_MAX; i++)
 	{
-		if (other->Client.pers.maxAmmoValues[i] < maxBandolierAmmoValues[i])
-			other->Client.pers.maxAmmoValues[i] = maxBandolierAmmoValues[i];
+		if (other->Client.Persistent.maxAmmoValues[i] < maxBandolierAmmoValues[i])
+			other->Client.Persistent.maxAmmoValues[i] = maxBandolierAmmoValues[i];
 	}
 
 	// Give them some more ammo
@@ -436,7 +436,7 @@ void CPowerShield::DoPickup (class CItemEntity *ent, CPlayerEntity *other)
 			SetRespawn (ent, 600);
 
 		// auto-use for DM only if we didn't already have one
-		if (!other->Client.pers.Inventory.Has(this))
+		if (!other->Client.Persistent.Inventory.Has(this))
 			Use (other);
 	}
 }
@@ -450,7 +450,7 @@ void CPowerShield::Use (CPlayerEntity *ent)
 	}
 	else
 	{
-		if (!ent->Client.pers.Inventory.Has(NItems::Cells))
+		if (!ent->Client.Persistent.Inventory.Has(NItems::Cells))
 		{
 			ent->PrintToClient (PRINT_HIGH, "No cells for %s.\n", Name);
 			return;
@@ -462,7 +462,7 @@ void CPowerShield::Use (CPlayerEntity *ent)
 
 void CPowerShield::Drop (CPlayerEntity *ent)
 {
-	if ((ent->Flags & FL_POWER_ARMOR) && (ent->Client.pers.Inventory.Has(this) == 1))
+	if ((ent->Flags & FL_POWER_ARMOR) && (ent->Client.Persistent.Inventory.Has(this) == 1))
 		Use (ent);
 	CBasePowerUp::Drop (ent);
 }
@@ -495,8 +495,8 @@ public:
 		ThinkState = ITS_DROPTOFLOOR;
 		PhysicsType = PHYSICS_NONE;
 
-		State.SetEffects(item->EffectFlags);
-		State.SetRenderEffects(RF_GLOW);
+		State.GetEffects() = item->EffectFlags;
+		State.GetRenderEffects() = RF_GLOW;
 	};
 };
 

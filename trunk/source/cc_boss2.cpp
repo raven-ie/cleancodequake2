@@ -433,13 +433,13 @@ void CBoss2::Explode ()
 		org.Y -= 48;
 		break;
 	case 8:
-		Entity->State.SetSound (0);
+		Entity->State.GetSound() = 0;
 		for (int n= 0; n < 4; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, 500, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, GameMedia.Gib_SmallMeat, 500, GIB_ORGANIC);
 		for (int n= 0; n < 8; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMetal(), 500, GIB_METALLIC);
-		CGibEntity::Spawn (Entity, gMedia.Gib_Chest, 500, GIB_ORGANIC);
-		Entity->ThrowHead (gMedia.Gib_Gear(), 500, GIB_METALLIC);
+			CGibEntity::Spawn (Entity, GameMedia.Gib_SmallMetal(), 500, GIB_METALLIC);
+		CGibEntity::Spawn (Entity, GameMedia.Gib_Chest, 500, GIB_ORGANIC);
+		Entity->ThrowHead (GameMedia.Gib_Gear(), 500, GIB_METALLIC);
 		Entity->DeadFlag = true;
 		return;
 	}
@@ -488,7 +488,7 @@ void CBoss2::ReAttackMg ()
 void CBoss2::Pain (CBaseEntity *other, float kick, int damage)
 {
 	if (Entity->Health < (Entity->MaxHealth / 2))
-		Entity->State.SetSkinNum(1);
+		Entity->State.GetSkinNum() = 1;
 
 	if (level.framenum < PainDebounceTime)
 		return;
@@ -595,10 +595,10 @@ void CBoss2::Spawn ()
 	SoundDeath = SoundIndex ("bosshovr/bhvdeth1.wav");
 	SoundSearch1 = SoundIndex ("bosshovr/bhvunqv1.wav");
 
-	Entity->State.SetSound(SoundIndex ("bosshovr/bhvengn1.wav"));
+	Entity->State.GetSound() = SoundIndex ("bosshovr/bhvengn1.wav");
 
 	Entity->SetSolid(SOLID_BBOX);
-	Entity->State.SetModelIndex(ModelIndex ("models/monsters/boss2/tris.md2"));
+	Entity->State.GetModelIndex() = ModelIndex ("models/monsters/boss2/tris.md2");
 	Entity->SetMins (vec3f(-56, -56, 0));
 	Entity->SetMaxs (vec3f(56, 56, 80));
 

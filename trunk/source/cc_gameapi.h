@@ -34,33 +34,19 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #if !defined(__CC_GAMEAPI_H__) || !defined(INCLUDE_GUARDS)
 #define __CC_GAMEAPI_H__
 
-void Cast (ECastFlags castFlags, edict_t *Ent);
-void Cast (ECastFlags castFlags, vec3_t Origin);
-void Cast (ECastType castType, ECastFlags castFlags, vec3_t Origin, edict_t *Ent);
-
-// vec3f overloads
 void Cast (ECastFlags castFlags, CBaseEntity *Ent);
-void Cast (ECastFlags castFlags, vec3f *Origin);
-void Cast (ECastType castType, ECastFlags castFlags, vec3f *Origin, CBaseEntity *Ent);
+void Cast (ECastFlags castFlags, vec3f &Origin);
 
-int PointContents (vec3_t start);
 int PointContents (vec3f &start);
 
-int BoxEdicts (vec3_t mins, vec3_t maxs, edict_t **list, int maxCount, bool triggers);
 int BoxEdicts (vec3f &mins, vec3f &maxs, edict_t **list, int maxCount, bool triggers);
 
 void ConfigString (int configStringIndex, char *configStringValue, CPlayerEntity *Audience = NULL);
 void GameError (char *fmt, ...);
 
 _CC_DISABLE_DEPRECATION
-// Hearable false = PVS, otherwise PHS
-inline bool InArea (bool Hearable, vec3_t p1, vec3_t p2)
-{
-	if (Hearable)
-		return (gi.inPHS (p1, p2) == 1);
-	return (gi.inPVS (p1, p2) == 1);
-}
 
+// Hearable false = PVS, otherwise PHS
 inline bool InArea (bool Hearable, vec3f &p1, vec3f &p2)
 {
 	if (Hearable)
@@ -68,9 +54,7 @@ inline bool InArea (bool Hearable, vec3f &p1, vec3f &p2)
 	return (gi.inPVS (p1, p2) == 1);
 }
 
-inline bool InHearableArea (vec3_t p1, vec3_t p2) { return InArea (true, p1, p2); }
 inline bool InHearableArea (vec3f &p1, vec3f &p2) { return InArea (true, p1, p2); }
-inline bool InVisibleArea (vec3_t p1, vec3_t p2) { return InArea (false, p1, p2); }
 inline bool InVisibleArea (vec3f &p1, vec3f &p2) { return InArea (false, p1, p2); }
 
 _CC_ENABLE_DEPRECATION

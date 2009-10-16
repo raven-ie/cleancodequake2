@@ -149,7 +149,7 @@ void CSoldierLight::SpawnSoldier ()
 	SoundIndex ("misc/lasfly.wav");
 	SoundIndex ("soldier/solatck2.wav");
 
-	Entity->State.SetSkinNum (0);
+	Entity->State.GetSkinNum() = 0;
 	Entity->Health = 20;
 	Entity->GibHealth = -30;
 

@@ -5,7 +5,8 @@
 /*----------------------------------------------------------------------------------*/
 /* ADMIN */
 
-typedef struct admin_settings_s {
+struct admin_settings_t
+{
 	int matchlen;
 	int matchsetuplen;
 	int matchstartlen;
@@ -14,7 +15,7 @@ typedef struct admin_settings_s {
 	bool quaddrop;
 	bool instantweap;
 	bool matchlock;
-} admin_settings_t;
+};
 
 #define SETMENU_SIZE (7 + 5)
 
@@ -29,7 +30,7 @@ void CTFAdmin_SettingsApply(edict_t *ent, pmenuhnd_t *p)
 
 	if (settings->matchlen != matchtime->value) {
 		gi.bprintf(PRINT_HIGH, "%s changed the match length to %d minutes.\n",
-			ent->client->pers.netname, settings->matchlen);
+			ent->client->Persistent.netname, settings->matchlen);
 		if (ctfgame.match == MATCH_GAME) {
 			// in the middle of a match, change it on the fly
 			ctfgame.matchtime = (ctfgame.matchtime - matchtime->value*60) + settings->matchlen*60;
@@ -40,7 +41,7 @@ void CTFAdmin_SettingsApply(edict_t *ent, pmenuhnd_t *p)
 
 	if (settings->matchsetuplen != matchsetuptime->value) {
 		gi.bprintf(PRINT_HIGH, "%s changed the match setup time to %d minutes.\n",
-			ent->client->pers.netname, settings->matchsetuplen);
+			ent->client->Persistent.netname, settings->matchsetuplen);
 		if (ctfgame.match == MATCH_SETUP) {
 			// in the middle of a match, change it on the fly
 			ctfgame.matchtime = (ctfgame.matchtime - matchsetuptime->value*60) + settings->matchsetuplen*60;
@@ -51,7 +52,7 @@ void CTFAdmin_SettingsApply(edict_t *ent, pmenuhnd_t *p)
 
 	if (settings->matchstartlen != matchstarttime->value) {
 		gi.bprintf(PRINT_HIGH, "%s changed the match start time to %d seconds.\n",
-			ent->client->pers.netname, settings->matchstartlen);
+			ent->client->Persistent.netname, settings->matchstartlen);
 		if (ctfgame.match == MATCH_PREGAME) {
 			// in the middle of a match, change it on the fly
 			ctfgame.matchtime = (ctfgame.matchtime - matchstarttime->value) + settings->matchstartlen;
@@ -62,7 +63,7 @@ void CTFAdmin_SettingsApply(edict_t *ent, pmenuhnd_t *p)
 
 	if (settings->weaponsstay != !!((int)dmflags->value & DF_WEAPONS_STAY)) {
 		gi.bprintf(PRINT_HIGH, "%s turned %s weapons stay.\n",
-			ent->client->pers.netname, settings->weaponsstay ? "on" : "off");
+			ent->client->Persistent.netname, settings->weaponsstay ? "on" : "off");
 		i = (int)dmflags->value;
 		if (settings->weaponsstay)
 			i |= DF_WEAPONS_STAY;
@@ -74,7 +75,7 @@ void CTFAdmin_SettingsApply(edict_t *ent, pmenuhnd_t *p)
 
 	if (settings->instantitems != !!((int)dmflags->value & DF_INSTANT_ITEMS)) {
 		gi.bprintf(PRINT_HIGH, "%s turned %s instant items.\n",
-			ent->client->pers.netname, settings->instantitems ? "on" : "off");
+			ent->client->Persistent.netname, settings->instantitems ? "on" : "off");
 		i = (int)dmflags->value;
 		if (settings->instantitems)
 			i |= DF_INSTANT_ITEMS;
@@ -86,7 +87,7 @@ void CTFAdmin_SettingsApply(edict_t *ent, pmenuhnd_t *p)
 
 	if (settings->quaddrop != !!((int)dmflags->value & DF_QUAD_DROP)) {
 		gi.bprintf(PRINT_HIGH, "%s turned %s quad drop.\n",
-			ent->client->pers.netname, settings->quaddrop ? "on" : "off");
+			ent->client->Persistent.netname, settings->quaddrop ? "on" : "off");
 		i = (int)dmflags->value;
 		if (settings->quaddrop)
 			i |= DF_QUAD_DROP;
@@ -98,14 +99,14 @@ void CTFAdmin_SettingsApply(edict_t *ent, pmenuhnd_t *p)
 
 	if (settings->instantweap != !!((int)instantweap->value)) {
 		gi.bprintf(PRINT_HIGH, "%s turned %s instant weapons.\n",
-			ent->client->pers.netname, settings->instantweap ? "on" : "off");
+			ent->client->Persistent.netname, settings->instantweap ? "on" : "off");
 		sprintf(st, "%d", (int)settings->instantweap);
 		gi.cvar_set("instantweap", st);
 	}
 
 	if (settings->matchlock != !!((int)matchlock->value)) {
 		gi.bprintf(PRINT_HIGH, "%s turned %s match lock.\n",
-			ent->client->pers.netname, settings->matchlock ? "on" : "off");
+			ent->client->Persistent.netname, settings->matchlock ? "on" : "off");
 		sprintf(st, "%d", (int)settings->matchlock);
 		gi.cvar_set("matchlock", st);
 	}
@@ -344,15 +345,15 @@ void CTFAdmin(edict_t *ent)
 	char text[1024];
 
 	if (gi.argc() > 1 && admin_password->string && *admin_password->string &&
-		!ent->client->resp.admin && strcmp(admin_password->string, gi.argv(1)) == 0) {
-		ent->client->resp.admin = true;
-		gi.bprintf(PRINT_HIGH, "%s has become an admin.\n", ent->client->pers.netname);
+		!ent->client->Respawn.admin && strcmp(admin_password->string, gi.argv(1)) == 0) {
+		ent->client->Respawn.admin = true;
+		gi.bprintf(PRINT_HIGH, "%s has become an admin.\n", ent->client->Persistent.netname);
 		gi.cprintf(ent, PRINT_HIGH, "Type 'admin' to access the adminstration menu.\n");
 	}
 
-	if (!ent->client->resp.admin) {
+	if (!ent->client->Respawn.admin) {
 		sprintf(text, "%s has requested admin rights.",
-			ent->client->pers.netname);
+			ent->client->Persistent.netname);
 		CTFBeginElection(ent, ELECT_ADMIN, text);
 		return;
 	}
@@ -370,16 +371,16 @@ void CTFAdmin(CPlayerEntity *ent)
 	char text[1024];
 
 	if (ArgCount() > 1 && admin_password->String() && *admin_password->String() &&
-		!ent->Client.resp.admin && strcmp(admin_password->String(), ArgGets(1)) == 0)
+		!ent->Client.Respawn.admin && strcmp(admin_password->String(), ArgGets(1)) == 0)
 	{
-		ent->Client.resp.admin = true;
-		BroadcastPrintf(PRINT_HIGH, "%s has become an admin.\n", ent->Client.pers.netname);
+		ent->Client.Respawn.admin = true;
+		BroadcastPrintf(PRINT_HIGH, "%s has become an admin.\n", ent->Client.Persistent.netname);
 		ent->PrintToClient (PRINT_HIGH, "Type 'admin' to access the adminstration menu.\n");
 	}
 
-	if (!ent->Client.resp.admin) {
+	if (!ent->Client.Respawn.admin) {
 		Q_snprintfz(text, sizeof(text), "%s has requested admin rights.",
-			ent->Client.pers.netname);
+			ent->Client.Persistent.netname);
 		CTFBeginElection(ent, ELECT_ADMIN, text);
 		return;
 	}

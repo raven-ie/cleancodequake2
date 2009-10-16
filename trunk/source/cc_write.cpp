@@ -146,34 +146,30 @@ void PushUp (byte *Ptr, EWriteType Type)
 	WriteQueue.push_back (new CWriteIndex(Ptr, Type));
 }
 
-void PushTest ()
-{
-}
-
-// Origin or Ent has to exist.
-void Cast (ECastType castType, ECastFlags castFlags, vec3_t Origin = NULL, edict_t *Ent = NULL)
+// vec3f overloads
+void Cast (ECastType castType, ECastFlags castFlags, vec3f &Origin, CBaseEntity *Ent, bool SuppliedOrigin)
 {
 	// Sanity checks
 	if (castType == CAST_MULTI && Ent)
 		Com_Printf (0, "Multicast with an associated Ent\n");
-	else if (castType == CAST_MULTI && !Origin)
+	else if (castType == CAST_MULTI && !SuppliedOrigin)
 	{
-		Com_Printf (0, "Multicast with no assicated Origin! Can't do!\n");
+		Com_Printf (0, "Multicast with no associated Origin! Can't do!\n");
 		Clear ();
 		return;
 	}
 	else if (castType == CAST_UNI && !Ent)
 	{
-		Com_Printf (0, "Unicast with no assicated Ent! Can't do!\n");
+		Com_Printf (0, "Unicast with no associated Ent! Can't do!\n");
 		Clear ();
 		return;
 	}
-	else if (castType == CAST_UNI && Origin)
+	else if (castType == CAST_UNI && SuppliedOrigin)
 		Com_Printf (0, "Multicast with an associated Origin\n");
 
 	CPlayerEntity *Entity = NULL;
 	if (Ent)
-		Entity = entity_cast<CPlayerEntity>(Ent->Entity);
+		Entity = entity_cast<CPlayerEntity>(Ent);
 
 	// Sends to all entities
 	switch (castType)
@@ -183,7 +179,7 @@ void Cast (ECastType castType, ECastFlags castFlags, vec3_t Origin = NULL, edict
 		{
 			CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 
-			if (!Player || !Player->IsInUse() || (Player->Client.pers.state != SVCS_SPAWNED))
+			if (!Player || !Player->IsInUse() || (Player->Client.Persistent.state != SVCS_SPAWNED))
 				continue;
 
 			if ((castFlags & CASTFLAG_PVS) && !InVisibleArea(Origin, Player->State.GetOrigin()))
@@ -203,78 +199,6 @@ void Cast (ECastType castType, ECastFlags castFlags, vec3_t Origin = NULL, edict
 			break;
 
 		//gi.unicast (Ent, (castFlags & CASTFLAG_RELIABLE) ? true : false);
-		SendQueue (Ent, (castFlags & CASTFLAG_RELIABLE) ? true : false);
-		break;
-	}
-
-	//if (castType == CAST_MULTI)
-	//	gi.multicast (Origin, (castFlags & CASTFLAG_PVS) ? MULTICAST_PVS : MULTICAST_PHS);
-	//else if (castType == CAST_UNI)
-	//	gi.unicast (Ent, (castFlags & CASTFLAG_RELIABLE) ? true : false);
-	Clear ();
-}
-void Cast (ECastFlags castFlags, vec3_t Origin)
-{
-	Cast (CAST_MULTI, castFlags, Origin, NULL);
-}
-void Cast (ECastFlags castFlags, edict_t *Ent)
-{
-	Cast (CAST_UNI, castFlags, NULL, Ent);
-}
-
-// vec3f overloads
-void Cast (ECastType castType, ECastFlags castFlags, vec3f *Origin = NULL, CBaseEntity *Ent = NULL)
-{
-	// Sanity checks
-	if (castType == CAST_MULTI && Ent)
-		Com_Printf (0, "Multicast with an associated Ent\n");
-	else if (castType == CAST_MULTI && !Origin)
-	{
-		Com_Printf (0, "Multicast with no assicated Origin! Can't do!\n");
-		Clear ();
-		return;
-	}
-	else if (castType == CAST_UNI && !Ent)
-	{
-		Com_Printf (0, "Unicast with no assicated Ent! Can't do!\n");
-		Clear ();
-		return;
-	}
-	else if (castType == CAST_UNI && Origin)
-		Com_Printf (0, "Multicast with an associated Origin\n");
-
-	CPlayerEntity *Entity = NULL;
-	if (Ent)
-		Entity = entity_cast<CPlayerEntity>(Ent);
-
-	// Sends to all entities
-	switch (castType)
-	{
-	case CAST_MULTI:
-		for (int i = 1; i <= game.maxclients; i++)
-		{
-			CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
-
-			if (!Player || !Player->IsInUse() || (Player->Client.pers.state != SVCS_SPAWNED))
-				continue;
-
-			if ((castFlags & CASTFLAG_PVS) && !InVisibleArea(*Origin, Player->State.GetOrigin()))
-				continue;
-			if ((castFlags & CASTFLAG_PHS) && !InHearableArea(*Origin, Player->State.GetOrigin()))
-				continue;
-
-			//gi.unicast (e, (castFlags & CASTFLAG_RELIABLE) ? true : false);
-			SendQueue (Player->gameEntity, (castFlags & CASTFLAG_RELIABLE) ? true : false);
-		}
-		break;
-	// Send to one entity
-	case CAST_UNI:
-		if ((castFlags & CASTFLAG_PVS) && !InVisibleArea(*Origin, Entity->State.GetOrigin()))
-			break;
-		if ((castFlags & CASTFLAG_PHS) && !InHearableArea(*Origin, Entity->State.GetOrigin()))
-			break;
-
-		//gi.unicast (Ent, (castFlags & CASTFLAG_RELIABLE) ? true : false);
 		SendQueue (Ent->gameEntity, (castFlags & CASTFLAG_RELIABLE) ? true : false);
 		break;
 	}
@@ -285,13 +209,13 @@ void Cast (ECastType castType, ECastFlags castFlags, vec3f *Origin = NULL, CBase
 	//	gi.unicast (Ent, (castFlags & CASTFLAG_RELIABLE) ? true : false);
 	Clear ();
 }
-void Cast (ECastFlags castFlags, vec3f *Origin)
+void Cast (ECastFlags castFlags, vec3f &Origin)
 {
-	Cast (CAST_MULTI, castFlags, Origin, NULL);
+	Cast (CAST_MULTI, castFlags, Origin, NULL, true);
 }
 void Cast (ECastFlags castFlags, CBaseEntity *Ent)
 {
-	Cast (CAST_UNI, castFlags, NULL, Ent);
+	Cast (CAST_UNI, castFlags, vec3fOrigin, Ent, false);
 }
 
 void WriteChar (sint8 val)

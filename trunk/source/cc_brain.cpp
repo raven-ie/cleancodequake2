@@ -295,7 +295,7 @@ CAnim BrainMovePain1 (FRAME_pain101, FRAME_pain121, BrainFramesPain1, &CMonster:
 void CBrain::Pain(CBaseEntity *other, float kick, int damage)
 {
 	if (Entity->Health < (Entity->MaxHealth / 2))
-		Entity->State.SetSkinNum (1);
+		Entity->State.GetSkinNum() = 1;
 
 	if (level.framenum < PainDebounceTime)
 		return;
@@ -444,7 +444,7 @@ void CBrain::Dead ()
 
 void CBrain::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
-	Entity->State.SetEffects (0);
+	Entity->State.GetEffects() = 0;
 	PowerArmorType = POWER_ARMOR_NONE;
 
 // check for gib
@@ -452,10 +452,10 @@ void CBrain::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n = 0; n < 2; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, GameMedia.Gib_Bone[0], damage, GIB_ORGANIC);
 		for (int n = 0; n < 4; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		Entity->ThrowHead (gMedia.Gib_Head[1], damage, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, GameMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		Entity->ThrowHead (GameMedia.Gib_Head[1], damage, GIB_ORGANIC);
 		return;
 	}
 
@@ -622,7 +622,7 @@ void CBrain::Spawn ()
 
 	Entity->PhysicsType = PHYSICS_STEP;
 	Entity->SetSolid (SOLID_BBOX);
-	Entity->State.SetModelIndex (ModelIndex ("models/monsters/brain/tris.md2"));
+	Entity->State.GetModelIndex() = ModelIndex ("models/monsters/brain/tris.md2");
 	Entity->SetMins (vec3f(-16, -16, -24));
 	Entity->SetMaxs (vec3f(16, 16, 32));
 

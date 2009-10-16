@@ -37,25 +37,11 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 gameImport_t	gi;
 
-int PointContents (vec3_t start)
-{
-_CC_DISABLE_DEPRECATION
-	return gi.pointcontents(start);
-_CC_ENABLE_DEPRECATION
-};
-
 int PointContents (vec3f &start)
 {
 _CC_DISABLE_DEPRECATION
 	return gi.pointcontents(start);
 _CC_ENABLE_DEPRECATION};
-
-int BoxEdicts (vec3_t mins, vec3_t maxs, edict_t **list, int maxCount, bool triggers)
-{
-_CC_DISABLE_DEPRECATION
-	return gi.BoxEdicts (mins, maxs, list, maxCount, (triggers) ? AREA_TRIGGERS : AREA_SOLID);
-_CC_ENABLE_DEPRECATION
-}
 
 int BoxEdicts (vec3f &mins, vec3f &maxs, edict_t **list, int maxCount, bool triggers)
 {

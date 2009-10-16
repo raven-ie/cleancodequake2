@@ -68,11 +68,11 @@ void CHyperBlaster::Fire (CPlayerEntity *ent)
 {
 	ent->Client.weapon_sound = SoundIndex("weapons/hyprbl1a.wav");
 
-	if (!(ent->Client.buttons & BUTTON_ATTACK))
-		ent->Client.PlayerState.SetGunFrame(ent->Client.PlayerState.GetGunFrame() + 1);
+	if (!(ent->Client.Buttons & BUTTON_ATTACK))
+		ent->Client.PlayerState.GetGunFrame()++;
 	else
 	{
-		if (!ent->Client.pers.Inventory.Has(ent->Client.pers.Weapon->WeaponItem->Ammo) )
+		if (!ent->Client.Persistent.Inventory.Has(ent->Client.Persistent.Weapon->WeaponItem->Ammo) )
 		{
 			OutOfAmmo(ent);
 			NoAmmoWeaponChange (ent);
@@ -108,9 +108,9 @@ void CHyperBlaster::Fire (CPlayerEntity *ent)
 			FireAnimation (ent);
 		}
 
-		ent->Client.PlayerState.SetGunFrame (ent->Client.PlayerState.GetGunFrame() + 1);
-		if (ent->Client.PlayerState.GetGunFrame() == 12 && ent->Client.pers.Inventory.Has(ent->Client.pers.Weapon->WeaponItem->Ammo))
-			ent->Client.PlayerState.SetGunFrame (6);
+		ent->Client.PlayerState.GetGunFrame()++;
+		if (ent->Client.PlayerState.GetGunFrame() == 12 && ent->Client.Persistent.Inventory.Has(ent->Client.Persistent.Weapon->WeaponItem->Ammo))
+			ent->Client.PlayerState.GetGunFrame() = 6;
 	}
 
 	if (ent->Client.PlayerState.GetGunFrame() == 12)

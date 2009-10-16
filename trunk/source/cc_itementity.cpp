@@ -90,16 +90,16 @@ void CItemEntity::Touch(CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf
 	// show icon and name on status bar
 	if (Player->Client.pickup_msg_time != (level.framenum + 30))
 	{
-		Player->Client.PlayerState.SetStat(STAT_PICKUP_ICON, gameEntity->item->GetIconIndex());
-		Player->Client.PlayerState.SetStat(STAT_PICKUP_STRING, gameEntity->item->GetConfigStringNumber());
+		Player->Client.PlayerState.GetStat (STAT_PICKUP_ICON) = gameEntity->item->GetIconIndex();
+		Player->Client.PlayerState.GetStat (STAT_PICKUP_STRING) = gameEntity->item->GetConfigStringNumber();
 		Player->Client.pickup_msg_time = level.framenum + 30;
 	}
 
 	// change selected item
 	if (gameEntity->item->Flags & ITEMFLAG_USABLE)
 	{
-		Player->Client.pers.Inventory.SelectedItem = gameEntity->item->GetIndex();
-		Player->Client.PlayerState.SetStat(STAT_SELECTED_ITEM, Player->Client.pers.Inventory.SelectedItem);
+		Player->Client.Persistent.Inventory.SelectedItem = gameEntity->item->GetIndex();
+		Player->Client.PlayerState.GetStat (STAT_SELECTED_ITEM) = Player->Client.Persistent.Inventory.SelectedItem;
 	}
 
 	if (gameEntity->item->PickupSound)
@@ -167,7 +167,7 @@ void CItemEntity::Think ()
 			SetMins (vec3f(-15,-15,-15));
 			SetMaxs (vec3f(15,15,15));
 
-			State.SetModelIndex (ModelIndex((gameEntity->model) ? gameEntity->model : gameEntity->item->WorldModel));
+			State.GetModelIndex() = ModelIndex((gameEntity->model) ? gameEntity->model : gameEntity->item->WorldModel);
 			SetSolid (SOLID_TRIGGER); 
 			Touchable = true;
 			PhysicsType = PHYSICS_TOSS;
@@ -199,8 +199,8 @@ void CItemEntity::Think ()
 			{
 				SetSolid (SOLID_BBOX);
 				Touchable = false;
-				State.RemoveEffects (EF_ROTATE);
-				State.RemoveRenderEffects (RF_GLOW);
+				State.GetEffects() &= ~EF_ROTATE;
+				State.GetRenderEffects() &= ~RF_GLOW;
 			}
 
 			if (SpawnFlags & ITEM_TRIGGER_SPAWN)
@@ -242,7 +242,7 @@ void CItemEntity::Think ()
 			RespawnedEntity->Link ();
 
 			// send an effect
-			RespawnedEntity->State.SetEvent (EV_ITEM_RESPAWN);
+			RespawnedEntity->State.GetEvent() = EV_ITEM_RESPAWN;
 		}
 		break;
 	case ITS_FREE:
@@ -268,6 +268,6 @@ void CItemEntity::Spawn (CBaseItem *item)
 	ThinkState = ITS_DROPTOFLOOR;
 	PhysicsType = PHYSICS_NONE;
 
-	State.SetEffects(item->EffectFlags);
-	State.SetRenderEffects(RF_GLOW);
+	State.GetEffects() = item->EffectFlags;
+	State.GetRenderEffects() = RF_GLOW;
 }

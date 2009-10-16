@@ -113,7 +113,7 @@ void CSoldierShotgun::SpawnSoldier ()
 	SoundPain = SoundIndex ("soldier/solpain1.wav");
 	SoundDeath = SoundIndex ("soldier/soldeth1.wav");
 
-	Entity->State.SetSkinNum (2);
+	Entity->State.GetSkinNum() = 2;
 	Entity->Health = 30;
 	Entity->GibHealth = -30;
 }

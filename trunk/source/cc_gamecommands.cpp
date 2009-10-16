@@ -108,14 +108,12 @@ Cmd_PutAway_f
 */
 void Cmd_PutAway_f (CPlayerEntity *ent)
 {
-	ent->Client.showscores = false;
-	ent->Client.showhelp = false;
-	ent->Client.showinventory = false;
+	ent->Client.LayoutFlags &= ~LF_SCREEN_MASK;
 
-	if (ent->Client.resp.MenuState.InMenu)
-		ent->Client.resp.MenuState.CloseMenu ();
+	if (ent->Client.Respawn.MenuState.InMenu)
+		ent->Client.Respawn.MenuState.CloseMenu ();
 
-	ent->Client.update_chase = true;
+	ent->Client.LayoutFlags |= LF_UPDATECHASE;
 }
 
 
@@ -174,7 +172,7 @@ void Cmd_Players_f (CPlayerEntity *ent)
 		CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i+1].Entity);
 		Q_snprintfz (small, sizeof(small), "%3i %s\n",
 			Player->Client.PlayerState.GetStat(STAT_FRAGS),
-			Player->Client.pers.netname);
+			Player->Client.Persistent.netname);
 		if (strlen (small) + strlen(large) > sizeof(large) - 100 )
 		{	// can't print all of them in one packet
 			Q_strcatz (large, "...\n", MAX_INFO_STRING);
@@ -208,28 +206,28 @@ void Cmd_Wave_f (CPlayerEntity *ent)
 	{
 	case 0:
 		ent->PrintToClient (PRINT_HIGH, "flipoff\n");
-		ent->State.SetFrame (FRAME_flip01-1);
+		ent->State.GetFrame() = FRAME_flip01 - 1;
 		ent->Client.anim_end = FRAME_flip12;
 		break;
 	case 1:
 		ent->PrintToClient (PRINT_HIGH, "salute\n");
-		ent->State.SetFrame (FRAME_salute01-1);
+		ent->State.GetFrame() = FRAME_salute01 - 1;
 		ent->Client.anim_end = FRAME_salute11;
 		break;
 	case 2:
 		ent->PrintToClient (PRINT_HIGH, "taunt\n");
-		ent->State.SetFrame (FRAME_taunt01-1);
+		ent->State.GetFrame() = FRAME_taunt01 - 1;
 		ent->Client.anim_end = FRAME_taunt17;
 		break;
 	case 3:
 		ent->PrintToClient (PRINT_HIGH, "wave\n");
-		ent->State.SetFrame (FRAME_wave01-1);
+		ent->State.GetFrame() = FRAME_wave01 - 1;
 		ent->Client.anim_end = FRAME_wave11;
 		break;
 	case 4:
 	default:
 		ent->PrintToClient (PRINT_HIGH, "point\n");
-		ent->State.SetFrame (FRAME_point01-1);
+		ent->State.GetFrame() = FRAME_point01 - 1;
 		ent->Client.anim_end = FRAME_point12;
 		break;
 	}
@@ -294,7 +292,7 @@ void Cmd_Say_f (CPlayerEntity *ent, bool team, bool arg0)
 	if (ArgCount () < 2 && !arg0)
 		return;
 
-	if (Bans.IsSquelched(ent->Client.pers.IP) || Bans.IsSquelched(ent->Client.pers.netname))
+	if (Bans.IsSquelched(ent->Client.Persistent.IP) || Bans.IsSquelched(ent->Client.Persistent.netname))
 	{
 		ent->PrintToClient (PRINT_HIGH, "You are squelched and may not talk.\n");
 		return;
@@ -303,7 +301,7 @@ void Cmd_Say_f (CPlayerEntity *ent, bool team, bool arg0)
 	if (!(dmFlags.dfSkinTeams || dmFlags.dfModelTeams))
 		team = false;
 
-	Q_snprintfz (text, sizeof(text), (team) ? "(%s): " : "%s: ", ent->Client.pers.netname);
+	Q_snprintfz (text, sizeof(text), (team) ? "(%s): " : "%s: ", ent->Client.Persistent.netname);
 
 	if (arg0)
 	{
@@ -363,16 +361,16 @@ public:
 
 		if (!Spectator)
 			Q_snprintfz(tempString, sizeof(tempString), " - %02d:%02d %4d %3d %s%s\n",
-				(level.framenum - Player->Client.resp.enterframe) / 600,
-				((level.framenum - Player->Client.resp.enterframe) % 600)/10,
+				(level.framenum - Player->Client.Respawn.enterframe) / 600,
+				((level.framenum - Player->Client.Respawn.enterframe) % 600)/10,
 				Player->Client.GetPing(),
-				Player->Client.resp.score,
-				Player->Client.pers.netname,
-				Player->Client.resp.spectator ? " (spectator)" : "");
+				Player->Client.Respawn.score,
+				Player->Client.Persistent.netname,
+				Player->Client.Respawn.spectator ? " (spectator)" : "");
 		else
 			Q_snprintfz(tempString, sizeof(tempString), " - %s%s\n",
-				Player->Client.pers.netname,
-				Player->Client.resp.spectator ? " (spectator)" : "");
+				Player->Client.Persistent.netname,
+				Player->Client.Respawn.spectator ? " (spectator)" : "");
 
 		if (strlen(Text) + strlen(tempString) > SizeOf - 50)
 		{
@@ -392,9 +390,9 @@ public:
 		{
 			CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 
-			if (Spectator && (!Player->IsInUse() || Player->Client.pers.state != SVCS_SPAWNED))
+			if (Spectator && (!Player->IsInUse() || Player->Client.Persistent.state != SVCS_SPAWNED))
 				continue;
-			else if (!Spectator && (Player->Client.pers.state == SVCS_SPAWNED))
+			else if (!Spectator && (Player->Client.Persistent.state == SVCS_SPAWNED))
 				continue;
 
 			Index = i;
@@ -438,11 +436,8 @@ void GCmd_SayTeam_f (CPlayerEntity *ent)
 	Cmd_Say_f (ent, true, false);
 }
 
-uint32 MurmurHash2 (const char *data, const int len, uint32 seed);
-void PushTest ();
 void Cmd_Test_f (CPlayerEntity *ent)
 {
-	PushTest ();
 }
 
 #include "cc_menu.h"
@@ -457,26 +452,24 @@ Display the scoreboard
 */
 void Cmd_Score_f (CPlayerEntity *ent)
 {
-	ent->Client.showinventory = false;
-	ent->Client.showhelp = false;
-
-	if (ent->Client.resp.MenuState.InMenu)
+	ent->Client.LayoutFlags &= ~(LF_SHOWINVENTORY | LF_SHOWHELP);
+	if (ent->Client.Respawn.MenuState.InMenu)
 	{
-		ent->Client.resp.MenuState.CloseMenu();
+		ent->Client.Respawn.MenuState.CloseMenu();
 		return;
 	}
 
 	if (game.mode == GAME_SINGLEPLAYER)
 		return;
 
-	if (ent->Client.showscores)
+	if (ent->Client.LayoutFlags & LF_SHOWSCORES)
 	{
-		ent->Client.showscores = false;
-		ent->Client.update_chase = true;
+		ent->Client.LayoutFlags &= ~LF_SHOWSCORES;
+		ent->Client.LayoutFlags |= LF_UPDATECHASE;
 		return;
 	}
 
-	ent->Client.showscores = true;
+	ent->Client.LayoutFlags |= LF_SHOWSCORES;
 	ent->DeathmatchScoreboardMessage (true);
 }
 
@@ -496,23 +489,21 @@ void Cmd_Help_f (CPlayerEntity *ent)
 		return;
 	}
 
-	ent->Client.showinventory = false;
-	ent->Client.showscores = false;
-
-	if (ent->Client.resp.MenuState.InMenu)
+	ent->Client.LayoutFlags &= ~(LF_SHOWSCORES | LF_SHOWINVENTORY);
+	if (ent->Client.Respawn.MenuState.InMenu)
 	{
-		ent->Client.resp.MenuState.CloseMenu();
+		ent->Client.Respawn.MenuState.CloseMenu();
 		return;
 	}
 
-	if (ent->Client.showhelp && (ent->Client.pers.game_helpchanged == game.helpchanged))
+	if ((ent->Client.LayoutFlags & LF_SHOWHELP) && (ent->Client.Persistent.game_helpchanged == game.helpchanged))
 	{
-		ent->Client.showhelp = false;
+		ent->Client.LayoutFlags &= ~LF_SHOWHELP;
 		return;
 	}
 
-	ent->Client.showhelp = true;
-	ent->Client.pers.helpchanged = 0;
+	ent->Client.LayoutFlags |= LF_SHOWHELP;
+	ent->Client.Persistent.helpchanged = 0;
 	HelpComputer (ent);
 }
 
@@ -559,7 +550,7 @@ void Cmd_Register ()
 	Cmd_AddCommand ("invprevp",				Cmd_SelectPrevPowerup_f);
 	Cmd_AddCommand ("test",					Cmd_Test_f);
 
-	// And last but certainly not least...
+	// And last but certainly not least->..
 	Cmd_AddCommand ("god",					Cmd_God_f,				CMD_CHEAT);
 	Cmd_AddCommand ("notarget",				Cmd_Notarget_f,			CMD_CHEAT);
 	Cmd_AddCommand ("noclip",				Cmd_Noclip_f,			CMD_CHEAT);

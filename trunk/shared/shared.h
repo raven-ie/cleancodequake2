@@ -576,7 +576,7 @@ struct cmTrace_t
 	plane_t			plane;		// surface normal at impact
 	cmBspSurface_t	*surface;	// surface hit
 	int				contents;	// contents on other side of surface hit
-	struct edict_s	*ent;		// not set by CM_*() functions
+	struct edict_t	*ent;		// not set by CM_*() functions
 };
 
 /*
@@ -620,38 +620,41 @@ struct pMoveState_t
 {
 	int				pmType;
 
-	int16			origin[3];		// 12.3
-	int16			velocity[3];	// 12.3
+	svec3_t			origin;			// 12.3
+	svec3_t			velocity;		// 12.3
 	byte			pmFlags;		// ducked, jump_held, etc
 	byte			pmTime;			// each unit = 8 ms
 	int16			gravity;
-	int16			deltaAngles[3];	// add to command angles to get view direction
+	svec3_t			deltaAngles;	// add to command angles to get view direction
 									// changed by spawns, rotating objects, and teleporters
 };
 
 //
 // button bits
 //
-#define BUTTON_ATTACK		1
-#define BUTTON_USE			2
+CC_ENUM (uint8, EButtons)
+{
+	BUTTON_ATTACK			= BIT(0),
+	BUTTON_USE				= BIT(1),
 
 #ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 //stolen for r1q2 in the name of bandwidth
-#define	BUTTON_UCMD_DBLFORWARD	4
-#define BUTTON_UCMD_DBLSIDE		8
-#define	BUTTON_UCMD_DBLUP		16
+	BUTTON_UCMD_DBLFORWARD	= BIT(2),
+	BUTTON_UCMD_DBLSIDE		= BIT(3),
+	BUTTON_UCMD_DBLUP		= BIT(4),
 
-#define BUTTON_UCMD_DBL_ANGLE1	32
-#define BUTTON_UCMD_DBL_ANGLE2	64
+	BUTTON_UCMD_DBL_ANGLE1	= BIT(5),
+	BUTTON_UCMD_DBL_ANGLE2	= BIT(6),
 #endif
 
-#define BUTTON_ANY			128			// any key whatsoever
+	BUTTON_ANY				= BIT(7)			// any key whatsoever
+};
 
 // userCmd_t is sent to the server each client frame
 struct userCmd_t
 {
 	byte		msec;
-	byte		buttons;
+	EButtons	buttons;
 
 	int16		angles[3];
 
@@ -662,7 +665,6 @@ struct userCmd_t
 	byte		impulse;		// remove?
 	byte		lightLevel;		// light level the player is standing on
 };
-
 
 #define MAXTOUCH	32
 #ifdef USE_EXTENDED_GAME_IMPORTS
@@ -677,14 +679,14 @@ struct pMove_t
 
 	// results (out)
 	int				numTouch;
-	struct edict_s	*touchEnts[MAXTOUCH];
+	struct edict_t	*touchEnts[MAXTOUCH];
 
 	vec3_t			viewAngles;			// clamped
 	float			viewHeight;
 
 	vec3_t			mins, maxs;			// bounding box size
 
-	struct edict_s	*groundEntity;
+	struct edict_t	*groundEntity;
 	int				waterType;
 	int				waterLevel;
 
@@ -705,14 +707,14 @@ struct pMoveNew_t
 
 	// results (out)
 	int				numTouch;
-	struct edict_s	*touchEnts[MAXTOUCH];
+	struct edict_t	*touchEnts[MAXTOUCH];
 
 	vec3_t			viewAngles;			// clamped
 	float			viewHeight;
 
 	vec3_t			mins, maxs;			// bounding box size
 
-	struct edict_s	*groundEntity;
+	struct edict_t	*groundEntity;
 	int				waterType;
 	int				waterLevel;
 };
@@ -1134,7 +1136,7 @@ enum
 
 // Temp entity events are for things that happen at a location seperate from
 // any existing entity. Temporary entity messages are explicitly constructed
-// and broadcast.
+// and broadcast->
 enum
 {
 	TE_GUNSHOT,
@@ -1407,9 +1409,9 @@ struct entityStateOld_t
 {
 	int				number;		// edict index
 
-	vec3_t			origin;		// entity origin or RF_BEAM start origin
-	vec3_t			angles;
-	vec3_t			oldOrigin;	// for interpolation or RF_BEAM end origin
+	vec3f			origin;		// entity origin or RF_BEAM start origin
+	vec3f			angles;
+	vec3f			oldOrigin;	// for interpolation or RF_BEAM end origin
 
 	// weapons, CTF flags, etc
 	int				modelIndex;
@@ -1527,16 +1529,16 @@ struct playerState_t
 	pMoveState_t	pMove;				// for prediction
 
 	// these fields do not need to be communicated bit-precise
-	vec3_t			viewAngles;			// for fixed views
-	vec3_t			viewOffset;			// add to pmovestate->origin
-	vec3_t			kickAngles;			// add to view direction to get render angles
+	vec3f			viewAngles;			// for fixed views
+	vec3f			viewOffset;			// add to pmovestate->origin
+	vec3f			kickAngles;			// add to view direction to get render angles
 										// set by weapon kicks, pain effects, etc
-	vec3_t			gunAngles;
-	vec3_t			gunOffset;
+	vec3f			gunAngles;
+	vec3f			gunOffset;
 	int				gunIndex;
 	int				gunFrame;
 
-	vec4_t			viewBlend;		// rgba full screen effect
+	colorf			viewBlend;		// rgba full screen effect
 	
 	float			fov;				// horizontal field of view
 

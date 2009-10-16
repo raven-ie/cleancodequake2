@@ -152,11 +152,11 @@ CItemEntity *CBaseItem::DropItem (CBaseEntity *ent)
 	dropped->gameEntity->classname = Classname;
 	dropped->gameEntity->item = this;
 	dropped->SpawnFlags = DROPPED_ITEM;
-	dropped->State.SetEffects (EffectFlags);
-	dropped->State.SetRenderEffects (RF_GLOW);
+	dropped->State.GetEffects() = EffectFlags;
+	dropped->State.GetRenderEffects() = RF_GLOW;
 	dropped->SetMins (vec3f(-15));
 	dropped->SetMaxs (vec3f(15));
-	dropped->State.SetModelIndex (ModelIndex(WorldModel));
+	dropped->State.GetModelIndex() = ModelIndex(WorldModel);
 	dropped->SetSolid (SOLID_TRIGGER);
 	dropped->gameEntity->owner = ent->gameEntity;
 

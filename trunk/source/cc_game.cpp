@@ -163,7 +163,7 @@ void CheckDMRules (void)
 			if (!cl->IsInUse())
 				continue;
 
-			if (cl->Client.resp.score >= fraglimit->Integer())
+			if (cl->Client.Respawn.score >= fraglimit->Integer())
 			{
 				BroadcastPrintf (PRINT_HIGH, "Fraglimit hit.\n");
 				EndDMLevel ();
@@ -198,8 +198,8 @@ void ExitLevel (void)
 		CPlayerEntity *ent = entity_cast<CPlayerEntity>(g_edicts[1 + i].Entity);
 		if (!ent->IsInUse())
 			continue;
-		if (ent->Health > ent->Client.pers.max_health)
-			ent->Health = ent->Client.pers.max_health;
+		if (ent->Health > ent->Client.Persistent.max_health)
+			ent->Health = ent->Client.Persistent.max_health;
 	}
 
 #ifdef MONSTERS_USE_PATHFINDING
@@ -320,7 +320,7 @@ void CC_RunFrame ()
 			memset (&Entity->PlayedSounds, 0, sizeof(Entity->PlayedSounds));
 			
 			level.CurrentEntity = Entity;
-			Entity->State.SetOldOrigin (Entity->State.GetOrigin());
+			Entity->State.GetOldOrigin() = Entity->State.GetOrigin();
 
 			// if the ground entity moved, make sure we are still on it
 			if ((Entity->GroundEntity) && ((!Entity->GroundEntity->gameEntity) || (Entity->GroundEntity->GetLinkCount() != Entity->GroundEntityLinkCount)))

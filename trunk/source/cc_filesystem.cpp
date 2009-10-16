@@ -55,19 +55,21 @@ CCvar	*fs_developer;
 =============================================================================
 */
 
-typedef struct fsLink_s {
-	struct fsLink_s			*next;
+struct fsLink_t
+{
+	fsLink_t				*next;
 	char					*from;
 	int						fromLength;
 	char					*to;
-} fsLink_t;
+};
 
-typedef struct fsPath_s {
+struct fsPath_t
+{
 	char					pathName[MAX_OSPATH];
 	char					gamePath[MAX_OSPATH];
 
-	struct fsPath_s			*next;
-} fsPath_t;
+	fsPath_t				*next;
+};
 
 static char		fs_gameDir[MAX_OSPATH];
 
@@ -86,7 +88,8 @@ static fsPath_t	*fs_baseSearchPath;		// Without gamedirs
 =============================================================================
 */
 
-typedef struct fsHandleIndex_s {
+struct fsHandleIndex_t
+{
 	char					name[MAX_QPATH];
 
 	bool					inUse;
@@ -94,7 +97,7 @@ typedef struct fsHandleIndex_s {
 
 	// One of these is always NULL
 	FILE					*regFile;
-} fsHandleIndex_t;
+};
 
 static fsHandleIndex_t	fs_fileIndices[FS_MAX_FILEINDICES];
 

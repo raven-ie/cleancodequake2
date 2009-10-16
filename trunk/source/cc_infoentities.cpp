@@ -54,8 +54,8 @@ public:
 
 	virtual void Spawn ()
 	{
-		State.SetModelIndex (ModelIndex("models/objects/dmspot/tris.md2"));
-		State.SetSkinNum (0);
+		State.GetModelIndex() = ModelIndex("models/objects/dmspot/tris.md2");
+		State.GetSkinNum() = 0;
 		SetSolid (SOLID_BBOX);
 		SetMins (vec3f(-32, -32, -24));
 		SetMaxs (vec3f(32, 32, -16));
@@ -125,7 +125,7 @@ public:
 		other->Unlink ();
 
 		other->State.SetOrigin (Dest->State.GetOrigin() + vec3f(0,0,10));
-		other->State.SetOldOrigin (Dest->State.GetOrigin());
+		other->State.GetOldOrigin() = Dest->State.GetOrigin();
 
 		// clear the velocity and hold them in place briefly
 		if (other->EntityFlags & ENT_PHYSICS)
@@ -137,19 +137,19 @@ public:
 		}
 
 		// draw the teleport splash at source and on the player
-		other->State.SetEvent ((Player) ? EV_PLAYER_TELEPORT : EV_OTHER_TELEPORT);
+		other->State.GetEvent() = (Player) ? EV_PLAYER_TELEPORT : EV_OTHER_TELEPORT;
 
 		// set angles
 		if (Player)
 		{
 			for (int i = 0; i < 3; i++)
-				Player->Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(Dest->State.GetAngles()[i] - Player->Client.resp.cmd_angles[i]);
+				Player->Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(Dest->State.GetAngles()[i] - Player->Client.Respawn.cmd_angles[i]);
 		}
 
 		other->State.SetAngles(vec3fOrigin);
 		if (Player)
 		{
-			Player->Client.PlayerState.SetViewAngles (vec3Origin);
+			Player->Client.PlayerState.GetViewAngles().Clear ();
 			Player->Client.ViewAngle.Clear ();
 		}
 
@@ -202,10 +202,10 @@ public:
 			return;
 		}
 
-		State.SetModelIndex (ModelIndex("models/objects/dmspot/tris.md2"));
-		State.SetSkinNum (1);
-		State.SetEffects (EF_TELEPORTER);
-		State.SetSound (SoundIndex ("world/amb10.wav"));
+		State.GetModelIndex() = ModelIndex("models/objects/dmspot/tris.md2");
+		State.GetSkinNum() = 1;
+		State.GetEffects() = EF_TELEPORTER;
+		State.GetSound() = SoundIndex ("world/amb10.wav");
 		SetSolid (SOLID_BBOX);
 
 		SetMins (vec3f(-32, -32, -24));
@@ -286,7 +286,7 @@ public:
 		// noise maker and splash effect dude
 		NoiseMaker *s = QNew (com_levelPool, 0) NoiseMaker;
 		s->State.SetOrigin (GetMins() + ((GetMaxs() - GetMins()) / 2));
-		s->State.SetSound (SoundIndex ("world/hum1.wav"));
+		s->State.GetSound() = SoundIndex ("world/hum1.wav");
 		s->Link ();
 	};
 };
@@ -645,7 +645,7 @@ void CPathCorner::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *sur
 	{
 		other->State.SetOrigin (next->State.GetOrigin() + vec3f(0, 0, next->GetMins().Z - other->GetMins().Z));
 		next = CC_PickTarget(entity_cast<CUsableEntity>(next)->Target);
-		other->State.SetEvent (EV_OTHER_TELEPORT);
+		other->State.GetEvent() = EV_OTHER_TELEPORT;
 	}
 
 	CMonsterEntity *Monster = NULL;

@@ -83,7 +83,7 @@ void CShotgun::Fire (CPlayerEntity *ent)
 	Muzzle (ent, MZ_SHOTGUN);
 	AttackSound (ent);
 
-	ent->Client.PlayerState.SetGunFrame(ent->Client.PlayerState.GetGunFrame() + 1);
+	ent->Client.PlayerState.GetGunFrame()++;
 	ent->PlayerNoiseAt (start, PNOISE_WEAPON);
 	FireAnimation (ent);
 

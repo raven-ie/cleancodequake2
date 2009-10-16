@@ -29,13 +29,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #define MEM_SENTINEL_FOOT(b)	(byte)((/*0x64 +*/ (b)->realSize) & 0xff)
 #define MEM_TOUCH_STEP			256
 
-typedef struct memBlock_s
+struct memBlock_t
 {
 	byte				topSentinel;				// For memory integrity checking
 
-	struct memBlock_s	*next, *prev;				// Next/Previous block in this pool
-	struct memPool_s	*pool;						// Owner pool
-	struct memPuddle_s	*puddle;					// Puddle allocated from
+	memBlock_t			*next, *prev;				// Next/Previous block in this pool
+	struct memPool_t	*pool;						// Owner pool
+	struct memPuddle_t	*puddle;					// Puddle allocated from
 	int					tagNum;						// For group free
 
 	const char			*allocFile;					// File the memory was allocated in
@@ -44,12 +44,12 @@ typedef struct memBlock_s
 	void				*memPointer;				// pointer to allocated memory
 	size_t				memSize;					// Size minus the header, sentinel, and any rounding up to the byte barrier
 	size_t				realSize;					// Actual size of block
-} memBlock_t;
+};
 
 #define MEM_MAX_POOL_COUNT		32
 #define MEM_MAX_POOL_NAME		64
 
-typedef struct memPool_s
+struct memPool_t
 {
 	char				name[MEM_MAX_POOL_NAME];	// Name of pool
 	bool				inUse;						// Slot in use?
@@ -61,7 +61,7 @@ typedef struct memPool_s
 
 	const char			*createFile;				// File this pool was created on
 	int					createLine;					// Line this pool was created on
-} memPool_t;
+};
 
 static memPool_t		m_poolList[MEM_MAX_POOL_COUNT];
 static uint32			m_numPools;
@@ -74,21 +74,20 @@ memPool_t	*com_fileSysPool; // File system (same as game, just here for easy poi
 #define MEM_MAX_PUDDLES			42
 #define MEM_MAX_PUDDLE_SIZE		(32768+1)
 
-typedef struct memPuddle_s
+struct memPuddle_t
 {
-	struct memPuddle_s	*next;
-	struct memPuddle_s	*prev;
+	memPuddle_t			*next, *prev;
 	memBlock_t			*block;
-} memPuddle_t;
+};
 
-typedef struct memPuddleInfo_s
+struct memPuddleInfo_t
 {
 	size_t				blockSize;
 	size_t				granularity;
 
 	memPuddle_t			headNode;
 	memPuddle_t			*freePuddles;
-} memPuddleInfo_t;
+};
 
 static memPuddleInfo_t	m_puddleList[MEM_MAX_PUDDLES];
 static memPuddleInfo_t	*m_sizeToPuddle[MEM_MAX_PUDDLE_SIZE];
@@ -356,7 +355,7 @@ memPool_t *_Mem_CreatePool(const char *name, const char *fileName, const int fil
 _Mem_DeletePool
 ========================
 */
-size_t _Mem_DeletePool(struct memPool_s *pool, const char *fileName, const int fileLine)
+size_t _Mem_DeletePool(struct memPool_t *pool, const char *fileName, const int fileLine)
 {
 	size_t size;
 
@@ -454,7 +453,7 @@ _Mem_FreeTag
 Free memory blocks assigned to a specified tag within a pool
 ========================
 */
-size_t _Mem_FreeTag (struct memPool_s *pool, const int tagNum, const char *fileName, const int fileLine)
+size_t _Mem_FreeTag (struct memPool_t *pool, const int tagNum, const char *fileName, const int fileLine)
 {
 	memBlock_t	*mem, *next;
 	memBlock_t	*headNode = &pool->blockHeadNode;
@@ -483,7 +482,7 @@ _Mem_FreePool
 Free all items within a pool
 ========================
 */
-size_t _Mem_FreePool (struct memPool_s *pool, const char *fileName, const int fileLine)
+size_t _Mem_FreePool (struct memPool_t *pool, const char *fileName, const int fileLine)
 {
 	memBlock_t	*mem, *next;
 	memBlock_t	*headNode = &pool->blockHeadNode;
@@ -512,7 +511,7 @@ _Mem_Alloc
 Returns 0 filled memory allocated in a pool with a tag
 ========================
 */
-void *_Mem_Alloc(size_t size, struct memPool_s *pool, const int tagNum, const char *fileName, const int fileLine)
+void *_Mem_Alloc(size_t size, struct memPool_t *pool, const int tagNum, const char *fileName, const int fileLine)
 {
 	memBlock_t *mem;
 
@@ -634,7 +633,7 @@ _Mem_PoolStrDup
 No need to null terminate the extra spot because Mem_Alloc returns zero-filled memory
 ================
 */
-char *_Mem_PoolStrDup (const char *in, struct memPool_s *pool, const int tagNum, const char *fileName, const int fileLine)
+char *_Mem_PoolStrDup (const char *in, struct memPool_t *pool, const int tagNum, const char *fileName, const int fileLine)
 {
 	char	*out;
 
@@ -650,7 +649,7 @@ char *_Mem_PoolStrDup (const char *in, struct memPool_s *pool, const int tagNum,
 _Mem_PoolSize
 ================
 */
-size_t _Mem_PoolSize (struct memPool_s *pool)
+size_t _Mem_PoolSize (struct memPool_t *pool)
 {
 	if (!pool)
 		return 0;
@@ -664,7 +663,7 @@ size_t _Mem_PoolSize (struct memPool_s *pool)
 _Mem_TagSize
 ================
 */
-size_t _Mem_TagSize (struct memPool_s *pool, const int tagNum)
+size_t _Mem_TagSize (struct memPool_t *pool, const int tagNum)
 {
 	memBlock_t	*mem;
 	memBlock_t	*headNode = &pool->blockHeadNode;
@@ -689,7 +688,7 @@ size_t _Mem_TagSize (struct memPool_s *pool, const int tagNum)
 _Mem_ChangeTag
 ========================
 */
-size_t _Mem_ChangeTag (struct memPool_s *pool, const int tagFrom, const int tagTo)
+size_t _Mem_ChangeTag (struct memPool_t *pool, const int tagFrom, const int tagTo)
 {
 	memBlock_t	*mem;
 	memBlock_t	*headNode = &pool->blockHeadNode;
@@ -717,7 +716,7 @@ size_t _Mem_ChangeTag (struct memPool_s *pool, const int tagFrom, const int tagT
 _Mem_CheckPoolIntegrity
 ========================
 */
-void _Mem_CheckPoolIntegrity (struct memPool_s *pool, const char *fileName, const int fileLine)
+void _Mem_CheckPoolIntegrity (struct memPool_t *pool, const char *fileName, const int fileLine)
 {
 	memBlock_t	*mem;
 	memBlock_t	*headNode = &pool->blockHeadNode;
@@ -768,7 +767,7 @@ void _Mem_CheckGlobalIntegrity(const char *fileName, const int fileLine)
 _Mem_TouchPool
 ========================
 */
-void _Mem_TouchPool(struct memPool_s *pool, const char *fileName, const int fileLine)
+void _Mem_TouchPool(struct memPool_t *pool, const char *fileName, const int fileLine)
 {
 	memBlock_t	*mem;
 	memBlock_t	*headNode = &pool->blockHeadNode;

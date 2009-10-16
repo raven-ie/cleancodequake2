@@ -54,10 +54,7 @@ void CFlagEntity::Think ()
 			SetMins (vec3f(-15, -15, -15));
 			SetMaxs (vec3f(15, 15, 15));
 
-			if (gameEntity->model)
-				State.SetModelIndex (ModelIndex(gameEntity->model));
-			else
-				State.SetModelIndex (ModelIndex(gameEntity->item->WorldModel));
+			State.GetModelIndex() = ModelIndex((gameEntity->model) ? gameEntity->model : gameEntity->item->WorldModel);
 			SetSolid (SOLID_TRIGGER);
 			Touchable = false;
 			PhysicsType = PHYSICS_NONE;
@@ -82,7 +79,7 @@ void CFlagEntity::Think ()
 		break;
 	case FTS_FLAGTHINK:
 		if (GetSolid() != SOLID_NOT)
-			State.SetFrame (173 + (((State.GetFrame() - 173) + 1) % 16));
+			State.GetFrame() = (173 + (((State.GetFrame() - 173) + 1) % 16));
 		NextThink = level.framenum + FRAMETIME;
 		break;
 	default:
@@ -111,8 +108,8 @@ void CFlagEntity::Spawn (CBaseItem *Item)
 	ThinkState = FTS_FLAGSETUP;
 	PhysicsType = PHYSICS_NONE;
 
-	State.SetEffects(Item->EffectFlags);
-	State.SetRenderEffects(RF_GLOW);
+	State.GetEffects() = Item->EffectFlags;
+	State.GetRenderEffects() = RF_GLOW;
 };
 
 CRedFlagEntity::CRedFlagEntity () :
@@ -217,11 +214,11 @@ CItemEntity *CFlag::DropItem (CBaseEntity *ent)
 	dropped->gameEntity->classname = Classname;
 	dropped->gameEntity->item = this;
 	dropped->SpawnFlags = DROPPED_ITEM;
-	dropped->State.SetEffects (EffectFlags);
-	dropped->State.SetRenderEffects (RF_GLOW);
+	dropped->State.GetEffects() = EffectFlags;
+	dropped->State.GetRenderEffects() = RF_GLOW;
 	dropped->SetMins (vec3f(-15));
 	dropped->SetMaxs (vec3f(15));
-	dropped->State.SetModelIndex (ModelIndex(WorldModel));
+	dropped->State.GetModelIndex() = ModelIndex(WorldModel);
 	dropped->SetSolid (SOLID_TRIGGER);
 	dropped->gameEntity->owner = ent->gameEntity;
 

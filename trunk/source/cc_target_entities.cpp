@@ -46,7 +46,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 Normal sounds play each time the target is used.  The reliable flag can be set for crucial voiceovers.
 
 Looped sounds are always atten 3 / vol 1, and the use function toggles it on/off.
-Multiple identical looping sounds will just increase volume without any speed cost.
+Multiple identical looping sounds will just increase volume without any speed cost->
 */
 
 class CTargetSpeaker : public CMapEntity, public CUsableEntity
@@ -78,7 +78,7 @@ public:
 	void Use (CBaseEntity *other, CBaseEntity *activator)
 	{
 		if (SpawnFlags & 3) // looping sound toggles
-			State.SetSound (State.GetSound() ? 0 : NoiseIndex); // start or stop it
+			State.GetSound() = (State.GetSound() ? 0 : NoiseIndex); // start or stop it
 		else
 			// use a positioned_sound, because this entity won't normally be
 			// sent to any clients because it is invisible
@@ -97,14 +97,19 @@ public:
 		if (!Volume)
 			Volume = 255;
 
-		if (!Attenuation)
+		switch (Attenuation)
+		{
+		case 0:
 			Attenuation = 1;
-		else if (Attenuation == -1)	// use -1 so 0 defaults to 1
+			break;
+		case -1: // use -1 so 0 defaults to 1
 			Attenuation = 0;
+			break;
+		};
 
 		// check for prestarted looping sound
 		if (SpawnFlags & 1)
-			State.SetSound (NoiseIndex);
+			State.GetSound() = NoiseIndex;
 
 		// must link the entity so we get areas and clusters so
 		// the server can determine who to send updates to
@@ -473,7 +478,7 @@ void BeginIntermission (CTargetChangeLevel *targ)
 					if (n >= GetNumItems())
 						break;
 					if (GetItemByIndex(n)->Flags & ITEMFLAG_KEY)
-						client->Client.pers.Inventory.Set(n, 0);
+						client->Client.Persistent.Inventory.Set(n, 0);
 				}
 			}
 		}
@@ -572,7 +577,7 @@ void CTargetChangeLevel::Use (CBaseEntity *other, CBaseEntity *activator)
 		if (activator && (activator->EntityFlags & ENT_PLAYER))
 		{
 			CPlayerEntity *Player = entity_cast<CPlayerEntity>(activator);
-			BroadcastPrintf (PRINT_HIGH, "%s exited the level.\n", Player->Client.pers.netname);
+			BroadcastPrintf (PRINT_HIGH, "%s exited the level.\n", Player->Client.Persistent.netname);
 		}
 	}
 
@@ -1046,7 +1051,7 @@ public:
 			start = tr.EndPos;
 		}
 
-		State.SetOldOrigin (tr.EndPos);
+		State.GetOldOrigin() = tr.EndPos;
 		NextThink = level.framenum + FRAMETIME;
 	};
 
@@ -1079,26 +1084,23 @@ public:
 	void Start ()
 	{
 		SetSolid (SOLID_NOT);
-		State.AddRenderEffects (RF_BEAM|RF_TRANSLUCENT);
-		State.SetModelIndex (1);			// must be non-zero
+		State.GetRenderEffects() |= (RF_BEAM|RF_TRANSLUCENT);
+		State.GetModelIndex() = 1;			// must be non-zero
 
 		// set the beam diameter
-		if (SpawnFlags & FAT)
-			State.SetFrame (16);
-		else
-			State.SetFrame (4);
+		State.GetFrame() = (SpawnFlags & FAT) ? 16 : 4;
 
 		// set the color
 		if (SpawnFlags & RED)
-			State.SetSkinNum (Color_RGBAToHex (NSColor::PatriotRed, NSColor::PatriotRed, NSColor::Red, NSColor::Red));
+			State.GetSkinNum() = Color_RGBAToHex (NSColor::PatriotRed, NSColor::PatriotRed, NSColor::Red, NSColor::Red);
 		else if (SpawnFlags & GREEN)
-			State.SetSkinNum (Color_RGBAToHex (NSColor::Green, NSColor::Lime, NSColor::FireSpeechGreen, NSColor::Harlequin));
+			State.GetSkinNum() = Color_RGBAToHex (NSColor::Green, NSColor::Lime, NSColor::FireSpeechGreen, NSColor::Harlequin);
 		else if (SpawnFlags & BLUE)
-			State.SetSkinNum (Color_RGBAToHex (NSColor::PatriotBlue, NSColor::PatriotBlue, NSColor::NeonBlue, NSColor::NeonBlue));
+			State.GetSkinNum() = Color_RGBAToHex (NSColor::PatriotBlue, NSColor::PatriotBlue, NSColor::NeonBlue, NSColor::NeonBlue);
 		else if (SpawnFlags & YELLOW)
-			State.SetSkinNum (Color_RGBAToHex (NSColor::ParisDaisy, NSColor::Gorse, NSColor::Lemon, NSColor::Gold));
+			State.GetSkinNum() = Color_RGBAToHex (NSColor::ParisDaisy, NSColor::Gorse, NSColor::Lemon, NSColor::Gold);
 		else if (SpawnFlags & ORANGE)
-			State.SetSkinNum (Color_RGBAToHex (NSColor::HarvestGold, NSColor::RobRoy, NSColor::TulipTree, NSColor::FireBush));
+			State.GetSkinNum() = Color_RGBAToHex (NSColor::HarvestGold, NSColor::RobRoy, NSColor::TulipTree, NSColor::FireBush);
 
 		if (!Enemy)
 		{

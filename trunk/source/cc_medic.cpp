@@ -387,7 +387,7 @@ void CMedic::Pain(CBaseEntity *other, float kick, int damage)
 #endif
 
 	if (Entity->Health < (Entity->MaxHealth / 2))
-		Entity->State.SetSkinNum (1);
+		Entity->State.GetSkinNum() = 1;
 
 	if (level.framenum < PainDebounceTime)
 		return;
@@ -506,10 +506,10 @@ void CMedic::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, GameMedia.Gib_Bone[0], damage, GIB_ORGANIC);
 		for (int n= 0; n < 4; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		Entity->ThrowHead(gMedia.Gib_Head[1], damage, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, GameMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		Entity->ThrowHead(GameMedia.Gib_Head[1], damage, GIB_ORGANIC);
 		Entity->DeadFlag = true;
 		return;
 	}
@@ -674,7 +674,7 @@ void CMedic::CableAttack ()
 		Entity->PlaySound (CHAN_AUTO, SoundHookHit);
 		(entity_cast<CMonsterEntity>(Entity->Enemy))->Monster->AIFlags |= AI_RESURRECTING;
 
-		Entity->Enemy->State.SetEffects (EF_PENT);
+		Entity->Enemy->State.GetEffects() = EF_PENT;
 		break;
 	case FRAME_attack50:
 		Entity->Enemy->SpawnFlags = 0;
@@ -695,7 +695,7 @@ void CMedic::CableAttack ()
 		Monster->Enemy = NULL;
 		// Paril, fix skinnum
 		if (Monster->State.GetSkinNum() & 1)
-			Monster->State.SetSkinNum (Monster->State.GetSkinNum() - 1);
+			Monster->State.GetSkinNum() -= 1;
 		Monster->PhysicsType = PHYSICS_STEP;
 		Monster->Flags &= ~FL_NO_KNOCKBACK;
 		Monster->SetSvFlags (Monster->GetSvFlags() | SVF_MONSTER);
@@ -733,8 +733,7 @@ void CMedic::CableAttack ()
 			Monster->Enemy = NULL;
 
 			// Paril, fix skinnum
-			if (Monster->State.GetSkinNum() & 1)
-				Monster->State.SetSkinNum (Monster->State.GetSkinNum() - 1);
+			Monster->State.GetSkinNum() &= ~1;
 			Monster->PhysicsType = PHYSICS_STEP;
 			Monster->Flags &= ~FL_NO_KNOCKBACK;
 			Monster->SetSvFlags (Monster->GetSvFlags() | SVF_MONSTER);
@@ -1042,7 +1041,7 @@ void CMedic::Spawn ()
 	SoundIndex ("medic/medatck1.wav");
 
 	Entity->SetSolid (SOLID_BBOX);
-	Entity->State.SetModelIndex(ModelIndex ("models/monsters/medic/tris.md2"));
+	Entity->State.GetModelIndex() = ModelIndex ("models/monsters/medic/tris.md2");
 	Entity->SetMins (vec3f(-24, -24, -24));
 	Entity->SetMaxs (vec3f(24, 24, 32));
 

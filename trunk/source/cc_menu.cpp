@@ -262,28 +262,28 @@ void CMenuState::Select ()
 
 void Cmd_MenuLeft_t (CPlayerEntity *Player)
 {
-	if (!Player->Client.resp.MenuState.InMenu)
+	if (!Player->Client.Respawn.MenuState.InMenu)
 		return;
 
-	Player->Client.resp.MenuState.Key = CMenuState::KEY_LEFT;
+	Player->Client.Respawn.MenuState.Key = CMenuState::KEY_LEFT;
 
 	// Update the currently selected control
-	if (Player->Client.resp.MenuState.Cursor != -1)
-		Player->Client.resp.MenuState.CurrentMenu->Items.at(Player->Client.resp.MenuState.Cursor)->Update(Player);
+	if (Player->Client.Respawn.MenuState.Cursor != -1)
+		Player->Client.Respawn.MenuState.CurrentMenu->Items.at(Player->Client.Respawn.MenuState.Cursor)->Update(Player);
 
-	Player->Client.resp.MenuState.Key = CMenuState::KEY_NONE;
+	Player->Client.Respawn.MenuState.Key = CMenuState::KEY_NONE;
 }
 
 void Cmd_MenuRight_t (CPlayerEntity *Player)
 {
-	if (!Player->Client.resp.MenuState.InMenu)
+	if (!Player->Client.Respawn.MenuState.InMenu)
 		return;
 
-	Player->Client.resp.MenuState.Key = CMenuState::KEY_RIGHT;
+	Player->Client.Respawn.MenuState.Key = CMenuState::KEY_RIGHT;
 
 	// Update the currently selected control
-	if (Player->Client.resp.MenuState.Cursor != -1)
-		Player->Client.resp.MenuState.CurrentMenu->Items.at(Player->Client.resp.MenuState.Cursor)->Update(Player);
+	if (Player->Client.Respawn.MenuState.Cursor != -1)
+		Player->Client.Respawn.MenuState.CurrentMenu->Items.at(Player->Client.Respawn.MenuState.Cursor)->Update(Player);
 
-	Player->Client.resp.MenuState.Key = CMenuState::KEY_NONE;
+	Player->Client.Respawn.MenuState.Key = CMenuState::KEY_NONE;
 }

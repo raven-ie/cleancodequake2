@@ -380,10 +380,10 @@ void CTurretDriver::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, GameMedia.Gib_Bone[0], damage, GIB_ORGANIC);
 		for (int n= 0; n < 4; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		Entity->ThrowHead (gMedia.Gib_Head[1], damage, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, GameMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		Entity->ThrowHead (GameMedia.Gib_Head[1], damage, GIB_ORGANIC);
 		Entity->DeadFlag = true;
 		return;
 	}
@@ -415,7 +415,7 @@ void CTurretDriver::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 void CTurretDriver::Pain (CBaseEntity *other, float kick, int damage)
 {
 	if (Entity->Health < (Entity->MaxHealth / 2))
-		Entity->State.SetSkinNum(1);
+		Entity->State.GetSkinNum() = 1;
 
 	if (level.framenum < PainDebounceTime)
 		return;
@@ -519,7 +519,7 @@ void CTurretDriver::Spawn ()
 
 	Entity->PhysicsType = PHYSICS_PUSH;
 	Entity->SetSolid (SOLID_BBOX);
-	Entity->State.SetModelIndex (ModelIndex("models/monsters/infantry/tris.md2"));
+	Entity->State.GetModelIndex() = ModelIndex("models/monsters/infantry/tris.md2");
 	Entity->SetMins (vec3f(-16, -16, -24));
 	Entity->SetMaxs (vec3f(16, 16, 32));
 
@@ -538,10 +538,10 @@ void CTurretDriver::Spawn ()
 	level.total_monsters++;
 
 	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_MONSTER);
-	Entity->State.AddRenderEffects (RF_FRAMELERP);
+	Entity->State.GetRenderEffects() |= RF_FRAMELERP;
 	Entity->CanTakeDamage = true;
 	Entity->SetClipmask (CONTENTS_MASK_MONSTERSOLID);
-	Entity->State.SetOldOrigin (Entity->State.GetOrigin ());
+	Entity->State.GetOldOrigin() = Entity->State.GetOrigin ();
 	AIFlags |= (AI_STAND_GROUND);
 
 	Think = static_cast<void (__thiscall CMonster::* )(void)>(&CTurretDriver::TurretLink);

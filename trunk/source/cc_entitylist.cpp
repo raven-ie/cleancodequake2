@@ -27,7 +27,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_entitylist.cpp
+// cc_entitylist->cpp
 // Resolves an entity from a classname
 //
 
@@ -95,8 +95,6 @@ CBaseEntity *ResolveMapEntity (edict_t *ent)
 	return EntityList.Resolve (ent);
 };
 
-spawn_temp_t	st;
-
 /*
 ===============
 ED_CallSpawn
@@ -141,7 +139,7 @@ static char *ED_ParseEdict (char *data, edict_t *ent)
 	char	*token;
 
 	init = false;
-	memset (&st, 0, sizeof(st));
+	memset (st, 0, sizeof(*st));
 
 	// Go through all the dictionary pairs
 	for ( ; ; ) {
@@ -271,7 +269,7 @@ void InitEntities ()
 	InitPlayers();
 }
 
-extern clientPersistent_t *SavedClients;
+extern CPersistentData *SavedClients;
 char *gEntString;
 
 /*
@@ -282,6 +280,8 @@ Creates a server's entity / program execution context by
 parsing textual entity definitions out of an ent file.
 ==============
 */
+spawn_temp_t	*st;
+
 void CC_SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 {
 	uint32 startTime = Sys_Milliseconds();
@@ -318,7 +318,7 @@ void CC_SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 		// Reset the entity states
 		//g_edicts[i+1].Entity = SavedClients[i];
 		CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i+1].Entity);
-		memcpy (&Player->Client.pers, &SavedClients[i], sizeof(clientPersistent_t));
+		memcpy (&Player->Client.Persistent, &SavedClients[i], sizeof(CPersistentData));
 		g_edicts[i+1].client = game.clients + i;
 	}
 
@@ -327,6 +327,7 @@ void CC_SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 
 	level.inhibit = 0;
 
+	st = QNew (com_genericPool, 0) spawn_temp_t;
 	// Parse ents
 	while (true)
 	{
@@ -371,5 +372,6 @@ _CC_ENABLE_DEPRECATION
 //ZOID
 #endif
 
+	QDelete st;
 	DebugPrintf ("Finished server initialization in %d ms\n", Sys_Milliseconds() - startTime);
 }

@@ -25,10 +25,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #define __CC_MEMORY_H__
 
 // Constants
-extern struct memPool_s	*com_genericPool; // Generic memory; memory that will be freed on level change, but not necessarily needed for anything
-extern struct memPool_s	*com_levelPool; // Flushed per level
-extern struct memPool_s	*com_gamePool; // Flushed per entire game
-extern struct memPool_s	*com_fileSysPool; // Flushed per entire game
+extern struct memPool_t	*com_genericPool; // Generic memory; memory that will be freed on level change, but not necessarily needed for anything
+extern struct memPool_t	*com_levelPool; // Flushed per level
+extern struct memPool_t	*com_gamePool; // Flushed per entire game
+extern struct memPool_t	*com_fileSysPool; // Flushed per entire game
 
 #define Mem_AllocA(size)								_alloca((size))
 
@@ -55,24 +55,24 @@ extern struct memPool_s	*com_fileSysPool; // Flushed per entire game
 #define Mem_TouchGlobal()								_Mem_TouchGlobal(__FILE__,__LINE__)
 
 // Functions
-struct memPool_s *_Mem_CreatePool(const char *name, const char *fileName, const int fileLine);
-size_t		_Mem_DeletePool(struct memPool_s *pool, const char *fileName, const int fileLine);
+struct memPool_t *_Mem_CreatePool(const char *name, const char *fileName, const int fileLine);
+size_t		_Mem_DeletePool(struct memPool_t *pool, const char *fileName, const int fileLine);
 
 size_t		_Mem_Free(const void *ptr, const char *fileName, const int fileLine);
-size_t		_Mem_FreeTag(struct memPool_s *pool, const int tagNum, const char *fileName, const int fileLine);
-size_t		_Mem_FreePool(struct memPool_s *pool, const char *fileName, const int fileLine);
-void		*_Mem_Alloc(size_t size, struct memPool_s *pool, const int tagNum, const char *fileName, const int fileLine);
+size_t		_Mem_FreeTag(struct memPool_t *pool, const int tagNum, const char *fileName, const int fileLine);
+size_t		_Mem_FreePool(struct memPool_t *pool, const char *fileName, const int fileLine);
+void		*_Mem_Alloc(size_t size, struct memPool_t *pool, const int tagNum, const char *fileName, const int fileLine);
 void		*_Mem_ReAlloc(void *ptr, size_t newSize, const char *fileName, const int fileLine);
 
-char		*_Mem_PoolStrDup(const char *in, struct memPool_s *pool, const int tagNum, const char *fileName, const int fileLine);
-size_t		_Mem_PoolSize(struct memPool_s *pool);
-size_t		_Mem_TagSize(struct memPool_s *pool, const int tagNum);
-size_t		_Mem_ChangeTag(struct memPool_s *pool, const int tagFrom, const int tagTo);
+char		*_Mem_PoolStrDup(const char *in, struct memPool_t *pool, const int tagNum, const char *fileName, const int fileLine);
+size_t		_Mem_PoolSize(struct memPool_t *pool);
+size_t		_Mem_TagSize(struct memPool_t *pool, const int tagNum);
+size_t		_Mem_ChangeTag(struct memPool_t *pool, const int tagFrom, const int tagTo);
 
-void		_Mem_CheckPoolIntegrity(struct memPool_s *pool, const char *fileName, const int fileLine);
+void		_Mem_CheckPoolIntegrity(struct memPool_t *pool, const char *fileName, const int fileLine);
 void		_Mem_CheckGlobalIntegrity(const char *fileName, const int fileLine);
 
-void		_Mem_TouchPool(struct memPool_s *pool, const char *fileName, const int fileLine);
+void		_Mem_TouchPool(struct memPool_t *pool, const char *fileName, const int fileLine);
 void		_Mem_TouchGlobal(const char *fileName, const int fileLine);
 
 void		Mem_Register();
@@ -102,20 +102,20 @@ inline void operator delete[](void *Pointer)
 }
 
 // But allow these!
-inline void *operator new(size_t Size, struct memPool_s *Pool, const int TagNum, const char *FileName, const int FileLine)
+inline void *operator new(size_t Size, struct memPool_t *Pool, const int TagNum, const char *FileName, const int FileLine)
 {
 	return _Mem_Alloc(Size, Pool, TagNum, FileName, FileLine);
 }
 
 // Placement operator
-inline void *operator new (size_t Size, void *ptr, struct memPool_s *Pool, const int TagNum, const char *FileName, const int FileLine)
+inline void *operator new (size_t Size, void *ptr, struct memPool_t *Pool, const int TagNum, const char *FileName, const int FileLine)
 {
 	return (ptr = _Mem_Alloc(Size, Pool, TagNum, FileName, FileLine));
 }
 
 #define QNew(Pool,TagNum)	new((Pool),(TagNum),__FILE__,__LINE__)
 
-inline void operator delete(void *Pointer, struct memPool_s *Pool, const int TagNum, const char *FileName, const int FileLine)
+inline void operator delete(void *Pointer, struct memPool_t *Pool, const int TagNum, const char *FileName, const int FileLine)
 {
 	_Mem_Free(Pointer, FileName, FileLine);
 }

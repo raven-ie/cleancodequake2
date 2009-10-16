@@ -48,7 +48,7 @@ static void SV_ClientPrintf (edict_t *ent, EGamePrintLevel printLevel, char *fmt
 	static char	string[MAX_COMPRINT];
 	CPlayerEntity *Player = entity_cast<CPlayerEntity>(ent->Entity);
 
-	if (printLevel < Player->Client.resp.messageLevel)
+	if (printLevel < Player->Client.Respawn.messageLevel)
 		return;
 
 	va_start (argptr, fmt);
@@ -59,7 +59,7 @@ static void SV_ClientPrintf (edict_t *ent, EGamePrintLevel printLevel, char *fmt
 	if (printLevel != PRINT_CENTER)
 		WriteByte (printLevel);
 	WriteString (string);
-	Cast (CASTFLAG_UNRELIABLE, ent);
+	Cast (CASTFLAG_UNRELIABLE, Player);
 }
 
 void ClientPrintf (edict_t *ent, EGamePrintLevel printLevel, char *fmt, ...)
@@ -165,9 +165,9 @@ void BroadcastPrintf (EGamePrintLevel printLevel, char *fmt, ...)
 	for (i=1, cl=&g_edicts[1]; i<=game.maxclients ; i++, cl++)
 	{
 		CPlayerEntity *Player = entity_cast<CPlayerEntity>(cl->Entity);
-		if (printLevel < Player->Client.resp.messageLevel)
+		if (printLevel < Player->Client.Respawn.messageLevel)
 			continue;
-		if (Player->Client.pers.state != SVCS_SPAWNED)
+		if (Player->Client.Persistent.state != SVCS_SPAWNED)
 			continue;
 
 
@@ -175,7 +175,7 @@ void BroadcastPrintf (EGamePrintLevel printLevel, char *fmt, ...)
 		if (printLevel != PRINT_CENTER)
 			WriteByte (printLevel);
 		WriteString (string);
-		Cast (CASTFLAG_UNRELIABLE, cl);
+		Cast (CASTFLAG_UNRELIABLE, Player);
 	}
 }
 #endif

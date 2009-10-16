@@ -104,8 +104,8 @@ public:
 		ThinkState = ITS_DROPTOFLOOR;
 		PhysicsType = PHYSICS_NONE;
 
-		State.SetEffects(item->EffectFlags);
-		State.SetRenderEffects(RF_GLOW);
+		State.GetEffects() = item->EffectFlags;
+		State.GetRenderEffects() = RF_GLOW;
 	};
 };
 

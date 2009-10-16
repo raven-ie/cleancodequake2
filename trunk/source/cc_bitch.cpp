@@ -252,7 +252,7 @@ CAnim ChickMovePain3 (FRAME_pain301, FRAME_pain321, ChickFramesPain3, ConvertDer
 void CMaiden::Pain (CBaseEntity *other, float kick, int damage)
 {
 	if (Entity->Health < (Entity->MaxHealth / 2))
-		Entity->State.SetSkinNum(1);
+		Entity->State.GetSkinNum() = 1;
 
 	if (level.framenum < PainDebounceTime)
 		return;
@@ -358,10 +358,10 @@ void CMaiden::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (n= 0; n < 2; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, GameMedia.Gib_Bone[0], damage, GIB_ORGANIC);
 		for (n= 0; n < 4; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		Entity->ThrowHead (gMedia.Gib_Head[1], damage, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, GameMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		Entity->ThrowHead (GameMedia.Gib_Head[1], damage, GIB_ORGANIC);
 		Entity->DeadFlag = true;
 		return;
 	}
@@ -764,7 +764,7 @@ void CMaiden::Sight()
 void CMaiden::Spawn ()
 {
 	Entity->SetSolid (SOLID_BBOX);
-	Entity->State.SetModelIndex ( ModelIndex("models/monsters/bitch/tris.md2"));
+	Entity->State.GetModelIndex() = ModelIndex("models/monsters/bitch/tris.md2");
 	Entity->SetMins (vec3f(-16, -16, 0));
 	Entity->SetMaxs (vec3f(16, 16, 56));
 

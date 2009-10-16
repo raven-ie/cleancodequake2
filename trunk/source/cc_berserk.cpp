@@ -307,7 +307,7 @@ CAnim BerserkMovePain2 (FRAME_painb1, FRAME_painb20, BerserkFramesPain2, &CMonst
 void CBerserker::Pain (CBaseEntity *other, float kick, int damage)
 {
 	if (Entity->Health < (Entity->MaxHealth / 2))
-		Entity->State.SetSkinNum(1);
+		Entity->State.GetSkinNum() = 1;
 
 	if (level.framenum < PainDebounceTime)
 		return;
@@ -370,10 +370,10 @@ void CBerserker::Die(CBaseEntity *inflictor, CBaseEntity *attacker, int damage, 
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, GameMedia.Gib_Bone[0], damage, GIB_ORGANIC);
 		for (int n= 0; n < 4; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		Entity->ThrowHead (gMedia.Gib_Head[1], damage, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, GameMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		Entity->ThrowHead (GameMedia.Gib_Head[1], damage, GIB_ORGANIC);
 		Entity->DeadFlag = true;
 		return;
 	}
@@ -409,7 +409,7 @@ void CBerserker::Spawn ()
 	SoundSearch = SoundIndex ("berserk/bersrch1.wav");
 	SoundSight = SoundIndex ("berserk/sight.wav");
 
-	Entity->State.SetModelIndex (ModelIndex("models/monsters/berserk/tris.md2"));
+	Entity->State.GetModelIndex() = ModelIndex("models/monsters/berserk/tris.md2");
 	Entity->SetMins (vec3f(-16, -16, -24));
 	Entity->SetMaxs (vec3f(16, 16, 32));
 	Entity->SetSolid (SOLID_BBOX);

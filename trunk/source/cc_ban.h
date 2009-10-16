@@ -36,10 +36,10 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #define MAX_IP_BLOCK_LEN 3
 #define MAX_IP_LEN (MAX_IP_BLOCK_LEN * 4 + 3)
 
-typedef struct
+struct IPAddress
 {
 	char str[MAX_IP_LEN];
-} IPAddress;
+};
 
 #endif
 #else
@@ -53,7 +53,7 @@ CC_ENUM (int, EBanTypeFlags)
 	BAN_ENTER		=	BIT(2), // Banned from entering the game
 };
 
-typedef struct BanIndex_s
+struct BanIndex
 {
 	bool			IP;
 	union
@@ -63,7 +63,7 @@ typedef struct BanIndex_s
 	};
 
 	EBanTypeFlags	Flags;
-} BanIndex;
+};
 
 class CBanList
 {
@@ -82,7 +82,7 @@ public:
 	void ChangeBan (IPAddress Adr, EBanTypeFlags Flags);
 	void ChangeBan (char *Name, EBanTypeFlags Flags);
 
-	// Call these with ent->client->pers.IP if after spawning
+	// Call these with ent->client->Persistent.IP if after spawning
 	bool IsSquelched (IPAddress IP);
 	bool IsBannedFromSpectator (IPAddress IP);
 	bool IsBanned (IPAddress IP);

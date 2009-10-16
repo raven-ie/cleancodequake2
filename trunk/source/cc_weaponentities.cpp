@@ -189,8 +189,8 @@ void CGrenade::Spawn (CBaseEntity *Spawner, vec3f start, vec3f aimdir, int damag
 	Grenade->Velocity = Grenade->Velocity.MultiplyAngles (crandom() * 10.0, right);
 
 	Vec3Set (Grenade->AngularVelocity, 300, 300, 300);
-	Grenade->State.SetEffects (EF_GRENADE);
-	Grenade->State.SetModelIndex((!handNade) ? ModelIndex ("models/objects/grenade/tris.md2") : ModelIndex ("models/objects/grenade2/tris.md2"));
+	Grenade->State.GetEffects() = EF_GRENADE;
+	Grenade->State.GetModelIndex() = (!handNade) ? ModelIndex ("models/objects/grenade/tris.md2") : ModelIndex ("models/objects/grenade2/tris.md2");
 	Grenade->SetOwner(Spawner);
 	Grenade->NextThink = level.framenum + (timer * 10);
 	Grenade->Damage = damage;
@@ -199,7 +199,7 @@ void CGrenade::Spawn (CBaseEntity *Spawner, vec3f start, vec3f aimdir, int damag
 	if (handNade)
 	{
 		Grenade->SpawnFlags = (held) ? (GRENADE_HAND|GRENADE_HELD) : GRENADE_HAND;
-		Grenade->State.SetSound (SoundIndex("weapons/hgrenc1b.wav"));
+		Grenade->State.GetSound() = SoundIndex("weapons/hgrenc1b.wav");
 	}
 
 	if (timer <= 0.0)
@@ -277,14 +277,14 @@ void CBlasterProjectile::Spawn (CBaseEntity *Spawner, vec3f start, vec3f dir,
 
 	Bolt->SetSvFlags (SVF_DEADMONSTER | SVF_PROJECTILE);
 	Bolt->State.SetOrigin (start);
-	Bolt->State.SetOldOrigin (start);
+	Bolt->State.GetOldOrigin() = start;
 	Bolt->State.SetAngles (dir.ToAngles());
 	Bolt->Velocity = dir * speed;
 
-	Bolt->State.SetEffects (effect);
-	Bolt->State.SetModelIndex (ModelIndex ("models/objects/laser/tris.md2"));
+	Bolt->State.GetEffects() = effect;
+	Bolt->State.GetModelIndex() = ModelIndex ("models/objects/laser/tris.md2");
 
-	Bolt->State.SetSound (SoundIndex ("misc/lasfly.wav"));
+	Bolt->State.GetSound() = SoundIndex ("misc/lasfly.wav");
 	Bolt->SetOwner (Spawner);
 	Bolt->NextThink = level.framenum + 20;
 	Bolt->Damage = damage;
@@ -298,7 +298,7 @@ void CBlasterProjectile::Spawn (CBaseEntity *Spawner, vec3f start, vec3f dir,
 	{
 		start = start.MultiplyAngles (-10, dir);
 		Bolt->State.SetOrigin (start);
-		Bolt->State.SetOldOrigin (start);
+		Bolt->State.GetOldOrigin() = start;
 
 		if (tr.ent->Entity)
 			Bolt->Touch (tr.ent->Entity, &tr.plane, tr.surface);
@@ -376,14 +376,14 @@ void CRocket::Spawn	(CBaseEntity *Spawner, vec3f start, vec3f dir,
 
 	Rocket->State.SetAngles (dir.ToAngles());
 	Rocket->Velocity = dir * speed;
-	Rocket->State.SetEffects (EF_ROCKET);
-	Rocket->State.SetModelIndex (ModelIndex ("models/objects/rocket/tris.md2"));
+	Rocket->State.GetEffects() = EF_ROCKET;
+	Rocket->State.GetModelIndex() = ModelIndex ("models/objects/rocket/tris.md2");
 	Rocket->SetOwner (Spawner);
 	Rocket->NextThink = level.framenum + 80000/speed;
 	Rocket->Damage = damage;
 	Rocket->RadiusDamage = radius_damage;
 	Rocket->DamageRadius = damage_radius;
-	Rocket->State.SetSound (SoundIndex ("weapons/rockfly.wav"));
+	Rocket->State.GetSound() = SoundIndex ("weapons/rockfly.wav");
 	Rocket->gameEntity->classname = "rocket";
 
 	if (Spawner->EntityFlags & ENT_PLAYER)
@@ -446,7 +446,7 @@ void CBFGBolt::Think ()
 		}
 
 		NextThink = level.framenum + FRAMETIME;
-		State.SetFrame (State.GetFrame() + 1);
+		State.GetFrame()++;
 		if (State.GetFrame() == 5)
 			Free ();
 
@@ -486,7 +486,7 @@ void CBFGBolt::Think ()
 			if ((game.mode & GAME_CTF) && (ent->EntityFlags & ENT_PLAYER) &&
 				(GetOwner() && (GetOwner()->EntityFlags & ENT_PLAYER)))
 			{
-				if ((entity_cast<CPlayerEntity>(ent))->Client.resp.ctf_team == (entity_cast<CPlayerEntity>(GetOwner()))->Client.resp.ctf_team)
+				if ((entity_cast<CPlayerEntity>(ent))->Client.Respawn.ctf_team == (entity_cast<CPlayerEntity>(GetOwner()))->Client.Respawn.ctf_team)
 					continue;
 			}
 	//ZOID
@@ -561,10 +561,10 @@ void CBFGBolt::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	Exploded = true;
 	State.SetOrigin (boltOrigin.MultiplyAngles (-0.1f, Velocity));
 	Velocity.Clear ();
-	State.SetModelIndex(ModelIndex ("sprites/s_bfg3.sp2"));
-	State.SetFrame(0);
-	State.SetSound(0);
-	State.SetEffects (EF_BFG);
+	State.GetModelIndex() = ModelIndex ("sprites/s_bfg3.sp2");
+	State.GetFrame() = 0;
+	State.GetSound() = 0;
+	State.GetEffects() = EF_BFG;
 	NextThink = level.framenum + FRAMETIME;
 	Enemy = other;
 
@@ -583,13 +583,13 @@ void CBFGBolt::Spawn	(CBaseEntity *Spawner, vec3f start, vec3f dir,
 	vel.NormalizeFast();
 	vel *= speed;
 	BFG->Velocity = vel;
-	BFG->State.SetEffects (EF_BFG | EF_ANIM_ALLFAST);
-	BFG->State.SetModelIndex (ModelIndex ("sprites/s_bfg1.sp2"));
+	BFG->State.GetEffects() = EF_BFG | EF_ANIM_ALLFAST;
+	BFG->State.GetModelIndex() = ModelIndex ("sprites/s_bfg1.sp2");
 	BFG->SetOwner (Spawner);
 	BFG->NextThink = level.framenum + FRAMETIME;
 	BFG->Damage = damage;
 	BFG->DamageRadius = damage_radius;
-	BFG->State.SetSound (SoundIndex ("weapons/bfg__l1a.wav"));
+	BFG->State.GetSound() = SoundIndex ("weapons/bfg__l1a.wav");
 	BFG->gameEntity->classname = "bfg blast";
 	BFG->FreeTime = level.framenum + 80000/speed;
 
@@ -1408,7 +1408,7 @@ void CGrappleEntity::GrapplePull()
 {
 	byte volume = (Player->Client.silencer_shots) ? 51 : 255;
 
-	if ((Player->Client.pers.Weapon->Item == NItems::Grapple) &&
+	if ((Player->Client.Persistent.Weapon->Item == NItems::Grapple) &&
 		!Player->Client.NewWeapon &&
 		(Player->Client.weaponstate != WS_FIRING) &&
 		(Player->Client.weaponstate != WS_ACTIVATING))
@@ -1500,14 +1500,14 @@ void CGrappleEntity::Spawn (CPlayerEntity *Spawner, vec3f start, vec3f dir, int 
 	dir.NormalizeFast();
 
 	Grapple->State.SetOrigin (start);
-	Grapple->State.SetOldOrigin (start);
+	Grapple->State.GetOldOrigin() = start;
 	Grapple->State.SetAngles (dir.ToAngles());
 	Grapple->Velocity = dir * speed;
 	Grapple->SetClipmask (CONTENTS_MASK_SHOT);
 	Grapple->SetSolid (SOLID_BBOX);
 	Grapple->SetMins (vec3fOrigin);
 	Grapple->SetMaxs (vec3fOrigin);
-	Grapple->State.SetModelIndex (ModelIndex ("models/weapons/grapple/hook/tris.md2"));
+	Grapple->State.GetModelIndex() = ModelIndex ("models/weapons/grapple/hook/tris.md2");
 	Grapple->SetOwner (Spawner);
 	Spawner->Client.ctf_grapple = Grapple;
 	Spawner->Client.ctf_grapplestate = CTF_GRAPPLE_STATE_FLY; // we're firing, not on hook
@@ -1700,14 +1700,14 @@ public:
 			Projectiles[i] = QNew (com_levelPool, 0) CTazerProjectile;
 
 			Projectiles[i]->State.SetOrigin (results[i]);
-			Projectiles[i]->State.SetOldOrigin (results[i]);
+			Projectiles[i]->State.GetOldOrigin() = results[i];
 			Projectiles[i]->State.SetAngles (forward.ToAngles());
 			Projectiles[i]->Velocity = forward * 600;
 			Projectiles[i]->SetClipmask (CONTENTS_MASK_SHOT);
 			Projectiles[i]->SetSolid (SOLID_BBOX);
 			Projectiles[i]->SetMins (vec3fOrigin);
 			Projectiles[i]->SetMaxs (vec3fOrigin);
-			Projectiles[i]->State.SetModelIndex (ModelIndex ("models/monsters/parasite/tip/tris.md2"));
+			Projectiles[i]->State.GetModelIndex() = ModelIndex ("models/monsters/parasite/tip/tris.md2");
 			Projectiles[i]->SetOwner (this);
 			Projectiles[i]->Base = this;
 			Projectiles[i]->NextThink = level.framenum + FRAMETIME;
@@ -1726,14 +1726,14 @@ public:
 		dir.NormalizeFast ();
 
 		Base->State.SetOrigin (origin);
-		Base->State.SetOldOrigin (origin);
+		Base->State.GetOldOrigin() = origin;
 		Base->State.SetAngles (dir.ToAngles());
 		Base->Velocity = dir * speed;
 		Base->SetClipmask (CONTENTS_MASK_SHOT);
 		Base->SetSolid (SOLID_BBOX);
 		Base->SetMins (vec3fOrigin);
 		Base->SetMaxs (vec3fOrigin);
-		Base->State.SetModelIndex (ModelIndex ("models/objects/grenade/tris.md2"));
+		Base->State.GetModelIndex() = ModelIndex ("models/objects/grenade/tris.md2");
 		Base->NextThink = level.framenum + 1;
 		Base->SetOwner (Spawner);
 		Base->Link ();
