@@ -33,7 +33,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 
-SGameMedia_t gMedia;
+CGameMedia GameMedia;
 
 void InitGameMedia ()
 {
@@ -42,37 +42,37 @@ void InitGameMedia ()
 	for (int i = 0; i < 4; i++)
 	{
 		Q_snprintfz (buffer, sizeof(buffer), "*death%i.wav", i+1);
-		gMedia.Player.Death[i] = SoundIndex(buffer);
+		GameMedia.Player.Death[i] = SoundIndex(buffer);
 	}
 
-	gMedia.Player.Fall[0] = SoundIndex("*fall1.wav");
-	gMedia.Player.Fall[1] = SoundIndex("*fall2.wav");
+	GameMedia.Player.Fall[0] = SoundIndex("*fall1.wav");
+	GameMedia.Player.Fall[1] = SoundIndex("*fall2.wav");
 
-	gMedia.Player.Gurp[0] = SoundIndex("*gurp1.wav");
-	gMedia.Player.Gurp[1] = SoundIndex("*gurp2.wav");
+	GameMedia.Player.Gurp[0] = SoundIndex("*gurp1.wav");
+	GameMedia.Player.Gurp[1] = SoundIndex("*gurp2.wav");
 
-	gMedia.Player.Jump = SoundIndex("*jump1.wav");
+	GameMedia.Player.Jump = SoundIndex("*jump1.wav");
 
 	for (int i = 25; i <= 100; i += 25)
 	{
 		Q_snprintfz (buffer, sizeof(buffer), "*pain%i_1.wav", i);
-		gMedia.Player.Pain[(int)(i / 25) - 1][0] = SoundIndex(buffer);
+		GameMedia.Player.Pain[(int)(i / 25) - 1][0] = SoundIndex(buffer);
 
 		Q_snprintfz (buffer, sizeof(buffer), "*pain%i_2.wav", i);
-		gMedia.Player.Pain[(int)(i / 25) - 1][1] = SoundIndex(buffer);
+		GameMedia.Player.Pain[(int)(i / 25) - 1][1] = SoundIndex(buffer);
 	}
 
-	gMedia.Gib_SmallMeat	=	ModelIndex ("models/objects/gibs/sm_meat/tris.md2");
-	gMedia.Gib_Bone[0]		=	ModelIndex ("models/objects/gibs/bone/tris.md2");
-	gMedia.Gib_Bone[1]		=	ModelIndex ("models/objects/gibs/bone2/tris.md2");
-	gMedia.Gib_Chest		=	ModelIndex ("models/objects/gibs/chest/tris.md2");
-	gMedia.Gib_Skull		=	ModelIndex ("models/objects/gibs/skull/tris.md2");
-	gMedia.Gib_Head[0]		=	ModelIndex ("models/objects/gibs/head/tris.md2");
-	gMedia.Gib_Head[1]		=	ModelIndex ("models/objects/gibs/head2/tris.md2");
+	GameMedia.Gib_SmallMeat	=	ModelIndex ("models/objects/gibs/sm_meat/tris.md2");
+	GameMedia.Gib_Bone[0]		=	ModelIndex ("models/objects/gibs/bone/tris.md2");
+	GameMedia.Gib_Bone[1]		=	ModelIndex ("models/objects/gibs/bone2/tris.md2");
+	GameMedia.Gib_Chest		=	ModelIndex ("models/objects/gibs/chest/tris.md2");
+	GameMedia.Gib_Skull		=	ModelIndex ("models/objects/gibs/skull/tris.md2");
+	GameMedia.Gib_Head[0]		=	ModelIndex ("models/objects/gibs/head/tris.md2");
+	GameMedia.Gib_Head[1]		=	ModelIndex ("models/objects/gibs/head2/tris.md2");
 
 	// Hud stuff
-	gMedia.Hud.HealthPic		=	ImageIndex ("i_health");
-	gMedia.Hud.HelpPic			=	ImageIndex ("i_help");
+	GameMedia.Hud.HealthPic		=	ImageIndex ("i_health");
+	GameMedia.Hud.HelpPic			=	ImageIndex ("i_help");
 
 	InitItemMedia ();
 }

@@ -90,5 +90,5 @@ void CRocketLauncher::Fire (CPlayerEntity *ent)
 	if (!dmFlags.dfInfiniteAmmo)
 		DepleteAmmo(ent, 1);
 
-	ent->Client.PlayerState.SetGunFrame(ent->Client.PlayerState.GetGunFrame()+1);
+	ent->Client.PlayerState.GetGunFrame()++;
 }

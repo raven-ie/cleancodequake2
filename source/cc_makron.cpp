@@ -257,7 +257,7 @@ CAnim MakronMovePain4 (FRAME_pain401, FRAME_pain404, MakronFramesPain4, &CMonste
 void CMakron::Pain (CBaseEntity *other, float kick, int damage)
 {
 	if (Entity->Health < (Entity->MaxHealth / 2))
-			Entity->State.SetSkinNum (1);
+			Entity->State.GetSkinNum() = 1;
 
 	if (level.framenum < PainDebounceTime)
 			return;
@@ -610,12 +610,11 @@ public:
 
 	void Think ()
 	{
-		State.SetFrame (State.GetFrame() + 1);
-		if (State.GetFrame() < 365)
+		if (++State.GetFrame() < 365)
 			NextThink = level.framenum + FRAMETIME;
 		else
 		{		
-			State.SetFrame (346);
+			State.GetFrame() = 346;
 			NextThink = level.framenum + FRAMETIME;
 		}
 	};
@@ -631,10 +630,10 @@ public:
 
 		NewClass->SetMins (vec3f(-8, -8, 0));
 		NewClass->SetMaxs (vec3f(8, 8, 8));
-		NewClass->State.SetModelIndex (Owner->State.GetModelIndex());
+		NewClass->State.GetModelIndex() = Owner->State.GetModelIndex();
 		NewClass->NextThink = level.framenum + 2;
-		NewClass->State.SetSound (SoundIndex("makron/spine.wav"));
-		NewClass->State.SetFrame (346);
+		NewClass->State.GetSound() = SoundIndex("makron/spine.wav");
+		NewClass->State.GetFrame() = 346;
 		NewClass->SetSolid (SOLID_NOT);
 		NewClass->Link ();
 	};
@@ -656,16 +655,16 @@ void CMakron::Dead ()
 
 void CMakron::Die(CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
-	Entity->State.SetSound (0);
+	Entity->State.GetSound() = 0;
 	// check for gib
 	if (Entity->Health <= Entity->GibHealth)
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 1 /*4*/; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, GameMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 		for (int n= 0; n < 4; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMetal(), damage, GIB_METALLIC);
-		Entity->ThrowHead (gMedia.Gib_Gear(), damage, GIB_METALLIC);
+			CGibEntity::Spawn (Entity, GameMedia.Gib_SmallMetal(), damage, GIB_METALLIC);
+		Entity->ThrowHead (GameMedia.Gib_Gear(), damage, GIB_METALLIC);
 		Entity->DeadFlag = true;
 		return;
 	}
@@ -950,7 +949,7 @@ void CMakron::Spawn ()
 	SoundHit = SoundIndex ("makron/bhit.wav");
 	
 	Entity->SetSolid (SOLID_BBOX);
-	Entity->State.SetModelIndex (ModelIndex ("models/monsters/boss3/rider/tris.md2"));
+	Entity->State.GetModelIndex() = ModelIndex ("models/monsters/boss3/rider/tris.md2");
 	Entity->SetMins (vec3f(-30, -30, 0));
 	Entity->SetMaxs (vec3f(30, 30, 90));
 

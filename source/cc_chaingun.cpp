@@ -67,12 +67,12 @@ void CChaingun::FireAnimation (CPlayerEntity *ent)
 	ent->Client.anim_priority = ANIM_ATTACK;
 	if (ent->Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED)
 	{
-		ent->State.SetFrame (FRAME_crattak1 - (ent->Client.PlayerState.GetGunFrame() & 1));
+		ent->State.GetFrame() = (FRAME_crattak1 - (ent->Client.PlayerState.GetGunFrame() & 1));
 		ent->Client.anim_end = FRAME_crattak9;
 	}
 	else
 	{
-		ent->State.SetFrame (FRAME_attack1 - (ent->Client.PlayerState.GetGunFrame() & 1));
+		ent->State.GetFrame() = (FRAME_attack1 - (ent->Client.PlayerState.GetGunFrame() & 1));
 		ent->Client.anim_end = FRAME_attack8;
 	}
 }
@@ -90,19 +90,19 @@ void CChaingun::Fire (CPlayerEntity *ent)
 	if (ent->Client.PlayerState.GetGunFrame() == 5)
 		ent->PlaySound (CHAN_AUTO, SoundIndex("weapons/chngnu1a.wav"));
 
-	if ((ent->Client.PlayerState.GetGunFrame() == 14) && !(ent->Client.buttons & BUTTON_ATTACK))
+	if ((ent->Client.PlayerState.GetGunFrame() == 14) && !(ent->Client.Buttons & BUTTON_ATTACK))
 	{
-		ent->Client.PlayerState.SetGunFrame (31);
+		ent->Client.PlayerState.GetGunFrame() = 31;
 		ent->Client.weapon_sound = 0;
 		return;
 	}
-	else if ((ent->Client.PlayerState.GetGunFrame() == 21) && (ent->Client.buttons & BUTTON_ATTACK)
-		&& ent->Client.pers.Inventory.Has(ent->Client.pers.Weapon->WeaponItem->Ammo))
+	else if ((ent->Client.PlayerState.GetGunFrame() == 21) && (ent->Client.Buttons & BUTTON_ATTACK)
+		&& ent->Client.Persistent.Inventory.Has(ent->Client.Persistent.Weapon->WeaponItem->Ammo))
 	{
-		ent->Client.PlayerState.SetGunFrame(15);
+		ent->Client.PlayerState.GetGunFrame() = 15;
 	}
 	else
-		ent->Client.PlayerState.SetGunFrame(ent->Client.PlayerState.GetGunFrame() + 1);
+		ent->Client.PlayerState.GetGunFrame()++;
 
 	if (ent->Client.PlayerState.GetGunFrame() == 22)
 	{
@@ -118,7 +118,7 @@ void CChaingun::Fire (CPlayerEntity *ent)
 		shots = 1;
 	else if (ent->Client.PlayerState.GetGunFrame() <= 14)
 	{
-		if (ent->Client.buttons & BUTTON_ATTACK)
+		if (ent->Client.Buttons & BUTTON_ATTACK)
 			shots = 2;
 		else
 			shots = 1;
@@ -126,8 +126,8 @@ void CChaingun::Fire (CPlayerEntity *ent)
 	else
 		shots = 3;
 
-	if (ent->Client.pers.Inventory.Has(ent->Client.pers.Weapon->WeaponItem->Ammo) < shots)
-		shots = ent->Client.pers.Inventory.Has(ent->Client.pers.Weapon->WeaponItem->Ammo);
+	if (ent->Client.Persistent.Inventory.Has(ent->Client.Persistent.Weapon->WeaponItem->Ammo) < shots)
+		shots = ent->Client.Persistent.Inventory.Has(ent->Client.Persistent.Weapon->WeaponItem->Ammo);
 
 	if (!shots)
 	{

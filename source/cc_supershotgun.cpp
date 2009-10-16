@@ -92,7 +92,7 @@ void CSuperShotgun::Fire (CPlayerEntity *ent)
 
 	AttackSound (ent);
 
-	ent->Client.PlayerState.SetGunFrame(ent->Client.PlayerState.GetGunFrame() + 1);
+	ent->Client.PlayerState.GetGunFrame()++;
 	ent->PlayerNoiseAt (start, PNOISE_WEAPON);
 
 	if (!dmFlags.dfInfiniteAmmo)

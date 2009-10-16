@@ -43,52 +43,26 @@ public:
 	CEntityState			(entityStateOld_t *state);
 	CEntityState			();
 
-	void	SetNumber		(int value);
-	int		GetNumber		();
+	int		&GetNumber		();
 
-	void	GetOrigin		(vec3_t in);
-	vec3f	GetOrigin		();
+	vec3f	&GetOrigin		();
+	vec3f	&GetAngles		();
+	vec3f	&GetOldOrigin	();
 
-	void	GetAngles		(vec3_t in);
-	vec3f	GetAngles		();
-
-	void	GetOldOrigin	(vec3_t in);
-	vec3f	GetOldOrigin	();
-
-	void	SetOrigin		(vec3_t in);
-	void	SetOrigin		(vec3f &in);
-
-	void	SetAngles		(vec3_t in);
-	void	SetAngles		(vec3f &in);
-
-	void	SetOldOrigin	(vec3_t in);
-	void	SetOldOrigin	(vec3f &in);
+	void	SetOrigin		(vec3f in);
+	void	SetAngles		(vec3f in);
 
 	// Can be 1, 2, 3, or 4
-	int		GetModelIndex	(uint8 index = 1);
-	void	SetModelIndex	(MediaIndex value, uint8 index = 1);
+	int		&GetModelIndex	(uint8 index = 1);
 
-	int		GetFrame		();
-	void	SetFrame		(int value);
+	int		&GetFrame		();
+	int		&GetSkinNum		();
 
-	int		GetSkinNum		();
-	void	SetSkinNum		(int value);
+	EEntityStateEffects			&GetEffects		();
+	EEntityStateRenderEffects	&GetRenderEffects	();
 
-	EEntityStateEffects	GetEffects		();
-	void	SetEffects		(EEntityStateEffects value);
-	void	AddEffects		(EEntityStateEffects value);
-	void	RemoveEffects	(EEntityStateEffects value);
-
-	EEntityStateRenderEffects		GetRenderEffects	();
-	void	SetRenderEffects	(EEntityStateRenderEffects value);
-	void	AddRenderEffects	(EEntityStateRenderEffects value);
-	void	RemoveRenderEffects	(EEntityStateRenderEffects value);
-
-	MediaIndex	GetSound		();
-	void		SetSound		(MediaIndex value);
-
-	EEventEffect		GetEvent			();
-	void	SetEvent			(EEventEffect value);
+	MediaIndex		&GetSound		();
+	EEventEffect	&GetEvent			();
 };
 
 // FIXME: merge some of these flags elsewhere?
@@ -146,38 +120,21 @@ public:
 	ESolidType		GetSolid ();
 	void			SetSolid (ESolidType solid);
 
-	// Vectors are a little weird.
-	// Since we can't really "return" an array we have to pass it
-	void			GetMins (vec3_t in);
-	void			GetMaxs (vec3_t in);
-
-	void			GetAbsMin (vec3_t in);
-	void			GetAbsMax (vec3_t in);
-	void			GetSize (vec3_t in);
-
 	// Unless, of course, you use the vec3f class :D
-	vec3f			GetMins ();
-	vec3f			GetMaxs ();
+	vec3f			&GetMins ();
+	vec3f			&GetMaxs ();
 
-	vec3f			GetAbsMin ();
-	vec3f			GetAbsMax ();
-	vec3f			GetSize ();
-
-	// Same for setting
-	void			SetMins (vec3_t in);
-	void			SetMaxs (vec3_t in);
-
-	void			SetAbsMin (vec3_t in);
-	void			SetAbsMax (vec3_t in);
-	void			SetSize (vec3_t in);
+	vec3f			&GetAbsMin ();
+	vec3f			&GetAbsMax ();
+	vec3f			&GetSize ();
 
 	// Vec3f
-	void			SetMins (vec3f &in);
-	void			SetMaxs (vec3f &in);
+	void			SetMins (vec3f in);
+	void			SetMaxs (vec3f in);
 
-	void			SetAbsMin (vec3f &in);
-	void			SetAbsMax (vec3f &in);
-	void			SetSize (vec3f &in);
+	void			SetAbsMin (vec3f in);
+	void			SetAbsMax (vec3f in);
+	void			SetSize (vec3f in);
 
 	EServerFlags	GetSvFlags ();
 	void			SetSvFlags (EServerFlags SVFlags);
@@ -253,7 +210,7 @@ inline CBaseEntity *entity_cast<CBaseEntity> (CBaseEntity *Entity)
 	return Entity; // Implicit cast already done
 }
 
-inline char *CopyStr (char *In, struct memPool_s *Pool)
+inline char *CopyStr (char *In, struct memPool_t *Pool)
 {
 	std::string newString (In);
 	
@@ -354,7 +311,7 @@ public:
 		if (FieldType & FT_GAME_ENTITY)
 			ClassOffset = (byte*)Entity->gameEntity;
 		else if (FieldType & FT_SPAWNTEMP)
-			ClassOffset = (byte*)&st;
+			ClassOffset = (byte*)st;
 
 		ClassOffset += Offset;
 

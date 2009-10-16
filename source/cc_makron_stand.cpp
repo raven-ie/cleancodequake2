@@ -72,9 +72,10 @@ public:
 	void Think ()
 	{
 		if (State.GetFrame() == FRAME_stand260)
-			State.SetFrame (FRAME_stand201);
+			State.GetFrame() = (FRAME_stand201);
 		else
-			State.SetFrame (State.GetFrame() + 1);
+			State.GetFrame()++;
+
 		NextThink = level.framenum + FRAMETIME;
 	};
 
@@ -94,8 +95,8 @@ public:
 
 		PhysicsType = PHYSICS_STEP;
 		SetSolid (SOLID_BBOX);
-		State.SetModelIndex (ModelIndex ("models/monsters/boss3/rider/tris.md2"));
-		State.SetFrame (FRAME_stand201);
+		State.GetModelIndex() = ModelIndex ("models/monsters/boss3/rider/tris.md2");
+		State.GetFrame() = FRAME_stand201;
 
 		SoundIndex ("misc/bigtele.wav");
 

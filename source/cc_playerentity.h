@@ -45,58 +45,26 @@ public:
 	pMoveState_t	*GetPMove (); // Direct pointer
 	void			SetPMove (pMoveState_t *newState);
 
-	// Since we can't really "return" an array we have to pass it
-	void			GetViewAngles (vec3_t in);
-	void			GetViewOffset (vec3_t in);
-
-	void			GetGunAngles (vec3_t in);
-	void			GetGunOffset (vec3_t in);
-	void			GetKickAngles (vec3_t in);
-
 	// Unless, of course, you use the vec3f class :D
-	vec3f			GetViewAngles ();
-	vec3f			GetViewOffset ();
+	vec3f			&GetViewAngles ();
+	vec3f			&GetViewOffset ();
 
-	vec3f			GetGunAngles ();
-	vec3f			GetGunOffset ();
-	vec3f			GetKickAngles ();
+	vec3f			&GetGunAngles ();
+	vec3f			&GetGunOffset ();
+	vec3f			&GetKickAngles ();
 
-	void			SetViewAngles (vec3_t in);
-	void			SetViewOffset (vec3_t in);
+	MediaIndex		&GetGunIndex ();
 
-	void			SetGunAngles (vec3_t in);
-	void			SetGunOffset (vec3_t in);
-	void			SetKickAngles (vec3_t in);
+	int				&GetGunFrame ();
 
-	void			SetViewAngles (vec3f &in);
-	void			SetViewOffset (vec3f &in);
-
-	void			SetGunAngles (vec3f &in);
-	void			SetGunOffset (vec3f &in);
-	void			SetKickAngles (vec3f &in);
-
-	MediaIndex		GetGunIndex ();
-	void			SetGunIndex (MediaIndex val);
-
-	int				GetGunFrame ();
-	void			SetGunFrame (int val);
-
-	void			GetViewBlend (vec4_t in);
-	colorf			GetViewBlend ();
+	colorf			&GetViewBlend ();
 	colorb			GetViewBlendB (); // Name had to be different
 
-	void			SetViewBlend (vec4_t in);
-	void			SetViewBlend (colorf in);
-	void			SetViewBlend (colorb in);
+	float			&GetFov ();
 
-	float			GetFov ();
-	void			SetFov (float value);
+	ERenderDefFlags	&GetRdFlags ();
 
-	int				GetRdFlags ();
-	void			SetRdFlags (int value);
-
-	int16			GetStat (uint8 index);
-	void			SetStat (uint8 index, int16 val);
+	int16			&GetStat (uint8 index);
 	void			CopyStats (int16 *Stats);
 	int16			*GetStats ();
 
@@ -119,8 +87,9 @@ CC_ENUM (uint8, EClientState)
 };
 
 // client data that stays across multiple level loads
-typedef struct
+class CPersistentData
 {
+public:
 	char		userinfo[MAX_INFO_STRING];
 	IPAddress	IP;
 	char		netname[16];
@@ -156,7 +125,7 @@ typedef struct
 	bool		spectator;			// client is a spectator
 
 	colorf		viewBlend; // View blending
-} clientPersistent_t;
+};
 
 // All players have a copy of this class.
 class CMenuState
@@ -189,9 +158,10 @@ public:
 };
 
 // client data that stays across deathmatch respawns
-typedef struct
+class CRespawnData
 {
-	clientPersistent_t	coop_respawn;	// what to set client->pers to on a respawn
+public:
+	CPersistentData	coop_respawn;	// what to set client->Persistent to on a respawn
 	int			enterframe;			// level.framenum the client entered the game
 	int			score;				// frags, etc
 	vec3_t		cmd_angles;			// angles sent over in the last command
@@ -218,10 +188,32 @@ typedef struct
 	bool		voted; // for elections
 	bool		ready;
 	bool		admin;
-	struct ghost_s *ghost; // for ghost codes
+	ghost_t		*ghost; // for ghost codes
 //ZOID
 #endif
-} clientRespawn_t;
+};
+
+CC_ENUM (uint8, ELayoutFlags)
+{
+	LF_SHOWSCORES		= BIT(0),
+	LF_SHOWINVENTORY	= BIT(1),
+	LF_SHOWHELP			= BIT(2),
+	LF_UPDATECHASE		= BIT(3),
+
+	LF_SCREEN_MASK		= (LF_SHOWSCORES | LF_SHOWINVENTORY | LF_SHOWHELP),
+};
+
+// short should suffice here.
+// Not unsigned because healing shots can affect screen too.
+CC_ENUM (int16, EDamageType)
+{
+	DT_ARMOR,			// damage absorbed by armor
+	DT_POWERARMOR,		// damage absorbed by power armor
+	DT_BLOOD,			// damage taken out of health
+	DT_KNOCKBACK,		// impact damage
+
+	DT_MAX
+};
 
 class CClient
 {
@@ -236,42 +228,31 @@ public:
 	vec3f			ViewAngle;			// aiming direction
 	vec3f			DamageFrom;		// origin for vector calculation
 	colorf			DamageBlend;
+#ifndef MONSTERS_USE_PATHFINDING
 	CBaseEntity		*mynoise;		// can go in client only
 	CBaseEntity		*mynoise2;
+#endif
 	vec3f			OldViewAngles;
 	vec3f			OldVelocity;
 	vec2f			ViewDamage;
 	FrameNumber_t	ViewDamageTime;
 	float			KillerYaw;			// when dead, look at killer
+	CPersistentData	Persistent;
+	CRespawnData	Respawn;
+	pMoveState_t	OldPMove;	// for detecting out-of-pmove changes
+	ELayoutFlags	LayoutFlags;
+	// sum up damage over an entire frame, so
+	// shotgun blasts give a single big kick
+	EDamageType		DamageValues[DT_MAX];
+	EButtons		Buttons;
+	EButtons		LatchedButtons;
 
 	CClient (gclient_t *client);
 
-	int				GetPing ();
-	void			SetPing (int ping);
-
+	int				&GetPing ();
 	void			Clear ();
 
-	// Member variables
-	clientPersistent_t	pers;
-	clientRespawn_t		resp;
-	pMoveState_t		old_pmove;	// for detecting out-of-pmove changes
-
-	bool		showscores;			// set layout stat
-	bool		showinventory;		// set layout stat
-	bool		showhelp;
-	bool		showhelpicon;
-
-	int			buttons;
-	int			latched_buttons;
-
 	CWeapon		*NewWeapon;
-
-	// sum up damage over an entire frame, so
-	// shotgun blasts give a single big kick
-	int			damage_armor;		// damage absorbed by armor
-	int			damage_parmor;		// damage absorbed by power armor
-	int			damage_blood;		// damage taken out of health
-	int			damage_knockback;	// impact damage
 
 	EWeaponState weaponstate;
 	FrameNumber_t		fall_time;
@@ -311,7 +292,6 @@ public:
 	FrameNumber_t		respawn_time;		// can respawn when time > this
 
 	CPlayerEntity		*chase_target;		// player we are chasing
-	bool				update_chase;		// need to update chase info?
 	int					chase_mode;
 
 #ifdef CLEANCTF_ENABLED
@@ -342,23 +322,23 @@ public:
 	FrameNumber_t		PainDebounceTime;
 
 	CPlayerEntity (int Index);
-	bool Run ();
 
-	void BeginServerFrame ();
+	bool			Run ();
+	void			BeginServerFrame ();
 
-	void BeginDeathmatch ();
-	void Begin ();
-	bool Connect (char *userinfo);
-	void Disconnect ();
-	void Obituary (CBaseEntity *attacker);
+	void			BeginDeathmatch ();
+	void			Begin ();
+	bool			Connect (char *userinfo);
+	void			Disconnect ();
+	void			Obituary (CBaseEntity *attacker);
 
-	void SpectatorRespawn ();
-	void Respawn ();
-	void PutInServer ();
-	void InitPersistent ();
-	void InitItemMaxValues ();
-	void UserinfoChanged (char *userinfo);
-	void FetchEntData ();
+	void			SpectatorRespawn ();
+	void			Respawn ();
+	void			PutInServer ();
+	void			InitPersistent ();
+	void			InitItemMaxValues ();
+	void			UserinfoChanged (char *userinfo);
+	void			FetchEntData ();
 
 	// EndServerFrame-related functions
 	inline float	CalcRoll (vec3f &forward, vec3f &right);
@@ -404,24 +384,24 @@ public:
 
 	CBaseEntity		*SelectCTFSpawnPoint ();
 	void			CTFAssignTeam ();
-	void CTFAssignSkin (char *s);
-	bool CTFStart ();
+	void			CTFAssignSkin (char *s);
+	bool			CTFStart ();
 #endif
 
-	void Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point);
+	void			Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point);
 
 	// Printing routines
 	inline void		PrintToClient (EGamePrintLevel printLevel, char *fmt, ...);
 
-	void UpdateChaseCam();
-	void ChaseNext();
-	void ChasePrev();
-	void GetChaseTarget ();
+	void			UpdateChaseCam();
+	void			ChaseNext();
+	void			ChasePrev();
+	void			GetChaseTarget ();
 
-	void TossHead (int damage);
+	void			TossHead (int damage);
 
-	void P_ProjectSource (vec3f distance, vec3f &forward, vec3f &right, vec3f &result);
-	void PlayerNoiseAt (vec3f Where, int type);
+	void			P_ProjectSource (vec3f distance, vec3f &forward, vec3f &right, vec3f &result);
+	void			PlayerNoiseAt (vec3f Where, int type);
 };
 
 void ClientEndServerFrames ();

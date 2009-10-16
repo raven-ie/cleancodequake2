@@ -106,17 +106,17 @@ void SvCmd_RunCommand (char *commandName)
 		Com_Printf (0, "Unknown server command \"%s\"\n", commandName);
 }
 
-typedef struct SServerEntityListIndex_s
+struct SServerEntityListIndex
 {
 	const char	*className;
 	uint32		Num;
 	bool		Old;
 	vec3f		Origin;
 
-	struct SServerEntityListIndex_s	*hashNext;
+	SServerEntityListIndex			*hashNext;
 	uint32							hashValue;
 
-	SServerEntityListIndex_s (const char *name) :
+	SServerEntityListIndex (const char *name) :
 		className(name),
 		hashValue (Com_HashGeneric(className, MAX_CS_EDICTS)),
 		Num (0),
@@ -124,7 +124,7 @@ typedef struct SServerEntityListIndex_s
 		Origin()
 	{
 	};
-} SServerEntityListIndex;
+};
 
 class CServerEntityList
 {

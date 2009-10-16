@@ -43,78 +43,38 @@ state(state)
 {
 };
 
-void	CEntityState::SetNumber(int value)
-{
-	state->number = value;
-}
-
-int		CEntityState::GetNumber		()
+int		&CEntityState::GetNumber		()
 {
 	return state->number;
 }
 
-void	CEntityState::GetOrigin		(vec3_t in)
+vec3f	&CEntityState::GetOrigin		()
 {
-	Vec3Copy (state->origin, in);
-}
-vec3f	CEntityState::GetOrigin		()
-{
-	return vec3f(state->origin);
+	return state->origin;
 }
 
-void	CEntityState::GetAngles		(vec3_t in)
+vec3f	&CEntityState::GetAngles		()
 {
-	Vec3Copy (state->angles, in);
-}
-vec3f	CEntityState::GetAngles		()
-{
-	return vec3f(state->angles);
+	return state->angles;
 }
 
-void	CEntityState::GetOldOrigin	(vec3_t in)
+vec3f	&CEntityState::GetOldOrigin	()
 {
-	Vec3Copy (state->oldOrigin, in);
-}
-vec3f	CEntityState::GetOldOrigin	()
-{
-	return vec3f(state->oldOrigin);
+	return state->oldOrigin;
 }
 
-void	CEntityState::SetOrigin		(vec3_t in)
+void	CEntityState::SetOrigin		(vec3f in)
 {
-	Vec3Copy (in, state->origin);
-}
-void	CEntityState::SetOrigin		(vec3f &in)
-{
-	state->origin[0] = in.X;
-	state->origin[1] = in.Y;
-	state->origin[2] = in.Z;
+	state->origin = in;
 }
 
-void	CEntityState::SetAngles		(vec3_t in)
+void	CEntityState::SetAngles		(vec3f in)
 {
-	Vec3Copy (in, state->angles);
-}
-void	CEntityState::SetAngles		(vec3f &in)
-{
-	state->angles[0] = in.X;
-	state->angles[1] = in.Y;
-	state->angles[2] = in.Z;
-}
-
-void	CEntityState::SetOldOrigin	(vec3_t in)
-{
-	Vec3Copy (in, state->oldOrigin);
-}
-void	CEntityState::SetOldOrigin	(vec3f &in)
-{
-	state->oldOrigin[0] = in.X;
-	state->oldOrigin[1] = in.Y;
-	state->oldOrigin[2] = in.Z;
+	state->angles = in;
 }
 
 // Can be 1, 2, 3, or 4
-int		CEntityState::GetModelIndex	(uint8 index)
+int		&CEntityState::GetModelIndex	(uint8 index)
 {
 	switch (index)
 	{
@@ -128,101 +88,38 @@ int		CEntityState::GetModelIndex	(uint8 index)
 		return state->modelIndex4;
 	default:
 		_CC_ASSERT_EXPR(0, "index for GetModelIndex is out of bounds");
-		return 0;
-		break;
-	}
-}
-void	CEntityState::SetModelIndex	(MediaIndex value, uint8 index)
-{
-	switch (index)
-	{
-	case 1:
-		state->modelIndex = value;
-		break;
-	case 2:
-		state->modelIndex2 = value;
-		break;
-	case 3:
-		state->modelIndex3 = value;
-		break;
-	case 4:
-		state->modelIndex4 = value;
-		break;
-	default:
-		_CC_ASSERT_EXPR(0, "index for SetModelIndex is out of bounds");
-		break;
+		return state->modelIndex;
 	}
 }
 
-int		CEntityState::GetFrame		()
+int		&CEntityState::GetFrame		()
 {
 	return state->frame;
 }
-void	CEntityState::SetFrame		(int value)
-{
-	_CC_ASSERT_EXPR((value >= 0 && value < 512), "value for SetFrame is out of bounds");
-	state->frame = value;
-}
 
-int	CEntityState::GetSkinNum		()
+int	&CEntityState::GetSkinNum		()
 {
 	return state->skinNum;
 }
-void	CEntityState::SetSkinNum		(int value)
-{
-	state->skinNum = value;
-}
 
-EEntityStateEffects	CEntityState::GetEffects		()
+EEntityStateEffects	&CEntityState::GetEffects		()
 {
 	return state->effects;
 }
-void	CEntityState::SetEffects		(EEntityStateEffects value)
-{
-	state->effects = value;
-}
-void	CEntityState::AddEffects		(EEntityStateEffects value)
-{
-	state->effects |= value;
-}
-void	CEntityState::RemoveEffects		(EEntityStateEffects value)
-{
-	state->effects &= ~value;
-}
 
-EEntityStateRenderEffects		CEntityState::GetRenderEffects	()
+EEntityStateRenderEffects		&CEntityState::GetRenderEffects	()
 {
 	return state->renderFx;
 }
-void	CEntityState::SetRenderEffects	(EEntityStateRenderEffects value)
+
+MediaIndex	&CEntityState::GetSound		()
 {
-	state->renderFx = value;
-}
-void	CEntityState::AddRenderEffects	(EEntityStateRenderEffects value)
-{
-	state->renderFx |= value;
-}
-void	CEntityState::RemoveRenderEffects	(EEntityStateRenderEffects value)
-{
-	state->renderFx &= ~value;
+	return (MediaIndex&)state->sound;
 }
 
-MediaIndex	CEntityState::GetSound		()
-{
-	return state->sound;
-}
-void		CEntityState::SetSound		(MediaIndex value)
-{
-	state->sound = value;
-}
-
-EEventEffect	CEntityState::GetEvent			()
+EEventEffect	&CEntityState::GetEvent			()
 {
 	return state->event;
-}
-void	CEntityState::SetEvent			(EEventEffect value)
-{
-	state->event = value;
 }
 
 void G_InitEdict (edict_t *e)
@@ -379,107 +276,50 @@ void			CBaseEntity::SetSolid (ESolidType solid)
 	gameEntity->solid = solid;
 }
 
-// Vectors are a little weird.
-// Since we can't really "return" an array we have to pass it
-void			CBaseEntity::GetMins (vec3_t in)
-{
-	Vec3Copy (gameEntity->mins, in);
-}
-void			CBaseEntity::GetMaxs (vec3_t in)
-{
-	Vec3Copy (gameEntity->maxs, in);
-}
-
-void			CBaseEntity::GetAbsMin (vec3_t in)
-{
-	Vec3Copy (gameEntity->absMin, in);
-}
-void			CBaseEntity::GetAbsMax (vec3_t in)
-{
-	Vec3Copy (gameEntity->absMax, in);
-}
-void			CBaseEntity::GetSize (vec3_t in)
-{
-	Vec3Copy (gameEntity->size, in);
-}
-
 // Unless, of course, you use the vec3f class :D
-vec3f			CBaseEntity::GetMins ()
+vec3f			&CBaseEntity::GetMins ()
 {
-	return vec3f(gameEntity->mins);
+	return gameEntity->mins;
 }
-vec3f			CBaseEntity::GetMaxs ()
+vec3f			&CBaseEntity::GetMaxs ()
 {
-	return vec3f(gameEntity->maxs);
-}
-
-vec3f			CBaseEntity::GetAbsMin ()
-{
-	return vec3f(gameEntity->absMin);
-}
-vec3f			CBaseEntity::GetAbsMax ()
-{
-	return vec3f(gameEntity->absMax);
-}
-vec3f			CBaseEntity::GetSize ()
-{
-	return vec3f(gameEntity->size);
+	return gameEntity->maxs;
 }
 
-// Same for setting
-void			CBaseEntity::SetMins (vec3_t in)
+vec3f			&CBaseEntity::GetAbsMin ()
 {
-	Vec3Copy (in, gameEntity->mins);
+	return gameEntity->absMin;
 }
-void			CBaseEntity::SetMaxs (vec3_t in)
+vec3f			&CBaseEntity::GetAbsMax ()
 {
-	Vec3Copy (in, gameEntity->maxs);
+	return gameEntity->absMax;
 }
-
-void			CBaseEntity::SetAbsMin (vec3_t in)
+vec3f			&CBaseEntity::GetSize ()
 {
-	Vec3Copy (in, gameEntity->absMin);
-}
-void			CBaseEntity::SetAbsMax (vec3_t in)
-{
-	Vec3Copy (in, gameEntity->absMax);
-}
-void			CBaseEntity::SetSize (vec3_t in)
-{
-	Vec3Copy (in, gameEntity->size);
+	return gameEntity->size;
 }
 
 // Vec3f
-void			CBaseEntity::SetMins (vec3f &in)
+void			CBaseEntity::SetMins (vec3f in)
 {
-	gameEntity->mins[0] = in.X;
-	gameEntity->mins[1] = in.Y;
-	gameEntity->mins[2] = in.Z;
+	gameEntity->mins = in;
 }
-void			CBaseEntity::SetMaxs (vec3f &in)
+void			CBaseEntity::SetMaxs (vec3f in)
 {
-	gameEntity->maxs[0] = in.X;
-	gameEntity->maxs[1] = in.Y;
-	gameEntity->maxs[2] = in.Z;
+	gameEntity->maxs = in;
 }
 
-void			CBaseEntity::SetAbsMin (vec3f &in)
+void			CBaseEntity::SetAbsMin (vec3f in)
 {
-	gameEntity->absMin[0] = in.X;
-	gameEntity->absMin[1] = in.Y;
-	gameEntity->absMin[2] = in.Z;
+	gameEntity->absMin = in;
 }
-void			CBaseEntity::SetAbsMax (vec3f &in)
+void			CBaseEntity::SetAbsMax (vec3f in)
 {
-	gameEntity->absMax[0] = in.X;
-	gameEntity->absMax[1] = in.Y;
-	gameEntity->absMax[2] = in.Z;
+	gameEntity->absMax = in;
 }
-void			CBaseEntity::SetSize (vec3f &in)
+void			CBaseEntity::SetSize (vec3f in)
 {
-	gameEntity->size[0] = in.X;
-	gameEntity->size[1] = in.Y;
-	gameEntity->size[2] = in.Z;
+	gameEntity->size = in;
 }
 
 EServerFlags	CBaseEntity::GetSvFlags ()
@@ -643,7 +483,7 @@ void CBaseEntity::SetBrushModel ()
 	if (!gameEntity->model || gameEntity->model[0] != '*')
 	{
 		DebugPrintf ("CleanCode warning: SetBrushModel on a non-brush model!\n");
-		State.SetModelIndex (ModelIndex(gameEntity->model));
+		State.GetModelIndex() = ModelIndex(gameEntity->model);
 		return;
 	}
 
@@ -654,7 +494,7 @@ _CC_ENABLE_DEPRECATION
 
 void CBaseEntity::CastTo (ECastFlags CastFlags)
 {
-	Cast (CastFlags, gameEntity);
+	Cast (CastFlags, this);
 }
 
 void CBaseEntity::StuffText (char *text)

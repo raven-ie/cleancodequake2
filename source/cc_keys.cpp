@@ -62,12 +62,12 @@ bool CKey::Pickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	if (game.mode == GAME_COOPERATIVE)
 	{
-		if (other->Client.pers.Inventory.Has(this))
+		if (other->Client.Persistent.Inventory.Has(this))
 			return false;
-		other->Client.pers.Inventory.Set (this, 1);
+		other->Client.Persistent.Inventory.Set (this, 1);
 		return true;
 	}
-	other->Client.pers.Inventory += this;
+	other->Client.Persistent.Inventory += this;
 	return true;
 }
 
@@ -75,13 +75,13 @@ bool CPowerCube::Pickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	if (game.mode == GAME_COOPERATIVE)
 	{
-		if (other->Client.pers.power_cubes & ((ent->SpawnFlags & 0x0000ff00)>> 8))
+		if (other->Client.Persistent.power_cubes & ((ent->SpawnFlags & 0x0000ff00)>> 8))
 			return false;
-		other->Client.pers.Inventory += this;
-		other->Client.pers.power_cubes |= ((ent->SpawnFlags & 0x0000ff00) >> 8);
+		other->Client.Persistent.Inventory += this;
+		other->Client.Persistent.power_cubes |= ((ent->SpawnFlags & 0x0000ff00) >> 8);
 		return true;
 	}
-	other->Client.pers.Inventory += this;
+	other->Client.Persistent.Inventory += this;
 	return true;
 }
 
@@ -119,8 +119,8 @@ public:
 		ThinkState = ITS_DROPTOFLOOR;
 		PhysicsType = PHYSICS_NONE;
 
-		State.SetEffects(item->EffectFlags);
-		State.SetRenderEffects(RF_GLOW);
+		State.GetEffects() = item->EffectFlags;
+		State.GetRenderEffects() = RF_GLOW;
 	};
 };
 

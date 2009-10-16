@@ -52,24 +52,27 @@ CC_ENUM (int, ESolidType)
 // ==========================================================================
 
 // link_t is only used for entity area links now
-typedef struct link_s {
-	struct link_s	*prev, *next;
-} link_t;
+struct link_t
+{
+	link_t	*prev, *next;
+};
 
 #define MAX_ENT_CLUSTERS	16
 
 #ifndef GAME_INCLUDE
 
-typedef struct gclient_s {
+struct gclient_t
+{
 	playerState_t		playerState;		// communicated by server to clients
 	int					ping;
 	// the game dll can add anything it wants after
 	// this point in the structure
-} gclient_t;
+};
 
-typedef struct edict_s {
+struct edict_t
+{
 	entityStateOld_t	s;
-	struct gclient_s	*client;	// NULL if not a player
+	gclient_t			*client;	// NULL if not a player
 									// the server expects the first part
 									// of gclient_s to be a player_state_t
 									// but the rest of it is opaque
@@ -91,16 +94,16 @@ typedef struct edict_s {
 	vec3_t				absMin, absMax, size;
 	ESolidType			solid;
 	EBrushContents		clipMask;
-	struct edict_s		*owner;
+	edict_t				*owner;
 
 	// the game dll can add anything it wants after
 	// this point in the structure
-} edict_t;
+};
 
 #else		// GAME_INCLUDE
 
-typedef struct edict_s edict_t;
-typedef struct gclient_s gclient_t;
+struct edict_t;
+struct gclient_t;
 
 #endif		// GAME_INCLUDE
 
@@ -109,7 +112,7 @@ typedef struct gclient_s gclient_t;
 //
 // functions provided by the main engine
 //
-typedef struct gameImport_s
+struct gameImport_t
 {
 	// special messages
 #ifndef USE_EXTENDED_GAME_IMPORTS
@@ -328,7 +331,7 @@ typedef struct gameImport_s
 	void	(*AddCommandString) (char *text);
 
 	void	(*DebugGraph) (float value, int color);
-} gameImport_t;
+};
 
 #ifdef GAME_INCLUDE
 extern	gameImport_t	gi;
@@ -384,7 +387,7 @@ typedef struct gameExport_s {
 	// can vary in size from one game to another.
 	// 
 	// The size will be fixed when ge->Init() is called
-	struct edict_s	*edicts;
+	edict_t			*edicts;
 	int				edictSize;
 	int				numEdicts;		// current number, <= MAX_CS_EDICTS
 	int				maxEdicts;

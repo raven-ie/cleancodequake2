@@ -50,57 +50,57 @@ bool CArmor::Pickup (class CItemEntity *ent, CPlayerEntity *other)
 {
 	if (normalProtection == -1)
 	{
-		if (other->Client.pers.Armor == NULL)
+		if (other->Client.Persistent.Armor == NULL)
 		{
-			other->Client.pers.Inventory.Set (NItems::JacketArmor, 2);
-			other->Client.pers.Armor = dynamic_cast<CArmor*>(NItems::JacketArmor);
+			other->Client.Persistent.Inventory.Set (NItems::JacketArmor, 2);
+			other->Client.Persistent.Armor = dynamic_cast<CArmor*>(NItems::JacketArmor);
 		}
 		else
 		{
-			if (maxCount != -1 && (other->Client.pers.Inventory.Has(other->Client.pers.Armor) >= maxCount))
+			if (maxCount != -1 && (other->Client.Persistent.Inventory.Has(other->Client.Persistent.Armor) >= maxCount))
 				return false;
 
-			other->Client.pers.Inventory.Add (other->Client.pers.Armor, 2);
-			if (maxCount != -1 && (other->Client.pers.Inventory.Has(other->Client.pers.Armor) > maxCount))
-				other->Client.pers.Inventory.Set(other->Client.pers.Armor, maxCount);
+			other->Client.Persistent.Inventory.Add (other->Client.Persistent.Armor, 2);
+			if (maxCount != -1 && (other->Client.Persistent.Inventory.Has(other->Client.Persistent.Armor) > maxCount))
+				other->Client.Persistent.Inventory.Set(other->Client.Persistent.Armor, maxCount);
 		}
 	}
-	else if (other->Client.pers.Armor != NULL)
+	else if (other->Client.Persistent.Armor != NULL)
 	{
-		if (normalProtection > other->Client.pers.Armor->normalProtection)
+		if (normalProtection > other->Client.Persistent.Armor->normalProtection)
 		{
 			// calc new armor values
-			int newCount = baseCount + (((float)other->Client.pers.Armor->normalProtection / (float)normalProtection) * other->Client.pers.Inventory.Has(other->Client.pers.Armor));
+			int newCount = baseCount + (((float)other->Client.Persistent.Armor->normalProtection / (float)normalProtection) * other->Client.Persistent.Inventory.Has(other->Client.Persistent.Armor));
 			if (newCount > maxCount)
 				newCount = maxCount;
 
 			// zero count of old armor so it goes away
-			other->Client.pers.Inventory.Set(other->Client.pers.Armor, 0);
+			other->Client.Persistent.Inventory.Set(other->Client.Persistent.Armor, 0);
 
 			// change armor to new item with computed value
-			other->Client.pers.Inventory.Set(this, newCount);
-			other->Client.pers.Armor = this;
+			other->Client.Persistent.Inventory.Set(this, newCount);
+			other->Client.Persistent.Armor = this;
 		}
 		else
 		{
 			// calc new armor values
-			int newCount = other->Client.pers.Inventory.Has(other->Client.pers.Armor) + (((float)normalProtection / (float)other->Client.pers.Armor->normalProtection) * this->baseCount);
-			if (newCount > other->Client.pers.Armor->maxCount)
-				newCount = other->Client.pers.Armor->maxCount;
+			int newCount = other->Client.Persistent.Inventory.Has(other->Client.Persistent.Armor) + (((float)normalProtection / (float)other->Client.Persistent.Armor->normalProtection) * baseCount);
+			if (newCount > other->Client.Persistent.Armor->maxCount)
+				newCount = other->Client.Persistent.Armor->maxCount;
 
 			// if we're already maxed out then we don't need the new armor
-			if (other->Client.pers.Inventory.Has(other->Client.pers.Armor) >= newCount)
+			if (other->Client.Persistent.Inventory.Has(other->Client.Persistent.Armor) >= newCount)
 				return false;
 
 			// update current armor value
-			other->Client.pers.Inventory.Set(other->Client.pers.Armor, newCount);
+			other->Client.Persistent.Inventory.Set(other->Client.Persistent.Armor, newCount);
 		}
 	}
 	// Player has no other armor, just use it
 	else
 	{
-		other->Client.pers.Armor = this;
-		other->Client.pers.Inventory.Set(this, baseCount);
+		other->Client.Persistent.Armor = this;
+		other->Client.Persistent.Inventory.Set(this, baseCount);
 	}
 
 	if (!(ent->SpawnFlags & DROPPED_ITEM) && (game.mode & GAME_DEATHMATCH))
@@ -126,18 +126,18 @@ int CArmor::CheckArmor (CPlayerEntity *Player, vec3f &point, vec3f &normal, int 
 		return 0;
 
 	int save = ceil (((dflags & DAMAGE_ENERGY) ? ((float)energyProtection / 100) : ((float)normalProtection / 100)) * damage);
-	if (save >= Player->Client.pers.Inventory.Has(this))
-		save = Player->Client.pers.Inventory.Has(this);
+	if (save >= Player->Client.Persistent.Inventory.Has(this))
+		save = Player->Client.Persistent.Inventory.Has(this);
 
 	if (!save)
 		return 0;
 
-	Player->Client.pers.Inventory.Remove(GetIndex(), save);
+	Player->Client.Persistent.Inventory.Remove(GetIndex(), save);
 	CTempEnt_Splashes::Sparks (point, normal, (dflags & DAMAGE_BULLET) ? CTempEnt_Splashes::ST_BULLET_SPARKS : CTempEnt_Splashes::ST_SPARKS, CTempEnt_Splashes::SPT_SPARKS);
 
 	// Ran out of armor?
-	if (!Player->Client.pers.Inventory.Has(this))
-		Player->Client.pers.Armor = NULL;
+	if (!Player->Client.Persistent.Inventory.Has(this))
+		Player->Client.Persistent.Armor = NULL;
 
 	return save;
 }
@@ -170,8 +170,8 @@ public:
 		ThinkState = ITS_DROPTOFLOOR;
 		PhysicsType = PHYSICS_NONE;
 
-		State.SetEffects(item->EffectFlags);
-		State.SetRenderEffects(RF_GLOW);
+		State.GetEffects() = item->EffectFlags;
+		State.GetRenderEffects() = RF_GLOW;
 	};
 };
 

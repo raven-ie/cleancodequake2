@@ -565,5 +565,5 @@ template<class TType>
 static inline void *operator new(size_t Size, dynArray<TType> &List)
 {
 	assert(Size == sizeof(TType));
-	return &List[List.Add(1)];
+	return &List[List->Add(1)];
 }

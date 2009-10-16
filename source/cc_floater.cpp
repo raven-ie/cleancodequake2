@@ -528,7 +528,7 @@ void CFloater::Melee ()
 void CFloater::Pain (CBaseEntity *other, float kick, int damage)
 {
 	if (Entity->Health < (Entity->MaxHealth / 2))
-		Entity->State.SetSkinNum(1);
+		Entity->State.GetSkinNum() = 1;
 
 	if (level.framenum < PainDebounceTime)
 		return;
@@ -560,10 +560,10 @@ void CFloater::Spawn ()
 
 	SoundIndex ("floater/fltatck1.wav");
 
-	Entity->State.SetSound (SoundIndex ("floater/fltsrch1.wav"));
+	Entity->State.GetSound() = SoundIndex ("floater/fltsrch1.wav");
 
 	Entity->SetSolid (SOLID_BBOX);
-	Entity->State.SetModelIndex (ModelIndex ("models/monsters/float/tris.md2"));
+	Entity->State.GetModelIndex() = ModelIndex ("models/monsters/float/tris.md2");
 	Entity->SetMins (vec3f(-24, -24, -24));
 	Entity->SetMaxs (vec3f(24, 24, 32));
 

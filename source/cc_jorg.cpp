@@ -270,9 +270,9 @@ CAnim JorgMovePain1 (FRAME_pain101, FRAME_pain103, JorgFramesPain1, &CMonster::R
 void CJorg::Pain (CBaseEntity *other, float kick, int damage)
 {
 	if (Entity->Health < (Entity->MaxHealth / 2))
-			Entity->State.SetSkinNum (1);
+			Entity->State.GetSkinNum() = 1;
 	
-	Entity->State.SetSound (0);
+	Entity->State.GetSound() = 0;
 
 	if (level.framenum < PainDebounceTime)
 			return;
@@ -417,13 +417,13 @@ void CJorg::Explode ()
 		org.Y -= 48;
 		break;
 	case 8:
-		Entity->State.SetSound (0);
+		Entity->State.GetSound() = 0;
 		for (int n= 0; n < 4; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, 500, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, GameMedia.Gib_SmallMeat, 500, GIB_ORGANIC);
 		for (int n= 0; n < 8; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMetal(), 500, GIB_METALLIC);
-		CGibEntity::Spawn (Entity, gMedia.Gib_Chest, 500, GIB_ORGANIC);
-		Entity->ThrowHead (gMedia.Gib_Gear(), 500, GIB_METALLIC);
+			CGibEntity::Spawn (Entity, GameMedia.Gib_SmallMetal(), 500, GIB_METALLIC);
+		CGibEntity::Spawn (Entity, GameMedia.Gib_Chest, 500, GIB_ORGANIC);
+		Entity->ThrowHead (GameMedia.Gib_Gear(), 500, GIB_METALLIC);
 		Entity->DeadFlag = true;
 		return;
 	}
@@ -437,7 +437,7 @@ void CJorg::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3
 	Entity->PlaySound (CHAN_VOICE, SoundDeath);
 	Entity->DeadFlag = true;
 	Entity->CanTakeDamage = false;
-	Entity->State.SetSound (0);
+	Entity->State.GetSound() = 0;
 	Entity->gameEntity->count = 0;
 	CurrentMove = &JorgMoveDeath;
 }
@@ -501,13 +501,13 @@ void CJorg::ReAttack1()
 			CurrentMove = &JorgMoveAttack1;
 		else
 		{
-			Entity->State.SetSound (0);
+			Entity->State.GetSound() = 0;
 			CurrentMove = &JorgMoveEndAttack1;	
 		}
 	}
 	else
 	{
-		Entity->State.SetSound (0);
+		Entity->State.GetSound() = 0;
 		CurrentMove = &JorgMoveEndAttack1;	
 	}
 }
@@ -563,7 +563,7 @@ void CJorg::Attack()
 	if (random() <= 0.75)
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundAttack1);
-		Entity->State.SetSound (SoundIndex ("boss3/w_loop.wav"));
+		Entity->State.GetSound() = SoundIndex ("boss3/w_loop.wav");
 		CurrentMove = &JorgMoveStartAttack1;
 	}
 	else
@@ -819,8 +819,8 @@ void CJorg::Spawn ()
 	CMakron::Precache ();
 
 	Entity->SetSolid (SOLID_BBOX);
-	Entity->State.SetModelIndex (ModelIndex ("models/monsters/boss3/rider/tris.md2"), 2);
-	Entity->State.SetModelIndex (ModelIndex ("models/monsters/boss3/jorg/tris.md2"));
+	Entity->State.GetModelIndex(2) = ModelIndex ("models/monsters/boss3/rider/tris.md2");
+	Entity->State.GetModelIndex() = ModelIndex ("models/monsters/boss3/jorg/tris.md2");
 	Entity->SetMins (vec3f(-80, -80, 0));
 	Entity->SetMaxs (vec3f(80, 80, 140));
 

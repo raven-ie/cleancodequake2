@@ -44,6 +44,8 @@ public:
 	inline colorf(const colorf &Other)
 		: R(Other.R), G(Other.G), B(Other.B), A(Other.A) {}
 
+	inline colorf(const class colorb &Other);
+
 	inline colorf(const float InR, const float InG, const float InB, const float InA)
 		: R(InR), G(InG), B(InB), A(InA) {}
 
@@ -117,6 +119,7 @@ public:
 		, G(FloatToByte(Other.G))
 		, B(FloatToByte(Other.B))
 		, A(FloatToByte(Other.A)) {}
+
 	inline colorb(const vec4_t Other)
 		: R(FloatToByte(Other[0]))
 		, G(FloatToByte(Other[1]))
@@ -161,6 +164,9 @@ public:
 
 	inline void Set(const colorf &Other) { R = FloatToByte(Other.R); G = FloatToByte(Other.G); B = FloatToByte(Other.B); A = FloatToByte(Other.A); }
 };
+
+inline colorf::colorf(const colorb &Other)
+	: R(Other.R / 255), G(Other.G / 255), B(Other.B / 255), A(Other.A / 255) {}
 
 /*
 ==============================================================================

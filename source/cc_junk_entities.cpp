@@ -127,7 +127,7 @@ _CC_ENABLE_DEPRECATION
 				ClosedList.push_back (number);
 
 				JunkClassType *Junk = ReallocateEntity<JunkClassType>(number);
-				Junk->State.SetEvent (EV_OTHER_TELEPORT);
+				Junk->State.GetEvent() = EV_OTHER_TELEPORT;
 
 				return Junk;
 			}
@@ -168,8 +168,8 @@ void CJunkEntity::Die ()
 	JunkList->OpenList.push_back (State.GetNumber());
 
 	// Disappear us
-	State.SetModelIndex(0);
-	State.SetEffects(0);
+	State.GetModelIndex() = 0;
+	State.GetEffects() = 0;
 	SetSvFlags (SVF_NOCLIENT);
 }
 
@@ -234,12 +234,12 @@ void CGibEntity::Spawn (CBaseEntity *Owner, MediaIndex gibIndex, int damage, int
 							origin.Y + crandom() * size.Y,
 							origin.Z + crandom() * size.Z));
 
-	Junk->State.SetModelIndex (gibIndex);
+	Junk->State.GetModelIndex() = gibIndex;
 	Junk->SetSvFlags (SVF_DEADMONSTER);
 	Junk->SetMins (vec3Origin);
 	Junk->SetMaxs (vec3Origin);
 	Junk->SetSolid (SOLID_NOT);
-	Junk->State.SetEffects (EF_GIB);
+	Junk->State.GetEffects() = EF_GIB;
 
 	Junk->backOff = (type == GIB_ORGANIC) ? 1.0f : 1.5f;
 	float vscale = (type == GIB_ORGANIC) ? 0.5f : 1.0f;

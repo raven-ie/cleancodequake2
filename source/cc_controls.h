@@ -91,11 +91,11 @@ public:
 	}
 };
 
-typedef struct
+struct SSpinControlIndex
 {
 	char		*Text;
 	char		*Value;
-} SSpinControlIndex;
+};
 
 class CMenu_Spin : public CMenuItem
 {

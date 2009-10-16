@@ -267,7 +267,7 @@ CAnim TankMovePain3 (FRAME_pain301, FRAME_pain316, TankFramesPain3, ConvertDeriv
 void CTank::Pain (CBaseEntity *other, float kick, int damage)
 {
 	if (Entity->Health < (Entity->MaxHealth / 2))
-		Entity->State.SetSkinNum (Entity->State.GetSkinNum() | 1);
+		Entity->State.GetSkinNum() |= 1;
 
 	if (damage <= 10)
 		return;
@@ -860,11 +860,11 @@ void CTank::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 1 /*4*/; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, GameMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 		for (int n= 0; n < 4; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMetal(), damage, GIB_METALLIC);
-		CGibEntity::Spawn (Entity, gMedia.Gib_Chest, damage, GIB_ORGANIC);
-		Entity->ThrowHead (gMedia.Gib_Gear(), damage, GIB_METALLIC);
+			CGibEntity::Spawn (Entity, GameMedia.Gib_SmallMetal(), damage, GIB_METALLIC);
+		CGibEntity::Spawn (Entity, GameMedia.Gib_Chest, damage, GIB_ORGANIC);
+		Entity->ThrowHead (GameMedia.Gib_Gear(), damage, GIB_METALLIC);
 		Entity->DeadFlag = true;
 		return;
 	}
@@ -887,7 +887,7 @@ void CTank::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3
 
 void CTank::Spawn ()
 {
-	Entity->State.SetModelIndex (ModelIndex ("models/monsters/tank/tris.md2"));
+	Entity->State.GetModelIndex() = ModelIndex ("models/monsters/tank/tris.md2");
 	Entity->SetMins (vec3f(-32, -32, -16));
 	Entity->SetMaxs (vec3f(32, 32, 72));
 	Entity->SetSolid (SOLID_BBOX);
@@ -933,7 +933,7 @@ void CTankCommander::Spawn ()
 	CTank::Spawn ();
 	Entity->Health = 1000;
 	Entity->GibHealth = -225;
-	Entity->State.SetSkinNum (2);
+	Entity->State.GetSkinNum() = 2;
 }
 
 LINK_MONSTER_CLASSNAME_TO_CLASS ("monster_tank_commander", CTankCommander);

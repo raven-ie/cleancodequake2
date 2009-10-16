@@ -57,18 +57,18 @@ void	CFlag::Use (CPlayerEntity *ent)
 
 bool CFlag::Pickup(CItemEntity *ent, CPlayerEntity *other)
 {
-	if (team == other->Client.resp.ctf_team)
+	if (team == other->Client.Respawn.ctf_team)
 	{
 		if (!(ent->SpawnFlags & DROPPED_ITEM))
 		{
 			// If we have the flag, but the flag isn't this, then we have another flag.
 			// FIXME this code here will break with > 2 teams (when we get there)!!
-			if (other->Client.pers.Flag && (other->Client.pers.Flag != this))
+			if (other->Client.Persistent.Flag && (other->Client.Persistent.Flag != this))
 			{
 				BroadcastPrintf(PRINT_HIGH, "%s captured the %s flag!\n",
-						other->Client.pers.netname, CTFOtherTeamName(team));
-				other->Client.pers.Inventory.Set(other->Client.pers.Flag, 0);
-				other->Client.pers.Flag = NULL;
+						other->Client.Persistent.netname, CTFOtherTeamName(team));
+				other->Client.Persistent.Inventory.Set(other->Client.Persistent.Flag, 0);
+				other->Client.Persistent.Flag = NULL;
 
 				ctfgame.last_flag_capture = level.framenum;
 				ctfgame.last_capture_team = team;
@@ -81,9 +81,9 @@ bool CFlag::Pickup(CItemEntity *ent, CPlayerEntity *other)
 				ent->PlaySound (CHAN_RELIABLE+CHAN_NO_PHS_ADD+CHAN_VOICE, SoundIndex("ctf/flagcap.wav"), 255, ATTN_NONE);
 
 				// other gets another 10 frag bonus
-				other->Client.resp.score += CTF_CAPTURE_BONUS;
-				if (other->Client.resp.ghost)
-					other->Client.resp.ghost->caps++;
+				other->Client.Respawn.score += CTF_CAPTURE_BONUS;
+				if (other->Client.Respawn.ghost)
+					other->Client.Respawn.ghost->caps++;
 
 				// Ok, let's do the player loop, hand out the bonuses
 				for (int i = 1; i <= game.maxclients; i++)
@@ -92,22 +92,22 @@ bool CFlag::Pickup(CItemEntity *ent, CPlayerEntity *other)
 					if (!player->IsInUse())
 						continue;
 
-					if (player->Client.resp.ctf_team != other->Client.resp.ctf_team)
-						player->Client.resp.ctf_lasthurtcarrier = -5;
-					else if (player->Client.resp.ctf_team == other->Client.resp.ctf_team)
+					if (player->Client.Respawn.ctf_team != other->Client.Respawn.ctf_team)
+						player->Client.Respawn.ctf_lasthurtcarrier = -5;
+					else if (player->Client.Respawn.ctf_team == other->Client.Respawn.ctf_team)
 					{
 						if (player != other)
-							player->Client.resp.score += CTF_TEAM_BONUS;
+							player->Client.Respawn.score += CTF_TEAM_BONUS;
 						// award extra points for capture assists
-						if (player->Client.resp.ctf_lastreturnedflag + CTF_RETURN_FLAG_ASSIST_TIMEOUT > level.framenum)
+						if (player->Client.Respawn.ctf_lastreturnedflag + CTF_RETURN_FLAG_ASSIST_TIMEOUT > level.framenum)
 						{
-							BroadcastPrintf(PRINT_HIGH, "%s gets an assist for returning the flag!\n", player->Client.pers.netname);
-							player->Client.resp.score += CTF_RETURN_FLAG_ASSIST_BONUS;
+							BroadcastPrintf(PRINT_HIGH, "%s gets an assist for returning the flag!\n", player->Client.Persistent.netname);
+							player->Client.Respawn.score += CTF_RETURN_FLAG_ASSIST_BONUS;
 						}
-						if (player->Client.resp.ctf_lastfraggedcarrier + CTF_FRAG_CARRIER_ASSIST_TIMEOUT > level.framenum)
+						if (player->Client.Respawn.ctf_lastfraggedcarrier + CTF_FRAG_CARRIER_ASSIST_TIMEOUT > level.framenum)
 						{
-							BroadcastPrintf(PRINT_HIGH, "%s gets an assist for fragging the flag carrier!\n", player->Client.pers.netname);
-							player->Client.resp.score += CTF_FRAG_CARRIER_ASSIST_BONUS;
+							BroadcastPrintf(PRINT_HIGH, "%s gets an assist for fragging the flag carrier!\n", player->Client.Persistent.netname);
+							player->Client.Respawn.score += CTF_FRAG_CARRIER_ASSIST_BONUS;
 						}
 					}
 				}
@@ -119,9 +119,9 @@ bool CFlag::Pickup(CItemEntity *ent, CPlayerEntity *other)
 		}	
 		// hey, its not home.  return it by teleporting it back
 		BroadcastPrintf(PRINT_HIGH, "%s returned the %s flag!\n", 
-			other->Client.pers.netname, CTFTeamName(team));
-		other->Client.resp.score += CTF_RECOVERY_BONUS;
-		other->Client.resp.ctf_lastreturnedflag = level.framenum;
+			other->Client.Persistent.netname, CTFTeamName(team));
+		other->Client.Respawn.score += CTF_RECOVERY_BONUS;
+		other->Client.Respawn.ctf_lastreturnedflag = level.framenum;
 		ent->PlaySound (CHAN_RELIABLE+CHAN_NO_PHS_ADD+CHAN_VOICE, SoundIndex("ctf/flagret.wav"), 255, ATTN_NONE);
 		//CTFResetFlag will remove this entity!  We must return false
 		CTFResetFlag(team);
@@ -130,12 +130,12 @@ bool CFlag::Pickup(CItemEntity *ent, CPlayerEntity *other)
 
 	// hey, its not our flag, pick it up
 	BroadcastPrintf(PRINT_HIGH, "%s got the %s flag!\n",
-		other->Client.pers.netname, CTFTeamName(team));
-	other->Client.resp.score += CTF_FLAG_BONUS;
+		other->Client.Persistent.netname, CTFTeamName(team));
+	other->Client.Respawn.score += CTF_FLAG_BONUS;
 
-	other->Client.pers.Inventory.Set(this, 1);
-	other->Client.pers.Flag = this;
-	other->Client.resp.ctf_flagsince = level.framenum;
+	other->Client.Persistent.Inventory.Set(this, 1);
+	other->Client.Persistent.Flag = this;
+	other->Client.Respawn.ctf_flagsince = level.framenum;
 
 	// pick up the flag
 	// if it's not a dropped flag, we just make is disappear

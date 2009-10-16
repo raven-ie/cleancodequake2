@@ -87,23 +87,23 @@ void CBody::TossHead (int damage)
 {
 	if (irandom(2))
 	{
-		State.SetModelIndex (gMedia.Gib_Head[1]);
-		State.SetSkinNum (1);		// second skin is player
+		State.GetModelIndex() = GameMedia.Gib_Head[1];
+		State.GetSkinNum() = 1;		// second skin is player
 	}
 	else
 	{
-		State.SetModelIndex (gMedia.Gib_Skull);
-		State.SetSkinNum (0);
+		State.GetModelIndex() = GameMedia.Gib_Skull;
+		State.GetSkinNum() = 0;
 	}
 
-	State.SetFrame (0);
+	State.GetFrame() = 0;
 	SetMins (vec3f(-16, -16, 0));
 	SetMaxs (vec3f(16, 16, 16));
 
 	CanTakeDamage = false;
 	SetSolid (SOLID_NOT);
-	State.SetEffects (EF_GIB);
-	State.SetSound (0);
+	State.GetEffects() = EF_GIB;
+	State.GetSound() = 0;
 	Flags |= FL_NO_KNOCKBACK;
 
 	backOff = 1.5f;	
@@ -143,8 +143,7 @@ void CBody::Think ()
 	BodyQueueList->OpenList.push_back (this);
 
 	// Disappear us
-	State.SetModelIndex(0);
-	State.SetEffects(0);
+	State.GetModelIndex() = State.GetEffects() = 0;
 	SetSvFlags (SVF_NOCLIENT);
 }
 
@@ -154,7 +153,7 @@ void CBody::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3
 	{
 		PlaySound(CHAN_BODY, SoundIndex ("misc/udeath.wav"));
 		for (int n = 0; n < 4; n++)
-			CGibEntity::Spawn (this, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+			CGibEntity::Spawn (this, GameMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 			
 		vec3f origin = State.GetOrigin();
 		origin.Z -= 16;
@@ -165,7 +164,7 @@ void CBody::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3
 
 CBody *CBodyQueue::GrabFreeBody ()
 {
-	// If there's anything in the open list..
+	// If there's anything in the open List..
 	if (OpenList.size())
 	{
 		// Pop it off the front
@@ -224,22 +223,21 @@ void CBodyQueue::CopyBodyToQueue (CPlayerEntity *Player)
 	CBody *Body = GrabFreeBody();
 
 	// Make sure it doesn't interpolate
-	Body->State.SetEvent(EV_OTHER_TELEPORT);
+	Body->State.GetEvent() = EV_OTHER_TELEPORT;
 
 	Player->Unlink();
 	Body->Unlink();
 
-	Body->State.SetSound (Player->State.GetSound());
 	vec3f angles = Player->State.GetAngles();
 	angles[0] = 0;
 	Body->State.SetAngles (angles);
-	Body->State.SetEffects (Player->State.GetEffects());
-	Body->State.SetFrame (Player->State.GetFrame());
-	Body->State.SetModelIndex (Player->State.GetModelIndex());
-	Body->State.SetOldOrigin (Player->State.GetOldOrigin());
+	Body->State.GetEffects() = Player->State.GetEffects();
+	Body->State.GetFrame() = Player->State.GetFrame();
+	Body->State.GetModelIndex() = Player->State.GetModelIndex();
+	Body->State.GetOldOrigin() = Player->State.GetOldOrigin();
 	Body->State.SetOrigin (Player->State.GetOrigin());
-	Body->State.SetRenderEffects (Player->State.GetRenderEffects());
-	Body->State.SetSkinNum (Player->State.GetSkinNum());
+	Body->State.GetRenderEffects() = Player->State.GetRenderEffects();
+	Body->State.GetSkinNum() = Player->State.GetSkinNum();
 
 	Body->SetSvFlags (Player->GetSvFlags());
 	Body->SetMins (Player->GetMins());

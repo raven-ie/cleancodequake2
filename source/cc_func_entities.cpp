@@ -175,7 +175,7 @@ void CTargetCharacter::Spawn ()
 	PhysicsType = PHYSICS_PUSH;
 	SetBrushModel ();
 	SetSolid (SOLID_BSP);
-	State.SetFrame (12);
+	State.GetFrame() = 12;
 	Link ();
 };
 
@@ -215,19 +215,34 @@ public:
 		size_t n = e->gameEntity->count - 1;
 		if (n > StrLen)
 		{
-			e->State.SetFrame (12);
+			e->State.GetFrame() = 12;
 			return;
 		}
 
-		char c = Message[n];
-		if (c >= '0' && c <= '9')
-			e->State.SetFrame (c - '0');
-		else if (c == '-')
-			e->State.SetFrame (10);
-		else if (c == ':')
-			e->State.SetFrame (11);
-		else
-			e->State.SetFrame (12);
+		switch (Message[n])
+		{
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+			e->State.GetFrame() = (Message[n] - '0');
+			break;
+		case '-':
+			e->State.GetFrame() = 10;
+			break;
+		case ':':
+			e->State.GetFrame() = 11;
+			break;
+		default:
+			e->State.GetFrame() = 12;
+			break;
+		}
 	};
 };
 

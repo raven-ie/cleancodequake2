@@ -113,7 +113,7 @@ CC_ENUM (uint16, EGameMode)
 #endif
 };
 
-typedef struct
+struct game_locals_t
 {
 	char		helpmessage1[128];
 	char		helpmessage2[128];
@@ -136,13 +136,13 @@ typedef struct
 	// cross level triggers
 	int			serverflags;
 	bool		autosaved;
-} game_locals_t;
+};
 
 //
 // this structure is cleared as each map is entered
 // it is read/written to the level.sav file for savegames
 //
-typedef struct
+struct level_locals_t
 {
 	FrameNumber_t	framenum;
 
@@ -188,24 +188,24 @@ typedef struct
 	int			power_cubes;		// ugly necessity for coop
 	uint32		inhibit;
 	uint32		EntityNumber;
-} level_locals_t;
+};
 
 
 // spawn_temp_t is only used to hold entity field values that
 // can be set from the editor, but aren't actualy present
 // in edict_t during gameplay
-typedef struct
+struct spawn_temp_t
 {
 	// world vars
 	char		*sky;
 	float		skyrotate;
-	vec3_t		skyaxis;
+	vec3f		skyaxis;
 	char		*nextmap;
 
 	int			lip;
 	int			height;
 	char		*gravity;
-} spawn_temp_t;
+};
 
 CC_ENUM (uint8, EFuncState)
 {
@@ -218,7 +218,7 @@ CC_ENUM (uint8, EFuncState)
 extern	game_locals_t	game;
 extern	level_locals_t	level;
 extern	gameExport_t	globals;
-extern	spawn_temp_t	st;
+extern	spawn_temp_t	*st;
 
 // means of death
 CC_ENUM (uint32, EMeansOfDeath)
@@ -370,8 +370,8 @@ enum
 };
 
 // this structure is cleared on each PutClientInServer(),
-// except for 'client->pers'
-struct gclient_s
+// except for 'client->Persistent'
+struct gclient_t
 {
 	// known to server
 	playerState_t	playerState;				// communicated by server to clients
@@ -399,10 +399,10 @@ public:
 	};
 };
 
-struct edict_s
+struct edict_t
 {
 	entityStateOld_t	state;
-	struct gclient_s	*client;	// NULL if not a player
+	gclient_t			*client;	// NULL if not a player
 									// the server expects the first part
 									// of gclient_s to be a player_state_t
 									// but the rest of it is opaque
@@ -420,11 +420,11 @@ struct edict_s
 	//================================
 
 	EServerFlags		svFlags;			// SVF_NOCLIENT, SVF_DEADMONSTER, SVF_MONSTER, etc
-	vec3_t				mins, maxs;
-	vec3_t				absMin, absMax, size;
+	vec3f				mins, maxs;
+	vec3f				absMin, absMax, size;
 	ESolidType			solid;
 	EBrushContents		clipMask;
-	struct edict_s		*owner;
+	edict_t				*owner;
 
 
 	// DO NOT MODIFY ANYTHING ABOVE THIS, THE SERVER

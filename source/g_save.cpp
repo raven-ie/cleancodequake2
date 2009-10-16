@@ -202,17 +202,17 @@ All pointer variables (except function pointers) must be handled specially.
 */
 void WriteClient (fileHandle_t f, CPlayerEntity *Player)
 {
-	// Write pers.weapon and pers.newweapon
+	// Write Persistent.weapon and Persistent.newweapon
 	int pwIndex = -1, nwIndex = -1, lwIndex = -1;
 
-	if (Player->Client.pers.Weapon)
+	if (Player->Client.Persistent.Weapon)
 	{
-		CBaseItem *Item = Player->Client.pers.Weapon->Item;
+		CBaseItem *Item = Player->Client.Persistent.Weapon->Item;
 		pwIndex = Item->GetIndex();
 	}
-	if (Player->Client.pers.LastWeapon)
+	if (Player->Client.Persistent.LastWeapon)
 	{
-		CBaseItem *Item = Player->Client.pers.LastWeapon->Item;
+		CBaseItem *Item = Player->Client.Persistent.LastWeapon->Item;
 		lwIndex = Item->GetIndex();
 	}
 	if (Player->Client.NewWeapon)
@@ -258,17 +258,17 @@ void ReadClient (fileHandle_t f, CPlayerEntity *Player)
 			if (It->Flags & ITEMFLAG_AMMO)
 			{
 				CAmmo *Ammo = static_cast<CAmmo*>(It);
-				Player->Client.pers.Weapon = Ammo->Weapon;
+				Player->Client.Persistent.Weapon = Ammo->Weapon;
 			}
 			else
 			{
 				CWeaponItem *Weapon = static_cast<CWeaponItem*>(It);
-				Player->Client.pers.Weapon = Weapon->Weapon;
+				Player->Client.Persistent.Weapon = Weapon->Weapon;
 			}
 		}
 	}
 	else
-		Player->Client.pers.Weapon = NULL;
+		Player->Client.Persistent.Weapon = NULL;
 
 	if (lwIndex != -1)
 	{
@@ -278,17 +278,17 @@ void ReadClient (fileHandle_t f, CPlayerEntity *Player)
 			if (It->Flags & ITEMFLAG_AMMO)
 			{
 				CAmmo *Ammo = static_cast<CAmmo*>(It);
-				Player->Client.pers.LastWeapon = Ammo->Weapon;
+				Player->Client.Persistent.LastWeapon = Ammo->Weapon;
 			}
 			else
 			{
 				CWeaponItem *Weapon = static_cast<CWeaponItem*>(It);
-				Player->Client.pers.LastWeapon = Weapon->Weapon;
+				Player->Client.Persistent.LastWeapon = Weapon->Weapon;
 			}
 		}
 	}
 	else
-		Player->Client.pers.LastWeapon = NULL;
+		Player->Client.Persistent.LastWeapon = NULL;
 
 	if (nwIndex != -1)
 	{
@@ -684,7 +684,7 @@ CC_EXCEPTION_HANDLER_BEGIN
 		ent->client = game.clients + i;
 
 		CPlayerEntity *Player = entity_cast<CPlayerEntity>(ent->Entity);
-		Player->Client.pers.state = SVCS_FREE;
+		Player->Client.Persistent.state = SVCS_FREE;
 	}
 
 	// do any load time things at this point

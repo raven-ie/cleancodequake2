@@ -97,7 +97,7 @@ void CGrapple::Fire (CPlayerEntity *Player)
 	Player->PlayerNoiseAt (start, PNOISE_WEAPON);
 	FireAnimation(Player);
 
-	Player->Client.PlayerState.SetGunFrame (Player->Client.PlayerState.GetGunFrame() + 1);
+	Player->Client.PlayerState.GetGunFrame()++;
 }
 
 void CGrapple::WeaponGeneric (CPlayerEntity *Player)
@@ -133,20 +133,20 @@ void CGrapple::WeaponGeneric (CPlayerEntity *Player)
 			newState = WS_DEACTIVATING;
 			newFrame = DeactStart;
 		}
-		else if ((Player->Client.buttons|Player->Client.latched_buttons) & BUTTON_ATTACK)
+		else if ((Player->Client.Buttons|Player->Client.LatchedButtons) & BUTTON_ATTACK)
 		{
-			Player->Client.latched_buttons &= ~BUTTON_ATTACK;
+			Player->Client.LatchedButtons &= ~BUTTON_ATTACK;
 
 			// This here is ugly, but necessary so that machinegun/chaingun/hyperblaster
 			// get the right acceptance on first-frame-firing
-			Player->Client.buttons |= BUTTON_ATTACK;
+			Player->Client.Buttons |= BUTTON_ATTACK;
 
 			// We want to attack!
 			// First call, check AttemptToFire
 			if (AttemptToFire(Player))
 			{
 				// Got here, we can fire!
-				Player->Client.PlayerState.SetGunFrame(FireStart);
+				Player->Client.PlayerState.GetGunFrame() = FireStart;
 				Player->Client.weaponstate = WS_FIRING;
 
 				// We need to check against us right away for first-frame firing
@@ -187,7 +187,7 @@ void CGrapple::WeaponGeneric (CPlayerEntity *Player)
 		// Only do this if we haven't been explicitely set a newFrame
 		// because we might want to keep firing beyond this point
 		// Go right away if we aren't holding attack
-		else if (!(Player->Client.buttons & BUTTON_ATTACK))
+		else if (!(Player->Client.Buttons & BUTTON_ATTACK))
 		{
 			if (Player->Client.ctf_grapple)
 				Player->Client.ctf_grapple->ResetGrapple ();
@@ -204,7 +204,7 @@ void CGrapple::WeaponGeneric (CPlayerEntity *Player)
 		else if (newFrame == -1 && Player->Client.PlayerState.GetGunFrame() > FireEnd)
 		{
 			// Grapple shouldn't change unless we want it to
-			if ((Player->Client.buttons & BUTTON_ATTACK) && 
+			if ((Player->Client.Buttons & BUTTON_ATTACK) && 
 				Player->Client.ctf_grapple)
 				newFrame = Player->Client.PlayerState.GetGunFrame();
 			else
@@ -225,11 +225,11 @@ void CGrapple::WeaponGeneric (CPlayerEntity *Player)
 	}
 
 	if (newFrame != -1)
-		Player->Client.PlayerState.SetGunFrame (newFrame);
+		Player->Client.PlayerState.GetGunFrame() = newFrame;
 	if (newState != -1)
 		Player->Client.weaponstate = newState;
 
 	if (newFrame == -1 && newState == -1)
-		Player->Client.PlayerState.SetGunFrame (Player->Client.PlayerState.GetGunFrame() + 1);
+		Player->Client.PlayerState.GetGunFrame()++;
 }
 #endif

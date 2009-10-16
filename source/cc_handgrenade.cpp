@@ -74,14 +74,14 @@ void CHandGrenade::Hold (CPlayerEntity *ent)
 		FireGrenade (ent, true);
 		ent->Client.grenade_blew_up = true;
 
-		ent->Client.PlayerState.SetGunFrame(15);
+		ent->Client.PlayerState.GetGunFrame() = 15;
 		return;
 	}
 
-	if (ent->Client.buttons & BUTTON_ATTACK)
+	if (ent->Client.Buttons & BUTTON_ATTACK)
 		return;
 
-	ent->Client.PlayerState.SetGunFrame(ent->Client.PlayerState.GetGunFrame()+1);
+	ent->Client.PlayerState.GetGunFrame()++;
 }
 
 void CHandGrenade::FireGrenade (CPlayerEntity *ent, bool inHand)
@@ -96,7 +96,7 @@ void CHandGrenade::FireGrenade (CPlayerEntity *ent, bool inHand)
 	ent->P_ProjectSource (offset, forward, right, start);
 
 	float timer = (float)(ent->Client.grenade_time - level.framenum) / 10;
-	const int speed = (ent->Client.pers.Weapon) ? 
+	const int speed = (ent->Client.Persistent.Weapon) ? 
 		(GRENADE_MINSPEED + ((GRENADE_TIMER/10) - timer) * ((GRENADE_MAXSPEED - GRENADE_MINSPEED) / (GRENADE_TIMER/10)))
 		: 25; // If we're dead, don't toss it 5 yards.
 	CGrenade::Spawn (ent, start, forward, damage, speed, timer, radius, true, inHand);
@@ -114,16 +114,16 @@ void CHandGrenade::FireGrenade (CPlayerEntity *ent, bool inHand)
 	if (ent->Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED)
 	{
 		ent->Client.anim_priority = ANIM_ATTACK;
-		ent->State.SetFrame (FRAME_crattak1-1);
+		ent->State.GetFrame() = FRAME_crattak1 - 1;
 		ent->Client.anim_end = FRAME_crattak3;
 	}
 	else
 	{
 		ent->Client.anim_priority = ANIM_REVERSE;
-		ent->State.SetFrame (FRAME_wave08);
+		ent->State.GetFrame() = FRAME_wave08;
 		ent->Client.anim_end = FRAME_wave01;
 	}
-	ent->Client.PlayerState.SetGunFrame (ent->Client.PlayerState.GetGunFrame()+1);
+	ent->Client.PlayerState.GetGunFrame()++;
 }
 
 void CHandGrenade::Wait (CPlayerEntity *ent)
@@ -134,7 +134,7 @@ void CHandGrenade::Wait (CPlayerEntity *ent)
 
 	if (!ent->DeadFlag)
 		ent->Client.grenade_thrown = false;
-	ent->Client.PlayerState.SetGunFrame (ent->Client.PlayerState.GetGunFrame()+1);
+	ent->Client.PlayerState.GetGunFrame()++;
 }
 
 void CHandGrenade::Fire (CPlayerEntity *ent)
@@ -187,16 +187,16 @@ void CHandGrenade::WeaponGeneric (CPlayerEntity *ent)
 			newState = WS_DEACTIVATING;
 			newFrame = DeactStart;
 		}
-		else if ((ent->Client.buttons|ent->Client.latched_buttons) & BUTTON_ATTACK)
+		else if ((ent->Client.Buttons|ent->Client.LatchedButtons) & BUTTON_ATTACK)
 		{
-			ent->Client.latched_buttons &= ~BUTTON_ATTACK;
+			ent->Client.LatchedButtons &= ~BUTTON_ATTACK;
 
 			// We want to attack!
 			// First call, check AttemptToFire
 			if (AttemptToFire(ent))
 			{
 				// Got here, we can fire!
-				ent->Client.PlayerState.SetGunFrame (FireStart);
+				ent->Client.PlayerState.GetGunFrame() = FireStart;
 				ent->Client.weaponstate = WS_FIRING;
 				ent->Client.grenade_time = 0;
 
@@ -239,7 +239,7 @@ void CHandGrenade::WeaponGeneric (CPlayerEntity *ent)
 		// because we might want to keep firing beyond this point
 		if (newFrame == -1 && ent->Client.PlayerState.GetGunFrame() == FireEnd)
 		{
-			if (!ent->Client.pers.Inventory.Has(Item))
+			if (!ent->Client.Persistent.Inventory.Has(Item))
 			{
 				NoAmmoWeaponChange (ent);
 				newState = WS_DEACTIVATING;
@@ -264,10 +264,10 @@ void CHandGrenade::WeaponGeneric (CPlayerEntity *ent)
 	}
 
 	if (newFrame != -1)
-		ent->Client.PlayerState.SetGunFrame (newFrame);
+		ent->Client.PlayerState.GetGunFrame() = newFrame;
 	if (newState != -1)
 		ent->Client.weaponstate = newState;
 
 	if (newFrame == -1 && newState == -1)
-		ent->Client.PlayerState.SetGunFrame (ent->Client.PlayerState.GetGunFrame()+1);
+		ent->Client.PlayerState.GetGunFrame()++;
 }

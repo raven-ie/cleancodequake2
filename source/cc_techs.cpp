@@ -57,7 +57,7 @@ TechType(TechType)
 
 bool CTech::Pickup (class CItemEntity *ent, CPlayerEntity *other)
 {
-	if (other->Client.pers.Tech)
+	if (other->Client.Persistent.Tech)
 	{
 		if (level.framenum - other->Client.lasttechmsg > 20)
 		{
@@ -68,8 +68,8 @@ bool CTech::Pickup (class CItemEntity *ent, CPlayerEntity *other)
 	}
 	
 	// client only gets one tech
-	other->Client.pers.Inventory.Set(this, 1);
-	other->Client.pers.Tech = this;
+	other->Client.Persistent.Inventory.Set(this, 1);
+	other->Client.Persistent.Tech = this;
 	other->Client.regentime = level.framenum;
 	return true;
 }
@@ -144,12 +144,12 @@ public:
 				Player->Client.regentime += 5;
 				noise = true;
 			}
-			index = Player->Client.pers.Armor;
-			if (index && Player->Client.pers.Inventory.Has(index) < 150)
+			index = Player->Client.Persistent.Armor;
+			if (index && Player->Client.Persistent.Inventory.Has(index) < 150)
 			{
-				Player->Client.pers.Inventory.Add (index, 5);
-				if (Player->Client.pers.Inventory.Has(index) > 150)
-					Player->Client.pers.Inventory.Set(index, 150);
+				Player->Client.Persistent.Inventory.Add (index, 5);
+				if (Player->Client.Persistent.Inventory.Has(index) > 150)
+					Player->Client.Persistent.Inventory.Set(index, 150);
 				Player->Client.regentime += 5;
 				noise = true;
 			}
@@ -188,22 +188,22 @@ public:
 		bool noise = false;
 		if (Player->Client.regentime < level.framenum)
 		{
-			if (Player->Client.pers.Weapon)
+			if (Player->Client.Persistent.Weapon)
 			{
-				if (Player->Client.pers.Weapon->WeaponItem)
+				if (Player->Client.Persistent.Weapon->WeaponItem)
 				{
-					CAmmo *Ammo = Player->Client.pers.Weapon->WeaponItem->Ammo;
+					CAmmo *Ammo = Player->Client.Persistent.Weapon->WeaponItem->Ammo;
 	
-					if (Ammo && Player->Client.pers.Inventory.Has(Ammo) && Player->Client.pers.Inventory.Has(Ammo) < Player->Client.pers.maxAmmoValues[Ammo->Tag])
+					if (Ammo && Player->Client.Persistent.Inventory.Has(Ammo) && Player->Client.Persistent.Inventory.Has(Ammo) < Player->Client.Persistent.maxAmmoValues[Ammo->Tag])
 					{			
 						noise = true;
 						Ammo->AddAmmo (Player, RegenAmts[Ammo->Tag]);
 					}
 				}
-				else if (Player->Client.pers.Weapon->Item && (Player->Client.pers.Weapon->Item->Flags & ITEMFLAG_AMMO))
+				else if (Player->Client.Persistent.Weapon->Item && (Player->Client.Persistent.Weapon->Item->Flags & ITEMFLAG_AMMO))
 				{
-					CAmmo *Ammo = dynamic_cast<CAmmo*>(Player->Client.pers.Weapon->Item);
-					if (Player->Client.pers.Inventory.Has(Ammo) < Player->Client.pers.maxAmmoValues[Ammo->Tag])
+					CAmmo *Ammo = dynamic_cast<CAmmo*>(Player->Client.Persistent.Weapon->Item);
+					if (Player->Client.Persistent.Inventory.Has(Ammo) < Player->Client.Persistent.maxAmmoValues[Ammo->Tag])
 					{
 						noise = true;
 						Ammo->AddAmmo (Player, RegenAmts[Ammo->Tag]);
@@ -288,11 +288,11 @@ CItemEntity *CTech::DropItem (CBaseEntity *ent)
 	dropped->gameEntity->classname = Classname;
 	dropped->gameEntity->item = this;
 	dropped->SpawnFlags = DROPPED_ITEM;
-	dropped->State.SetEffects (EffectFlags);
-	dropped->State.SetRenderEffects (RF_GLOW);
+	dropped->State.GetEffects() = EffectFlags;
+	dropped->State.GetRenderEffects() = RF_GLOW;
 	dropped->SetMins (vec3f(-15));
 	dropped->SetMaxs (vec3f(15));
-	dropped->State.SetModelIndex (ModelIndex(WorldModel));
+	dropped->State.GetModelIndex() = ModelIndex(WorldModel);
 	dropped->SetSolid (SOLID_TRIGGER);
 	dropped->gameEntity->owner = ent->gameEntity;
 
@@ -331,8 +331,8 @@ void CTech::Drop (CPlayerEntity *ent)
 {
 	CItemEntity *tech = DropItem(ent);
 	tech->NextThink = level.framenum + CTF_TECH_TIMEOUT;
-	ent->Client.pers.Inventory.Set(this, 0);
-	ent->Client.pers.Tech = NULL;
+	ent->Client.Persistent.Inventory.Set(this, 0);
+	ent->Client.Persistent.Tech = NULL;
 }
 
 void SpawnTech(CBaseItem *item, CBaseEntity *spot)
@@ -342,11 +342,11 @@ void SpawnTech(CBaseItem *item, CBaseEntity *spot)
 	ent->gameEntity->classname = item->Classname;
 	ent->gameEntity->item = item;
 	ent->SpawnFlags = DROPPED_ITEM;
-	ent->State.SetEffects(item->EffectFlags);
-	ent->State.SetRenderEffects (RF_GLOW);
+	ent->State.GetEffects() = item->EffectFlags;
+	ent->State.GetRenderEffects() = RF_GLOW;
 	ent->SetMins (vec3f(-15));
 	ent->SetMaxs (vec3f(15));
-	ent->State.SetModelIndex (ModelIndex(item->WorldModel));
+	ent->State.GetModelIndex() = ModelIndex(item->WorldModel);
 	ent->SetSolid (SOLID_TRIGGER);
 	ent->gameEntity->owner = ent->gameEntity;
 

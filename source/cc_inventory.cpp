@@ -61,16 +61,14 @@ void CInventory::Remove (int Index, int Num)
 
 void CInventory::Draw (CPlayerEntity *ent)
 {
-	ent->Client.showscores = false;
-	ent->Client.showhelp = false;
-
-	if (ent->Client.showinventory)
+	ent->Client.LayoutFlags &= ~(LF_SHOWSCORES | LF_SHOWHELP);
+	if (ent->Client.LayoutFlags & LF_SHOWINVENTORY)
 	{
-		ent->Client.showinventory = false;
+		ent->Client.LayoutFlags &= ~LF_SHOWINVENTORY;
 		return;
 	}
 
-	ent->Client.showinventory = true;
+	ent->Client.LayoutFlags |= LF_SHOWINVENTORY;
 
 	WriteByte (SVC_INVENTORY);
 	for (int i=0 ; i<MAX_CS_ITEMS ; i++)
@@ -200,14 +198,14 @@ void Cmd_Use_f (CPlayerEntity *ent)
 		ent->PrintToClient (PRINT_HIGH, "Item is not usable.\n");
 		return;
 	}
-	if (!ent->Client.pers.Inventory.Has(Item))
+	if (!ent->Client.Persistent.Inventory.Has(Item))
 	{
 		ent->PrintToClient (PRINT_HIGH, "Out of item: %s\n", s);
 		return;
 	}
 
 	Item->Use (ent);
-	ent->Client.pers.Inventory.ValidateSelectedItem();
+	ent->Client.Persistent.Inventory.ValidateSelectedItem();
 }
 
 
@@ -242,19 +240,19 @@ void Cmd_UseList_f (CPlayerEntity *ent)
 			continue;
 		}
 		// Only warn us if it's unknown or not usable; not if we don't have it
-		if (!ent->Client.pers.Inventory.Has(Item))
+		if (!ent->Client.Persistent.Inventory.Has(Item))
 			continue;
 
 		// If it's a weapon and we don't have ammo, don't bother
 		if (Item->Flags & ITEMFLAG_WEAPON && !(Item->Flags & ITEMFLAG_AMMO))
 		{
 			CWeaponItem *Weapon = dynamic_cast<CWeaponItem*>(Item);
-			if (!ent->Client.pers.Inventory.Has(Weapon->Ammo))
+			if (!ent->Client.Persistent.Inventory.Has(Weapon->Ammo))
 				continue;
 		}
 
 		Item->Use (ent);
-		ent->Client.pers.Inventory.ValidateSelectedItem();
+		ent->Client.Persistent.Inventory.ValidateSelectedItem();
 		return;
 	}
 	ent->PrintToClient (PRINT_HIGH, "No item in list found!\n");
@@ -273,10 +271,10 @@ void Cmd_Drop_f (CPlayerEntity *ent)
 
 	if (Q_stricmp(s, "tech") == 0)
 	{
-		if (ent->Client.pers.Tech)
+		if (ent->Client.Persistent.Tech)
 		{
-			ent->Client.pers.Tech->Drop (ent);
-			ent->Client.pers.Inventory.ValidateSelectedItem();
+			ent->Client.Persistent.Tech->Drop (ent);
+			ent->Client.Persistent.Inventory.ValidateSelectedItem();
 		}
 		return;
 	}
@@ -297,14 +295,14 @@ void Cmd_Drop_f (CPlayerEntity *ent)
 		ent->PrintToClient (PRINT_HIGH, "Item is not dropable.\n");
 		return;
 	}
-	if (!ent->Client.pers.Inventory.Has(Item))
+	if (!ent->Client.Persistent.Inventory.Has(Item))
 	{
 		ent->PrintToClient (PRINT_HIGH, "Out of item: %s\n", s);
 		return;
 	}
 
 	Item->Drop (ent);
-	ent->Client.pers.Inventory.ValidateSelectedItem();
+	ent->Client.Persistent.Inventory.ValidateSelectedItem();
 }
 
 
@@ -315,15 +313,15 @@ Cmd_Inven_f
 */
 void Cmd_Inven_f (CPlayerEntity *ent)
 {
-	if (ent->Client.resp.MenuState.InMenu)
+	if (ent->Client.Respawn.MenuState.InMenu)
 	{
-		ent->Client.resp.MenuState.CloseMenu();
-		ent->Client.update_chase = true;
+		ent->Client.Respawn.MenuState.CloseMenu();
+		ent->Client.LayoutFlags |= LF_UPDATECHASE;
 		return;
 	}
 #ifdef CLEANCTF_ENABLED
 //ZOID
-	if ((game.mode & GAME_CTF) && ent->Client.resp.ctf_team == CTF_NOTEAM)
+	if ((game.mode & GAME_CTF) && ent->Client.Respawn.ctf_team == CTF_NOTEAM)
 	{
 		CTFOpenJoinMenu(ent);
 		return;
@@ -331,7 +329,7 @@ void Cmd_Inven_f (CPlayerEntity *ent)
 //ZOID
 #endif
 
-	ent->Client.pers.Inventory.Draw(ent);
+	ent->Client.Persistent.Inventory.Draw(ent);
 }
 
 /*
@@ -341,23 +339,23 @@ Cmd_InvUse_f
 */
 void Cmd_InvUse_f (CPlayerEntity *ent)
 {
-	if (ent->Client.resp.MenuState.InMenu)
+	if (ent->Client.Respawn.MenuState.InMenu)
 	{
-		ent->Client.resp.MenuState.Select();
+		ent->Client.Respawn.MenuState.Select();
 		return;
 	}
 	if (ent->Health <= 0 || ent->DeadFlag)
 		return;
 
-	ent->Client.pers.Inventory.ValidateSelectedItem ();
+	ent->Client.Persistent.Inventory.ValidateSelectedItem ();
 
-	if (ent->Client.pers.Inventory.SelectedItem == -1)
+	if (ent->Client.Persistent.Inventory.SelectedItem == -1)
 	{
 		ent->PrintToClient (PRINT_HIGH, "No item to use.\n");
 		return;
 	}
 
-	CBaseItem *it = GetItemByIndex(ent->Client.pers.Inventory.SelectedItem);
+	CBaseItem *it = GetItemByIndex(ent->Client.Persistent.Inventory.SelectedItem);
 	if (!(it->Flags & ITEMFLAG_USABLE))
 	{
 		ent->PrintToClient (PRINT_HIGH, "Item is not usable.\n");
@@ -373,18 +371,18 @@ Cmd_WeapPrev_f
 */
 void Cmd_WeapPrev_f (CPlayerEntity *ent)
 {
-	if (!ent->Client.pers.Weapon)
+	if (!ent->Client.Persistent.Weapon)
 		return;
 	if (ent->Health <= 0 || ent->DeadFlag)
 		return;
 
-	int selectedWeaponIndex = ent->Client.pers.Weapon->Item->GetIndex();
+	int selectedWeaponIndex = ent->Client.Persistent.Weapon->Item->GetIndex();
 
 	// scan  for the next valid one
 	for (int i=0 ; i<=GetNumItems() ; i++)
 	{
 		int index = (selectedWeaponIndex + MAX_ITEMS - i)%MAX_CS_ITEMS;
-		if (!ent->Client.pers.Inventory.Has(index))
+		if (!ent->Client.Persistent.Inventory.Has(index))
 			continue;
 		CBaseItem *Item = GetItemByIndex(index);
 		if (!(Item->Flags & ITEMFLAG_USABLE))
@@ -392,7 +390,7 @@ void Cmd_WeapPrev_f (CPlayerEntity *ent)
 		if (! (Item->Flags & ITEMFLAG_WEAPON) )
 			continue;
 		Item->Use (ent);
-		if (ent->Client.NewWeapon && ent->Client.NewWeapon->Item == Item || ent->Client.pers.Weapon->Item == Item)
+		if (ent->Client.NewWeapon && ent->Client.NewWeapon->Item == Item || ent->Client.Persistent.Weapon->Item == Item)
 			return;	// successful
 	}
 }
@@ -404,18 +402,18 @@ Cmd_WeapNext_f
 */
 void Cmd_WeapNext_f (CPlayerEntity *ent)
 {
-	if (!ent->Client.pers.Weapon)
+	if (!ent->Client.Persistent.Weapon)
 		return;
 	if (ent->Health <= 0 || ent->DeadFlag)
 		return;
 
-	int selectedWeaponIndex = ent->Client.pers.Weapon->Item->GetIndex();
+	int selectedWeaponIndex = ent->Client.Persistent.Weapon->Item->GetIndex();
 
 	// scan  for the next valid one
 	for (int i=0 ; i<=GetNumItems() ; i++)
 	{
 		int index = (selectedWeaponIndex + i)%MAX_CS_ITEMS;
-		if (!ent->Client.pers.Inventory.Has(index))
+		if (!ent->Client.Persistent.Inventory.Has(index))
 			continue;
 		CBaseItem *Item = GetItemByIndex(index);
 		if (!(Item->Flags & ITEMFLAG_USABLE))
@@ -423,7 +421,7 @@ void Cmd_WeapNext_f (CPlayerEntity *ent)
 		if (! (Item->Flags & ITEMFLAG_WEAPON) )
 			continue;
 		Item->Use (ent);
-		if (ent->Client.NewWeapon && ent->Client.NewWeapon->Item == Item || ent->Client.pers.Weapon->Item == Item)
+		if (ent->Client.NewWeapon && ent->Client.NewWeapon->Item == Item || ent->Client.Persistent.Weapon->Item == Item)
 			return;	// successful
 	}
 }
@@ -435,16 +433,16 @@ Cmd_WeapLast_f
 */
 void Cmd_WeapLast_f (CPlayerEntity *ent)
 {
-	if (!ent->Client.pers.Weapon || !ent->Client.pers.LastWeapon)
+	if (!ent->Client.Persistent.Weapon || !ent->Client.Persistent.LastWeapon)
 		return;
 
-	if (!ent->Client.pers.Inventory.Has(ent->Client.pers.LastWeapon->Item))
+	if (!ent->Client.Persistent.Inventory.Has(ent->Client.Persistent.LastWeapon->Item))
 		return;
-	if (!(ent->Client.pers.LastWeapon->Item->Flags & ITEMFLAG_USABLE))
+	if (!(ent->Client.Persistent.LastWeapon->Item->Flags & ITEMFLAG_USABLE))
 		return;
-	if (! (ent->Client.pers.LastWeapon->Item->Flags & ITEMFLAG_WEAPON) )
+	if (! (ent->Client.Persistent.LastWeapon->Item->Flags & ITEMFLAG_WEAPON) )
 		return;
-	ent->Client.pers.LastWeapon->Item->Use (ent);
+	ent->Client.Persistent.LastWeapon->Item->Use (ent);
 }
 
 /*
@@ -457,22 +455,22 @@ void Cmd_InvDrop_f (CPlayerEntity *ent)
 	if (ent->Health <= 0 || ent->DeadFlag)
 		return;
 
-	ent->Client.pers.Inventory.ValidateSelectedItem ();
+	ent->Client.Persistent.Inventory.ValidateSelectedItem ();
 
-	if (ent->Client.pers.Inventory.SelectedItem == -1)
+	if (ent->Client.Persistent.Inventory.SelectedItem == -1)
 	{
 		ent->PrintToClient (PRINT_HIGH, "No item to drop.\n");
 		return;
 	}
 
-	CBaseItem *Item = GetItemByIndex(ent->Client.pers.Inventory.SelectedItem);
+	CBaseItem *Item = GetItemByIndex(ent->Client.Persistent.Inventory.SelectedItem);
 	if (!(Item->Flags & ITEMFLAG_DROPPABLE))
 	{
 		ent->PrintToClient (PRINT_HIGH, "Item is not dropable.\n");
 		return;
 	}
 	Item->Drop (ent);
-	ent->Client.pers.Inventory.ValidateSelectedItem();
+	ent->Client.Persistent.Inventory.ValidateSelectedItem();
 }
 
 void Cmd_SelectNextItem_f (CPlayerEntity *ent)
@@ -480,9 +478,9 @@ void Cmd_SelectNextItem_f (CPlayerEntity *ent)
 	if (ent->Health <= 0 || ent->DeadFlag)
 		return;
 
-	if (ent->Client.resp.MenuState.InMenu)
+	if (ent->Client.Respawn.MenuState.InMenu)
 	{
-		ent->Client.resp.MenuState.SelectNext();
+		ent->Client.Respawn.MenuState.SelectNext();
 		return;
 	}
 
@@ -492,16 +490,16 @@ void Cmd_SelectNextItem_f (CPlayerEntity *ent)
 		return;
 	}
 
-	ent->Client.pers.Inventory.SelectNextItem (-1);
+	ent->Client.Persistent.Inventory.SelectNextItem (-1);
 }
 void Cmd_SelectPrevItem_f (CPlayerEntity *ent)
 {
 	if (ent->Health <= 0 || ent->DeadFlag)
 		return;
 
-	if (ent->Client.resp.MenuState.InMenu)
+	if (ent->Client.Respawn.MenuState.InMenu)
 	{
-		ent->Client.resp.MenuState.SelectPrev();
+		ent->Client.Respawn.MenuState.SelectPrev();
 		return;
 	}
 
@@ -511,35 +509,35 @@ void Cmd_SelectPrevItem_f (CPlayerEntity *ent)
 		return;
 	}
 
-	ent->Client.pers.Inventory.SelectPrevItem (-1);
+	ent->Client.Persistent.Inventory.SelectPrevItem (-1);
 }
 void Cmd_SelectNextWeapon_f (CPlayerEntity *ent)
 {
 	if (ent->Health <= 0 || ent->DeadFlag)
 		return;
 
-	ent->Client.pers.Inventory.SelectNextItem (ITEMFLAG_WEAPON);
+	ent->Client.Persistent.Inventory.SelectNextItem (ITEMFLAG_WEAPON);
 }
 void Cmd_SelectPrevWeapon_f (CPlayerEntity *ent)
 {
 	if (ent->Health <= 0 || ent->DeadFlag)
 		return;
 
-	ent->Client.pers.Inventory.SelectPrevItem (ITEMFLAG_WEAPON);
+	ent->Client.Persistent.Inventory.SelectPrevItem (ITEMFLAG_WEAPON);
 }
 void Cmd_SelectNextPowerup_f (CPlayerEntity *ent)
 {
 	if (ent->Health <= 0 || ent->DeadFlag)
 		return;
 
-	ent->Client.pers.Inventory.SelectNextItem (ITEMFLAG_POWERUP);
+	ent->Client.Persistent.Inventory.SelectNextItem (ITEMFLAG_POWERUP);
 }
 void Cmd_SelectPrevPowerup_f (CPlayerEntity *ent)
 {
 	if (ent->Health <= 0 || ent->DeadFlag)
 		return;
 
-	ent->Client.pers.Inventory.SelectPrevItem (ITEMFLAG_POWERUP);
+	ent->Client.Persistent.Inventory.SelectPrevItem (ITEMFLAG_POWERUP);
 }
 
 /*
@@ -581,7 +579,7 @@ void Cmd_Give_f (CPlayerEntity *ent)
 			it = GetItemByIndex(i);
 			if (!(it->Flags & ITEMFLAG_WEAPON))
 				continue;
-			ent->Client.pers.Inventory += it;
+			ent->Client.Persistent.Inventory += it;
 		}
 		if (!give_all)
 			return;
@@ -606,15 +604,15 @@ void Cmd_Give_f (CPlayerEntity *ent)
 
 	if (give_all || Q_stricmp(name, "armor") == 0)
 	{
-		ent->Client.pers.Inventory.Set(NItems::JacketArmor->GetIndex(), 0);
-		ent->Client.pers.Inventory.Set(NItems::CombatArmor->GetIndex(), 0);
+		ent->Client.Persistent.Inventory.Set(NItems::JacketArmor->GetIndex(), 0);
+		ent->Client.Persistent.Inventory.Set(NItems::CombatArmor->GetIndex(), 0);
 
 		CArmor *Armor = dynamic_cast<CArmor*>(NItems::BodyArmor);
-		ent->Client.pers.Inventory.Set(Armor->GetIndex(), Armor->maxCount);
-		ent->Client.pers.Armor = Armor;
+		ent->Client.Persistent.Inventory.Set(Armor->GetIndex(), Armor->maxCount);
+		ent->Client.Persistent.Armor = Armor;
 
 		if (ArgCount() >= 3)
-			ent->Client.pers.Inventory.Set(Armor->GetIndex(), ArgGeti(2));
+			ent->Client.Persistent.Inventory.Set(Armor->GetIndex(), ArgGeti(2));
 
 		if (!give_all)
 			return;
@@ -645,7 +643,7 @@ void Cmd_Give_f (CPlayerEntity *ent)
 				continue;
 			if (it->Flags & (ITEMFLAG_HEALTH|ITEMFLAG_ARMOR|ITEMFLAG_WEAPON|ITEMFLAG_AMMO))
 				continue;
-			ent->Client.pers.Inventory.Set (i, 1);
+			ent->Client.Persistent.Inventory.Set (i, 1);
 		}
 		return;
 	}
@@ -669,7 +667,7 @@ void Cmd_Give_f (CPlayerEntity *ent)
 
 	if (!(it->Flags & ITEMFLAG_GRABBABLE))
 	{
-		ent->Client.pers.Inventory += it;
+		ent->Client.Persistent.Inventory += it;
 		return;
 	}
 
@@ -677,9 +675,9 @@ void Cmd_Give_f (CPlayerEntity *ent)
 	{
 		CAmmo *Ammo = dynamic_cast<CAmmo*>(it);
 		if (ArgCount() == 3)
-			ent->Client.pers.Inventory.Set (Ammo, ArgGeti(2));
+			ent->Client.Persistent.Inventory.Set (Ammo, ArgGeti(2));
 		else
-			ent->Client.pers.Inventory.Add(Ammo, Ammo->Quantity);
+			ent->Client.Persistent.Inventory.Add(Ammo, Ammo->Quantity);
 	}
 	else
 	{

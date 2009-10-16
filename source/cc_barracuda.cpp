@@ -221,7 +221,7 @@ void CBarracudaShark::Melee()
 void CBarracudaShark::Pain (CBaseEntity *other, float kick, int damage)
 {
 	if (Entity->Health < (Entity->MaxHealth / 2))
-		Entity->State.SetSkinNum(1);
+		Entity->State.GetSkinNum() = 1;
 
 	if (level.framenum < PainDebounceTime)
 		return;
@@ -332,10 +332,10 @@ void CBarracudaShark::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int da
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, GameMedia.Gib_Bone[0], damage, GIB_ORGANIC);
 		for (int n= 0; n < 2; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		Entity->ThrowHead (gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, GameMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		Entity->ThrowHead (GameMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 		Entity->DeadFlag = true;
 		return;
 	}
@@ -364,7 +364,7 @@ void CBarracudaShark::Spawn ()
 	SoundSight		= SoundIndex ("flipper/flpsght1.wav");
 
 	Entity->SetSolid (SOLID_BBOX);
-	Entity->State.SetModelIndex (ModelIndex ("models/monsters/flipper/tris.md2"));
+	Entity->State.GetModelIndex() = ModelIndex ("models/monsters/flipper/tris.md2");
 	Entity->SetMins (vec3f(-16, -16, 0));
 	Entity->SetMaxs (vec3f(16, 16, 32));
 

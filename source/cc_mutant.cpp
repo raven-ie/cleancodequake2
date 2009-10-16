@@ -592,7 +592,7 @@ CAnim MutantMovePain3 (FRAME_pain301, FRAME_pain311, MutantFramesPain3, &CMonste
 void CMutant::Pain (CBaseEntity *other, float kick, int damage)
 {
 	if (Entity->Health < (Entity->MaxHealth / 2))
-		Entity->State.SetSkinNum(1);
+		Entity->State.GetSkinNum() = 1;
 
 	if (level.framenum < PainDebounceTime)
 		return;
@@ -670,10 +670,10 @@ void CMutant::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
 		for (int n= 0; n < 2; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_Bone[0], damage, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, GameMedia.Gib_Bone[0], damage, GIB_ORGANIC);
 		for (int n= 0; n < 4; n++)
-			CGibEntity::Spawn (Entity, gMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
-		Entity->ThrowHead (gMedia.Gib_Head[1], damage, GIB_ORGANIC);
+			CGibEntity::Spawn (Entity, GameMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		Entity->ThrowHead (GameMedia.Gib_Head[1], damage, GIB_ORGANIC);
 		Entity->DeadFlag = true;
 		return;
 	}
@@ -684,7 +684,7 @@ void CMutant::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 	Entity->PlaySound (CHAN_VOICE, SoundDeath);
 	Entity->DeadFlag = true;
 	Entity->CanTakeDamage = true;
-	Entity->State.SetSkinNum(1);
+	Entity->State.GetSkinNum() = 1;
 
 	CurrentMove = (random() < 0.5) ? &MutantMoveDeath1 : &MutantMoveDeath2;
 }
@@ -713,7 +713,7 @@ void CMutant::Spawn ()
 	SoundThud = SoundIndex ("mutant/thud1.wav");
 	
 	Entity->SetSolid (SOLID_BBOX);
-	Entity->State.SetModelIndex (ModelIndex ("models/monsters/mutant/tris.md2"));
+	Entity->State.GetModelIndex() = ModelIndex ("models/monsters/mutant/tris.md2");
 	Entity->SetMins (vec3f(-32, -32, -24));
 	Entity->SetMaxs (vec3f(32, 32, 48));
 
