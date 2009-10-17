@@ -134,7 +134,7 @@ struct game_locals_t
 	EGameMode	mode; // Game mode
 
 	// cross level triggers
-	int			serverflags;
+	ECrossLevelTriggerFlags		serverflags;
 	bool		autosaved;
 };
 
@@ -190,23 +190,6 @@ struct level_locals_t
 	uint32		EntityNumber;
 };
 
-
-// spawn_temp_t is only used to hold entity field values that
-// can be set from the editor, but aren't actualy present
-// in edict_t during gameplay
-struct spawn_temp_t
-{
-	// world vars
-	char		*sky;
-	float		skyrotate;
-	vec3f		skyaxis;
-	char		*nextmap;
-
-	int			lip;
-	int			height;
-	char		*gravity;
-};
-
 CC_ENUM (uint8, EFuncState)
 {
 	STATE_TOP,
@@ -218,7 +201,6 @@ CC_ENUM (uint8, EFuncState)
 extern	game_locals_t	game;
 extern	level_locals_t	level;
 extern	gameExport_t	globals;
-extern	spawn_temp_t	*st;
 
 // means of death
 CC_ENUM (uint32, EMeansOfDeath)

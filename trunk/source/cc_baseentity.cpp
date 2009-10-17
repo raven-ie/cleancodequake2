@@ -466,16 +466,6 @@ ENTITYFIELDS_BEGIN(CMapEntity)
 	CEntityField ("sounds",			GameEntityMemberOffset(sounds),					FT_INT | FT_GAME_ENTITY),
 
 	CEntityField ("owner",			GameEntityMemberOffset(owner),					FT_ENTITY | FT_GAME_ENTITY | FT_NOSPAWN | FT_SAVABLE),
-
-	// temp spawn vars -- only valid when the spawn function is called
-	CEntityField ("lip",			SpawnTempMemberOffset(lip),						FT_INT | FT_SPAWNTEMP),
-	CEntityField ("height",			SpawnTempMemberOffset(height),					FT_INT | FT_SPAWNTEMP),
-
-	CEntityField ("gravity",		SpawnTempMemberOffset(gravity),					FT_LEVEL_STRING | FT_SPAWNTEMP),
-	CEntityField ("sky",			SpawnTempMemberOffset(sky),						FT_LEVEL_STRING | FT_SPAWNTEMP),
-	CEntityField ("skyrotate",		SpawnTempMemberOffset(skyrotate),				FT_FLOAT | FT_SPAWNTEMP),
-	CEntityField ("skyaxis",		SpawnTempMemberOffset(skyaxis),					FT_VECTOR | FT_SPAWNTEMP),
-	CEntityField ("nextmap",		SpawnTempMemberOffset(nextmap),					FT_LEVEL_STRING | FT_SPAWNTEMP),
 };
 ENTITYFIELDS_END(CMapEntity)
 

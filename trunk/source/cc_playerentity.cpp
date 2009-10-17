@@ -648,19 +648,19 @@ void CPlayerEntity::CTFAssignSkin(std::string s)
 	std::string t = s;
 
 	if (t.find('/'))
-		t.erase (0, t.find('/') + 1);
+		t.erase (t.find('/') + 1);
 	else
 		t = "male/";
 
 	switch (Client.Respawn.ctf_team)
 	{
 	case CTF_TEAM1:
-		ConfigString (CS_PLAYERSKINS+playernum, Q_VarArgs("%s\\%s%s", 
-			Client.Persistent.netname, t.c_str(), CTF_TEAM1_SKIN));
+		ConfigString (CS_PLAYERSKINS+playernum, Q_VarArgs("%s\\%s"CTF_TEAM1_SKIN, 
+			Client.Persistent.netname, t.c_str()));
 		break;
 	case CTF_TEAM2:
 		ConfigString (CS_PLAYERSKINS+playernum,
-			Q_VarArgs("%s\\%s%s", Client.Persistent.netname, t.c_str(), CTF_TEAM2_SKIN));
+			Q_VarArgs("%s\\%s"CTF_TEAM2_SKIN, Client.Persistent.netname, t.c_str()));
 		break;
 	default:
 		ConfigString (CS_PLAYERSKINS+playernum, 
@@ -3718,9 +3718,8 @@ bool CPlayerEntity::Connect (char *userinfo)
 
 	// check to see if they are on the banned IP list
 	std::string value = Info_ValueForKey (UserInfo, "ip");
-	IPAddress Adr;
+	IPAddress Adr = CopyIP (value.c_str());
 
-	Adr = CopyIP (value.c_str());
 	if (Bans.IsBanned(Adr) || Bans.IsBanned(Info_ValueForKey(UserInfo, "name").c_str()))
 	{
 		Info_SetValueForKey(UserInfo, "rejmsg", "Connection refused.");
