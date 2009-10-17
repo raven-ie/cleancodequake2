@@ -619,9 +619,9 @@ void CFlyer::Spawn ()
 	SoundIndex ("flyer/flyatck3.wav");
 
 	Entity->State.GetModelIndex() = ModelIndex ("models/monsters/flyer/tris.md2");
-	Entity->SetMins (vec3f(-16, -16, -24));
-	Entity->SetMaxs (vec3f(16, 16, 16));
-	Entity->SetSolid (SOLID_BBOX);
+	Entity->GetMins().Set (-16, -16, -24);
+	Entity->GetMaxs().Set (16);
+	Entity->GetSolid() = SOLID_BBOX;
 
 	Entity->State.GetSound() = SoundIndex ("flyer/flyidle1.wav");
 

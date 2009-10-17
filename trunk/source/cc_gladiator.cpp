@@ -258,10 +258,10 @@ void CGladiator::Pain (CBaseEntity *other, float kick, int damage)
 
 void CGladiator::Dead ()
 {
-	Entity->SetMins (vec3f(-16, -16, -24));
-	Entity->SetMaxs (vec3f(16, 16, -8));
+	Entity->GetMins().Set (-16, -16, -24);
+	Entity->GetMaxs().Set (16, 16, -8);
 	Entity->PhysicsType = PHYSICS_TOSS;
-	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
+	Entity->GetSvFlags() |= SVF_DEADMONSTER;
 	Entity->NextThink = 0;
 	Entity->Link ();
 }
@@ -335,10 +335,10 @@ void CGladiator::Spawn ()
 	SoundSearch = SoundIndex ("gladiator/gldsrch1.wav");
 	SoundSight = SoundIndex ("gladiator/sight.wav");
 
-	Entity->SetSolid (SOLID_BBOX);
+	Entity->GetSolid() = SOLID_BBOX;
 	Entity->State.GetModelIndex() = ModelIndex ("models/monsters/gladiatr/tris.md2");
-	Entity->SetMins (vec3f(-32, -32, -24));
-	Entity->SetMaxs (vec3f(32, 32, 64));
+	Entity->GetMins().Set (-32, -32, -24);
+	Entity->GetMaxs().Set (32, 32, 64);
 
 	Entity->Health = 400;
 	Entity->GibHealth = -175;

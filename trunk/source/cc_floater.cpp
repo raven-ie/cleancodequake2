@@ -562,10 +562,10 @@ void CFloater::Spawn ()
 
 	Entity->State.GetSound() = SoundIndex ("floater/fltsrch1.wav");
 
-	Entity->SetSolid (SOLID_BBOX);
+	Entity->GetSolid() = SOLID_BBOX;
 	Entity->State.GetModelIndex() = ModelIndex ("models/monsters/float/tris.md2");
-	Entity->SetMins (vec3f(-24, -24, -24));
-	Entity->SetMaxs (vec3f(24, 24, 32));
+	Entity->GetMins().Set (-24, -24, -24);
+	Entity->GetMaxs().Set (24, 24, 32);
 
 	Entity->Health = 200;
 	Entity->GibHealth = -80;

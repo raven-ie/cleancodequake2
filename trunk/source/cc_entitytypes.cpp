@@ -69,7 +69,7 @@ char *ClientTeam (CPlayerEntity *ent)
 
 	value[0] = 0;
 
-	Q_strncpyz(value, Info_ValueForKey (ent->Client.Persistent.userinfo, "skin"), sizeof(value));
+	Q_strncpyz(value, Info_ValueForKey (ent->Client.Persistent.UserInfo, "skin").c_str(), sizeof(value));
 	p = strchr(value, '/');
 	if (!p)
 		return value;
@@ -602,7 +602,7 @@ CTrace CPhysicsEntity::PushEntity (vec3f &push)
 	{
 		Trace = CTrace (Start, GetMins(), GetMaxs(), End, gameEntity, (GetClipmask()) ? GetClipmask() : CONTENTS_MASK_SOLID);
 		
-		State.SetOrigin (Trace.endPos);
+		State.GetOrigin() = Trace.EndPos;
 		Link();
 
 		if (Trace.fraction != 1.0)
@@ -610,10 +610,10 @@ CTrace CPhysicsEntity::PushEntity (vec3f &push)
 			Impact (&Trace);
 
 			// if the pushed entity went away and the pusher is still there
-			if (!Trace.ent->inUse && IsInUse())
+			if (!Trace.Ent->GetInUse() && GetInUse())
 			{
 				// move the pusher back and try again
-				State.SetOrigin (Start);
+				State.GetOrigin() = Start;
 				Link ();
 				continue;
 			}
@@ -621,7 +621,7 @@ CTrace CPhysicsEntity::PushEntity (vec3f &push)
 		break;
 	}
 
-	if (IsInUse())
+	if (GetInUse())
 		G_TouchTriggers (this);
 
 	return Trace;
@@ -654,10 +654,10 @@ backOff(1.5f),
 CPhysicsEntity ()
 {
 	Velocity.Clear ();
-	SetClipmask (CONTENTS_MASK_SHOT);
-	SetSolid (SOLID_BBOX);
-	SetMins(vec3Origin);
-	SetMaxs(vec3Origin);
+	GetClipmask() = CONTENTS_MASK_SHOT;
+	GetSolid() = SOLID_BBOX;
+	GetMins().Clear ();
+	GetMaxs().Clear ();
 
 	PhysicsType = PHYSICS_BOUNCE;
 }
@@ -667,10 +667,10 @@ backOff(1.5f),
 CPhysicsEntity (Index)
 {
 	Velocity.Clear ();
-	SetClipmask (CONTENTS_MASK_SHOT);
-	SetSolid (SOLID_BBOX);
-	SetMins(vec3Origin);
-	SetMaxs(vec3Origin);
+	GetClipmask() = CONTENTS_MASK_SHOT;
+	GetSolid() = SOLID_BBOX;
+	GetMins().Clear ();
+	GetMaxs().Clear ();
 
 	PhysicsType = PHYSICS_BOUNCE;
 }
@@ -691,7 +691,7 @@ bool CBounceProjectile::Run ()
 		GroundEntity = NULL;
 
 // check for the groundentity going away
-	if (GroundEntity && !GroundEntity->IsInUse())
+	if (GroundEntity && !GroundEntity->GetInUse())
 		GroundEntity = NULL;
 
 // if onground, return without moving
@@ -704,13 +704,13 @@ bool CBounceProjectile::Run ()
 	AddGravity ();
 
 // move angles
-	State.SetAngles (State.GetAngles().MultiplyAngles (0.1f, AngularVelocity));
+	State.GetAngles() = State.GetAngles().MultiplyAngles (0.1f, AngularVelocity);
 
 // move origin
 	move = Velocity * 0.1f;
 
 	trace = PushEntity (move);
-	if (!IsInUse())
+	if (!GetInUse())
 		return false;
 
 	if (trace.fraction < 1)
@@ -746,7 +746,7 @@ bool CBounceProjectile::Run ()
 // move teamslaves
 	for (CBaseEntity *slave = TeamChain; slave; slave = slave->TeamChain)
 	{
-		slave->State.SetOrigin (State.GetOrigin());
+		slave->State.GetOrigin() = State.GetOrigin();
 		slave->Link ();
 	}
 
@@ -773,10 +773,10 @@ CFlyMissileProjectile::CFlyMissileProjectile () :
 CPhysicsEntity ()
 {
 	Velocity.Clear ();
-	SetClipmask (CONTENTS_MASK_SHOT);
-	SetSolid (SOLID_BBOX);
-	SetMins(vec3Origin);
-	SetMaxs(vec3Origin);
+	GetClipmask() = CONTENTS_MASK_SHOT;
+	GetSolid() = SOLID_BBOX;
+	GetMins().Clear ();
+	GetMaxs().Clear ();
 
 	PhysicsType = PHYSICS_FLYMISSILE;
 }
@@ -785,10 +785,10 @@ CFlyMissileProjectile::CFlyMissileProjectile (int Index) :
 CPhysicsEntity (Index)
 {
 	Velocity.Clear ();
-	SetClipmask (CONTENTS_MASK_SHOT);
-	SetSolid (SOLID_BBOX);
-	SetMins(vec3Origin);
-	SetMaxs(vec3Origin);
+	GetClipmask() = CONTENTS_MASK_SHOT;
+	GetSolid() = SOLID_BBOX;
+	GetMins().Clear ();
+	GetMaxs().Clear ();
 
 	PhysicsType = PHYSICS_FLYMISSILE;
 }
@@ -808,7 +808,7 @@ bool CFlyMissileProjectile::Run ()
 		GroundEntity = NULL;
 
 // check for the groundentity going away
-	if (GroundEntity && !GroundEntity->IsInUse())
+	if (GroundEntity && !GroundEntity->GetInUse())
 		GroundEntity = NULL;
 
 // if onground, return without moving
@@ -818,13 +818,13 @@ bool CFlyMissileProjectile::Run ()
 	old_origin = State.GetOrigin();
 
 // move angles
-	State.SetAngles (State.GetAngles().MultiplyAngles (0.1f, AngularVelocity));
+	State.GetAngles() = State.GetAngles().MultiplyAngles (0.1f, AngularVelocity);
 
 // move origin
 	move = Velocity * 0.1f;
 	trace = PushEntity (move);
 
-	if (!IsInUse())
+	if (!GetInUse())
 		return false;
 
 	if (trace.fraction < 1)
@@ -856,7 +856,7 @@ bool CFlyMissileProjectile::Run ()
 // move teamslaves
 	for (CBaseEntity *slave = TeamChain; slave; slave = slave->TeamChain)
 	{
-		slave->State.SetOrigin (State.GetOrigin());
+		slave->State.GetOrigin() = State.GetOrigin();
 		slave->Link ();
 	}
 
@@ -867,10 +867,10 @@ CStepPhysics::CStepPhysics () :
 CPhysicsEntity ()
 {
 	Velocity.Clear ();
-	SetClipmask (CONTENTS_MASK_SHOT);
-	SetSolid (SOLID_BBOX);
-	SetMins(vec3Origin);
-	SetMaxs(vec3Origin);
+	GetClipmask() = CONTENTS_MASK_SHOT;
+	GetSolid() = SOLID_BBOX;
+	GetMins().Clear ();
+	GetMaxs().Clear ();
 
 	PhysicsType = PHYSICS_STEP;
 }
@@ -879,10 +879,10 @@ CStepPhysics::CStepPhysics (int Index) :
 CPhysicsEntity (Index)
 {
 	Velocity.Clear (); 
-	SetClipmask (CONTENTS_MASK_SHOT);
-	SetSolid (SOLID_BBOX);
-	SetMins(vec3Origin);
-	SetMaxs(vec3Origin);
+	GetClipmask() = CONTENTS_MASK_SHOT;
+	GetSolid() = SOLID_BBOX;
+	GetMins().Clear ();
+	GetMaxs().Clear ();
 
 	PhysicsType = PHYSICS_STEP;
 }
@@ -912,7 +912,7 @@ void CStepPhysics::CheckGround ()
 
 	if (!trace.startSolid && !trace.allSolid)
 	{
-		State.SetOrigin (trace.EndPos);
+		State.GetOrigin() = trace.EndPos;
 		GroundEntity = trace.Ent;
 		GroundEntityLinkCount = trace.Ent->GetLinkCount();
 		Velocity.Z = 0;
@@ -925,7 +925,7 @@ void CStepPhysics::CheckGround ()
 
 void CStepPhysics::AddRotationalFriction ()
 {
-	State.SetAngles (State.GetAngles().MultiplyAngles (0.1f, AngularVelocity));
+	State.GetAngles() = State.GetAngles().MultiplyAngles (0.1f, AngularVelocity);
 
 	float adjustment = 0.1f * SV_STOPSPEED * SV_FRICTION;
 	for (int n = 0; n < 3; n++)
@@ -974,7 +974,7 @@ int CStepPhysics::FlyMove (float time, int mask)
 		if (trace.fraction > 0)
 		{
 			// actually covered some distance
-			State.SetOrigin (trace.EndPos);
+			State.GetOrigin() = trace.EndPos;
 			original_velocity = Velocity;
 			numplanes = 0;
 		}
@@ -1000,7 +1000,7 @@ int CStepPhysics::FlyMove (float time, int mask)
 // run the impact function
 //
 		Impact (&trace);
-		if (!IsInUse())
+		if (!GetInUse())
 			break;		// removed by the impact function
 
 		
@@ -1158,7 +1158,7 @@ bool CStepPhysics::Run ()
 
 		Link();
 		G_TouchTriggers (this);
-		if (!IsInUse())
+		if (!GetInUse())
 			return false;
 
 		if (GroundEntity && !wasonground && hitsound)
@@ -1273,8 +1273,8 @@ bool Push (std::vector<CPushed> &Pushed, CBaseEntity *Entity, vec3f &move, vec3f
 	Entity->State.GetOrigin(), Entity->State.GetAngles()));
 
 	// move the pusher to it's final position
-	Entity->State.SetOrigin (Entity->State.GetOrigin() + move);
-	Entity->State.SetAngles (Entity->State.GetAngles() + amove);
+	Entity->State.GetOrigin() += move;
+	Entity->State.GetAngles() += amove;
 	Entity->Link ();
 
 	// see if any solid entities are inside the final position
@@ -1327,7 +1327,7 @@ bool Push (std::vector<CPushed> &Pushed, CBaseEntity *Entity, vec3f &move, vec3f
 			CPushed PushedEntity (Check, 0, Check->State.GetOrigin(), Check->State.GetAngles());
 
 			// try moving the contacted entity
-			Check->State.SetOrigin (Check->State.GetOrigin() + move);
+			Check->State.GetOrigin() += move;
 			if (Check->EntityFlags & ENT_PLAYER)
 			{
 				CPlayerEntity *Player = entity_cast<CPlayerEntity>(Check);
@@ -1338,7 +1338,7 @@ bool Push (std::vector<CPushed> &Pushed, CBaseEntity *Entity, vec3f &move, vec3f
 			}
 
 			else
-				Check->State.SetAngles (Check->State.GetAngles() + vec3f (0, amove.Y, 0));
+				Check->State.GetAngles() += vec3f (0, amove.Y, 0);
 
 			Pushed.push_back (PushedEntity);
 
@@ -1349,7 +1349,7 @@ bool Push (std::vector<CPushed> &Pushed, CBaseEntity *Entity, vec3f &move, vec3f
 				-org.Dot (right),
 				org.Dot (up)
 				);
-			Check->State.SetOrigin (Check->State.GetOrigin() + (org2 - org));
+			Check->State.GetOrigin() += (org2 - org);
 
 			// may have pushed them off an edge
 			if (Check->GroundEntity != Entity)
@@ -1365,7 +1365,7 @@ bool Push (std::vector<CPushed> &Pushed, CBaseEntity *Entity, vec3f &move, vec3f
 			// if it is ok to leave in the old position, do it
 			// this is only relevent for riding entities, not pushed
 			// FIXME: this doesn't acount for rotation
-			Check->State.SetOrigin (Check->State.GetOrigin() - move);
+			Check->State.GetOrigin() -= move;
 			if (!SV_TestEntityPosition (Check))
 			{
 				Pushed.pop_back();
@@ -1383,8 +1383,8 @@ bool Push (std::vector<CPushed> &Pushed, CBaseEntity *Entity, vec3f &move, vec3f
 		{
 			CPushed &PushedEntity = *it;
 
-			PushedEntity.Entity->State.SetOrigin (PushedEntity.Origin);
-			PushedEntity.Entity->State.SetAngles (PushedEntity.Angles);
+			PushedEntity.Entity->State.GetOrigin() = PushedEntity.Origin;
+			PushedEntity.Entity->State.GetAngles() = PushedEntity.Angles;
 			if (PushedEntity.Entity->EntityFlags & ENT_PLAYER)
 				(entity_cast<CPlayerEntity>(PushedEntity.Entity))->Client.PlayerState.GetPMove()->deltaAngles[YAW] = PushedEntity.DeltaYaw;
 			PushedEntity.Entity->Link ();
@@ -1613,7 +1613,7 @@ void CUsableEntity::UseTargets (CBaseEntity *activator, char *Message)
 		{
 			t->Free ();
 
-			if (!IsInUse())
+			if (!GetInUse())
 			{
 				DebugPrintf("entity was removed while using killtargets\n");
 				return;
@@ -1647,7 +1647,7 @@ void CUsableEntity::UseTargets (CBaseEntity *activator, char *Message)
 				if (Used->Usable)
 					Used->Use (this, activator);
 			}
-			if (!IsInUse())
+			if (!GetInUse())
 			{
 				DebugPrintf("entity was removed while using targets\n");
 				return;

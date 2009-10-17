@@ -97,11 +97,11 @@ void CBody::TossHead (int damage)
 	}
 
 	State.GetFrame() = 0;
-	SetMins (vec3f(-16, -16, 0));
-	SetMaxs (vec3f(16, 16, 16));
+	GetMins().Set (-16, -16, 0);
+	GetMaxs().Set (16);
 
 	CanTakeDamage = false;
-	SetSolid (SOLID_NOT);
+	GetSolid() = SOLID_NOT;
 	State.GetEffects() = EF_GIB;
 	State.GetSound() = 0;
 	Flags |= FL_NO_KNOCKBACK;
@@ -144,7 +144,7 @@ void CBody::Think ()
 
 	// Disappear us
 	State.GetModelIndex() = State.GetEffects() = 0;
-	SetSvFlags (SVF_NOCLIENT);
+	GetSvFlags() = SVF_NOCLIENT;
 }
 
 void CBody::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
@@ -155,9 +155,7 @@ void CBody::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3
 		for (int n = 0; n < 4; n++)
 			CGibEntity::Spawn (this, GameMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
 			
-		vec3f origin = State.GetOrigin();
-		origin.Z -= 16;
-		State.SetOrigin(origin);
+		State.GetOrigin().Z -= 16;
 		TossHead (damage);
 	}
 }
@@ -230,23 +228,23 @@ void CBodyQueue::CopyBodyToQueue (CPlayerEntity *Player)
 
 	vec3f angles = Player->State.GetAngles();
 	angles[0] = 0;
-	Body->State.SetAngles (angles);
+	Body->State.GetAngles() = angles;
 	Body->State.GetEffects() = Player->State.GetEffects();
 	Body->State.GetFrame() = Player->State.GetFrame();
 	Body->State.GetModelIndex() = Player->State.GetModelIndex();
 	Body->State.GetOldOrigin() = Player->State.GetOldOrigin();
-	Body->State.SetOrigin (Player->State.GetOrigin());
+	Body->State.GetOrigin() = Player->State.GetOrigin();
 	Body->State.GetRenderEffects() = Player->State.GetRenderEffects();
 	Body->State.GetSkinNum() = Player->State.GetSkinNum();
 
-	Body->SetSvFlags (Player->GetSvFlags());
-	Body->SetMins (Player->GetMins());
-	Body->SetMaxs (Player->GetMaxs());
-	Body->SetAbsMin (Player->GetAbsMin());
-	Body->SetAbsMax (Player->GetAbsMax());
-	Body->SetSize (Player->GetSize());
-	Body->SetSolid (Player->GetSolid());
-	Body->SetClipmask(Player->GetClipmask());
+	Body->GetSvFlags() = Player->GetSvFlags();
+	Body->GetMins() = Player->GetMins();
+	Body->GetMaxs() = Player->GetMaxs();
+	Body->GetAbsMin() = Player->GetAbsMin();
+	Body->GetAbsMax() = Player->GetAbsMax();
+	Body->GetSize() = Player->GetSize();
+	Body->GetSolid() = Player->GetSolid();
+	Body->GetClipmask() = Player->GetClipmask();
 	Body->Velocity.Clear ();
 	CBaseEntity *owner;
 	if ((owner = Player->GetOwner()) != 0)

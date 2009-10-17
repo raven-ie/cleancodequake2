@@ -51,11 +51,11 @@ void CFlagEntity::Think ()
 	{
 	case FTS_FLAGSETUP:
 		{
-			SetMins (vec3f(-15, -15, -15));
-			SetMaxs (vec3f(15, 15, 15));
+			GetMins().Set (-15);
+			GetMaxs().Set (15);
 
 			State.GetModelIndex() = ModelIndex((gameEntity->model) ? gameEntity->model : gameEntity->item->WorldModel);
-			SetSolid (SOLID_TRIGGER);
+			GetSolid() = SOLID_TRIGGER;
 			Touchable = false;
 			PhysicsType = PHYSICS_NONE;
 
@@ -69,7 +69,7 @@ void CFlagEntity::Think ()
 				return;
 			}
 
-			State.SetOrigin (tr.EndPos);
+			State.GetOrigin() = tr.EndPos;
 
 			Link ();
 
@@ -216,10 +216,10 @@ CItemEntity *CFlag::DropItem (CBaseEntity *ent)
 	dropped->SpawnFlags = DROPPED_ITEM;
 	dropped->State.GetEffects() = EffectFlags;
 	dropped->State.GetRenderEffects() = RF_GLOW;
-	dropped->SetMins (vec3f(-15));
-	dropped->SetMaxs (vec3f(15));
+	dropped->GetMins().Set (-15);
+	dropped->GetMaxs().Set (15);
 	dropped->State.GetModelIndex() = ModelIndex(WorldModel);
-	dropped->SetSolid (SOLID_TRIGGER);
+	dropped->GetSolid() = SOLID_TRIGGER;
 	dropped->gameEntity->owner = ent->gameEntity;
 
 	if (ent->EntityFlags & ENT_PLAYER)
@@ -235,12 +235,12 @@ CItemEntity *CFlag::DropItem (CBaseEntity *ent)
 
 		trace = CTrace (ent->State.GetOrigin(), dropped->GetMins(), dropped->GetMaxs(),
 			result, ent->gameEntity, CONTENTS_SOLID);
-		dropped->State.SetOrigin (trace.endPos);
+		dropped->State.GetOrigin() = trace.endPos;
 	}
 	else
 	{
 		ent->State.GetAngles().ToVectors(&forward, &right, NULL);
-		dropped->State.SetOrigin (ent->State.GetOrigin());
+		dropped->State.GetOrigin() = ent->State.GetOrigin();
 	}
 
 	forward *= 100;

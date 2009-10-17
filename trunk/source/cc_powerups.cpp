@@ -241,8 +241,8 @@ void CMegaHealth::DoPickup (CItemEntity *ent, CPlayerEntity *other)
 		MegaHealth->NextThink = level.framenum + 50;
 		MegaHealth->Player = other;
 		MegaHealth->Flags |= FL_RESPAWN;
-		MegaHealth->SetSvFlags (MegaHealth->GetSvFlags() | SVF_NOCLIENT);
-		MegaHealth->SetSolid (SOLID_NOT);
+		MegaHealth->GetSvFlags() |= SVF_NOCLIENT;
+		MegaHealth->GetSolid() = SOLID_NOT;
 
 		other->Health += 100;
 #ifdef CLEANCTF_ENABLED

@@ -275,7 +275,7 @@ edict_t *PlayerNearby (vec3f origin, int distance)
 
 	while ((ent = FindRadius <CPlayerEntity, ENT_PLAYER> (ent, origin, distance)) != NULL)
 	{
-		if (ent->IsInUse())
+		if (ent->GetInUse())
 			return ent->gameEntity;
 	}
 	return NULL;
@@ -287,7 +287,7 @@ void PrintVerboseNodes (vec3f origin, uint32 numNode, ENodeType Type)
 
 	while ((ent = FindRadius <CPlayerEntity, ENT_PLAYER>(ent, origin, 25)) != NULL)
 	{
-		if (ent->IsInUse())
+		if (ent->GetInUse())
 		{
 			char *nodeType = "normal";
 			switch (Type)
@@ -344,7 +344,7 @@ void SpawnNodeEntity (CPathNode *Node)
 
 	Node->Ent = new CNodeEntity;
 	Node->Ent->State.GetModelIndex() = ModelIndex("models/objects/grenade2/tris.md2");
-	Node->Ent->State.SetOrigin (Node->Origin);
+	Node->Ent->State.GetOrigin() = Node->Origin;
 	Node->Ent->Link ();
 	CheckNodeFlags (Node);
 }
@@ -753,7 +753,7 @@ void Cmd_Node_f (CPlayerEntity *ent)
 		vec3f v (ArgGetf(3), ArgGetf(4), ArgGetf(5));
 
 		Node->Origin += v;
-		Node->Ent->State.SetOrigin (Node->Ent->State.GetOrigin() + v);
+		Node->Ent->State.GetOrigin() = (Node->Ent->State.GetOrigin() + v);
 		Node->Ent->Link ();
 	}
 }

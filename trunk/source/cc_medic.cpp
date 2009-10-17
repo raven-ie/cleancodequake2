@@ -50,7 +50,7 @@ CMonster(ID)
 void CMedic::CleanupHeal (bool ChangeFrame)
 {
 	// clean up target, if we have one and it's legit
-	if (Entity->Enemy && Entity->Enemy->IsInUse())
+	if (Entity->Enemy && Entity->Enemy->GetInUse())
 	{
 		CMonsterEntity *Enemy = entity_cast<CMonsterEntity>(Entity->Enemy);
 		Enemy->Monster->Healer = NULL;
@@ -71,17 +71,17 @@ void CMedic::AbortHeal (bool Gib, bool Mark)
 	CleanupHeal (true);
 
 	// gib em!
-	if ((Mark) && (Entity->Enemy) && (Entity->Enemy->IsInUse()))
+	if ((Mark) && (Entity->Enemy) && (Entity->Enemy->GetInUse()))
 	{
 		CMonsterEntity *Enemy = entity_cast<CMonsterEntity>(Entity->Enemy);
 		// if the first badMedic slot is filled by a medic, skip it and use the second one
-		if ((Enemy->Monster->BadMedic1) && (Enemy->Monster->BadMedic1->IsInUse())
+		if ((Enemy->Monster->BadMedic1) && (Enemy->Monster->BadMedic1->GetInUse())
 			&& (!strncmp(Enemy->Monster->BadMedic1->gameEntity->classname, "monster_medic", 13)) )
 			Enemy->Monster->BadMedic2 = Entity;
 		else
 			Enemy->Monster->BadMedic1 = Entity;
 	}
-	if ((Gib) && (Entity->Enemy) && (Entity->Enemy->IsInUse()))
+	if ((Gib) && (Entity->Enemy) && (Entity->Enemy->GetInUse()))
 	{
 //		if ((g_showlogic) && (g_showlogic->value))
 //			gi.dprintf ("%s - gibbing bad heal target", self->classname);
@@ -95,7 +95,7 @@ void CMedic::AbortHeal (bool Gib, bool Mark)
 	// clean up self
 
 	AIFlags &= ~AI_MEDIC;
-	if ((Entity->OldEnemy) && (Entity->OldEnemy->IsInUse()))
+	if ((Entity->OldEnemy) && (Entity->OldEnemy->GetInUse()))
 		Entity->Enemy = Entity->OldEnemy;
 	else
 		Entity->Enemy = NULL;
@@ -132,7 +132,7 @@ CMonsterEntity *CMedic::FindDeadMonster ()
 			// FIXME - this is correcting a bug that is somewhere else
 			// if the healer is a monster, and it's in medic mode .. continue .. otherwise
 			//   we will override the healer, if it passes all the other tests
-			if ((ent->Monster->Healer->IsInUse()) && (ent->Monster->Healer->Health > 0) &&
+			if ((ent->Monster->Healer->GetInUse()) && (ent->Monster->Healer->Health > 0) &&
 				(ent->Monster->Healer->GetSvFlags() & SVF_MONSTER) && (ent->Monster->Healer->Monster->AIFlags & AI_MEDIC))
 				continue;
 #endif
@@ -448,10 +448,10 @@ void CMedic::FireBlaster ()
 
 void CMedic::Dead ()
 {
-	Entity->SetMins (vec3f(-16, -16, -24));
-	Entity->SetMaxs (vec3f(16, 16, -8));
+	Entity->GetMins().Set (-16, -16, -24);
+	Entity->GetMaxs().Set (16, 16, -8);
 	Entity->PhysicsType = PHYSICS_TOSS;
-	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
+	Entity->GetSvFlags() |= SVF_DEADMONSTER;
 	Entity->NextThink = 0;
 	Entity->Link ();
 }
@@ -598,10 +598,10 @@ void CMedic::CableAttack ()
 	float	distance;
 
 #ifndef MONSTER_USE_ROGUE_AI
-	if (!Entity->Enemy->IsInUse())
+	if (!Entity->Enemy->GetInUse())
 		return;
 #else
-	if ((!Entity->Enemy) || (!Entity->Enemy->IsInUse()) || (Entity->Enemy->State.GetEffects() & EF_GIB))
+	if ((!Entity->Enemy) || (!Entity->Enemy->GetInUse()) || (Entity->Enemy->State.GetEffects() & EF_GIB))
 	{
 		AbortHeal (false, false);
 		return;
@@ -698,8 +698,8 @@ void CMedic::CableAttack ()
 			Monster->State.GetSkinNum() -= 1;
 		Monster->PhysicsType = PHYSICS_STEP;
 		Monster->Flags &= ~FL_NO_KNOCKBACK;
-		Monster->SetSvFlags (Monster->GetSvFlags() | SVF_MONSTER);
-		Monster->SetSolid (SOLID_BBOX);
+		Monster->GetSvFlags() |= SVF_MONSTER;
+		Monster->GetSolid() = SOLID_BBOX;
 		Monster->Link ();
 
 		if (Entity->OldEnemy && (Entity->OldEnemy->EntityFlags & ENT_PLAYER))
@@ -736,8 +736,8 @@ void CMedic::CableAttack ()
 			Monster->State.GetSkinNum() &= ~1;
 			Monster->PhysicsType = PHYSICS_STEP;
 			Monster->Flags &= ~FL_NO_KNOCKBACK;
-			Monster->SetSvFlags (Monster->GetSvFlags() | SVF_MONSTER);
-			Monster->SetSolid (SOLID_BBOX);
+			Monster->GetSvFlags() |= SVF_MONSTER;
+			Monster->GetSolid() = SOLID_BBOX;
 			Monster->Link ();
 
 			if (Entity->OldEnemy && (Entity->OldEnemy->EntityFlags & ENT_PLAYER))
@@ -863,7 +863,7 @@ bool CMedic::CheckAttack ()
 		return true;
 #else
 		// if our target went away
-		if ((!Entity->Enemy) || (!Entity->Enemy->IsInUse()))
+		if ((!Entity->Enemy) || (!Entity->Enemy->GetInUse()))
 		{
 			AbortHeal (false, false);
 			return false;
@@ -911,7 +911,7 @@ void CMedic::Duck_Down ()
 		return;
 	AIFlags |= AI_DUCKED;
 	PauseTime = level.framenum + 10;
-	Entity->SetMins (Entity->GetMins() - vec3f(0, 0, 32));
+	Entity->GetMins() -= vec3f(0, 0, 32);
 	Entity->Link ();
 }
 
@@ -926,7 +926,7 @@ void CMedic::Duck_Hold ()
 void CMedic::Duck_Up ()
 {
 	AIFlags &= ~AI_DUCKED;
-	Entity->SetMins (Entity->GetMins() + vec3f(0, 0, 32));
+	Entity->GetMins() += vec3f(0, 0, 32);
 	Entity->Link ();
 }
 #endif
@@ -1040,10 +1040,10 @@ void CMedic::Spawn ()
 
 	SoundIndex ("medic/medatck1.wav");
 
-	Entity->SetSolid (SOLID_BBOX);
+	Entity->GetSolid() = SOLID_BBOX;
 	Entity->State.GetModelIndex() = ModelIndex ("models/monsters/medic/tris.md2");
-	Entity->SetMins (vec3f(-24, -24, -24));
-	Entity->SetMaxs (vec3f(24, 24, 32));
+	Entity->GetMins().Set (-24, -24, -24);
+	Entity->GetMaxs().Set (24, 24, 32);
 
 	Entity->Health = 300;
 	Entity->GibHealth = -130;

@@ -126,17 +126,17 @@ bool CItemEntity::Run ()
 
 void CItemEntity::Use (CBaseEntity *other, CBaseEntity *activator)
 {
-	SetSvFlags (GetSvFlags() & ~SVF_NOCLIENT);
+	GetSvFlags() &= ~SVF_NOCLIENT;
 	Usable = false;
 
 	if (SpawnFlags & ITEM_NO_TOUCH)
 	{
-		SetSolid (SOLID_BBOX);
+		GetSolid() = SOLID_BBOX;
 		Touchable = false;
 	}
 	else
 	{
-		SetSolid (SOLID_TRIGGER);
+		GetSolid() = SOLID_TRIGGER;
 		Touchable = true;
 	}
 
@@ -151,7 +151,7 @@ CItemEntity *CItemEntity::GetRandomTeamMember (CItemEntity *Master)
 
 	for (count = 0, Member = Master; Member; Member = Member->TeamChain, count++);
 	int choice = irandom(count);
-	for (count = 0, Member = Master; count < choice; Member = Member->TeamChain, count++);
+	for (count = 0, Member = Master; count < choice, Member; Member = Member->TeamChain, count++);
 
 	return entity_cast<CItemEntity>(Member);
 }
@@ -164,11 +164,11 @@ void CItemEntity::Think ()
 		ThinkState = ITS_NONE;
 
 		{
-			SetMins (vec3f(-15,-15,-15));
-			SetMaxs (vec3f(15,15,15));
+			GetMins().Set (-15);
+			GetMaxs().Set (15);
 
 			State.GetModelIndex() = ModelIndex((gameEntity->model) ? gameEntity->model : gameEntity->item->WorldModel);
-			SetSolid (SOLID_TRIGGER); 
+			GetSolid() = SOLID_TRIGGER; 
 			Touchable = true;
 			PhysicsType = PHYSICS_TOSS;
 
@@ -181,13 +181,13 @@ void CItemEntity::Think ()
 				return;
 			}
 
-			State.SetOrigin (tr.EndPos);
+			State.GetOrigin() = tr.EndPos;
 
 			if (gameEntity->team)
 			{
 				Flags &= ~FL_TEAMSLAVE;
-				SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
-				SetSolid (SOLID_NOT);
+				GetSvFlags() |= SVF_NOCLIENT;
+				GetSolid() = SOLID_NOT;
 				if (TeamMaster == this)
 				{
 					NextThink = level.framenum + FRAMETIME;
@@ -197,7 +197,7 @@ void CItemEntity::Think ()
 
 			if (SpawnFlags & ITEM_NO_TOUCH)
 			{
-				SetSolid (SOLID_BBOX);
+				GetSolid() = SOLID_BBOX;
 				Touchable = false;
 				State.GetEffects() &= ~EF_ROTATE;
 				State.GetRenderEffects() &= ~RF_GLOW;
@@ -205,8 +205,8 @@ void CItemEntity::Think ()
 
 			if (SpawnFlags & ITEM_TRIGGER_SPAWN)
 			{
-				SetSvFlags(GetSvFlags() | SVF_NOCLIENT);
-				SetSolid (SOLID_NOT);
+				GetSvFlags() |= SVF_NOCLIENT;
+				GetSolid() = SOLID_NOT;
 				Usable = true;
 			}
 
@@ -237,8 +237,8 @@ void CItemEntity::Think ()
 				RespawnedEntity = GetRandomTeamMember(entity_cast<CItemEntity>(Master));
 			}
 
-			RespawnedEntity->SetSvFlags (RespawnedEntity->GetSvFlags() & ~SVF_NOCLIENT);
-			RespawnedEntity->SetSolid (SOLID_TRIGGER);
+			RespawnedEntity->GetSvFlags() &= ~SVF_NOCLIENT;
+			RespawnedEntity->GetSolid() = SOLID_TRIGGER;
 			RespawnedEntity->Link ();
 
 			// send an effect

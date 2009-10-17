@@ -272,7 +272,7 @@ void CMutant::HitRight ()
 
 void CMutant::CheckRefire ()
 {
-	if (!Entity->Enemy || !Entity->Enemy->IsInUse() || entity_cast<CHurtableEntity>(Entity->Enemy)->Health <= 0)
+	if (!Entity->Enemy || !Entity->Enemy->GetInUse() || entity_cast<CHurtableEntity>(Entity->Enemy)->Health <= 0)
 		return;
 
 	// Paril, this was kinda dumb because he would keep refiring on nightmare
@@ -357,15 +357,14 @@ void CMutant::JumpTakeOff ()
 	Entity->Velocity.Z = 250;
 #else
 	vec3f	forward, up, angles;
-	vec3f origin = Entity->State.GetOrigin();
 
 	if (AttemptJumpToLastSight)
 	{
-		angles = LastSighting - origin;
+		angles = LastSighting - Entity->State.GetOrigin();
 		AttemptJumpToLastSight = false;
 	}
 	else
-		angles = Entity->Enemy->State.GetOrigin() - origin;
+		angles = Entity->Enemy->State.GetOrigin() - Entity->State.GetOrigin();
 
 	angles.ToAngles ().ToVectors (&forward, NULL, &up);
 
@@ -374,8 +373,7 @@ void CMutant::JumpTakeOff ()
 	Entity->Velocity = Entity->Velocity.MultiplyAngles (60 + angles.Length(), up);
 #endif
 
-	origin.Z += 1;
-	Entity->State.SetOrigin(origin);
+	Entity->State.GetOrigin().Z += 1;
 	Entity->GroundEntity = NULL;
 	AIFlags |= AI_DUCKED;
 	AttackFinished = level.framenum + 30;
@@ -626,10 +624,10 @@ void CMutant::Pain (CBaseEntity *other, float kick, int damage)
 
 void CMutant::Dead ()
 {
-	Entity->SetMins (vec3f(-16, -16, -24));
-	Entity->SetMaxs (vec3f(16, 16, -8));
+	Entity->GetMins().Set (-16, -16, -24);
+	Entity->GetMaxs().Set (16, 16, -8);
 	Entity->PhysicsType = PHYSICS_TOSS;
-	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
+	Entity->GetSvFlags() |= SVF_DEADMONSTER;
 	Entity->Link ();
 
 	CheckFlies ();
@@ -712,10 +710,10 @@ void CMutant::Spawn ()
 	SoundStep3 = SoundIndex ("mutant/step3.wav");
 	SoundThud = SoundIndex ("mutant/thud1.wav");
 	
-	Entity->SetSolid (SOLID_BBOX);
+	Entity->GetSolid() = SOLID_BBOX;
 	Entity->State.GetModelIndex() = ModelIndex ("models/monsters/mutant/tris.md2");
-	Entity->SetMins (vec3f(-32, -32, -24));
-	Entity->SetMaxs (vec3f(32, 32, 48));
+	Entity->GetMins().Set (-32, -32, -24);
+	Entity->GetMaxs().Set (32, 32, 48);
 
 	Entity->Health = 300;
 	Entity->GibHealth = -120;

@@ -544,11 +544,11 @@ void CInsane::Dead ()
 		Entity->Flags |= FL_FLY;
 	else
 	{
-		Entity->SetMins (vec3f(-16, -16, -24));
-		Entity->SetMaxs (vec3f(16, 16, -8));
+		Entity->GetMins().Set (-16, -16, -24);
+		Entity->GetMaxs().Set (16, 16, -8);
 		Entity->PhysicsType = PHYSICS_TOSS;
 	}
-	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
+	Entity->GetSvFlags() |= SVF_DEADMONSTER;
 	Entity->NextThink = 0;
 	Entity->Link ();
 }
@@ -604,11 +604,11 @@ void CInsane::Spawn ()
 	SoundScream[6] = SoundIndex ("insane/insane9.wav");
 	SoundScream[7] = SoundIndex ("insane/insane10.wav");
 
-	Entity->SetSolid (SOLID_BBOX);
+	Entity->GetSolid() = SOLID_BBOX;
 	Entity->State.GetModelIndex() = ModelIndex("models/monsters/insane/tris.md2");
 
-	Entity->SetMins (vec3f(-16, -16, -24));
-	Entity->SetMaxs (vec3f(16, 16, 32));
+	Entity->GetMins().Set (-16, -16, -24);
+	Entity->GetMaxs().Set (16, 16, 32);
 
 	Entity->Health = 100;
 	Entity->GibHealth = -50;
@@ -625,8 +625,8 @@ void CInsane::Spawn ()
 
 	if (Entity->SpawnFlags & 8)					// Crucified ?
 	{
-		Entity->SetMins (vec3f(-16, 0, 0));
-		Entity->SetMaxs (vec3f(16, 8, 32));
+		Entity->GetMins().Set (-16, 0, 0);
+		Entity->GetMaxs().Set (16, 8, 32);
 		Entity->Flags |= FL_NO_KNOCKBACK;
 		FlyMonsterStart ();
 	}

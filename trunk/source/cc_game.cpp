@@ -160,7 +160,7 @@ void CheckDMRules (void)
 		for (int i=0 ; i<game.maxclients ; i++)
 		{
 			CPlayerEntity *cl = entity_cast<CPlayerEntity>(g_edicts[i+1].Entity);
-			if (!cl->IsInUse())
+			if (!cl->GetInUse())
 				continue;
 
 			if (cl->Client.Respawn.score >= fraglimit->Integer())
@@ -196,7 +196,7 @@ void ExitLevel (void)
 	for (int i = 0; i < game.maxclients; i++)
 	{
 		CPlayerEntity *ent = entity_cast<CPlayerEntity>(g_edicts[1 + i].Entity);
-		if (!ent->IsInUse())
+		if (!ent->GetInUse())
 			continue;
 		if (ent->Health > ent->Client.Persistent.max_health)
 			ent->Health = ent->Client.Persistent.max_health;
@@ -236,7 +236,7 @@ void ClientEndServerFrames ()
 	for (int i = 1; i <= game.maxclients ; i++)
 	{
 		CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
-		if (!Player->IsInUse())
+		if (!Player->GetInUse())
 			continue;
 		Player->EndServerFrame ();
 	}
@@ -589,7 +589,6 @@ void CC_InitGame ()
 	InitItemlist ();
 
 	Q_snprintfz (game.helpmessage1, sizeof(game.helpmessage1), "");
-
 	Q_snprintfz (game.helpmessage2, sizeof(game.helpmessage2), "");
 
 	// initialize all entities for this game

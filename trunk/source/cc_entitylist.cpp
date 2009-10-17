@@ -204,7 +204,7 @@ void G_FindTeams (void)
 	{
 		if (!e)
 			continue;
-		if (!e->IsInUse())
+		if (!e->GetInUse())
 			continue;
 		if (!e->gameEntity->team)
 			continue;
@@ -220,7 +220,7 @@ void G_FindTeams (void)
 		{
 			if (!e2)
 				continue;
-			if (!e2->IsInUse())
+			if (!e2->GetInUse())
 				continue;
 			if (!e2->gameEntity->team)
 				continue;

@@ -142,11 +142,10 @@ public:
 
 		bool Select (CPlayerEntity *ent)
 		{
-			ent->SetSvFlags(ent->GetSvFlags() & ~SVF_NOCLIENT);
+			ent->GetSvFlags() &= ~SVF_NOCLIENT;
 			ent->Client.Respawn.ctf_team = team;
 			ent->Client.Respawn.ctf_state = 0;
-			char *s = Info_ValueForKey (ent->Client.Persistent.userinfo, "skin");
-			ent->CTFAssignSkin(s);
+			ent->CTFAssignSkin(Info_ValueForKey (ent->Client.Persistent.UserInfo, "skin"));
 
 			// assign a ghost if we are in match mode
 			if (ctfgame.match == MATCH_GAME)
@@ -197,7 +196,7 @@ public:
 			for (int i = 1; i <= game.maxclients; i++)
 			{
 				CPlayerEntity *e = entity_cast<CPlayerEntity>((g_edicts + i)->Entity);
-				if (e->IsInUse() && e->GetSolid() != SOLID_NOT)
+				if (e->GetInUse() && e->GetSolid() != SOLID_NOT)
 				{
 					ent->Client.chase_target = e;
 					ent->Client.LayoutFlags |= LF_UPDATECHASE;
@@ -234,7 +233,7 @@ public:
 		for (int i = 0; i < game.maxclients; i++)
 		{
 			CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i+1].Entity);
-			if (!Player->IsInUse())
+			if (!Player->GetInUse())
 				continue;
 			if (Player->Client.Respawn.ctf_team == CTF_TEAM1)
 				num1++;

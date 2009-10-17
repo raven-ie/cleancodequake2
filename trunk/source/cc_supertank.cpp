@@ -704,10 +704,10 @@ void CSuperTank::Attack ()
 
 void CSuperTank::Dead ()
 {
-	Entity->SetMins (vec3f(-60, -60, 0));
-	Entity->SetMaxs (vec3f(60, 60, 72));
+	Entity->GetMins().Set (-60, -60, 0);
+	Entity->GetMaxs().Set (60, 60, 72);
 	Entity->PhysicsType = PHYSICS_TOSS;
-	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
+	Entity->GetSvFlags() |= SVF_DEADMONSTER;
 	Entity->NextThink = 0;
 	Entity->Link ();
 }
@@ -795,10 +795,10 @@ void CSuperTank::Spawn ()
 
 	TreadSound = SoundIndex ("bosstank/btkengn1.wav");
 
-	Entity->SetSolid (SOLID_BBOX);
+	Entity->GetSolid() = SOLID_BBOX;
 	Entity->State.GetModelIndex() = ModelIndex ("models/monsters/boss1/tris.md2");
-	Entity->SetMins (vec3f(-64, -64, 0));
-	Entity->SetMaxs (vec3f(64, 64, 112));
+	Entity->GetMins().Set (-64, -64, 0);
+	Entity->GetMaxs().Set (64, 64, 112);
 
 	Entity->Health = 1500;
 	Entity->GibHealth = -500;

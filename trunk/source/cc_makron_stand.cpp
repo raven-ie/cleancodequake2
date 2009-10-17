@@ -94,14 +94,14 @@ public:
 		}
 
 		PhysicsType = PHYSICS_STEP;
-		SetSolid (SOLID_BBOX);
+		GetSolid() = SOLID_BBOX;
 		State.GetModelIndex() = ModelIndex ("models/monsters/boss3/rider/tris.md2");
 		State.GetFrame() = FRAME_stand201;
 
 		SoundIndex ("misc/bigtele.wav");
 
-		SetMins (vec3f(-32, -32, 0));
-		SetMaxs (vec3f(32, 32, 90));
+		GetMins().Set (32, -32, 0);
+		GetMaxs().Set (32, 32, 90);
 
 		NextThink = level.framenum + FRAMETIME;
 		Link ();

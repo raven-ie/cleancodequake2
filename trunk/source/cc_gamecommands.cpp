@@ -390,7 +390,7 @@ public:
 		{
 			CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 
-			if (Spectator && (!Player->IsInUse() || Player->Client.Persistent.state != SVCS_SPAWNED))
+			if (Spectator && (!Player->GetInUse() || Player->Client.Persistent.state != SVCS_SPAWNED))
 				continue;
 			else if (!Spectator && (Player->Client.Persistent.state == SVCS_SPAWNED))
 				continue;

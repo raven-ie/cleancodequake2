@@ -174,16 +174,12 @@ public:
 	void Init ()
 	{
 		if (State.GetAngles() != vec3fOrigin)
-		{
-			vec3f angles = State.GetAngles();
-			G_SetMovedir (angles, MoveDir);
-			State.SetAngles (angles);
-		}
+			G_SetMovedir (State.GetAngles(), MoveDir);
 
-		SetSolid (SOLID_TRIGGER);
+		GetSolid() = SOLID_TRIGGER;
 		SetBrushModel ();
 
-		SetSvFlags (SVF_NOCLIENT);
+		GetSvFlags() = SVF_NOCLIENT;
 	};
 
 	// the trigger was just activated
@@ -266,7 +262,7 @@ public:
 		if (ActivateUse)
 		{
 			ActivateUse = false;
-			SetSolid (SOLID_TRIGGER);
+			GetSolid() = SOLID_TRIGGER;
 			Link ();
 			return;
 		}
@@ -286,25 +282,21 @@ public:
 			Wait = 2;
 
 		if (!map_debug->Boolean())
-			SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
+			GetSvFlags() |= SVF_NOCLIENT;
 
 		if (SpawnFlags & 4)
 		{
-			SetSolid (SOLID_NOT);
+			GetSolid() = SOLID_NOT;
 			ActivateUse = true;
 		}
 		else
 		{
-			SetSolid (SOLID_TRIGGER);
+			GetSolid() = SOLID_TRIGGER;
 			ActivateUse = false;
 		}
 
 		if (State.GetAngles() != vec3fOrigin)
-		{
-			vec3f angles = State.GetAngles();
-			G_SetMovedir (angles, MoveDir);
-			State.SetAngles (angles);
-		}
+			G_SetMovedir (State.GetAngles(), MoveDir);
 
 		SetBrushModel ();
 		Link ();
@@ -460,7 +452,7 @@ public:
 
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
-		vec3f vel = vec3f(MoveDir) * Speed;
+		vec3f vel = MoveDir * Speed;
 
 		if (Q3Touch)
 		{
@@ -612,7 +604,7 @@ public:
 		if (ActivateUse)
 			return;
 
-		SetSolid ((GetSolid() == SOLID_NOT) ? SOLID_TRIGGER : SOLID_NOT);
+		GetSolid() = ((GetSolid() == SOLID_NOT) ? SOLID_TRIGGER : SOLID_NOT);
 		Link ();
 
 		if (!(SpawnFlags & 2))
@@ -627,7 +619,7 @@ public:
 		if (!Damage)
 			Damage = 5;
 
-		SetSolid ((SpawnFlags & 1) ? SOLID_NOT : SOLID_TRIGGER);
+		GetSolid() = ((SpawnFlags & 1) ? SOLID_NOT : SOLID_TRIGGER);
 
 		ActivateUse = (SpawnFlags & 2) ? false : true;
 		Link ();
@@ -709,12 +701,10 @@ public:
 
 		if (!st->height)
 			st->height = 200;
+
 		if (State.GetAngles().Y == 0)
-		{
-			vec3f Ang = State.GetAngles();
-			Ang.Y = 360;
-			State.SetAngles (Ang);
-		}
+			State.GetAngles().Y = 360;
+
 		Init ();
 		MoveDir.Z = st->height;
 	};
@@ -870,7 +860,7 @@ public:
 				for (int player = 1; player <= game.maxclients; player++)
 				{
 					CPlayerEntity *ent = entity_cast<CPlayerEntity>(g_edicts[player].Entity);
-					if (!ent->IsInUse())
+					if (!ent->GetInUse())
 						continue;
 					if (ent->Client.Persistent.power_cubes & (1 << cube))
 					{
@@ -884,7 +874,7 @@ public:
 				for (int player = 1; player <= game.maxclients; player++)
 				{
 					CPlayerEntity *ent = entity_cast<CPlayerEntity>(g_edicts[player].Entity);
-					if (!ent->IsInUse())
+					if (!ent->GetInUse())
 						continue;
 					ent->Client.Persistent.Inventory.Set(index, 0);
 				}

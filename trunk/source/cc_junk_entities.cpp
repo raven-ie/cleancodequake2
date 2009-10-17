@@ -170,7 +170,7 @@ void CJunkEntity::Die ()
 	// Disappear us
 	State.GetModelIndex() = 0;
 	State.GetEffects() = 0;
-	SetSvFlags (SVF_NOCLIENT);
+	GetSvFlags() = SVF_NOCLIENT;
 }
 
 CGibEntity::CGibEntity () :
@@ -230,15 +230,15 @@ void CGibEntity::Spawn (CBaseEntity *Owner, MediaIndex gibIndex, int damage, int
 
 	vec3f origin = Owner->GetAbsMin() + size;
 
-	Junk->State.SetOrigin ( vec3f(origin.X + crandom() * size.X,
+	Junk->State.GetOrigin().Set (origin.X + crandom() * size.X,
 							origin.Y + crandom() * size.Y,
-							origin.Z + crandom() * size.Z));
+							origin.Z + crandom() * size.Z);
 
 	Junk->State.GetModelIndex() = gibIndex;
-	Junk->SetSvFlags (SVF_DEADMONSTER);
-	Junk->SetMins (vec3Origin);
-	Junk->SetMaxs (vec3Origin);
-	Junk->SetSolid (SOLID_NOT);
+	Junk->GetSvFlags() = SVF_DEADMONSTER;
+	Junk->GetMins().Clear ();
+	Junk->GetMaxs().Clear ();
+	Junk->GetSolid() = SOLID_NOT;
 	Junk->State.GetEffects() = EF_GIB;
 
 	Junk->backOff = (type == GIB_ORGANIC) ? 1.0f : 1.5f;

@@ -348,7 +348,7 @@ void CTank::Rocket ()
 	CTrace	trace;
 	bool blindfire = false;
 
-	if(!Entity->Enemy || !Entity->Enemy->IsInUse())
+	if(!Entity->Enemy || !Entity->Enemy->GetInUse())
 		return;
 
 	if (AIFlags & AI_MANUAL_STEERING)
@@ -731,7 +731,7 @@ void CTank::DoAttackRocket ()
 
 void CTank::Attack ()
 {
-	if (!Entity->Enemy || !Entity->Enemy->IsInUse())
+	if (!Entity->Enemy || !Entity->Enemy->GetInUse())
 		return;
 
 	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health < 0)
@@ -808,10 +808,10 @@ void CTank::Attack ()
 
 void CTank::Dead ()
 {
-	Entity->SetMins (vec3f(-16, -16, -16));
-	Entity->SetMaxs (vec3f(16, 16, -0));
+	Entity->GetMins().Set (-16);
+	Entity->GetMaxs().Set (16, 16, -0);
 	Entity->PhysicsType = PHYSICS_TOSS;
-	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
+	Entity->GetSvFlags() |= SVF_DEADMONSTER;
 	Entity->NextThink = 0;
 	Entity->Link ();
 }
@@ -888,9 +888,9 @@ void CTank::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3
 void CTank::Spawn ()
 {
 	Entity->State.GetModelIndex() = ModelIndex ("models/monsters/tank/tris.md2");
-	Entity->SetMins (vec3f(-32, -32, -16));
-	Entity->SetMaxs (vec3f(32, 32, 72));
-	Entity->SetSolid (SOLID_BBOX);
+	Entity->GetMins().Set (-32, -32, -16);
+	Entity->GetMaxs().Set (32, 32, 72);
+	Entity->GetSolid() = SOLID_BBOX;
 
 	SoundPain = SoundIndex ("tank/tnkpain2.wav");
 	SoundThud = SoundIndex ("tank/tnkdeth2.wav");

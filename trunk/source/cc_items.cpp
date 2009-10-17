@@ -87,8 +87,8 @@ Precache(Precache)
 void CBaseItem::SetRespawn (CItemEntity *ent, FrameNumber_t delay)
 {
 	ent->Flags |= FL_RESPAWN;
-	ent->SetSvFlags (ent->GetSvFlags() | SVF_NOCLIENT);
-	ent->SetSolid (SOLID_NOT);
+	ent->GetSvFlags() |= SVF_NOCLIENT;
+	ent->GetSolid() = SOLID_NOT;
 	ent->NextThink = level.framenum + delay;
 	ent->ThinkState = ITS_RESPAWN;
 	ent->Link();
@@ -154,10 +154,10 @@ CItemEntity *CBaseItem::DropItem (CBaseEntity *ent)
 	dropped->SpawnFlags = DROPPED_ITEM;
 	dropped->State.GetEffects() = EffectFlags;
 	dropped->State.GetRenderEffects() = RF_GLOW;
-	dropped->SetMins (vec3f(-15));
-	dropped->SetMaxs (vec3f(15));
+	dropped->GetMins().Set (-15);
+	dropped->GetMaxs().Set (15);
 	dropped->State.GetModelIndex() = ModelIndex(WorldModel);
-	dropped->SetSolid (SOLID_TRIGGER);
+	dropped->GetSolid() = SOLID_TRIGGER;
 	dropped->gameEntity->owner = ent->gameEntity;
 
 	if (ent->EntityFlags & ENT_PLAYER)
@@ -173,12 +173,12 @@ CItemEntity *CBaseItem::DropItem (CBaseEntity *ent)
 
 		trace = CTrace (ent->State.GetOrigin(), dropped->GetMins(), dropped->GetMaxs(),
 			result, ent->gameEntity, CONTENTS_SOLID);
-		dropped->State.SetOrigin (trace.endPos);
+		dropped->State.GetOrigin() = trace.EndPos;
 	}
 	else
 	{
 		ent->State.GetAngles().ToVectors(&forward, &right, NULL);
-		dropped->State.SetOrigin (ent->State.GetOrigin());
+		dropped->State.GetOrigin() = ent->State.GetOrigin();
 	}
 
 	forward *= 100;

@@ -160,7 +160,7 @@ void	G_TouchTriggers (CBaseEntity *ent)
 		edict_t *hit = touch[i];
 		CBaseEntity *Entity = hit->Entity;
 
-		if (!Entity || !Entity->IsInUse())
+		if (!Entity || !Entity->GetInUse())
 			continue;
 
 		if (Entity->EntityFlags & ENT_TOUCHABLE)
@@ -169,7 +169,7 @@ void	G_TouchTriggers (CBaseEntity *ent)
 			continue;
 		}
 
-		if (!ent->IsInUse())
+		if (!ent->GetInUse())
 			break;
 	}
 }
@@ -205,7 +205,7 @@ void CForEachPlayerCallback::Query (bool MustBeInUse)
 	{
 		CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 
-		if (MustBeInUse && (!Player->IsInUse() || Player->Client.Persistent.state != SVCS_SPAWNED))
+		if (MustBeInUse && (!Player->GetInUse() || Player->Client.Persistent.state != SVCS_SPAWNED))
 			continue;
 
 		Index = i;
@@ -276,7 +276,7 @@ float	PlayersRangeFromSpot (CBaseEntity *spot)
 	{
 		CPlayerEntity *player = entity_cast<CPlayerEntity>(g_edicts[n].Entity);
 
-		if (!player->IsInUse())
+		if (!player->GetInUse())
 			continue;
 
 		if (player->Health <= 0)
@@ -420,6 +420,8 @@ bool IsInFront (CBaseEntity *self, CBaseEntity *other)
 T_RadiusDamage
 ============
 */
+
+#if 0
 void DebugTrailAll (vec3f &left, vec3f &right)
 {
 	WriteByte (SVC_TEMP_ENTITY);
@@ -441,7 +443,7 @@ void DrawRadiusDebug (vec3f &origin, float radius)
 	for (int32 i = 0; i < k_segments; ++i)
 	{
 		vec2f v = center + vec2f(cosf(theta), sinf(theta)) * radius;
-		origins[i] = vec3f(v.X, v.Y, origin.Z + 8);
+		origins[i].Set (v.X, v.Y, origin.Z + 8);
 		theta += k_increment;
 	}
 
@@ -450,6 +452,7 @@ void DrawRadiusDebug (vec3f &origin, float radius)
 		DebugTrailAll (origins[i], origins[((i+1) >= k_segments) ? 0 : i+1]);
 	}
 }
+#endif
 
 void T_RadiusDamage (CBaseEntity *inflictor, CBaseEntity *attacker, float damage, CBaseEntity *ignore, float radius, EMeansOfDeath mod)
 {

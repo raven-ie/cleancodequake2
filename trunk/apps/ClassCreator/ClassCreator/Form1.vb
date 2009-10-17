@@ -57,13 +57,21 @@
     New DataType("Entity", "CBaseEntity", "NULL", "FT_ENTITY", True) _
     }
 
+    Public Function DataTypeFromString(ByRef name As String) As DataType
+        For Each Dat In DataTypeArray
+            If Dat.Name = name Then Return Dat
+        Next
+        Return Nothing
+    End Function
+
     Public Sub WriteVariables(ByRef WrittenClass As String)
         For Each Row As DataGridViewRow In DataGridView1.Rows
-            WrittenClass = WrittenClass = "\t" + DataTypeArray(CType(Row.Cells(2).Value(), ComboBox).SelectedIndex).Type + " "
-            If CType(Row.Cells(4).Value, Boolean) = True Then
+            If (Row.Cells(0).EditedFormattedValue() Is "" Or Row.Cells(1).EditedFormattedValue() Is "" Or Row.Cells(2).EditedFormattedValue() Is "") Then Exit For
+            WrittenClass = WrittenClass + "\t" + DataTypeFromString(Row.Cells(2).EditedFormattedValue()).Type + " "
+            If DataTypeFromString(Row.Cells(2).EditedFormattedValue()).Pointer = True Then
                 WrittenClass = WrittenClass + "*"
             End If
-            WrittenClass = WrittenClass + Row.Cells(1).Value().ToString() + "\n"
+            WrittenClass = WrittenClass + Row.Cells(1).EditedFormattedValue().ToString() + ";\n"
         Next
 
         If (DataGridView1.RowCount > 0) Then

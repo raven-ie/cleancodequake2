@@ -298,7 +298,7 @@ bool			CTurretBreach::ParseField (char *Key, char *Value)
 
 void CTurretBreach::Spawn ()
 {
-	SetSolid (SOLID_BSP);
+	GetSolid() = SOLID_BSP;
 	PhysicsType = PHYSICS_PUSH;
 	SetBrushModel ();
 
@@ -320,7 +320,7 @@ void CTurretBreach::Spawn ()
 	Positions[1].Y = PitchOptions[3];
 
 	MoveAngles.Y = State.GetAngles().Y;
-	State.SetAngles (vec3fOrigin);
+	State.GetAngles().Clear ();
 
 	NextThink = level.framenum + FRAMETIME;
 	Link ();
@@ -347,7 +347,7 @@ CTurretEntityBase (Index)
 
 void CTurretBase::Spawn ()
 {
-	SetSolid (SOLID_BSP);
+	GetSolid() = SOLID_BSP;
 	PhysicsType = PHYSICS_PUSH;
 	SetBrushModel ();
 	Link ();
@@ -428,7 +428,7 @@ void CTurretDriver::TurretThink ()
 {
 	Entity->NextThink = level.framenum + FRAMETIME;
 
-	if (Entity->Enemy && (!Entity->Enemy->IsInUse() || entity_cast<CHurtableEntity>(Entity->Enemy)->Health <= 0))
+	if (Entity->Enemy && (!Entity->Enemy->GetInUse() || entity_cast<CHurtableEntity>(Entity->Enemy)->Health <= 0))
 		Entity->Enemy = NULL;
 
 	if (!Entity->Enemy)
@@ -487,7 +487,7 @@ void CTurretDriver::TurretLink ()
 	TargetedBreach = entity_cast<CTurretBreach>(CC_PickTarget (Entity->Target));
 	TargetedBreach->SetOwner (Entity);
 	TargetedBreach->TeamMaster->SetOwner (Entity);
-	Entity->State.SetAngles (TargetedBreach->State.GetAngles());
+	Entity->State.GetAngles() = TargetedBreach->State.GetAngles();
 
 	vec3f vec = (TargetedBreach->State.GetOrigin() - Entity->State.GetOrigin());
 	vec.Z = 0;
@@ -518,10 +518,10 @@ void CTurretDriver::Spawn ()
 	}
 
 	Entity->PhysicsType = PHYSICS_PUSH;
-	Entity->SetSolid (SOLID_BBOX);
+	Entity->GetSolid() = SOLID_BBOX;
 	Entity->State.GetModelIndex() = ModelIndex("models/monsters/infantry/tris.md2");
-	Entity->SetMins (vec3f(-16, -16, -24));
-	Entity->SetMaxs (vec3f(16, 16, 32));
+	Entity->GetMins().Set (-16, -16, -24);
+	Entity->GetMaxs().Set (16, 16, 32);
 
 	Entity->Health = Entity->MaxHealth = 100;
 	Entity->GibHealth = -40;
@@ -537,10 +537,10 @@ void CTurretDriver::Spawn ()
 
 	level.total_monsters++;
 
-	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_MONSTER);
+	Entity->GetSvFlags() |= SVF_MONSTER;
 	Entity->State.GetRenderEffects() |= RF_FRAMELERP;
 	Entity->CanTakeDamage = true;
-	Entity->SetClipmask (CONTENTS_MASK_MONSTERSOLID);
+	Entity->GetClipmask() = CONTENTS_MASK_MONSTERSOLID;
 	Entity->State.GetOldOrigin() = Entity->State.GetOrigin ();
 	AIFlags |= (AI_STAND_GROUND);
 

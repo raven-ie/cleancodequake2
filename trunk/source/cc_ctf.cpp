@@ -342,7 +342,7 @@ void CTFFragBonuses(CPlayerEntity *targ, CPlayerEntity *attacker)
 		for (i = 1; i <= game.maxclients; i++)
 		{
 			CPlayerEntity *ent = entity_cast<CPlayerEntity>((g_edicts + i)->Entity);
-			if (ent->IsInUse() && ent->Client.Respawn.ctf_team == otherteam)
+			if (ent->GetInUse() && ent->Client.Respawn.ctf_team == otherteam)
 				ent->Client.Respawn.ctf_lasthurtcarrier = 0;
 		}
 		return;
@@ -392,7 +392,7 @@ void CTFFragBonuses(CPlayerEntity *targ, CPlayerEntity *attacker)
 	for (i = 1; i <= game.maxclients; i++)
 	{
 		carrier = entity_cast<CPlayerEntity>((g_edicts + i)->Entity);
-		if (carrier->IsInUse() && 
+		if (carrier->GetInUse() && 
 			carrier->Client.Persistent.Inventory.Has(flag_item))
 			break;
 		carrier = NULL;
@@ -483,8 +483,8 @@ void CTFResetFlag(int ctf_team)
 			ent->Free ();
 		else
 		{
-			ent->SetSvFlags(ent->GetSvFlags() & ~SVF_NOCLIENT);
-			ent->SetSolid (SOLID_TRIGGER);
+			ent->GetSvFlags() &= ~SVF_NOCLIENT;
+			ent->GetSolid() = SOLID_TRIGGER;
 			ent->Link ();
 			ent->State.GetEvent() = EV_ITEM_RESPAWN;
 		}
@@ -517,7 +517,7 @@ void CTFCalcScores(void)
 	{
 		CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i+1].Entity);
 
-		if (!Player->IsInUse())
+		if (!Player->GetInUse())
 			continue;
 		if (Player->Client.Respawn.ctf_team == CTF_TEAM1)
 			ctfgame.total1 += Player->Client.Respawn.score;
@@ -536,7 +536,7 @@ void CTFID_f (CPlayerEntity *ent)
 
 void CTFTeam_f (CPlayerEntity *ent)
 {
-	char *t, *s;
+	char *t;
 	int desired_team;
 
 	t = ArgGetConcatenatedString();
@@ -571,12 +571,11 @@ void CTFTeam_f (CPlayerEntity *ent)
 	}
 
 ////
-	ent->SetSvFlags (0);
+	ent->GetSvFlags() = 0;
 	ent->Flags &= ~FL_GODMODE;
 	ent->Client.Respawn.ctf_team = desired_team;
 	ent->Client.Respawn.ctf_state = 0;
-	s = Info_ValueForKey (ent->Client.Persistent.userinfo, "skin");
-	ent->CTFAssignSkin(s);
+	ent->CTFAssignSkin(Info_ValueForKey (ent->Client.Persistent.UserInfo, "skin"));
 
 	if (ent->GetSolid() == SOLID_NOT)
 	{ // spectator
@@ -825,7 +824,7 @@ static inline void CTFSay_Team_Sight(CPlayerEntity *who, char *buf, size_t bufSi
 	for (i = 1; i <= game.maxclients; i++)
 	{
 		CPlayerEntity *targ = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
-		if (!targ->IsInUse() || 
+		if (!targ->GetInUse() || 
 			targ == who ||
 			!loc_CanSee(targ, who))
 			continue;
@@ -925,7 +924,7 @@ void CTFSay_Team(CPlayerEntity *who, char *msg)
 
 	for (i = 0; i < game.maxclients; i++) {
 		CPlayerEntity *cl_ent = entity_cast<CPlayerEntity>((g_edicts + 1 + i)->Entity);
-		if (!cl_ent->IsInUse())
+		if (!cl_ent->GetInUse())
 			continue;
 		if (cl_ent->Client.Persistent.state != SVCS_SPAWNED)
 			continue;
@@ -975,7 +974,7 @@ public:
 
 	virtual void Spawn ()
 	{
-		SetSolid (SOLID_NOT);
+		GetSolid() = SOLID_NOT;
 		State.GetModelIndex() = ModelIndex ("models/ctf/banner/tris.md2");
 		if (SpawnFlags & 1) // team2
 			State.GetSkinNum() = 1;
@@ -1010,7 +1009,7 @@ public:
 
 	void Spawn ()
 	{
-		SetSolid (SOLID_NOT);
+		GetSolid() = SOLID_NOT;
 		State.GetModelIndex() = ModelIndex ("models/ctf/banner/small.md2");
 		if (SpawnFlags & 1) // team2
 			State.GetSkinNum() = 1;
@@ -1048,7 +1047,7 @@ bool CTFBeginElection(CPlayerEntity *ent, EElectState type, char *msg)
 	{
 		CPlayerEntity *e = entity_cast<CPlayerEntity>((g_edicts + i)->Entity);
 		e->Client.Respawn.voted = false;
-		if (e->IsInUse())
+		if (e->GetInUse())
 			count++;
 	}
 
@@ -1079,7 +1078,7 @@ void CTFResetAllPlayers(void)
 	for (int i = 1; i <= game.maxclients; i++)
 	{
 		CPlayerEntity *ent = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
-		if (!ent->IsInUse())
+		if (!ent->GetInUse())
 			continue;
 
 		//if (ent->client->menu)
@@ -1094,7 +1093,7 @@ void CTFResetAllPlayers(void)
 		ent->Client.Respawn.ctf_team = CTF_NOTEAM;
 		ent->Client.Respawn.ready = false;
 
-		ent->SetSvFlags (0);
+		ent->GetSvFlags() = 0;
 		ent->Flags &= ~FL_GODMODE;
 		ent->PutInServer();
 	}
@@ -1107,7 +1106,7 @@ void CTFResetAllPlayers(void)
 	{
 		CBaseEntity *ent = g_edicts[i].Entity;
 
-		if (ent && ent->IsInUse() && (ent->EntityFlags & ENT_ITEM))
+		if (ent && ent->GetInUse() && (ent->EntityFlags & ENT_ITEM))
 		{
 			CItemEntity *Item = entity_cast<CItemEntity>(ent);
 			if (Item->GetSolid() == SOLID_NOT && Item->ThinkState == ITS_RESPAWN &&
@@ -1135,7 +1134,7 @@ void CTFStartMatch(void)
 	for (int i = 1; i <= game.maxclients; i++)
 	{
 		CPlayerEntity *ent = entity_cast<CPlayerEntity>((g_edicts + i)->Entity);
-		if (!ent->IsInUse())
+		if (!ent->GetInUse())
 			continue;
 
 		ent->Client.Respawn.score = 0;
@@ -1149,7 +1148,7 @@ void CTFStartMatch(void)
 			// make up a ghost code
 			ent->CTFAssignGhost();
 			CGrapple::PlayerResetGrapple(ent);
-			ent->SetSvFlags (SVF_NOCLIENT);
+			ent->GetSvFlags() = SVF_NOCLIENT;
 			ent->Flags &= ~FL_GODMODE;
 
 			ent->Client.respawn_time = level.framenum + 10 + ((irandom(300))/100);
@@ -1316,7 +1315,7 @@ void CTFReady(CPlayerEntity *ent)
 	for (j = 0, i = 1; i <= game.maxclients; i++)
 	{
 		CPlayerEntity *e = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
-		if (!e->IsInUse())
+		if (!e->GetInUse())
 			continue;
 		if (e->Client.Respawn.ctf_team != CTF_NOTEAM && !e->Client.Respawn.ready)
 			j++;
@@ -1397,7 +1396,7 @@ void CTFGhost(CPlayerEntity *ent)
 			ent->Client.Respawn.score = ctfgame.ghosts[i].score;
 			ent->Client.Respawn.ctf_state = 0;
 			ctfgame.ghosts[i].ent = ent;
-			ent->SetSvFlags(0);
+			ent->GetSvFlags() = 0;
 			ent->Flags &= ~FL_GODMODE;
 			ent->PutInServer();
 			BroadcastPrintf(PRINT_HIGH, "%s has been reinstated to %s team.\n",
@@ -1439,8 +1438,8 @@ void CTFObserver(CPlayerEntity *ent)
 	ent->DeadDropTech();
 
 	ent->NoClip = true;
-	ent->SetSolid(SOLID_NOT);
-	ent->SetSvFlags (ent->GetSvFlags() | SVF_NOCLIENT);
+	ent->GetSolid() = SOLID_NOT;
+	ent->GetSvFlags() |= SVF_NOCLIENT;
 	ent->Client.Respawn.ctf_team = CTF_NOTEAM;
 	ent->Client.PlayerState.GetGunIndex () = 0;
 	ent->Client.Respawn.score = 0;
@@ -1506,7 +1505,7 @@ bool CTFCheckRules(void)
 			for (j = 0, i = 1; i <= game.maxclients; i++)
 			{
 				CPlayerEntity *ent = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
-				if (!ent->IsInUse())
+				if (!ent->GetInUse())
 					continue;
 				if (ent->Client.Respawn.ctf_team != CTF_NOTEAM &&
 					!ent->Client.Respawn.ready)
@@ -1562,7 +1561,7 @@ void CTFStats(CPlayerEntity *ent)
 		for (i = 1; i <= game.maxclients; i++)
 		{
 			CPlayerEntity *e2 = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
-			if (!e2->IsInUse())
+			if (!e2->GetInUse())
 				continue;
 			if (!e2->Client.Respawn.ready && e2->Client.Respawn.ctf_team != CTF_NOTEAM)
 			{
@@ -1637,7 +1636,7 @@ void CTFPlayerList(CPlayerEntity *ent)
 		for (i = 1; i <= game.maxclients; i++)
 		{
 			CPlayerEntity *e2 = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
-			if (!e2->IsInUse())
+			if (!e2->GetInUse())
 				continue;
 			if (!e2->Client.Respawn.ready && e2->Client.Respawn.ctf_team != CTF_NOTEAM)
 			{
@@ -1654,7 +1653,7 @@ void CTFPlayerList(CPlayerEntity *ent)
 	for (i = 1; i <= game.maxclients; i++)
 	{
 		CPlayerEntity *e2 = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
-		if (!e2->IsInUse())
+		if (!e2->GetInUse())
 			continue;
 
 		Q_snprintfz(tempStr, sizeof(tempStr), "%3d %-16.16s %02d:%02d %4d %3d%s%s\n",
@@ -1756,7 +1755,7 @@ void CTFBoot(CPlayerEntity *ent)
 	}
 
 	CPlayerEntity *targ = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
-	if (!targ->IsInUse())
+	if (!targ->GetInUse())
 	{
 		ent->PrintToClient (PRINT_HIGH, "That player number is not connected.\n");
 		return;

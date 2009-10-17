@@ -818,11 +818,11 @@ void CJorg::Spawn ()
 
 	CMakron::Precache ();
 
-	Entity->SetSolid (SOLID_BBOX);
+	Entity->GetSolid() = SOLID_BBOX;
 	Entity->State.GetModelIndex(2) = ModelIndex ("models/monsters/boss3/rider/tris.md2");
 	Entity->State.GetModelIndex() = ModelIndex ("models/monsters/boss3/jorg/tris.md2");
-	Entity->SetMins (vec3f(-80, -80, 0));
-	Entity->SetMaxs (vec3f(80, 80, 140));
+	Entity->GetMins().Set (-80, -80, 0);
+	Entity->GetMaxs().Set (80, 80, 140);
 
 	Entity->Health = 3000;
 	Entity->GibHealth = -2000;

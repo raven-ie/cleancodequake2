@@ -294,10 +294,10 @@ void CInfantry::Sight ()
 
 void CInfantry::Dead ()
 {
-	Entity->SetMins (vec3f(-16, -16, -24));
-	Entity->SetMaxs (vec3f(16, 16, -8));
+	Entity->GetMins().Set (-16, -16, -24);
+	Entity->GetMaxs().Set (16, 16, -8);
 	Entity->PhysicsType = PHYSICS_TOSS;
-	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
+	Entity->GetSvFlags() |= SVF_DEADMONSTER;
 	Entity->Link ();
 
 	// FIXME: BAD
@@ -425,9 +425,7 @@ void CInfantry::Duck_Down ()
 	if (AIFlags & AI_DUCKED)
 		return;
 	AIFlags |= AI_DUCKED;
-	vec3f maxs = Entity->GetMaxs();
-	maxs.Z -= 32;
-	Entity->SetMaxs (maxs);
+	Entity->GetMaxs().Z -= 32;
 	Entity->CanTakeDamage = true;
 	PauseTime = level.framenum + 10;
 	Entity->Link ();
@@ -444,9 +442,7 @@ void CInfantry::Duck_Hold ()
 void CInfantry::Duck_Up ()
 {
 	AIFlags &= ~AI_DUCKED;
-	vec3f maxs = Entity->GetMaxs();
-	maxs.Z += 32;
-	Entity->SetMaxs (maxs);
+	Entity->GetMaxs().Z += 32;
 	Entity->CanTakeDamage = true;
 	Entity->Link ();
 }
@@ -624,10 +620,10 @@ void CInfantry::SideStep ()
 
 void CInfantry::Spawn ()
 {
-	Entity->SetSolid (SOLID_BBOX);
+	Entity->GetSolid() = SOLID_BBOX;
 	Entity->State.GetModelIndex() = ModelIndex("models/monsters/infantry/tris.md2");
-	Entity->SetMins (vec3f(-16, -16, -24));
-	Entity->SetMaxs (vec3f(16, 16, 32));
+	Entity->GetMins().Set (-16, -16, -24);
+	Entity->GetMaxs().Set (16, 16, 32);
 
 	SoundPain1 = SoundIndex ("infantry/infpain1.wav");
 	SoundPain2 = SoundIndex ("infantry/infpain2.wav");

@@ -296,10 +296,10 @@ void CMaiden::Pain (CBaseEntity *other, float kick, int damage)
 
 void CMaiden::Dead ()
 {
-	Entity->SetMins (vec3f(-16, -16, 0));
-	Entity->SetMaxs (vec3f(16, 16, 16));
+	Entity->GetMins().Set (-16, -16, 0);
+	Entity->GetMaxs().Set (16, 16, 16);
 	Entity->PhysicsType = PHYSICS_TOSS;
-	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
+	Entity->GetSvFlags() |= SVF_DEADMONSTER;
 	Entity->NextThink = 0;
 	Entity->Link ();
 }
@@ -384,9 +384,7 @@ void CMaiden::DuckDown ()
 	if (AIFlags & AI_DUCKED)
 		return;
 	AIFlags |= AI_DUCKED;
-	vec3f maxs = Entity->GetMaxs();
-	maxs.Z -= 32;
-	Entity->SetMaxs (maxs);
+	Entity->GetMaxs().Z -= 32;
 	Entity->CanTakeDamage = true;
 	PauseTime = level.framenum + 10;
 	Entity->Link ();
@@ -403,9 +401,7 @@ void CMaiden::DuckHold ()
 void CMaiden::DuckUp ()
 {
 	AIFlags &= ~AI_DUCKED;
-	vec3f maxs = Entity->GetMaxs();
-	maxs.Z += 32;
-	Entity->SetMaxs (maxs);
+	Entity->GetMaxs().Z += 32;
 	Entity->CanTakeDamage = true;
 	Entity->Link ();
 }
@@ -763,10 +759,10 @@ void CMaiden::Sight()
 
 void CMaiden::Spawn ()
 {
-	Entity->SetSolid (SOLID_BBOX);
+	Entity->GetSolid() = SOLID_BBOX;
 	Entity->State.GetModelIndex() = ModelIndex("models/monsters/bitch/tris.md2");
-	Entity->SetMins (vec3f(-16, -16, 0));
-	Entity->SetMaxs (vec3f(16, 16, 56));
+	Entity->GetMins().Set (-16, -16, 0);
+	Entity->GetMaxs().Set (16, 16, 56);
 
 	SoundMissilePrelaunch	= SoundIndex ("chick/chkatck1.wav");	
 	SoundMissileLaunch	= SoundIndex ("chick/chkatck2.wav");	

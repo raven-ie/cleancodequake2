@@ -56,9 +56,9 @@ public:
 	{
 		State.GetModelIndex() = ModelIndex("models/objects/dmspot/tris.md2");
 		State.GetSkinNum() = 0;
-		SetSolid (SOLID_BBOX);
-		SetMins (vec3f(-32, -32, -24));
-		SetMaxs (vec3f(32, 32, -16));
+		GetSolid() = SOLID_BBOX;
+		GetMins().Set (-32, -32, -24);
+		GetMaxs().Set (32, 32, -16);
 		Link ();
 	};
 };
@@ -124,7 +124,7 @@ public:
 		// unlink to make sure it can't possibly interfere with KillBox
 		other->Unlink ();
 
-		other->State.SetOrigin (Dest->State.GetOrigin() + vec3f(0,0,10));
+		other->State.GetOrigin() = (Dest->State.GetOrigin() + vec3f(0,0,10));
 		other->State.GetOldOrigin() = Dest->State.GetOrigin();
 
 		// clear the velocity and hold them in place briefly
@@ -146,7 +146,7 @@ public:
 				Player->Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(Dest->State.GetAngles()[i] - Player->Client.Respawn.cmd_angles[i]);
 		}
 
-		other->State.SetAngles(vec3fOrigin);
+		other->State.GetAngles().Clear ();
 		if (Player)
 		{
 			Player->Client.PlayerState.GetViewAngles().Clear ();
@@ -206,20 +206,20 @@ public:
 		State.GetSkinNum() = 1;
 		State.GetEffects() = EF_TELEPORTER;
 		State.GetSound() = SoundIndex ("world/amb10.wav");
-		SetSolid (SOLID_BBOX);
+		GetSolid() = SOLID_BBOX;
 
-		SetMins (vec3f(-32, -32, -24));
-		SetMaxs (vec3f(32, 32, -16));
+		GetMins().Set (-32, -32, -24);
+		GetMaxs().Set (32, 32, -16);
 		Link ();
 
 		CTeleporterTrigger *trig = QNew (com_levelPool, 0) CTeleporterTrigger;
 		trig->Touchable = true;
-		trig->SetSolid (SOLID_TRIGGER);
+		trig->GetSolid() = SOLID_TRIGGER;
 		trig->Target = Target;
 		trig->SetOwner (this);
-		trig->State.SetOrigin (State.GetOrigin());
-		trig->SetMins (vec3f(-8, -8, 8));
-		trig->SetMaxs (vec3f(8, 8, 24));
+		trig->State.GetOrigin() = State.GetOrigin();
+		trig->GetMins().Set (-8, -8, 8);
+		trig->GetMaxs().Set (8, 8, 24);
 		trig->NextThink = level.framenum + 1;
 		trig->Link ();
 	};
@@ -277,15 +277,15 @@ public:
 			return;
 		}
 
-		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
-		SetSolid (SOLID_TRIGGER);
+		GetSvFlags() |= SVF_NOCLIENT;
+		GetSolid() = SOLID_TRIGGER;
 		Touchable = true;
 		SetBrushModel ();
 		Link ();
 
 		// noise maker and splash effect dude
 		NoiseMaker *s = QNew (com_levelPool, 0) NoiseMaker;
-		s->State.SetOrigin (GetMins() + ((GetMaxs() - GetMins()) / 2));
+		s->State.GetOrigin() = (GetMins() + ((GetMaxs() - GetMins()) / 2));
 		s->State.GetSound() = SoundIndex ("world/hum1.wav");
 		s->Link ();
 	};
@@ -313,7 +313,7 @@ public:
 
 	void Spawn ()
 	{
-		State.SetOrigin (State.GetOrigin() + vec3f(0, 0, 16));
+		State.GetOrigin().Z += 16;
 	};
 };
 
@@ -345,8 +345,8 @@ public:
 		if (!(game.mode & GAME_DEATHMATCH))
 		{
 #ifndef FREE_UNUSED_SPOTS
-			SetSolid (SOLID_NOT);
-			SetSvFlags (SVF_NOCLIENT);
+			GetSolid() = SOLID_NOT;
+			GetSvFlags() = SVF_NOCLIENT;
 			Link ();
 #else
 			Free ();
@@ -512,9 +512,9 @@ public:
 			{
 				CPlayerCoop *spot = QNew (com_levelPool, 0) CPlayerCoop;
 				spot->gameEntity->classname = "info_player_coop";
-				spot->State.SetOrigin (origins[i]);
+				spot->State.GetOrigin() = origins[i];
 				spot->TargetName = "jail3";
-				spot->State.SetAngles (vec3f(0,90,0));
+				spot->State.GetAngles().Set (0, 90, 0);
 			}
 		}
 	};
@@ -643,7 +643,7 @@ void CPathCorner::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *sur
 	next = (Target) ? CC_PickTarget(Target) : NULL;
 	if ((next) && (next->SpawnFlags & 1))
 	{
-		other->State.SetOrigin (next->State.GetOrigin() + vec3f(0, 0, next->GetMins().Z - other->GetMins().Z));
+		other->State.GetOrigin() = (next->State.GetOrigin() + vec3f(0, 0, next->GetMins().Z - other->GetMins().Z));
 		next = CC_PickTarget(entity_cast<CUsableEntity>(next)->Target);
 		other->State.GetEvent() = EV_OTHER_TELEPORT;
 	}
@@ -687,11 +687,11 @@ void CPathCorner::Spawn ()
 		return;
 	}
 
-	SetSolid (SOLID_TRIGGER);
+	GetSolid() = SOLID_TRIGGER;
 	Touchable = true;
-	SetMins (vec3f(-8, -8, -8));
-	SetMaxs (vec3f(8, 8, 8));
-	SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
+	GetMins().Set (-8);
+	GetMaxs().Set (8);
+	GetSvFlags() |= SVF_NOCLIENT;
 	Link ();
 };
 
@@ -805,11 +805,11 @@ public:
 			Free ();
 			return;
 		}
-		SetSolid (SOLID_TRIGGER);
+		GetSolid() = SOLID_TRIGGER;
 		Touchable = true;
-		SetMins (vec3f(-8, -8, -16));
-		SetMaxs (vec3f(8, 8, 16));
-		SetSvFlags (SVF_NOCLIENT);
+		GetMins().Set (-8, -8, -16);
+		GetMaxs().Set (8, 8, 16);
+		GetSvFlags() = SVF_NOCLIENT;
 		Link ();
 	};
 };
@@ -865,8 +865,8 @@ public:
 
 	void Spawn ()
 	{
-		SetAbsMin(State.GetOrigin());
-		SetAbsMax(State.GetOrigin());
+		GetAbsMin() = State.GetOrigin();
+		GetAbsMax() = State.GetOrigin();
 	};
 };
 
@@ -1044,7 +1044,7 @@ public:
 			return;
 		}
 
-		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
+		GetSvFlags() |= SVF_NOCLIENT;
 
 		RampMessage[0] = Message[0] - 'a';
 		RampMessage[1] = Message[1] - 'a';

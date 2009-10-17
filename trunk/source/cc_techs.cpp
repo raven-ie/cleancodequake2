@@ -290,10 +290,10 @@ CItemEntity *CTech::DropItem (CBaseEntity *ent)
 	dropped->SpawnFlags = DROPPED_ITEM;
 	dropped->State.GetEffects() = EffectFlags;
 	dropped->State.GetRenderEffects() = RF_GLOW;
-	dropped->SetMins (vec3f(-15));
-	dropped->SetMaxs (vec3f(15));
+	dropped->GetMins().Set (-15);
+	dropped->GetMaxs().Set (15);
 	dropped->State.GetModelIndex() = ModelIndex(WorldModel);
-	dropped->SetSolid (SOLID_TRIGGER);
+	dropped->GetSolid() = SOLID_TRIGGER;
 	dropped->gameEntity->owner = ent->gameEntity;
 
 	if (ent->EntityFlags & ENT_PLAYER)
@@ -309,12 +309,12 @@ CItemEntity *CTech::DropItem (CBaseEntity *ent)
 
 		trace = CTrace (ent->State.GetOrigin(), dropped->GetMins(), dropped->GetMaxs(),
 			result, ent->gameEntity, CONTENTS_SOLID);
-		dropped->State.SetOrigin (trace.endPos);
+		dropped->State.GetOrigin() = trace.endPos;
 	}
 	else
 	{
 		ent->State.GetAngles().ToVectors(&forward, &right, NULL);
-		dropped->State.SetOrigin (ent->State.GetOrigin());
+		dropped->State.GetOrigin() = ent->State.GetOrigin();
 	}
 
 	forward *= 100;
@@ -344,16 +344,16 @@ void SpawnTech(CBaseItem *item, CBaseEntity *spot)
 	ent->SpawnFlags = DROPPED_ITEM;
 	ent->State.GetEffects() = item->EffectFlags;
 	ent->State.GetRenderEffects() = RF_GLOW;
-	ent->SetMins (vec3f(-15));
-	ent->SetMaxs (vec3f(15));
+	ent->GetMins().Set (-15);
+	ent->GetMaxs().Set (15);
 	ent->State.GetModelIndex() = ModelIndex(item->WorldModel);
-	ent->SetSolid (SOLID_TRIGGER);
+	ent->GetSolid() = SOLID_TRIGGER;
 	ent->gameEntity->owner = ent->gameEntity;
 
 	vec3f forward;
 	vec3f(0, random()*360, 0).ToVectors(&forward, NULL, NULL);
 
-	ent->State.SetOrigin (spot->State.GetOrigin() + vec3f(0,0,16));
+	ent->State.GetOrigin() += vec3f(0,0,16);
 	forward *= 100;
 	ent->Velocity = forward;
 	ent->Velocity.Z = 300;
@@ -423,7 +423,7 @@ void ResetTechs()
 	{
 		CBaseEntity *Entity = ent->Entity;
 
-		if (Entity && Entity->IsInUse() && (Entity->EntityFlags & ENT_ITEM))
+		if (Entity && Entity->GetInUse() && (Entity->EntityFlags & ENT_ITEM))
 		{
 			CItemEntity *Item = entity_cast<CItemEntity>(Entity);
 

@@ -87,9 +87,9 @@ public:
 	bool IsBannedFromSpectator (IPAddress IP);
 	bool IsBanned (IPAddress IP);
 
-	bool IsSquelched (char *Name);
-	bool IsBannedFromSpectator (char *Name);
-	bool IsBanned (char *Name);
+	bool IsSquelched (const char *Name);
+	bool IsBannedFromSpectator (const char *Name);
+	bool IsBanned (const char *Name);
 };
 
 extern CBanList	Bans;

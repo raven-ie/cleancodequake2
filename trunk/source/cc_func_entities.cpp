@@ -139,7 +139,7 @@ void CFuncTimer::Spawn ()
 		Activator = this;
 	}
 
-	SetSvFlags (SVF_NOCLIENT);
+	GetSvFlags() = SVF_NOCLIENT;
 }
 
 LINK_CLASSNAME_TO_CLASS ("func_timer", CFuncTimer);
@@ -174,7 +174,7 @@ void CTargetCharacter::Spawn ()
 {
 	PhysicsType = PHYSICS_PUSH;
 	SetBrushModel ();
-	SetSolid (SOLID_BSP);
+	GetSolid() = SOLID_BSP;
 	State.GetFrame() = 12;
 	Link ();
 };

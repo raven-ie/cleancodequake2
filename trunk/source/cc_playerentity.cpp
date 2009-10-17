@@ -242,7 +242,7 @@ void CPlayerEntity::Respawn ()
 		// spectator's don't leave bodies
 		if (!NoClip)
 			CopyToBodyQueue (this);
-		SetSvFlags (GetSvFlags() & ~SVF_NOCLIENT);
+		GetSvFlags() &= ~SVF_NOCLIENT;
 		PutInServer ();
 
 		// add a teleportation effect
@@ -271,10 +271,10 @@ void CPlayerEntity::SpectatorRespawn ()
 
 	if (Client.Persistent.spectator)
 	{
-		char *value = Info_ValueForKey (Client.Persistent.userinfo, "spectator");
+		std::string value = Info_ValueForKey (Client.Persistent.UserInfo, "spectator");
 		if (*spectator_password->String() && 
 			strcmp(spectator_password->String(), "none") && 
-			strcmp(spectator_password->String(), value))
+			value != spectator_password->String())
 		{
 			PrintToClient (PRINT_HIGH, "Spectator password incorrect.\n");
 			Client.Persistent.spectator = false;
@@ -287,7 +287,7 @@ void CPlayerEntity::SpectatorRespawn ()
 		for (int i = 1; i <= game.maxclients; i++)
 		{
 			CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
-			if (Player->IsInUse() && Player->Client.Persistent.spectator)
+			if (Player->GetInUse() && Player->Client.Persistent.spectator)
 				numspec++;
 		}
 
@@ -304,9 +304,9 @@ void CPlayerEntity::SpectatorRespawn ()
 	{
 		// he was a spectator and wants to join the game
 		// he must have the right password
-		char *value = Info_ValueForKey (Client.Persistent.userinfo, "password");
+		std::string value = Info_ValueForKey (Client.Persistent.UserInfo, "password");
 		if (*password->String() && strcmp(password->String(), "none") && 
-			strcmp(password->String(), value))
+			value != password->String())
 		{
 			PrintToClient (PRINT_HIGH, "Password incorrect.\n");
 			Client.Persistent.spectator = true;
@@ -318,7 +318,7 @@ void CPlayerEntity::SpectatorRespawn ()
 	// clear client on respawn
 	Client.Respawn.score = Client.Persistent.score = 0;
 
-	SetSvFlags (GetSvFlags() & ~SVF_NOCLIENT);
+	GetSvFlags() &= ~SVF_NOCLIENT;
 	PutInServer ();
 
 	// add a teleportation effect
@@ -350,8 +350,8 @@ a deathmatch.
 */
 void CPlayerEntity::PutInServer ()
 {
-	vec3f					mins (-16, -16, -2);
-	vec3f					maxs (16, 16, 32);
+	static const vec3f		mins (-16, -16, -2);
+	static const vec3f		maxs (16, 16, 32);
 	int						index;
 	vec3f					spawn_origin, spawn_angles;
 	int						i;
@@ -371,13 +371,13 @@ void CPlayerEntity::PutInServer ()
 	// deathmatch wipes most client data every spawn
 	default:
 			Respawn = Client.Respawn;
-			memcpy (userinfo, Client.Persistent.userinfo, sizeof(userinfo));
+			memcpy (userinfo, Client.Persistent.UserInfo.c_str(), sizeof(userinfo));
 			InitPersistent ();
 			UserinfoChanged (userinfo);
 		break;
 	case GAME_COOPERATIVE:
 			Respawn = Client.Respawn;
-			memcpy (userinfo, Client.Persistent.userinfo, sizeof(userinfo));
+			memcpy (userinfo, Client.Persistent.UserInfo.c_str(), sizeof(userinfo));
 
 			Respawn.coop_respawn.game_helpchanged = Client.Persistent.game_helpchanged;
 			Respawn.coop_respawn.helpchanged = Client.Persistent.helpchanged;
@@ -409,23 +409,22 @@ void CPlayerEntity::PutInServer ()
 	NoClip = false;
 	TossPhysics = false;
 	ViewHeight = 22;
-	SetInUse (true);
+	GetInUse() = true;
 	gameEntity->classname = "player";
 	Mass = 200;
-	SetSolid (SOLID_BBOX);
+	GetSolid() = SOLID_BBOX;
 	DeadFlag = false;
 	AirFinished = level.framenum + 120;
-	SetClipmask (CONTENTS_MASK_PLAYERSOLID);
-	gameEntity->model = "players/male/tris.md2";
+	GetClipmask() = CONTENTS_MASK_PLAYERSOLID;
 	gameEntity->waterlevel = 0;
 	gameEntity->watertype = 0;
 	Flags &= ~FL_NO_KNOCKBACK;
-	SetSvFlags (GetSvFlags() & ~SVF_DEADMONSTER);
+	GetSvFlags() &= ~SVF_DEADMONSTER;
 	if (!Client.Respawn.MenuState.ent)
 		Client.Respawn.MenuState = CMenuState(this);
 
-	SetMins (mins);
-	SetMaxs (maxs);
+	GetMins() = mins;
+	GetMaxs() = maxs;
 	Velocity.Clear ();
 
 	// clear playerstate values
@@ -442,7 +441,7 @@ void CPlayerEntity::PutInServer ()
 		Client.PlayerState.GetFov () = 90;
 	else
 	{
-		float fov = atof(Info_ValueForKey(Client.Persistent.userinfo, "fov"));
+		float fov = atof(Info_ValueForKey(Client.Persistent.UserInfo, "fov").c_str());
 		if (fov < 1)
 			fov = 90;
 		else if (fov > 160)
@@ -462,14 +461,14 @@ void CPlayerEntity::PutInServer ()
 	State.GetSkinNum()--;
 	State.GetFrame() = 0;
 
-	State.SetOrigin (spawn_origin + vec3f(0,0,1));
+	State.GetOrigin() = (spawn_origin + vec3f(0,0,1));
 	State.GetOldOrigin() = State.GetOrigin();
 
 	// set the delta angle
 	for (i=0 ; i<3 ; i++)
 		Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(spawn_angles[i] - Client.Respawn.cmd_angles[i]);
 
-	State.SetAngles (vec3f(0, spawn_angles[YAW], 0));
+	State.GetAngles().Set (0, spawn_angles[YAW], 0);
 	Client.PlayerState.GetViewAngles() = State.GetAngles();
 	Client.ViewAngle = State.GetAngles();
 
@@ -488,8 +487,8 @@ void CPlayerEntity::PutInServer ()
 		Client.Respawn.spectator = true;
 
 		NoClip = true;
-		SetSolid (SOLID_NOT);
-		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
+		GetSolid() = SOLID_NOT;
+		GetSvFlags() |= SVF_NOCLIENT;
 		Client.PlayerState.GetGunIndex () = 0;
 		Link ();
 		return;
@@ -559,28 +558,24 @@ The game can override any of the settings in place
 */
 void CPlayerEntity::UserinfoChanged (char *userinfo)
 {
-	char	*s;
-	int		playernum;
+	std::string UserInfo = userinfo;
 
 	// check for malformed or illegal info strings
-	if (!Info_Validate(userinfo))
-		Q_strncpyz (userinfo, "\\name\\badinfo\\skin\\male/grunt", MAX_INFO_STRING);
+	if (!Info_Validate(UserInfo))
+		UserInfo = "\\name\\badinfo\\skin\\male/grunt";
 
 	// set name
-	s = Info_ValueForKey (userinfo, "name");
-	Q_strncpyz (Client.Persistent.netname, s, sizeof(Client.Persistent.netname)-1);
+	std::string s = Info_ValueForKey (UserInfo, "name");
+	Q_strncpyz (Client.Persistent.netname, s.c_str(), sizeof(Client.Persistent.netname)-1);
 
 	// set spectator
-	s = Info_ValueForKey (userinfo, "spectator");
+	s = Info_ValueForKey (UserInfo, "spectator");
 	// spectators are only supported in deathmatch
-	if ((game.mode & GAME_DEATHMATCH) && *s && strcmp(s, "0"))
-		Client.Persistent.spectator = true;
-	else
-		Client.Persistent.spectator = false;
+	Client.Persistent.spectator = ((game.mode & GAME_DEATHMATCH) && s.length() && s != "0");
 
 	// set skin
-	s = Info_ValueForKey (userinfo, "skin");
-	playernum = State.GetNumber()-1;
+	s = Info_ValueForKey (UserInfo, "skin");
+	int playernum = State.GetNumber() - 1;
 
 	// combine name and skin into a configstring
 #ifdef CLEANCTF_ENABLED
@@ -590,14 +585,14 @@ void CPlayerEntity::UserinfoChanged (char *userinfo)
 	else
 //ZOID
 #endif
-		ConfigString (CS_PLAYERSKINS+playernum, Q_VarArgs ("%s\\%s", Client.Persistent.netname, s) );
+		ConfigString (CS_PLAYERSKINS+playernum, Q_VarArgs ("%s\\%s", Client.Persistent.netname, s.c_str()) );
 
 	// fov
 	if ((game.mode & GAME_DEATHMATCH) && dmFlags.dfFixedFov)
 		Client.PlayerState.GetFov () = 90;
 	else
 	{
-		float fov = atof(Info_ValueForKey(userinfo, "fov"));
+		float fov = atof(Info_ValueForKey(UserInfo, "fov").c_str());
 		if (fov < 1)
 			fov = 90;
 		else if (fov > 160)
@@ -607,17 +602,17 @@ void CPlayerEntity::UserinfoChanged (char *userinfo)
 	}
 
 	// handedness
-	s = Info_ValueForKey (userinfo, "hand");
-	if (strlen(s))
-		Client.Persistent.hand = atoi(s);
+	s = Info_ValueForKey (UserInfo, "hand");
+	if (s.length())
+		Client.Persistent.hand = atoi(s.c_str());
 
 	// IP
 	// Paril: removed. could be changed any time in-game!
 	//s = Info_ValueForKey (userinfo, "ip");
 
 	// Gender
-	s = Info_ValueForKey (userinfo, "gender");
-	if (strlen(s))
+	s = Info_ValueForKey (UserInfo, "gender");
+	if (s.length())
 	{
 		switch (s[0])
 		{
@@ -638,41 +633,38 @@ void CPlayerEntity::UserinfoChanged (char *userinfo)
 		Client.Respawn.Gender = GENDER_MALE;
 
 	// MSG command
-	s = Info_ValueForKey (userinfo, "msg");
-	if (strlen (s))
-		Client.Respawn.messageLevel = atoi (s);
+	s = Info_ValueForKey (UserInfo, "msg");
+	if (s.length())
+		Client.Respawn.messageLevel = atoi (s.c_str());
 
 	// save off the userinfo in case we want to check something later
-	Q_strncpyz (Client.Persistent.userinfo, userinfo, sizeof(Client.Persistent.userinfo)-1);
+	Client.Persistent.UserInfo = userinfo;
 }
 
 #ifdef CLEANCTF_ENABLED
-void CPlayerEntity::CTFAssignSkin(char *s)
+void CPlayerEntity::CTFAssignSkin(std::string s)
 {
 	int playernum = State.GetNumber()-1;
-	char *p;
-	char t[64];
+	std::string t = s;
 
-	Q_snprintfz(t, sizeof(t), "%s", s);
-
-	if ((p = strrchr(t, '/')) != NULL)
-		p[1] = 0;
+	if (t.find('/'))
+		t.erase (0, t.find('/') + 1);
 	else
-		Q_strncpyz(t, "male/", sizeof(t));
+		t = "male/";
 
 	switch (Client.Respawn.ctf_team)
 	{
 	case CTF_TEAM1:
 		ConfigString (CS_PLAYERSKINS+playernum, Q_VarArgs("%s\\%s%s", 
-			Client.Persistent.netname, t, CTF_TEAM1_SKIN) );
+			Client.Persistent.netname, t.c_str(), CTF_TEAM1_SKIN));
 		break;
 	case CTF_TEAM2:
 		ConfigString (CS_PLAYERSKINS+playernum,
-			Q_VarArgs("%s\\%s%s", Client.Persistent.netname, t, CTF_TEAM2_SKIN) );
+			Q_VarArgs("%s\\%s%s", Client.Persistent.netname, t.c_str(), CTF_TEAM2_SKIN));
 		break;
 	default:
 		ConfigString (CS_PLAYERSKINS+playernum, 
-			Q_VarArgs("%s\\%s", Client.Persistent.netname, s) );
+			Q_VarArgs("%s\\%s", Client.Persistent.netname, s.c_str()));
 		break;
 	}
 }
@@ -687,8 +679,8 @@ bool CPlayerEntity::CTFStart ()
 		// start as 'observer'
 		Client.Respawn.ctf_team = CTF_NOTEAM;
 		NoClip = true;
-		SetSolid (SOLID_NOT);
-		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
+		GetSolid() = SOLID_NOT;
+		GetSvFlags() |= SVF_NOCLIENT;
 		Client.PlayerState.GetGunIndex () = 0;
 		Link ();
 
@@ -878,7 +870,7 @@ inline void CPlayerEntity::CalcViewOffset (vec3f &forward, vec3f &right, vec3f &
 	// if dead, fix the angle and don't add any kick
 	if (DeadFlag)
 	{
-		Client.PlayerState.GetViewAngles() = vec3f(-15, Client.KillerYaw, 40);
+		Client.PlayerState.GetViewAngles().Set (-15, Client.KillerYaw, 40);
 		Client.PlayerState.GetKickAngles().Clear ();
 	}
 	else
@@ -1613,6 +1605,9 @@ and right after spawning
 */
 void CPlayerEntity::EndServerFrame ()
 {
+	if (!gameEntity)
+		return;
+
 	float	bobtime;
 	int		i;
 
@@ -1654,10 +1649,11 @@ void CPlayerEntity::EndServerFrame ()
 	// set model angles from view angles so other things in
 	// the world can tell which direction you are looking
 	//
-	State.SetAngles (vec3f(
+	State.GetAngles().Set (
 		(Client.ViewAngle.X > 180) ? (-360 + Client.ViewAngle.X)/3 : Client.ViewAngle.X/3,
 		Client.ViewAngle.Y,
-		CalcRoll (Velocity, right)*4));
+		CalcRoll (Velocity, right)*4
+		);
 
 	//
 	// calculate speed and cycle to be used for
@@ -1723,7 +1719,7 @@ void CPlayerEntity::EndServerFrame ()
 	for (i = 1; i <= game.maxclients; i++)
 	{
 		CPlayerEntity *e = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
-		if (!e->IsInUse() || e->Client.chase_target != this)
+		if (!e->GetInUse() || e->Client.chase_target != this)
 			continue;
 
 		e->Client.PlayerState.CopyStats (Client.PlayerState.GetStats());
@@ -1786,7 +1782,7 @@ void CPlayerEntity::CTFScoreboardMessage (bool reliable)
 	for (int i=0 ; i<game.maxclients ; i++)
 	{
 		CPlayerEntity *cl_ent = entity_cast<CPlayerEntity>((g_edicts + 1 + i)->Entity);
-		if (!cl_ent->IsInUse())
+		if (!cl_ent->GetInUse())
 			continue;
 		if (cl_ent->Client.Respawn.ctf_team == CTF_TEAM1)
 			team = 0;
@@ -1904,7 +1900,7 @@ void CPlayerEntity::CTFScoreboardMessage (bool reliable)
 		for (int i = 0; i < game.maxclients; i++)
 		{
 			CPlayerEntity *cl_ent = entity_cast<CPlayerEntity>((g_edicts + 1 + i)->Entity);
-			if (!cl_ent->IsInUse() ||
+			if (!cl_ent->GetInUse() ||
 				cl_ent->GetSolid() != SOLID_NOT ||
 				cl_ent->Client.Respawn.ctf_team != CTF_NOTEAM)
 				continue;
@@ -1977,7 +1973,7 @@ void CPlayerEntity::DeathmatchScoreboardMessage (bool reliable)
 	for (int i = 0; i < game.maxclients ; i++)
 	{
 		CPlayerEntity *cl_ent = entity_cast<CPlayerEntity>((g_edicts + 1 + i)->Entity);
-		if (!cl_ent->IsInUse() || cl_ent->Client.Respawn.spectator)
+		if (!cl_ent->GetInUse() || cl_ent->Client.Respawn.spectator)
 			continue;
 		score = cl_ent->Client.Respawn.score;
 		int j = 0;
@@ -2214,7 +2210,7 @@ void CPlayerEntity::SetSpectatorStats ()
 		Client.PlayerState.GetStat (STAT_LAYOUTS) = Client.PlayerState.GetStat(STAT_LAYOUTS) | 2;
 
 	Client.PlayerState.GetStat (STAT_CHASE) = 
-		(Client.chase_target && Client.chase_target->IsInUse()) ? (CS_PLAYERSKINS + (Client.chase_target->State.GetNumber() - 1)) : 0;
+		(Client.chase_target && Client.chase_target->GetInUse()) ? (CS_PLAYERSKINS + (Client.chase_target->State.GetNumber() - 1)) : 0;
 }
 
 #ifdef CLEANCTF_ENABLED
@@ -2276,7 +2272,7 @@ void CPlayerEntity::SetCTFStats()
 			{
 				CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 
-				if (Player->IsInUse() &&
+				if (Player->GetInUse() &&
 					(Player->Client.Persistent.Flag == NItems::RedFlag))
 				{
 					// enemy has it
@@ -2301,7 +2297,7 @@ void CPlayerEntity::SetCTFStats()
 			{
 				CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 
-				if (Player->IsInUse() &&
+				if (Player->GetInUse() &&
 					(Player->Client.Persistent.Flag == NItems::BlueFlag))
 				{
 					// enemy has it
@@ -2386,7 +2382,7 @@ void CPlayerEntity::CTFSetIDView()
 	for (int i = 1; i <= game.maxclients; i++)
 	{
 		CPlayerEntity *who = entity_cast<CPlayerEntity>((g_edicts + i)->Entity);
-		if (!who->IsInUse() || who->GetSolid() == SOLID_NOT)
+		if (!who->GetInUse() || who->GetSolid() == SOLID_NOT)
 			continue;
 		vec3f dir = who->State.GetOrigin() - State.GetOrigin();
 		dir.NormalizeFast ();
@@ -2439,7 +2435,7 @@ void CPlayerEntity::MoveToIntermission ()
 	if (game.mode != GAME_SINGLEPLAYER)
 		Client.LayoutFlags |= LF_SHOWSCORES;
 
-	State.SetOrigin (level.IntermissionOrigin);
+	State.GetOrigin() = level.IntermissionOrigin;
 
 	Client.PlayerState.GetPMove()->origin[0] = level.IntermissionOrigin.X*8;
 	Client.PlayerState.GetPMove()->origin[1] = level.IntermissionOrigin.Y*8;
@@ -2463,7 +2459,7 @@ void CPlayerEntity::MoveToIntermission ()
 	State.GetModelIndex() = State.GetModelIndex(2) = State.GetModelIndex(3) = 0;
 	State.GetEffects() = 0;
 	State.GetSound() = 0;
-	SetSolid (SOLID_NOT);
+	GetSolid() = SOLID_NOT;
 
 	// add the layout
 	Enemy = NULL;
@@ -2713,7 +2709,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 	Client.PlayerState.SetPMove (&pm.state);
 	Client.OldPMove = pm.state;
 
-	State.SetOrigin(vec3f(pm.state.origin[0]*0.125, pm.state.origin[1]*0.125, pm.state.origin[2]*0.125));
+	State.GetOrigin().Set (pm.state.origin[0]*0.125, pm.state.origin[1]*0.125, pm.state.origin[2]*0.125);
 	for (int i = 0; i < 3; i++)
 		Velocity[i] = pm.state.velocity[i]*0.125;
 
@@ -2738,11 +2734,11 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 		GroundEntityLinkCount = GroundEntity->GetLinkCount();
 
 	if (DeadFlag)
-		Client.PlayerState.GetViewAngles() = vec3f(-15, Client.KillerYaw, 40);
+		Client.PlayerState.GetViewAngles().Set (-15, Client.KillerYaw, 40);
 	else
 	{
 		Client.ViewAngle.Set (pm.viewAngles);
-		Client.PlayerState.GetViewAngles() = pm.viewAngles;
+		Client.PlayerState.GetViewAngles().Set (pm.viewAngles);
 	}
 
 #ifdef CLEANCTF_ENABLED
@@ -2765,7 +2761,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 			edict_t *other = pm.touchEnts[i];
 			if (other->Entity)
 			{
-				if ((other->Entity->EntityFlags & ENT_TOUCHABLE) && other->Entity->IsInUse())
+				if ((other->Entity->EntityFlags & ENT_TOUCHABLE) && other->Entity->GetInUse())
 				{
 					CTouchableEntity *Touchered = entity_cast<CTouchableEntity>(other->Entity);
 
@@ -2820,7 +2816,7 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 	for (int i = 1; i <= game.maxclients; i++)
 	{
 		CPlayerEntity *other = entity_cast<CPlayerEntity>((g_edicts + i)->Entity);
-		if (other->IsInUse() && other->Client.chase_target == this)
+		if (other->GetInUse() && other->Client.chase_target == this)
 			other->UpdateChaseCam();
 	}
 }
@@ -2843,7 +2839,7 @@ void CPlayerEntity::CTFAssignTeam()
 	{
 		CPlayerEntity *player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 
-		if (!player->IsInUse() || player == this)
+		if (!player->GetInUse() || player == this)
 			continue;
 
 		switch (player->Client.Respawn.ctf_team)
@@ -2917,7 +2913,7 @@ void CPlayerEntity::SaveClientData ()
 			return; // Not set up
 
 		CPlayerEntity *ent = entity_cast<CPlayerEntity>(g_edicts[1+i].Entity);
-		if (!ent->IsInUse())
+		if (!ent->GetInUse())
 			continue;
 
 		memcpy (&SavedClients[i], &ent->Client.Persistent, sizeof(CPersistentData));
@@ -3104,11 +3100,11 @@ void CPlayerEntity::TossHead (int damage)
 	}
 
 	State.GetFrame() = 0;
-	SetMins (vec3f(-16, -16, 0));
-	SetMaxs (vec3f(16, 16, 16));
+	GetMins().Set (-16, -16, 0);
+	GetMaxs().Set (16);
 
 	CanTakeDamage = false;
-	SetSolid (SOLID_NOT);
+	GetSolid() = SOLID_NOT;
 	State.GetEffects() = EF_GIB;
 	State.GetSound() = 0;
 	Flags |= FL_NO_KNOCKBACK;
@@ -3128,16 +3124,14 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 
 	State.GetModelIndex(2) = State.GetModelIndex(3) = 0;	// remove linked weapon model and ctf flag
 
-	State.SetAngles (vec3f(0, State.GetAngles().Y, 0));
+	State.GetAngles().Set (0, State.GetAngles().Y, 0);
 
 	State.GetSound() = 0;
 	Client.weapon_sound = 0;
 
-	vec3f maxs = GetMaxs();
-	maxs[2] = -8;
-	SetMaxs (maxs);
+	GetMaxs().Z = -8;
 
-	SetSvFlags (GetSvFlags() | SVF_DEADMONSTER);
+	GetSvFlags() |= SVF_DEADMONSTER;
 
 	if (!DeadFlag)
 	{
@@ -3271,7 +3265,7 @@ void CPlayerEntity::UpdateChaseCam()
 	CPlayerEntity *targ;
 
 	// is our chase target gone?
-	if (!Client.chase_target->IsInUse()
+	if (!Client.chase_target->GetInUse()
 		|| Client.chase_target->Client.Respawn.spectator || Client.chase_target->Client.chase_target)
 	{
 		CPlayerEntity *old = Client.chase_target;
@@ -3330,17 +3324,17 @@ void CPlayerEntity::UpdateChaseCam()
 			else
 				Client.PlayerState.GetPMove()->pmType = PMT_FREEZE;
 
-			State.SetOrigin (goal);
+			State.GetOrigin() = goal;
 
 			for (int i = 0; i < 3; i++)
 				Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(targ->Client.ViewAngle[i] - Client.Respawn.cmd_angles[i]);
 
 			if (targ->DeadFlag)
-				Client.PlayerState.GetViewAngles() = vec3f(-15, targ->Client.KillerYaw, 40);
+				Client.PlayerState.GetViewAngles().Set (-15, targ->Client.KillerYaw, 40);
 			else
 			{
 				angles = targ->Client.ViewAngle + targ->Client.KickAngles;
-				Client.PlayerState.GetViewAngles() = angles;
+				Client.PlayerState.GetViewAngles().Set (angles);
 				Client.ViewAngle = angles;
 			}
 		}
@@ -3387,7 +3381,7 @@ void CPlayerEntity::UpdateChaseCam()
 			else
 				Client.PlayerState.GetPMove()->pmType = PMT_FREEZE;
 
-			State.SetOrigin (goal);
+			State.GetOrigin() = goal;
 
 			for (int i = 0; i < 3; i++)
 				Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(targ->Client.ViewAngle[i] - Client.Respawn.cmd_angles[i]);
@@ -3405,7 +3399,7 @@ void CPlayerEntity::UpdateChaseCam()
 			vec3f o = ownerv.MultiplyAngles (16, forward);
 			o.Z += targ->ViewHeight;
 
-			State.SetOrigin (o);
+			State.GetOrigin() = o;
 			Client.PlayerState.GetFov () = targ->Client.PlayerState.GetFov();
 
 			Client.PlayerState.GetGunIndex() = targ->Client.PlayerState.GetGunIndex();
@@ -3417,11 +3411,11 @@ void CPlayerEntity::UpdateChaseCam()
 				Client.PlayerState.GetPMove()->deltaAngles[i] = ANGLE2SHORT(targ->Client.ViewAngle[i] - Client.Respawn.cmd_angles[i]);
 
 			if (targ->DeadFlag)
-				Client.PlayerState.GetViewAngles() = vec3f(-15, targ->Client.KillerYaw, 40);
+				Client.PlayerState.GetViewAngles().Set (-15, targ->Client.KillerYaw, 40);
 			else
 			{
 				angles = targ->Client.ViewAngle + targ->Client.KickAngles;
-				Client.PlayerState.GetViewAngles() = angles;
+				Client.PlayerState.GetViewAngles().Set (angles);
 				Client.ViewAngle = angles;
 			}
 		}
@@ -3470,7 +3464,7 @@ void CPlayerEntity::ChaseNext()
 		if (i > game.maxclients)
 			i = 1;
 		e = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
-		if (!e->IsInUse())
+		if (!e->GetInUse())
 			continue;
 		if (e->NoClip)
 			continue;
@@ -3495,7 +3489,7 @@ void CPlayerEntity::ChasePrev()
 		if (i < 1)
 			i = game.maxclients;
 		e = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
-		if (!e->IsInUse())
+		if (!e->GetInUse())
 			continue;
 		if (e->NoClip)
 			continue;
@@ -3513,7 +3507,7 @@ void CPlayerEntity::GetChaseTarget()
 	for (int i = 1; i <= game.maxclients; i++)
 	{
 		CPlayerEntity *other = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
-		if (other->IsInUse() && !other->Client.Respawn.spectator && !other->NoClip)
+		if (other->GetInUse() && !other->Client.Respawn.spectator && !other->NoClip)
 		{
 			Client.chase_target = other;
 			Client.LayoutFlags |= LF_UPDATECHASE;
@@ -3582,18 +3576,18 @@ void CPlayerEntity::PlayerNoiseAt (vec3f Where, int type)
 	{
 		CPlayerNoise *noise = QNew (com_levelPool, 0) CPlayerNoise;
 		noise->gameEntity->classname = "player_noise";
-		noise->SetMins (vec3f(-8, -8, -8));
-		noise->SetMaxs (vec3f(8, 8, 8));
+		noise->GetMins().Set (-8);
+		noise->GetMaxs().Set (8);
 		noise->SetOwner (this);
-		noise->SetSvFlags (SVF_NOCLIENT);
+		noise->GetSvFlags() = SVF_NOCLIENT;
 		Client.mynoise = noise;
 
 		noise = QNew (com_levelPool, 0) CPlayerNoise;
 		noise->gameEntity->classname = "player_noise";
-		noise->SetMins (vec3f(-8, -8, -8));
-		noise->SetMaxs (vec3f(8, 8, 8));
+		noise->GetMins().Set (-8);
+		noise->GetMaxs().Set (8);
 		noise->SetOwner (this);
-		noise->SetSvFlags (SVF_NOCLIENT);
+		noise->GetSvFlags() = SVF_NOCLIENT;
 		Client.mynoise2 = noise;
 	}
 
@@ -3611,9 +3605,9 @@ void CPlayerEntity::PlayerNoiseAt (vec3f Where, int type)
 		level.sound2_entity_framenum = level.framenum;
 	}
 
-	noise->State.SetOrigin (Where);
-	noise->SetAbsMin (Where - noise->GetMins());
-	noise->SetAbsMax (Where + noise->GetMaxs());
+	noise->State.GetOrigin() = Where;
+	noise->GetAbsMin() = (Where - noise->GetMins());
+	noise->GetAbsMax() = (Where + noise->GetMaxs());
 	noise->gameEntity->teleport_time = level.framenum;
 	noise->Link ();
 #else
@@ -3658,7 +3652,7 @@ void CPlayerEntity::Begin ()
 
 	// if there is already a body waiting for us (a loadgame), just
 	// take it, otherwise spawn one from scratch
-	if (IsInUse())
+	if (GetInUse())
 	{
 		// the client has cleared the client side viewangles upon
 		// connecting to the server, which is different than the
@@ -3720,34 +3714,35 @@ IPAddress CopyIP (const char *val)
 
 bool CPlayerEntity::Connect (char *userinfo)
 {
-	char	*value;
+	std::string	UserInfo = userinfo;
 
 	// check to see if they are on the banned IP list
-	value = Info_ValueForKey (userinfo, "ip");
+	std::string value = Info_ValueForKey (UserInfo, "ip");
 	IPAddress Adr;
 
-	Adr = CopyIP (value);
-	if (Bans.IsBanned(Adr) || Bans.IsBanned(Info_ValueForKey(userinfo, "name")))
+	Adr = CopyIP (value.c_str());
+	if (Bans.IsBanned(Adr) || Bans.IsBanned(Info_ValueForKey(UserInfo, "name").c_str()))
 	{
-		Info_SetValueForKey(userinfo, "rejmsg", "Connection refused.");
+		Info_SetValueForKey(UserInfo, "rejmsg", "Connection refused.");
 		return false;
 	}
 
 	// check for a spectator
-	value = Info_ValueForKey (userinfo, "spectator");
-	if ((game.mode & GAME_DEATHMATCH) && *value && strcmp(value, "0"))
+	value = Info_ValueForKey (UserInfo, "spectator");
+	if ((game.mode & GAME_DEATHMATCH) && value.length() && value != "0")
 	{
 		int i, numspec;
 
-		if (Bans.IsBannedFromSpectator(Adr) || Bans.IsBannedFromSpectator(Info_ValueForKey(userinfo, "name")))
+		if (Bans.IsBannedFromSpectator(Adr) || Bans.IsBannedFromSpectator(Info_ValueForKey(UserInfo, "name").c_str()))
 		{
-			Info_SetValueForKey(userinfo, "rejmsg", "Not permitted to enter spectator mode");
+			Info_SetValueForKey(UserInfo, "rejmsg", "Not permitted to enter spectator mode");
 			return false;
 		}
 		if (*spectator_password->String() && 
 			strcmp(spectator_password->String(), "none") && 
-			strcmp(spectator_password->String(), value)) {
-			Info_SetValueForKey(userinfo, "rejmsg", "Spectator password required or incorrect.");
+			spectator_password->String() != value)
+		{
+			Info_SetValueForKey(UserInfo, "rejmsg", "Spectator password required or incorrect.");
 			return false;
 		}
 
@@ -3755,24 +3750,24 @@ bool CPlayerEntity::Connect (char *userinfo)
 		for (i = numspec = 0; i < game.maxclients; i++)
 		{
 			CPlayerEntity *Ent = entity_cast<CPlayerEntity>(g_edicts[i+1].Entity);
-			if (Ent->IsInUse() && Ent->Client.Persistent.spectator)
+			if (Ent->GetInUse() && Ent->Client.Persistent.spectator)
 				numspec++;
 		}
 
 		if (numspec >= game.maxspectators)
 		{
-			Info_SetValueForKey(userinfo, "rejmsg", "Server spectator limit is full.");
+			Info_SetValueForKey(UserInfo, "rejmsg", "Server spectator limit is full.");
 			return false;
 		}
 	}
 	else
 	{
 		// check for a password
-		value = Info_ValueForKey (userinfo, "password");
+		value = Info_ValueForKey (UserInfo, "password");
 		if (*password->String() && strcmp(password->String(), "none") && 
-			strcmp(password->String(), value))
+			password->String() != value)
 		{
-			Info_SetValueForKey(userinfo, "rejmsg", "Password required or incorrect.");
+			Info_SetValueForKey(UserInfo, "rejmsg", "Password required or incorrect.");
 			return false;
 		}
 	}
@@ -3783,7 +3778,7 @@ bool CPlayerEntity::Connect (char *userinfo)
 
 	// if there is already a body waiting for us (a loadgame), just
 	// take it, otherwise spawn one from scratch
-	if (!IsInUse())
+	if (!GetInUse())
 	{
 		// clear the respawning variables
 #ifdef CLEANCTF_ENABLED
@@ -3806,10 +3801,10 @@ bool CPlayerEntity::Connect (char *userinfo)
 		BroadcastPrintf (PRINT_MEDIUM, "%s connected\n", Client.Persistent.netname);
 		
 		// But only tell the server the IP
-		DebugPrintf ("%s@%s connected\n", Client.Persistent.netname, Info_ValueForKey (userinfo, "ip"));
+		DebugPrintf ("%s@%s connected\n", Client.Persistent.netname, Info_ValueForKey (UserInfo, "ip").c_str());
 	}
 
-	SetSvFlags (0); // make sure we start with known default
+	GetSvFlags() = 0; // make sure we start with known default
 	Client.Persistent.state = SVCS_CONNECTED;
 	return true;
 }
@@ -3837,8 +3832,8 @@ void CPlayerEntity::Disconnect ()
 
 	Unlink ();
 	State.GetModelIndex() = 0;
-	SetSolid (SOLID_NOT);
-	SetInUse (false);
+	GetSolid() = SOLID_NOT;
+	GetInUse() = false;
 	gameEntity->classname = "disconnected";
 
 	ConfigString (CS_PLAYERSKINS+(State.GetNumber()-1), "");

@@ -85,7 +85,7 @@ public:
 		float ratio = entity_cast<CPhysicsEntity>(other)->Mass / Mass;
 		vec3f v = State.GetOrigin() - other->State.GetOrigin();
 		float Yaw = (v.ToYaw ()*M_PI*2 / 360);
-		vec3f move = vec3f( cosf(Yaw)*(2 * ratio),
+		vec3f move ( cosf(Yaw)*(2 * ratio),
 							sinf(Yaw)*(2 * ratio),
 							0);
 
@@ -93,7 +93,7 @@ public:
 				newOrigin = (oldOrigin + move);
 
 		newOrigin.Z += BARREL_STEPSIZE;
-		vec3f end = vec3f(newOrigin);
+		vec3f end (newOrigin);
 
 		end.Z -= BARREL_STEPSIZE*2;
 
@@ -112,7 +112,7 @@ public:
 		}
 
 	// check point traces down for dangling corners
-		State.SetOrigin (trace.endPos);
+		State.GetOrigin() = trace.EndPos;
 
 		GroundEntity = trace.Ent;
 		GroundEntityLinkCount = trace.Ent->GetLinkCount();
@@ -143,7 +143,7 @@ public:
 			if (trace.fraction == 1 || trace.allSolid)
 				return;
 
-			State.SetOrigin (trace.endPos);
+			State.GetOrigin() = trace.EndPos;
 			Link();
 			return;
 		}
@@ -177,12 +177,12 @@ public:
 			return;
 		}
 
-		SetSolid (SOLID_BBOX);
+		GetSolid() = SOLID_BBOX;
 
 		State.GetModelIndex() = ModelIndex ("models/objects/barrels/tris.md2");
 
-		SetMins (vec3f(-16, -16, 0));
-		SetMaxs (vec3f(16, 16, 40));
+		GetMins().Set (-16, -16, 0);
+		GetMaxs().Set (16, 16, 40);
 
 		if (!Explosivity)
 			Explosivity = 400;
@@ -253,7 +253,7 @@ public:
 	{
 		if (MyUse)
 		{
-			SetSvFlags (GetSvFlags() & ~SVF_NOCLIENT);
+			GetSvFlags() &= ~SVF_NOCLIENT;
 			MyUse = false;
 		}
 		CTrainBase::Use (other, activator);
@@ -274,13 +274,13 @@ public:
 
 		PhysicsType = PHYSICS_PUSH;
 		Touchable = true;
-		SetSolid (SOLID_NOT);
+		GetSolid() = SOLID_NOT;
 		State.GetModelIndex() = ModelIndex ("models/ships/viper/tris.md2");
-		SetMins (vec3f(-16, -16, 0));
-		SetMaxs (vec3f(16, 16, 32));
+		GetMins().Set (-16, -16, 0);
+		GetMaxs().Set (16, 16, 32);
 
 		NextThink = level.framenum + FRAMETIME;
-		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
+		GetSvFlags() |= SVF_NOCLIENT;
 		Accel = Decel = Speed;
 
 		Link ();
@@ -352,7 +352,7 @@ public:
 
 	void Spawn ()
 	{
-		SetSolid (SOLID_NOT);
+		GetSolid() = SOLID_NOT;
 		State.GetModelIndex() = ModelIndex ("models/objects/banner/tris.md2");
 		State.GetFrame() = irandom(16);
 		Link ();
@@ -408,9 +408,9 @@ public:
 
 	void Spawn ()
 	{
-		SetSolid (SOLID_NOT);
-		SetMins (vec3f(-64, -64, 0));
-		SetMaxs (vec3f(64, 64, 8));
+		GetSolid() = SOLID_NOT;
+		GetMins().Set (-64, -64, 0);
+		GetMaxs().Set (64, 64, 8);
 		State.GetModelIndex() = ModelIndex ("models/objects/black/tris.md2");
 		State.GetRenderEffects() = RF_TRANSLUCENT;
 		NextThink = level.framenum + 2;
@@ -454,9 +454,9 @@ public:
 
 	void Spawn ()
 	{
-		SetSolid (SOLID_BBOX);
-		SetMins (vec3f(-32, -32, -16));
-		SetMaxs (vec3f(32, 32, 32));
+		GetSolid() = SOLID_BBOX;
+		GetMins().Set (-32, -32, -16);
+		GetMaxs().Set (32, 32, 32);
 		State.GetModelIndex() = ModelIndex ("models/monsters/tank/tris.md2");
 		State.GetFrame() = 254;
 		NextThink = level.framenum + 2;
@@ -500,9 +500,9 @@ public:
 
 	void Spawn ()
 	{
-		SetSolid (SOLID_BBOX);
-		SetMins (vec3f(-32, -32, 0));
-		SetMaxs (vec3f(32, 32, 32));
+		GetSolid() = SOLID_BBOX;
+		GetMins().Set (-32, -32, 0);
+		GetMaxs().Set (32, 32, 32);
 		State.GetModelIndex() = ModelIndex ("models/monsters/bitch/tris.md2");
 		State.GetFrame() = 208;
 		NextThink = level.framenum + 2;
@@ -546,9 +546,9 @@ public:
 
 	void Spawn ()
 	{
-		SetSolid (SOLID_BBOX);
-		SetMins (vec3f(-32, -32, 0));
-		SetMaxs (vec3f(32, 32, 32));
+		GetSolid() = SOLID_BBOX;
+		GetMins().Set (-32, -32, 0);
+		GetMaxs().Set (32, 32, 32);
 		State.GetModelIndex() = ModelIndex ("models/monsters/bitch/tris.md2");
 		State.GetFrame() = 248;
 		NextThink = level.framenum + 2;
@@ -609,7 +609,7 @@ public:
 		{
 			Drop = false;
 			PhysicsType = PHYSICS_TOSS;
-			State.SetOrigin (State.GetOrigin() + vec3f(0,0,2));
+			State.GetOrigin().Z += 2;
 		}
 	};
 
@@ -622,10 +622,10 @@ public:
 	void Spawn ()
 	{
 		PhysicsType = PHYSICS_NONE;
-		SetSolid (SOLID_BBOX);
+		GetSolid() = SOLID_BBOX;
 		State.GetModelIndex() = ModelIndex ("models/monsters/commandr/tris.md2");
-		SetMins (vec3f(-32, -32, 0));
-		SetMaxs (vec3f(32, 32, 48));
+		GetMins().Set (-32, -32, 0);
+		GetMaxs().Set (32, 32, 48);
 		CanTakeDamage = true;
 		Flags = FL_GODMODE;
 		State.GetRenderEffects() |= RF_FRAMELERP;
@@ -708,17 +708,17 @@ public:
 		State.GetSkinNum() = 0;
 		State.GetFrame() = 0;
 
-		SetMins (vec3fOrigin);
-		SetMaxs (vec3fOrigin);
+		GetMins().Clear ();
+		GetMaxs().Clear ();
 
 		State.GetModelIndex(2) = 0;
 		State.GetModelIndex() = gibIndex;
-		SetSolid (SOLID_NOT);
+		GetSolid() = SOLID_NOT;
 		State.GetEffects() |= EF_GIB;
 		State.GetEffects() &= ~EF_FLIES;
 		State.GetSound() = 0;
 		Flags |= FL_NO_KNOCKBACK;
-		SetSvFlags (GetSvFlags() & ~SVF_MONSTER);
+		GetSvFlags() &= ~SVF_MONSTER;
 		CanTakeDamage = true;
 
 		if (type == GIB_ORGANIC)
@@ -763,7 +763,7 @@ public:
 		}
 
 		PhysicsType = PHYSICS_NONE;
-		SetSolid (SOLID_BBOX);
+		GetSolid() = SOLID_BBOX;
 		State.GetModelIndex() = ModelIndex ("models/deadbods/dude/tris.md2");
 
 		// Defaults to frame 0
@@ -780,11 +780,11 @@ public:
 		else
 			State.GetFrame() = 0;
 
-		SetMins (vec3f(-16, -16, 0));
-		SetMaxs (vec3f(16, 16, 16));
+		GetMins().Set (-16, -16, 0);
+		GetMaxs().Set (16, 16, 16);
 		DeadFlag = true;
 		CanTakeDamage = true;
-		SetSvFlags (GetSvFlags() | (SVF_MONSTER|SVF_DEADMONSTER));
+		GetSvFlags() |= (SVF_MONSTER|SVF_DEADMONSTER);
 
 		Link ();
 	};
@@ -817,9 +817,9 @@ public:
 
 	void Spawn ()
 	{
-		SetSolid (SOLID_BBOX);
-		SetMins (vec3f(-176, -120, -24));
-		SetMaxs (vec3f(176, 120, 72));
+		GetSolid() = SOLID_BBOX;
+		GetMins().Set (-176, -120, -24);
+		GetMaxs().Set (176, 120, 72);
 		State.GetModelIndex() = ModelIndex ("models/ships/bigviper/tris.md2");
 		Link ();
 	};
@@ -891,14 +891,14 @@ public:
 
 		vec3f angles = v.ToAngles();
 		angles.Z = diff + 10;
-		State.SetAngles (angles);
+		State.GetAngles() = angles;
 	};
 
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
 		UseTargets (Activator, Message);
 
-		State.SetOrigin (vec3f(State.GetOrigin().X, State.GetOrigin().Y, GetAbsMin().Z + 1));
+		State.GetOrigin().Z = GetAbsMin().Z + 1;
 		T_RadiusDamage (this, this, Damage, NULL, Damage+40, MOD_BOMB);
 		BecomeExplosion (true);
 	};
@@ -908,8 +908,8 @@ public:
 		if (!Usable)
 			return;
 
-		SetSolid (SOLID_BBOX);
-		SetSvFlags (GetSvFlags() & ~SVF_NOCLIENT);
+		GetSolid() = SOLID_BBOX;
+		GetSvFlags() &= ~SVF_NOCLIENT;
 		State.GetEffects() |= EF_ROCKET;
 		Usable = false;
 		PhysicsType = PHYSICS_TOSS;
@@ -919,7 +919,7 @@ public:
 
 		CMiscViper *viper = entity_cast<CMiscViper>(CC_Find (NULL, FOFS(classname), "misc_viper"));
 
-		Velocity = vec3f(viper->Dir) * viper->Speed;
+		Velocity = viper->Dir * viper->Speed;
 
 		TimeStamp = level.framenum;
 		MoveDir = viper->Dir;
@@ -930,16 +930,16 @@ public:
 	{
 		PhysicsType = PHYSICS_NONE;
 		Touchable = false;
-		SetSolid (SOLID_NOT);
-		SetMins (vec3f(-8, -8, -8));
-		SetMaxs (vec3f(8, 8, 8));
+		GetSolid() = SOLID_NOT;
+		GetMins().Set (-8);
+		GetMaxs().Set (8);
 
 		State.GetModelIndex() = ModelIndex ("models/objects/bomb/tris.md2");
 
 		if (!Damage)
 			Damage = 1000;
 
-		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
+		GetSvFlags() |= SVF_NOCLIENT;
 		Link ();
 	};
 };
@@ -1005,9 +1005,9 @@ public:
 
 	void Spawn ()
 	{
-		SetSolid (SOLID_BBOX);
-		SetMins (vec3f(-64, -64, 0));
-		SetMaxs (vec3f(64, 64, 128));
+		GetSolid() = SOLID_BBOX;
+		GetMins().Set (-64, -64, 0);
+		GetMaxs().Set (64, 64, 128);
 		State.GetModelIndex() = ModelIndex ("models/objects/satellite/tris.md2");
 		Link ();
 	};
@@ -1039,7 +1039,7 @@ public:
 
 	void Spawn ()
 	{
-		SetSolid (SOLID_BBOX);
+		GetSolid() = SOLID_BBOX;
 		State.GetModelIndex() = ModelIndex ("models/objects/minelite/light1/tris.md2");
 		Link ();
 	};
@@ -1071,7 +1071,7 @@ public:
 
 	void Spawn ()
 	{
-		SetSolid (SOLID_BBOX);
+		GetSolid() = SOLID_BBOX;
 		State.GetModelIndex() = ModelIndex ("models/objects/minelite/light2/tris.md2");
 		Link ();
 	};
@@ -1119,11 +1119,11 @@ public:
 	void Spawn ()
 	{
 		State.GetModelIndex() = GameMedia.Gib_Arm();
-		SetSolid (SOLID_NOT);
+		GetSolid() = SOLID_NOT;
 		State.GetEffects() |= EF_GIB;
 		CanTakeDamage = true;
 		PhysicsType = PHYSICS_TOSS;
-		SetSvFlags (GetSvFlags() | SVF_MONSTER);
+		GetSvFlags() |= SVF_MONSTER;
 		AngularVelocity.Set (random()*200, random()*200, random()*200);
 		NextThink = level.framenum + 300;
 		Link ();
@@ -1172,11 +1172,11 @@ public:
 	void Spawn ()
 	{
 		State.GetModelIndex() = GameMedia.Gib_Leg();
-		SetSolid (SOLID_NOT);
+		GetSolid() = SOLID_NOT;
 		State.GetEffects() |= EF_GIB;
 		CanTakeDamage = true;
 		PhysicsType = PHYSICS_TOSS;
-		SetSvFlags (GetSvFlags() | SVF_MONSTER);
+		GetSvFlags() |= SVF_MONSTER;
 		AngularVelocity.Set (random()*200, random()*200, random()*200);
 		NextThink = level.framenum + 300;
 		Link ();
@@ -1225,11 +1225,11 @@ public:
 	void Spawn ()
 	{
 		State.GetModelIndex() = GameMedia.Gib_Head[0];
-		SetSolid (SOLID_NOT);
+		GetSolid() = SOLID_NOT;
 		State.GetEffects() |= EF_GIB;
 		CanTakeDamage = true;
 		PhysicsType = PHYSICS_TOSS;
-		SetSvFlags (GetSvFlags() | SVF_MONSTER);
+		GetSvFlags() |= SVF_MONSTER;
 		AngularVelocity.Set (random()*200, random()*200, random()*200);
 		NextThink = level.framenum + 300;
 		Link ();

@@ -623,18 +623,18 @@ public:
 	{
 		CMakronTorso *NewClass = QNew (com_levelPool, 0) CMakronTorso;
 
-		NewClass->State.SetOrigin (Owner->State.GetOrigin());
-		NewClass->State.SetAngles (Owner->State.GetAngles());
+		NewClass->State.GetOrigin() = Owner->State.GetOrigin();
+		NewClass->State.GetAngles() = Owner->State.GetAngles();
 		vec3f origin = Owner->State.GetOrigin();
 		origin.Y -= 84;
 
-		NewClass->SetMins (vec3f(-8, -8, 0));
-		NewClass->SetMaxs (vec3f(8, 8, 8));
+		NewClass->GetMins().Set (-8, -8, 0);
+		NewClass->GetMaxs().Set (8);
 		NewClass->State.GetModelIndex() = Owner->State.GetModelIndex();
 		NewClass->NextThink = level.framenum + 2;
 		NewClass->State.GetSound() = SoundIndex("makron/spine.wav");
 		NewClass->State.GetFrame() = 346;
-		NewClass->SetSolid (SOLID_NOT);
+		NewClass->GetSolid() = SOLID_NOT;
 		NewClass->Link ();
 	};
 };
@@ -645,10 +645,10 @@ public:
 
 void CMakron::Dead ()
 {
-	Entity->SetMins (vec3f(-60, -60, 0));
-	Entity->SetMaxs (vec3f(60, 60, 72));
+	Entity->GetMins().Set (-60, -60, 0);
+	Entity->GetMaxs().Set (60, 60, 72);
 	Entity->PhysicsType = PHYSICS_TOSS;
-	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
+	Entity->GetSvFlags() |= SVF_DEADMONSTER;
 	Entity->NextThink = 0;
 	Entity->Link ();
 }
@@ -948,10 +948,10 @@ void CMakron::Spawn ()
 	SoundTaunt3 = SoundIndex ("makron/voice.wav");
 	SoundHit = SoundIndex ("makron/bhit.wav");
 	
-	Entity->SetSolid (SOLID_BBOX);
+	Entity->GetSolid() = SOLID_BBOX;
 	Entity->State.GetModelIndex() = ModelIndex ("models/monsters/boss3/rider/tris.md2");
-	Entity->SetMins (vec3f(-30, -30, 0));
-	Entity->SetMaxs (vec3f(30, 30, 90));
+	Entity->GetMins().Set (-30, -30, 0);
+	Entity->GetMaxs().Set (30, 30, 90);
 
 	Entity->Health = 3000;
 	Entity->GibHealth = -2000;
@@ -990,7 +990,7 @@ void CMakronJumpTimer::Think ()
 	CMakron *Monster = QNew (com_levelPool, 0) CMakron (CMakron_ID);
 	newClass->Monster = Monster;
 	Monster->Entity = newClass;
-	newClass->State.SetOrigin (State.GetOrigin());
+	newClass->State.GetOrigin() = State.GetOrigin();
 	Monster->Spawn ();
 	newClass->NextThink = level.framenum + 1;
 	newClass->Target = Target;
@@ -1001,7 +1001,7 @@ void CMakronJumpTimer::Think ()
 		return;
 
 	vec3f vec = (Player->State.GetOrigin() - newClass->State.GetOrigin());
-	newClass->State.SetAngles (vec3f(0, vec.ToYaw(), 0));
+	newClass->State.GetAngles().Set (0, vec.ToYaw(), 0);
 	vec.Normalize();
 	vec3f vel = vec3fOrigin.MultiplyAngles (400, vec);
 	newClass->Velocity = vel;
@@ -1018,6 +1018,6 @@ void CMakronJumpTimer::Spawn (CJorg *Jorg)
 	
 	Timer->NextThink = level.framenum + 8;
 	Timer->Target = Jorg->Entity->Target;
-	Timer->State.SetOrigin (Jorg->Entity->State.GetOrigin());
+	Timer->State.GetOrigin() = Jorg->Entity->State.GetOrigin();
 	Timer->Link();
 }
