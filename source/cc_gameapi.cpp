@@ -50,19 +50,19 @@ _CC_DISABLE_DEPRECATION
 _CC_ENABLE_DEPRECATION
 }
 
-void ConfigString (int configStringIndex, char *configStringValue, CPlayerEntity *Audience)
+void ConfigString (int configStringIndex, const char *configStringValue, CPlayerEntity *Audience)
 {
 	if (Audience)
 	{
 		WriteChar (SVC_CONFIGSTRING);
 		WriteShort (configStringIndex);
-		WriteString (configStringValue);
+		WriteString (const_cast<char*>(configStringValue));
 		Audience->CastTo (CASTFLAG_UNRELIABLE);
 	}
 	else
 	{
 _CC_DISABLE_DEPRECATION
-		gi.configstring (configStringIndex, configStringValue);
+		gi.configstring (configStringIndex, const_cast<char*>(configStringValue));
 _CC_ENABLE_DEPRECATION
 	}
 }

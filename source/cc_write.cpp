@@ -294,7 +294,7 @@ void WriteAngle16 (float val)
 	WriteShort (ANGLE2SHORT (val));
 }
 
-void WriteString (char *val)
+void WriteString (const char *val)
 {
 	if (!val || val == NULL || !val[0] || strlen(val) > 1400)
 	{
