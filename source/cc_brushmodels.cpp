@@ -103,6 +103,7 @@ ENTITYFIELDS_BEGIN(CBrushModel)
 	CEntityField ("decel", EntityMemberOffset(CBrushModel,Decel), FT_FLOAT),
 	CEntityField ("distance", EntityMemberOffset(CBrushModel,Distance), FT_INT),
 	CEntityField ("dmg", EntityMemberOffset(CBrushModel,Damage), FT_INT),
+	CEntityField ("lip", EntityMemberOffset(CBrushModel,Lip), FT_INT),
 };
 ENTITYFIELDS_END(CBrushModel)
 
@@ -382,7 +383,8 @@ CBaseEntity(),
 CMapEntity(),
 CBlockableEntity(),
 CUsableEntity(),
-CBrushModel()
+CBrushModel(),
+Height (0)
 {
 	BrushType |= BRUSH_PLATFORM;
 };
@@ -392,7 +394,8 @@ CBaseEntity(Index),
 CMapEntity(Index),
 CBlockableEntity(Index),
 CUsableEntity(Index),
-CBrushModel(Index)
+CBrushModel(Index),
+Height (0)
 {
 	BrushType |= BRUSH_PLATFORM;
 };
@@ -551,7 +554,7 @@ void CPlatForm::SpawnInsideTrigger ()
 	tmax.Y -= 25;
 	tmax.Z += 8;
 
-	tmin.Z = tmax.Z - (Positions[0].Z - Positions[1].Z + st->lip);
+	tmin.Z = tmax.Z - (Positions[0].Z - Positions[1].Z + Lip);
 
 	if (SpawnFlags & PLAT_LOW_TRIGGER)
 		tmax.Z = tmin.Z + 8;
@@ -599,12 +602,12 @@ void CPlatForm::Spawn ()
 	if (!Damage)
 		Damage = 2;
 
-	if (!st->lip)
-		st->lip = 8;
+	if (!Lip)
+		Lip = 8;
 
 	// pos1 is the top position, pos2 is the bottom
 	Positions[0] = Positions[1] = State.GetOrigin ();
-	Positions[1].Z -= (st->height) ? st->height : ((GetMaxs().Z - GetMins().Z) - st->lip);
+	Positions[1].Z -= (Height) ? Height : ((GetMaxs().Z - GetMins().Z) - Lip);
 
 	if (TargetName)
 		MoveState = STATE_UP;
@@ -628,6 +631,21 @@ void CPlatForm::Spawn ()
 		SpawnInsideTrigger ();	// the "start moving" trigger	
 	else
 		GetSolid() = SOLID_NOT;
+};
+
+ENTITYFIELDS_BEGIN(CPlatForm)
+{
+	CEntityField ("height", EntityMemberOffset(CPlatForm,Height), FT_INT),
+};
+ENTITYFIELDS_END(CPlatForm)
+
+bool			CPlatForm::ParseField (char *Key, char *Value)
+{
+	if (CheckFields<CPlatForm> (this, Key, Value))
+		return true;
+
+	// Couldn't find it here
+	return (CBrushModel::ParseField (Key, Value) || CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
 };
 
 LINK_CLASSNAME_TO_CLASS ("func_plat", CPlatForm);
@@ -1025,15 +1043,15 @@ void CDoor::Spawn ()
 
 	if (!Wait)
 		Wait = 30;
-	if (!st->lip)
-		st->lip = 8;
+	if (!Lip)
+		Lip = 8;
 	if (!Damage)
 		Damage = 2;
 
 	// calculate second position
 	Positions[0] = State.GetOrigin ();
-	vec3f Size = GetSize();
-	Distance = Q_fabs(MoveDir.X) * Size.X + Q_fabs(MoveDir.Y) * Size.Y + Q_fabs(MoveDir.Z) * Size.Z - st->lip;
+
+	Distance = Q_fabs(MoveDir.X) * GetSize().X + Q_fabs(MoveDir.Y) * GetSize().Y + Q_fabs(MoveDir.Z) * GetSize().Z - Lip;
 	Positions[1] = Positions[0].MultiplyAngles (Distance, MoveDir);
 
 	// if it starts open, switch the positions
@@ -1279,7 +1297,7 @@ void CMovableWater::Spawn ()
 	// calculate second position
 	Positions[0] = State.GetOrigin ();
 
-	Distance = Q_fabs(MoveDir.X) * GetSize().X + Q_fabs(MoveDir.Y) * GetSize().Y + Q_fabs(MoveDir.Z) * GetSize().Z - st->lip;
+	Distance = Q_fabs(MoveDir.X) * GetSize().X + Q_fabs(MoveDir.Y) * GetSize().Y + Q_fabs(MoveDir.Z) * GetSize().Z - Lip;
 	Positions[1] = Positions[0].MultiplyAngles (Distance, MoveDir);
 
 	// if it starts open, switch the positions
@@ -1653,12 +1671,12 @@ void CButton::Spawn ()
 
 	if (!Wait)
 		Wait = 30;
-	if (!st->lip)
-		st->lip = 4;
+	if (!Lip)
+		Lip = 4;
 
 	Positions[0] = State.GetOrigin ();
-	float dist = Q_fabs(MoveDir.X) * GetSize().X + Q_fabs(MoveDir.Y) * GetSize().Y + Q_fabs(MoveDir.Z) * GetSize().Z - st->lip;
-	Positions[1] = Positions[0].MultiplyAngles (dist, MoveDir);
+	Positions[1] = Positions[0].MultiplyAngles (
+		Q_fabs(MoveDir.X) * GetSize().X + Q_fabs(MoveDir.Y) * GetSize().Y + Q_fabs(MoveDir.Z) * GetSize().Z - Lip, MoveDir);
 
 	State.GetEffects() |= EF_ANIM01;
 
@@ -2094,7 +2112,12 @@ CBrushModel(Index)
 
 ENTITYFIELDS_BEGIN(CWorldEntity)
 {
-	CEntityField ("message", EntityMemberOffset(CWorldEntity,Message), FT_LEVEL_STRING),
+	CEntityField ("message",		EntityMemberOffset(CWorldEntity,Message),		FT_LEVEL_STRING),
+	CEntityField ("gravity",		EntityMemberOffset(CWorldEntity,Gravity),		FT_LEVEL_STRING),
+	CEntityField ("sky",			EntityMemberOffset(CWorldEntity,Sky),			FT_LEVEL_STRING),
+	CEntityField ("skyrotate",		EntityMemberOffset(CWorldEntity,SkyRotate),		FT_FLOAT),
+	CEntityField ("skyaxis",		EntityMemberOffset(CWorldEntity,SkyAxis),		FT_VECTOR),
+	CEntityField ("nextmap",		EntityMemberOffset(CWorldEntity,NextMap),		FT_LEVEL_STRING),
 };
 ENTITYFIELDS_END(CWorldEntity)
 
@@ -2167,8 +2190,8 @@ void CWorldEntity::Spawn ()
 	BodyQueue_Init ();
 	Init_Junk();
 
-	if (st->nextmap)
-		Q_strncpyz (level.nextmap, st->nextmap, sizeof(level.nextmap));
+	if (NextMap)
+		Q_strncpyz (level.nextmap, NextMap, sizeof(level.nextmap));
 
 	// make some data visible to the server
 	if (Message && Message[0])
@@ -2179,19 +2202,15 @@ void CWorldEntity::Spawn ()
 	else
 		Q_strncpyz (level.level_name, level.mapname, sizeof(level.level_name));
 
-	if (st->sky && st->sky[0])
-		ConfigString (CS_SKY, st->sky);
-	else
-		ConfigString (CS_SKY, "unit1_");
-
-	ConfigString (CS_SKYROTATE, Q_VarArgs ("%f", st->skyrotate) );
+	ConfigString (CS_SKY, (Sky && Sky[0]) ? Sky : "unit1_");
+	ConfigString (CS_SKYROTATE, Q_VarArgs ("%f", SkyRotate));
 
 	ConfigString (CS_SKYAXIS, Q_VarArgs ("%f %f %f",
-		st->skyaxis[0], st->skyaxis[1], st->skyaxis[2]) );
+		SkyAxis.X, SkyAxis.Y, SkyAxis.Z));
 
-	ConfigString (CS_CDTRACK, Q_VarArgs ("%i", gameEntity->sounds) );
+	ConfigString (CS_CDTRACK, Q_VarArgs ("%i", gameEntity->sounds));
 
-	ConfigString (CS_MAXCLIENTS, maxclients->String() );
+	ConfigString (CS_MAXCLIENTS, maxclients->String());
 
 	// status bar program
 	if (game.mode & GAME_DEATHMATCH)
@@ -2222,11 +2241,7 @@ void CWorldEntity::Spawn ()
 	//---------------
 	SetItemNames();
 
-	CCvar gravity ("gravity", "800", 0);
-	if (!st->gravity)
-		gravity.Set("800");
-	else
-		gravity.Set(st->gravity);
+	sv_gravity->Set((Gravity) ? Gravity : "800");
 
 	SoundIndex ("player/lava1.wav");
 	SoundIndex ("player/lava2.wav");

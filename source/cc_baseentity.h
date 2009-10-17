@@ -269,9 +269,8 @@ CC_ENUM (uint32, EFieldType)
 
 	// Flags
 	FT_GAME_ENTITY	=	BIT(10),		// Stored in gameEntity instead of TClass
-	FT_SPAWNTEMP	=	BIT(11),		// Stored in SpawnTemp instead of TClass
-	FT_SAVABLE		=	BIT(12),		// Field will be saved/loaded
-	FT_NOSPAWN		=	BIT(13),		// Field cannot be used as a spawn field
+	FT_SAVABLE		=	BIT(11),		// Field will be saved/loaded
+	FT_NOSPAWN		=	BIT(12),		// Field cannot be used as a spawn field
 };
 
 class CEntityField
@@ -285,21 +284,14 @@ public:
 	Name(Name),
 	Offset(Offset),
 	FieldType(FieldType),
-	StrippedFields(FieldType & ~(FT_GAME_ENTITY | FT_SPAWNTEMP | FT_SAVABLE | FT_NOSPAWN))
+	StrippedFields(FieldType & ~(FT_GAME_ENTITY | FT_SAVABLE | FT_NOSPAWN))
 	{
 	};
 
 	template <class TClass>
 	void Create (TClass *Entity, char *Value) const
 	{
-		byte *ClassOffset = (byte*)Entity;
-
-		if (FieldType & FT_GAME_ENTITY)
-			ClassOffset = (byte*)Entity->gameEntity;
-		else if (FieldType & FT_SPAWNTEMP)
-			ClassOffset = (byte*)st;
-
-		ClassOffset += Offset;
+		byte *ClassOffset = ((FieldType & FT_GAME_ENTITY) ? (byte*)Entity->gameEntity : (byte*)Entity) + Offset;
 
 		switch (StrippedFields)
 		{

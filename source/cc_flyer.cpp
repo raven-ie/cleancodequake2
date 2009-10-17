@@ -552,7 +552,7 @@ void CFlyer::Duck (float eta)
 		return;
 	
 	// Don't dodge if we're attacking or dodging already
-	if ((CurrentMove == &FlyerMoveRollLeft || CurrentMove == &FlyerMoveRollRight) || (CurrentMove == &FlyerMoveAttack2 && (random() < 0.5)))
+	if ((CurrentMove == &FlyerMoveRollLeft || CurrentMove == &FlyerMoveRollRight) || (CurrentMove == &FlyerMoveAttack2 && (random() < 0.25)))
 		return;
 
 	CTrace trace;

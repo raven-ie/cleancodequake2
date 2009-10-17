@@ -98,6 +98,8 @@ public:
 	vec3f		Positions[2];
 	vec3f		MoveOrigin, MoveAngles;
 
+	int			Lip;
+
 	// state data
 	int			MoveState;
 	vec3f		Dir;
@@ -159,10 +161,13 @@ public:
 class CPlatForm : public CMapEntity, public CBrushModel, public CBlockableEntity, public CUsableEntity
 {
 public:
+	int	Height;
+
 	enum
 	{
 		PLATTHINK_GO_DOWN = BRUSHTHINK_CUSTOM_START
 	};
+
 	CPlatForm();
 	CPlatForm(int Index);
 
@@ -172,10 +177,7 @@ public:
 	void HitTop ();
 	void HitBottom ();
 
-	virtual bool			ParseField (char *Key, char *Value)
-	{
-		return (CBrushModel::ParseField (Key, Value) || CUsableEntity::ParseField (Key, Value) || CMapEntity::ParseField (Key, Value));
-	};
+	ENTITYFIELD_DEFS
 
 	enum
 	{
@@ -418,6 +420,9 @@ class CWorldEntity : public CMapEntity, public CBrushModel
 {
 public:
 	char	*Message;
+	char	*Gravity, *Sky, *NextMap;
+	vec3f	SkyAxis;
+	float	SkyRotate;
 
 	CWorldEntity ();
 	CWorldEntity (int Index);

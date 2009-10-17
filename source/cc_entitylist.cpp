@@ -139,7 +139,6 @@ static char *ED_ParseEdict (char *data, edict_t *ent)
 	char	*token;
 
 	init = false;
-	memset (st, 0, sizeof(*st));
 
 	// Go through all the dictionary pairs
 	for ( ; ; ) {
@@ -280,7 +279,6 @@ Creates a server's entity / program execution context by
 parsing textual entity definitions out of an ent file.
 ==============
 */
-spawn_temp_t	*st;
 
 void CC_SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 {
@@ -327,7 +325,6 @@ void CC_SpawnEntities (char *mapname, char *entities, char *spawnpoint)
 
 	level.inhibit = 0;
 
-	st = QNew (com_genericPool, 0) spawn_temp_t;
 	// Parse ents
 	while (true)
 	{
@@ -372,6 +369,5 @@ _CC_ENABLE_DEPRECATION
 //ZOID
 #endif
 
-	QDelete st;
 	DebugPrintf ("Finished server initialization in %d ms\n", Sys_Milliseconds() - startTime);
 }

@@ -699,20 +699,20 @@ public:
 			Speed = 200;
 		Speed *= 10;
 
-		if (!st->height)
-			st->height = 200;
+		if (!MoveDir.Z)
+			MoveDir.Z = 200;
 
 		if (State.GetAngles().Y == 0)
 			State.GetAngles().Y = 360;
 
 		Init ();
-		MoveDir.Z = st->height;
 	};
 };
 
 ENTITYFIELDS_BEGIN(CTriggerMonsterJump)
 {
 	CEntityField ("speed", EntityMemberOffset(CTriggerMonsterJump,Speed), FT_FLOAT),
+	CEntityField ("height", EntityMemberOffset(CTriggerMonsterJump,MoveDir.Z), FT_FLOAT),
 };
 ENTITYFIELDS_END(CTriggerMonsterJump)
 
@@ -735,6 +735,8 @@ gravity for the level.
 class CTriggerGravity : public CTriggerMultiple
 {
 public:
+	float	Gravity;
+
 	CTriggerGravity () :
 	  CBaseEntity (),
 	  CTriggerMultiple ()
@@ -747,6 +749,8 @@ public:
 	  {
 	  };
 
+	ENTITYFIELD_DEFS
+
 	void Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
 		other->gameEntity->gravity = gameEntity->gravity;
@@ -758,7 +762,7 @@ public:
 
 	void Spawn ()
 	{
-		if (st->gravity == 0)
+		if (!Gravity)
 		{
 			//gi.dprintf("trigger_gravity without gravity set at (%f %f %f)\n", self->state.origin[0], self->state.origin[1], self->state.origin[2]);
 			MapPrint (MAPPRINT_ERROR, this, State.GetOrigin(), "No gravity set\n");
@@ -767,8 +771,23 @@ public:
 		}
 
 		Init ();
-		gameEntity->gravity = atoi(st->gravity);
+		gameEntity->gravity = Gravity;
 	};
+};
+
+ENTITYFIELDS_BEGIN(CTriggerGravity)
+{
+	CEntityField ("gravity",		EntityMemberOffset(CTriggerGravity,Gravity),		FT_FLOAT),
+};
+ENTITYFIELDS_END(CTriggerGravity)
+
+bool			CTriggerGravity::ParseField (char *Key, char *Value)
+{
+	if (CheckFields<CTriggerGravity> (this, Key, Value))
+		return true;
+
+	// Couldn't find it here
+	return false;
 };
 
 LINK_CLASSNAME_TO_CLASS ("trigger_gravity", CTriggerGravity);
