@@ -302,10 +302,10 @@ void CGunner::Pain (CBaseEntity *other, float kick, int damage)
 
 void CGunner::Dead ()
 {
-	Entity->SetMins (vec3f(-16, -16, -24));
-	Entity->SetMaxs (vec3f(16, 16, -8));
+	Entity->GetMins().Set (-16, -16, -24);
+	Entity->GetMaxs().Set (16, 16, -8);
 	Entity->PhysicsType = PHYSICS_TOSS;
-	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
+	Entity->GetSvFlags() |= SVF_DEADMONSTER;
 	Entity->NextThink = 0;
 	Entity->Link ();
 }
@@ -363,15 +363,11 @@ void CGunner::DuckDown ()
 			Grenade ();
 	}
 
-	vec3f maxs = Entity->GetMaxs();
-	maxs.Z -= 32;
-	Entity->SetMaxs (maxs);
+	Entity->GetMaxs().Z -= 32;
 	Entity->CanTakeDamage = true;
 	PauseTime = level.framenum + 10;
 	Entity->Link ();
 #else
-//	if (self->monsterinfo.aiflags & AI_DUCKED)
-//		return;
 	AIFlags |= AI_DUCKED;
 	if (skill->Integer() >= 2)
 	{
@@ -379,10 +375,7 @@ void CGunner::DuckDown ()
 			Grenade ();
 	}
 
-//	self->maxs[2] -= 32;
-	vec3f maxs = Entity->GetMaxs();
-	maxs.Z = BaseHeight - 32;
-	Entity->SetMaxs(maxs);
+	Entity->GetMaxs().Z = BaseHeight - 32;
 	Entity->CanTakeDamage = true;
 	if (DuckWaitTime < level.framenum)
 		DuckWaitTime = level.framenum + 10;
@@ -402,9 +395,7 @@ void CGunner::DuckHold ()
 void CGunner::DuckUp ()
 {
 	AIFlags &= ~AI_DUCKED;
-	vec3f maxs = Entity->GetMaxs();
-	maxs.Z += 32;
-	Entity->SetMaxs (maxs);
+	Entity->GetMaxs().Z += 32;
 	Entity->CanTakeDamage = true;
 	Entity->Link ();
 }
@@ -544,7 +535,7 @@ void CGunner::Grenade ()
 	// PMM
 	vec3f	target;	
 
-	if(!Entity->Enemy || !Entity->Enemy->IsInUse())		//PGM
+	if(!Entity->Enemy || !Entity->Enemy->GetInUse())		//PGM
 		return;									//PGM
 
 	switch (Entity->State.GetFrame())
@@ -819,10 +810,10 @@ void CGunner::Spawn ()
 	SoundIndex ("gunner/gunatck2.wav");
 	SoundIndex ("gunner/gunatck3.wav");
 
-	Entity->SetSolid (SOLID_BBOX);
+	Entity->GetSolid() = SOLID_BBOX;
 	Entity->State.GetModelIndex() = ModelIndex ("models/monsters/gunner/tris.md2");
-	Entity->SetMins (vec3f(-16, -16, -24));
-	Entity->SetMaxs (vec3f(16, 16, 32));
+	Entity->GetMins().Set (-16, -16, -24);
+	Entity->GetMaxs().Set (16, 16, 32);
 
 	Entity->Health = 175;
 	Entity->GibHealth = -70;

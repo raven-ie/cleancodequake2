@@ -539,7 +539,7 @@ void CPlatForm::SpawnInsideTrigger ()
 	//
 	// middle trigger
 	//	
-	trigger->SetSolid(SOLID_TRIGGER);
+	trigger->GetSolid() = SOLID_TRIGGER;
 	trigger->Owner = this;
 
 	tmin = GetMins();
@@ -567,16 +567,16 @@ void CPlatForm::SpawnInsideTrigger ()
 		tmax.Y = tmin.Y + 1;
 	}
 
-	trigger->SetMins (tmin);
-	trigger->SetMaxs (tmax);
+	trigger->GetMins() = tmin;
+	trigger->GetMaxs() = tmax;
 
 	trigger->Link ();
 };
 
 void CPlatForm::Spawn ()
 {
-	State.SetAngles(vec3Origin);
-	SetSolid (SOLID_BSP);
+	State.GetAngles().Clear ();
+	GetSolid() = SOLID_BSP;
 	PhysicsType = PHYSICS_PUSH;
 
 	SetBrushModel ();
@@ -610,7 +610,7 @@ void CPlatForm::Spawn ()
 		MoveState = STATE_UP;
 	else
 	{
-		State.SetOrigin (Positions[1]);
+		State.GetOrigin() = Positions[1];
 		Link ();
 		MoveState = STATE_BOTTOM;
 	}
@@ -627,7 +627,7 @@ void CPlatForm::Spawn ()
 	if (!map_debug->Boolean())
 		SpawnInsideTrigger ();	// the "start moving" trigger	
 	else
-		SetSolid (SOLID_NOT);
+		GetSolid() = SOLID_NOT;
 };
 
 LINK_CLASSNAME_TO_CLASS ("func_plat", CPlatForm);
@@ -886,11 +886,11 @@ void CDoor::SpawnDoorTrigger ()
 	maxs.Y += 60;
 
 	CDoorTrigger *Trigger = QNew (com_levelPool, 0) CDoorTrigger();
-	Trigger->SetMins (mins);
-	Trigger->SetMaxs (maxs);
+	Trigger->GetMins() = mins;
+	Trigger->GetMaxs() = maxs;
 	Trigger->SetOwner (this);
 	Trigger->Touchable = true;
-	Trigger->SetSolid (SOLID_TRIGGER);
+	Trigger->GetSolid() = SOLID_TRIGGER;
 	Trigger->Link ();
 
 	if (SpawnFlags & DOOR_START_OPEN)
@@ -908,7 +908,7 @@ void CDoor::Blocked (CBaseEntity *other)
 			entity_cast<CHurtableEntity>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, 100000, 1, 0, MOD_CRUSH);
 
 		// if it's still there, nuke it
-		if (other->IsInUse())
+		if (other->GetInUse())
 			other->BecomeExplosion (false);
 		return;
 	}
@@ -1010,7 +1010,7 @@ void CDoor::Spawn ()
 	SetMoveDir ();
 
 	PhysicsType = PHYSICS_PUSH;
-	SetSolid (SOLID_BSP);
+	GetSolid() = SOLID_BSP;
 	SetBrushModel ();
 	
 	if (!Speed)
@@ -1039,7 +1039,7 @@ void CDoor::Spawn ()
 	// if it starts open, switch the positions
 	if (SpawnFlags & DOOR_START_OPEN)
 	{
-		State.SetOrigin (Positions[1]);
+		State.GetOrigin() = Positions[1];
 		Positions[1] = Positions[0];
 		Positions[0] = State.GetOrigin ();
 	}
@@ -1144,7 +1144,7 @@ void CRotatingDoor::GoUp (CBaseEntity *activator)
 
 void CRotatingDoor::Spawn ()
 {
-	State.SetAngles (vec3fOrigin);
+	State.GetAngles().Clear ();
 
 	// set the axis of rotation
 	MoveDir.Clear ();
@@ -1170,7 +1170,7 @@ void CRotatingDoor::Spawn ()
 	Positions[1] = Positions[0].MultiplyAngles (Distance, MoveDir);
 
 	PhysicsType = PHYSICS_PUSH;
-	SetSolid (SOLID_BSP);
+	GetSolid() = SOLID_BSP;
 	SetBrushModel ();
 
 	if (!Speed)
@@ -1198,7 +1198,7 @@ void CRotatingDoor::Spawn ()
 	// if it starts open, switch the positions
 	if (SpawnFlags & DOOR_START_OPEN)
 	{
-		State.SetAngles (Positions[1]);
+		State.GetAngles() = Positions[1];
 		Positions[1] = Positions[0];
 		Positions[0] = State.GetAngles ();
 		MoveDir.Invert ();
@@ -1261,7 +1261,7 @@ void CMovableWater::Spawn ()
 	SetMoveDir ();
 
 	PhysicsType = PHYSICS_PUSH;
-	SetSolid (SOLID_BSP);
+	GetSolid() = SOLID_BSP;
 	SetBrushModel ();
 
 	switch (gameEntity->sounds)
@@ -1285,7 +1285,7 @@ void CMovableWater::Spawn ()
 	// if it starts open, switch the positions
 	if (SpawnFlags & DOOR_START_OPEN)
 	{
-		State.SetOrigin (Positions[1]);
+		State.GetOrigin() = Positions[1];
 		Positions[1] = Positions[0];
 		Positions[0] = State.GetOrigin ();
 	}
@@ -1417,7 +1417,7 @@ void CDoorSecret::Blocked (CBaseEntity *other)
 			entity_cast<CHurtableEntity>(other)->TakeDamage (this, this, vec3fOrigin, State.GetOrigin(), vec3fOrigin, 100000, 1, 0, MOD_CRUSH);
 
 		// if it's still there, nuke it
-		if (other->IsInUse())
+		if (other->GetInUse())
 			other->BecomeExplosion(false);
 		return;
 	}
@@ -1443,7 +1443,7 @@ void CDoorSecret::Spawn ()
 	SoundEnd = SoundIndex  ("doors/dr1_end.wav");
 
 	PhysicsType = PHYSICS_PUSH;
-	SetSolid (SOLID_BSP);
+	GetSolid() = SOLID_BSP;
 	SetBrushModel ();
 
 	if (!(TargetName) || (SpawnFlags & SECRET_ALWAYS_SHOOT))
@@ -1467,7 +1467,7 @@ void CDoorSecret::Spawn ()
 	// calculate positions
 	vec3f	forward, right, up;
 	State.GetAngles().ToVectors (&forward, &right, &up);
-	State.SetAngles (vec3fOrigin);
+	State.GetAngles().Clear ();
 
 	float width = (SpawnFlags & SECRET_1ST_DOWN) ? Q_fabs(up.Dot (GetSize())) : Q_fabs(right.Dot (GetSize()));
 	float length = Q_fabs(forward.Dot (GetSize()));
@@ -1638,7 +1638,7 @@ void CButton::Spawn ()
 	SetMoveDir ();
 
 	PhysicsType = PHYSICS_STOP;
-	SetSolid (SOLID_BSP);
+	GetSolid() = SOLID_BSP;
 	SetBrushModel ();
 
 	if (gameEntity->sounds != 1)
@@ -1734,7 +1734,7 @@ void CTrainBase::Blocked (CBaseEntity *other)
 			entity_cast<CHurtableEntity>(other)->TakeDamage (this, this, vec3fOrigin, other->State.GetOrigin(), vec3fOrigin, 100000, 1, 0, MOD_CRUSH);
 
 		// if it's still there, nuke it
-		if (other->IsInUse())
+		if (other->GetInUse())
 			other->BecomeExplosion (false);
 		return;
 	}
@@ -1762,7 +1762,7 @@ void CTrainBase::TrainWait ()
 		TargetEntity->Target = savetarget;
 
 		// make sure we didn't get killed by a killtarget
-		if (!IsInUse())
+		if (!GetInUse())
 			return;
 	}
 
@@ -1822,7 +1822,7 @@ void CTrainBase::Next ()
 				return;
 			}
 			first = false;
-			State.SetOrigin (ent->State.GetOrigin() - GetMins());
+			State.GetOrigin() = (ent->State.GetOrigin() - GetMins());
 			State.GetOldOrigin () = State.GetOrigin();
 			State.GetEvent() = EV_OTHER_TELEPORT;
 			Link ();
@@ -1878,7 +1878,7 @@ void CTrainBase::Find ()
 		return;
 	}
 	Target = ent->Target;
-	State.SetOrigin (ent->State.GetOrigin() - GetMins());
+	State.GetOrigin() = (ent->State.GetOrigin() - GetMins());
 
 	Link ();
 
@@ -1960,7 +1960,7 @@ void CTrain::Spawn ()
 {
 	PhysicsType = PHYSICS_PUSH;
 
-	State.SetAngles (vec3fOrigin);
+	State.GetAngles().Clear ();
 	if (SpawnFlags & TRAIN_BLOCK_STOPS)
 		Damage = 0;
 	else
@@ -1968,7 +1968,7 @@ void CTrain::Spawn ()
 		if (!Damage)
 			Damage = 100;
 	}
-	SetSolid (SOLID_BSP);
+	GetSolid() = SOLID_BSP;
 	SetBrushModel ();
 
 	if (NoiseIndex)
@@ -2065,7 +2065,7 @@ void CTriggerElevator::Think ()
 
 	MoveTarget = entity_cast<CTrain>(newTarg);
 	Usable = true;
-	SetSvFlags (SVF_NOCLIENT);
+	GetSvFlags() = SVF_NOCLIENT;
 }
 
 void CTriggerElevator::Spawn ()
@@ -2159,8 +2159,8 @@ void CWorldEntity::Spawn ()
 	InvalidateItemMedia ();
 
 	PhysicsType = PHYSICS_PUSH;
-	SetSolid (SOLID_BSP);
-	SetInUse (true);			// since the world doesn't use G_Spawn()
+	GetSolid() = SOLID_BSP;
+	GetInUse() = true;			// since the world doesn't use G_Spawn()
 	State.GetModelIndex() = 1;	// world model is always index 1
 
 	// reserve some spots for dead player bodies for coop / deathmatch
@@ -2347,7 +2347,7 @@ void CRotatingBrush::Spawn ()
 {
 	Touchable = false;
 
-	SetSolid (SOLID_BSP);
+	GetSolid() = SOLID_BSP;
 	if (SpawnFlags & 32)
 		PhysicsType = PHYSICS_STOP;
 	else
@@ -2449,7 +2449,7 @@ void CConveyor::Spawn ()
 	}
 
 	SetBrushModel ();
-	SetSolid (SOLID_BSP);
+	GetSolid() = SOLID_BSP;
 	Link ();
 }
 
@@ -2538,14 +2538,14 @@ void CFuncWall::Use (CBaseEntity *other, CBaseEntity *activator)
 
 	if (GetSolid() == SOLID_NOT)
 	{
-		SetSolid (SOLID_BSP);
-		SetSvFlags (GetSvFlags() & ~SVF_NOCLIENT);
+		GetSolid() = SOLID_BSP;
+		GetSvFlags() &= ~SVF_NOCLIENT;
 		KillBox ();
 	}
 	else
 	{
-		SetSolid (SOLID_NOT);
-		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
+		GetSolid() = SOLID_NOT;
+		GetSvFlags() |= SVF_NOCLIENT;
 	}
 	Link ();
 
@@ -2571,7 +2571,7 @@ void CFuncWall::Spawn ()
 	// just a wall
 	if ((SpawnFlags & 7) == 0)
 	{
-		SetSolid (SOLID_BSP);
+		GetSolid() = SOLID_BSP;
 		Link ();
 		return;
 	}
@@ -2591,9 +2591,9 @@ void CFuncWall::Spawn ()
 		}
 	}
 
-	SetSolid ((SpawnFlags & 4) ? SOLID_BSP : SOLID_NOT);
+	GetSolid() = (SpawnFlags & 4) ? SOLID_BSP : SOLID_NOT;
 	if (!(SpawnFlags & 4))
-		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
+		GetSvFlags() |= SVF_NOCLIENT;
 
 	Link ();
 }
@@ -2663,8 +2663,8 @@ void CFuncObject::Think ()
 
 void CFuncObject::Use (CBaseEntity *other, CBaseEntity *activator)
 {
-	SetSolid (SOLID_BSP);
-	SetSvFlags (GetSvFlags() & ~SVF_NOCLIENT);
+	GetSolid() = SOLID_BSP;
+	GetSvFlags() &= ~SVF_NOCLIENT;
 	Usable = false;
 	KillBox ();
 	Think (); // release us
@@ -2675,24 +2675,24 @@ void CFuncObject::Spawn ()
 	Touchable = false;
 	SetBrushModel ();
 
-	SetMins (GetMins() + vec3f(1,1,1));
-	SetMaxs (GetMaxs() - vec3f(1,1,1));
+	GetMins() += 1;
+	GetMaxs() -= 1;
 
 	if (!Damage)
 		Damage = 100;
 
 	if (SpawnFlags == 0)
 	{
-		SetSolid (SOLID_BSP);
+		GetSolid() = SOLID_BSP;
 		PhysicsType = PHYSICS_PUSH;
 		NextThink = level.framenum + 2;
 	}
 	else
 	{
-		SetSolid (SOLID_NOT);
+		GetSolid() = SOLID_NOT;
 		PhysicsType = PHYSICS_PUSH;
 		Usable = true;
-		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
+		GetSvFlags() |= SVF_NOCLIENT;
 	}
 
 	if (SpawnFlags & 2)
@@ -2700,7 +2700,7 @@ void CFuncObject::Spawn ()
 	if (SpawnFlags & 4)
 		State.GetEffects() |= EF_ANIM_ALLFAST;
 
-	SetClipmask (CONTENTS_MASK_MONSTERSOLID);
+	GetClipmask() = CONTENTS_MASK_MONSTERSOLID;
 	Link ();
 }
 #pragma endregion Object
@@ -2765,7 +2765,7 @@ void CFuncExplosive::Pain (CBaseEntity *other, float kick, int damage)
 void CFuncExplosive::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, vec3f &point)
 {
 	// bmodel origins are (0 0 0), we need to adjust that here
-	State.SetOrigin ( GetAbsMin() + (GetSize() * 0.5f));
+	State.GetOrigin() = (GetAbsMin() + (GetSize() * 0.5f));
 
 	CanTakeDamage = false;
 
@@ -2824,8 +2824,8 @@ void CFuncExplosive::Use (CBaseEntity *other, CBaseEntity *activator)
 
 void CFuncExplosive::DoSpawn ()
 {
-	SetSolid (SOLID_BSP);
-	SetSvFlags (GetSvFlags() & ~SVF_NOCLIENT);
+	GetSolid() = SOLID_BSP;
+	GetSvFlags() &= ~SVF_NOCLIENT;
 	UseType = FUNCEXPLOSIVE_USE_NONE;
 	KillBox ();
 	Link ();
@@ -2851,13 +2851,13 @@ void CFuncExplosive::Spawn ()
 
 	if (SpawnFlags & 1)
 	{
-		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
-		SetSolid (SOLID_NOT);
+		GetSvFlags() |= SVF_NOCLIENT;
+		GetSolid() = SOLID_NOT;
 		UseType = FUNCEXPLOSIVE_USE_SPAWN;
 	}
 	else
 	{
-		SetSolid (SOLID_BSP);
+		GetSolid() = SOLID_BSP;
 		if (TargetName)
 			UseType = FUNCEXPLOSIVE_USE_EXPLODE;
 	}
@@ -2909,7 +2909,7 @@ void CKillbox::Use (CBaseEntity *other, CBaseEntity *activator)
 void CKillbox::Spawn ()
 {
 	SetBrushModel ();
-	SetSvFlags (SVF_NOCLIENT);
+	GetSvFlags() = SVF_NOCLIENT;
 }
 
 LINK_CLASSNAME_TO_CLASS ("func_killbox", CKillbox);

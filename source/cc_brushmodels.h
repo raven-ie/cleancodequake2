@@ -124,7 +124,7 @@ public:
 		else
 			State.GetAngles().ToVectors (&MoveDir, NULL, NULL);
 
-		State.SetAngles (vec3fOrigin);
+		State.GetAngles().Clear ();
 	}
 
 

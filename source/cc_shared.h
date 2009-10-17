@@ -43,8 +43,6 @@ typedef int64	FrameNumber_t;
 
 
 #include "cc_memory.h"
-#include "cc_stl.h"
-
 #include "cc_conchars.h"
 #include "cc_colors.h"
 #include "cc_indexing.h"

@@ -351,7 +351,7 @@ void CBrain::Duck_Down ()
 	if (AIFlags & AI_DUCKED)
 		return;
 	AIFlags |= AI_DUCKED;
-	Entity->SetMins (Entity->GetMins() - vec3f(0, 0, 32));
+	Entity->GetMins() -= vec3f(0, 0, 32);
 	Entity->Link ();
 }
 
@@ -366,7 +366,7 @@ void CBrain::Duck_Hold ()
 void CBrain::Duck_Up ()
 {
 	AIFlags &= ~AI_DUCKED;
-	Entity->SetMins (Entity->GetMins() + vec3f(0, 0, 32));
+	Entity->GetMins() += vec3f(0, 0, 32);
 	Entity->Link ();
 }
 
@@ -434,10 +434,10 @@ CAnim BrainMoveDeath1 (FRAME_death101, FRAME_death118, BrainFramesDeath1, Conver
 
 void CBrain::Dead ()
 {
-	Entity->SetMins (vec3f(-16, -16, -24));
-	Entity->SetMaxs (vec3f(16, 16, -8));
+	Entity->GetMins().Set (-16, -16, -24);
+	Entity->GetMaxs().Set (16, 16, -8);
 	Entity->PhysicsType = PHYSICS_TOSS;
-	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
+	Entity->GetSvFlags() |= SVF_DEADMONSTER;
 	Entity->NextThink = 0;
 	Entity->Link ();
 }
@@ -621,10 +621,10 @@ void CBrain::Spawn ()
 	SoundMelee3 = SoundIndex ("brain/melee3.wav");
 
 	Entity->PhysicsType = PHYSICS_STEP;
-	Entity->SetSolid (SOLID_BBOX);
+	Entity->GetSolid() = SOLID_BBOX;
 	Entity->State.GetModelIndex() = ModelIndex ("models/monsters/brain/tris.md2");
-	Entity->SetMins (vec3f(-16, -16, -24));
-	Entity->SetMaxs (vec3f(16, 16, 32));
+	Entity->GetMins().Set (-16, -16, -24);
+	Entity->GetMaxs().Set (16, 16, 32);
 
 	Entity->Health = 300;
 	Entity->GibHealth = -150;

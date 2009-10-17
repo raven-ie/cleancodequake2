@@ -89,7 +89,7 @@ bool CFlag::Pickup(CItemEntity *ent, CPlayerEntity *other)
 				for (int i = 1; i <= game.maxclients; i++)
 				{
 					CPlayerEntity *player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
-					if (!player->IsInUse())
+					if (!player->GetInUse())
 						continue;
 
 					if (player->Client.Respawn.ctf_team != other->Client.Respawn.ctf_team)
@@ -143,8 +143,8 @@ bool CFlag::Pickup(CItemEntity *ent, CPlayerEntity *other)
 	if (!(ent->SpawnFlags & DROPPED_ITEM))
 	{
 		ent->Flags |= FL_RESPAWN;
-		ent->SetSvFlags (ent->GetSvFlags() | SVF_NOCLIENT);
-		ent->SetSolid (SOLID_NOT);
+		ent->GetSvFlags() |= SVF_NOCLIENT;
+		ent->GetSolid() = SOLID_NOT;
 	}
 	return true;
 }

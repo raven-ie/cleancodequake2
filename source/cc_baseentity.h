@@ -49,9 +49,6 @@ public:
 	vec3f	&GetAngles		();
 	vec3f	&GetOldOrigin	();
 
-	void	SetOrigin		(vec3f in);
-	void	SetAngles		(vec3f in);
-
 	// Can be 1, 2, 3, or 4
 	int		&GetModelIndex	(uint8 index = 1);
 
@@ -104,6 +101,8 @@ public:
 	CBaseEntity		*Enemy;
 	int				ViewHeight;
 
+	FrameNumber_t	LastMinsSet, LastMaxSet;
+
 	CBaseEntity ();
 	CBaseEntity (int Index);
 	virtual ~CBaseEntity ();
@@ -114,11 +113,8 @@ public:
 	CBaseEntity		*GetOwner	();
 	void			SetOwner	(CBaseEntity *ent);
 
-	EBrushContents	GetClipmask	();
-	void			SetClipmask (EBrushContents mask);
-
-	ESolidType		GetSolid ();
-	void			SetSolid (ESolidType solid);
+	EBrushContents	&GetClipmask	();
+	ESolidType		&GetSolid ();
 
 	// Unless, of course, you use the vec3f class :D
 	vec3f			&GetMins ();
@@ -128,31 +124,21 @@ public:
 	vec3f			&GetAbsMax ();
 	vec3f			&GetSize ();
 
-	// Vec3f
-	void			SetMins (vec3f in);
-	void			SetMaxs (vec3f in);
-
-	void			SetAbsMin (vec3f in);
-	void			SetAbsMax (vec3f in);
-	void			SetSize (vec3f in);
-
-	EServerFlags	GetSvFlags ();
-	void			SetSvFlags (EServerFlags SVFlags);
+	EServerFlags	&GetSvFlags ();
 
 	int				GetNumClusters ();
 	int				*GetClusterNums ();
 	int				GetHeadNode ();
 
+	// Not a reference; don't let people change it.
 	int				GetAreaNum (bool second = false);
-	void			SetAreaNum (int num, bool second = false); // FIXME: needed?
 
 	link_t			*GetArea ();
 	void			ClearArea ();
 
 	int				GetLinkCount ();
 
-	virtual bool	IsInUse ();
-	virtual void	SetInUse (bool inuse);
+	virtual bool	&GetInUse ();
 
 	void			Link ();
 	void			Unlink ();
@@ -405,10 +391,16 @@ bool CheckFields (TClass *Me, char *Key, char *Value)
 template <class TClass>
 bool CheckFields (TClass *Me, char *Key, char *Value)
 {
-	for (size_t i = 0; i < TClass::FieldsForParsingSize; i++)
+	for (uint32 i = 0; i < TClass::FieldsForParsingSize; i++)
 	{
+#if (MSVS_VERSION >= VS_9)
+#pragma warning (suppress : 6385 6386)
+#endif
 		if (!(TClass::FieldsForParsing[i].FieldType & FT_NOSPAWN) && (strcmp (Key, TClass::FieldsForParsing[i].Name) == 0))
 		{
+#if (MSVS_VERSION >= VS_9)
+#pragma warning (suppress : 6385 6386)
+#endif
 			TClass::FieldsForParsing[i].Create<TClass> (Me, Value);
 			return true;
 		}
@@ -465,8 +457,7 @@ public:
 	CPrivateEntity ();
 	void Free ();
 
-	bool IsInUse ();
-	void SetInUse (bool inuse);
+	bool &GetInUse ();
 };
 
 #include "cc_itementity.h"

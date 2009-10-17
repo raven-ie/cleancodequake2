@@ -49,7 +49,7 @@ public:
 		byte Enum,
 		ECastFlags castFlags = CASTFLAG_PVS)
 	{
-		this->Origin = vec3f(Origin);
+		this->Origin.Set (Origin);
 		castType = castFlags;
 
 		WriteByte (SVC_TEMP_ENTITY);
@@ -83,7 +83,7 @@ public:
 				byte Enum,
 				ECastFlags castFlags = CASTFLAG_PVS)
 	{
-		this->Origin = vec3f(Origin);
+		this->Origin.Set (Origin);
 		castType = castFlags;
 
 		WriteByte (Enum);

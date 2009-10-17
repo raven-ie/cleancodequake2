@@ -181,7 +181,7 @@ void CGrenade::Spawn (CBaseEntity *Spawner, vec3f start, vec3f aimdir, int damag
 
 	dir.ToVectors (&forward, &right, &up);
 
-	Grenade->State.SetOrigin (start);
+	Grenade->State.GetOrigin() = start;
 	aimdir *= speed;
 
 	Grenade->Velocity = aimdir;
@@ -275,10 +275,10 @@ void CBlasterProjectile::Spawn (CBaseEntity *Spawner, vec3f start, vec3f dir,
 
 	dir.NormalizeFast();
 
-	Bolt->SetSvFlags (SVF_DEADMONSTER | SVF_PROJECTILE);
-	Bolt->State.SetOrigin (start);
+	Bolt->GetSvFlags() |= (SVF_DEADMONSTER | SVF_PROJECTILE);
+	Bolt->State.GetOrigin() = start;
 	Bolt->State.GetOldOrigin() = start;
-	Bolt->State.SetAngles (dir.ToAngles());
+	Bolt->State.GetAngles() = dir.ToAngles();
 	Bolt->Velocity = dir * speed;
 
 	Bolt->State.GetEffects() = effect;
@@ -297,7 +297,7 @@ void CBlasterProjectile::Spawn (CBaseEntity *Spawner, vec3f start, vec3f dir,
 	if (tr.fraction < 1.0)
 	{
 		start = start.MultiplyAngles (-10, dir);
-		Bolt->State.SetOrigin (start);
+		Bolt->State.GetOrigin() = start;
 		Bolt->State.GetOldOrigin() = start;
 
 		if (tr.ent->Entity)
@@ -372,9 +372,8 @@ void CRocket::Spawn	(CBaseEntity *Spawner, vec3f start, vec3f dir,
 {
 	CRocket	*Rocket = QNew (com_levelPool, 0) CRocket;
 
-	Rocket->State.SetOrigin (start);
-
-	Rocket->State.SetAngles (dir.ToAngles());
+	Rocket->State.GetOrigin() = start;
+	Rocket->State.GetAngles() = dir.ToAngles();
 	Rocket->Velocity = dir * speed;
 	Rocket->State.GetEffects() = EF_ROCKET;
 	Rocket->State.GetModelIndex() = ModelIndex ("models/objects/rocket/tris.md2");
@@ -556,10 +555,10 @@ void CBFGBolt::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	T_RadiusDamage(this, GetOwner(), 200, other, 100, MOD_BFG_BLAST);
 
 	PlaySound (CHAN_VOICE, SoundIndex ("weapons/bfg__x1b.wav"));
-	SetSolid (SOLID_NOT);
+	GetSolid() = SOLID_NOT;
 
 	Exploded = true;
-	State.SetOrigin (boltOrigin.MultiplyAngles (-0.1f, Velocity));
+	State.GetOrigin() = boltOrigin.MultiplyAngles (-0.1f, Velocity);
 	Velocity.Clear ();
 	State.GetModelIndex() = ModelIndex ("sprites/s_bfg3.sp2");
 	State.GetFrame() = 0;
@@ -576,13 +575,9 @@ void CBFGBolt::Spawn	(CBaseEntity *Spawner, vec3f start, vec3f dir,
 {
 	CBFGBolt	*BFG = QNew (com_levelPool, 0) CBFGBolt;
 
-	BFG->State.SetOrigin (start);
-
-	BFG->State.SetAngles (dir.ToAngles());
-	vec3f vel = dir;
-	vel.NormalizeFast();
-	vel *= speed;
-	BFG->Velocity = vel;
+	BFG->State.GetOrigin() = start;
+	BFG->State.GetAngles() = dir.ToAngles();
+	BFG->Velocity = (dir.GetNormalizedFast()) * speed;
 	BFG->State.GetEffects() = EF_BFG | EF_ANIM_ALLFAST;
 	BFG->State.GetModelIndex() = ModelIndex ("sprites/s_bfg1.sp2");
 	BFG->SetOwner (Spawner);
@@ -1427,7 +1422,7 @@ void CGrappleEntity::GrapplePull()
 
 		if (Enemy->GetSolid() == SOLID_BBOX)
 		{
-			State.SetOrigin ((Enemy->GetSize() * 0.5f) + Enemy->State.GetOrigin() + Enemy->GetMins());
+			State.GetOrigin() = (Enemy->GetSize() * 0.5f) + Enemy->State.GetOrigin() + Enemy->GetMins();
 			Link ();
 		}
 		else if (Enemy->EntityFlags & ENT_PHYSICS)
@@ -1499,25 +1494,24 @@ void CGrappleEntity::Spawn (CPlayerEntity *Spawner, vec3f start, vec3f dir, int 
 
 	dir.NormalizeFast();
 
-	Grapple->State.SetOrigin (start);
+	Grapple->State.GetOrigin() = start;
 	Grapple->State.GetOldOrigin() = start;
-	Grapple->State.SetAngles (dir.ToAngles());
+	Grapple->State.GetAngles() = dir.ToAngles();
 	Grapple->Velocity = dir * speed;
-	Grapple->SetClipmask (CONTENTS_MASK_SHOT);
-	Grapple->SetSolid (SOLID_BBOX);
-	Grapple->SetMins (vec3fOrigin);
-	Grapple->SetMaxs (vec3fOrigin);
+	Grapple->GetClipmask() = CONTENTS_MASK_SHOT;
+	Grapple->GetSolid() = SOLID_BBOX;
+	Grapple->GetMins().Clear ();
+	Grapple->GetMaxs().Clear ();
 	Grapple->State.GetModelIndex() = ModelIndex ("models/weapons/grapple/hook/tris.md2");
 	Grapple->SetOwner (Spawner);
 	Spawner->Client.ctf_grapple = Grapple;
 	Spawner->Client.ctf_grapplestate = CTF_GRAPPLE_STATE_FLY; // we're firing, not on hook
 	Grapple->Link ();
 
-	vec3f origin = Spawner->State.GetOrigin();
-	CTrace tr = CTrace (origin, Grapple->State.GetOrigin(), Grapple->gameEntity, CONTENTS_MASK_SHOT);
+	CTrace tr = CTrace (Spawner->State.GetOrigin(), Grapple->State.GetOrigin(), Grapple->gameEntity, CONTENTS_MASK_SHOT);
 	if (tr.fraction < 1.0)
 	{
-		Grapple->State.SetOrigin (Grapple->State.GetOrigin().MultiplyAngles (-10, dir));
+		Grapple->State.GetOrigin() = Grapple->State.GetOrigin().MultiplyAngles (-10, dir);
 		Grapple->Touch (tr.ent->Entity, NULL, NULL);
 	}
 };
@@ -1549,7 +1543,7 @@ void CGrappleEntity::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *
 	Player->Client.ctf_grapplestate = CTF_GRAPPLE_STATE_PULL; // we're on hook
 	Enemy = other;
 
-	SetSolid (SOLID_NOT);
+	GetSolid() = SOLID_NOT;
 
 	byte volume = (Player->Client.silencer_shots) ? 51 : 255;
 	Player->PlaySound (CHAN_WEAPON, SoundIndex("weapons/grapple/grpull.wav"), volume);
@@ -1608,8 +1602,8 @@ public:
 	{
 		if (other == World)
 		{
-			SetSolid (SOLID_NOT);
-			SetClipmask (0);
+			GetSolid() = SOLID_NOT;
+			GetClipmask() = 0;
 			Velocity.Clear ();
 		}
 
@@ -1624,8 +1618,8 @@ public:
 		NextZapTime = level.framenum + FRAMETIME + (int)(random() * 4);
 		NumZaps = 0;
 
-		SetSolid (SOLID_NOT);
-		SetClipmask (0);
+		GetSolid() = SOLID_NOT;
+		GetClipmask() = 0;
 	};
 };
 
@@ -1699,14 +1693,14 @@ public:
 		{
 			Projectiles[i] = QNew (com_levelPool, 0) CTazerProjectile;
 
-			Projectiles[i]->State.SetOrigin (results[i]);
+			Projectiles[i]->State.GetOrigin() = results[i];
 			Projectiles[i]->State.GetOldOrigin() = results[i];
-			Projectiles[i]->State.SetAngles (forward.ToAngles());
+			Projectiles[i]->State.GetAngles() = forward.ToAngles();
 			Projectiles[i]->Velocity = forward * 600;
-			Projectiles[i]->SetClipmask (CONTENTS_MASK_SHOT);
-			Projectiles[i]->SetSolid (SOLID_BBOX);
-			Projectiles[i]->SetMins (vec3fOrigin);
-			Projectiles[i]->SetMaxs (vec3fOrigin);
+			Projectiles[i]->GetClipmask() = CONTENTS_MASK_SHOT;
+			Projectiles[i]->GetSolid() = SOLID_BBOX;
+			Projectiles[i]->GetMins().Clear ();
+			Projectiles[i]->GetMaxs().Clear ();
 			Projectiles[i]->State.GetModelIndex() = ModelIndex ("models/monsters/parasite/tip/tris.md2");
 			Projectiles[i]->SetOwner (this);
 			Projectiles[i]->Base = this;
@@ -1725,14 +1719,14 @@ public:
 
 		dir.NormalizeFast ();
 
-		Base->State.SetOrigin (origin);
+		Base->State.GetOrigin() = origin;
 		Base->State.GetOldOrigin() = origin;
-		Base->State.SetAngles (dir.ToAngles());
+		Base->State.GetAngles() = dir.ToAngles();
 		Base->Velocity = dir * speed;
-		Base->SetClipmask (CONTENTS_MASK_SHOT);
-		Base->SetSolid (SOLID_BBOX);
-		Base->SetMins (vec3fOrigin);
-		Base->SetMaxs (vec3fOrigin);
+		Base->GetClipmask() = CONTENTS_MASK_SHOT;
+		Base->GetSolid() = SOLID_BBOX;
+		Base->GetMins().Clear ();
+		Base->GetMaxs().Clear ();
 		Base->State.GetModelIndex() = ModelIndex ("models/objects/grenade/tris.md2");
 		Base->NextThink = level.framenum + 1;
 		Base->SetOwner (Spawner);
@@ -1791,7 +1785,7 @@ void CTazerProjectile::Think ()
 	}
 
 	// Attach
-	State.SetOrigin (Attached->State.GetOrigin() + Offset);
+	State.GetOrigin() = (Attached->State.GetOrigin() + Offset);
 	Link ();
 };
 #endif

@@ -193,7 +193,7 @@ public:
 
 	void Spawn ()
 	{
-		SetSvFlags (SVF_NOCLIENT);
+		GetSvFlags() = SVF_NOCLIENT;
 	};
 };
 
@@ -262,8 +262,8 @@ public:
 		if (!Entity)
 			return;
 
-		Entity->State.SetOrigin (State.GetOrigin());
-		Entity->State.SetAngles (State.GetAngles());
+		Entity->State.GetOrigin() = State.GetOrigin();
+		Entity->State.GetAngles() = State.GetAngles();
 
 		Entity->Unlink ();
 		Entity->KillBox ();
@@ -275,13 +275,11 @@ public:
 
 	void Spawn ()
 	{
-		SetSvFlags (SVF_NOCLIENT);
+		GetSvFlags() = SVF_NOCLIENT;
 		if (Speed)
 		{
-			vec3f angles = State.GetAngles();
-			G_SetMovedir (angles, MoveDir);
+			G_SetMovedir (State.GetAngles(), MoveDir);
 			MoveDir *= Speed;
-			State.SetAngles (angles);
 		}
 	};
 };
@@ -357,14 +355,12 @@ public:
 
 	void Spawn ()
 	{
-		vec3f angles = State.GetAngles();
-		G_SetMovedir (angles, MoveDir);
-		State.SetAngles (angles);
+		G_SetMovedir (State.GetAngles(), MoveDir);
 
 		if (!gameEntity->count)
 			gameEntity->count = 32;
 
-		SetSvFlags (SVF_NOCLIENT);
+		GetSvFlags() = SVF_NOCLIENT;
 	};
 };
 
@@ -454,7 +450,7 @@ void BeginIntermission (CTargetChangeLevel *targ)
 	for (int i=0 ; i<game.maxclients ; i++)
 	{
 		CPlayerEntity *client = entity_cast<CPlayerEntity>((g_edicts + 1 + i)->Entity);
-		if (!client->IsInUse())
+		if (!client->GetInUse())
 			continue;
 		if (client->Health <= 0)
 			client->Respawn();
@@ -470,7 +466,7 @@ void BeginIntermission (CTargetChangeLevel *targ)
 			for (int i=0 ; i<game.maxclients ; i++)
 			{
 				CPlayerEntity *client = entity_cast<CPlayerEntity>((g_edicts + 1 + i)->Entity);
-				if (!client->IsInUse())
+				if (!client->GetInUse())
 					continue;
 				// strip players of all keys between units
 				for (int n = 0; n < MAX_CS_ITEMS; n++)
@@ -520,7 +516,7 @@ void BeginIntermission (CTargetChangeLevel *targ)
 	for (int i=0 ; i<game.maxclients ; i++)
 	{
 		CPlayerEntity *client = entity_cast<CPlayerEntity>((g_edicts + 1 + i)->Entity);
-		if (!client->IsInUse())
+		if (!client->GetInUse())
 			continue;
 		client->MoveToIntermission();
 	}
@@ -602,7 +598,7 @@ void CTargetChangeLevel::Spawn ()
    if((Q_stricmp(level.mapname, "fact1") == 0) && (Q_stricmp(Map, "fact3") == 0))
 	   Map = "fact3$secret1";
 
-	SetSvFlags (SVF_NOCLIENT);
+	GetSvFlags() = SVF_NOCLIENT;
 };
 
 ENTITYFIELDS_BEGIN(CTargetChangeLevel)
@@ -671,7 +667,7 @@ public:
 
 	void Spawn ()
 	{
-		SetSvFlags (SVF_NOCLIENT);
+		GetSvFlags() = SVF_NOCLIENT;
 	};
 };
 
@@ -727,7 +723,7 @@ public:
 	{
 		if (!Delay)
 			Delay = 1;
-		SetSvFlags (SVF_NOCLIENT);
+		GetSvFlags() = SVF_NOCLIENT;
 		
 		// Paril: backwards compatibility
 		NextThink = level.framenum + Delay;
@@ -785,7 +781,7 @@ public:
 		if (!NoiseIndex)
 			NoiseIndex = SoundIndex("misc/secret.wav");
 
-		SetSvFlags (SVF_NOCLIENT);
+		GetSvFlags() = SVF_NOCLIENT;
 		level.total_secrets++;
 		// map bug hack
 
@@ -854,7 +850,7 @@ public:
 		if (!NoiseIndex)
 			NoiseIndex = SoundIndex ("misc/secret.wav");
 
-		SetSvFlags (SVF_NOCLIENT);
+		GetSvFlags() = SVF_NOCLIENT;
 		level.total_goals++;
 	};
 };
@@ -912,10 +908,7 @@ public:
 
 	void Spawn ()
 	{
-		vec3f ang = State.GetAngles();
-		G_SetMovedir (ang, MoveDir);
-		State.SetAngles (ang);
-
+		G_SetMovedir (State.GetAngles(), MoveDir);
 		NoiseIndex = SoundIndex ("weapons/laser2.wav");
 
 		if (!Damage)
@@ -923,7 +916,7 @@ public:
 		if (!Speed)
 			Speed = 1000;
 
-		SetSvFlags (SVF_NOCLIENT);
+		GetSvFlags() = SVF_NOCLIENT;
 	};
 };
 
@@ -1072,18 +1065,18 @@ public:
 		if (!Activator)
 			Activator = this;
 		SpawnFlags |= 0x80000001;
-		SetSvFlags (GetSvFlags() & ~SVF_NOCLIENT);
+		GetSvFlags() &= ~SVF_NOCLIENT;
 		Think ();
 	};
 	void Off ()
 	{
 		SpawnFlags &= ~1;
-		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
+		GetSvFlags() |= SVF_NOCLIENT;
 		NextThink = 0;
 	};
 	void Start ()
 	{
-		SetSolid (SOLID_NOT);
+		GetSolid() = SOLID_NOT;
 		State.GetRenderEffects() |= (RF_BEAM|RF_TRANSLUCENT);
 		State.GetModelIndex() = 1;			// must be non-zero
 
@@ -1114,9 +1107,7 @@ public:
 			}
 			else
 			{
-				vec3f angles = State.GetAngles ();
-				G_SetMovedir (angles, MoveDir);
-				State.SetAngles (angles);
+				G_SetMovedir (State.GetAngles(), MoveDir);
 			}
 		}
 
@@ -1126,8 +1117,8 @@ public:
 		if (!Damage)
 			Damage = 1;
 
-		SetMins (vec3f(-8, -8, -8));
-		SetMaxs (vec3f(8, 8, 8));
+		GetMins().Set (-8);
+		GetMaxs().Set (8);
 		Link ();
 
 		if (SpawnFlags & START_ON)
@@ -1317,7 +1308,7 @@ public:
 		if (!Speed)
 			Speed = 200;
 
-		SetSvFlags (GetSvFlags() | SVF_NOCLIENT);
+		GetSvFlags() |= SVF_NOCLIENT;
 
 		NoiseIndex = SoundIndex ("world/quake.wav");
 	};

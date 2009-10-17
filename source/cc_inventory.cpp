@@ -626,7 +626,7 @@ void Cmd_Give_f (CPlayerEntity *ent)
 		it_ent->Spawn (it);
 
 		it_ent->Touch (ent, NULL, NULL);
-		if (it_ent->IsInUse())
+		if (it_ent->GetInUse())
 			it_ent->Free();*/
 		NItems::PowerShield->Add (ent, 1);
 
@@ -685,7 +685,7 @@ void Cmd_Give_f (CPlayerEntity *ent)
 		it_ent->gameEntity->classname = it->Classname;
 		it_ent->Spawn(it);
 		it_ent->Touch (ent, NULL, NULL);
-		if (it_ent->IsInUse())
+		if (it_ent->GetInUse())
 			it_ent->Free ();
 		//it->Add (ent, 1);
 	}
@@ -717,10 +717,10 @@ void Cmd_Give (CPlayerEntity *ent)
 		return;
 
 	CBaseEntity *Spawned = CreateEntityFromClassname(ArgGetConcatenatedString());
-	if (Spawned && Spawned->IsInUse())
+	if (Spawned && Spawned->GetInUse())
 	{
-		Spawned->State.SetOrigin (Origin);
-		Spawned->State.SetAngles (Angles);
+		Spawned->State.GetOrigin() = Origin;
+		Spawned->State.GetAngles() = Angles;
 
 		Spawned->Link ();
 	}

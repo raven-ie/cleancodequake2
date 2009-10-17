@@ -71,7 +71,7 @@ VWepModel(VWepModel)
 #ifndef NO_AUTOSWITCH
 bool CheckAutoSwitch (CPlayerEntity *other)
 {
-	int val = atoi(Info_ValueForKey (other->Client.Persistent.userinfo, "cc_autoswitch"));
+	int val = atoi(Info_ValueForKey (other->Client.Persistent.UserInfo, "cc_autoswitch").c_str());
 	return (val == 1);
 }
 #endif

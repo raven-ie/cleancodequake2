@@ -323,11 +323,11 @@ void CBerserker::Pain (CBaseEntity *other, float kick, int damage)
 
 void CBerserker::Dead ()
 {
-	Entity->SetMins (vec3f(-16, -16, -24));
-	Entity->SetMaxs (vec3f(16, 16, -8));
+	Entity->GetMins().Set (-16, -16, -24);
+	Entity->GetMaxs().Set (16, 16, -8);
 
 	Entity->PhysicsType = PHYSICS_TOSS;
-	Entity->SetSvFlags (Entity->GetSvFlags() | SVF_DEADMONSTER);
+	Entity->GetSvFlags() |= SVF_DEADMONSTER;
 	Entity->Link ();
 
 	Entity->NextThink = 0;
@@ -410,9 +410,9 @@ void CBerserker::Spawn ()
 	SoundSight = SoundIndex ("berserk/sight.wav");
 
 	Entity->State.GetModelIndex() = ModelIndex("models/monsters/berserk/tris.md2");
-	Entity->SetMins (vec3f(-16, -16, -24));
-	Entity->SetMaxs (vec3f(16, 16, 32));
-	Entity->SetSolid (SOLID_BBOX);
+	Entity->GetMins().Set (-16, -16, -24);
+	Entity->GetMaxs().Set (16, 16, 32);
+	Entity->GetSolid() = SOLID_BBOX;
 
 	Entity->Health = 240;
 	Entity->GibHealth = -60;

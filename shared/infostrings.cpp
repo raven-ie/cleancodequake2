@@ -37,44 +37,44 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 Info_Print
 ================
 */
-void Info_Print (char *s)
+void Info_Print (std::string &s)
 {
-	char	key[512];
-	char	value[512];
-	char	*o;
-	int		l;
+	size_t curIndex = 0;
 
-	if (*s == '\\')
-		s++;
+	if (s[curIndex] == '\\')
+		s[curIndex++];
 
-	while (*s) {
-		o = key;
-		while (*s && *s != '\\')
-			*o++ = *s++;
+	while (s[curIndex])
+	{
+		std::string	key, value;
 
-		l = o - key;
-		if (l < 20) {
-			memset (o, ' ', 20-l);
-			key[20] = 0;
+		while (s[curIndex] && s[curIndex] != '\\')
+			key += s[curIndex++];
+
+		// Number of spaces to add
+		size_t l = key.length();
+		if (l < 20)
+		{
+			for (size_t i = 0; i < (20 - l); i++)
+				key += ' ';
 		}
-		else
-			*o = 0;
-		Com_Printf (0, "%s", key);
 
-		if (!*s) {
+		Com_Printf (0, "%s", key.c_str());
+
+		if (!s[curIndex])
+		{
 			Com_Printf (0, "MISSING VALUE\n");
 			return;
 		}
 
-		o = value;
-		s++;
-		while (*s && *s != '\\')
-			*o++ = *s++;
-		*o = 0;
+		s[curIndex++];
+		while (s[curIndex] && s[curIndex] != '\\')
+			value += s[curIndex++];
 
-		if (*s)
-			s++;
-		Com_Printf (0, "%s\n", value);
+		if (s[curIndex])
+			s[curIndex++];
+
+		Com_Printf (0, "%s\n", value.c_str());
 	}
 }
 
@@ -84,46 +84,41 @@ void Info_Print (char *s)
 Info_ValueForKey
 
 Searches the string for the given key and returns the associated value, or an empty string.
-
-Uses two buffers to lessen the chance of stomping.
 ===============
 */
-char *Info_ValueForKey (char *s, char *key)
+std::string Info_ValueForKey (std::string &s, std::string key)
 {
-	char		pkey[512];
-	static char value[2][512];
-	static int	valueIndex;
-	
-	valueIndex ^= 1;
-	if (*s == '\\')
-		s++;
+	size_t	curIndex = 0;
+
+	if (s[curIndex] == '\\')
+		curIndex++;
 
 	while (true)
 	{
-		char *o = pkey;
-		while (*s != '\\') {
-			if (!*s)
+		std::string pkey;
+		std::string value;
+
+		while (s[curIndex] != '\\')
+		{
+			if (!s[curIndex])
 				return "";
-			*o++ = *s++;
+			pkey += s[curIndex++];
 		}
-		*o = 0;
-		s++;
+		curIndex++;
 
-		o = value[valueIndex];
-
-		while (*s != '\\' && *s) {
-			if (!*s)
+		while (s[curIndex] != '\\' && s[curIndex])
+		{
+			if (!s[curIndex])
 				return "";
-			*o++ = *s++;
+			value += s[curIndex++];
 		}
-		*o = 0;
 
-		if (!strcmp (key, pkey))
-			return value[valueIndex];
+		if (key == pkey)
+			return value;
 
-		if (!*s)
+		if (!s[curIndex])
 			return "";
-		s++;
+		curIndex++;
 	}
 }
 
@@ -133,46 +128,48 @@ char *Info_ValueForKey (char *s, char *key)
 Info_RemoveKey
 ==================
 */
-void Info_RemoveKey (char *s, char *key)
+void Info_RemoveKey (std::string &s, std::string key)
 {
-	char	*start;
-	char	pkey[MAX_INFO_KEY];
-	char	value[MAX_INFO_STRING];
-	char	*o;
-
-	if (strstr (key, "\\"))
+	if (key.find ('\\'))
 		return;
 
-	for ( ; ; ) {
-		start = s;
-		if (*s == '\\')
-			s++;
-		o = pkey;
-		while (*s != '\\') {
-			if (!*s)
-				return;
-			*o++ = *s++;
-		}
-		*o = 0;
-		s++;
+	size_t	curIndex = 0;
+	std::string	pkey, value;
+	while (true)
+	{
+		size_t start = curIndex;
+		if (s[curIndex] == '\\')
+			curIndex++;
 
-		o = value;
-		while (*s != '\\' && *s) {
-			if (!*s)
-				return;
-			*o++ = *s++;
-		}
-		*o = 0;
+		pkey.clear ();
+		value.clear ();
 
-		if (!strcmp (key, pkey)) {
-			Q_strncpyz (start, s, MAX_INFO_KEY);	// Remove this part
+		while (s[curIndex] != '\\')
+		{
+			if (!s[curIndex])
+				return;
+			
+			pkey += s[curIndex++];
+		}
+		curIndex++;
+
+		while (s[curIndex] != '\\' && s[curIndex])
+		{
+			if (!s[curIndex])
+				return;
+			value += s[curIndex++];
+		}
+
+		if (key == pkey)
+		{
+			//Q_strncpyz (start, s, MAX_INFO_KEY);	// Remove this part
+			s.erase (start, (start - curIndex));
 			return;
 		}
 
-		if (!*s)
+		if (!s[curIndex])
 			return;
 	}
-
 }
 
 
@@ -184,14 +181,9 @@ Some characters are illegal in info strings because they
 can mess up the server's parsing
 ==================
 */
-bool Info_Validate (char *s)
+bool Info_Validate (std::string &s)
 {
-	if (strstr (s, "\""))
-		return false;
-	if (strstr (s, ";"))
-		return false;
-
-	return true;
+	return (s.find ('\"') || s.find (';'));
 }
 
 
@@ -200,56 +192,58 @@ bool Info_Validate (char *s)
 Info_SetValueForKey
 ==================
 */
-void Info_SetValueForKey (char *s, char *key, char *value)
+void Info_SetValueForKey (std::string &s, std::string key, std::string value)
 {
-	char	newPair[MAX_INFO_STRING], *v;
-	int		c;
-
 	// Sanity check
-	if (strstr (key, "\\")) {
+	if (key.find ('\\'))
+	{
 		Com_Printf (PRNT_WARNING, "Can't use keys with a \\\n");
 		return;
 	}
-	if (strstr (value, "\\")) {
+	if (value.find ('\\'))
+	{
 		Com_Printf (PRNT_WARNING, "Can't use values with a \\\n");
 		return;
 	}
-	if (strstr (key, ";")) {
+	if (key.find (';'))
+	{
 		Com_Printf (PRNT_WARNING, "Can't use keys or values with a semicolon\n");
 		return;
 	}
-	if (strstr (key, "\"")) {
+	if (key.find ('\"'))
+	{
 		Com_Printf (PRNT_WARNING, "Can't use keys with a \"\n");
 		return;
 	}
-	if (strstr (value, "\"")) {
+	if (value.find ('\"'))
+	{
 		Com_Printf (PRNT_WARNING, "Can't use values with a \"\n");
 		return;
 	}
-	if (strlen (key) > MAX_INFO_KEY-1 || strlen (value) > MAX_INFO_KEY-1) {
+	if (key.length() > MAX_INFO_KEY-1 || value.length() > MAX_INFO_KEY-1)
+	{
 		Com_Printf (PRNT_WARNING, "Keys and values must be < %i characters.\n", MAX_INFO_KEY);
 		return;
 	}
 
 	// Remove the key so it can be re-added cleanly
 	Info_RemoveKey (s, key);
-	if (!value || !strlen (value))
+	if (!value.length())
 		return;
 
 	// Generate the key and make sure it will fit
-	Q_snprintfz (newPair, sizeof(newPair), "\\%s\\%s", key, value);
-	if (strlen (newPair) + strlen (s) > MAX_INFO_STRING-1) {
+	std::string newPair = "\\" + key + '\\' + value;
+	if (newPair.length() + s.length() > MAX_INFO_STRING-1)
+	{
 		Com_Printf (PRNT_WARNING, "Info string length exceeded\n");
 		return;
 	}
 
 	// Only copy ascii values
-	s += strlen (s);
-	for (v=newPair ; *v ; ) {
-		c = *v++;
-		c &= 127;	// Strip high bits
+	for (size_t cur = 0; newPair[cur]; )
+	{
+		char c = newPair[cur++] & 127;	// Strip high bits
 		if (c >= 32 && c < 127)
-			*s++ = c;
+			s += c;
 	}
-	*s = 0;
 }

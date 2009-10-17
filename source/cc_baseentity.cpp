@@ -63,16 +63,6 @@ vec3f	&CEntityState::GetOldOrigin	()
 	return state->oldOrigin;
 }
 
-void	CEntityState::SetOrigin		(vec3f in)
-{
-	state->origin = in;
-}
-
-void	CEntityState::SetAngles		(vec3f in)
-{
-	state->angles = in;
-}
-
 // Can be 1, 2, 3, or 4
 int		&CEntityState::GetModelIndex	(uint8 index)
 {
@@ -231,6 +221,7 @@ CBaseEntity::CBaseEntity (int Index)
 	Freed = false;
 	EntityFlags |= ENT_BASE;
 	State = CEntityState(&gameEntity->state);
+	LastMinsSet = LastMaxSet = -1;
 }
 
 CBaseEntity::~CBaseEntity ()
@@ -258,22 +249,14 @@ void			CBaseEntity::SetOwner	(CBaseEntity *ent)
 	gameEntity->owner = ent->gameEntity;
 }
 
-EBrushContents	CBaseEntity::GetClipmask	()
+EBrushContents	&CBaseEntity::GetClipmask	()
 {
 	return gameEntity->clipMask;
 }
-void			CBaseEntity::SetClipmask (EBrushContents mask)
-{
-	gameEntity->clipMask = mask;
-}
 
-ESolidType		CBaseEntity::GetSolid ()
+ESolidType		&CBaseEntity::GetSolid ()
 {
 	return gameEntity->solid;
-}
-void			CBaseEntity::SetSolid (ESolidType solid)
-{
-	gameEntity->solid = solid;
 }
 
 // Unless, of course, you use the vec3f class :D
@@ -283,6 +266,7 @@ vec3f			&CBaseEntity::GetMins ()
 }
 vec3f			&CBaseEntity::GetMaxs ()
 {
+
 	return gameEntity->maxs;
 }
 
@@ -299,45 +283,14 @@ vec3f			&CBaseEntity::GetSize ()
 	return gameEntity->size;
 }
 
-// Vec3f
-void			CBaseEntity::SetMins (vec3f in)
-{
-	gameEntity->mins = in;
-}
-void			CBaseEntity::SetMaxs (vec3f in)
-{
-	gameEntity->maxs = in;
-}
-
-void			CBaseEntity::SetAbsMin (vec3f in)
-{
-	gameEntity->absMin = in;
-}
-void			CBaseEntity::SetAbsMax (vec3f in)
-{
-	gameEntity->absMax = in;
-}
-void			CBaseEntity::SetSize (vec3f in)
-{
-	gameEntity->size = in;
-}
-
-EServerFlags	CBaseEntity::GetSvFlags ()
+EServerFlags	&CBaseEntity::GetSvFlags ()
 {
 	return gameEntity->svFlags;
-}
-void			CBaseEntity::SetSvFlags (EServerFlags SVFlags)
-{
-	gameEntity->svFlags = SVFlags;
 }
 
 int				CBaseEntity::GetAreaNum (bool second)
 {
 	return ((second) ? gameEntity->areaNum2 : gameEntity->areaNum);
-}
-void			CBaseEntity::SetAreaNum (int num, bool second)
-{
-	((second) ? gameEntity->areaNum2 : gameEntity->areaNum) = num;
 }
 
 link_t			*CBaseEntity::GetArea ()
@@ -354,13 +307,9 @@ int				CBaseEntity::GetLinkCount ()
 	return gameEntity->linkCount;
 }
 
-bool			CBaseEntity::IsInUse ()
+bool			&CBaseEntity::GetInUse ()
 {
 	return gameEntity->inUse;
-}
-void			CBaseEntity::SetInUse (bool inuse)
-{
-	gameEntity->inUse = (inuse == true) ? 1 : 0;
 }
 
 void			CBaseEntity::Link ()
@@ -381,7 +330,7 @@ void			CBaseEntity::Free ()
 	gameEntity->Entity = this;
 	gameEntity->classname = "freed";
 	gameEntity->freetime = level.framenum;
-	SetInUse(false);
+	GetInUse() = false;
 
 	Freed = true;
 }
@@ -455,13 +404,9 @@ CPrivateEntity::CPrivateEntity ()
 	InUse = true;
 };
 
-bool			CPrivateEntity::IsInUse ()
+bool			&CPrivateEntity::GetInUse ()
 {
 	return InUse;
-}
-void			CPrivateEntity::SetInUse (bool inuse)
-{
-	InUse = inuse;
 }
 
 void CPrivateEntity::Free ()

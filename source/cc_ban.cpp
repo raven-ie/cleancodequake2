@@ -327,11 +327,11 @@ bool CBanList::IsBanned (IPAddress Adr)
 	return false;
 }
 
-bool CBanList::IsSquelched (char *Name)
+bool CBanList::IsSquelched (const char *Name)
 {
 	std::vector<BanIndex*>::iterator it;
 
-	for ( it=BanList.begin() ; it < BanList.end(); it++ )
+	for (it = BanList.begin(); it < BanList.end(); it++)
 	{
 		BanIndex *Index = *it;
 
@@ -344,11 +344,11 @@ bool CBanList::IsSquelched (char *Name)
 	return false;
 }
 
-bool CBanList::IsBannedFromSpectator (char *Name)
+bool CBanList::IsBannedFromSpectator (const char *Name)
 {
 	std::vector<BanIndex*>::iterator it;
 
-	for ( it=BanList.begin() ; it < BanList.end(); it++ )
+	for (it = BanList.begin(); it < BanList.end(); it++)
 	{
 		BanIndex *Index = *it;
 
@@ -361,11 +361,11 @@ bool CBanList::IsBannedFromSpectator (char *Name)
 	return false;
 }
 
-bool CBanList::IsBanned (char *Name)
+bool CBanList::IsBanned (const char *Name)
 {
 	std::vector<BanIndex*>::iterator it;
 
-	for ( it=BanList.begin() ; it < BanList.end(); it++ )
+	for (it = BanList.begin(); it < BanList.end(); it++)
 	{
 		BanIndex *Index = *it;
 
