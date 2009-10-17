@@ -34,138 +34,127 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 
-CStatusBar::CStatusBar()
+CStatusBar::CStatusBar() :
+Bar ()
 {
-	bar = QNew (com_levelPool, 0) char[MAX_COMPRINT/2];
-	temp = QNew (com_levelPool, 0) char[MAX_COMPRINT/2];
 }
 
 CStatusBar::~CStatusBar()
 {
-	QDelete[] bar;
-	QDelete[] temp;
 }
 
 size_t CStatusBar::Length ()
 {
-	return strlen(bar);
+	return Bar.length();
 }
 
 void CStatusBar::Send ()
 {
-	ConfigString (CS_STATUSBAR, bar);
+	ConfigString (CS_STATUSBAR, Bar.c_str());
 }
 
 void CStatusBar::SendMsg (CPlayerEntity *ent, bool reliable)
 {
 	WriteByte (SVC_LAYOUT);
-	WriteString (bar);
+	WriteString (Bar.c_str());
 	ent->CastTo ((reliable) ? CASTFLAG_RELIABLE : CASTFLAG_UNRELIABLE);
 }
 
-void CStatusBar::AddToBarBuffer (char *string)
+void CStatusBar::AddToBarBuffer (char *fmt, ...)
 {
-	Q_snprintfz (bar, MAX_COMPRINT/2, "%s%s", bar, temp);
+	va_list		argptr;
+	static char	text[MAX_COMPRINT];
+
+	va_start (argptr, fmt);
+	vsnprintf_s (text, sizeof(text), MAX_COMPRINT, fmt, argptr);
+	va_end (argptr);
+
+	if (Bar.length() + strlen(text) > (MAX_COMPRINT/2)-1)
+		assert (0);
+
+	Bar += text;
 }
 
 void CStatusBar::AddVirtualPoint_Y (int y)
 {
-	Q_snprintfz (temp, MAX_COMPRINT/2, "yv %i ", y);
-	AddToBarBuffer (temp);
+	AddToBarBuffer ("yv %i ", y);
 }
 
 void CStatusBar::AddVirtualPoint_X (int x)
 {
-	Q_snprintfz (temp, MAX_COMPRINT/2, "xv %i ", x);
-	AddToBarBuffer (temp);
+	AddToBarBuffer ("xv %i ", x);
 }
 
 void CStatusBar::AddPoint_X (int x, bool inverted = false)
 {
-	Q_snprintfz (temp, MAX_COMPRINT/2, "x%c %i ", inverted ? 'r' : 'l', x);
-	AddToBarBuffer (temp);
+	AddToBarBuffer ("x%c %i ", inverted ? 'r' : 'l', x);
 }
 
 void CStatusBar::AddPoint_Y (int y, bool inverted = false)
 {
-	Q_snprintfz (temp, MAX_COMPRINT/2, "y%c %i ", inverted ? 'b' : 't', y);
-	AddToBarBuffer (temp);
+	AddToBarBuffer ("y%c %i ", inverted ? 'b' : 't', y);
 }
 
 void CStatusBar::AddString (char *string, bool highBit = false, bool center = false)
 {
-	Q_snprintfz (temp, MAX_COMPRINT/2, "%sstring%s \"%s\" ", center ? "c" : "", highBit ? "2" : "", string);
-	AddToBarBuffer(temp);
+	AddToBarBuffer ("%sstring%s \"%s\" ", center ? "c" : "", highBit ? "2" : "", string);
 }
 
 void CStatusBar::AddStatString (int stat)
 {
-	Q_snprintfz (temp, MAX_COMPRINT/2, "stat_string %i ", stat);
-	AddToBarBuffer (temp);
+	AddToBarBuffer ("stat_string %i ", stat);
 }
 
 void CStatusBar::AddPic (char *pic)
 {
-	Q_snprintfz (temp, MAX_COMPRINT/2, "picn %s ", pic);
-	AddToBarBuffer(temp);
+	AddToBarBuffer ("picn %s ", pic);
 }
 
 void CStatusBar::AddPicStat (int stat)
 {
-	Q_snprintfz (temp, MAX_COMPRINT/2, "pic %i ", stat);
-	AddToBarBuffer(temp);
+	AddToBarBuffer ("pic %i ", stat);
 }
 
 void CStatusBar::AddNumStat (int stat, int width = 3)
 {
-	Q_snprintfz (temp, MAX_COMPRINT/2, "num %i %i ", width, stat);
-	AddToBarBuffer(temp);
+	AddToBarBuffer ("num %i %i ", width, stat);
 }
 
 void CStatusBar::AddIf (int stat)
 {
-	Q_snprintfz (temp, MAX_COMPRINT/2, "if %i ", stat);
-	AddToBarBuffer(temp);
+	AddToBarBuffer ("if %i ", stat);
 }
 
 void CStatusBar::AddEndIf ()
 {
-	Q_snprintfz (temp, MAX_COMPRINT/2, "endif ");
-	AddToBarBuffer(temp);
+	AddToBarBuffer ("endif ");
 }
 
 void CStatusBar::AddAmmoNum ()
 {
-	Q_snprintfz (temp, MAX_COMPRINT/2, "anum ");
-	AddToBarBuffer(temp);
+	AddToBarBuffer ("anum ");
 }
 
 void CStatusBar::AddHealthNum ()
 {
-	Q_snprintfz (temp, MAX_COMPRINT/2, "hnum ");
-	AddToBarBuffer(temp);
+	AddToBarBuffer ("hnum ");
 }
 
 void CStatusBar::AddArmorNum ()
 {
-	Q_snprintfz (temp, MAX_COMPRINT/2, "rnum ");
-	AddToBarBuffer(temp);
+	AddToBarBuffer ("rnum ");
 }
 
 void CStatusBar::AddClientBlock (int x, int y, int cNum, int score, int ping, int time)
 {
 	assert (!(cNum >= game.maxclients || cNum < 0));
-
-	Q_snprintfz (temp, MAX_COMPRINT/2, "client %i %i %i %i %i %i ", x, y, cNum, score, ping, time);
-	AddToBarBuffer(temp);
+	AddToBarBuffer ("client %i %i %i %i %i %i ", x, y, cNum, score, ping, time);
 }
 
 void CStatusBar::AddClientBlock (int x, int y, int cNum, int score, int ping)
 {
 	assert (!(cNum >= game.maxclients || cNum < 0));
-
-	Q_snprintfz (temp, MAX_COMPRINT/2, "ctf %i %i %i %i %i %i ", x, y, cNum, score, ping);
-	AddToBarBuffer(temp);
+	AddToBarBuffer ("ctf %i %i %i %i %i %i ", x, y, cNum, score, ping);
 }
 
 void CreateDMStatusbar ()
@@ -180,45 +169,45 @@ void CreateDMStatusbar ()
 	DMBar.AddPicStat (STAT_HEALTH_ICON);
 
 	DMBar.AddIf (STAT_AMMO_ICON);
-	DMBar.AddVirtualPoint_X (100);
-	DMBar.AddAmmoNum ();
-	DMBar.AddVirtualPoint_X (150);
-	DMBar.AddPicStat (STAT_AMMO_ICON);
+		DMBar.AddVirtualPoint_X (100);
+		DMBar.AddAmmoNum ();
+		DMBar.AddVirtualPoint_X (150);
+		DMBar.AddPicStat (STAT_AMMO_ICON);
 	DMBar.AddEndIf ();
 
 	DMBar.AddIf (STAT_ARMOR);
-	DMBar.AddVirtualPoint_X (200);
-	DMBar.AddArmorNum ();
-	DMBar.AddVirtualPoint_X (250);
-	DMBar.AddPicStat (STAT_ARMOR_ICON);
+		DMBar.AddVirtualPoint_X (200);
+		DMBar.AddArmorNum ();
+		DMBar.AddVirtualPoint_X (250);
+		DMBar.AddPicStat (STAT_ARMOR_ICON);
 	DMBar.AddEndIf ();
 
 	DMBar.AddIf (STAT_SELECTED_ICON);
-	DMBar.AddVirtualPoint_X (296);
-	DMBar.AddPicStat (STAT_SELECTED_ICON);
+		DMBar.AddVirtualPoint_X (296);
+		DMBar.AddPicStat (STAT_SELECTED_ICON);
 	DMBar.AddEndIf ();
 
 	DMBar.AddPoint_Y (-50, true);
 
 	DMBar.AddIf (STAT_PICKUP_ICON);
-	DMBar.AddVirtualPoint_X (0);
-	DMBar.AddPicStat (STAT_PICKUP_ICON);
-	DMBar.AddVirtualPoint_X (26);
-	DMBar.AddPoint_Y (-42, true);
-	DMBar.AddStatString (STAT_PICKUP_STRING);
-	DMBar.AddPoint_Y (-50, true);
+		DMBar.AddVirtualPoint_X (0);
+		DMBar.AddPicStat (STAT_PICKUP_ICON);
+		DMBar.AddVirtualPoint_X (26);
+		DMBar.AddPoint_Y (-42, true);
+		DMBar.AddStatString (STAT_PICKUP_STRING);
+		DMBar.AddPoint_Y (-50, true);
 	DMBar.AddEndIf ();
 
 	DMBar.AddIf (STAT_TIMER_ICON);
-	DMBar.AddVirtualPoint_X (246);
-	DMBar.AddNumStat (STAT_TIMER, 2);
-	DMBar.AddVirtualPoint_X (296);
-	DMBar.AddPicStat (STAT_TIMER_ICON);
+		DMBar.AddVirtualPoint_X (246);
+		DMBar.AddNumStat (STAT_TIMER, 2);
+		DMBar.AddVirtualPoint_X (296);
+		DMBar.AddPicStat (STAT_TIMER_ICON);
 	DMBar.AddEndIf ();
 
 	DMBar.AddIf (STAT_HELPICON);
-	DMBar.AddVirtualPoint_X (148);
-	DMBar.AddPicStat (STAT_HELPICON);
+		DMBar.AddVirtualPoint_X (148);
+		DMBar.AddPicStat (STAT_HELPICON);
 	DMBar.AddEndIf ();
 
 	DMBar.AddPoint_X (-50, true);
@@ -233,11 +222,11 @@ void CreateDMStatusbar ()
 	DMBar.AddEndIf();
 
 	DMBar.AddIf (STAT_CHASE);
-	DMBar.AddVirtualPoint_X (0);
-	DMBar.AddPoint_Y (-68, true);
-	DMBar.AddString ("Chasing");
-	DMBar.AddVirtualPoint_X (64);
-	DMBar.AddStatString (STAT_CHASE);
+		DMBar.AddVirtualPoint_X (0);
+		DMBar.AddPoint_Y (-68, true);
+		DMBar.AddString ("Chasing");
+		DMBar.AddVirtualPoint_X (64);
+		DMBar.AddStatString (STAT_CHASE);
 	DMBar.AddEndIf ();
 
 	DMBar.Send();
@@ -255,45 +244,45 @@ void CreateSPStatusbar ()
 	SPBar.AddPicStat (STAT_HEALTH_ICON);
 
 	SPBar.AddIf (STAT_AMMO_ICON);
-	SPBar.AddVirtualPoint_X (100);
-	SPBar.AddAmmoNum ();
-	SPBar.AddVirtualPoint_X (150);
-	SPBar.AddPicStat (STAT_AMMO_ICON);
+		SPBar.AddVirtualPoint_X (100);
+		SPBar.AddAmmoNum ();
+		SPBar.AddVirtualPoint_X (150);
+		SPBar.AddPicStat (STAT_AMMO_ICON);
 	SPBar.AddEndIf ();
 
 	SPBar.AddIf (STAT_ARMOR);
-	SPBar.AddVirtualPoint_X (200);
-	SPBar.AddArmorNum ();
-	SPBar.AddVirtualPoint_X (250);
-	SPBar.AddPicStat (STAT_ARMOR_ICON);
+		SPBar.AddVirtualPoint_X (200);
+		SPBar.AddArmorNum ();
+		SPBar.AddVirtualPoint_X (250);
+		SPBar.AddPicStat (STAT_ARMOR_ICON);
 	SPBar.AddEndIf ();
 
 	SPBar.AddIf (STAT_SELECTED_ICON);
-	SPBar.AddVirtualPoint_X (296);
-	SPBar.AddPicStat (STAT_SELECTED_ICON);
+		SPBar.AddVirtualPoint_X (296);
+		SPBar.AddPicStat (STAT_SELECTED_ICON);
 	SPBar.AddEndIf ();
 
 	SPBar.AddPoint_Y (-50, true);
 
 	SPBar.AddIf (STAT_PICKUP_ICON);
-	SPBar.AddVirtualPoint_X (0);
-	SPBar.AddPicStat (STAT_PICKUP_ICON);
-	SPBar.AddVirtualPoint_X (26);
-	SPBar.AddPoint_Y (-42, true);
-	SPBar.AddStatString (STAT_PICKUP_STRING);
-	SPBar.AddPoint_Y (-50, true);
+		SPBar.AddVirtualPoint_X (0);
+		SPBar.AddPicStat (STAT_PICKUP_ICON);
+		SPBar.AddVirtualPoint_X (26);
+		SPBar.AddPoint_Y (-42, true);
+		SPBar.AddStatString (STAT_PICKUP_STRING);
+		SPBar.AddPoint_Y (-50, true);
 	SPBar.AddEndIf ();
 
 	SPBar.AddIf (STAT_TIMER_ICON);
-	SPBar.AddVirtualPoint_X (246);
-	SPBar.AddNumStat (STAT_TIMER, 2);
-	SPBar.AddVirtualPoint_X (296);
-	SPBar.AddPicStat (STAT_TIMER_ICON);
+		SPBar.AddVirtualPoint_X (246);
+		SPBar.AddNumStat (STAT_TIMER, 2);
+		SPBar.AddVirtualPoint_X (296);
+		SPBar.AddPicStat (STAT_TIMER_ICON);
 	SPBar.AddEndIf ();
 
 	SPBar.AddIf (STAT_HELPICON);
-	SPBar.AddVirtualPoint_X (148);
-	SPBar.AddPicStat (STAT_HELPICON);
+		SPBar.AddVirtualPoint_X (148);
+		SPBar.AddPicStat (STAT_HELPICON);
 	SPBar.AddEndIf ();
 
 	SPBar.Send();

@@ -41,7 +41,7 @@ int PointContents (vec3f &start);
 
 int BoxEdicts (vec3f &mins, vec3f &maxs, edict_t **list, int maxCount, bool triggers);
 
-void ConfigString (int configStringIndex, char *configStringValue, CPlayerEntity *Audience = NULL);
+void ConfigString (int configStringIndex, const char *configStringValue, CPlayerEntity *Audience = NULL);
 void GameError (char *fmt, ...);
 
 _CC_DISABLE_DEPRECATION

@@ -37,8 +37,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 class CStatusBar
 {
-	char *bar;
-	char *temp; // A temp buffer used for adding stuffs to the bar buffer.
+	std::string		Bar;
 
 public:
 	CStatusBar();
@@ -47,7 +46,7 @@ public:
 	void Send ();
 	void SendMsg (CPlayerEntity *ent, bool reliable = true);
 
-	void AddToBarBuffer (char *string);
+	void AddToBarBuffer (char *fmt, ...);
 	void AddVirtualPoint_Y (int y);
 	void AddVirtualPoint_X (int x);
 	void AddPoint_X (int x, bool inverted);

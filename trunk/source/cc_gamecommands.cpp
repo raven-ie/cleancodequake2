@@ -357,16 +357,15 @@ public:
 
 	bool DoCallback (CPlayerEntity *Player)
 	{
-		char tempString[80];
+		char tempString[160];
 
 		if (!Spectator)
-			Q_snprintfz(tempString, sizeof(tempString), " - %02d:%02d %4d %3d %s%s\n",
+			Q_snprintfz(tempString, sizeof(tempString), " - %02I64d:%02I64d %4d %3d %s\n",
 				(level.framenum - Player->Client.Respawn.enterframe) / 600,
 				((level.framenum - Player->Client.Respawn.enterframe) % 600)/10,
 				Player->Client.GetPing(),
 				Player->Client.Respawn.score,
-				Player->Client.Persistent.netname,
-				Player->Client.Respawn.spectator ? " (spectator)" : "");
+				Player->Client.Persistent.netname);
 		else
 			Q_snprintfz(tempString, sizeof(tempString), " - %s%s\n",
 				Player->Client.Persistent.netname,
@@ -390,9 +389,9 @@ public:
 		{
 			CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 
-			if (Spectator && (!Player->GetInUse() || Player->Client.Persistent.state != SVCS_SPAWNED))
+			if (Spectator && (!Player->GetInUse() || Player->Client.Persistent.state == SVCS_SPAWNED))
 				continue;
-			else if (!Spectator && (Player->Client.Persistent.state == SVCS_SPAWNED))
+			else if (!Spectator && (Player->Client.Persistent.state != SVCS_SPAWNED))
 				continue;
 
 			Index = i;
