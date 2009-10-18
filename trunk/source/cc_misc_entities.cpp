@@ -742,9 +742,9 @@ public:
 
 		ClipGibVelocity (this);
 
-		AngularVelocity.Y = crandom()*600;
+		AngularVelocity.Y = crand()*600;
 
-		NextThink = level.framenum + 100 + random()*100;
+		NextThink = level.framenum + 100 + frand()*100;
 
 		Link();
 	};
@@ -1124,7 +1124,7 @@ public:
 		CanTakeDamage = true;
 		PhysicsType = PHYSICS_TOSS;
 		GetSvFlags() |= SVF_MONSTER;
-		AngularVelocity.Set (random()*200, random()*200, random()*200);
+		AngularVelocity.Set (frand()*200, frand()*200, frand()*200);
 		NextThink = level.framenum + 300;
 		Link ();
 	};
@@ -1177,7 +1177,7 @@ public:
 		CanTakeDamage = true;
 		PhysicsType = PHYSICS_TOSS;
 		GetSvFlags() |= SVF_MONSTER;
-		AngularVelocity.Set (random()*200, random()*200, random()*200);
+		AngularVelocity.Set (frand()*200, frand()*200, frand()*200);
 		NextThink = level.framenum + 300;
 		Link ();
 	};
@@ -1230,7 +1230,7 @@ public:
 		CanTakeDamage = true;
 		PhysicsType = PHYSICS_TOSS;
 		GetSvFlags() |= SVF_MONSTER;
-		AngularVelocity.Set (random()*200, random()*200, random()*200);
+		AngularVelocity.Set (frand()*200, frand()*200, frand()*200);
 		NextThink = level.framenum + 300;
 		Link ();
 	};

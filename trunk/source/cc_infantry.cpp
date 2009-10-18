@@ -469,7 +469,7 @@ CAnim InfantryMoveDuck (FRAME_duck01, FRAME_duck05, InfantryFramesDuck, ConvertD
 #ifndef MONSTER_USE_ROGUE_AI
 void CInfantry::Dodge (CBaseEntity *attacker, float eta)
 {
-	if (random() > 0.25)
+	if (frand() > 0.25)
 		return;
 
 	if (!Entity->Enemy)

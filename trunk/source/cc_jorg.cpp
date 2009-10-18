@@ -278,7 +278,7 @@ void CJorg::Pain (CBaseEntity *other, float kick, int damage)
 			return;
 
 	// Lessen the chance of him going into his pain frames if he takes little damage
-	if ((damage <= 40) && (random() <= 0.6))
+	if ((damage <= 40) && (frand() <= 0.6))
 		return;
 
 	/* 
@@ -287,13 +287,13 @@ void CJorg::Pain (CBaseEntity *other, float kick, int damage)
 	*/
 	
 	int frame = Entity->State.GetFrame();
-	if (((frame >= FRAME_attak101) && (frame <= FRAME_attak108)) && (random() <= 0.005))
+	if (((frame >= FRAME_attak101) && (frame <= FRAME_attak108)) && (frand() <= 0.005))
 		return;
 
-	if (((frame >= FRAME_attak109) && (frame <= FRAME_attak114)) && (random() <= 0.00005))
+	if (((frame >= FRAME_attak109) && (frame <= FRAME_attak114)) && (frand() <= 0.00005))
 		return;
 
-	if (((frame >= FRAME_attak201) && (frame <= FRAME_attak208)) && (random() <= 0.005))
+	if (((frame >= FRAME_attak201) && (frame <= FRAME_attak208)) && (frand() <= 0.005))
 		return;
 
 	PainDebounceTime = level.framenum + 30;
@@ -310,7 +310,7 @@ void CJorg::Pain (CBaseEntity *other, float kick, int damage)
 		Entity->PlaySound (CHAN_VOICE, SoundPain2);
 		CurrentMove = &JorgMovePain2;
 	}
-	else if (random() <= 0.3)
+	else if (frand() <= 0.3)
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundPain3);
 		CurrentMove = &JorgMovePain3;
@@ -497,7 +497,7 @@ void CJorg::ReAttack1()
 {
 	if (IsVisible(Entity, Entity->Enemy))
 	{
-		if (random() < 0.9)
+		if (frand() < 0.9)
 			CurrentMove = &JorgMoveAttack1;
 		else
 		{
@@ -560,7 +560,7 @@ void CJorg::FireBullet ()
 
 void CJorg::Attack()
 {
-	if (random() <= 0.75)
+	if (frand() <= 0.75)
 	{
 		Entity->PlaySound (CHAN_VOICE, SoundAttack1);
 		Entity->State.GetSound() = SoundIndex ("boss3/w_loop.wav");
@@ -644,16 +644,16 @@ bool CJorg::CheckAttack ()
 	else if (skill->Integer() >= 2)
 		chance *= 2;
 
-	if (random () < chance)
+	if (frand () < chance)
 	{
 		AttackState = AS_MISSILE;
-		AttackFinished = level.framenum + ((2*random())*10);
+		AttackFinished = level.framenum + ((2*frand())*10);
 		return true;
 	}
 
 	if (Entity->Flags & FL_FLY)
 	{
-		if (random() < 0.3)
+		if (frand() < 0.3)
 			AttackState = AS_SLIDING;
 		else
 			AttackState = AS_STRAIGHT;
@@ -755,10 +755,10 @@ bool CJorg::CheckAttack ()
 		chance *= 2;
 
 	// PGM - go ahead and shoot every time if it's a info_notnull
-	if ((random () < chance) || (Entity->Enemy->GetSolid() == SOLID_NOT))
+	if ((frand () < chance) || (Entity->Enemy->GetSolid() == SOLID_NOT))
 	{
 		AttackState = AS_MISSILE;
-		AttackFinished = level.framenum + ((2*random())*10);
+		AttackFinished = level.framenum + ((2*frand())*10);
 		return true;
 	}
 
@@ -777,7 +777,7 @@ bool CJorg::CheckAttack ()
 		if ((Entity->Enemy) && (Entity->Enemy->gameEntity->classname) && (!strcmp(Entity->Enemy->gameEntity->classname, "tesla")))
 			strafe_chance = 0;
 
-		if (random() < strafe_chance)
+		if (frand() < strafe_chance)
 			AttackState = AS_SLIDING;
 		else
 			AttackState = AS_STRAIGHT;
@@ -785,7 +785,7 @@ bool CJorg::CheckAttack ()
 // do we want the monsters strafing?
 	else
 	{
-		if (random() < 0.4)
+		if (frand() < 0.4)
 			AttackState = AS_SLIDING;
 		else
 			AttackState = AS_STRAIGHT;

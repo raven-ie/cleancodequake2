@@ -96,7 +96,6 @@ struct ctfgame_t
 	FrameNumber_t electtime;	// remaining time until election times out
 	char emsg[256];		// election name
 
-
 	ghost_t ghosts[MAX_CS_CLIENTS]; // ghost codes
 };
 
@@ -133,25 +132,52 @@ extern CCvar *ctf;
 void CTFInit(void);
 void CTFSpawn(void);
 
-void SP_info_player_team1(edict_t *self);
-void SP_info_player_team2(edict_t *self);
+inline char *CTFTeamName(ETeamIndex team)
+{
+	switch (team)
+	{
+	case CTF_TEAM1:
+		return "RED";
+	case CTF_TEAM2:
+		return "BLUE";
+	default:
+		return "UNKNOWN";
+	}
+}
 
-char *CTFTeamName(ETeamIndex team);
-char *CTFOtherTeamName(ETeamIndex team);
-void CTFAssignSkin(edict_t *ent, char *s);
-void CTFAssignTeam(gclient_t *who);
+inline char *CTFOtherTeamName(ETeamIndex team)
+{
+	switch (team)
+	{
+	case CTF_TEAM1:
+		return "BLUE";
+	case CTF_TEAM2:
+		return "RED";
+	default:
+		return "UNKNOWN";
+	}
+}
+
+inline ETeamIndex CTFOtherTeam(ETeamIndex team)
+{
+	switch (team)
+	{
+	case CTF_TEAM1:
+		return CTF_TEAM2;
+	case CTF_TEAM2:
+		return CTF_TEAM1;
+	default:
+		return -1;
+	}
+}
+
+
 edict_t *SelectCTFSpawnPoint (edict_t *ent);
-bool CTFPickup_Flag(edict_t *ent, edict_t *other);
-bool CTFDrop_Flag(edict_t *ent, CBaseItem *item);
-void CTFEffects(edict_t *player);
 void CTFCalcScores(void);
 void SetCTFStats(edict_t *ent);
-void CTFDeadDropFlag(CPlayerEntity *self);
-void CTFScoreboardMessage (edict_t *ent, edict_t *killer, bool reliable);
 void CTFTeam_f (CPlayerEntity *ent);
 void CTFID_f (CPlayerEntity *ent);
 void CTFSay_Team(CPlayerEntity *who, char *msg);
-void CTFFlagSetup (edict_t *ent);
 void CTFResetFlag(int ctf_team);
 void CTFFragBonuses(CPlayerEntity *targ, CPlayerEntity *attacker);
 void CTFCheckHurtCarrier(CPlayerEntity *targ, CPlayerEntity *attacker);
@@ -174,16 +200,9 @@ void CTFBoot(CPlayerEntity *ent);
 void CTFPlayerList(CPlayerEntity *ent);
 
 bool CTFCheckRules(void);
-
-void SP_misc_ctf_banner (edict_t *ent);
-void SP_misc_ctf_small_banner (edict_t *ent);
-
 void CreateCTFStatusbar ();
 
 void CTFObserver(CPlayerEntity *ent);
-
-void SP_trigger_teleport (edict_t *ent);
-void SP_info_teleport_destination (edict_t *ent);
 
 extern ctfgame_t ctfgame;
 

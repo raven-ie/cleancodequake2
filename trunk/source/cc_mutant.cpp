@@ -156,7 +156,7 @@ void CMutant::Stand ()
 
 void CMutant::IdleLoop ()
 {
-	if (random() < 0.75)
+	if (frand() < 0.75)
 		NextFrame = FRAME_stand155;
 }
 
@@ -277,7 +277,7 @@ void CMutant::CheckRefire ()
 
 	// Paril, this was kinda dumb because he would keep refiring on nightmare
 	// making him really easy to kill
-	if ((skill->Integer() == 3) && (random() < 0.5))
+	if ((skill->Integer() == 3) && (frand() < 0.5))
 		return;
 
 	if (Range(Entity, Entity->Enemy) == RANGE_MELEE)
@@ -326,7 +326,7 @@ void CMutant::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 			vec3f origin = Entity->State.GetOrigin();
 			vec3f point = origin.MultiplyAngles (Entity->GetMaxs().X, normal);
 
-			int damage = 40 + 10 * random();
+			int damage = 40 + 10 * frand();
 			entity_cast<CHurtableEntity>(other)->TakeDamage (Entity, Entity, Entity->Velocity, point, normal, damage, damage, 0, MOD_UNKNOWN);
 		}
 	}
@@ -516,7 +516,7 @@ bool CMutant::CheckJump ()
 		return false;
 	if (distance > 100)
 	{
-		if (random() < 0.9)
+		if (frand() < 0.9)
 			return false;
 	}
 	else if (distance > 350)
@@ -684,7 +684,7 @@ void CMutant::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 	Entity->CanTakeDamage = true;
 	Entity->State.GetSkinNum() = 1;
 
-	CurrentMove = (random() < 0.5) ? &MutantMoveDeath1 : &MutantMoveDeath2;
+	CurrentMove = (frand() < 0.5) ? &MutantMoveDeath1 : &MutantMoveDeath2;
 }
 
 

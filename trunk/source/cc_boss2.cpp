@@ -44,7 +44,7 @@ CMonster (ID)
 
 void CBoss2::Search ()
 {
-	if (random() < 0.5)
+	if (frand() < 0.5)
 		Entity->PlaySound (CHAN_VOICE, SoundSearch1, 255, ATTN_NONE);
 }
 
@@ -471,7 +471,7 @@ void CBoss2::Walk ()
 void CBoss2::Attack ()
 {
 	CurrentMove = ((Entity->Enemy->State.GetOrigin() - Entity->State.GetOrigin()).Length() <= 125) ?
-		&Boss2MoveAttackPreMg : ((random() <= 0.6) ? &Boss2MoveAttackPreMg : &Boss2MoveAttackRocket);
+		&Boss2MoveAttackPreMg : ((frand() <= 0.6) ? &Boss2MoveAttackPreMg : &Boss2MoveAttackRocket);
 }
 
 void CBoss2::AttackMg ()
@@ -482,7 +482,7 @@ void CBoss2::AttackMg ()
 void CBoss2::ReAttackMg ()
 {
 	CurrentMove = (IsInFront(Entity, Entity->Enemy)) ?
-		((random() <= 0.7) ? &Boss2MoveAttackMg : &Boss2MoveAttackPostMg) : &Boss2MoveAttackPostMg;
+		((frand() <= 0.7) ? &Boss2MoveAttackMg : &Boss2MoveAttackPostMg) : &Boss2MoveAttackPostMg;
 }
 
 void CBoss2::Pain (CBaseEntity *other, float kick, int damage)
@@ -574,14 +574,14 @@ bool CBoss2::CheckAttack ()
 	else
 		return false;
 
-	if (random () < chance)
+	if (frand () < chance)
 	{
 		AttackState = AS_MISSILE;
-		AttackFinished = level.framenum + (2*random())*10;
+		AttackFinished = level.framenum + (2*frand())*10;
 		return true;
 	}
 
-	AttackState = (random() < 0.3) ? AS_SLIDING : AS_STRAIGHT;
+	AttackState = (frand() < 0.3) ? AS_SLIDING : AS_STRAIGHT;
 	return false;
 }
 

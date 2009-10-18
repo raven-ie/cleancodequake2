@@ -1757,6 +1757,17 @@ void CPlayerEntity::EndServerFrame ()
 }
 
 #ifdef CLEANCTF_ENABLED
+void CPlayerEntity::CTFDeadDropFlag ()
+{
+	if (Client.Persistent.Flag)
+	{
+		Client.Persistent.Flag->DropItem (this);
+		Client.Persistent.Inventory.Set (Client.Persistent.Flag, 0);
+		BroadcastPrintf (PRINT_HIGH, "%s lost the %s flag!\n", Client.Persistent.netname, CTFTeamName(Client.Persistent.Flag->team));
+		Client.Persistent.Flag = NULL;
+	}
+}
+
 /*
 ==================
 CTFScoreboardMessage
@@ -2713,8 +2724,8 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 	for (int i = 0; i < 3; i++)
 		Velocity[i] = pm.state.velocity[i]*0.125;
 
-	Vec3Copy (pm.mins, gameEntity->mins);
-	Vec3Copy (pm.maxs, gameEntity->maxs);
+	SetMins (pm.mins);
+	SetMaxs (pm.maxs);
 
 	Client.Respawn.cmd_angles[0] = SHORT2ANGLE(ucmd->angles[0]);
 	Client.Respawn.cmd_angles[1] = SHORT2ANGLE(ucmd->angles[1]);
@@ -3166,7 +3177,7 @@ void CPlayerEntity::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dama
 		if (game.mode & GAME_CTF)
 		{
 			CGrapple::PlayerResetGrapple(this);
-			CTFDeadDropFlag(this);
+			CTFDeadDropFlag();
 		}
 //ZOID
 #endif
@@ -3819,7 +3830,7 @@ void CPlayerEntity::Disconnect ()
 #ifdef CLEANCTF_ENABLED
 //ZOID
 	if (game.mode & GAME_CTF)
-		CTFDeadDropFlag(this);
+		CTFDeadDropFlag();
 //ZOID
 #endif
 

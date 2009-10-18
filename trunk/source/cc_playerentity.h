@@ -380,8 +380,9 @@ public:
 	static void		SaveClientData ();
 	void			SelectSpawnPoint (vec3f &origin, vec3f &angles);
 	CBaseEntity		*SelectCoopSpawnPoint ();
-#ifdef CLEANCTF_ENABLED
 
+#ifdef CLEANCTF_ENABLED
+	void			CTFDeadDropFlag ();
 	CBaseEntity		*SelectCTFSpawnPoint ();
 	void			CTFAssignTeam ();
 	void			CTFAssignSkin (std::string s);

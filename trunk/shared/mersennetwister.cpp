@@ -59,13 +59,40 @@ typedef unsigned __int32 uint32;
 typedef uint32_t uint32;
 #endif
 
-#define N              (624)                 // length of state vector
-#define M              (397)                 // a period parameter
-#define K              (0x9908B0DFU)         // a magic constant
-#define hiBit(u)       ((u) & 0x80000000U)   // mask all but highest   bit of u
-#define loBit(u)       ((u) & 0x00000001U)   // mask all but lowest    bit of u
-#define loBits(u)      ((u) & 0x7FFFFFFFU)   // mask     the highest   bit of u
-#define mixBits(u, v)  (hiBit(u)|loBits(v))  // move hi bit of u to hi bit of v
+#define W				(sizeof(uint32) * 8)  //
+#define R				(31)				  //
+#define U				(11)				  //
+#define S				(7)					  //
+#define B				(0x9D2C5680U)		  // 
+#define N				(624)                 // length of state vector
+#define M				(397)                 // a period parameter
+#define C				(0xEFC60000U)		  //
+#define K				(0x9908B0DFU)         // a magic constant
+#define	T				(15)				  //
+#define L				(18)				  //
+#define hiBit(u)		((u) & 0x80000000U)   // mask all but highest   bit of u
+#define loBit(u)		((u) & 0x00000001U)   // mask all but lowest    bit of u
+#define loBits(u)		((u) & 0x7FFFFFFFU)   // mask     the highest   bit of u
+#define mixBits(u, v)	(hiBit(u)|loBits(v))  // move hi bit of u to hi bit of v
+
+#if (MSVS_VERSION >= VS_9)
+
+#include <random>
+std::tr1::mersenne_twister <uint32, W, N,
+    M, R, K, U, S, B,
+    T, C, L> twister;
+
+void seedMT (uint32 seed)
+{
+	twister.seed ((unsigned long)seed);
+}
+
+uint32 randomMT ()
+{
+	return twister();
+}
+
+#else
 
 static uint32   state[N+1];     // state vector + 1 extra to not violate ANSI C
 static uint32   *next;          // next random value is computed from here
@@ -145,10 +172,10 @@ static uint32 reloadMT(void)
         *p0++ = *pM++ ^ (mixBits(s0, s1) >> 1) ^ (loBit(s1) ? K : 0U);
 
     s1=state[0], *p0 = *pM ^ (mixBits(s0, s1) >> 1) ^ (loBit(s1) ? K : 0U);
-    s1 ^= (s1 >> 11);
-    s1 ^= (s1 <<  7) & 0x9D2C5680U;
-    s1 ^= (s1 << 15) & 0xEFC60000U;
-    return(s1 ^ (s1 >> 18));
+    s1 ^= (s1 >> U);
+    s1 ^= (s1 <<  S) & B;
+    s1 ^= (s1 << T) & C;
+    return(s1 ^ (s1 >> L));
  }
 
 
@@ -160,9 +187,10 @@ uint32 randomMT(void)
 		return(reloadMT());
 
 	y  = *next++;
-	y ^= (y >> 11);
-	y ^= (y <<  7) & 0x9D2C5680U;
-	y ^= (y << 15) & 0xEFC60000U;
+	y ^= (y >> U);
+	y ^= (y <<  S) & B;
+	y ^= (y << T) & C;
 
-	return (y = y ^ (y >> 18));
+	return (y = y ^ (y >> L));
 }
+#endif

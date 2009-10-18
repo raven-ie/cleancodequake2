@@ -407,7 +407,7 @@ void CMedic::Pain(CBaseEntity *other, float kick, int damage)
 		UnDuck ();
 #endif
 
-	float r = random();
+	float r = frand();
 	CurrentMove = (r < 0.5) ? &MedicMovePain1 : &MedicMovePain2;
 	Entity->PlaySound (CHAN_VOICE, (r < 0.5) ? SoundPain1 : SoundPain2);
 }
@@ -548,7 +548,7 @@ CAnim MedicMoveAttackHyperBlaster (FRAME_attack15, FRAME_attack30, MedicFramesAt
 
 void CMedic::ContinueFiring ()
 {
-	if (IsVisible (Entity, Entity->Enemy) && (random() <= 0.95))
+	if (IsVisible (Entity, Entity->Enemy) && (frand() <= 0.95))
 		CurrentMove = &MedicMoveAttackHyperBlaster;
 }
 
@@ -971,7 +971,7 @@ CAnim MedicMoveDuck (FRAME_duck1, FRAME_duck16, MedicFramesDuck, &CMonster::Run)
 #ifndef MONSTER_USE_ROGUE_AI
 void CMedic::Dodge (CBaseEntity *attacker, float eta)
 {
-	if (random() > 0.25)
+	if (frand() > 0.25)
 		return;
 
 	if (!Entity->Enemy)

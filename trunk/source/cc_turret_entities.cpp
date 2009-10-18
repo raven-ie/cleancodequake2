@@ -128,7 +128,7 @@ void CTurretBreach::Fire ()
 	start = start.MultiplyAngles (MoveOrigin.Y, r);
 	start = start.MultiplyAngles (MoveOrigin.Z, u);
 
-	int damage = 100 + random() * 50;
+	int damage = 100 + frand() * 50;
 	CRocket::Spawn (TeamMaster->GetOwner(), start, f, damage, 550 + 50 * skill->Integer(), 150, damage);
 	PlayPositionedSound (start, CHAN_WEAPON, SoundIndex("weapons/rocklf1a.wav"));
 }
@@ -227,9 +227,7 @@ void CTurretBreach::Think ()
 		if (delta.Y < -1 * Speed * 0.1f)
 			delta.Y = -1 * Speed * 0.1f;
 
-		//Vec3Scale (delta, 1, gameEntity->avelocity);
 		AngularVelocity = delta;
-
 		NextThink = level.framenum + FRAMETIME;
 
 		CAvelocityForEachTeamChainCallback (AngularVelocity.Y).Query (this);

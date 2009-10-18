@@ -119,7 +119,7 @@ void CGunner::Fidget ()
 {
 	if (AIFlags & AI_STAND_GROUND)
 		return;
-	if (random() <= 0.05)
+	if (frand() <= 0.05)
 		CurrentMove = &GunnerMoveFidget;
 }
 
@@ -359,7 +359,7 @@ void CGunner::DuckDown ()
 	AIFlags |= AI_DUCKED;
 	if (skill->Integer() >= 2)
 	{
-		if (random() > 0.5)
+		if (frand() > 0.5)
 			Grenade ();
 	}
 
@@ -371,7 +371,7 @@ void CGunner::DuckDown ()
 	AIFlags |= AI_DUCKED;
 	if (skill->Integer() >= 2)
 	{
-		if (random() > 0.5)
+		if (frand() > 0.5)
 			Grenade ();
 	}
 
@@ -428,7 +428,7 @@ void CGunner::Dodge (CBaseEntity *attacker, float eta
 #endif
 					 )
 {
-	if (random() > 0.25)
+	if (frand() > 0.25)
 		return;
 
 	if (!Entity->Enemy)
@@ -690,7 +690,7 @@ void CGunner::Attack()
 	if (Range (Entity, Entity->Enemy) == RANGE_MELEE)
 		CurrentMove = &GunnerMoveAttackChain;
 	else
-		CurrentMove = (random() <= 0.5) ? &GunnerMoveAttackGrenade : &GunnerMoveAttackChain;
+		CurrentMove = (frand() <= 0.5) ? &GunnerMoveAttackGrenade : &GunnerMoveAttackChain;
 #else
 	DoneDodge();
 
@@ -698,14 +698,14 @@ void CGunner::Attack()
 	if (AttackState == AS_BLIND)
 	{
 		// minimum of 2 seconds, plus 0-3, after the shots are done
-		BlindFireDelay += 2.1 + 2.0 + random()*3.0;
+		BlindFireDelay += 2.1 + 2.0 + frand()*3.0;
 
 		// don't shoot at the origin
 		if (BlindFireTarget == vec3fOrigin)
 			return;
 
 		// don't shoot if the dice say not to
-		float r = random();
+		float r = frand();
 		if (BlindFireDelay < 7.5 && (r > 0.4f))
 			return;
 		else if (r > 0.1f)
@@ -718,7 +718,7 @@ void CGunner::Attack()
 		{
 			// if the check passes, go for the attack
 			CurrentMove = &GunnerMoveAttackGrenade;
-			AttackFinished = level.framenum + ((2*random())*10);
+			AttackFinished = level.framenum + ((2*frand())*10);
 		}
 		// turn off blindfire flag
 		AIFlags &= ~AI_MANUAL_STEERING;
@@ -730,7 +730,7 @@ void CGunner::Attack()
 	if (Range (Entity, Entity->Enemy) == RANGE_MELEE)
 		CurrentMove = &GunnerMoveAttackChain;
 	else
-		CurrentMove = (random() <= 0.5 && GrenadeCheck()) ? &GunnerMoveAttackGrenade : &GunnerMoveAttackChain;
+		CurrentMove = (frand() <= 0.5 && GrenadeCheck()) ? &GunnerMoveAttackGrenade : &GunnerMoveAttackChain;
 #endif
 }
 
@@ -741,7 +741,7 @@ void CGunner::FireChain ()
 
 void CGunner::ReFireChain ()
 {
-	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0 && IsVisible (Entity, Entity->Enemy) && random() <= 0.5)
+	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0 && IsVisible (Entity, Entity->Enemy) && frand() <= 0.5)
 	{
 		CurrentMove = &GunnerMoveFireChain;
 		return;

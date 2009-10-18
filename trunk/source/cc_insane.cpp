@@ -428,7 +428,7 @@ CAnim InsaneMoveStruggleCross (FRAME_cross16, FRAME_cross30, InsaneFramesStruggl
 
 void CInsane::Cross ()
 {
-	CurrentMove = (random() < 0.8) ? &InsaneMoveCross : &InsaneMoveStruggleCross;
+	CurrentMove = (frand() < 0.8) ? &InsaneMoveCross : &InsaneMoveStruggleCross;
 }
 
 void CInsane::Walk ()
@@ -442,7 +442,7 @@ void CInsane::Walk ()
 	if (Entity->SpawnFlags & 4)
 		CurrentMove = &InsaneMoveCrawl;
 	else
-		CurrentMove = (random() <= 0.5) ? &InsaneMoveWalkNormal : &InsaneMoveWalkInsane;
+		CurrentMove = (frand() <= 0.5) ? &InsaneMoveWalkNormal : &InsaneMoveWalkInsane;
 }
 
 void CInsane::Run ()
@@ -456,7 +456,7 @@ void CInsane::Run ()
 	if (Entity->SpawnFlags & 4)				// Crawling?
 		CurrentMove = &InsaneMoveRunCrawl;
 	else // Else, mix it up
-		CurrentMove = (random() <= 0.5) ? &InsaneMoveRunNormal : &InsaneMoveRunInsane;
+		CurrentMove = (frand() <= 0.5) ? &InsaneMoveRunNormal : &InsaneMoveRunInsane;
 }
 
 
@@ -511,8 +511,8 @@ void CInsane::CheckDown ()
 {
 	if (Entity->SpawnFlags & 32)				// Always stand
 		return;
-	if (random() < 0.3)
-		CurrentMove = (random() < 0.5) ? &InsaneMoveUpToDown : &InsaneMoveJumpDown;
+	if (frand() < 0.3)
+		CurrentMove = (frand() < 0.5) ? &InsaneMoveUpToDown : &InsaneMoveJumpDown;
 }
 
 void CInsane::CheckUp ()
@@ -520,7 +520,7 @@ void CInsane::CheckUp ()
 	// If Hold_Ground and Crawl are set
 	if ( (Entity->SpawnFlags & 4) && (Entity->SpawnFlags & 16) )
 		return;
-	if (random() < 0.5)
+	if (frand() < 0.5)
 		CurrentMove = &InsaneMoveUpToDown;
 }
 
@@ -535,7 +535,7 @@ void CInsane::Stand ()
 	else if ( (Entity->SpawnFlags & 4) && (Entity->SpawnFlags & 16) )
 		CurrentMove = &InsaneMoveDown;
 	else
-		CurrentMove = (random() < 0.5) ? &InsaneMoveStandNormal : &InsaneMoveStandInsane;
+		CurrentMove = (frand() < 0.5) ? &InsaneMoveStandNormal : &InsaneMoveStandInsane;
 }
 
 void CInsane::Dead ()

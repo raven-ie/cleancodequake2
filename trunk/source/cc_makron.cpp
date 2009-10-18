@@ -263,7 +263,7 @@ void CMakron::Pain (CBaseEntity *other, float kick, int damage)
 			return;
 
 	// Lessen the chance of him going into his pain frames
-	if ((damage <= 25) && (random() < 0.2f))
+	if ((damage <= 25) && (frand() < 0.2f))
 		return;
 
 	PainDebounceTime = level.framenum + 30;
@@ -282,12 +282,12 @@ void CMakron::Pain (CBaseEntity *other, float kick, int damage)
 	}
 	else
 	{
-		if ((damage <= 150) && (random() <= 0.45f))
+		if ((damage <= 150) && (frand() <= 0.45f))
 		{
 			Entity->PlaySound (CHAN_VOICE, SoundPain6, 255, ATTN_NONE);
 			CurrentMove = &MakronMovePain6;
 		}
-		else if (random() <= 0.35f)
+		else if (frand() <= 0.35f)
 		{
 			Entity->PlaySound (CHAN_VOICE, SoundPain6, 255, ATTN_NONE);
 			CurrentMove = &MakronMovePain6;
@@ -754,16 +754,16 @@ bool CMakron::CheckAttack ()
 	else if (skill->Integer() >= 2)
 		chance *= 2;
 
-	if (random () < chance)
+	if (frand () < chance)
 	{
 		AttackState = AS_MISSILE;
-		AttackFinished = level.framenum + ((2*random())*10);
+		AttackFinished = level.framenum + ((2*frand())*10);
 		return true;
 	}
 
 	if (Entity->Flags & FL_FLY)
 	{
-		if (random() < 0.3)
+		if (frand() < 0.3)
 			AttackState = AS_SLIDING;
 		else
 			AttackState = AS_STRAIGHT;
@@ -863,10 +863,10 @@ bool CMakron::CheckAttack ()
 		chance *= 2;
 
 	// PGM - go ahead and shoot every time if it's a info_notnull
-	if ((random () < chance) || (Entity->Enemy->GetSolid() == SOLID_NOT))
+	if ((frand () < chance) || (Entity->Enemy->GetSolid() == SOLID_NOT))
 	{
 		AttackState = AS_MISSILE;
-		AttackFinished = level.framenum + ((2*random())*10);
+		AttackFinished = level.framenum + ((2*frand())*10);
 		return true;
 	}
 
@@ -885,7 +885,7 @@ bool CMakron::CheckAttack ()
 		if ((Entity->Enemy) && (Entity->Enemy->gameEntity->classname) && (!strcmp(Entity->Enemy->gameEntity->classname, "tesla")))
 			strafe_chance = 0;
 
-		if (random() < strafe_chance)
+		if (frand() < strafe_chance)
 			AttackState = AS_SLIDING;
 		else
 			AttackState = AS_STRAIGHT;
@@ -893,7 +893,7 @@ bool CMakron::CheckAttack ()
 // do we want the monsters strafing?
 	else
 	{
-		if (random() < 0.4)
+		if (frand() < 0.4)
 			AttackState = AS_SLIDING;
 		else
 			AttackState = AS_STRAIGHT;

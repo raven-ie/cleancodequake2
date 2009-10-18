@@ -582,12 +582,9 @@ void Cmd_Register ()
 ClientCommand
 =================
 */
-void CC_ClientCommand (edict_t *ent)
+void CC_ClientCommand (CPlayerEntity *ent)
 {
-	if (!ent->client)
-		return;		// not fully in game yet
-
 	InitArg ();
-	Cmd_RunCommand (ArgGets(0), entity_cast<CPlayerEntity>(ent->Entity));
+	Cmd_RunCommand (ArgGets(0), ent);
 	EndArg ();
 }

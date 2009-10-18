@@ -146,14 +146,13 @@ void CItemEntity::Use (CBaseEntity *other, CBaseEntity *activator)
 // Returns a random team member of ent
 CItemEntity *CItemEntity::GetRandomTeamMember (CItemEntity *Master)
 {
-	CBaseEntity *Member;
-	int count;
+	static std::vector<CBaseEntity*>	Team;
+	Team.clear ();
 
-	for (count = 0, Member = Master; Member; Member = Member->TeamChain, count++);
-	int choice = irandom(count);
-	for (count = 0, Member = Master; count < choice, Member; Member = Member->TeamChain, count++);
+	for (CBaseEntity *Member = Master; Member; Member = Member->TeamChain)
+		Team.push_back (Member);
 
-	return entity_cast<CItemEntity>(Member);
+	return entity_cast<CItemEntity>(Team[irandom(Team.size())]);
 }
 
 void CItemEntity::Think ()

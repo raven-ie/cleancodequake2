@@ -138,15 +138,15 @@ void CChaingun::Fire (CPlayerEntity *ent)
 
 	for (int i=0 ; i<3 ; i++)
 	{
-		ent->Client.KickOrigin[i] = crandom() * 0.35;
-		ent->Client.KickAngles[i] = crandom() * 0.7;
+		ent->Client.KickOrigin[i] = crand() * 0.35;
+		ent->Client.KickAngles[i] = crand() * 0.7;
 	}
 
 	for (int i=0 ; i<shots ; i++)
 	{
 		// get start / end positions
 		ent->Client.ViewAngle.ToVectors (&forward, &right, &up);
-		offset.Set (0, 7 + crandom()*4, crandom()*4 + ent->ViewHeight-8);
+		offset.Set (0, 7 + crand()*4, crand()*4 + ent->ViewHeight-8);
 		ent->P_ProjectSource (offset, forward, right, start);
 
 		CBullet::Fire (ent, start, forward, damage, kick, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, MOD_CHAINGUN);

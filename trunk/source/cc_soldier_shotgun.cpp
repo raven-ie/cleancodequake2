@@ -51,7 +51,7 @@ void CSoldierShotgun::Attack ()
 #ifdef MONSTER_USE_ROGUE_AI
 	DoneDodge ();
 
-	float r = random();
+	float r = frand();
 	if ((!(AIFlags & (AI_BLOCKED|AI_STAND_GROUND))) &&
 		(Range(Entity, Entity->Enemy) == RANGE_MID) && 
 		(r < (skill->Integer()*0.05))) // Very low chance for shotty soldier
@@ -59,7 +59,7 @@ void CSoldierShotgun::Attack ()
 	else
 #endif
 	{
-		if (random() < 0.5)
+		if (frand() < 0.5)
 			CurrentMove = &SoldierMoveAttack1;
 		else
 			CurrentMove = &SoldierMoveAttack2;
@@ -96,8 +96,8 @@ void CSoldierShotgun::FireGun (int FlashNumber)
 			dir.ToVectors (&forward, &right, &up);
 
 			end = start.MultiplyAngles (8192, forward);
-			end = end.MultiplyAngles (crandom() * 1000, right);
-			end = end.MultiplyAngles (crandom() * 500, up);
+			end = end.MultiplyAngles (crand() * 1000, right);
+			end = end.MultiplyAngles (crand() * 500, up);
 
 			aim = end - start;
 			aim.Normalize ();

@@ -49,7 +49,7 @@ void CSuperTank::PlayTreadSound ()
 
 void CSuperTank::Search ()
 {
-	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundSearch1 : SoundSearch2);
+	Entity->PlaySound (CHAN_VOICE, (frand() < 0.5) ? SoundSearch1 : SoundSearch2);
 }
 
 //
@@ -450,7 +450,7 @@ CAnim SuperTankMoveEndAttack1 (FRAME_attak1_7, FRAME_attak1_20, SuperTankFramesE
 void CSuperTank::ReAttack1 ()
 {
 	if (IsVisible(Entity, Entity->Enemy))
-		CurrentMove = (random() < 0.9) ? &SuperTankMoveAttack1 : &SuperTankMoveEndAttack1;
+		CurrentMove = (frand() < 0.9) ? &SuperTankMoveAttack1 : &SuperTankMoveEndAttack1;
 	else
 		CurrentMove = &SuperTankMoveEndAttack1;
 }
@@ -464,7 +464,7 @@ void CSuperTank::Pain (CBaseEntity *other, float kick, int damage)
 			return;
 
 	// Lessen the chance of him going into his pain frames
-	if (damage <= 25 && random() < 0.2)
+	if (damage <= 25 && frand() < 0.2)
 		return;
 
 	// Don't go into pain if he's firing his rockets
@@ -558,7 +558,7 @@ void CSuperTank::Rocket ()
 	// don't shoot at feet if they're above me.
 	else
 #endif
-	if(random() < 0.66 || (start.Z < Entity->Enemy->GetAbsMin().Z))
+	if(frand() < 0.66 || (start.Z < Entity->Enemy->GetAbsMin().Z))
 	{
 //		gi.dprintf("normal shot\n");
 		vec = Entity->Enemy->State.GetOrigin();
@@ -659,9 +659,9 @@ void CSuperTank::Attack ()
 		else
 			chance = 0.1f;
 
-		r = random();
+		r = frand();
 
-		BlindFireDelay += 3.2 + 2.0 + random()*3.0;
+		BlindFireDelay += 3.2 + 2.0 + frand()*3.0;
 
 		// don't shoot at the origin
 		if (BlindFireTarget == vec3fOrigin)
@@ -674,7 +674,7 @@ void CSuperTank::Attack ()
 		// turn on manual steering to signal both manual steering and blindfire
 		AIFlags |= AI_MANUAL_STEERING;
 		CurrentMove = &SuperTankMoveAttack2;
-		AttackFinished = level.framenum + 30 + 20*random();
+		AttackFinished = level.framenum + 30 + 20*frand();
 		return;
 	}
 	// pmm
@@ -686,14 +686,14 @@ void CSuperTank::Attack ()
 	if (range <= 160)
 		CurrentMove = &SuperTankMoveAttack1;
 	else // fire rockets more often at distance
-		CurrentMove = (random() < 0.3) ? &SuperTankMoveAttack1 : &SuperTankMoveAttack2;
+		CurrentMove = (frand() < 0.3) ? &SuperTankMoveAttack1 : &SuperTankMoveAttack2;
 #else
 	if (range <= 160)
-		CurrentMove = (random() < 0.3) ? &SuperTankMoveAttack4 : &SuperTankMoveAttack1;
+		CurrentMove = (frand() < 0.3) ? &SuperTankMoveAttack4 : &SuperTankMoveAttack1;
 	else if (range <= 650)
-		CurrentMove = (random() < 0.6) ? &SuperTankMoveAttack4 : &SuperTankMoveAttack1;
+		CurrentMove = (frand() < 0.6) ? &SuperTankMoveAttack4 : &SuperTankMoveAttack1;
 	else
-		CurrentMove = (random() < 0.3) ? &SuperTankMoveAttack1 : &SuperTankMoveAttack2;
+		CurrentMove = (frand() < 0.3) ? &SuperTankMoveAttack1 : &SuperTankMoveAttack2;
 #endif
 }
 
