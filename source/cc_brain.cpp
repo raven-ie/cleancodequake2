@@ -169,7 +169,7 @@ CAnim BrainMoveWalk1 (FRAME_walk101, FRAME_walk111, BrainFramesWalk1);
 #if 0
 void brain_walk2_cycle (edict_t *self)
 {
-	if (random() > 0.1)
+	if (frand() > 0.1)
 		self->monsterinfo.nextframe = FRAME_walk220;
 }
 

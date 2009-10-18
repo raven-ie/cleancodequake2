@@ -193,7 +193,7 @@ Misc functions
 */
 vec3f VelocityForDamage (int damage)
 {
-	return vec3f(100.0f * crandom(), 100.0f * crandom(), 200 + 100 * random()) * (damage < 50) ? 0.7f : 1.2f;
+	return vec3f(100.0f * crand(), 100.0f * crand(), 200 + 100 * frand()) * (damage < 50) ? 0.7f : 1.2f;
 }
 
 void ClipGibVelocity (CPhysicsEntity *ent)
@@ -230,9 +230,9 @@ void CGibEntity::Spawn (CBaseEntity *Owner, MediaIndex gibIndex, int damage, int
 
 	vec3f origin = Owner->GetAbsMin() + size;
 
-	Junk->State.GetOrigin().Set (origin.X + crandom() * size.X,
-							origin.Y + crandom() * size.Y,
-							origin.Z + crandom() * size.Z);
+	Junk->State.GetOrigin().Set (origin.X + crand() * size.X,
+							origin.Y + crand() * size.Y,
+							origin.Z + crand() * size.Z);
 
 	Junk->State.GetModelIndex() = gibIndex;
 	Junk->GetSvFlags() = SVF_DEADMONSTER;
@@ -251,8 +251,8 @@ void CGibEntity::Spawn (CBaseEntity *Owner, MediaIndex gibIndex, int damage, int
 	Junk->Velocity = velocity;
 	ClipGibVelocity (Junk);
 
-	Junk->AngularVelocity.Set (crandom()*600, crandom()*600, crandom()*600);
-	Junk->NextThink = level.framenum + 100 + random()*100;
+	Junk->AngularVelocity.Set (crand()*600, crand()*600, crand()*600);
+	Junk->NextThink = level.framenum + 100 + frand()*100;
 
 	Junk->Link ();
 }

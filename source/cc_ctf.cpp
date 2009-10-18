@@ -165,36 +165,6 @@ Returns entities that have origins within a spherical area
 findradius (origin, radius)
 =================
 */
-static CBaseEntity *loc_findradius (CBaseEntity *from, vec3f org, float rad)
-{
-	edict_t *fromEnt;
-	if (!from)
-		fromEnt = g_edicts;
-	else
-	{
-		fromEnt = from->gameEntity;
-		fromEnt++;
-	}
-	for ( ; fromEnt < &g_edicts[globals.numEdicts]; fromEnt++)
-	{
-		if (!fromEnt->inUse)
-			continue;
-		if (!fromEnt->Entity)
-			continue;
-#if 0
-		if (from->solid == SOLID_NOT)
-			continue;
-#endif
-
-		from = fromEnt->Entity;
-		if ((org - (from->State.GetOrigin() + (from->GetMins() + from->GetMaxs()) * 0.5)).Length() > rad)
-			continue;
-		return from;
-	}
-
-	return NULL;
-}
-
 static void loc_buildboxpoints(vec3f p[8], vec3f org, vec3f mins, vec3f maxs)
 {
 	p[0] = org + mins;
@@ -259,41 +229,6 @@ void CTFInit(void)
 	matchstarttime = QNew (com_gamePool, 0) CCvar("matchstarttime", "20", 0);
 	admin_password = QNew (com_gamePool, 0) CCvar("admin_password", "", 0);
 	warp_list = QNew (com_gamePool, 0) CCvar("warp_list", "q2ctf1 q2ctf2 q2ctf3 q2ctf4 q2ctf5", 0);
-}
-
-/*--------------------------------------------------------------------------*/
-
-char *CTFTeamName(ETeamIndex team)
-{
-	switch (team) {
-	case CTF_TEAM1:
-		return "RED";
-	case CTF_TEAM2:
-		return "BLUE";
-	}
-	return "UKNOWN";
-}
-
-char *CTFOtherTeamName(ETeamIndex team)
-{
-	switch (team) {
-	case CTF_TEAM1:
-		return "BLUE";
-	case CTF_TEAM2:
-		return "RED";
-	}
-	return "UKNOWN";
-}
-
-ETeamIndex CTFOtherTeam(ETeamIndex team)
-{
-	switch (team) {
-	case CTF_TEAM1:
-		return CTF_TEAM2;
-	case CTF_TEAM2:
-		return CTF_TEAM1;
-	}
-	return -1; // invalid value
 }
 
 /*------------------------------------------------------------------------*/
@@ -429,8 +364,8 @@ void CTFFragBonuses(CPlayerEntity *targ, CPlayerEntity *attacker)
 		v1 = (targ->State.GetOrigin() - carrier->State.GetOrigin());
 		v2 = (attacker->State.GetOrigin() - carrier->State.GetOrigin());
 
-		if (Vec3Length(v1) < CTF_ATTACKER_PROTECT_RADIUS ||
-			Vec3Length(v2) < CTF_ATTACKER_PROTECT_RADIUS ||
+		if (v1.Length() < CTF_ATTACKER_PROTECT_RADIUS ||
+			v2.Length() < CTF_ATTACKER_PROTECT_RADIUS ||
 			loc_CanSee(carrier, targ) || loc_CanSee(carrier, attacker))
 		{
 			attacker->Client.Respawn.score += CTF_CARRIER_PROTECT_BONUS;
@@ -495,18 +430,6 @@ void CTFResetFlags(void)
 {
 	CTFResetFlag(CTF_TEAM1);
 	CTFResetFlag(CTF_TEAM2);
-}
-
-// Called from PlayerDie, to drop the flag from a dying player
-void CTFDeadDropFlag(CPlayerEntity *self)
-{
-	if (self->Client.Persistent.Flag)
-	{
-		self->Client.Persistent.Flag->DropItem (self);
-		self->Client.Persistent.Inventory.Set (self->Client.Persistent.Flag, 0);
-		BroadcastPrintf (PRINT_HIGH, "%s lost the %s flag!\n", self->Client.Persistent.netname, CTFTeamName(self->Client.Persistent.Flag->team));
-		self->Client.Persistent.Flag = NULL;
-	}
 }
 
 // called when we enter the intermission
@@ -644,7 +567,6 @@ struct {
 	{ NULL, 0 }
 };
 
-
 static inline void CTFSay_Team_Location(CPlayerEntity *who, char *buf, size_t bufSize)
 {
 	CBaseEntity *hot = NULL;
@@ -659,7 +581,7 @@ static inline void CTFSay_Team_Location(CPlayerEntity *who, char *buf, size_t bu
 	CBaseEntity *what = NULL;
 
 	vec3f origin = who->State.GetOrigin();
-	while ((what = loc_findradius(what, origin, 1024)) != NULL)
+	while ((what = FindRadius<ENT_BASE>(what, origin, 1024, false)) != NULL)
 	{
 		// find what in loc_classnames
 		for (i = 0; loc_names[i].classname; i++)
@@ -739,21 +661,22 @@ static inline void CTFSay_Team_Location(CPlayerEntity *who, char *buf, size_t bu
 	// near or above
 	vec3f v = origin - hot->State.GetOrigin();
 	if (Q_fabs(v.Z) > Q_fabs(v.X) && Q_fabs(v.Z) > Q_fabs(v.Y))
-	{
-		if (v.Z > 0)
-			Q_strcatz(buf, "above ", bufSize);
-		else
-			Q_strcatz(buf, "below ", bufSize);
-	}
+		Q_strcatz(buf, (v.Z > 0) ? "above " : "below ", bufSize);
 	else
 		Q_strcatz(buf, "near ", bufSize);
 
-	if (nearteam == CTF_TEAM1)
+	switch (nearteam)
+	{
+	case CTF_TEAM1:
 		Q_strcatz(buf, "the red ", bufSize);
-	else if (nearteam == CTF_TEAM2)
+		break;
+	case CTF_TEAM2:
 		Q_strcatz(buf, "the blue ", bufSize);
-	else
+		break;
+	default:
 		Q_strcatz(buf, "the ", bufSize);
+		break;
+	}
 
 	Q_strcatz(buf, item->Name, bufSize);
 }
@@ -1087,7 +1010,7 @@ void CTFResetAllPlayers(void)
 			ent->Client.Respawn.MenuState.CloseMenu();
 
 		CGrapple::PlayerResetGrapple(ent);
-		CTFDeadDropFlag(ent);
+		ent->CTFDeadDropFlag();
 		ent->DeadDropTech();
 
 		ent->Client.Respawn.ctf_team = CTF_NOTEAM;
@@ -1434,7 +1357,7 @@ void CTFObserver(CPlayerEntity *ent)
 	}
 
 	CGrapple::PlayerResetGrapple(ent);
-	CTFDeadDropFlag(ent);
+	ent->CTFDeadDropFlag();
 	ent->DeadDropTech();
 
 	ent->NoClip = true;

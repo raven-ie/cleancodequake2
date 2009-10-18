@@ -41,7 +41,7 @@ CMonster (ID)
 
 void CSoldierBase::Idle ()
 {
-	if (random() > 0.8)
+	if (frand() > 0.8)
 		Entity->PlaySound (CHAN_VOICE, SoundIdle, 255, ATTN_IDLE);
 }
 
@@ -139,7 +139,7 @@ CAnim SoldierMoveStand3 (FRAME_stand301, FRAME_stand339, SoldierFramesStand3, Co
 
 void CSoldierBase::Stand ()
 {
-	if ((CurrentMove == &SoldierMoveStand3) || (random() < 0.8))
+	if ((CurrentMove == &SoldierMoveStand3) || (frand() < 0.8))
 		CurrentMove = &SoldierMoveStand1;
 	else
 		CurrentMove = &SoldierMoveStand3;
@@ -152,7 +152,7 @@ void CSoldierBase::Stand ()
 
 void CSoldierBase::Walk1_Random ()
 {
-	if (random() > 0.1)
+	if (frand() > 0.1)
 		NextFrame = FRAME_walk101;
 }
 
@@ -211,7 +211,7 @@ CAnim SoldierMoveWalk2 (FRAME_walk209, FRAME_walk218, SoldierFramesWalk2);
 
 void CSoldierBase::Walk ()
 {
-	if (random() < 0.5)
+	if (frand() < 0.5)
 		CurrentMove = &SoldierMoveWalk1;
 	else
 		CurrentMove = &SoldierMoveWalk2;
@@ -364,7 +364,7 @@ void CSoldierBase::Pain (CBaseEntity *other, float kick, int damage)
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
 
-	float r = random();
+	float r = frand();
 	if (r < 0.33)
 		CurrentMove = &SoldierMovePain1;
 	else if (r < 0.66)
@@ -407,7 +407,7 @@ void CSoldierBase::Attack1_Refire1 ()
 	if (!EnemyVis)
 		return;
 
-	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (Range(Entity, Entity->Enemy) == RANGE_MELEE) )
+	if ( ((skill->Integer() == 3) && (frand() < 0.5)) || (Range(Entity, Entity->Enemy) == RANGE_MELEE) )
 		NextFrame = FRAME_attak102;
 	else
 		NextFrame = FRAME_attak110;
@@ -424,7 +424,7 @@ void CSoldierBase::Attack1_Refire2 ()
 	if (!EnemyVis)
 		return;
 
-	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (Range(Entity, Entity->Enemy) == RANGE_MELEE) )
+	if ( ((skill->Integer() == 3) && (frand() < 0.5)) || (Range(Entity, Entity->Enemy) == RANGE_MELEE) )
 		NextFrame = FRAME_attak102;
 }
 
@@ -463,7 +463,7 @@ void CSoldierBase::Attack2_Refire1 ()
 	if (!EnemyVis)
 		return;
 
-	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (Range(Entity, Entity->Enemy) == RANGE_MELEE) )
+	if ( ((skill->Integer() == 3) && (frand() < 0.5)) || (Range(Entity, Entity->Enemy) == RANGE_MELEE) )
 		NextFrame = FRAME_attak204;
 	else
 		NextFrame = FRAME_attak216;
@@ -480,7 +480,7 @@ void CSoldierBase::Attack2_Refire2 ()
 	if (!EnemyVis)
 		return;
 
-	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (Range(Entity, Entity->Enemy) == RANGE_MELEE) )
+	if ( ((skill->Integer() == 3) && (frand() < 0.5)) || (Range(Entity, Entity->Enemy) == RANGE_MELEE) )
 		NextFrame = FRAME_attak204;
 }
 
@@ -559,7 +559,7 @@ void CSoldierBase::Fire4 ()
 //	if (self->enemy->health <= 0)
 //		return;
 //
-//	if ( ((skill->Integer() == 3) && (random() < 0.5)) || (range(self, self->enemy) == RANGE_MELEE) )
+//	if ( ((skill->Integer() == 3) && (frand() < 0.5)) || (range(self, self->enemy) == RANGE_MELEE) )
 //		self->monsterinfo.nextframe = FRAME_attak402;
 }
 
@@ -598,7 +598,7 @@ void CSoldierBase::Attack6_Refire ()
 	if (!EnemyVis)
 		return;
 
-	if (((skill->Integer() == 3 && (Entity->State.GetSkinNum() < 2)) || ((random() < (0.09*((float)skill->Integer()))))))
+	if (((skill->Integer() == 3 && (Entity->State.GetSkinNum() < 2)) || ((frand() < (0.09*((float)skill->Integer()))))))
 		NextFrame = FRAME_runs03;
 }
 
@@ -621,7 +621,7 @@ void CSoldierBase::Attack6_RefireBlaster ()
 	if (!EnemyVis)
 		return;
 
-	if ((skill->Integer() == 3) || ((random() < (0.25*((float)skill->Integer())))))
+	if ((skill->Integer() == 3) || ((frand() < (0.25*((float)skill->Integer())))))
 		NextFrame = FRAME_runs03;
 	else
 		NextFrame = FRAME_runs14;
@@ -682,12 +682,12 @@ CAnim SoldierMoveAttack6 (FRAME_runs01, FRAME_runs14, SoldierFramesAttack6, Conv
 
 void CSoldierBase::Sight ()
 {
-	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundSight1 : SoundSight2);
+	Entity->PlaySound (CHAN_VOICE, (frand() < 0.5) ? SoundSight1 : SoundSight2);
 
 	if ((skill->Integer() > 0) && (Range(Entity, Entity->Enemy) >= RANGE_NEAR))
 	{
 		// Only do run-shoot off the bat if we're not a shotgun soldier (too cheap)
-		if ((random() > 0.75) && (Entity->State.GetSkinNum() < 2))
+		if ((frand() > 0.75) && (Entity->State.GetSkinNum() < 2))
 			CurrentMove = &SoldierMoveAttack6;
 	}
 }
@@ -717,7 +717,7 @@ CAnim SoldierMoveDuck (FRAME_duck01, FRAME_duck05, SoldierFramesDuck, ConvertDer
 #ifndef MONSTER_USE_ROGUE_AI
 void CSoldierBase::Dodge (CBaseEntity *attacker, float eta)
 {
-	if (random() > 0.25)
+	if (frand() > 0.25)
 		return;
 
 	if (!Entity->Enemy)
@@ -729,7 +729,7 @@ void CSoldierBase::Dodge (CBaseEntity *attacker, float eta)
 	{
 	case 0:
 	case 1:
-		if (random() > 0.33)
+		if (frand() > 0.33)
 			CurrentMove = &SoldierMoveDuck;
 		else
 			CurrentMove = &SoldierMoveAttack3;
@@ -737,7 +737,7 @@ void CSoldierBase::Dodge (CBaseEntity *attacker, float eta)
 	case 2:
 	case 3:
 	default:
-		if (random() > 0.66)
+		if (frand() > 0.66)
 			CurrentMove = &SoldierMoveDuck;
 		else
 			CurrentMove = &SoldierMoveAttack3;
@@ -1101,7 +1101,7 @@ void CSoldierBase::Duck (float eta)
 		return;
 	}
 
-	r = random();
+	r = frand();
 
 	if (r > (skill->Integer() * 0.3))
 	{

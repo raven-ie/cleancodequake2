@@ -351,7 +351,7 @@ void SpawnTech(CBaseItem *item, CBaseEntity *spot)
 	ent->gameEntity->owner = ent->gameEntity;
 
 	vec3f forward;
-	vec3f(0, random()*360, 0).ToVectors(&forward, NULL, NULL);
+	vec3f(0, frand()*360, 0).ToVectors(&forward, NULL, NULL);
 
 	ent->State.GetOrigin() += vec3f(0,0,16);
 	forward *= 100;

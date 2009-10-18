@@ -41,7 +41,7 @@ void CheckDodge (CBaseEntity *self, vec3f &start, vec3f &dir, int speed)
 	// easy mode only ducks one quarter the time
 	if (skill->Integer() == 0)
 	{
-		if (random() > 0.25)
+		if (frand() > 0.25)
 			return;
 	}
 
@@ -152,7 +152,7 @@ void CGrenade::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	{
 		if (SpawnFlags & GRENADE_HAND)
 		{
-			if (random() > 0.5)
+			if (frand() > 0.5)
 				PlaySound (CHAN_VOICE, SoundIndex ("weapons/hgrenb1a.wav"));
 			else
 				PlaySound (CHAN_VOICE, SoundIndex ("weapons/hgrenb2a.wav"));
@@ -185,10 +185,10 @@ void CGrenade::Spawn (CBaseEntity *Spawner, vec3f start, vec3f aimdir, int damag
 	aimdir *= speed;
 
 	Grenade->Velocity = aimdir;
-	Grenade->Velocity = Grenade->Velocity.MultiplyAngles (200 + crandom() * 10.0f, up);
-	Grenade->Velocity = Grenade->Velocity.MultiplyAngles (crandom() * 10.0, right);
+	Grenade->Velocity = Grenade->Velocity.MultiplyAngles (200 + crand() * 10.0f, up);
+	Grenade->Velocity = Grenade->Velocity.MultiplyAngles (crand() * 10.0, right);
 
-	Vec3Set (Grenade->AngularVelocity, 300, 300, 300);
+	Grenade->AngularVelocity.Set (300);
 	Grenade->State.GetEffects() = EF_GRENADE;
 	Grenade->State.GetModelIndex() = (!handNade) ? ModelIndex ("models/objects/grenade/tris.md2") : ModelIndex ("models/objects/grenade2/tris.md2");
 	Grenade->SetOwner(Spawner);
@@ -895,7 +895,7 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 			// do complex tracing.
 
 			// Keep going
-			Vec3MA (Trace.endPos, 0.1f, aimdir, from);
+			from = Trace.EndPos.MultiplyAngles (0.1f, aimdir);
 
 			// Water hit effect
 			DoWaterHit (&Trace);
@@ -949,8 +949,8 @@ bool CBullet::ModifyEnd (vec3f &aimDir, vec3f &start, vec3f &end)
 	vec3f forward, right, up;
 	dir.ToVectors (&forward, &right, &up);
 
-	float r = crandom()*hSpread;
-	float u = crandom()*vSpread;
+	float r = crand()*hSpread;
+	float u = crand()*vSpread;
 	end = start.MultiplyAngles (8192, forward);
 	end = end.MultiplyAngles (r, right);
 	end = end.MultiplyAngles (u, up);
@@ -1615,7 +1615,7 @@ public:
 		Offset = State.GetOrigin() - Attached->State.GetOrigin();
 
 		NextThink = level.framenum + FRAMETIME;
-		NextZapTime = level.framenum + FRAMETIME + (int)(random() * 4);
+		NextZapTime = level.framenum + FRAMETIME + (int)(frand() * 4);
 		NumZaps = 0;
 
 		GetSolid() = SOLID_NOT;
@@ -1777,7 +1777,7 @@ void CTazerProjectile::Think ()
 
 	if (NextZapTime < level.framenum)
 	{
-		NextZapTime = level.framenum + FRAMETIME + (int)(random() * 8) + (int)(random() * 8);
+		NextZapTime = level.framenum + FRAMETIME + (int)(frand() * 8) + (int)(frand() * 8);
 		NumZaps++;
 
 		Attached->PlaySound (CHAN_AUTO, SoundIndex("world/spark3.wav"));

@@ -359,8 +359,10 @@ void ClientCommand (edict_t *ent)
 #ifdef CC_USE_EXCEPTION_HANDLER
 CC_EXCEPTION_HANDLER_BEGIN
 #endif
+	if (!ent->client || !ent->Entity)
+		return;		// not fully in game yet
 
-	CC_ClientCommand (ent);
+	CC_ClientCommand (entity_cast<CPlayerEntity>(ent->Entity));
 
 #ifdef CC_USE_EXCEPTION_HANDLER
 CC_EXCEPTION_HANDLER_END

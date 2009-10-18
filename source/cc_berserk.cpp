@@ -97,7 +97,7 @@ void CBerserker::Fidget ()
 {
 	if (AIFlags & AI_STAND_GROUND)
 		return;
-	if (random() > 0.15)
+	if (frand() > 0.15)
 		return;
 
 	CurrentMove = &BerserkMoveStandFidget;
@@ -318,7 +318,7 @@ void CBerserker::Pain (CBaseEntity *other, float kick, int damage)
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
 
-	CurrentMove = ((damage < 20) || (random() < 0.5)) ? &BerserkMovePain1 : &BerserkMovePain2;
+	CurrentMove = ((damage < 20) || (frand() < 0.5)) ? &BerserkMovePain1 : &BerserkMovePain2;
 }
 
 void CBerserker::Dead ()

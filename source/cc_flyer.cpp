@@ -433,7 +433,7 @@ CAnim FlyerMoveLoopMelee (FRAME_attak107, FRAME_attak118, FlyerFramesLoopMelee, 
 
 void CFlyer::LoopMelee ()
 {
-/*	if (random() <= 0.5)	
+/*	if (frand() <= 0.5)	
 		self->monsterinfo.currentmove = &flyer_move_attack1;
 	else */
 	CurrentMove = &FlyerMoveLoopMelee;
@@ -441,7 +441,7 @@ void CFlyer::LoopMelee ()
 
 void CFlyer::Attack ()
 {
-/*	if (random() <= 0.5)	
+/*	if (frand() <= 0.5)	
 		self->monsterinfo.currentmove = &flyer_move_attack1;
 	else */
 	CurrentMove = &FlyerMoveAttack2;
@@ -455,7 +455,7 @@ void CFlyer::Melee ()
 void CFlyer::CheckMelee ()
 {
 	if (Range (Entity, Entity->Enemy) == RANGE_MELEE)
-		CurrentMove = (random() <= 0.8) ? &FlyerMoveLoopMelee : &FlyerMoveEndMelee;
+		CurrentMove = (frand() <= 0.8) ? &FlyerMoveLoopMelee : &FlyerMoveEndMelee;
 	else
 		CurrentMove = &FlyerMoveEndMelee;
 }
@@ -539,7 +539,7 @@ void CFlyer::AI_Roll(float Dist)
 
 void CFlyer::ChooseAfterDodge ()
 {
-	CurrentMove = (random() < 0.5) ? &FlyerMoveRun : &FlyerMoveAttack2;
+	CurrentMove = (frand() < 0.5) ? &FlyerMoveRun : &FlyerMoveAttack2;
 }
 
 #ifndef MONSTER_USE_ROGUE_AI
@@ -548,18 +548,18 @@ void CFlyer::Dodge (CBaseEntity *attacker, float eta)
 void CFlyer::Duck (float eta)
 #endif
 {
-	if (random() > (0.35f + ((skill->Float()+1) / 10)) )
+	if (frand() > (0.35f + ((skill->Float()+1) / 10)) )
 		return;
 	
 	// Don't dodge if we're attacking or dodging already
-	if ((CurrentMove == &FlyerMoveRollLeft || CurrentMove == &FlyerMoveRollRight) || (CurrentMove == &FlyerMoveAttack2 && (random() < 0.25)))
+	if ((CurrentMove == &FlyerMoveRollLeft || CurrentMove == &FlyerMoveRollRight) || (CurrentMove == &FlyerMoveAttack2 && (frand() < 0.25)))
 		return;
 
 	CTrace trace;
 
 	vec3f right;
 	Entity->State.GetAngles().ToVectors (NULL, &right, NULL);
-	bool WantsLeft = (random() < 0.5);
+	bool WantsLeft = (frand() < 0.5);
 
 	// Approximate travel distance.
 	// First, check if we can roll right.

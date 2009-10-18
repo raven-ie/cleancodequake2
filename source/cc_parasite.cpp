@@ -107,7 +107,7 @@ void CParasite::DoFidget ()
 
 void CParasite::ReFidget ()
 {
-	CurrentMove = (random() <= 0.8) ? &ParasiteMoveFidget : &ParasiteMoveEndFidget;
+	CurrentMove = (frand() <= 0.8) ? &ParasiteMoveFidget : &ParasiteMoveEndFidget;
 }
 
 void CParasite::Idle ()
@@ -252,7 +252,7 @@ void CParasite::Pain (CBaseEntity *other, float kick, int damage)
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
 
-	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundPain1 : SoundPain2);
+	Entity->PlaySound (CHAN_VOICE, (frand() < 0.5) ? SoundPain1 : SoundPain2);
 
 	CurrentMove = &ParasiteMovePain1;
 }
@@ -398,7 +398,7 @@ Break Stuff Ends
 
 void CParasite::Attack ()
 {
-//	if (random() <= 0.2)
+//	if (frand() <= 0.2)
 //		self->monsterinfo.currentmove = &parasite_move_break;
 //	else
 	CurrentMove = &ParasiteMoveDrain;

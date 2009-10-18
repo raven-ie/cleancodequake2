@@ -191,7 +191,7 @@ CAnim FloaterMoveStand2 (FRAME_stand201, FRAME_stand252, FloaterFramesStand2);
 
 void CFloater::Stand ()
 {
-	CurrentMove = (random() <= 0.5) ? &FloaterMoveStand1 : &FloaterMoveStand2;
+	CurrentMove = (frand() <= 0.5) ? &FloaterMoveStand1 : &FloaterMoveStand2;
 }
 
 CFrame FloaterFramesAttack1 [] =
@@ -505,14 +505,14 @@ void CFloater::Attack()
 	// 75% chance in hard
 	// 86.67% chance in nightmare
 
-	if (random() > chance)
+	if (frand() > chance)
 	{
 		AttackState = AS_STRAIGHT;
 		CurrentMove = &FloaterMoveAttack1;
 	}
 	else // circle strafe
 	{
-		if (random () <= 0.5) // switch directions
+		if (frand () <= 0.5) // switch directions
 			Lefty = !Lefty;
 		AttackState = AS_SLIDING;
 		CurrentMove = &FloaterMoveAttack1a;
@@ -522,7 +522,7 @@ void CFloater::Attack()
 
 void CFloater::Melee ()
 {
-	CurrentMove = (random() < 0.5) ? &FloaterMoveAttack3 : &FloaterMoveAttack2;
+	CurrentMove = (frand() < 0.5) ? &FloaterMoveAttack3 : &FloaterMoveAttack2;
 }
 
 void CFloater::Pain (CBaseEntity *other, float kick, int damage)
@@ -537,7 +537,7 @@ void CFloater::Pain (CBaseEntity *other, float kick, int damage)
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
 
-	bool n = (random() < 0.5);
+	bool n = (frand() < 0.5);
 	Entity->PlaySound (CHAN_VOICE, n ? SoundPain1 : SoundPain2);
 	CurrentMove = n ? &FloaterMovePain1 : &FloaterMovePain2;
 }
@@ -575,7 +575,7 @@ void CFloater::Spawn ()
 
 	Entity->Link ();
 
-	CurrentMove = (random() <= 0.5) ? &FloaterMoveStand1 : &FloaterMoveStand2;	
+	CurrentMove = (frand() <= 0.5) ? &FloaterMoveStand1 : &FloaterMoveStand2;	
 
 	FlyMonsterStart ();
 }

@@ -63,10 +63,10 @@ void CSoldierLight::Attack ()
 		else
 			chance = 0.1f;
 
-		r = random();
+		r = frand();
 
 		// minimum of 2 seconds, plus 0-3, after the shots are done
-		BlindFireDelay += 2.1 + 2.0 + random()*3.0;
+		BlindFireDelay += 2.1 + 2.0 + frand()*3.0;
 
 		// don't shoot at the origin
 		if (BlindFireTarget == vec3fOrigin)
@@ -79,12 +79,12 @@ void CSoldierLight::Attack ()
 		// turn on manual steering to signal both manual steering and blindfire
 		AIFlags |= AI_MANUAL_STEERING;
 		CurrentMove = &SoldierMoveAttack1;
-		AttackFinished = level.framenum + ((1.5 + random()) * 10);
+		AttackFinished = level.framenum + ((1.5 + frand()) * 10);
 		return;
 	}
 	// pmm
 
-	float r = random();
+	float r = frand();
 	if ((!(AIFlags & (AI_BLOCKED|AI_STAND_GROUND))) &&
 		(Range(Entity, Entity->Enemy) >= RANGE_NEAR) && 
 		(r < (skill->Integer()*0.25)))
@@ -92,7 +92,7 @@ void CSoldierLight::Attack ()
 	else
 #endif
 	{
-		if (random() < 0.5)
+		if (frand() < 0.5)
 			CurrentMove = &SoldierMoveAttack1;
 		else
 			CurrentMove = &SoldierMoveAttack2;
@@ -129,8 +129,8 @@ void CSoldierLight::FireGun (int FlashNumber)
 			dir.ToVectors (&forward, &right, &up);
 
 			end = start.MultiplyAngles (8192, forward);
-			end = end.MultiplyAngles (crandom() * 1000, right);
-			end = end.MultiplyAngles (crandom() * 500, up);
+			end = end.MultiplyAngles (crand() * 1000, right);
+			end = end.MultiplyAngles (crand() * 500, up);
 
 			aim = end - start;
 			aim.Normalize ();

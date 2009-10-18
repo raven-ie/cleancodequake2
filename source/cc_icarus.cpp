@@ -49,7 +49,7 @@ void CIcarus::Sight ()
 
 void CIcarus::Search ()
 {
-	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundSearch1 : SoundSearch2);
+	Entity->PlaySound (CHAN_VOICE, (frand() < 0.5) ? SoundSearch1 : SoundSearch2);
 }
 
 CFrame HoverFramesStand [] =
@@ -437,7 +437,7 @@ CAnim HoverMoveEndAttack2 (FRAME_attak107, FRAME_attak108, HoverFramesEndAttack2
 
 void CIcarus::ReAttack ()
 {
-	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0 && IsVisible (Entity, Entity->Enemy) && random() <= 0.6)
+	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0 && IsVisible (Entity, Entity->Enemy) && frand() <= 0.6)
 	{
 #ifdef MONSTER_USE_ROGUE_AI
 		CurrentMove = (AttackState == AS_SLIDING) ? &HoverMoveAttack2 : &HoverMoveAttack1;
@@ -495,14 +495,14 @@ void CIcarus::Attack ()
 	else
 		chance = 1.0f - (0.5f/skill->Float());
 
-	if (random() > chance)
+	if (frand() > chance)
 	{
 		CurrentMove = &HoverMoveStartAttack;
 		AttackState = AS_STRAIGHT;
 	}
 	else // circle strafe
 	{
-		if (random () <= 0.5) // switch directions
+		if (frand () <= 0.5) // switch directions
 			Lefty = !Lefty;
 		CurrentMove = &HoverMoveStartAttack2;
 		AttackState = AS_SLIDING;
@@ -532,7 +532,7 @@ void CIcarus::Pain (CBaseEntity *other, float kick, int damage)
 
 	if (damage <= 25)
 	{
-		if (random() < 0.5)
+		if (frand() < 0.5)
 		{
 			Entity->PlaySound (CHAN_VOICE, SoundPain1);
 			CurrentMove = &HoverMovePain3;
@@ -550,7 +550,7 @@ void CIcarus::Pain (CBaseEntity *other, float kick, int damage)
 		CurrentMove = &HoverMovePain1;
 #else
 		//PGM pain sequence is WAY too long
-		if (random() < (0.45 - (0.1 * skill->Float())))
+		if (frand() < (0.45 - (0.1 * skill->Float())))
 		{
 			Entity->PlaySound (CHAN_VOICE, SoundPain1);
 			CurrentMove = &HoverMovePain1;
@@ -604,7 +604,7 @@ void CIcarus::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int damage, ve
 
 	Entity->PhysicsType = PHYSICS_TOSS;
 // regular death
-	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundDeath1 : SoundDeath2);
+	Entity->PlaySound (CHAN_VOICE, (frand() < 0.5) ? SoundDeath1 : SoundDeath2);
 	Entity->DeadFlag = true;
 	Entity->CanTakeDamage = true;
 	CurrentMove = &HoverMoveDeath1;

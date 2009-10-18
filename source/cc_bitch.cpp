@@ -44,7 +44,7 @@ CMonster(ID)
 
 void CMaiden::Moan ()
 {
-	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundIdle1 : SoundIdle2, 255, ATTN_IDLE);
+	Entity->PlaySound (CHAN_VOICE, (frand() < 0.5) ? SoundIdle1 : SoundIdle2, 255, ATTN_IDLE);
 }
 
 CFrame ChickFramesFidget [] =
@@ -86,7 +86,7 @@ void CMaiden::Idle ()
 {
 	if (AIFlags & AI_STAND_GROUND)
 		return;
-	if (random() <= 0.3)
+	if (frand() <= 0.3)
 		CurrentMove = &ChickMoveFidget;
 }
 
@@ -526,7 +526,7 @@ void CMaiden::SideStep ()
 #else
 void CMaiden::Dodge (CBaseEntity *attacker, float eta)
 {
-	if (random() > 0.25)
+	if (frand() > 0.25)
 		return;
 
 	if (!Entity->Enemy)
@@ -562,7 +562,7 @@ void CMaiden::Rocket ()
 	}
 	// pmm
 	// don't shoot at feet if they're above where i'm shooting from.
-	else if(random() < 0.33 || (start[2] < Entity->Enemy->GetAbsMin().Z))
+	else if(frand() < 0.33 || (start[2] < Entity->Enemy->GetAbsMin().Z))
 	{
 		vec = target;
 		vec.Z += Entity->Enemy->ViewHeight;
@@ -577,7 +577,7 @@ void CMaiden::Rocket ()
 
 	// Lead target  (not when blindfiring)
 	// 20, 35, 50, 65 chance of leading
-	if((!blindfire) && ((random() < (0.2 + ((3 - skill->Integer()) * 0.15)))))
+	if((!blindfire) && ((frand() < (0.2 + ((3 - skill->Integer()) * 0.15)))))
 	{
 		vec = vec.MultiplyAngles (dir.Length() / rocketSpeed, entity_cast<CPhysicsEntity>(Entity->Enemy)->Velocity);
 		dir = vec - start;
@@ -656,7 +656,7 @@ void CMaiden::ReRocket()
 	{
 		if (Range (Entity, Entity->Enemy) > RANGE_MELEE &&
 			IsVisible (Entity, Entity->Enemy) &&
-			(random() <= (0.6 + (0.05*skill->Float()))))
+			(frand() <= (0.6 + (0.05*skill->Float()))))
 		{
 			CurrentMove = &ChickMoveAttack1;
 			return;
@@ -695,7 +695,7 @@ CAnim ChickMoveEndSlash (FRAME_attak213, FRAME_attak216, ChickFramesEndSlash, Co
 
 void CMaiden::ReSlash()
 {
-	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0 && (Range (Entity, Entity->Enemy) == RANGE_MELEE) && (random() <= 0.9))
+	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0 && (Range (Entity, Entity->Enemy) == RANGE_MELEE) && (frand() <= 0.9))
 		CurrentMove = &ChickMoveSlash;
 	else
 		CurrentMove = &ChickMoveEndSlash;
@@ -728,14 +728,14 @@ void CMaiden::Attack()
 	if (AttackState == AS_BLIND)
 	{
 		// minimum of 2 seconds, plus 0-3, after the shots are done
-		BlindFireDelay += 2.0 + (4.5 * random());
+		BlindFireDelay += 2.0 + (4.5 * frand());
 
 		// don't shoot at the origin
 		if (BlindFireTarget == vec3fOrigin)
 			return;
 
 		// don't shoot if the dice say not to
-		float r = random();
+		float r = frand();
 		if (BlindFireDelay < 7.5f && (r > 0.4))
 			return;
 		else if (r > 0.1)
@@ -744,7 +744,7 @@ void CMaiden::Attack()
 		// turn on manual steering to signal both manual steering and blindfire
 		AIFlags |= AI_MANUAL_STEERING;
 		CurrentMove = &ChickMoveStartAttack1;
-		AttackFinished = level.framenum + ((2*random())*10);
+		AttackFinished = level.framenum + ((2*frand())*10);
 		return;
 	}
 	// pmm

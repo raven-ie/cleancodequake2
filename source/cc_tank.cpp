@@ -275,7 +275,7 @@ void CTank::Pain (CBaseEntity *other, float kick, int damage)
 	if (level.framenum < PainDebounceTime)
 			return;
 
-	if (damage <= 30 && random() > 0.2)
+	if (damage <= 30 && frand() > 0.2)
 		return;
 	
 	// If hard or nightmare, don't go into pain while attacking
@@ -379,7 +379,7 @@ void CTank::Rocket ()
 		vec = target;
 		dir = vec - start;
 	}
-	else if(random() < 0.66 || (start[2] < Entity->Enemy->GetAbsMin().Z))
+	else if(frand() < 0.66 || (start[2] < Entity->Enemy->GetAbsMin().Z))
 	{
 		vec = Entity->Enemy->State.GetOrigin();
 		vec.Z += Entity->Enemy->ViewHeight;
@@ -392,7 +392,7 @@ void CTank::Rocket ()
 		dir = vec - start;
 	}
 
-	if (!blindfire && ((random() < (0.2 + ((3 - skill->Integer()) * 0.15)))))
+	if (!blindfire && ((frand() < (0.2 + ((3 - skill->Integer()) * 0.15)))))
 	{
 		vec = vec.MultiplyAngles (dir.Length() / rocketSpeed, entity_cast<CPhysicsEntity>(Entity->Enemy)->Velocity);
 		dir = vec - start;
@@ -539,7 +539,7 @@ CAnim TankMoveAttackPostBlast (FRAME_attak117, FRAME_attak122, TankFramesAttackP
 
 void CTank::ReAttackBlaster ()
 {
-	if (skill->Integer() >= 2 && IsVisible (Entity, Entity->Enemy) && entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0 && random() <= 0.6)
+	if (skill->Integer() >= 2 && IsVisible (Entity, Entity->Enemy) && entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0 && frand() <= 0.6)
 	{
 		CurrentMove = &TankMoveReAttackBlast;
 		return;
@@ -716,7 +716,7 @@ void CTank::ReFireRocket ()
 #endif
 
 	// Only on hard or nightmare
-	if ( skill->Integer() >= 2 && entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0 && IsVisible(Entity, Entity->Enemy) && random() <= 0.4)
+	if ( skill->Integer() >= 2 && entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0 && IsVisible(Entity, Entity->Enemy) && frand() <= 0.4)
 	{
 		CurrentMove = &TankMoveAttackFireRocket;
 		return;
@@ -746,9 +746,9 @@ void CTank::Attack ()
 	if (AttackState == AS_BLIND)
 	{
 		// setup shot probabilities
-		float r = random();
+		float r = frand();
 
-		BlindFireDelay += 3.2 + 2.0 + random()*3.0;
+		BlindFireDelay += 3.2 + 2.0 + frand()*3.0;
 
 		// don't shoot at the origin
 		if (BlindFireTarget == vec3fOrigin)
@@ -763,7 +763,7 @@ void CTank::Attack ()
 		// turn on manual steering to signal both manual steering and blindfire
 		AIFlags |= AI_MANUAL_STEERING;
 		CurrentMove = &TankMoveAttackFireRocket;
-		AttackFinished = level.framenum + 30 + ((2*random())*10);
+		AttackFinished = level.framenum + 30 + ((2*frand())*10);
 		PainDebounceTime = level.framenum + 50;	// no pain for a while
 		return;
 	}
@@ -771,7 +771,7 @@ void CTank::Attack ()
 #endif
 
 	float range = (Entity->Enemy->State.GetOrigin() - Entity->State.GetOrigin()).Length();
-	float r = random();
+	float r = frand();
 
 	if (range <= 125)
 	{

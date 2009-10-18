@@ -83,8 +83,8 @@ void CSoldierMachinegun::FireGun (int FlashNumber)
 			dir.ToVectors (&forward, &right, &up);
 
 			end = start.MultiplyAngles (8192, forward);
-			end = end.MultiplyAngles (crandom() * 1000, right);
-			end = end.MultiplyAngles (crandom() * 500, up);
+			end = end.MultiplyAngles (crand() * 1000, right);
+			end = end.MultiplyAngles (crand() * 500, up);
 
 			aim = end - start;
 			aim.Normalize ();

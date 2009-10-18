@@ -1279,8 +1279,8 @@ public:
 			CPlayerEntity *Player = entity_cast<CPlayerEntity>(Entity);
 
 			Player->GroundEntity = NULL;
-			Player->Velocity.X += crandom()* 150;
-			Player->Velocity.Y += crandom()* 150;
+			Player->Velocity.X += crand()* 150;
+			Player->Velocity.Y += crand()* 150;
 			Player->Velocity.Z = Speed * (100.0 / Player->Mass);
 		}
 

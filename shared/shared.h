@@ -144,6 +144,16 @@ inline float crand ()
 	return ((int)randomMT() - 0x7FFFFFFF) * 0.000000000465661287307739257812f;
 }
 
+inline int irandom (const int h)
+{
+	return (int)(frand() * h);
+}
+
+inline int icrandom (const int h)
+{
+	return (int)(crand() * h);
+}
+
 /*
 ==============================================================================
 

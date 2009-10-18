@@ -255,11 +255,6 @@ extern	edict_t			*g_edicts;
 #define LLOFS(x) (int)&(((level_locals_t *)0)->x)
 #define CLOFS(x) (int)&(((CClient *)0)->x)
 
-#define irandom(x)	((int)(frand()*(x)))
-#define icrandom(x)	((int)(crand()*(x)))
-#define random()	(frand())
-#define crandom()	(crand())
-
 #define world	(&g_edicts[0])
 
 // Spawnflags
@@ -459,18 +454,18 @@ struct edict_t
 void	G_ProjectSource (const vec3f &point, const vec3f &distance, const vec3f &forward, const vec3f &right, vec3f &result);
 
 // Changed to int, rarely used as a float..
-CBaseEntity *FindRadius (CBaseEntity *From, vec3f &org, int Radius, uint32 EntityFlags);
+CBaseEntity *FindRadius (CBaseEntity *From, vec3f &org, int Radius, uint32 EntityFlags, bool CheckNonSolid);
 
 template <class ReturnType, uint32 EntityFlags>
-ReturnType *FindRadius (CBaseEntity *From, vec3f &org, int Radius)
+ReturnType *FindRadius (CBaseEntity *From, vec3f &org, int Radius, bool CheckNonSolid = true)
 {
-	return entity_cast<ReturnType>(FindRadius (From, org, Radius, EntityFlags));
+	return entity_cast<ReturnType>(FindRadius (From, org, Radius, EntityFlags, CheckNonSolid));
 }
 
 template <uint32 EntityFlags>
-inline CBaseEntity *FindRadius (CBaseEntity *From, vec3f &org, int Radius)
+inline CBaseEntity *FindRadius (CBaseEntity *From, vec3f &org, int Radius, bool CheckNonSolid = true)
 {
-	return FindRadius (From, org, Radius, EntityFlags);
+	return FindRadius (From, org, Radius, EntityFlags, CheckNonSolid);
 }
 
 _CC_INSECURE_DEPRECATE (CreateEntityFromClassname)

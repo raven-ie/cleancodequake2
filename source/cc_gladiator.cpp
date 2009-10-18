@@ -249,7 +249,7 @@ void CGladiator::Pain (CBaseEntity *other, float kick, int damage)
 
 	PainDebounceTime = level.framenum + 30;
 
-	Entity->PlaySound (CHAN_VOICE, (random() < 0.5) ? SoundPain1 : SoundPain2);
+	Entity->PlaySound (CHAN_VOICE, (frand() < 0.5) ? SoundPain1 : SoundPain2);
 	if (skill->Integer() == 3)
 		return;		// no pain anims in nightmare
 

@@ -2804,7 +2804,7 @@ void CFuncExplosive::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dam
 		if (count > 8)
 			count = 8;
 		while(count--)
-			ThrowDebris (gameEntity, "models/objects/debris1/tris.md2", 1, vec3f (origin + (crandom() * size)));
+			ThrowDebris (gameEntity, "models/objects/debris1/tris.md2", 1, vec3f (origin + (crand() * size)));
 	}
 
 	// small chunks
@@ -2812,7 +2812,7 @@ void CFuncExplosive::Die (CBaseEntity *inflictor, CBaseEntity *attacker, int dam
 	if (count > 16)
 		count = 16;
 	while(count--)
-		ThrowDebris (gameEntity, "models/objects/debris2/tris.md2", 2, vec3f (origin + (crandom() * size)));*/
+		ThrowDebris (gameEntity, "models/objects/debris2/tris.md2", 2, vec3f (origin + (crand() * size)));*/
 
 	UseTargets (attacker, Message);
 

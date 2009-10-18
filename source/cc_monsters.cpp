@@ -494,9 +494,9 @@ void CMonsterEntity::ThrowHead (MediaIndex gibIndex, int damage, int type)
 	
 	Velocity = Velocity.MultiplyAngles (vscale, VelocityForDamage (damage));
 	ClipGibVelocity (this);
-	AngularVelocity.Y = crandom()*600;
+	AngularVelocity.Y = crand()*600;
 
-	NextThink = level.framenum + 100 + random()*100;
+	NextThink = level.framenum + 100 + frand()*100;
 
 	Link();
 }
@@ -1458,16 +1458,16 @@ bool CMonster::CheckAttack ()
 	else if (skill->Integer() >= 2)
 		chance *= 2;
 
-	if (random () < chance)
+	if (frand () < chance)
 	{
 		AttackState = AS_MISSILE;
-		AttackFinished = level.framenum + ((2*random())*10);
+		AttackFinished = level.framenum + ((2*frand())*10);
 		return true;
 	}
 
 	if (Entity->Flags & FL_FLY)
 	{
-		if (random() < 0.3)
+		if (frand() < 0.3)
 			AttackState = AS_SLIDING;
 		else
 			AttackState = AS_STRAIGHT;
@@ -1570,10 +1570,10 @@ bool CMonster::CheckAttack ()
 		chance *= 2;
 
 	// PGM - go ahead and shoot every time if it's a info_notnull
-	if ((random () < chance) || (Entity->Enemy->GetSolid() == SOLID_NOT))
+	if ((frand () < chance) || (Entity->Enemy->GetSolid() == SOLID_NOT))
 	{
 		AttackState = AS_MISSILE;
-		AttackFinished = level.framenum + ((2*random())*10);
+		AttackFinished = level.framenum + ((2*frand())*10);
 		return true;
 	}
 
@@ -1592,7 +1592,7 @@ bool CMonster::CheckAttack ()
 		if ((Entity->Enemy) && (Entity->Enemy->gameEntity->classname) && (!strcmp(Entity->Enemy->gameEntity->classname, "tesla")))
 			strafe_chance = 0;
 
-		if (random() < strafe_chance)
+		if (frand() < strafe_chance)
 			AttackState = AS_SLIDING;
 		else
 			AttackState = AS_STRAIGHT;
@@ -1600,7 +1600,7 @@ bool CMonster::CheckAttack ()
 // do we want the monsters strafing?
 	else
 	{
-		if (random() < 0.4)
+		if (frand() < 0.4)
 			AttackState = AS_SLIDING;
 		else
 			AttackState = AS_STRAIGHT;
@@ -2655,10 +2655,10 @@ void CMonster::AI_Stand (float Dist)
 		if (IdleTime)
 		{
 			Idle ();
-			IdleTime = level.framenum + 150 + (random() * 150);
+			IdleTime = level.framenum + 150 + (frand() * 150);
 		}
 		else
-			IdleTime = level.framenum + (random() * 150);
+			IdleTime = level.framenum + (frand() * 150);
 	}
 #else
 	if (Dist)
@@ -2745,11 +2745,11 @@ void CMonster::AI_Stand (float Dist)
 		if (IdleTime)
 		{
 			Idle ();
-			IdleTime = level.framenum + 150 + random() * 150;
+			IdleTime = level.framenum + 150 + frand() * 150;
 		}
 		else
 		{
-			IdleTime = level.framenum + random() * 150;
+			IdleTime = level.framenum + frand() * 150;
 		}
 	}
 #endif
@@ -2856,10 +2856,10 @@ void CMonster::AI_Walk(float Dist)
 		if (IdleTime)
 		{
 			Search ();
-			IdleTime = level.framenum + 150 + (random() * 150);
+			IdleTime = level.framenum + 150 + (frand() * 150);
 		}
 		else
-			IdleTime = level.framenum + (random() * 150);
+			IdleTime = level.framenum + (frand() * 150);
 	}
 }
 
@@ -3197,7 +3197,7 @@ void CMonster::WorldEffects()
 		{
 			if (Entity->gameEntity->watertype & CONTENTS_LAVA)
 			{
-				if (random() <= 0.5)
+				if (frand() <= 0.5)
 					Entity->PlaySound (CHAN_BODY, SoundIndex("player/lava1.wav"));
 				else
 					Entity->PlaySound (CHAN_BODY, SoundIndex("player/lava2.wav"));
@@ -3560,11 +3560,11 @@ void CMonster::CheckFlies ()
 	if (Entity->gameEntity->waterlevel)
 		return;
 
-	if (random() > 0.5)
+	if (frand() > 0.5)
 		return;
 
 	Think = &CMonster::FliesOn;
-	Entity->NextThink = level.framenum + ((5 + 10 * random()) * 10);
+	Entity->NextThink = level.framenum + ((5 + 10 * frand()) * 10);
 }
 
 uint32 LastID = 0;
@@ -3586,7 +3586,7 @@ void CMonster::SideStep ()
 
 void CMonster::Dodge (CBaseEntity *attacker, float eta, CTrace *tr)
 {
-	float	r = random();
+	float	r = frand();
 	float	height;
 	bool	ducker = false, dodger = false;
 

@@ -69,12 +69,12 @@ void CMachinegun::FireAnimation (CPlayerEntity *ent)
 	ent->Client.anim_priority = ANIM_ATTACK;
 	if (ent->Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED)
 	{
-		ent->State.GetFrame() = (FRAME_crattak1 - (int) (random()+0.25));
+		ent->State.GetFrame() = (FRAME_crattak1 - (int) (frand()+0.25));
 		ent->Client.anim_end = FRAME_crattak9;
 	}
 	else
 	{
-		ent->State.GetFrame() = (FRAME_attack1 - (int) (random()+0.25));
+		ent->State.GetFrame() = (FRAME_attack1 - (int) (frand()+0.25));
 		ent->Client.anim_end = FRAME_attack8;
 	}
 }
@@ -106,10 +106,10 @@ void CMachinegun::Fire (CPlayerEntity *ent)
 
 	for (int i=1 ; i<3 ; i++)
 	{
-		ent->Client.KickOrigin[i] = crandom() * 0.35;
-		ent->Client.KickAngles[i] = crandom() * 0.7;
+		ent->Client.KickOrigin[i] = crand() * 0.35;
+		ent->Client.KickAngles[i] = crand() * 0.7;
 	}
-	ent->Client.KickOrigin.X = crandom() * 0.35;
+	ent->Client.KickOrigin.X = crand() * 0.35;
 	ent->Client.KickAngles.X = ent->Client.machinegun_shots * -1.5;
 
 	// raise the gun as it is firing

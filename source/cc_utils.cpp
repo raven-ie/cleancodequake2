@@ -41,35 +41,21 @@ void G_ProjectSource (const vec3f &point, const vec3f &distance, const vec3f &fo
 }
 
 
-CBaseEntity *FindRadius (CBaseEntity *From, vec3f &org, int Radius, uint32 EntityFlags)
+CBaseEntity *FindRadius (CBaseEntity *From, vec3f &org, int Radius, uint32 EntityFlags, bool CheckNonSolid)
 {
-	vec3f	eOrigin;
-
-	edict_t *from;
-	if (!From)
-		from = g_edicts;
-	else
+	for (edict_t *from = (!From) ? g_edicts : (From->gameEntity + 1); from < &g_edicts[globals.numEdicts]; from++)
 	{
-		from = From->gameEntity;
-		from++;
-	}
-
-	for ( ; from < &g_edicts[globals.numEdicts]; from++)
-	{
-		if (!from->inUse)
-			continue;
-		if (from->solid == SOLID_NOT)
-			continue;
 		if (!from->Entity)
 			continue;
-		if (!(from->Entity->EntityFlags & EntityFlags))
+		CBaseEntity *Entity = from->Entity;
+		if (!Entity->GetInUse())
 			continue;
-		
-		eOrigin.X = org.X - (from->state.origin[0] + (from->mins[0] + from->maxs[0]) * 0.5);
-		eOrigin.Y = org.Y - (from->state.origin[1] + (from->mins[1] + from->maxs[1]) * 0.5);
-		eOrigin.Z = org.Z - (from->state.origin[2] + (from->mins[2] + from->maxs[2]) * 0.5);
+		if (CheckNonSolid && (Entity->GetSolid() == SOLID_NOT))
+			continue;
+		if (!(Entity->EntityFlags & EntityFlags))
+			continue;
 
-		if ((int)eOrigin.LengthFast() > Radius)
+		if ((int)(org - (Entity->State.GetOrigin() + (Entity->GetMins()+ Entity->GetMaxs()) * 0.5)).LengthFast() > Radius)
 			continue;
 		return from->Entity;
 	}

@@ -109,7 +109,7 @@ void CBody::TossHead (int damage)
 	backOff = 1.5f;	
 	Velocity += VelocityForDamage (damage);
 
-	NextThink = level.framenum + 100 + random()*100;
+	NextThink = level.framenum + 100 + frand()*100;
 
 	Link ();
 }
