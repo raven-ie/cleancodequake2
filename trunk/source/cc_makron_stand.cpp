@@ -33,6 +33,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 #include "m_boss32.h"
+#include "cc_tent.h"
 
 /*QUAKED monster_boss3_stand (1 .5 0) (-32 -32 0) (32 32 90)
 

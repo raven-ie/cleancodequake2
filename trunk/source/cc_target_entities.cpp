@@ -33,6 +33,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 #include "cc_target_entities.h"
+#include "cc_tent.h"
 
 /*QUAKED target_speaker (1 0 0) (-8 -8 -8) (8 8 8) looped-on looped-off reliable
 "noise"		wav file to play
@@ -1013,7 +1014,7 @@ public:
 		CTrace tr;
 		while(1)
 		{
-			tr = CTrace (start, end, ignore, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_DEADMONSTER);
+			tr (start, end, ignore, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_DEADMONSTER);
 
 			if (!tr.ent)
 				break;
@@ -1032,7 +1033,7 @@ public:
 				{
 					SpawnFlags &= ~0x80000000;
 					CTempEnt_Splashes::Sparks (tr.EndPos,
-						tr.Plane.normal, 
+						tr.plane.normal, 
 						CTempEnt_Splashes::ST_LASER_SPARKS,
 						(State.GetSkinNum() & 255),
 						(SpawnFlags & 0x80000000) ? 8 : 4);

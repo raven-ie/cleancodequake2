@@ -377,6 +377,8 @@ void CJorg::TossMakron ()
 	CMakronJumpTimer::Spawn (this);
 };
 
+#include "cc_tent.h"
+
 void CJorg::Explode ()
 {
 	vec3f	org = Entity->State.GetOrigin() + vec3f(0, 0, 24 + (randomMT()&15));
@@ -588,7 +590,7 @@ bool CJorg::CheckAttack ()
 		spot2 = Entity->Enemy->State.GetOrigin();
 		spot2.Z += Entity->Enemy->ViewHeight;
 
-		tr = CTrace(spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
+		tr (spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
 
 		// do we have a clear shot?
 		if (tr.ent != Entity->Enemy)
@@ -692,7 +694,7 @@ bool CJorg::CheckAttack ()
 						else
 						{
 							// make sure we're not going to shoot a monster
-							tr = CTrace (spot1, BlindFireTarget, Entity->gameEntity, CONTENTS_MONSTER);
+							tr (spot1, BlindFireTarget, Entity->gameEntity, CONTENTS_MONSTER);
 							if (tr.allSolid || tr.startSolid || ((tr.fraction < 1.0) && (tr.Ent != Entity->Enemy)))
 								return false;
 

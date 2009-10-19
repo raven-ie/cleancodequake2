@@ -276,6 +276,8 @@ bool CParasite::DrainAttackOK (vec3f &start, vec3f &end)
 	return true;
 }
 
+#include "cc_tent.h"
+
 void CParasite::DrainAttack ()
 {
 	vec3f f, r;
@@ -311,7 +313,7 @@ void CParasite::DrainAttack ()
 	}
 	end = Entity->Enemy->State.GetOrigin();
 
-	CTrace tr = CTrace(start, end, Entity->gameEntity, CONTENTS_MASK_SHOT);
+	CTrace tr (start, end, Entity->gameEntity, CONTENTS_MASK_SHOT);
 	if (tr.Ent != Entity->Enemy)
 		return;
 

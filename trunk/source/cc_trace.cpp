@@ -40,12 +40,10 @@ void CTrace::Copy (cmTrace_t tr)
 	plane = tr.plane;
 	allSolid = (tr.allSolid != 0);
 	startSolid = (tr.startSolid != 0);
-	Vec3Copy (tr.endPos, endPos);
+	EndPos = tr.endPos;
 	surface = tr.surface;
 	contents = tr.contents;
 
-	memcpy (&Plane, &plane, sizeof(Plane));
-	memcpy (EndPos, endPos, sizeof(EndPos));
 	Ent = ent->Entity;
 };
 
@@ -55,25 +53,6 @@ CTrace::CTrace ()
 
 _CC_DISABLE_DEPRECATION
 
-// Constructor easyness
-CTrace::CTrace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *ignore, int contentMask)
-{
-	cmTrace_t temp = gi.trace(start, mins, maxs, end, ignore, contentMask);
-	Copy(temp);
-};
-
-CTrace::CTrace (vec3_t start, vec3_t end, edict_t *ignore, int contentMask)
-{
-	cmTrace_t temp = gi.trace(start, vec3Origin, vec3Origin, end, ignore, contentMask);
-	Copy(temp);
-};
-
-CTrace::CTrace (vec3_t start, vec3_t end, int contentMask)
-{
-	cmTrace_t temp = gi.trace(start, vec3Origin, vec3Origin, end, NULL, contentMask);
-	Copy(temp);
-};
-
 CTrace::CTrace (vec3f &start, vec3f &mins, vec3f &maxs, vec3f &end, edict_t *ignore, int contentMask)
 {
 	cmTrace_t temp = gi.trace(start, mins, maxs, end, ignore, contentMask);
@@ -82,13 +61,31 @@ CTrace::CTrace (vec3f &start, vec3f &mins, vec3f &maxs, vec3f &end, edict_t *ign
 
 CTrace::CTrace (vec3f &start, vec3f &end, edict_t *ignore, int contentMask)
 {
-	cmTrace_t temp = gi.trace(start, vec3Origin, vec3Origin, end, ignore, contentMask);
+	cmTrace_t temp = gi.trace(start, vec3fOrigin, vec3fOrigin, end, ignore, contentMask);
 	Copy(temp);
 };
 
 CTrace::CTrace (vec3f &start, vec3f &end, int contentMask)
 {
-	cmTrace_t temp = gi.trace(start, vec3Origin, vec3Origin, end, NULL, contentMask);
+	cmTrace_t temp = gi.trace(start, vec3fOrigin, vec3fOrigin, end, NULL, contentMask);
+	Copy(temp);
+}
+
+void CTrace::operator () (vec3f &start, vec3f &mins, vec3f &maxs, vec3f &end, edict_t *ignore, int contentMask)
+{
+	cmTrace_t temp = gi.trace(start, mins, maxs, end, ignore, contentMask);
+	Copy(temp);
+};
+
+void CTrace::operator () (vec3f &start, vec3f &end, edict_t *ignore, int contentMask)
+{
+	cmTrace_t temp = gi.trace(start, vec3fOrigin, vec3fOrigin, end, ignore, contentMask);
+	Copy(temp);
+};
+
+void CTrace::operator () (vec3f &start, vec3f &end, int contentMask)
+{
+	cmTrace_t temp = gi.trace(start, vec3fOrigin, vec3fOrigin, end, NULL, contentMask);
 	Copy(temp);
 }
 

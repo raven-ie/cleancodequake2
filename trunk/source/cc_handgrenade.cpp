@@ -32,6 +32,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 //
 
 #include "cc_local.h"
+#include "cc_weaponmain.h"
 #include "m_player.h"
 
 CHandGrenade WeaponGrenades;
@@ -174,7 +175,7 @@ void CHandGrenade::WeaponGeneric (CPlayerEntity *ent)
 	// Idea from Brazen source
 	int newFrame = -1, newState = -1;
 
-	switch (ent->Client.weaponstate)
+	switch (ent->Client.WeaponState)
 	{
 	case WS_ACTIVATING:
 		newFrame = IdleStart;
@@ -197,7 +198,7 @@ void CHandGrenade::WeaponGeneric (CPlayerEntity *ent)
 			{
 				// Got here, we can fire!
 				ent->Client.PlayerState.GetGunFrame() = FireStart;
-				ent->Client.weaponstate = WS_FIRING;
+				ent->Client.WeaponState = WS_FIRING;
 				ent->Client.grenade_time = 0;
 
 				// We need to check against us right away for first-frame firing
@@ -231,7 +232,7 @@ void CHandGrenade::WeaponGeneric (CPlayerEntity *ent)
 
 			// Now, this call above CAN change the underlying frame and state.
 			// We need this block to make sure we are still doing what we are supposed to.
-			newState = ent->Client.weaponstate;
+			newState = ent->Client.WeaponState;
 			newFrame = ent->Client.PlayerState.GetGunFrame();
 		}
 
@@ -266,7 +267,7 @@ void CHandGrenade::WeaponGeneric (CPlayerEntity *ent)
 	if (newFrame != -1)
 		ent->Client.PlayerState.GetGunFrame() = newFrame;
 	if (newState != -1)
-		ent->Client.weaponstate = newState;
+		ent->Client.WeaponState = newState;
 
 	if (newFrame == -1 && newState == -1)
 		ent->Client.PlayerState.GetGunFrame()++;

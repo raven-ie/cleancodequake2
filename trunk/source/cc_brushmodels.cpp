@@ -630,7 +630,11 @@ void CPlatForm::Spawn ()
 	if (!map_debug->Boolean())
 		SpawnInsideTrigger ();	// the "start moving" trigger	
 	else
-		GetSolid() = SOLID_NOT;
+	{
+		GetSolid() = SOLID_BBOX;
+		GetSvFlags() = (SVF_MONSTER|SVF_DEADMONSTER);
+		Link ();
+	}
 };
 
 ENTITYFIELDS_BEGIN(CPlatForm)
@@ -1093,9 +1097,16 @@ void CDoor::Spawn ()
 	Link ();
 
 	NextThink = level.framenum + FRAMETIME;
-	if (Health || TargetName)
+
+	if (map_debug->Boolean())
+	{
+		GetSolid() = SOLID_BSP;
+		GetSvFlags() = (SVF_MONSTER|SVF_DEADMONSTER);
+		Link ();
+	}
+	else if (Health || TargetName)
 		ThinkType = DOORTHINK_CALCMOVESPEED;
-	else if (!map_debug->Boolean())
+	else
 		ThinkType = DOORTHINK_SPAWNDOORTRIGGER;
 }
 
@@ -2096,6 +2107,8 @@ LINK_CLASSNAME_TO_CLASS ("trigger_elevator", CTriggerElevator);
 #pragma endregion Train
 
 #pragma region World
+#include "cc_bodyqueue.h"
+
 CWorldEntity::CWorldEntity () : 
 CBaseEntity(),
 CMapEntity(),
@@ -2137,6 +2150,7 @@ bool CWorldEntity::Run ()
 
 void CreateDMStatusbar ();
 void CreateSPStatusbar ();
+void CreateMapDebugStatusbar ();
 void SetItemNames ();
 
 void SetupLights ()
@@ -2213,7 +2227,9 @@ void CWorldEntity::Spawn ()
 	ConfigString (CS_MAXCLIENTS, maxclients->String());
 
 	// status bar program
-	if (game.mode & GAME_DEATHMATCH)
+	if (map_debug->Boolean())
+		CreateMapDebugStatusbar();
+	else if (game.mode & GAME_DEATHMATCH)
 	{
 #ifdef CLEANCTF_ENABLED
 //ZOID
@@ -2667,7 +2683,7 @@ void CFuncObject::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *sur
 	if (!entity_cast<CHurtableEntity>(other)->CanTakeDamage)
 		return;
 
-	entity_cast<CHurtableEntity>(other)->TakeDamage (this, this, vec3Origin, State.GetOrigin(), vec3fOrigin, Damage, 1, 0, MOD_CRUSH);
+	entity_cast<CHurtableEntity>(other)->TakeDamage (this, this, vec3fOrigin, State.GetOrigin(), vec3fOrigin, Damage, 1, 0, MOD_CRUSH);
 };
 
 void CFuncObject::Think ()

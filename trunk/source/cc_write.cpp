@@ -317,7 +317,7 @@ void WritePosition (vec3_t val)
 	if (!val)
 	{
 		for (int i = 0; i < 3; i++)
-			WriteCoord(vec3Origin[i]);
+			WriteCoord(vec3fOrigin[i]);
 	}
 	else
 	{
@@ -340,7 +340,7 @@ void WritePosition (vec3f &val)
 	if (!val)
 	{
 		for (int i = 0; i < 3; i++)
-			WriteCoord(vec3Origin[i]);
+			WriteCoord(vec3fOrigin[i]);
 	}
 	else
 	{

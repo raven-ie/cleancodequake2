@@ -32,6 +32,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 //
 
 #include "cc_local.h"
+#include "cc_weaponmain.h"
 #include "m_player.h"
 
 CBFG WeaponBFG;
@@ -116,7 +117,7 @@ void CBFG::FireBFG (CPlayerEntity *ent)
 	CBFGBolt::Spawn (ent, start, forward, damage, 400, 1000);
 
 	AttackSound (ent);
-	ent->Client.PlayerState.GetGunFrame();
+	ent->Client.PlayerState.GetGunFrame()++;
 
 	ent->PlayerNoiseAt (start, PNOISE_WEAPON);
 

@@ -35,6 +35,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "m_player.h"
 #include "cc_menu.h"
 #include "cc_ban.h"
+#include "cc_bodyqueue.h"
+#include "cc_weaponmain.h"
 
 #ifndef USE_EXTENDED_GAME_IMPORTS
 #include "cc_pmove.h"
@@ -260,6 +262,8 @@ void CPlayerEntity::Respawn ()
 	gi.AddCommandString ("menu_loadgame\n");
 }
 
+#include "cc_tent.h"
+
 /* 
  * only called when Persistent.spectator changes
  * note that Respawn.spectator should be the opposite of Persistent.spectator here
@@ -371,13 +375,15 @@ void CPlayerEntity::PutInServer ()
 	// deathmatch wipes most client data every spawn
 	default:
 			Respawn = Client.Respawn;
-			memcpy (userinfo, Client.Persistent.UserInfo.c_str(), sizeof(userinfo));
+			//memcpy (userinfo, Client.Persistent.UserInfo.c_str(), sizeof(userinfo));
+			Q_snprintfz (userinfo, sizeof(userinfo), "%s", Client.Persistent.UserInfo.c_str());
 			InitPersistent ();
 			UserinfoChanged (userinfo);
 		break;
 	case GAME_COOPERATIVE:
 			Respawn = Client.Respawn;
-			memcpy (userinfo, Client.Persistent.UserInfo.c_str(), sizeof(userinfo));
+			//memcpy (userinfo, Client.Persistent.UserInfo.c_str(), sizeof(userinfo));
+			Q_snprintfz (userinfo, sizeof(userinfo), "%s", Client.Persistent.UserInfo.c_str());
 
 			Respawn.coop_respawn.game_helpchanged = Client.Persistent.game_helpchanged;
 			Respawn.coop_respawn.helpchanged = Client.Persistent.helpchanged;
@@ -416,7 +422,7 @@ void CPlayerEntity::PutInServer ()
 	DeadFlag = false;
 	AirFinished = level.framenum + 120;
 	GetClipmask() = CONTENTS_MASK_PLAYERSOLID;
-	gameEntity->waterlevel = 0;
+	gameEntity->waterlevel = WATER_NONE;
 	gameEntity->watertype = 0;
 	Flags &= ~FL_NO_KNOCKBACK;
 	GetSvFlags() &= ~SVF_DEADMONSTER;
@@ -516,10 +522,20 @@ void CPlayerEntity::InitPersistent ()
 {
 	memset (&Client.Persistent, 0, sizeof(Client.Persistent));
 
-	NItems::Blaster->Add(this, 1);
-	Client.Persistent.Weapon = &WeaponBlaster;
-	Client.Persistent.LastWeapon = Client.Persistent.Weapon;
-	Client.Persistent.Inventory.SelectedItem =Client.Persistent.Weapon->Item->GetIndex();
+	if (!map_debug->Boolean())
+	{
+		NItems::Blaster->Add(this, 1);
+		Client.Persistent.Weapon = &WeaponBlaster;
+		Client.Persistent.LastWeapon = Client.Persistent.Weapon;
+		Client.Persistent.Inventory.SelectedItem = Client.Persistent.Weapon->Item->GetIndex();
+	}
+	else
+	{
+		FindItem("Surface Picker")->Add(this, 1);
+		Client.Persistent.Weapon = &Debug_SurfacePicker;
+		Client.Persistent.LastWeapon = Client.Persistent.Weapon;
+		Client.Persistent.Inventory.SelectedItem = Client.Persistent.Weapon->Item->GetIndex();
+	}
 
 #ifdef CLEANCTF_ENABLED
 	if (game.mode & GAME_CTF)
@@ -889,10 +905,10 @@ inline void CPlayerEntity::CalcViewOffset (vec3f &forward, vec3f &right, vec3f &
 		angles.Z += ratio * Client.ViewDamage.Y;
 
 		// add pitch based on fall kick
-		ratio = (float)(Client.fall_time - level.framenum) / FALL_TIME;
+		ratio = (float)(Client.FallTime - level.framenum) / FALL_TIME;
 		if (ratio < 0)
 			ratio = 0;
-		angles.X += ratio * Client.fall_value;
+		angles.X += ratio * Client.FallValue;
 
 		// add angles based on velocity
 		float delta = Velocity.Dot (forward);
@@ -923,10 +939,10 @@ inline void CPlayerEntity::CalcViewOffset (vec3f &forward, vec3f &right, vec3f &
 	v.Z += ViewHeight;
 
 	// add fall height
-	ratio = (float)(Client.fall_time - level.framenum) / FALL_TIME;
+	ratio = (float)(Client.FallTime - level.framenum) / FALL_TIME;
 	if (ratio < 0)
 		ratio = 0;
-	v.Z -= ratio * Client.fall_value * 0.4;
+	v.Z -= ratio * Client.FallValue * 0.4;
 
 	// add bob height
 	bob = bobfracsin * xyspeed * bob_up->Float();
@@ -1054,7 +1070,7 @@ inline void CPlayerEntity::CalcBlend ()
 {
 	// add for contents
 	vec3f	vieworg = State.GetOrigin() + Client.PlayerState.GetViewOffset();
-	int contents = PointContents (vieworg);
+	EBrushContents contents = PointContents (vieworg);
 
 	if (contents & (CONTENTS_LAVA|CONTENTS_SLIME|CONTENTS_WATER) )
 		Client.PlayerState.GetRdFlags () |= RDF_UNDERWATER;
@@ -1116,14 +1132,14 @@ inline void CPlayerEntity::CalcBlend ()
 	}
 
 	// add bonus and drop the value
-	if (Client.bonus_alpha)
+	if (Client.BonusAlpha)
 	{
-		BonusColor.A = Client.bonus_alpha;
+		BonusColor.A = Client.BonusAlpha;
 		SV_AddBlend (BonusColor, Client.Persistent.viewBlend);
 
-		Client.bonus_alpha -= 0.1f;
-		if (Client.bonus_alpha < 0)
-			Client.bonus_alpha = 0;
+		Client.BonusAlpha -= 0.1f;
+		if (Client.BonusAlpha < 0)
+			Client.BonusAlpha = 0;
 	}
 
 	if (contents & (CONTENTS_LAVA))
@@ -1176,11 +1192,11 @@ inline void CPlayerEntity::FallingDamage ()
 	delta = delta*delta * 0.0001;
 
 	// never take falling damage if completely underwater
-	if (gameEntity->waterlevel == 3)
+	if (gameEntity->waterlevel == WATER_UNDER)
 		return;
-	if (gameEntity->waterlevel == 2)
+	if (gameEntity->waterlevel == WATER_WAIST)
 		delta *= 0.25;
-	if (gameEntity->waterlevel == 1)
+	if (gameEntity->waterlevel == WATER_FEET)
 		delta *= 0.5;
 
 	if (delta < 1)
@@ -1192,10 +1208,10 @@ inline void CPlayerEntity::FallingDamage ()
 		return;
 	}
 
-	Client.fall_value = delta*0.5;
-	if (Client.fall_value > 40)
-		Client.fall_value = 40;
-	Client.fall_time = level.framenum + FALL_TIME;
+	Client.FallValue = delta*0.5;
+	if (Client.FallValue > 40)
+		Client.FallValue = 40;
+	Client.FallTime = level.framenum + FALL_TIME;
 
 	if (delta > 30)
 	{
@@ -1210,7 +1226,7 @@ inline void CPlayerEntity::FallingDamage ()
 		static vec3f dir (0, 0, 1);
 
 		if (!dmFlags.dfNoFallingDamage )
-			TakeDamage (World, World, dir, State.GetOrigin(), vec3Origin, damage, 0, 0, MOD_FALLING);
+			TakeDamage (World, World, dir, State.GetOrigin(), vec3fOrigin, damage, 0, 0, MOD_FALLING);
 	}
 	else
 	{
@@ -1228,7 +1244,7 @@ inline void CPlayerEntity::WorldEffects ()
 {
 	bool	breather;
 	bool	envirosuit;
-	int		waterlevel, old_waterlevel;
+	EWaterLevel		waterlevel, OldWaterLevel;
 	vec3f origin = State.GetOrigin();
 
 	if (NoClip)
@@ -1238,8 +1254,8 @@ inline void CPlayerEntity::WorldEffects ()
 	}
 
 	waterlevel = gameEntity->waterlevel;
-	old_waterlevel = Client.old_waterlevel;
-	Client.old_waterlevel = waterlevel;
+	OldWaterLevel = Client.OldWaterLevel;
+	Client.OldWaterLevel = waterlevel;
 
 	breather = (bool)(Client.breather_framenum > level.framenum);
 	envirosuit = (bool)(Client.enviro_framenum > level.framenum);
@@ -1247,7 +1263,7 @@ inline void CPlayerEntity::WorldEffects ()
 	//
 	// if just entered a water volume, play a sound
 	//
-	if (!old_waterlevel && waterlevel)
+	if (!OldWaterLevel && waterlevel)
 	{
 		PlayerNoiseAt (origin, PNOISE_SELF);
 		if (gameEntity->watertype & CONTENTS_LAVA)
@@ -1265,7 +1281,7 @@ inline void CPlayerEntity::WorldEffects ()
 	//
 	// if just completely exited a water volume, play a sound
 	//
-	if (old_waterlevel && ! waterlevel)
+	if (OldWaterLevel && !waterlevel)
 	{
 		PlayerNoiseAt (origin, PNOISE_SELF);
 		PlaySound (CHAN_BODY, SoundIndex("player/watr_out.wav"));
@@ -1275,13 +1291,13 @@ inline void CPlayerEntity::WorldEffects ()
 	//
 	// check for head just going under water
 	//
-	if (old_waterlevel != 3 && waterlevel == 3)
+	if (OldWaterLevel != WATER_UNDER && waterlevel == WATER_UNDER)
 		PlaySound (CHAN_BODY, SoundIndex("player/watr_un.wav"));
 
 	//
 	// check for head just coming out of water
 	//
-	if (old_waterlevel == 3 && waterlevel != 3)
+	if (OldWaterLevel == WATER_UNDER && waterlevel != WATER_UNDER)
 	{
 		if (AirFinished < level.framenum)
 		{	// gasp for air
@@ -1295,7 +1311,7 @@ inline void CPlayerEntity::WorldEffects ()
 	//
 	// check for drowning
 	//
-	if (waterlevel == 3)
+	if (waterlevel == WATER_UNDER)
 	{
 		// breather or envirosuit give air
 		if (breather || envirosuit)
@@ -1344,7 +1360,7 @@ inline void CPlayerEntity::WorldEffects ()
 	//
 	// check for sizzle damage
 	//
-	if (waterlevel && (gameEntity->watertype&(CONTENTS_LAVA|CONTENTS_SLIME)) )
+	if (waterlevel && (gameEntity->watertype & (CONTENTS_LAVA|CONTENTS_SLIME)))
 	{
 		if (gameEntity->watertype & CONTENTS_LAVA)
 		{
@@ -1454,7 +1470,7 @@ inline void CPlayerEntity::SetClientEvent (float xyspeed)
 
 	if ( GroundEntity && xyspeed > 225)
 	{
-		if ( (int)(Client.bobtime+bobmove) != bobcycle )
+		if ( (int)(Client.BobTime+bobmove) != bobcycle )
 			State.GetEvent() = EV_FOOTSTEP;
 	}
 }
@@ -1608,7 +1624,7 @@ void CPlayerEntity::EndServerFrame ()
 	if (!gameEntity)
 		return;
 
-	float	bobtime;
+	float	BobTime;
 	int		i;
 
 	//
@@ -1664,7 +1680,7 @@ void CPlayerEntity::EndServerFrame ()
 	if (xyspeed < 5 || Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED)
 	{
 		bobmove = 0;
-		Client.bobtime = 0;	// start at beginning of cycle again
+		Client.BobTime = 0;	// start at beginning of cycle again
 	}
 	else if (GroundEntity)
 	{
@@ -1677,13 +1693,13 @@ void CPlayerEntity::EndServerFrame ()
 			bobmove = 0.0625;
 	}
 	
-	bobtime = (Client.bobtime += bobmove);
+	BobTime = (Client.BobTime += bobmove);
 
 	if (Client.PlayerState.GetPMove()->pmFlags & PMF_DUCKED)
-		bobtime *= 4;
+		BobTime *= 4;
 
-	bobcycle = (int)bobtime;
-	bobfracsin = Q_fabs(sinf(bobtime*M_PI));
+	bobcycle = (int)BobTime;
+	bobfracsin = Q_fabs(sinf(BobTime*M_PI));
 
 	// detect hitting the floor
 	FallingDamage ();
@@ -2044,160 +2060,168 @@ void CPlayerEntity::DeathmatchScoreboardMessage (bool reliable)
 
 void CPlayerEntity::SetStats ()
 {
-	//
-	// health
-	//
-	Client.PlayerState.GetStat (STAT_HEALTH_ICON) = GameMedia.Hud.HealthPic;
-	Client.PlayerState.GetStat (STAT_HEALTH) = Health;
-
-	//
-	// ammo
-	//
-	if (Client.Persistent.Weapon)
+	if (map_debug->Boolean())
 	{
-		if (Client.Persistent.Weapon->WeaponItem && Client.Persistent.Weapon->WeaponItem->Ammo)
+		Client.PlayerState.GetStat (STAT_PICKUP_STRING) = CS_POINTING_SURFACE;
+		Client.PlayerState.GetStat (STAT_TIMER_ICON) = CS_POINTING_SURFACE-1;
+	}
+	else
+	{
+		//
+		// health
+		//
+		Client.PlayerState.GetStat (STAT_HEALTH_ICON) = GameMedia.Hud.HealthPic;
+		Client.PlayerState.GetStat (STAT_HEALTH) = Health;
+
+		//
+		// ammo
+		//
+		if (Client.Persistent.Weapon)
 		{
-			Client.PlayerState.GetStat (STAT_AMMO_ICON) = Client.Persistent.Weapon->WeaponItem->Ammo->GetIconIndex();
-			Client.PlayerState.GetStat (STAT_AMMO) = Client.Persistent.Inventory.Has(Client.Persistent.Weapon->WeaponItem->Ammo->GetIndex());
-		}
-		else if (Client.Persistent.Weapon->Item && (Client.Persistent.Weapon->Item->Flags & ITEMFLAG_AMMO))
-		{
-			Client.PlayerState.GetStat (STAT_AMMO_ICON) = Client.Persistent.Weapon->Item->GetIconIndex();
-			Client.PlayerState.GetStat (STAT_AMMO) = Client.Persistent.Inventory.Has(Client.Persistent.Weapon->Item->GetIndex());
+			if (Client.Persistent.Weapon->WeaponItem && Client.Persistent.Weapon->WeaponItem->Ammo)
+			{
+				Client.PlayerState.GetStat (STAT_AMMO_ICON) = Client.Persistent.Weapon->WeaponItem->Ammo->GetIconIndex();
+				Client.PlayerState.GetStat (STAT_AMMO) = Client.Persistent.Inventory.Has(Client.Persistent.Weapon->WeaponItem->Ammo->GetIndex());
+			}
+			else if (Client.Persistent.Weapon->Item && (Client.Persistent.Weapon->Item->Flags & ITEMFLAG_AMMO))
+			{
+				Client.PlayerState.GetStat (STAT_AMMO_ICON) = Client.Persistent.Weapon->Item->GetIconIndex();
+				Client.PlayerState.GetStat (STAT_AMMO) = Client.Persistent.Inventory.Has(Client.Persistent.Weapon->Item->GetIndex());
+			}
+			else
+			{
+				Client.PlayerState.GetStat (STAT_AMMO_ICON) = 0;
+				Client.PlayerState.GetStat (STAT_AMMO) = 0;
+			}
 		}
 		else
 		{
 			Client.PlayerState.GetStat (STAT_AMMO_ICON) = 0;
 			Client.PlayerState.GetStat (STAT_AMMO) = 0;
 		}
-	}
-	else
-	{
-		Client.PlayerState.GetStat (STAT_AMMO_ICON) = 0;
-		Client.PlayerState.GetStat (STAT_AMMO) = 0;
-	}
-	
-	//
-	// armor
-	//
-	int			cells = 0;
-	int			power_armor_type = PowerArmorType ();
-	if (power_armor_type)
-	{
-		cells = Client.Persistent.Inventory.Has(NItems::Cells);
-		if (cells == 0)
-		{	// ran out of cells for power armor
-			Flags &= ~FL_POWER_ARMOR;
-			PlaySound (CHAN_ITEM, SoundIndex("misc/power2.wav"));
-			power_armor_type = 0;
+		
+		//
+		// armor
+		//
+		int			cells = 0;
+		int			power_armor_type = PowerArmorType ();
+		if (power_armor_type)
+		{
+			cells = Client.Persistent.Inventory.Has(NItems::Cells);
+			if (cells == 0)
+			{	// ran out of cells for power armor
+				Flags &= ~FL_POWER_ARMOR;
+				PlaySound (CHAN_ITEM, SoundIndex("misc/power2.wav"));
+				power_armor_type = 0;
+			}
 		}
-	}
 
-	CArmor *Armor = Client.Persistent.Armor;
-	if (power_armor_type && (!Armor || (level.framenum & 8) ) )
-	{	// flash between power armor and other armor icon
-		Client.PlayerState.GetStat (STAT_ARMOR_ICON) = NItems::PowerShield->GetIconIndex();
-		Client.PlayerState.GetStat (STAT_ARMOR) = cells;
-	}
-	else if (Armor)
-	{
-		Client.PlayerState.GetStat (STAT_ARMOR_ICON) = Armor->GetIconIndex();
-		Client.PlayerState.GetStat (STAT_ARMOR) = Client.Persistent.Inventory.Has(Armor);
-	}
-	else
-	{
-		Client.PlayerState.GetStat (STAT_ARMOR_ICON) = 0;
-		Client.PlayerState.GetStat (STAT_ARMOR) = 0;
-	}
+		CArmor *Armor = Client.Persistent.Armor;
+		if (power_armor_type && (!Armor || (level.framenum & 8) ) )
+		{	// flash between power armor and other armor icon
+			Client.PlayerState.GetStat (STAT_ARMOR_ICON) = NItems::PowerShield->GetIconIndex();
+			Client.PlayerState.GetStat (STAT_ARMOR) = cells;
+		}
+		else if (Armor)
+		{
+			Client.PlayerState.GetStat (STAT_ARMOR_ICON) = Armor->GetIconIndex();
+			Client.PlayerState.GetStat (STAT_ARMOR) = Client.Persistent.Inventory.Has(Armor);
+		}
+		else
+		{
+			Client.PlayerState.GetStat (STAT_ARMOR_ICON) = 0;
+			Client.PlayerState.GetStat (STAT_ARMOR) = 0;
+		}
 
-	//
-	// pickup message
-	//
-	if (level.framenum > Client.pickup_msg_time)
-	{
-		Client.PlayerState.GetStat (STAT_PICKUP_ICON) = 0;
-		Client.PlayerState.GetStat (STAT_PICKUP_STRING) = 0;
+		//
+		// pickup message
+		//
+		if (level.framenum > Client.pickup_msg_time)
+		{
+			Client.PlayerState.GetStat (STAT_PICKUP_ICON) = 0;
+			Client.PlayerState.GetStat (STAT_PICKUP_STRING) = 0;
+		}
+
+		//
+		// timers
+		//
+		if (Client.quad_framenum > level.framenum)
+		{
+			Client.PlayerState.GetStat (STAT_TIMER_ICON) = NItems::Quad->GetIconIndex();
+			Client.PlayerState.GetStat (STAT_TIMER) = (Client.quad_framenum - level.framenum)/10;
+		}
+		else if (Client.invincible_framenum > level.framenum)
+		{
+			Client.PlayerState.GetStat (STAT_TIMER_ICON) = NItems::Invul->GetIconIndex();
+			Client.PlayerState.GetStat (STAT_TIMER) = (Client.invincible_framenum - level.framenum)/10;
+		}
+		else if (Client.enviro_framenum > level.framenum)
+		{
+			Client.PlayerState.GetStat (STAT_TIMER_ICON) = NItems::EnvironmentSuit->GetIconIndex();
+			Client.PlayerState.GetStat (STAT_TIMER) = (Client.enviro_framenum - level.framenum)/10;
+		}
+		else if (Client.breather_framenum > level.framenum)
+		{
+			Client.PlayerState.GetStat (STAT_TIMER_ICON) = NItems::Rebreather->GetIconIndex();
+			Client.PlayerState.GetStat (STAT_TIMER) = (Client.breather_framenum - level.framenum)/10;
+		}
+		// Paril, show silencer
+		else if (Client.silencer_shots)
+		{
+			Client.PlayerState.GetStat (STAT_TIMER_ICON) = NItems::Silencer->GetIconIndex();
+			Client.PlayerState.GetStat (STAT_TIMER) = Client.silencer_shots;
+		}
+		// Paril
+		else
+		{
+			Client.PlayerState.GetStat (STAT_TIMER_ICON) = 0;
+			Client.PlayerState.GetStat (STAT_TIMER) = 0;
+		}
+
+		//
+		// selected item
+		//
+		Client.PlayerState.GetStat (STAT_SELECTED_ICON) = (Client.Persistent.Inventory.SelectedItem == -1) ? 0 : GetItemByIndex(Client.Persistent.Inventory.SelectedItem)->GetIconIndex();
+		Client.PlayerState.GetStat (STAT_SELECTED_ITEM) = Client.Persistent.Inventory.SelectedItem;
+
+		//
+		// layouts
+		//
+		Client.PlayerState.GetStat (STAT_LAYOUTS) = 0;
+
+		if (Client.Persistent.health <= 0 || Client.Respawn.MenuState.InMenu ||
+			(level.intermissiontime || (Client.LayoutFlags & LF_SHOWSCORES)) || 
+			(!(game.mode & GAME_DEATHMATCH)) && (Client.LayoutFlags & LF_SHOWHELP))
+			Client.PlayerState.GetStat (STAT_LAYOUTS) = Client.PlayerState.GetStat(STAT_LAYOUTS) | 1;
+		if ((Client.LayoutFlags & LF_SHOWINVENTORY) && Client.Persistent.health > 0)
+			Client.PlayerState.GetStat (STAT_LAYOUTS) = Client.PlayerState.GetStat(STAT_LAYOUTS) | 2;
+
+		//
+		// frags
+		//
+		Client.PlayerState.GetStat (STAT_FRAGS) = Client.Respawn.score;
+
+		//
+		// help icon / current weapon if not shown
+		//
+		if (Client.Persistent.helpchanged && (level.framenum&8) )
+			Client.PlayerState.GetStat (STAT_HELPICON) = GameMedia.Hud.HelpPic;
+
+		Client.PlayerState.GetStat (STAT_HELPICON) = ((Client.Persistent.hand == CENTER_HANDED || Client.PlayerState.GetFov() > 91)
+			&& Client.Persistent.Weapon && Client.Persistent.Weapon->Item) ? Client.Persistent.Weapon->Item->GetIconIndex() : 0;
+		Client.PlayerState.GetStat (STAT_SPECTATOR) = 0;
+		Client.PlayerState.GetStat (STAT_TECH) = 0;
+
+		if (Client.Persistent.Tech)
+			Client.PlayerState.GetStat (STAT_TECH) = Client.Persistent.Tech->GetIconIndex();
+
+	#ifdef CLEANCTF_ENABLED
+	//ZOID
+		if (game.mode & GAME_CTF)
+			SetCTFStats();
+	//ZOID
+	#endif
 	}
-
-	//
-	// timers
-	//
-	if (Client.quad_framenum > level.framenum)
-	{
-		Client.PlayerState.GetStat (STAT_TIMER_ICON) = NItems::Quad->GetIconIndex();
-		Client.PlayerState.GetStat (STAT_TIMER) = (Client.quad_framenum - level.framenum)/10;
-	}
-	else if (Client.invincible_framenum > level.framenum)
-	{
-		Client.PlayerState.GetStat (STAT_TIMER_ICON) = NItems::Invul->GetIconIndex();
-		Client.PlayerState.GetStat (STAT_TIMER) = (Client.invincible_framenum - level.framenum)/10;
-	}
-	else if (Client.enviro_framenum > level.framenum)
-	{
-		Client.PlayerState.GetStat (STAT_TIMER_ICON) = NItems::EnvironmentSuit->GetIconIndex();
-		Client.PlayerState.GetStat (STAT_TIMER) = (Client.enviro_framenum - level.framenum)/10;
-	}
-	else if (Client.breather_framenum > level.framenum)
-	{
-		Client.PlayerState.GetStat (STAT_TIMER_ICON) = NItems::Rebreather->GetIconIndex();
-		Client.PlayerState.GetStat (STAT_TIMER) = (Client.breather_framenum - level.framenum)/10;
-	}
-	// Paril, show silencer
-	else if (Client.silencer_shots)
-	{
-		Client.PlayerState.GetStat (STAT_TIMER_ICON) = NItems::Silencer->GetIconIndex();
-		Client.PlayerState.GetStat (STAT_TIMER) = Client.silencer_shots;
-	}
-	// Paril
-	else
-	{
-		Client.PlayerState.GetStat (STAT_TIMER_ICON) = 0;
-		Client.PlayerState.GetStat (STAT_TIMER) = 0;
-	}
-
-	//
-	// selected item
-	//
-	Client.PlayerState.GetStat (STAT_SELECTED_ICON) = (Client.Persistent.Inventory.SelectedItem == -1) ? 0 : GetItemByIndex(Client.Persistent.Inventory.SelectedItem)->GetIconIndex();
-	Client.PlayerState.GetStat (STAT_SELECTED_ITEM) = Client.Persistent.Inventory.SelectedItem;
-
-	//
-	// layouts
-	//
-	Client.PlayerState.GetStat (STAT_LAYOUTS) = 0;
-
-	if (Client.Persistent.health <= 0 || Client.Respawn.MenuState.InMenu ||
-		(level.intermissiontime || (Client.LayoutFlags & LF_SHOWSCORES)) || 
-		(!(game.mode & GAME_DEATHMATCH)) && (Client.LayoutFlags & LF_SHOWHELP))
-		Client.PlayerState.GetStat (STAT_LAYOUTS) = Client.PlayerState.GetStat(STAT_LAYOUTS) | 1;
-	if ((Client.LayoutFlags & LF_SHOWINVENTORY) && Client.Persistent.health > 0)
-		Client.PlayerState.GetStat (STAT_LAYOUTS) = Client.PlayerState.GetStat(STAT_LAYOUTS) | 2;
-
-	//
-	// frags
-	//
-	Client.PlayerState.GetStat (STAT_FRAGS) = Client.Respawn.score;
-
-	//
-	// help icon / current weapon if not shown
-	//
-	if (Client.Persistent.helpchanged && (level.framenum&8) )
-		Client.PlayerState.GetStat (STAT_HELPICON) = GameMedia.Hud.HelpPic;
-
-	Client.PlayerState.GetStat (STAT_HELPICON) = ((Client.Persistent.hand == CENTER_HANDED || Client.PlayerState.GetFov() > 91)
-		&& Client.Persistent.Weapon && Client.Persistent.Weapon->Item) ? Client.Persistent.Weapon->Item->GetIconIndex() : 0;
-	Client.PlayerState.GetStat (STAT_SPECTATOR) = 0;
-	Client.PlayerState.GetStat (STAT_TECH) = 0;
-
-	if (Client.Persistent.Tech)
-		Client.PlayerState.GetStat (STAT_TECH) = Client.Persistent.Tech->GetIconIndex();
-
-#ifdef CLEANCTF_ENABLED
-//ZOID
-	if (game.mode & GAME_CTF)
-		SetCTFStats();
-//ZOID
-#endif
 }
 
 /*
@@ -2724,14 +2748,14 @@ void CPlayerEntity::ClientThink (userCmd_t *ucmd)
 	for (int i = 0; i < 3; i++)
 		Velocity[i] = pm.state.velocity[i]*0.125;
 
-	SetMins (pm.mins);
-	SetMaxs (pm.maxs);
+	GetMins() = pm.mins;
+	GetMaxs() = pm.maxs;
 
 	Client.Respawn.cmd_angles[0] = SHORT2ANGLE(ucmd->angles[0]);
 	Client.Respawn.cmd_angles[1] = SHORT2ANGLE(ucmd->angles[1]);
 	Client.Respawn.cmd_angles[2] = SHORT2ANGLE(ucmd->angles[2]);
 
-	if (GroundEntity && !pm.groundEntity && (pm.cmd.upMove >= 10) && (pm.waterLevel == 0))
+	if (GroundEntity && !pm.groundEntity && (pm.cmd.upMove >= 10) && (pm.waterLevel == WATER_NONE))
 	{
 		PlaySound (CHAN_VOICE, GameMedia.Player.Jump);
 		PlayerNoiseAt (State.GetOrigin(), PNOISE_SELF);
@@ -3319,13 +3343,13 @@ void CPlayerEntity::UpdateChaseCam()
 
 			vec3f goal = trace.EndPos.MultiplyAngles (2, forward);
 			o = goal + vec3f(0, 0, 6);
-			trace = CTrace (goal, o, targ->gameEntity, CONTENTS_MASK_SOLID);
+			trace (goal, o, targ->gameEntity, CONTENTS_MASK_SOLID);
 
 			if (trace.fraction < 1)
 				goal = trace.EndPos - vec3f(0, 0, 6);
 
 			o = goal - vec3f(0, 0, 6);
-			trace = CTrace(goal, o, targ->gameEntity, CONTENTS_MASK_SOLID);
+			trace (goal, o, targ->gameEntity, CONTENTS_MASK_SOLID);
 
 			if(trace.fraction < 1)
 				goal = trace.EndPos + vec3f(0, 0, 6);
@@ -3375,14 +3399,14 @@ void CPlayerEntity::UpdateChaseCam()
 			vec3f goal = trace.EndPos.MultiplyAngles (2, forward);
 			o = goal + vec3f(0, 0, 6);
 
-			trace = CTrace(goal, o, targ->gameEntity, CONTENTS_MASK_SOLID);
+			trace (goal, o, targ->gameEntity, CONTENTS_MASK_SOLID);
 
 			if(trace.fraction < 1)
 				goal = trace.EndPos - vec3f(0, 0, 6);
 
 			o = goal - vec3f(0, 0, 6);
 
-			trace = CTrace(goal, o, targ->gameEntity, CONTENTS_MASK_SOLID);
+			trace (goal, o, targ->gameEntity, CONTENTS_MASK_SOLID);
 
 			if(trace.fraction < 1)
 				goal = trace.EndPos + vec3f(0, 0, 6);

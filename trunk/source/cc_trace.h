@@ -44,26 +44,22 @@ public:
 	plane_t				plane;
 	bool				allSolid;
 	bool				startSolid;
-	vec3_t				endPos;
+	vec3f				EndPos;
 	cmBspSurface_t		*surface;
 	int					contents;
 
 	// For vec3f
-	Plane_t				Plane;
-	vec3f				EndPos;
 	CBaseEntity			*Ent;
 
 	CTrace ();
 
-	// Constructor easyness
-	CTrace (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *ignore, int contentMask);
-	CTrace (vec3_t start, vec3_t end, edict_t *ignore, int contentMask);
-	CTrace (vec3_t start, vec3_t end, int contentMask);
-
-	// vec3f overloads
 	CTrace (vec3f &start, vec3f &mins, vec3f &maxs, vec3f &end, edict_t *ignore, int contentMask);
 	CTrace (vec3f &start, vec3f &end, edict_t *ignore, int contentMask);
 	CTrace (vec3f &start, vec3f &end, int contentMask);
+
+	void operator () (vec3f &start, vec3f &mins, vec3f &maxs, vec3f &end, edict_t *ignore, int contentMask); 
+	void operator () (vec3f &start, vec3f &end, edict_t *ignore, int contentMask); 
+	void operator () (vec3f &start, vec3f &end, int contentMask); 
 };
 
 #else

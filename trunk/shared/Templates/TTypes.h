@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #endif
 
 #ifndef BIT
-# define BIT(x) (1<<(x))
+# define BIT(x) (uint32)(1<<(x))
 #endif
 
 #ifndef BOOL

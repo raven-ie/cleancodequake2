@@ -17,8 +17,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
-#include "g_local.h"
+
+#include "cc_local.h"
 #ifdef CLEANCTF_ENABLED
+#include "cc_weaponmain.h"
 #include "m_player.h"
 
 void EndDMLevel (void);

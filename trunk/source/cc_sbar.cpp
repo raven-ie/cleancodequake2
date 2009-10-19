@@ -288,6 +288,25 @@ void CreateSPStatusbar ()
 	SPBar.Send();
 }
 
+void CreateMapDebugStatusbar ()
+{
+	CStatusBar DebugBar;
+
+	DebugBar.AddPoint_Y (24, false);
+	DebugBar.AddPoint_X (5, false);
+	DebugBar.AddString ("Surface:");
+	DebugBar.AddPoint_X (5 + (8 * 9), false);
+	DebugBar.AddStatString (STAT_PICKUP_STRING);
+
+	DebugBar.AddPoint_Y (24 + 8, false);
+	DebugBar.AddPoint_X (5, false);
+	DebugBar.AddString ("Entity:");
+	DebugBar.AddPoint_X (5 + (8 * 9), false);
+	DebugBar.AddStatString (STAT_TIMER_ICON);
+
+	DebugBar.Send();
+}
+
 /*
 ==================
 HelpComputer

@@ -49,22 +49,6 @@ public:
 	CClassnameToClassIndex (CMapEntity *(*Spawn) (int Index), char *Classname);
 };
 
-class CEntityList
-{
-	CClassnameToClassIndex			*EntityList[MAX_CLASSNAME_CLASSES];
-	CClassnameToClassIndex			*HashedEntityList[MAX_CLASSNAME_CLASSES_HASH];
-	int								numEntities;
-public:
-	CEntityList ();
-
-	void Clear ();
-	void AddToList (CClassnameToClassIndex *Entity);
-
-	CBaseEntity *Resolve (edict_t *ent);
-};
-
-extern CEntityList EntityList;
-
 CBaseEntity *ResolveMapEntity (edict_t *ent);
 
 #define LINK_RESOLVE_CLASSNAME(x,y) x##y

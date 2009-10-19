@@ -34,6 +34,10 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_local.h"
 #include "cc_ban.h"
 #include "cc_target_entities.h"
+#include "cc_bodyqueue.h"
+#include "cc_cmds.h"
+#include "cc_gamecommands.h"
+#include "cc_servercommands.h"
 
 game_locals_t	game;
 level_locals_t	level;
@@ -238,6 +242,13 @@ void ClientEndServerFrames ()
 		CPlayerEntity *Player = entity_cast<CPlayerEntity>(g_edicts[i].Entity);
 		if (!Player->GetInUse())
 			continue;
+
+		if (map_debug->Boolean())
+		{
+			memset (&Player->PlayedSounds, 0, sizeof(Player->PlayedSounds));
+			Player->BeginServerFrame ();
+		}
+
 		Player->EndServerFrame ();
 	}
 }

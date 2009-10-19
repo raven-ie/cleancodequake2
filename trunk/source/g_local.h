@@ -435,8 +435,8 @@ struct edict_t
 
 	FrameNumber_t		teleport_time;
 
-	int			watertype;
-	int			waterlevel;
+	EBrushContents			watertype;
+	EWaterLevel			waterlevel;
 	int			light_level;
 	int			style;			// also used as areaportal number
 

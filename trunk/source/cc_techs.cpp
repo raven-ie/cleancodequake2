@@ -32,6 +32,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 //
 
 #include "cc_local.h"
+#include "cc_weaponmain.h"
 
 CTech::CTech (char *Classname, char *WorldModel, int EffectFlags,
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
@@ -307,9 +308,9 @@ CItemEntity *CTech::DropItem (CBaseEntity *ent)
 		vec3f result;
 		G_ProjectSource (ent->State.GetOrigin(), offset, forward, right, result);
 
-		trace = CTrace (ent->State.GetOrigin(), dropped->GetMins(), dropped->GetMaxs(),
+		trace (ent->State.GetOrigin(), dropped->GetMins(), dropped->GetMaxs(),
 			result, ent->gameEntity, CONTENTS_SOLID);
-		dropped->State.GetOrigin() = trace.endPos;
+		dropped->State.GetOrigin() = trace.EndPos;
 	}
 	else
 	{

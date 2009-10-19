@@ -215,6 +215,14 @@ CC_ENUM (int16, EDamageType)
 	DT_MAX
 };
 
+CC_ENUM (uint8, EWeaponState)
+{
+	WS_ACTIVATING,
+	WS_IDLE,
+	WS_FIRING,
+	WS_DEACTIVATING
+};
+
 class CClient
 {
 protected:
@@ -246,21 +254,19 @@ public:
 	EDamageType		DamageValues[DT_MAX];
 	EButtons		Buttons;
 	EButtons		LatchedButtons;
+	CWeapon			*NewWeapon;
+	EWeaponState	WeaponState;
+	FrameNumber_t	FallTime;
+	float			FallValue;		// for view drop on fall
+	float			BonusAlpha;
+	float			BobTime;			// so off-ground doesn't change it
 
 	CClient (gclient_t *client);
 
 	int				&GetPing ();
 	void			Clear ();
 
-	CWeapon		*NewWeapon;
-
-	EWeaponState weaponstate;
-	FrameNumber_t		fall_time;
-	float		fall_value;		// for view drop on fall
-	float		bonus_alpha;
-	float		bobtime;			// so off-ground doesn't change it
-
-	int			old_waterlevel;
+	EWaterLevel		OldWaterLevel;
 	int			breather_sound;
 
 	int			machinegun_shots;	// for weapon raising

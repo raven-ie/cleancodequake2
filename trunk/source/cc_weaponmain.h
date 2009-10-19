@@ -34,14 +34,6 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #if !defined(__CC_WEAPONMAIN_H__) || !defined(INCLUDE_GUARDS)
 #define __CC_WEAPONMAIN_H__
 
-CC_ENUM (uint8, EWeaponState)
-{
-	WS_ACTIVATING,
-	WS_IDLE,
-	WS_FIRING,
-	WS_DEACTIVATING
-};
-
 class CWeapon
 {
 	friend void InvalidateItemMedia ();
@@ -140,6 +132,7 @@ public:
 #ifdef CLEANCTF_ENABLED
 #include "cc_grapple.h"
 #endif
+#include "cc_debugweapons.h"
 
 #else
 FILE_WARNING

@@ -32,6 +32,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 //
 
 #include "cc_local.h"
+#include "cc_weaponmain.h"
 
 CWeaponItem::CWeaponItem (char *Classname, char *WorldModel, int EffectFlags,
 			   char *PickupSound, char *Icon, char *Name, EItemFlags Flags,
@@ -159,7 +160,7 @@ void CWeaponItem::Use (CPlayerEntity *ent)
 
 void CWeaponItem::Drop (CPlayerEntity *ent)
 {
-	if ((Weapon == ent->Client.Persistent.Weapon) && (ent->Client.weaponstate != WS_IDLE))
+	if ((Weapon == ent->Client.Persistent.Weapon) && (ent->Client.WeaponState != WS_IDLE))
 		return;
 
 	DropItem(ent);
@@ -387,6 +388,11 @@ void AddAmmoToList ()
 #ifdef CLEANCTF_ENABLED
 	ItemList->AddItemToList (NItems::Grapple);
 #endif
+
+	if (map_debug->Boolean())
+	{
+		ItemList->AddItemToList (QNew (com_gamePool, 0) CWeaponItem (NULL, NULL, 0, NULL, NULL, "Surface Picker", ITEMFLAG_WEAPON|ITEMFLAG_USABLE, NULL, &Debug_SurfacePicker, NULL, 0, NULL));
+	}
 }
 
 CC_ENUM (uint8, EWeaponVwepIndices)

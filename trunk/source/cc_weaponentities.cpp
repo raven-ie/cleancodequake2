@@ -32,6 +32,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 //
 
 #include "cc_local.h"
+#include "cc_weaponmain.h"
+#include "cc_tent.h"
 
 void CheckDodge (CBaseEntity *self, vec3f &start, vec3f &dir, int speed)
 {
@@ -46,7 +48,7 @@ void CheckDodge (CBaseEntity *self, vec3f &start, vec3f &dir, int speed)
 	}
 
 	end = start.MultiplyAngles(8192, dir);
-	tr = CTrace (start, end, self->gameEntity, CONTENTS_MASK_SHOT);
+	tr (start, end, self->gameEntity, CONTENTS_MASK_SHOT);
 
 #ifdef MONSTER_USE_ROGUE_AI
 	if ((tr.ent) && (tr.ent->Entity) && (tr.ent->Entity->EntityFlags & ENT_MONSTER) && (entity_cast<CHurtableEntity>(tr.ent->Entity)->Health > 0) && IsInFront(tr.Ent, self))
@@ -130,9 +132,9 @@ void CGrenade::Explode ()
 
 	origin = origin.MultiplyAngles (-0.02f, Velocity);
 	if (GroundEntity)
-		CTempEnt_Explosions::GrenadeExplosion(origin, gameEntity, !!gameEntity->waterlevel);
+		CTempEnt_Explosions::GrenadeExplosion(origin, this, !!gameEntity->waterlevel);
 	else
-		CTempEnt_Explosions::RocketExplosion(origin, gameEntity, !!gameEntity->waterlevel);
+		CTempEnt_Explosions::RocketExplosion(origin, this, !!gameEntity->waterlevel);
 
 	Free (); // "delete" the entity
 }
@@ -293,7 +295,7 @@ void CBlasterProjectile::Spawn (CBaseEntity *Spawner, vec3f start, vec3f dir,
 		Bolt->SpawnFlags = 1;
 	Bolt->Link ();
 
-	CTrace tr = CTrace ((Spawner) ? Spawner->State.GetOrigin() : start, start, Bolt->gameEntity, CONTENTS_MASK_SHOT);
+	CTrace tr ((Spawner) ? Spawner->State.GetOrigin() : start, start, Bolt->gameEntity, CONTENTS_MASK_SHOT);
 	if (tr.fraction < 1.0)
 	{
 		start = start.MultiplyAngles (-10, dir);
@@ -362,7 +364,7 @@ void CRocket::Touch (CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf)
 	// calculate position for the explosion entity
 	origin = origin.MultiplyAngles (-0.02f, Velocity);
 	T_RadiusDamage(this, GetOwner(), RadiusDamage, other, DamageRadius, MOD_R_SPLASH);
-	CTempEnt_Explosions::RocketExplosion(origin, gameEntity, !!gameEntity->waterlevel);
+	CTempEnt_Explosions::RocketExplosion(origin, this, !!gameEntity->waterlevel);
 
 	Free ();
 }
@@ -502,7 +504,7 @@ void CBFGBolt::Think ()
 			CTrace tr;
 			while(1)
 			{
-				tr = CTrace (start, end, ignore, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_DEADMONSTER);
+				tr (start, end, ignore, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_DEADMONSTER);
 
 				if (!tr.ent || !tr.Ent)
 					break;
@@ -516,7 +518,7 @@ void CBFGBolt::Think ()
 				//if (!(tr.ent->svFlags & SVF_MONSTER) && (!tr.ent->client))
 				if (!(tr.Ent->EntityFlags & ENT_MONSTER) && !(tr.Ent->EntityFlags & ENT_PLAYER))
 				{
-					CTempEnt_Splashes::Sparks (tr.EndPos, tr.Plane.normal, CTempEnt_Splashes::ST_LASER_SPARKS, State.GetSkinNum(), 4);
+					CTempEnt_Splashes::Sparks (tr.EndPos, tr.plane.normal, CTempEnt_Splashes::ST_LASER_SPARKS, State.GetSkinNum(), 4);
 					break;
 				}
 
@@ -667,7 +669,7 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 		{
 			stWater = stWater.MultiplyAngles (HITSCANSTEP, aimdir);
 
-			int contents = PointContents(stWater);
+			EBrushContents contents = PointContents(stWater);
 			if (contents == 0) // "Clear" or solid
 				break; // Got it
 			else if (contents & CONTENTS_MASK_SOLID)
@@ -718,7 +720,7 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 			if (Trace.startSolid)
 			{
 				vec3f origin = Target->State.GetOrigin();
-				if (!DoDamage (Entity, Target, aimdir, origin, Trace.Plane.normal))
+				if (!DoDamage (Entity, Target, aimdir, origin, Trace.plane.normal))
 				{
 					DoEffect (origin, lastDrawFrom, DrawIsWater);
 					break; // We wanted to stop
@@ -747,7 +749,7 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 				continue;
 			}
 
-			if (!DoDamage (Entity, Target, aimdir, Trace.EndPos, Trace.Plane.normal))
+			if (!DoDamage (Entity, Target, aimdir, Trace.EndPos, Trace.plane.normal))
 				break; // We wanted to stop
 
 			// Set up the start from where we are now
@@ -852,7 +854,7 @@ void CHitScan::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 			{
 				stWater = stWater.MultiplyAngles (HITSCANSTEP, aimdir);
 
-				int contents = PointContents(stWater);
+				EBrushContents contents = PointContents(stWater);
 				if (contents == 0) // "Clear" or solid
 					break; // Got it
 				else if (contents & CONTENTS_MASK_SOLID)
@@ -940,7 +942,7 @@ bool CBullet::DoDamage (CBaseEntity *Attacker, CHurtableEntity *Target, vec3f &d
 void CBullet::DoSolidHit	(CTrace *Trace)
 {
 	if (!(Trace->surface->flags & SURF_TEXINFO_SKY))
-		CTempEnt_Splashes::Gunshot (Trace->EndPos, Trace->Plane.normal);
+		CTempEnt_Splashes::Gunshot (Trace->EndPos, Trace->plane.normal);
 }
 
 bool CBullet::ModifyEnd (vec3f &aimDir, vec3f &start, vec3f &end)
@@ -980,7 +982,7 @@ void CBullet::DoWaterHit	(CTrace *Trace)
 	else
 		return;
 
-	CTempEnt_Splashes::Splash (Trace->EndPos, Trace->Plane.normal, color);
+	CTempEnt_Splashes::Splash (Trace->EndPos, Trace->plane.normal, color);
 }
 
 void CBullet::Fire(CBaseEntity *Entity, vec3f start, vec3f aimdir, int damage, int kick, int hSpread, int vSpread, int mod)
@@ -1026,7 +1028,7 @@ void CBullet::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 		{
 			stWater = stWater.MultiplyAngles (HITSCANSTEP, aimdir);
 
-			int contents = PointContents(stWater);
+			EBrushContents contents = PointContents(stWater);
 			if (contents == 0) // "Clear" or solid
 				break; // Got it
 			else if (contents & CONTENTS_MASK_SOLID)
@@ -1076,7 +1078,7 @@ void CBullet::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 			if (Trace.startSolid)
 			{
 				vec3f origin = Target->State.GetOrigin();
-				if (!DoDamage (Entity, Target, aimdir, origin, Trace.Plane.normal))
+				if (!DoDamage (Entity, Target, aimdir, origin, Trace.plane.normal))
 					break; // We wanted to stop
 
 				// Set up the start from where we are now
@@ -1090,7 +1092,7 @@ void CBullet::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 				// Continue our loop
 				continue;
 			}
-			if (!DoDamage (Entity, Target, aimdir, Trace.EndPos, Trace.Plane.normal))
+			if (!DoDamage (Entity, Target, aimdir, Trace.EndPos, Trace.plane.normal))
 				break; // We wanted to stop
 
 			// Set up the start from where we are now
@@ -1179,7 +1181,7 @@ void CBullet::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 			{
 				stWater = stWater.MultiplyAngles(HITSCANSTEP, aimdir);
 
-				int contents = PointContents(stWater);
+				EBrushContents contents = PointContents(stWater);
 				if (contents == 0) // "Clear" or solid
 					break; // Got it
 				else if (contents & CONTENTS_MASK_SOLID)
@@ -1242,7 +1244,7 @@ void CBullet::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 			{
 				stWater = stWater.MultiplyAngles (HITSCANSTEP, aimdir);
 
-				int contents = PointContents(stWater);
+				EBrushContents contents = PointContents(stWater);
 				if (contents == 0) // "Clear" or solid
 					break; // Got it
 				else if (contents & CONTENTS_MASK_SOLID)
@@ -1290,7 +1292,7 @@ void CBullet::DoFire(CBaseEntity *Entity, vec3f start, vec3f aimdir)
 void CShotgunPellets::DoSolidHit	(CTrace *Trace)
 {
 	if (!(Trace->surface->flags & SURF_TEXINFO_SKY))
-		CTempEnt_Splashes::Shotgun (Trace->EndPos, Trace->Plane.normal);
+		CTempEnt_Splashes::Shotgun (Trace->EndPos, Trace->plane.normal);
 }
 
 void CShotgunPellets::Fire(CBaseEntity *Entity, vec3f start, vec3f aimdir, int damage, int kick, int hSpread, int vSpread, int Count, int mod)
@@ -1326,7 +1328,7 @@ bool CMeleeWeapon::Fire(CBaseEntity *Entity, vec3f aim, int damage, int kick)
 
 	point = Entity->State.GetOrigin().MultiplyAngles (range, dir);
 
-	CTrace tr = CTrace (Entity->State.GetOrigin(), NULL, NULL, point, Entity->gameEntity, CONTENTS_MASK_SHOT);
+	CTrace tr (Entity->State.GetOrigin(), point, Entity->gameEntity, CONTENTS_MASK_SHOT);
 	if (tr.fraction == 1.0)
 		return false;
 
@@ -1405,8 +1407,8 @@ void CGrappleEntity::GrapplePull()
 
 	if ((Player->Client.Persistent.Weapon->Item == NItems::Grapple) &&
 		!Player->Client.NewWeapon &&
-		(Player->Client.weaponstate != WS_FIRING) &&
-		(Player->Client.weaponstate != WS_ACTIVATING))
+		(Player->Client.WeaponState != WS_FIRING) &&
+		(Player->Client.WeaponState != WS_ACTIVATING))
 	{
 		ResetGrapple();
 		return;
@@ -1508,7 +1510,7 @@ void CGrappleEntity::Spawn (CPlayerEntity *Spawner, vec3f start, vec3f dir, int 
 	Spawner->Client.ctf_grapplestate = CTF_GRAPPLE_STATE_FLY; // we're firing, not on hook
 	Grapple->Link ();
 
-	CTrace tr = CTrace (Spawner->State.GetOrigin(), Grapple->State.GetOrigin(), Grapple->gameEntity, CONTENTS_MASK_SHOT);
+	CTrace tr (Spawner->State.GetOrigin(), Grapple->State.GetOrigin(), Grapple->gameEntity, CONTENTS_MASK_SHOT);
 	if (tr.fraction < 1.0)
 	{
 		Grapple->State.GetOrigin() = Grapple->State.GetOrigin().MultiplyAngles (-10, dir);
@@ -1671,7 +1673,7 @@ public:
 	{
 		if (Projectiles[0] || Projectiles[1])
 		{
-			Die (this, this, 0, vec3Origin);
+			Die (this, this, 0, vec3fOrigin);
 			return;
 		}
 
@@ -1752,7 +1754,7 @@ void CTazerProjectile::Think ()
 
 	if (Attached->Health <= Attached->GibHealth)
 	{
-		Base->Die (this, this, 0, vec3Origin);
+		Base->Die (this, this, 0, vec3fOrigin);
 		return;
 	}
 

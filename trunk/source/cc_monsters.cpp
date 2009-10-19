@@ -37,6 +37,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #ifdef MONSTERS_USE_PATHFINDING
 #include "cc_pathfinding.h"
+#include "cc_tent.h"
 
 bool VecInFront (vec3f &angles, vec3f &origin1, vec3f &origin2);
 void CMonster::FoundPath ()
@@ -589,11 +590,11 @@ bool CMonster::CheckBottom ()
 	start.X = stop.X = (mins.X + maxs.X)*0.5;
 	start.Y = stop.Y = (mins.Y + maxs.Y)*0.5;
 	stop.Z = start.Z - 2*STEPSIZE;
-	trace = CTrace(start, stop, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
+	trace (start, stop, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
 
 	if (trace.fraction == 1.0)
 		return false;
-	mid = bottom = trace.endPos[2];
+	mid = bottom = trace.EndPos[2];
 	
 // the corners must be within 16 of the midpoint	
 	for	(x=0 ; x<=1 ; x++)
@@ -602,11 +603,11 @@ bool CMonster::CheckBottom ()
 			start.X = stop.X = x ? maxs.X : mins.X;
 			start.Y = stop.Y = y ? maxs.Y : mins.Y;
 			
-			trace = CTrace(start, stop, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
+			trace (start, stop, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
 			
-			if (trace.fraction != 1.0 && trace.endPos[2] > bottom)
-				bottom = trace.endPos[2];
-			if (trace.fraction == 1.0 || mid - trace.endPos[2] > STEPSIZE)
+			if (trace.fraction != 1.0 && trace.EndPos[2] > bottom)
+				bottom = trace.EndPos[2];
+			if (trace.fraction == 1.0 || mid - trace.EndPos[2] > STEPSIZE)
 				return false;
 		}
 
@@ -668,7 +669,7 @@ bool CMonster::MoveStep (vec3f move, bool ReLink)
 					if (dz > 40)
 						neworg.Z -= 8;
 
-					if (!((Entity->Flags & FL_SWIM) && (Entity->gameEntity->waterlevel < 2)) && (dz < 30))
+					if (!((Entity->Flags & FL_SWIM) && (Entity->gameEntity->waterlevel < WATER_WAIST)) && (dz < 30))
 						neworg.Z += 8;
 				}
 				else
@@ -683,7 +684,7 @@ bool CMonster::MoveStep (vec3f move, bool ReLink)
 						neworg.Z += dz;
 				}
 			}
-			trace = CTrace(oldorg, Entity->GetMins(), Entity->GetMaxs(), neworg, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
+			trace (oldorg, Entity->GetMins(), Entity->GetMaxs(), neworg, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
 	
 			// fly monsters don't enter water voluntarily
 			if (Entity->Flags & FL_FLY)
@@ -700,7 +701,7 @@ bool CMonster::MoveStep (vec3f move, bool ReLink)
 			// swim monsters don't exit water voluntarily
 			if (Entity->Flags & FL_SWIM)
 			{
-				if (Entity->gameEntity->waterlevel < 2)
+				if (Entity->gameEntity->waterlevel < WATER_WAIST)
 				{
 					vec3f test (trace.EndPos);
 					test.Z += Entity->GetMins().Z + 1;
@@ -736,7 +737,7 @@ bool CMonster::MoveStep (vec3f move, bool ReLink)
 	end = neworg;
 	end.Z -= stepsize * 2;
 
-	trace = CTrace(neworg, Entity->GetMins(), Entity->GetMaxs(), end, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
+	trace (neworg, Entity->GetMins(), Entity->GetMaxs(), end, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
 
 	if (trace.allSolid)
 		return false;
@@ -744,14 +745,14 @@ bool CMonster::MoveStep (vec3f move, bool ReLink)
 	if (trace.startSolid)
 	{
 		neworg.Z -= stepsize;
-		trace = CTrace(neworg, Entity->GetMins(), Entity->GetMaxs(), end, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
+		trace (neworg, Entity->GetMins(), Entity->GetMaxs(), end, Entity->gameEntity, CONTENTS_MASK_MONSTERSOLID);
 		if (trace.allSolid || trace.startSolid)
 			return false;
 	}
 
 
 	// don't go in to water
-	/*if (Entity->gameEntity->waterlevel == 0)
+	/*if (Entity->gameEntity->waterlevel == WATER_NONE)
 	{
 		test[0] = trace.endPos[0];
 		test[1] = trace.endPos[1];
@@ -805,7 +806,7 @@ bool CMonster::MoveStep (vec3f move, bool ReLink)
 		end2 = org.MultiplyAngles (-STEPSIZE, up);
 
 		// Trace
-		trace = CTrace (org, end2, Entity->gameEntity, CONTENTS_MASK_SOLID);
+		trace (org, end2, Entity->gameEntity, CONTENTS_MASK_SOLID);
 
 		// Couldn't make the move
 		if (trace.fraction == 1.0)
@@ -1090,8 +1091,11 @@ void CMonster::MonsterStartGo ()
 	{
 		Think = NULL; // Don't think
 		
-		// Make us non-solid
-		Entity->GetSolid() = SOLID_NOT;
+		// Make us a deadmonster solid
+		Entity->GetSolid() = SOLID_BBOX;
+		Entity->GetSvFlags() = (SVF_MONSTER|SVF_DEADMONSTER);
+
+		Entity->Link ();
 	}
 	else
 	{
@@ -1214,7 +1218,7 @@ bool CMonster::FriendlyInLine (vec3f &Origin, vec3f &Direction)
 	Direction.ToAngles ().ToVectors (&forward, NULL, NULL);
 
 	vec3f end = Origin.MultiplyAngles (8192, forward);
-	CTrace trace = CTrace(Origin, end, Entity->gameEntity, CONTENTS_MONSTER);
+	CTrace trace (Origin, end, Entity->gameEntity, CONTENTS_MONSTER);
 
 	if (trace.fraction <= 0.5 && trace.ent && (trace.ent->Entity && (trace.ent->Entity->EntityFlags & ENT_MONSTER)) &&
 		(entity_cast<CMonsterEntity>(trace.Ent)->Enemy != Entity))
@@ -1402,7 +1406,7 @@ bool CMonster::CheckAttack ()
 		spot2 = Entity->Enemy->State.GetOrigin();
 		spot2.Z += Entity->Enemy->ViewHeight;
 
-		tr = CTrace(spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
+		tr (spot1, spot2, Entity->gameEntity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
 
 		// do we have a clear shot?
 		if (tr.ent != Entity->Enemy)
@@ -1507,7 +1511,7 @@ bool CMonster::CheckAttack ()
 						else
 						{
 							// make sure we're not going to shoot a monster
-							tr = CTrace (spot1, BlindFireTarget, Entity->gameEntity, CONTENTS_MONSTER);
+							tr (spot1, BlindFireTarget, Entity->gameEntity, CONTENTS_MONSTER);
 							if (tr.allSolid || tr.startSolid || ((tr.fraction < 1.0) && (tr.Ent != Entity->Enemy)))
 								return false;
 
@@ -2135,7 +2139,7 @@ void CMonster::AI_Run(float Dist)
 	{
 //		gi.dprintf("checking for course correction\n");
 
-		tr = CTrace (origin, Entity->GetMins(), Entity->GetMaxs(), LastSighting, Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
+		tr (origin, Entity->GetMins(), Entity->GetMaxs(), LastSighting, Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
 		if (tr.fraction < 1)
 		{
 			v = Entity->GoalEntity->State.GetOrigin() - origin;
@@ -2148,12 +2152,12 @@ void CMonster::AI_Run(float Dist)
 
 			v.Set (d2, -16, 0);
 			G_ProjectSource (origin, v, v_forward, v_right, left_target);
-			tr = CTrace(origin, Entity->GetMins(), Entity->GetMaxs(), left_target, Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
+			tr (origin, Entity->GetMins(), Entity->GetMaxs(), left_target, Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
 			left = tr.fraction;
 
 			v.Set (d2, 16, 0);
 			G_ProjectSource (origin, v, v_forward, v_right, right_target);
-			tr = CTrace(origin, Entity->GetMins(), Entity->GetMaxs(), right_target, Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
+			tr (origin, Entity->GetMins(), Entity->GetMaxs(), right_target, Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
 			right = tr.fraction;
 
 			center = (d1*center)/d2;
@@ -2434,13 +2438,13 @@ void CMonster::AI_Run(float Dist)
 			vec3f left_target;
 			vec3f offset (d2, -16, 0);
 			G_ProjectSource (origin, offset, v_forward, v_right, left_target);
-			tr = CTrace(origin, Entity->GetMins(), Entity->GetMaxs(), left_target, Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
+			tr (origin, Entity->GetMins(), Entity->GetMaxs(), left_target, Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
 			float left = tr.fraction;
 
 			vec3f right_target;
 			offset.Set (d2, 16, 0);
 			G_ProjectSource (origin, offset, v_forward, v_right, right_target);
-			tr = CTrace(origin, Entity->GetMins(), Entity->GetMaxs(), right_target, Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
+			tr (origin, Entity->GetMins(), Entity->GetMaxs(), right_target, Entity->gameEntity, CONTENTS_MASK_PLAYERSOLID);
 			float right = tr.fraction;
 
 			center = (d1*center)/d2;
@@ -3132,7 +3136,7 @@ void CMonster::WorldEffects()
 	{
 		if (!(Entity->Flags & FL_SWIM))
 		{
-			if (Entity->gameEntity->waterlevel < 3)
+			if (Entity->gameEntity->waterlevel < WATER_UNDER)
 				Entity->AirFinished = level.framenum + 120;
 			else if (Entity->AirFinished < level.framenum)
 			{
@@ -3148,7 +3152,7 @@ void CMonster::WorldEffects()
 		}
 		else
 		{
-			if (Entity->gameEntity->waterlevel > 0)
+			if (Entity->gameEntity->waterlevel > WATER_NONE)
 				Entity->AirFinished = level.framenum + 90;
 			else if (Entity->AirFinished < level.framenum)
 			{	// suffocate!
@@ -3164,7 +3168,7 @@ void CMonster::WorldEffects()
 		}
 	}
 	
-	if (Entity->gameEntity->waterlevel == 0)
+	if (Entity->gameEntity->waterlevel == WATER_NONE)
 	{
 		if (Entity->Flags & FL_INWATER)
 		{	
@@ -3217,27 +3221,27 @@ void CMonster::CatagorizePosition()
 // get waterlevel
 //
 	vec3f point = Entity->State.GetOrigin() + vec3f (0, 0, Entity->GetMins().Z + 1);	
-	int cont = PointContents (point);
+	EBrushContents cont = PointContents (point);
 
 	if (!(cont & CONTENTS_MASK_WATER))
 	{
-		Entity->gameEntity->waterlevel = 0;
+		Entity->gameEntity->waterlevel = WATER_NONE;
 		Entity->gameEntity->watertype = 0;
 		return;
 	}
 
 	Entity->gameEntity->watertype = cont;
-	Entity->gameEntity->waterlevel = 1;
+	Entity->gameEntity->waterlevel = WATER_FEET;
 	point.Z += 26;
 	cont = PointContents (point);
 	if (!(cont & CONTENTS_MASK_WATER))
 		return;
 
-	Entity->gameEntity->waterlevel = 2;
+	Entity->gameEntity->waterlevel = WATER_WAIST;
 	point.Z += 22;
 	cont = PointContents (point);
 	if (cont & CONTENTS_MASK_WATER)
-		Entity->gameEntity->waterlevel = 3;
+		Entity->gameEntity->waterlevel = WATER_UNDER;
 }
 
 void CMonster::CheckGround()
@@ -3311,7 +3315,7 @@ bool CMonster::FindTarget()
 	{
 		if (Entity->SpawnFlags & 1)
 		{
-			CTrace trace = CTrace(Entity->State.GetOrigin(), level.NoiseNode->Origin, Entity->gameEntity, CONTENTS_MASK_SOLID);
+			CTrace trace (Entity->State.GetOrigin(), level.NoiseNode->Origin, Entity->gameEntity, CONTENTS_MASK_SOLID);
 
 			if (trace.fraction < 1.0)
 				return false;
@@ -3635,7 +3639,7 @@ void CMonster::Dodge (CBaseEntity *attacker, float eta, CTrace *tr)
 		//
 		// need to add monsterinfo.abort_duck() and monsterinfo.next_duck_time
 
-		if ((!dodger) && ((tr->endPos[2] <= height) || (AIFlags & AI_DUCKED)))
+		if ((!dodger) && ((tr->EndPos[2] <= height) || (AIFlags & AI_DUCKED)))
 			return;
 	}
 	else
@@ -3652,7 +3656,7 @@ void CMonster::Dodge (CBaseEntity *attacker, float eta, CTrace *tr)
 		}
 
 		// if we're ducking already, or the shot is at our knees
-		if ((tr->endPos[2] <= height) || (AIFlags & AI_DUCKED))
+		if ((tr->EndPos[2] <= height) || (AIFlags & AI_DUCKED))
 		{
 			vec3f right;
 

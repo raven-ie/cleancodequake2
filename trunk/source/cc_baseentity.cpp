@@ -363,11 +363,9 @@ void	CBaseEntity::PlayPositionedSound (vec3f origin, EEntSndChannel channel, Med
 
 void	CBaseEntity::KillBox ()
 {
-	CTrace		tr;
-
 	while (1)
 	{
-		tr = CTrace (State.GetOrigin(), GetMins(), GetMaxs(), State.GetOrigin(), NULL, CONTENTS_MASK_PLAYERSOLID);
+		CTrace tr (State.GetOrigin(), GetMins(), GetMaxs(), State.GetOrigin(), NULL, CONTENTS_MASK_PLAYERSOLID);
 		if (!tr.ent || !tr.Ent)
 			break;
 
@@ -414,12 +412,14 @@ void CPrivateEntity::Free ()
 	Freed = true;
 }
 
+#include "cc_tent.h"
+
 void CBaseEntity::BecomeExplosion (bool grenade)
 {
 	if (grenade)
-		CTempEnt_Explosions::GrenadeExplosion (State.GetOrigin(), gameEntity);
+		CTempEnt_Explosions::GrenadeExplosion (State.GetOrigin(), this);
 	else
-		CTempEnt_Explosions::RocketExplosion (State.GetOrigin(), gameEntity);
+		CTempEnt_Explosions::RocketExplosion (State.GetOrigin(), this);
 	Free ();
 }
 

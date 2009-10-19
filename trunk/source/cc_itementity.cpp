@@ -85,7 +85,7 @@ void CItemEntity::Touch(CBaseEntity *other, plane_t *plane, cmBspSurface_t *surf
 		return;
 
 	// flash the screen
-	Player->Client.bonus_alpha = 0.25;	
+	Player->Client.BonusAlpha = 0.25;	
 
 	// show icon and name on status bar
 	if (Player->Client.pickup_msg_time != (level.framenum + 30))
@@ -171,7 +171,8 @@ void CItemEntity::Think ()
 			Touchable = true;
 			PhysicsType = PHYSICS_TOSS;
 
-			CTrace tr = CTrace (State.GetOrigin(), GetMins(), GetMaxs(), (State.GetOrigin() + vec3f(0,0,-128)), gameEntity, CONTENTS_MASK_SOLID);
+			vec3f end = (State.GetOrigin() + vec3f(0,0,-128));
+			CTrace tr (State.GetOrigin(), GetMins(), GetMaxs(), end, gameEntity, CONTENTS_MASK_SOLID);
 			if (tr.startSolid)
 			{
 				//gi.dprintf ("droptofloor: %s startsolid at (%f %f %f)\n", ent->classname, ent->state.origin[0], ent->state.origin[1], ent->state.origin[2]);
@@ -207,6 +208,12 @@ void CItemEntity::Think ()
 				GetSvFlags() |= SVF_NOCLIENT;
 				GetSolid() = SOLID_NOT;
 				Usable = true;
+			}
+			
+			if (map_debug->Boolean())
+			{
+				GetSolid() = SOLID_BBOX;
+				GetSvFlags() = (SVF_MONSTER|SVF_DEADMONSTER);
 			}
 
 			Link ();
