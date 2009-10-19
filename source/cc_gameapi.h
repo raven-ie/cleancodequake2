@@ -34,10 +34,25 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #if !defined(__CC_GAMEAPI_H__) || !defined(INCLUDE_GUARDS)
 #define __CC_GAMEAPI_H__
 
+CC_ENUM (uint8, ECastType)
+{
+	// Cast type
+	CAST_MULTI,
+	CAST_UNI
+};
+
+CC_ENUM (uint8, ECastFlags)
+{
+	CASTFLAG_UNRELIABLE = 0,
+	CASTFLAG_PVS = 1,
+	CASTFLAG_PHS = 2,
+	CASTFLAG_RELIABLE = 4
+};
+
 void Cast (ECastFlags castFlags, CBaseEntity *Ent);
 void Cast (ECastFlags castFlags, vec3f &Origin);
 
-int PointContents (vec3f &start);
+EBrushContents PointContents (vec3f &start);
 
 int BoxEdicts (vec3f &mins, vec3f &maxs, edict_t **list, int maxCount, bool triggers);
 

@@ -281,9 +281,6 @@ public:
 		if (!Wait)
 			Wait = 2;
 
-		if (!map_debug->Boolean())
-			GetSvFlags() |= SVF_NOCLIENT;
-
 		if (SpawnFlags & 4)
 		{
 			GetSolid() = SOLID_NOT;
@@ -299,6 +296,15 @@ public:
 			G_SetMovedir (State.GetAngles(), MoveDir);
 
 		SetBrushModel ();
+
+		if (!map_debug->Boolean())
+			GetSvFlags() |= SVF_NOCLIENT;
+		else
+		{
+			GetSolid() = SOLID_BBOX;
+			GetSvFlags() = (SVF_MONSTER|SVF_DEADMONSTER);
+		}
+
 		Link ();
 	};
 };

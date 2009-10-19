@@ -32,6 +32,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 //
 
 #include "cc_local.h"
+#include "cc_tent.h"
 
 /*QUAKED misc_explobox (0 .5 .8) (-16 -16 0) (16 16 40)
 Large exploding box.  You can override its mass (100),
@@ -97,8 +98,7 @@ public:
 
 		end.Z -= BARREL_STEPSIZE*2;
 
-		CTrace trace;
-		trace = CTrace (newOrigin, GetMins(), GetMaxs(), end, gameEntity, CONTENTS_MASK_MONSTERSOLID);
+		CTrace trace (newOrigin, GetMins(), GetMaxs(), end, gameEntity, CONTENTS_MASK_MONSTERSOLID);
 
 		if (trace.allSolid)
 			return;
@@ -106,7 +106,7 @@ public:
 		if (trace.startSolid)
 		{
 			newOrigin[2] -= BARREL_STEPSIZE;
-			trace = CTrace (newOrigin, GetMins(), GetMaxs(), end, gameEntity, CONTENTS_MASK_MONSTERSOLID);
+			trace (newOrigin, GetMins(), GetMaxs(), end, gameEntity, CONTENTS_MASK_MONSTERSOLID);
 			if (trace.allSolid || trace.startSolid)
 				return;
 		}
@@ -138,7 +138,7 @@ public:
 			vec3f end = vec3f(origin);
 			end.Z -= 256;
 			
-			trace = CTrace (origin, GetMins(), GetMaxs(), end, gameEntity, CONTENTS_MASK_MONSTERSOLID);
+			trace (origin, GetMins(), GetMaxs(), end, gameEntity, CONTENTS_MASK_MONSTERSOLID);
 
 			if (trace.fraction == 1 || trace.allSolid)
 				return;
@@ -150,7 +150,7 @@ public:
 		T_RadiusDamage (this, Shooter, Damage, NULL, Damage+40, MOD_BARREL);
 
 		vec3f origin = State.GetOrigin ();
-		CTempEnt_Explosions::GrenadeExplosion (origin, gameEntity);
+		CTempEnt_Explosions::GrenadeExplosion (origin, this);
 
 		Free ();
 	};

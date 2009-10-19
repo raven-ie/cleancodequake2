@@ -579,7 +579,7 @@ void CSuperTank::Rocket ()
 
 	// pmm blindfire doesn't check target (done in checkattack)
 	// paranoia, make sure we're not shooting a target right next to us
-	CTrace trace = CTrace(start, vec, Entity->gameEntity, CONTENTS_MASK_SHOT);
+	CTrace trace (start, vec, Entity->gameEntity, CONTENTS_MASK_SHOT);
 	#ifdef MONSTER_USE_ROGUE_AI
 	if (blindfire)
 	{
@@ -593,7 +593,7 @@ void CSuperTank::Rocket ()
 			dir = vec - start;
 			dir.Normalize ();
 
-			trace = CTrace(start, vec, Entity->gameEntity, CONTENTS_MASK_SHOT);
+			trace (start, vec, Entity->gameEntity, CONTENTS_MASK_SHOT);
 			if (!(trace.startSolid || trace.allSolid || (trace.fraction < 0.5)))
 				MonsterFireRocket (start, dir, 50, 500, FlashNumber);
 			else 
@@ -603,7 +603,7 @@ void CSuperTank::Rocket ()
 				dir = vec - start;
 				dir.Normalize ();
 
-				trace = CTrace(start, vec, Entity->gameEntity, CONTENTS_MASK_SHOT);
+				trace (start, vec, Entity->gameEntity, CONTENTS_MASK_SHOT);
 				if (!(trace.startSolid || trace.allSolid || (trace.fraction < 0.5)))
 					MonsterFireRocket (start, dir, 50, 500, FlashNumber);
 			}
@@ -612,7 +612,7 @@ void CSuperTank::Rocket ()
 	else
 #endif
 	{
-		trace = CTrace(start, vec, Entity->gameEntity, CONTENTS_MASK_SHOT);
+		trace (start, vec, Entity->gameEntity, CONTENTS_MASK_SHOT);
 		if(trace.Ent == Entity->Enemy || trace.ent == world)
 		{
 			if(trace.fraction > 0.5 || (trace.ent && trace.ent->client))
@@ -711,6 +711,8 @@ void CSuperTank::Dead ()
 	Entity->NextThink = 0;
 	Entity->Link ();
 }
+
+#include "cc_tent.h"
 
 void CSuperTank::Explode ()
 {

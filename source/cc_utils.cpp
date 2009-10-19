@@ -381,9 +381,10 @@ returns 1 if the entity is visible to self, even if not infront ()
 =============
 */
 bool IsVisible (CBaseEntity *self, CBaseEntity *other)
-{	
-	return (CTrace (self->State.GetOrigin() + vec3f(0, 0, self->ViewHeight),
-		other->State.GetOrigin() + vec3f(0, 0, other->ViewHeight),
+{
+	vec3f start = self->State.GetOrigin() + vec3f(0, 0, self->ViewHeight),
+		  end = other->State.GetOrigin() + vec3f(0, 0, other->ViewHeight);
+	return (CTrace (start, end,
 		self->gameEntity, CONTENTS_MASK_OPAQUE).fraction == 1.0);
 }
 

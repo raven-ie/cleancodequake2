@@ -33,6 +33,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 #include "cc_menu.h"
+#include "cc_conchars.h"
 
 CMenu_Label::CMenu_Label (CMenu *Menu, int x, int y) :
 CMenuItem(Menu, x, y)

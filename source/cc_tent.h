@@ -39,6 +39,8 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #if !defined(__CC_TENT_H__) || !defined(INCLUDE_GUARDS)
 #define __CC_TENT_H__
 
+#include "cc_colors.h"
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 /// \class	CTempEnt_Splashes
 ///
@@ -89,49 +91,6 @@ public:
 		ST_TUNNEL_SPARKS = TE_TUNNEL_SPARKS
 	};
 
-	static void Gunshot	(vec3_t Origin,
-					vec3_t Normal);
-
-	static void Shotgun	(vec3_t Origin,
-					vec3_t Normal);
-
-	static void Blood	(vec3_t Origin,
-				vec3_t Normal,
-				EBloodType BloodType = BT_BLOOD);
-
-	static void Blaster	(vec3_t Origin,
-					vec3_t Normal,
-					EBlasterType BlasterType = BL_BLASTER);
-
-	static void Sparks	(vec3_t Origin,
-				vec3_t Normal,
-				ESparkType SparkType = ST_SPARKS,
-				ESplashType color = SPT_UNKNOWN,
-				byte amount = 8);
-
-	static void Splash	(vec3_t Origin,
-				vec3_t Normal,
-				ESplashType color = SPT_UNKNOWN,
-				byte amount = 8);
-
-	static void ShieldSparks	(vec3_t Origin,
-						vec3_t Normal,
-						bool Screen = false);
-
-	static void Steam	(vec3_t Origin,
-				vec3_t Normal,
-				byte count = 8,
-				ESplashType color = SPT_UNKNOWN,
-				short magnitude = 12,
-				short id = -1,
-				long endTime = 0);
-
-	static void HeatSteam	(vec3_t Origin,
-					vec3_t Normal);
-
-	static void ChainfistSmoke	(vec3_t Origin);
-
-	// vec3f overloads
 	static void Gunshot	(vec3f &Origin,
 					vec3f &Normal);
 
@@ -186,41 +145,6 @@ public:
 class CTempEnt_Trails
 {
 public:
-	static void RailTrail	(vec3_t Start,
-					vec3_t End);
-
-	static void HeatBeam	(vec3_t Start,
-					vec3_t End,
-					short Ent,
-					bool Monster = false);
-
-	static void ForceWall	(vec3_t Start,
-					vec3_t End,
-					byte color = NSColor::Lime);
-
-	static void DebugTrail	(vec3_t Start,
-					vec3_t End);
-
-	static void Lightning	(vec3_t Start,
-					vec3_t End,
-					short SrcEnt,
-					short DestEnt);
-
-	static void GrappleCable	(vec3_t Start,
-						vec3_t End,
-						short Ent,
-						vec3_t Offset = vec3Origin);
-
-	static void BFGLaser	(vec3_t Start,
-					vec3_t End);
-
-	static void FleshCable		(vec3_t Start,
-						vec3_t End,
-						short Ent);
-	static void BubbleTrail	(vec3_t Start,
-						vec3_t End);
-
-	// vec3f overloads
 	static void RailTrail	(vec3f &Start,
 					vec3f &End);
 
@@ -268,24 +192,6 @@ public:
 class CTempEnt_Explosions
 {
 public:
-	static void RocketExplosion	(vec3_t Origin, edict_t *ent,
-							bool Water = false,
-							bool Particles = true);
-
-	static void GrenadeExplosion	(vec3_t Origin,
-							edict_t *ent,
-							bool Water = false);
-
-	static void BFGExplosion		(vec3_t Origin,
-							bool Big = false);
-
-	static void PlasmaExplosion	(vec3_t Origin);
-
-	static void TrackerExplosion	(vec3_t Origin);
-
-	static void NukeBlast			(vec3_t Origin);
-
-	// vec3f overloads
 	static void RocketExplosion	(vec3f &Origin, CBaseEntity *ent,
 							bool Water = false,
 							bool Particles = true);
@@ -315,28 +221,6 @@ public:
 class CTempEnt
 {
 public:
-	// These don't go under either of the categories above
-	static void Flashlight		(vec3_t Origin,
-						short Ent);
-
-	static void BossTeleport	(vec3_t Origin);
-
-	static void TeleportEffect	(vec3_t Origin);
-
-	static void WidowBeamOut	(vec3_t Origin,
-						short id = -1);
-
-	static void WidowSplash	(vec3_t Origin);
-
-	static void MuzzleFlash	(vec3_t Origin,
-						short Ent,
-						short id);
-
-	static void MonsterFlash	(vec3_t Origin,
-						short Ent,
-						short id);
-
-	// vec3f overloads
 	static void Flashlight		(vec3f &Origin,
 						short Ent);
 
@@ -356,21 +240,6 @@ public:
 	static void MonsterFlash	(vec3f &Origin,
 						short Ent,
 						short id);
-};
-
-CC_ENUM (uint8, ECastType)
-{
-	// Cast type
-	CAST_MULTI,
-	CAST_UNI
-};
-
-CC_ENUM (uint8, ECastFlags)
-{
-	CASTFLAG_UNRELIABLE = 0,
-	CASTFLAG_PVS = 1,
-	CASTFLAG_PHS = 2,
-	CASTFLAG_RELIABLE = 4
 };
 
 #else

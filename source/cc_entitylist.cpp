@@ -33,6 +33,20 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 
 #include "cc_local.h"
 
+class CEntityList
+{
+	CClassnameToClassIndex			*EntityList[MAX_CLASSNAME_CLASSES];
+	CClassnameToClassIndex			*HashedEntityList[MAX_CLASSNAME_CLASSES_HASH];
+	int								numEntities;
+public:
+	CEntityList ();
+
+	void Clear ();
+	void AddToList (CClassnameToClassIndex *Entity);
+
+	CBaseEntity *Resolve (edict_t *ent);
+};
+
 CEntityList EntityList;
 
 void AddToList_Test (CClassnameToClassIndex *const Index)

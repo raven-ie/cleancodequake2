@@ -29,17 +29,14 @@ vec2_t vec2Origin =
 	0, 0
 };
 
-vec3_t vec3Origin =
-{
-	0, 0, 0
-};
-
 vec3f vec3fOrigin (0, 0, 0);
 
+#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 vec4_t vec4Origin =
 {
 	0, 0, 0, 0
 };
+#endif
 
 /*
 =============================================================================

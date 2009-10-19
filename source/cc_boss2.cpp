@@ -393,6 +393,8 @@ CFrame Boss2FramesDeath [] =
 };
 CAnim Boss2MoveDeath (FRAME_death2, FRAME_death50, Boss2FramesDeath, ConvertDerivedFunction(&CBoss2::Dead));
 
+#include "cc_tent.h"
+
 void CBoss2::Explode ()
 {
 	vec3f	org = Entity->State.GetOrigin() + vec3f(0, 0, 24 + (randomMT()&15));

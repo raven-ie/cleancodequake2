@@ -171,7 +171,7 @@ CItemEntity *CBaseItem::DropItem (CBaseEntity *ent)
 		vec3f result;
 		G_ProjectSource (ent->State.GetOrigin(), offset, forward, right, result);
 
-		trace = CTrace (ent->State.GetOrigin(), dropped->GetMins(), dropped->GetMaxs(),
+		trace (ent->State.GetOrigin(), dropped->GetMins(), dropped->GetMaxs(),
 			result, ent->gameEntity, CONTENTS_SOLID);
 		dropped->State.GetOrigin() = trace.EndPos;
 	}

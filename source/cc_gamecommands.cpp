@@ -34,6 +34,7 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 #include "cc_local.h"
 #include "m_player.h"
 #include "cc_ban.h"
+#include "cc_cmds.h"
 
 /*
 ==================
@@ -440,7 +441,6 @@ void Cmd_Test_f (CPlayerEntity *ent)
 }
 
 #include "cc_menu.h"
-
 
 /*
 ==================

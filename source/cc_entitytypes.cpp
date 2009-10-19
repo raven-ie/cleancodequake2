@@ -123,7 +123,8 @@ bool CHurtableEntity::CanDamage (CBaseEntity *inflictor)
 
 	for (int i = 0; i < 5; i++)
 	{
-		CTrace trace (inflictor->State.GetOrigin(), State.GetOrigin() + additions[i], inflictor->gameEntity, CONTENTS_MASK_SOLID);
+		vec3f end = State.GetOrigin() + additions[i];
+		CTrace trace (inflictor->State.GetOrigin(), end, inflictor->gameEntity, CONTENTS_MASK_SOLID);
 		if (trace.fraction == 1.0)
 			return true;
 	};
@@ -148,6 +149,8 @@ bool CHurtableEntity::CheckTeamDamage (CBaseEntity *attacker)
 
 	return false;
 }
+
+#include "cc_tent.h"
 
 int CHurtableEntity::CheckPowerArmor (vec3f &point, vec3f &normal, int damage, int dflags)
 {
@@ -308,6 +311,9 @@ void CHurtableEntity::TakeDamage (CBaseEntity *inflictor, CBaseEntity *attacker,
 								vec3f dir, vec3f point, vec3f normal, int damage,
 								int knockback, int dflags, EMeansOfDeath mod)
 {
+	if (map_debug->Boolean())
+		return;
+
 	int			take;
 	int			save;
 	int			asave = 0;
@@ -594,13 +600,13 @@ void CPhysicsEntity::AddGravity()
 
 CTrace CPhysicsEntity::PushEntity (vec3f &push)
 {
-	CTrace		Trace;
 	vec3f		Start = State.GetOrigin();
 	vec3f		End = Start + push;
 
+	CTrace Trace;
 	while (true)
 	{
-		Trace = CTrace (Start, GetMins(), GetMaxs(), End, gameEntity, (GetClipmask()) ? GetClipmask() : CONTENTS_MASK_SOLID);
+		Trace (Start, GetMins(), GetMaxs(), End, gameEntity, (GetClipmask()) ? GetClipmask() : CONTENTS_MASK_SOLID);
 		
 		State.GetOrigin() = Trace.EndPos;
 		Link();
@@ -715,7 +721,7 @@ bool CBounceProjectile::Run ()
 
 	if (trace.fraction < 1)
 	{
-		ClipVelocity (Velocity, trace.Plane.normal, Velocity, backOff);
+		ClipVelocity (Velocity, trace.plane.normal, Velocity, backOff);
 
 		// stop if on ground
 		if (trace.plane.normal[2] > 0.9)
@@ -737,7 +743,7 @@ bool CBounceProjectile::Run ()
 	gameEntity->watertype = PointContents (or);
 	isinwater = (gameEntity->watertype & CONTENTS_MASK_WATER) ? true : false;
 
-	gameEntity->waterlevel = (isinwater) ? 1 : 0;
+	gameEntity->waterlevel = (isinwater) ? WATER_FEET : WATER_NONE;
 	if (!wasinwater && isinwater)
 		World->PlayPositionedSound (old_origin, CHAN_AUTO, SoundIndex("misc/h2ohit1.wav"));
 	else if (wasinwater && !isinwater)
@@ -829,7 +835,7 @@ bool CFlyMissileProjectile::Run ()
 
 	if (trace.fraction < 1)
 	{
-		ClipVelocity (Velocity, trace.Plane.normal, Velocity, 1.0);
+		ClipVelocity (Velocity, trace.plane.normal, Velocity, 1.0);
 
 		// stop if on ground
 		if (trace.plane.normal[2] > 0.9)
@@ -846,7 +852,7 @@ bool CFlyMissileProjectile::Run ()
 	gameEntity->watertype = PointContents (State.GetOrigin());
 	isinwater = (gameEntity->watertype & CONTENTS_MASK_WATER) ? true : false;
 
-	gameEntity->waterlevel = (isinwater) ? 1 : 0;
+	gameEntity->waterlevel = (isinwater) ? WATER_FEET : WATER_NONE;
 
 	if (!wasinwater && isinwater)
 		World->PlayPositionedSound (old_origin, CHAN_AUTO, SoundIndex("misc/h2ohit1.wav"));
@@ -889,8 +895,6 @@ CPhysicsEntity (Index)
 
 void CStepPhysics::CheckGround ()
 {
-	CTrace		trace;
-
 	if (Velocity.Z > 100)
 	{
 		GroundEntity = NULL;
@@ -901,7 +905,7 @@ void CStepPhysics::CheckGround ()
 	vec3f point = State.GetOrigin();
 	point.Z -= 0.25f;
 
-	trace = CTrace (State.GetOrigin(), GetMins(), GetMaxs(), point, gameEntity, CONTENTS_MASK_MONSTERSOLID);
+	CTrace trace (State.GetOrigin(), GetMins(), GetMaxs(), point, gameEntity, CONTENTS_MASK_MONSTERSOLID);
 
 	// check steepness
 	if ( trace.plane.normal[2] < 0.7 && !trace.startSolid)
@@ -952,7 +956,6 @@ int CStepPhysics::FlyMove (float time, int mask)
 	int			i, j, blocked = 0, numplanes = 0, numbumps = 4;
 	vec3f		planes[MAX_CLIP_PLANES], dir, primal_velocity, original_velocity, new_velocity, end;
 	float		d, time_left = time;
-	CTrace		trace;
 	
 	original_velocity = primal_velocity = Velocity;
 	GroundEntity = NULL;
@@ -962,7 +965,7 @@ int CStepPhysics::FlyMove (float time, int mask)
 		vec3f origin = State.GetOrigin ();
 		end = origin + time_left * Velocity;
 
-		trace = CTrace (origin, GetMins(), GetMaxs(), end, gameEntity, mask);
+		CTrace trace (origin, GetMins(), GetMaxs(), end, gameEntity, mask);
 
 		if (trace.allSolid)
 		{
@@ -1014,7 +1017,7 @@ int CStepPhysics::FlyMove (float time, int mask)
 			return 3;
 		}
 
-		planes[numplanes++] = trace.Plane.normal;
+		planes[numplanes++] = trace.plane.normal;
 
 //
 // modify original_velocity so it parallels all of the clip planes
@@ -1096,11 +1099,11 @@ bool CStepPhysics::Run ()
 	{
 		if (!(Flags & FL_FLY))
 		{
-			if (!((Flags & FL_SWIM) && (gameEntity->waterlevel > 2)))
+			if (!((Flags & FL_SWIM) && (gameEntity->waterlevel > WATER_WAIST)))
 			{
 				if (Velocity.Z < sv_gravity->Float() * -0.1)
 					hitsound = true;
-				if (gameEntity->waterlevel == 0)
+				if (gameEntity->waterlevel == WATER_NONE)
 					AddGravity ();
 			}
 		}

@@ -8,7 +8,7 @@ of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 See the GNU General Public License for more details.
 
@@ -27,16 +27,48 @@ list the mod on my page for CleanCode Quake2 to help get the word around. Thanks
 */
 
 //
-// cc_local.h
-// Local header. Contains definitions local to CleanCode files and not necessarily used by the Quake2 base.
+// cc_debugweapons.h
+// 
 //
 
-#if !defined(__CC_LOCAL_H__) || !defined(INCLUDE_GUARDS)
-#define __CC_LOCAL_H__
+#if !defined(__CC_DEBUGWEAPONS_H__) || !defined(INCLUDE_GUARDS)
+#define __CC_DEBUGWEAPONS_H__
 
-#include "g_local.h"
+class CDebugWeapon abstract : public CWeapon
+{
+public:
+	CDebugWeapon();
 
-extern CItemList *ItemList;
+	inline bool	CanFire	(CPlayerEntity *Player)
+	{
+		return true;
+	};
+	inline bool	CanStopFidgetting (CPlayerEntity *Player)
+	{
+		return true;
+	};
+	
+	// This function is called when the player hits the attack button.
+	// Returns "true" if the animation can go ahead (check for ammo, etc here)
+	inline bool	AttemptToFire (CPlayerEntity *Player)
+	{
+		return true;
+	}; 
+
+	// The function called to "fire"
+	virtual void	Fire (CPlayerEntity *Player) = 0;
+	void	Think (CPlayerEntity *Player);
+};
+
+class CSurfacePicker : public CDebugWeapon
+{
+public:
+	CSurfacePicker ();
+
+	void Fire (CPlayerEntity *Player);
+};
+
+extern CSurfacePicker Debug_SurfacePicker;
 
 #else
 FILE_WARNING

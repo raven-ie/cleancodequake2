@@ -24,8 +24,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 class vec3f; // forward declaration
 
 extern vec2_t	vec2Origin;
-extern vec3_t	vec3Origin;
+#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 extern vec4_t	vec4Origin;
+#endif
 
 #ifdef SHARED_ALLOW_4x4_MATRIX
 extern mat4x4_t	mat4x4Identity;

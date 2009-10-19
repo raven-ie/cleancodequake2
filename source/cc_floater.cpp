@@ -476,6 +476,8 @@ void CFloater::Wham ()
 	CMeleeWeapon::Fire (Entity, aim, 5 + irandom(6), -50);
 }
 
+#include "cc_tent.h"
+
 void CFloater::Zap ()
 {
 	vec3f	forward, right, origin, dir;
@@ -486,7 +488,7 @@ void CFloater::Zap ()
 	G_ProjectSource (Entity->State.GetOrigin(), offset, forward, right, origin);
 
 	Entity->PlaySound (CHAN_WEAPON, SoundAttack2);
-	CTempEnt_Splashes::Splash (origin, vec3Origin, CTempEnt_Splashes::SPT_SPARKS, 32);
+	CTempEnt_Splashes::Splash (origin, vec3fOrigin, CTempEnt_Splashes::SPT_SPARKS, 32);
 
 	if (Entity->Enemy && (Entity->Enemy->EntityFlags & ENT_HURTABLE))
 		entity_cast<CHurtableEntity>(Entity->Enemy)->TakeDamage (Entity, Entity, vec3fOrigin,

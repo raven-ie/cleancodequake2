@@ -118,6 +118,8 @@ void CArmor::Drop (CPlayerEntity *ent)
 {
 }
 
+#include "cc_tent.h"
+
 int CArmor::CheckArmor (CPlayerEntity *Player, vec3f &point, vec3f &normal, int damage, int dflags)
 {
 	if (!damage)

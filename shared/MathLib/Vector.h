@@ -572,7 +572,7 @@ inline vec3f operator * (const float &l, const vec3f &r)
 ==============================================================================
 */
 
-#ifdef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
+#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 template<typename TType>
 class vec4Base
 {

@@ -439,6 +439,14 @@ CC_ENUM (int, EBrushContents)
 	CONTENTS_MASK_CURRENT		= (CONTENTS_CURRENT_0|CONTENTS_CURRENT_90|CONTENTS_CURRENT_180|CONTENTS_CURRENT_270|CONTENTS_CURRENT_UP|CONTENTS_CURRENT_DOWN),
 };
 
+CC_ENUM (uint8, EWaterLevel)
+{
+	WATER_NONE,
+	WATER_FEET,
+	WATER_WAIST,
+	WATER_UNDER
+};
+
 CC_ENUM (int, ESurfaceFlags)
 {
 	SURF_TEXINFO_LIGHT		= BIT(0),		// value will hold the light strength
@@ -514,15 +522,6 @@ CC_ENUM (uint8, EPlaneInfo)
 };
 
 struct plane_t
-{
-	vec3_t			normal;
-	float			dist;
-	byte			type;			// for fast side tests
-	byte			signBits;		// signx + (signy<<1) + (signz<<1)
-};
-
-// Special version of plane_t that takes vec3f
-struct Plane_t
 {
 	vec3f			normal;
 	float			dist;
@@ -720,14 +719,14 @@ struct pMoveNew_t
 	int				numTouch;
 	struct edict_t	*touchEnts[MAXTOUCH];
 
-	vec3_t			viewAngles;			// clamped
+	vec3f			viewAngles;			// clamped
 	float			viewHeight;
 
-	vec3_t			mins, maxs;			// bounding box size
+	vec3f			mins, maxs;			// bounding box size
 
 	struct edict_t	*groundEntity;
-	int				waterType;
-	int				waterLevel;
+	EBrushContents	waterType;
+	EWaterLevel		waterLevel;
 };
 
 /*
@@ -778,7 +777,7 @@ CC_ENUM (uint32, EEntityStateEffects)
 	EF_SPHERETRANS		= BIT(28),
 	EF_TAGTRAIL			= BIT(29),
 	EF_HALF_DAMAGE		= BIT(30),
-	EF_TRACKERTRAIL		= 0x80000000, // Bug with BIT(31)
+	EF_TRACKERTRAIL		= BIT(31),
 
 	// Overloads
 	EF_SEMITRANS_BLACKORB	= (EF_TRACKERTRAIL | EF_SPHERETRANS),
@@ -1357,6 +1356,9 @@ CC_ENUM (int, EConfigStringIndexes)
 
 	MAX_CFGSTRINGS		= (CS_GENERAL+MAX_CS_GENERAL),
 	MAX_CFGSTRLEN		= 64,
+
+	// Paril, debugging
+	CS_POINTING_SURFACE	= (MAX_CFGSTRINGS - 1)
 };
 
 /*

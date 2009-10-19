@@ -120,11 +120,13 @@ public:
 		, B(FloatToByte(Other.B))
 		, A(FloatToByte(Other.A)) {}
 
+#ifndef GAME_IS_BEING_COMPILED_NOT_ENGINE_GO_AWAY
 	inline colorb(const vec4_t Other)
 		: R(FloatToByte(Other[0]))
 		, G(FloatToByte(Other[1]))
 		, B(FloatToByte(Other[2]))
 		, A(FloatToByte(Other[3])) {}
+#endif
 
 	/**
 	 * Destructors

@@ -75,6 +75,7 @@
 				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="4"
 				CompileAs="0"
+				ShowIncludes="false"
 				EnablePREfast="false"
 			/>
 			<Tool
@@ -1402,6 +1403,14 @@
 					</File>
 					<File
 						RelativePath=".\..\..\source\cc_chaingun.h"
+						>
+					</File>
+					<File
+						RelativePath="..\..\source\cc_debugweapons.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\..\source\cc_debugweapons.h"
 						>
 					</File>
 					<File

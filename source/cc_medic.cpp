@@ -590,6 +590,8 @@ static vec3f	MedicCableOffsets[] =
 	vec3f(32.7f, -19.7f, 10.4f)
 };
 
+#include "cc_tent.h"
+
 void CMedic::CableAttack ()
 {
 	vec3f	offset, start, end, f, r;
@@ -643,11 +645,11 @@ void CMedic::CableAttack ()
 		return;
 
 #ifndef MONSTER_USE_ROGUE_AI
-	tr = CTrace (start, Entity->Enemy->State.GetOrigin(), Entity->gameEntity, CONTENTS_MASK_SHOT);
+	tr (start, Entity->Enemy->State.GetOrigin(), Entity->gameEntity, CONTENTS_MASK_SHOT);
 	if (tr.fraction != 1.0 && tr.Ent != Entity->Enemy)
 		return;
 #else
-	tr = CTrace (start, Entity->Enemy->State.GetOrigin(), Entity->gameEntity, CONTENTS_MASK_SHOT);
+	tr (start, Entity->Enemy->State.GetOrigin(), Entity->gameEntity, CONTENTS_MASK_SHOT);
 	if (tr.fraction != 1.0 && tr.Ent != Entity->Enemy)
 	{
 		if (tr.ent == world)
@@ -710,7 +712,7 @@ void CMedic::CableAttack ()
 #else
 		{
 			vec3f maxs = Entity->Enemy->GetMaxs() + vec3f(0, 0, 48);
-			tr = CTrace (Entity->Enemy->State.GetOrigin(), Entity->Enemy->GetMins(), maxs, Entity->Enemy->State.GetOrigin(), Entity->Enemy->gameEntity, CONTENTS_MASK_MONSTERSOLID);
+			tr (Entity->Enemy->State.GetOrigin(), Entity->Enemy->GetMins(), maxs, Entity->Enemy->State.GetOrigin(), Entity->Enemy->gameEntity, CONTENTS_MASK_MONSTERSOLID);
 		}
 
 		if (tr.startSolid || tr.allSolid)
