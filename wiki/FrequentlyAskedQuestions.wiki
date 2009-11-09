@@ -19,6 +19,12 @@ This, among many other things, is still left up to the engine. CleanCode only de
 
 However, if you have an engine that has improved effects and new temporary entities, you can easily change up the macros and make new functions to use these.
 
+===So how do I compile CleanCode?===
+Checkout the SVN source and open the corresponding project file to your IDE. If a project for a certain compiler does not exist, you can help us out by creating it and committing or sending it to us to build into the working copy.
+
+===I'm getting "Find/Load of game library failed" from Quake, what does this mean?===
+This means something failed before the game was able to call GetGameAPI. Normally you're missing something; CleanCode has a few dependencies because of CURL, make sure they are in your Quake 2 directory. If running on Windows, you may need the Visual Studio 2008 or 2010 redists, which can be found on the downloads page.
+
 ===I'm trying to convert/write some code similar to original Quake II and I get all of these 4996 warnings.. should I be worried?===
 That depends. If the 4996 warnings are related to CleanCode, follow the advice. This means that I have replaced a specific function and you should, and I repeat, should, use the new, cleaner, more stable function.
 
