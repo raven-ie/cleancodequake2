@@ -73,6 +73,21 @@ These features, however, are not permanent; they can be turned off by recompilin
 
 See [Options] for more details on each definition and what they do exactly.
 
+===I was doing x and the game crashed! What do I do?===
+Several things can happen during a crash. The two we're looking at here are exception handling; if you see a window come up saying "CleanCode ran into an unhandled exception", move to Fix A of troubleshooting, otherwise go to Fix B. If the game just crashes and gives you the Windows crash message, move to Fix C. If the game and engine disappear with no trace, move to Fix D.
+
+*Fix A*
+CleanCode has an exception handler designed to both handle exceptions, generate a crash report, and even in non-severe cases let the game continue normally. When briefed, it is recommended you generate a crash report; after generating the report the game will  attempt to continue normally. If, however, you get a repeat message, we recommend you generate one more crash report to see if they are related; if it happens a third time, end the process. As soon as possible, create an issue on this site, and email us the report(s) (paril at alteredsoftworks dot com).
+
+*Fix B*
+If you get a crash report from your engine in particular, post this here as well with the report. You may also send the report to your engine's developer for additional aid. The crash probably didn't get created as a result of CleanCode, but we will double-check to make sure that it wasn't our fault!
+
+*Fix C*
+Usually this means that either your engine doesn't have an exception handler, or it crashed somewhere where a crash handler wouldn't of been any help. Submit an issue telling us anything specific you might of done to create the crash. If you have no additional info, still report an issue with your OS, engine choice and any special paks you might have, and we'll try to re-create it.
+
+*Fix D*
+This is a bit harder to track, but this might also be an OS issue. Follow all of Step C, and we'll see what we can do.
+
 ===Does CleanCode support CTF, Tourney, or anything like that?===
 CleanCode has CTF built in (it's known as CleanCTF internally), so that's not a problem. However, tournament modes, class-based gameplay, all of that would have to be done either yourself or wait for an official release that may contain a tourney-like remake (CleanTourney maybe?). All of these gamemodes are entirely possibly, it just takes someone to code it!
 
