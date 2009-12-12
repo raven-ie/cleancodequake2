@@ -3,7 +3,7 @@
 = Credits =
 
 == Programming ==
-Paril
+  * Paril
 
 == Programming Reference ==
   * Fredrick Vamstad
