@@ -6,8 +6,8 @@ CleanCode is available in the following release formats:
 
 == Win32 ==
 
-[http://alteredsoftworks.com/cleancode/files/is/ccsetup.exe InstallShield Setup (6.6 MB)]
-[http://alteredsoftworks.com/cleancode/files/loose/CleanCode.zip ZIP (5.0 MB)]
+  * [http://alteredsoftworks.com/cleancode/files/is/ccsetup.exe InstallShield Setup (6.6 MB)]
+  * [http://alteredsoftworks.com/cleancode/files/loose/CleanCode.zip ZIP (5.0 MB)]
 
 == Others ==
 
