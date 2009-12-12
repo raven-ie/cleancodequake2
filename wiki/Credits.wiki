@@ -11,9 +11,9 @@ Paril
   * [http://msdn.microsoft.com/ MSDN]
 
 == Promotion/PR ==
-  * `[`EoM`]`Pr0c3550r`Q2C`
-  * `BTF`Jehar
-  * PeeWee`ROTA`
+  * `[`EoM`]`Pr0c3550r`[`Q2C`]`
+  * `[`BTF`]`Jehar
+  * PeeWee`[`ROTA`]`
   * Ra
 
 == Testing ==
