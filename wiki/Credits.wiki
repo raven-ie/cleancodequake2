@@ -6,23 +6,23 @@
 Paril
 
 == Programming Reference ==
-Fredrick Vamstad
-[http://www.cplusplus.com CPlusPlus]
-[http://msdn.microsoft.com/ MSDN]
+  * Fredrick Vamstad
+  * [http://www.cplusplus.com CPlusPlus]
+  * [http://msdn.microsoft.com/ MSDN]
 
 == Promotion/PR ==
-[EoM]Pr0c3550r[Q2C]
-[BTF]Jehar
-PeeWee[ROTA]
-Ra
+  * [EoM]Pr0c3550r[Q2C]
+  * [BTF]Jehar
+  * PeeWee[ROTA]
+  * Ra
 
 == Testing ==
-Jehar
-PeeWee
-James
-xRDVx
-Keeshu
+  * Jehar
+  * PeeWee
+  * James
+  * xRDVx
+  * Keeshu
 
 == Moral Support ==
-James
-PeeWee
+  * James
+  * PeeWee
