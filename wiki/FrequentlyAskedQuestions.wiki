@@ -105,3 +105,8 @@ Any entity class you create should have two constructors: Class() and Class(int 
 You may omit certain constructors under the following conditions:
   * Omit Class() if the entity inherits CMapEntity and should only be made through maps
   * Omit Class(int Index) if the entity does not inherit CMapEntity and will never be created on a re-used spot
+
+===Why am I getting an error on including <random>?===
+<random> is from the C++0x Technical Report 1 documentation, which only a handful of compilers support. Among them, which CleanCode is designed around, is Visual Studio 2008 and Visual Studio 2010. Visual Studio 2010 already supports TR1 and some of TR2, so that's not an issue, however VS08 requires the [http://www.microsoft.com/downloads/details.aspx?FamilyId=D466226B-8DAB-445F-A7B4-448B326C48E7&displaylang=en Visual Studio 2008 Feature Pack], which will give you access to some of the TR1 headers, including random.
+
+If your compiler does not support TR1 at all, or you are not in a position to do anything of the above (such as 2008 Express), you may disable the TR1 headers by setting _CC_NO_TR1 to 1 in cc_options.h
