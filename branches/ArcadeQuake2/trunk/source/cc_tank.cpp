@@ -1,0 +1,939 @@
+/*
+Copyright (C) 1997-2001 Id Software, Inc.
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+/*
+This source file is contained as part of CleanCode Quake2, a project maintained
+by Paril, to 'clean up' and make Quake2 an easier source base to read and work with.
+
+You may use any part of this code to help create your own bases and own mods off
+this code if you wish. It is under the same license as Quake 2 source (as above),
+therefore you are free to have to fun with it. All I ask is you email me so I can
+list the mod on my page for CleanCode Quake2 to help get the word around. Thanks.
+*/
+
+//
+// cc_tank.cpp
+// Tank
+//
+
+#include "cc_local.h"
+#include "m_tank.h"
+#include "cc_tank.h"
+
+CTank::CTank (uint32 ID) :
+CMonster(ID)
+{
+	Scale = MODEL_SCALE;
+	MonsterName = "Tank";
+}
+
+CTankCommander::CTankCommander (uint32 ID) :
+CTank (ID)
+{
+	Scale = MODEL_SCALE;
+	MonsterName = "Tank Commander";
+}
+
+//
+// misc
+//
+
+void CTank::Sight ()
+{
+	Entity->PlaySound (CHAN_VOICE, Sounds[SOUND_SIGHT]);
+}
+
+void CTank::Footstep ()
+{
+	Entity->PlaySound (CHAN_BODY, Sounds[SOUND_STEP]);
+}
+
+void CTank::Thud ()
+{
+	Entity->PlaySound (CHAN_BODY, Sounds[SOUND_THUD]);
+}
+
+void CTank::Windup ()
+{
+	Entity->PlaySound (CHAN_WEAPON, Sounds[SOUND_WINDUP]);
+}
+
+void CTank::Idle ()
+{
+	Entity->PlaySound (CHAN_VOICE, Sounds[SOUND_IDLE], 255, ATTN_IDLE);
+}
+
+//
+// stand
+//
+
+CFrame TankFramesStand []=
+{
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0)
+};
+CAnim	TankMoveStand (FRAME_stand01, FRAME_stand30, TankFramesStand);
+	
+void CTank::Stand ()
+{
+	CurrentMove = &TankMoveStand;
+}
+
+//
+// walk
+//
+
+CFrame TankFramesWalk [] =
+{
+	CFrame (&CMonster::AI_Walk, 4),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 3),
+	CFrame (&CMonster::AI_Walk, 2),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 4),
+	CFrame (&CMonster::AI_Walk, 4, ConvertDerivedFunction(&CTank::Footstep)),
+	CFrame (&CMonster::AI_Walk, 3),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 4),
+	CFrame (&CMonster::AI_Walk, 5),
+	CFrame (&CMonster::AI_Walk, 7),
+	CFrame (&CMonster::AI_Walk, 7),
+	CFrame (&CMonster::AI_Walk, 6),
+	CFrame (&CMonster::AI_Walk, 6, ConvertDerivedFunction(&CTank::Footstep))
+};
+CAnim TankMoveWalk (FRAME_walk05, FRAME_walk20, TankFramesWalk);
+
+void CTank::Walk ()
+{
+	CurrentMove = &TankMoveWalk;
+}
+
+//
+// run
+//
+
+CFrame TankFramesStartRun [] =
+{
+	CFrame (&CMonster::AI_Run,  0),
+	CFrame (&CMonster::AI_Run,  6),
+	CFrame (&CMonster::AI_Run,  6),
+	CFrame (&CMonster::AI_Run, 11, ConvertDerivedFunction(&CTank::Footstep))
+};
+CAnim TankMoveStartRun (FRAME_walk01, FRAME_walk04, TankFramesStartRun, ConvertDerivedFunction(&CTank::Run));
+
+CFrame TankFramesRun [] =
+{
+	CFrame (&CMonster::AI_Run, 4),
+	CFrame (&CMonster::AI_Run, 5),
+	CFrame (&CMonster::AI_Run, 3),
+	CFrame (&CMonster::AI_Run, 2),
+	CFrame (&CMonster::AI_Run, 5),
+	CFrame (&CMonster::AI_Run, 5),
+	CFrame (&CMonster::AI_Run, 4),
+	CFrame (&CMonster::AI_Run, 4, ConvertDerivedFunction(&CTank::Footstep)),
+	CFrame (&CMonster::AI_Run, 3),
+	CFrame (&CMonster::AI_Run, 5),
+	CFrame (&CMonster::AI_Run, 4),
+	CFrame (&CMonster::AI_Run, 5),
+	CFrame (&CMonster::AI_Run, 7),
+	CFrame (&CMonster::AI_Run, 7),
+	CFrame (&CMonster::AI_Run, 6),
+	CFrame (&CMonster::AI_Run, 6, ConvertDerivedFunction(&CTank::Footstep))
+};
+CAnim TankMoveRun (FRAME_walk05, FRAME_walk20, TankFramesRun);
+
+CFrame TankFramesStopRun [] =
+{
+	CFrame (&CMonster::AI_Run,  3),
+	CFrame (&CMonster::AI_Run,  3),
+	CFrame (&CMonster::AI_Run,  2),
+	CFrame (&CMonster::AI_Run,  2),
+	CFrame (&CMonster::AI_Run,  4, ConvertDerivedFunction(&CTank::Footstep))
+};
+CAnim TankMoveStopRun (FRAME_walk21, FRAME_walk25, TankFramesStopRun, ConvertDerivedFunction(&CTank::Walk));
+
+void CTank::Run ()
+{
+	if (Entity->Enemy && (Entity->Enemy->EntityFlags & ENT_PLAYER))
+		AIFlags |= AI_BRUTAL;
+	else
+		AIFlags &= ~AI_BRUTAL;
+
+	if (AIFlags & AI_STAND_GROUND)
+	{
+		CurrentMove = &TankMoveStand;
+		return;
+	}
+
+	if (CurrentMove == &TankMoveWalk ||
+		CurrentMove == &TankMoveStartRun)
+	{
+		CurrentMove = &TankMoveRun;
+	}
+	else
+	{
+		CurrentMove = &TankMoveStartRun;
+	}
+}
+
+//
+// pain
+//
+
+CFrame TankFramesPain1 [] =
+{
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0)
+};
+CAnim TankMovePain1 (FRAME_pain101, FRAME_pain104, TankFramesPain1, ConvertDerivedFunction(&CTank::Run));
+
+CFrame TankFramesPain2 [] =
+{
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0)
+};
+CAnim TankMovePain2 (FRAME_pain201, FRAME_pain205, TankFramesPain2, ConvertDerivedFunction(&CTank::Run));
+
+CFrame TankFramesPain3 [] =
+{
+	CFrame (&CMonster::AI_Move, -7),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 2),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 3),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 2),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0, ConvertDerivedFunction(&CTank::Footstep))
+};
+CAnim TankMovePain3 (FRAME_pain301, FRAME_pain316, TankFramesPain3, ConvertDerivedFunction(&CTank::Run));
+
+void CTank::Pain (CBaseEntity *other, float kick, sint32 damage)
+{
+	if (Entity->Health < (Entity->MaxHealth / 2))
+		Entity->State.GetSkinNum() |= 1;
+
+	if (damage <= 10)
+		return;
+
+	if (level.Frame < PainDebounceTime)
+			return;
+
+	if (damage <= 30 && frand() > 0.2)
+		return;
+	
+	// If hard or nightmare, don't go into pain while attacking
+	if ( skill->Integer() >= 2)
+	{
+		if ( (Entity->State.GetFrame() >= FRAME_attak301) && (Entity->State.GetFrame() <= FRAME_attak330) )
+			return;
+		if ( (Entity->State.GetFrame() >= FRAME_attak101) && (Entity->State.GetFrame() <= FRAME_attak116) )
+			return;
+	}
+
+	PainDebounceTime = level.Frame + 30;
+	Entity->PlaySound (CHAN_VOICE, Sounds[SOUND_PAIN]);
+
+	if (skill->Integer() == 3)
+		return;		// no pain anims in nightmare
+
+#if MONSTER_USE_ROGUE_AI
+	// PMM - blindfire cleanup
+	AIFlags &= ~AI_MANUAL_STEERING;
+	// pmm
+#endif
+
+	CurrentMove = ((damage <= 60) ? ((damage <= 30) ? &TankMovePain1 : &TankMovePain2) : &TankMovePain3);
+};
+
+
+//
+// attacks
+//
+
+void CTank::Blaster ()
+{
+	vec3f	forward, right, start, end, dir;
+	sint32		flash_number;
+
+	switch (Entity->State.GetFrame())
+	{
+	case FRAME_attak110:
+		flash_number = MZ2_TANK_BLASTER_1;
+		break;
+	case FRAME_attak113:
+		flash_number = MZ2_TANK_BLASTER_2;
+		break;
+	default:
+		flash_number = MZ2_TANK_BLASTER_3;
+		break;
+	}
+
+	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
+	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
+
+	end = Entity->Enemy->State.GetOrigin();
+	end.Z += Entity->Enemy->ViewHeight;
+	dir = end - start;
+
+	MonsterFireBlaster (start, dir, 30, 800, flash_number, EF_BLASTER);
+}	
+
+void CTank::Strike ()
+{
+	Entity->PlaySound (CHAN_WEAPON, Sounds[SOUND_STRIKE]);
+}	
+
+void CTank::Rocket ()
+{
+#if MONSTER_USE_ROGUE_AI
+	vec3f	forward, right, start, dir, vec, target;
+	sint32		flash_number, rocketSpeed;
+	CTrace	trace;
+	bool blindfire = false;
+
+	if(!Entity->Enemy || !Entity->Enemy->GetInUse())
+		return;
+
+	if (AIFlags & AI_MANUAL_STEERING)
+		blindfire = true;
+
+	switch (Entity->State.GetFrame())
+	{
+	case FRAME_attak324:
+		flash_number = MZ2_TANK_ROCKET_1;
+		break;
+	case FRAME_attak327:
+		flash_number = MZ2_TANK_ROCKET_2;
+		break;
+	default:
+		flash_number = MZ2_TANK_ROCKET_3;
+		break;
+	}
+
+	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
+	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
+
+	rocketSpeed = 500 + (100 * skill->Integer());	// PGM rock & roll.... :)
+
+	target = (blindfire) ? BlindFireTarget : Entity->Enemy->State.GetOrigin();
+
+	if (blindfire)
+	{
+		vec = target;
+		dir = vec - start;
+	}
+	else if(frand() < 0.66 || (start[2] < Entity->Enemy->GetAbsMin().Z))
+	{
+		vec = Entity->Enemy->State.GetOrigin();
+		vec.Z += Entity->Enemy->ViewHeight;
+		dir = vec - start;
+	}
+	else
+	{
+		vec = Entity->Enemy->State.GetOrigin();
+		vec.Z = Entity->Enemy->GetAbsMin().Z;
+		dir = vec - start;
+	}
+
+	if (!blindfire && ((frand() < (0.2 + ((3 - skill->Integer()) * 0.15)))))
+	{
+		vec = vec.MultiplyAngles (dir.Length() / rocketSpeed, entity_cast<CPhysicsEntity>(Entity->Enemy)->Velocity);
+		dir = vec - start;
+	}
+
+	dir.NormalizeFast ();
+
+	trace (start, vec, Entity, CONTENTS_MASK_SHOT);
+	if (blindfire)
+	{
+		if (!(trace.startSolid || trace.allSolid || (trace.fraction < 0.5)))
+			MonsterFireRocket (start, dir, 50, rocketSpeed, flash_number);
+		else 
+		{
+			vec = target.MultiplyAngles (-20, right);
+			dir = vec - start;
+			dir.NormalizeFast ();
+
+			trace (start, vec, Entity, CONTENTS_MASK_SHOT);
+			if (!(trace.startSolid || trace.allSolid || (trace.fraction < 0.5)))
+				MonsterFireRocket (start, dir, 50, rocketSpeed, flash_number);
+			else 
+			{
+				vec = target.MultiplyAngles (20, right);
+				dir = vec - start;
+				dir.NormalizeFast ();
+
+				trace (start, vec, Entity, CONTENTS_MASK_SHOT);
+				if (!(trace.startSolid || trace.allSolid || (trace.fraction < 0.5)))
+					MonsterFireRocket (start, dir, 50, rocketSpeed, flash_number);
+			}
+		}
+	}
+	else
+	{
+		trace (start, vec, Entity, CONTENTS_MASK_SHOT);
+		if(trace.Ent == Entity->Enemy || trace.Ent == World)
+		{
+			if(trace.fraction > 0.5 || (trace.ent && trace.ent->client))
+				MonsterFireRocket (start, dir, 50, rocketSpeed, flash_number);
+		}
+	}
+#else
+	vec3f	forward, right, start, dir, vec;
+	sint32		flash_number;
+
+	switch (Entity->State.GetFrame())
+	{
+	case FRAME_attak324:
+		flash_number = MZ2_TANK_ROCKET_1;
+		break;
+	case FRAME_attak327:
+		flash_number = MZ2_TANK_ROCKET_2;
+		break;
+	default:
+		flash_number = MZ2_TANK_ROCKET_3;
+		break;
+	}
+
+	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
+	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
+
+	vec = Entity->Enemy->State.GetOrigin();
+	vec.Z += Entity->Enemy->ViewHeight;
+	dir = vec - start;
+	dir.NormalizeFast ();
+
+	MonsterFireRocket (start, dir, 50, 550, flash_number);
+#endif
+}
+
+void CTank::MachineGun ()
+{
+	vec3f	dir, start, forward, right;
+	sint32		flash_number = MZ2_TANK_MACHINEGUN_1 + (Entity->State.GetFrame() - FRAME_attak406);
+
+	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
+	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
+
+	if (Entity->Enemy)
+	{
+		vec3f vec = Entity->Enemy->State.GetOrigin();
+		vec.Z += Entity->Enemy->ViewHeight;
+		vec -= start;
+		vec = vec.ToAngles ();
+		dir.X = vec.X;
+	}
+	else
+		dir.X = 0;
+
+	if (Entity->State.GetFrame() <= FRAME_attak415)
+		dir.Y = Entity->State.GetAngles().Y - 8 * (Entity->State.GetFrame() - FRAME_attak411);
+	else
+		dir.Y = Entity->State.GetAngles().Y + 8 * (Entity->State.GetFrame() - FRAME_attak419);
+	dir.Z = 0;
+
+	dir.ToVectors (&forward, NULL, NULL);
+	MonsterFireBullet (start, forward, 20, 4, DEFAULT_BULLET_HSPREAD, DEFAULT_BULLET_VSPREAD, flash_number);
+}	
+
+
+CFrame TankFramesAttackBlast [] =
+{
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, -1),
+	CFrame (&CMonster::AI_Charge, -2),
+	CFrame (&CMonster::AI_Charge, -1),
+	CFrame (&CMonster::AI_Charge, -1),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0,	ConvertDerivedFunction(&CTank::Blaster)),		// 10
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0,	ConvertDerivedFunction(&CTank::Blaster)),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0,	ConvertDerivedFunction(&CTank::Blaster)) // 16
+};
+CAnim TankMoveAttackBlast (FRAME_attak101, FRAME_attak116, TankFramesAttackBlast, ConvertDerivedFunction(&CTank::ReAttackBlaster));
+
+CFrame TankFramesReAttackBlast [] =
+{
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0,	ConvertDerivedFunction(&CTank::Blaster)),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0,	ConvertDerivedFunction(&CTank::Blaster))			// 16
+};
+CAnim TankMoveReAttackBlast (FRAME_attak111, FRAME_attak116, TankFramesReAttackBlast, ConvertDerivedFunction(&CTank::ReAttackBlaster));
+
+CFrame TankFramesAttackPostBlast [] =	
+{
+	CFrame (&CMonster::AI_Move, 0),				// 17
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 2),
+	CFrame (&CMonster::AI_Move, 3),
+	CFrame (&CMonster::AI_Move, 2),
+	CFrame (&CMonster::AI_Move, -2,	ConvertDerivedFunction(&CTank::Footstep))		// 22
+};
+CAnim TankMoveAttackPostBlast (FRAME_attak117, FRAME_attak122, TankFramesAttackPostBlast, ConvertDerivedFunction(&CTank::Run));
+
+void CTank::ReAttackBlaster ()
+{
+	if (skill->Integer() >= 2 && IsVisible (Entity, Entity->Enemy) && entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0 && frand() <= 0.6)
+	{
+		CurrentMove = &TankMoveReAttackBlast;
+		return;
+	}
+	CurrentMove = &TankMoveAttackPostBlast;
+}
+
+void CTank::PostStrike ()
+{
+	Entity->Enemy = NULL;
+	Run ();
+}
+
+CFrame TankFramesAttackStrike [] =
+{
+	CFrame (&CMonster::AI_Move, 3),
+	CFrame (&CMonster::AI_Move, 2),
+	CFrame (&CMonster::AI_Move, 2),
+	CFrame (&CMonster::AI_Move, 1),
+	CFrame (&CMonster::AI_Move, 6),
+	CFrame (&CMonster::AI_Move, 7),
+	CFrame (&CMonster::AI_Move, 9, ConvertDerivedFunction(&CTank::Footstep)),
+	CFrame (&CMonster::AI_Move, 2),
+	CFrame (&CMonster::AI_Move, 1),
+	CFrame (&CMonster::AI_Move, 2),
+	CFrame (&CMonster::AI_Move, 2, ConvertDerivedFunction(&CTank::Footstep)),
+	CFrame (&CMonster::AI_Move, 2),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, -2),
+	CFrame (&CMonster::AI_Move, -2),
+	CFrame (&CMonster::AI_Move, 0, ConvertDerivedFunction(&CTank::Windup)),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0, ConvertDerivedFunction(&CTank::Strike)),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, -1),
+	CFrame (&CMonster::AI_Move, -1),
+	CFrame (&CMonster::AI_Move, -1),
+	CFrame (&CMonster::AI_Move, -1),
+	CFrame (&CMonster::AI_Move, -1),
+	CFrame (&CMonster::AI_Move, -3),
+	CFrame (&CMonster::AI_Move, -10),
+	CFrame (&CMonster::AI_Move, -10),
+	CFrame (&CMonster::AI_Move, -2),
+	CFrame (&CMonster::AI_Move, -3),
+	CFrame (&CMonster::AI_Move, -2, ConvertDerivedFunction(&CTank::Footstep))
+};
+CAnim TankMoveAttackStrike (FRAME_attak201, FRAME_attak238, TankFramesAttackStrike, ConvertDerivedFunction(&CTank::PostStrike));
+
+CFrame TankFramesAttackPreRocket [] =
+{
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),			// 10
+
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 1),
+	CFrame (&CMonster::AI_Charge, 2),
+	CFrame (&CMonster::AI_Charge, 7),
+	CFrame (&CMonster::AI_Charge, 7),
+	CFrame (&CMonster::AI_Charge, 7,  ConvertDerivedFunction(&CTank::Footstep)),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),			// 20
+
+	CFrame (&CMonster::AI_Charge, -3)
+};
+CAnim TankMoveAttackPreRocket (FRAME_attak301, FRAME_attak321, TankFramesAttackPreRocket, ConvertDerivedFunction(&CTank::DoAttackRocket));
+
+CFrame TankFramesAttackFireRocket [] =
+{
+	CFrame (&CMonster::AI_Charge, -3),			// Loop Start	22 
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0,  ConvertDerivedFunction(&CTank::Rocket)),		// 24
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0,  ConvertDerivedFunction(&CTank::Rocket)),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, -1, ConvertDerivedFunction(&CTank::Rocket))		// 30	Loop End
+};
+CAnim TankMoveAttackFireRocket (FRAME_attak322, FRAME_attak330, TankFramesAttackFireRocket, ConvertDerivedFunction(&CTank::ReFireRocket));
+
+CFrame TankFramesAttackPostRocket [] =
+{	
+	CFrame (&CMonster::AI_Charge, 0),			// 31
+	CFrame (&CMonster::AI_Charge, -1),
+	CFrame (&CMonster::AI_Charge, -1),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 2),
+	CFrame (&CMonster::AI_Charge, 3),
+	CFrame (&CMonster::AI_Charge, 4),
+	CFrame (&CMonster::AI_Charge, 2),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),			// 40
+
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, -9),
+	CFrame (&CMonster::AI_Charge, -8),
+	CFrame (&CMonster::AI_Charge, -7),
+	CFrame (&CMonster::AI_Charge, -1),
+	CFrame (&CMonster::AI_Charge, -1, ConvertDerivedFunction(&CTank::Footstep)),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),			// 50
+
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0)
+};
+CAnim TankMoveAttackPostRocket (FRAME_attak331, FRAME_attak353, TankFramesAttackPostRocket, ConvertDerivedFunction(&CTank::Run));
+
+CFrame TankFramesAttackChain [] =
+{
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (NULL,      0, ConvertDerivedFunction(&CTank::MachineGun)),
+	CFrame (NULL,      0, ConvertDerivedFunction(&CTank::MachineGun)),
+	CFrame (NULL,      0, ConvertDerivedFunction(&CTank::MachineGun)),
+	CFrame (NULL,      0, ConvertDerivedFunction(&CTank::MachineGun)),
+	CFrame (NULL,      0, ConvertDerivedFunction(&CTank::MachineGun)),
+	CFrame (NULL,      0, ConvertDerivedFunction(&CTank::MachineGun)),
+	CFrame (NULL,      0, ConvertDerivedFunction(&CTank::MachineGun)),
+	CFrame (NULL,      0, ConvertDerivedFunction(&CTank::MachineGun)),
+	CFrame (NULL,      0, ConvertDerivedFunction(&CTank::MachineGun)),
+	CFrame (NULL,      0, ConvertDerivedFunction(&CTank::MachineGun)),
+	CFrame (NULL,      0, ConvertDerivedFunction(&CTank::MachineGun)),
+	CFrame (NULL,      0, ConvertDerivedFunction(&CTank::MachineGun)),
+	CFrame (NULL,      0, ConvertDerivedFunction(&CTank::MachineGun)),
+	CFrame (NULL,      0, ConvertDerivedFunction(&CTank::MachineGun)),
+	CFrame (NULL,      0, ConvertDerivedFunction(&CTank::MachineGun)),
+	CFrame (NULL,      0, ConvertDerivedFunction(&CTank::MachineGun)),
+	CFrame (NULL,      0, ConvertDerivedFunction(&CTank::MachineGun)),
+	CFrame (NULL,      0, ConvertDerivedFunction(&CTank::MachineGun)),
+	CFrame (NULL,      0, ConvertDerivedFunction(&CTank::MachineGun)),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0),
+	CFrame (&CMonster::AI_Charge, 0)
+};
+CAnim TankMoveAttackChain (FRAME_attak401, FRAME_attak429, TankFramesAttackChain, ConvertDerivedFunction(&CTank::Run));
+
+void CTank::ReFireRocket ()
+{
+#if MONSTER_USE_ROGUE_AI
+	// PMM - blindfire cleanup
+	if (AIFlags & AI_MANUAL_STEERING)
+	{
+		AIFlags &= ~AI_MANUAL_STEERING;
+		CurrentMove = &TankMoveAttackPostRocket;
+		return;
+	}
+	// pmm
+#endif
+
+	// Only on hard or nightmare
+	if ( skill->Integer() >= 2 && entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0 && IsVisible(Entity, Entity->Enemy) && frand() <= 0.4)
+	{
+		CurrentMove = &TankMoveAttackFireRocket;
+		return;
+	}
+	CurrentMove = &TankMoveAttackPostRocket;
+}
+
+void CTank::DoAttackRocket ()
+{
+	CurrentMove = &TankMoveAttackFireRocket;
+}
+
+void CTank::Attack ()
+{
+	if (!Entity->Enemy || !Entity->Enemy->GetInUse())
+		return;
+
+	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health < 0)
+	{
+		CurrentMove = &TankMoveAttackStrike;
+		AIFlags &= ~AI_BRUTAL;
+		return;
+	}
+
+#if MONSTER_USE_ROGUE_AI
+	// PMM 
+	if (AttackState == AS_BLIND)
+	{
+		// setup shot probabilities
+		float r = frand();
+
+		BlindFireDelay += 3.2 + 2.0 + frand()*3.0;
+
+		// don't shoot at the origin
+		if (BlindFireTarget == vec3fOrigin)
+			return;
+
+		// don't shoot if the dice say not to
+		if (BlindFireDelay < 6.5 && (r > 0.4f))
+			return;
+		else if (r > 0.1f)
+			return;
+
+		// turn on manual steering to signal both manual steering and blindfire
+		AIFlags |= AI_MANUAL_STEERING;
+		CurrentMove = &TankMoveAttackFireRocket;
+		AttackFinished = level.Frame + 30 + ((2*frand())*10);
+		PainDebounceTime = level.Frame + 50;	// no pain for a while
+		return;
+	}
+	// pmm
+#endif
+
+	float range = (Entity->Enemy->State.GetOrigin() - Entity->State.GetOrigin()).Length();
+	float r = frand();
+
+	if (range <= 125)
+	{
+		if (r < 0.4)
+			CurrentMove = &TankMoveAttackChain;
+		else 
+			CurrentMove = &TankMoveAttackBlast;
+	}
+	else if (range <= 250)
+	{
+		if (r < 0.5)
+			CurrentMove = &TankMoveAttackChain;
+		else
+			CurrentMove = &TankMoveAttackBlast;
+	}
+	else
+	{
+		if (r < 0.33)
+			CurrentMove = &TankMoveAttackChain;
+		else if (r < 0.66)
+		{
+			CurrentMove = &TankMoveAttackPreRocket;
+			PainDebounceTime = level.Frame + 50;	// no pain for a while
+		}
+		else
+			CurrentMove = &TankMoveAttackBlast;
+	}
+}
+
+
+//
+// death
+//
+
+void CTank::Dead ()
+{
+	Entity->GetMins().Set (-16);
+	Entity->GetMaxs().Set (16, 16, -0);
+	Entity->PhysicsType = PHYSICS_TOSS;
+	Entity->GetSvFlags() |= SVF_DEADMONSTER;
+	Entity->NextThink = 0;
+	Entity->Link ();
+}
+
+CFrame TankFramesDeath1 [] =
+{
+	CFrame (&CMonster::AI_Move, -7),
+	CFrame (&CMonster::AI_Move, -2),
+	CFrame (&CMonster::AI_Move, -2),
+	CFrame (&CMonster::AI_Move, 1),
+	CFrame (&CMonster::AI_Move, 3),
+	CFrame (&CMonster::AI_Move, 6),
+	CFrame (&CMonster::AI_Move, 1),
+	CFrame (&CMonster::AI_Move, 1),
+	CFrame (&CMonster::AI_Move, 2),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, -2),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, -3),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, -4),
+	CFrame (&CMonster::AI_Move, -6),
+	CFrame (&CMonster::AI_Move, -4),
+	CFrame (&CMonster::AI_Move, -5),
+	CFrame (&CMonster::AI_Move, -7),
+	CFrame (&CMonster::AI_Move, -15, ConvertDerivedFunction(&CTank::Thud)),
+	CFrame (&CMonster::AI_Move, -5),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0),
+	CFrame (&CMonster::AI_Move, 0)
+};
+CAnim TankMoveDeath (FRAME_death101, FRAME_death132, TankFramesDeath1, ConvertDerivedFunction(&CTank::Dead));
+
+void CTank::Die (CBaseEntity *inflictor, CBaseEntity *attacker, sint32 damage, vec3f &point)
+{
+// check for gib
+	if (Entity->Health <= Entity->GibHealth)
+	{
+		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
+		for (sint32 n= 0; n < 1 /*4*/; n++)
+			CGibEntity::Spawn (Entity, GameMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		for (sint32 n= 0; n < 4; n++)
+			CGibEntity::Spawn (Entity, GameMedia.Gib_SmallMetal(), damage, GIB_METALLIC);
+		CGibEntity::Spawn (Entity, GameMedia.Gib_Chest, damage, GIB_ORGANIC);
+		Entity->ThrowHead (GameMedia.Gib_Gear(), damage, GIB_METALLIC);
+		Entity->DeadFlag = true;
+		return;
+	}
+
+	if (Entity->DeadFlag == true)
+		return;
+
+// regular death
+	Entity->PlaySound (CHAN_VOICE, Sounds[SOUND_DIE]);
+	Entity->DeadFlag = true;
+	Entity->CanTakeDamage = true;
+
+	CurrentMove = &TankMoveDeath;
+}
+
+
+//
+// monster_tank
+//
+
+void CTank::Spawn ()
+{
+	Entity->State.GetModelIndex() = ModelIndex ("models/monsters/tank/tris.md2");
+	Entity->GetMins().Set (-32, -32, -16);
+	Entity->GetMaxs().Set (32, 32, 72);
+	Entity->GetSolid() = SOLID_BBOX;
+
+	Sounds[SOUND_PAIN] = SoundIndex ("tank/tnkpain2.wav");
+	Sounds[SOUND_THUD] = SoundIndex ("tank/tnkdeth2.wav");
+	Sounds[SOUND_IDLE] = SoundIndex ("tank/tnkidle1.wav");
+	Sounds[SOUND_DIE] = SoundIndex ("tank/death.wav");
+	Sounds[SOUND_STEP] = SoundIndex ("tank/step.wav");
+	Sounds[SOUND_WINDUP] = SoundIndex ("tank/tnkatck4.wav");
+	Sounds[SOUND_STRIKE] = SoundIndex ("tank/tnkatck5.wav");
+	Sounds[SOUND_SIGHT] = SoundIndex ("tank/sight1.wav");
+
+	SoundIndex ("tank/tnkatck1.wav");
+	SoundIndex ("tank/tnkatk2a.wav");
+	SoundIndex ("tank/tnkatk2b.wav");
+	SoundIndex ("tank/tnkatk2c.wav");
+	SoundIndex ("tank/tnkatk2d.wav");
+	SoundIndex ("tank/tnkatk2e.wav");
+	SoundIndex ("tank/tnkatck3.wav");
+
+	Entity->Health = 750;
+	Entity->GibHealth = -200;
+	Entity->Mass = 500;
+
+	MonsterFlags |= (MF_HAS_ATTACK | MF_HAS_SIGHT | MF_HAS_IDLE);
+
+#if MONSTER_USE_ROGUE_AI
+	// PMM
+	AIFlags |= AI_IGNORE_SHOTS;
+	BlindFire = true;
+	//pmm
+#endif
+
+	Entity->Link ();
+	WalkMonsterStart();
+}
+
+LINK_MONSTER_CLASSNAME_TO_CLASS ("monster_tank", CTank);
+
+void CTankCommander::Spawn ()
+{
+	CTank::Spawn ();
+	Entity->Health = 1000;
+	Entity->GibHealth = -225;
+	Entity->State.GetSkinNum() = 2;
+}
+
+LINK_MONSTER_CLASSNAME_TO_CLASS ("monster_tank_commander", CTankCommander);

@@ -1,0 +1,1035 @@
+/*
+Copyright (C) 1997-2001 Id Software, Inc.
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+/*
+This source file is contained as part of CleanCode Quake2, a project maintained
+by Paril, to 'clean up' and make Quake2 an easier source base to read and work with.
+
+You may use any part of this code to help create your own bases and own mods off
+this code if you wish. It is under the same license as Quake 2 source (as above),
+therefore you are free to have to fun with it. All I ask is you email me so I can
+list the mod on my page for CleanCode Quake2 to help get the word around. Thanks.
+*/
+
+//
+// cc_makron.cpp
+// 
+//
+
+#include "cc_local.h"
+#include "cc_jorg.h" // Req.
+#include "cc_makron.h"
+#include "m_boss32.h"
+
+CMakron::CMakron (uint32 ID) :
+CMonster (ID)
+{
+	Scale = MODEL_SCALE;
+	MonsterName = "Makron";
+}
+
+void CMakron::Taunt ()
+{
+	MediaIndex Sound = Sounds[SOUND_TAUNT1];
+	switch (irandom(3))
+	{
+	case 1:
+		Sound = Sounds[SOUND_TAUNT2];
+	default:
+		break;
+	case 2:
+		Sound = Sounds[SOUND_TAUNT3];
+		break;
+	};
+
+	Entity->PlaySound (CHAN_AUTO, Sound, 255, ATTN_NONE);
+}
+
+//
+// stand
+//
+
+CFrame MakronFramesStand []=
+{
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),		// 10
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),		// 20
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),		// 30
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),		// 40
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),		// 50
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),
+	CFrame (&CMonster::AI_Stand, 0),		// 60
+};
+CAnim	MakronMoveStand (FRAME_stand201, FRAME_stand260, MakronFramesStand);
+	
+void CMakron::Stand ()
+{
+	CurrentMove = &MakronMoveStand;
+}
+
+void CMakron::Hit ()
+{
+	Entity->PlaySound (CHAN_AUTO, Sounds[SOUND_HIT], 255, ATTN_NONE);
+}
+
+void CMakron::PopUp ()
+{
+	Entity->PlaySound (CHAN_BODY, Sounds[SOUND_POPUP], 255, ATTN_NONE);
+}
+
+void CMakron::StepLeft ()
+{
+	Entity->PlaySound (CHAN_BODY, Sounds[SOUND_STEPLEFT]);
+}
+
+void CMakron::StepRight ()
+{
+	Entity->PlaySound (CHAN_BODY, Sounds[SOUND_STEPRIGHT]);
+}
+
+void CMakron::BrainSplorch ()
+{
+	Entity->PlaySound (CHAN_VOICE, Sounds[SOUND_BRAIN_SPLORCH]);
+}
+
+void CMakron::PreRailgun ()
+{
+	Entity->PlaySound (CHAN_WEAPON, Sounds[SOUND_PRE_RAILGUN]);
+}
+
+CFrame MakronFramesRun [] =
+{
+	CFrame (&CMonster::AI_Run, 3,	ConvertDerivedFunction(&CMakron::StepLeft)),
+	CFrame (&CMonster::AI_Run, 12),
+	CFrame (&CMonster::AI_Run, 8),
+	CFrame (&CMonster::AI_Run, 8),
+	CFrame (&CMonster::AI_Run, 8,	ConvertDerivedFunction(&CMakron::StepRight)),
+	CFrame (&CMonster::AI_Run, 6),
+	CFrame (&CMonster::AI_Run, 12),
+	CFrame (&CMonster::AI_Run, 9),
+	CFrame (&CMonster::AI_Run, 6),
+	CFrame (&CMonster::AI_Run, 12)
+};
+CAnim	MakronMoveRun (FRAME_walk204, FRAME_walk213, MakronFramesRun);
+
+CFrame MakronFramesWalk [] =
+{
+	CFrame (&CMonster::AI_Walk, 3,	ConvertDerivedFunction(&CMakron::StepLeft)),
+	CFrame (&CMonster::AI_Walk, 12),
+	CFrame (&CMonster::AI_Walk, 8),
+	CFrame (&CMonster::AI_Walk, 8),
+	CFrame (&CMonster::AI_Walk, 8,	ConvertDerivedFunction(&CMakron::StepRight)),
+	CFrame (&CMonster::AI_Walk, 6),
+	CFrame (&CMonster::AI_Walk, 12),
+	CFrame (&CMonster::AI_Walk, 9),
+	CFrame (&CMonster::AI_Walk, 6),
+	CFrame (&CMonster::AI_Walk, 12)
+};
+CAnim	MakronMoveWalk (FRAME_walk204, FRAME_walk213, MakronFramesRun);
+
+void CMakron::Walk ()
+{
+	CurrentMove = &MakronMoveWalk;
+}
+
+void CMakron::Run ()
+{
+	CurrentMove = (AIFlags & AI_STAND_GROUND) ? &MakronMoveStand : &MakronMoveRun;
+}
+
+CFrame MakronFramesPain6 [] =
+{
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),		// 10
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CMakron::PopUp)),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),		// 20
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CMakron::Taunt)),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0)
+};
+CAnim MakronMovePain6 (FRAME_pain601, FRAME_pain627, MakronFramesPain6, &CMonster::Run);
+
+CFrame MakronFramesPain5 [] =
+{
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0)
+};
+CAnim MakronMovePain5 (FRAME_pain501, FRAME_pain504, MakronFramesPain5, &CMonster::Run);
+
+CFrame MakronFramesPain4 [] =
+{
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0)
+};
+CAnim MakronMovePain4 (FRAME_pain401, FRAME_pain404, MakronFramesPain4, &CMonster::Run);
+
+void CMakron::Pain (CBaseEntity *other, float kick, sint32 damage)
+{
+	if (Entity->Health < (Entity->MaxHealth / 2))
+			Entity->State.GetSkinNum() = 1;
+
+	if (level.Frame < PainDebounceTime)
+			return;
+
+	// Lessen the chance of him going into his pain frames
+	if ((damage <= 25) && (frand() < 0.2f))
+		return;
+
+	PainDebounceTime = level.Frame + 30;
+	if (skill->Integer() == 3)
+		return;		// no pain anims in nightmare
+
+	if (damage <= 40)
+	{
+		Entity->PlaySound (CHAN_VOICE, Sounds[SOUND_PAIN4], 255, ATTN_NONE);
+		CurrentMove = &MakronMovePain4;
+	}
+	else if (damage <= 110)
+	{
+		Entity->PlaySound (CHAN_VOICE, Sounds[SOUND_PAIN5], 255, ATTN_NONE);
+		CurrentMove = &MakronMovePain5;
+	}
+	else
+	{
+		if ((damage <= 150) && (frand() <= 0.45f))
+		{
+			Entity->PlaySound (CHAN_VOICE, Sounds[SOUND_PAIN6], 255, ATTN_NONE);
+			CurrentMove = &MakronMovePain6;
+		}
+		else if (frand() <= 0.35f)
+		{
+			Entity->PlaySound (CHAN_VOICE, Sounds[SOUND_PAIN6], 255, ATTN_NONE);
+			CurrentMove = &MakronMovePain6;
+		}
+	}
+};
+
+CFrame MakronFramesDeath2 [] =
+{
+	CFrame (&CMonster::AI_Move,	-15),
+	CFrame (&CMonster::AI_Move,	3),
+	CFrame (&CMonster::AI_Move,	-12),
+	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CMakron::StepLeft)),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),			// 10
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	11),
+	CFrame (&CMonster::AI_Move,	12),
+	CFrame (&CMonster::AI_Move,	11,	ConvertDerivedFunction(&CMakron::StepRight)),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),			// 20
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),			
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),			// 30
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	5),
+	CFrame (&CMonster::AI_Move,	7),
+	CFrame (&CMonster::AI_Move,	6,	ConvertDerivedFunction(&CMakron::StepLeft)),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	-1),
+	CFrame (&CMonster::AI_Move,	2),			// 40
+	CFrame (&CMonster::AI_Move,	0),			
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),			
+	CFrame (&CMonster::AI_Move,	0),			// 50
+	CFrame (&CMonster::AI_Move,	0),			
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	-6),
+	CFrame (&CMonster::AI_Move,	-4),
+	CFrame (&CMonster::AI_Move,	-6,	ConvertDerivedFunction(&CMakron::StepRight)),
+	CFrame (&CMonster::AI_Move,	-4),
+	CFrame (&CMonster::AI_Move,	-4,	ConvertDerivedFunction(&CMakron::StepLeft)),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),			// 60
+	CFrame (&CMonster::AI_Move,	0),			
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	-2),
+	CFrame (&CMonster::AI_Move,	-5),
+	CFrame (&CMonster::AI_Move,	-3,	ConvertDerivedFunction(&CMakron::StepRight)),
+	CFrame (&CMonster::AI_Move,	-8),
+	CFrame (&CMonster::AI_Move,	-3,	ConvertDerivedFunction(&CMakron::StepLeft)),
+	CFrame (&CMonster::AI_Move,	-7),
+	CFrame (&CMonster::AI_Move,	-4),
+	CFrame (&CMonster::AI_Move,	-4,	ConvertDerivedFunction(&CMakron::StepRight)),			// 70
+	CFrame (&CMonster::AI_Move,	-6),			
+	CFrame (&CMonster::AI_Move,	-7),
+	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CMakron::StepLeft)),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),			// 80
+	CFrame (&CMonster::AI_Move,	0),			
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	-2),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	2),
+	CFrame (&CMonster::AI_Move,	0),			// 90
+	CFrame (&CMonster::AI_Move,	27,	ConvertDerivedFunction(&CMakron::Hit)),			
+	CFrame (&CMonster::AI_Move,	26),
+	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CMakron::BrainSplorch)),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0)			// 95
+};
+CAnim MakronMoveDeath2 (FRAME_death201, FRAME_death295, MakronFramesDeath2, ConvertDerivedFunction(&CMakron::Dead));
+
+CFrame MakronFramesDeath3 [] =
+{
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0)
+};
+CAnim MakronMoveDeath3 (FRAME_death301, FRAME_death320, MakronFramesDeath3);
+
+CFrame MakronFramesSight [] =
+{
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0)
+};
+CAnim MakronMoveSight (FRAME_active01, FRAME_active13, MakronFramesSight, &CMonster::Run);
+
+void CMakron::FireBFG ()
+{
+	vec3f	forward, right;
+	vec3f	start;
+
+	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
+	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_MAKRON_BFG], forward, right, start);
+
+	Entity->PlaySound (CHAN_VOICE, Sounds[SOUND_ATTACK_BFG]);
+	MonsterFireBfg (start,
+		((Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->ViewHeight)) - start).GetNormalized(),
+		50, 300, 100, 300, MZ2_MAKRON_BFG);
+}	
+
+CFrame MakronFramesAttack3 []=
+{
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0,	ConvertDerivedFunction(&CMakron::FireBFG)),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0)
+};
+CAnim MakronMoveAttack3 (FRAME_attak301, FRAME_attak308, MakronFramesAttack3, &CMonster::Run);
+
+CFrame MakronFramesAttack4[]=
+{
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CMakron::FireHyperblaster)),		// fire
+	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CMakron::FireHyperblaster)),		// fire
+	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CMakron::FireHyperblaster)),		// fire
+	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CMakron::FireHyperblaster)),		// fire
+	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CMakron::FireHyperblaster)),		// fire
+	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CMakron::FireHyperblaster)),		// fire
+	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CMakron::FireHyperblaster)),		// fire
+	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CMakron::FireHyperblaster)),		// fire
+	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CMakron::FireHyperblaster)),		// fire
+	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CMakron::FireHyperblaster)),		// fire
+	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CMakron::FireHyperblaster)),		// fire
+	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CMakron::FireHyperblaster)),		// fire
+	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CMakron::FireHyperblaster)),		// fire
+	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CMakron::FireHyperblaster)),		// fire
+	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CMakron::FireHyperblaster)),		// fire
+	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CMakron::FireHyperblaster)),		// fire
+	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CMakron::FireHyperblaster)),		// fire
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0)
+};
+CAnim MakronMoveAttack4 (FRAME_attak401, FRAME_attak426, MakronFramesAttack4, &CMonster::Run);
+
+// FIXME: This is all wrong. He's not firing at the proper angles.
+void CMakron::FireHyperblaster ()
+{
+	vec3f	dir;
+	vec3f	start;
+	vec3f	forward, right;
+	sint32		flash_number = MZ2_MAKRON_BLASTER_1 + (Entity->State.GetFrame() - FRAME_attak405);
+
+	Entity->State.GetAngles().ToVectors(&forward, &right, NULL);
+	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[flash_number], forward, right, start);
+
+	if (Entity->Enemy)
+		dir.X = (Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->ViewHeight) - start).ToAngles().X;
+	else
+		dir.X = 0;
+
+	if (Entity->State.GetFrame() <= FRAME_attak413)
+		dir.Y = Entity->State.GetAngles().Y - 10 * (Entity->State.GetFrame() - FRAME_attak413);
+	else
+		dir.Y = Entity->State.GetAngles().Y + 10 * (Entity->State.GetFrame() - FRAME_attak421);
+	dir.Z = 0;
+
+	dir.ToVectors (&forward, NULL, NULL);
+	MonsterFireBlaster (start, forward, 15, 1000, MZ2_MAKRON_BLASTER_1, EF_BLASTER);
+}	
+
+CFrame MakronFramesAttack5[]=
+{
+	CFrame (&CMonster::AI_Charge,	0,	ConvertDerivedFunction(&CMakron::PreRailgun)),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0),
+	CFrame (&CMonster::AI_Charge,	0,	ConvertDerivedFunction(&CMakron::SavePosition)),
+	CFrame (&CMonster::AI_Move,	0,	ConvertDerivedFunction(&CMakron::FireRailgun)),		// Fire railgun
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0),
+	CFrame (&CMonster::AI_Move,	0)
+};
+CAnim MakronMoveAttack5 (FRAME_attak501, FRAME_attak516, MakronFramesAttack5, &CMonster::Run);
+
+void CMakron::SavePosition ()
+{
+	SavedLoc = Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->ViewHeight);
+};
+
+// FIXME: He's not firing from the proper Z
+void CMakron::FireRailgun ()
+{
+	vec3f	start;
+	vec3f	dir;
+	vec3f	forward, right;
+
+	Entity->State.GetAngles().ToVectors (&forward, &right, NULL);
+	G_ProjectSource (Entity->State.GetOrigin(), dumb_and_hacky_monster_MuzzFlashOffset[MZ2_MAKRON_RAILGUN_1], forward, right, start);
+	
+	// calc direction to where we targted
+	dir = SavedLoc - start;
+	dir.Normalize();
+
+	MonsterFireRailgun (start, dir, 50, 100, MZ2_MAKRON_RAILGUN_1);
+}
+
+void CMakron::Sight()
+{
+	CurrentMove = &MakronMoveSight;
+};
+
+void CMakron::Attack()
+{
+	switch (irandom(3))
+	{
+	case 0:
+		CurrentMove = &MakronMoveAttack3;
+		break;
+	case 1:
+		CurrentMove = &MakronMoveAttack4;
+		break;
+	case 2:
+	default:
+		CurrentMove = &MakronMoveAttack5;
+		break;
+	};
+}
+
+/*
+---
+Makron Torso. This needs to be spawned in
+---
+*/
+
+class CMakronTorso : public virtual CBaseEntity, public CThinkableEntity
+{
+public:
+	CMakronTorso () :
+	  CBaseEntity(),
+	  CThinkableEntity()
+	  {
+	  };
+
+	CMakronTorso (sint32 Index) :
+	  CBaseEntity(Index),
+	  CThinkableEntity (Index)
+	  {
+	  };
+
+	IMPLEMENT_SAVE_HEADER(CMakronTorso)
+
+	void SaveFields (CFile &File)
+	{
+		CThinkableEntity::SaveFields (File);
+	};
+
+	void LoadFields (CFile &File)
+	{
+		CThinkableEntity::LoadFields (File);
+	};
+
+	void Think ()
+	{
+		if (++State.GetFrame() < 365)
+			NextThink = level.Frame + FRAMETIME;
+		else
+		{		
+			State.GetFrame() = 346;
+			NextThink = level.Frame + FRAMETIME;
+		}
+	};
+
+	static void Spawn (CMonsterEntity *Owner)
+	{
+		CMakronTorso *NewClass = QNewEntityOf CMakronTorso;
+
+		NewClass->State.GetOrigin() = Owner->State.GetOrigin();
+		NewClass->State.GetAngles() = Owner->State.GetAngles();
+		vec3f origin = Owner->State.GetOrigin();
+		origin.Y -= 84;
+
+		NewClass->GetMins().Set (-8, -8, 0);
+		NewClass->GetMaxs().Set (8);
+		NewClass->State.GetModelIndex() = Owner->State.GetModelIndex();
+		NewClass->NextThink = level.Frame + 2;
+		NewClass->State.GetSound() = SoundIndex("makron/spine.wav");
+		NewClass->State.GetFrame() = 346;
+		NewClass->GetSolid() = SOLID_NOT;
+		NewClass->Link ();
+	};
+};
+
+//
+// death
+//
+
+void CMakron::Dead ()
+{
+	Entity->GetMins().Set (-60, -60, 0);
+	Entity->GetMaxs().Set (60, 60, 72);
+	Entity->PhysicsType = PHYSICS_TOSS;
+	Entity->GetSvFlags() |= SVF_DEADMONSTER;
+	Entity->NextThink = 0;
+	Entity->Link ();
+}
+
+void CMakron::Die(CBaseEntity *inflictor, CBaseEntity *attacker, sint32 damage, vec3f &point)
+{
+	Entity->State.GetSound() = 0;
+	// check for gib
+	if (Entity->Health <= Entity->GibHealth)
+	{
+		Entity->PlaySound (CHAN_VOICE, SoundIndex ("misc/udeath.wav"));
+		for (sint32 n= 0; n < 1 /*4*/; n++)
+			CGibEntity::Spawn (Entity, GameMedia.Gib_SmallMeat, damage, GIB_ORGANIC);
+		for (sint32 n= 0; n < 4; n++)
+			CGibEntity::Spawn (Entity, GameMedia.Gib_SmallMetal(), damage, GIB_METALLIC);
+		Entity->ThrowHead (GameMedia.Gib_Gear(), damage, GIB_METALLIC);
+		Entity->DeadFlag = true;
+		return;
+	}
+
+	if (Entity->DeadFlag == true)
+		return;
+
+// regular death
+	Entity->PlaySound (CHAN_VOICE, Sounds[SOUND_DEATH], 255, ATTN_NONE);
+	Entity->DeadFlag = true;
+	Entity->CanTakeDamage = true;
+
+	// Spawn torso
+	CMakronTorso::Spawn (Entity);
+
+	CurrentMove = &MakronMoveDeath2;
+}
+
+bool CMakron::CheckAttack ()
+{
+#if !MONSTER_USE_ROGUE_AI
+	vec3f	spot1, spot2;
+	float	chance;
+	CTrace	tr;
+
+	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0)
+	{
+	// see if any entities are in the way of the shot
+		spot1 = Entity->State.GetOrigin();
+		spot1.Z += Entity->ViewHeight;
+		spot2 = Entity->Enemy->State.GetOrigin();
+		spot2.Z += Entity->Enemy->ViewHeight;
+
+		tr (spot1, spot2, Entity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
+
+		// do we have a clear shot?
+		if (tr.Ent != Entity->Enemy)
+			return false;
+	}
+	
+	// melee attack
+	if (EnemyRange == RANGE_MELEE)
+	{
+		// don't always melee in easy mode
+		if (skill->Integer() == 0 && (randomMT()&3) )
+			return false;
+		if (MonsterFlags & MF_HAS_MELEE)
+			AttackState = AS_MELEE;
+		else
+			AttackState = AS_MISSILE;
+		return true;
+	}
+	
+// missile attack
+	if (!(MonsterFlags & MF_HAS_ATTACK))
+		return false;
+		
+	if (level.Frame < AttackFinished)
+		return false;
+		
+	if (EnemyRange == RANGE_FAR)
+		return false;
+
+	if (AIFlags & AI_STAND_GROUND)
+	{
+		chance = 0.4f;
+	}
+	else if (EnemyRange == RANGE_MELEE)
+	{
+		chance = 0.8f;
+	}
+	else if (EnemyRange == RANGE_NEAR)
+	{
+		chance = 0.4f;
+	}
+	else if (EnemyRange == RANGE_MID)
+	{
+		chance = 0.2f;
+	}
+	else
+	{
+		return false;
+	}
+
+	if (skill->Integer() == 0)
+		chance *= 0.5;
+	else if (skill->Integer() >= 2)
+		chance *= 2;
+
+	if (frand () < chance)
+	{
+		AttackState = AS_MISSILE;
+		AttackFinished = level.Frame + ((2*frand())*10);
+		return true;
+	}
+
+	if (Entity->Flags & FL_FLY)
+	{
+		if (frand() < 0.3)
+			AttackState = AS_SLIDING;
+		else
+			AttackState = AS_STRAIGHT;
+	}
+
+	return false;
+#else
+	float	chance;
+
+	if (entity_cast<CHurtableEntity>(Entity->Enemy)->Health > 0)
+	{
+	// see if any entities are in the way of the shot
+		vec3f	spot1 = Entity->State.GetOrigin() + vec3f(0, 0, Entity->ViewHeight);
+		vec3f	spot2 = Entity->Enemy->State.GetOrigin() + vec3f(0, 0, Entity->Enemy->ViewHeight);
+
+		CTrace tr (spot1, spot2, Entity, CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_SLIME|CONTENTS_LAVA|CONTENTS_WINDOW);
+
+		// do we have a clear shot?
+		if (tr.Ent != Entity->Enemy)
+		{	
+			// PGM - we want them to go ahead and shoot at info_notnulls if they can.
+			if(Entity->Enemy->GetSolid() != SOLID_NOT || tr.fraction < 1.0)		//PGM
+			{
+				// PMM - if we can't see our target, and we're not blocked by a monster, go into blind fire if available
+				if ((!(tr.ent->svFlags & SVF_MONSTER)) && (!IsVisible(Entity, Entity->Enemy)))
+				{
+					if ((BlindFire) && (BlindFireDelay <= 20.0))
+					{
+						if (level.Frame < AttackFinished)
+							return false;
+						if (level.Frame < (TrailTime + BlindFireDelay))
+							// wait for our time
+							return false;
+						else
+						{
+							// make sure we're not going to shoot a monster
+							tr (spot1, BlindFireTarget, Entity, CONTENTS_MONSTER);
+							if (tr.allSolid || tr.startSolid || ((tr.fraction < 1.0) && (tr.Ent != Entity->Enemy)))
+								return false;
+
+							AttackState = AS_BLIND;
+							return true;
+						}
+					}
+				}
+				// pmm
+				return false;
+			}
+		}
+	}
+	
+	// melee attack
+	if (EnemyRange == RANGE_MELEE)
+	{
+		// don't always melee in easy mode
+		if (skill->Integer() == 0 && (randomMT()&3) )
+		{
+			// PMM - fix for melee only monsters & strafing
+			AttackState = AS_STRAIGHT;
+			return false;
+		}
+		if (MonsterFlags & MF_HAS_MELEE)
+			AttackState = AS_MELEE;
+		else
+			AttackState = AS_MISSILE;
+		return true;
+	}
+	
+// missile attack
+	if (!(MonsterFlags & MF_HAS_ATTACK))
+	{
+		// PMM - fix for melee only monsters & strafing
+		AttackState = AS_STRAIGHT;
+		return false;
+	}
+	
+	if (level.Frame < AttackFinished)
+		return false;
+		
+	if (EnemyRange == RANGE_FAR)
+		return false;
+
+	if (AIFlags & AI_STAND_GROUND)
+		chance = 0.4f;
+	else if (EnemyRange == RANGE_MELEE)
+		chance = 0.8f;
+	else if (EnemyRange == RANGE_NEAR)
+		chance = 0.4f;
+	else if (EnemyRange == RANGE_MID)
+		chance = 0.2f;
+	else
+		return false;
+
+	if (skill->Integer() == 0)
+		chance *= 0.5;
+	else if (skill->Integer() >= 2)
+		chance *= 2;
+
+	// PGM - go ahead and shoot every time if it's a info_notnull
+	if ((frand () < chance) || (Entity->Enemy->GetSolid() == SOLID_NOT))
+	{
+		AttackState = AS_MISSILE;
+		AttackFinished = level.Frame + ((2*frand())*10);
+		return true;
+	}
+
+	// PMM -daedalus should strafe more .. this can be done here or in a customized
+	// check_attack code for the hover.
+	if (Entity->Flags & FL_FLY)
+	{
+		// originally, just 0.3
+		float strafe_chance;
+		if (!(strcmp(Entity->ClassName, "monster_daedalus")))
+			strafe_chance = 0.8f;
+		else
+			strafe_chance = 0.6f;
+
+		// if enemy is tesla, never strafe
+		if ((Entity->Enemy) && (Entity->Enemy->ClassName) && (!strcmp(Entity->Enemy->ClassName, "tesla")))
+			strafe_chance = 0;
+
+		if (frand() < strafe_chance)
+			AttackState = AS_SLIDING;
+		else
+			AttackState = AS_STRAIGHT;
+	}
+// do we want the monsters strafing?
+	else
+	{
+		if (frand() < 0.4)
+			AttackState = AS_SLIDING;
+		else
+			AttackState = AS_STRAIGHT;
+	}
+
+//-PMM
+
+	return false;
+#endif
+}
+
+//
+// monster_makron
+//
+
+void CMakron::Precache ()
+{
+	SoundIndex ("makron/pain3.wav");
+	SoundIndex ("makron/pain2.wav");
+	SoundIndex ("makron/pain1.wav");
+	SoundIndex ("makron/death.wav");
+	SoundIndex ("makron/step1.wav");
+	SoundIndex ("makron/step2.wav");
+	SoundIndex ("makron/bfg_fire.wav");
+	SoundIndex ("makron/brain1.wav");
+	SoundIndex ("makron/rail_up.wav");
+	SoundIndex ("makron/popup.wav");
+	SoundIndex ("makron/voice4.wav");
+	SoundIndex ("makron/voice3.wav");
+	SoundIndex ("makron/voice.wav");
+	SoundIndex ("makron/bhit.wav");
+
+	ModelIndex ("models/monsters/boss3/rider/tris.md2");
+}
+
+/*QUAKED monster_makron (1 .5 0) (-30 -30 0) (30 30 90) Ambush Trigger_Spawn Sight
+*/
+void CMakron::Spawn ()
+{
+	Sounds[SOUND_PAIN4] = SoundIndex ("makron/pain3.wav");
+	Sounds[SOUND_PAIN5] = SoundIndex ("makron/pain2.wav");
+	Sounds[SOUND_PAIN6] = SoundIndex ("makron/pain1.wav");
+	Sounds[SOUND_DEATH] = SoundIndex ("makron/death.wav");
+	Sounds[SOUND_STEPLEFT] = SoundIndex ("makron/step1.wav");
+	Sounds[SOUND_STEPRIGHT] = SoundIndex ("makron/step2.wav");
+	Sounds[SOUND_ATTACK_BFG] = SoundIndex ("makron/bfg_fire.wav");
+	Sounds[SOUND_BRAIN_SPLORCH] = SoundIndex ("makron/brain1.wav");
+	Sounds[SOUND_PRE_RAILGUN] = SoundIndex ("makron/rail_up.wav");
+	Sounds[SOUND_POPUP] = SoundIndex ("makron/popup.wav");
+	Sounds[SOUND_TAUNT1] = SoundIndex ("makron/voice4.wav");
+	Sounds[SOUND_TAUNT2] = SoundIndex ("makron/voice3.wav");
+	Sounds[SOUND_TAUNT3] = SoundIndex ("makron/voice.wav");
+	Sounds[SOUND_HIT] = SoundIndex ("makron/bhit.wav");
+	
+	Entity->GetSolid() = SOLID_BBOX;
+	Entity->State.GetModelIndex() = ModelIndex ("models/monsters/boss3/rider/tris.md2");
+	Entity->GetMins().Set (-30, -30, 0);
+	Entity->GetMaxs().Set (30, 30, 90);
+
+	Entity->Health = 3000;
+	Entity->GibHealth = -2000;
+	Entity->Mass = 500;
+
+	MonsterFlags = (MF_HAS_ATTACK | MF_HAS_SIGHT);
+	Entity->Link ();
+	
+	CurrentMove = &MakronMoveSight;
+	WalkMonsterStart();
+}
+
+LINK_MONSTER_CLASSNAME_TO_CLASS ("monster_makron", CMakron);
+
+/*
+=================
+CMakronJumpTimer class
+
+Jorg is just about dead, so set up to launch Makron out
+=================
+*/
+CMakronJumpTimer::CMakronJumpTimer () :
+CBaseEntity(),
+CThinkableEntity ()
+{
+};
+CMakronJumpTimer::CMakronJumpTimer (sint32 Index) :
+CBaseEntity(Index),
+CThinkableEntity (Index)
+{
+};
+
+void CMakronJumpTimer::Think ()
+{
+	CMonsterEntity *newClass = QNewEntityOf CMonsterEntity;
+	CMakron *Monster = QNewEntityOf CMakron (CMakron_ID);
+	newClass->Monster = Monster;
+	Monster->Entity = newClass;
+	newClass->State.GetOrigin() = State.GetOrigin();
+	Monster->Spawn ();
+	newClass->NextThink = level.Frame + 1;
+	newClass->Target = LinkedJorg->Target;
+
+	// jump at player
+	CPlayerEntity *Player = level.SightClient;
+	if (!Player)
+		return;
+
+	vec3f vec = (Player->State.GetOrigin() - newClass->State.GetOrigin());
+	newClass->State.GetAngles().Set (0, vec.ToYaw(), 0);
+	vec.Normalize();
+	vec3f vel = vec3fOrigin.MultiplyAngles (400, vec);
+	newClass->Velocity = vel;
+	newClass->Velocity.Z = 200;
+	newClass->GroundEntity = NULL;
+	newClass->Link ();
+
+	Free ();
+};
+
+void CMakronJumpTimer::Spawn (CJorg *Jorg)
+{
+	CMakronJumpTimer *Timer = QNewEntityOf CMakronJumpTimer;
+	
+	Timer->NextThink = level.Frame + 8;
+	Timer->LinkedJorg = Jorg->Entity;
+	Timer->State.GetOrigin() = Jorg->Entity->State.GetOrigin();
+	Timer->Link();
+}
