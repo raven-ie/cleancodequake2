@@ -1,5 +1,5 @@
 #summary FAQs for CleanCode
-#labels faqs
+#labels Phase-QA,featured
 
 ==Common Project Questions==
 
