@@ -4,6 +4,8 @@
 
 CleanCode is available in the following release formats:
 
+*NOTE: Please do not download these. For a more stable experience, please checkout the SVN version under Source.*
+
 == Version PR 1.0.259 ==
 
 === Win32 ===
